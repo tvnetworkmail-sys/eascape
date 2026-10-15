@@ -1,0 +1,115 @@
+[ai_queue1,slayer_cockatrice] gosub(npc_default_retaliate_ap);
+
+[ai_queue3,slayer_cockatrice]
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+
+obj_add(npc_coord, npc_param(death_drop), 1, ^lootdrop_duration);
+
+// pre roll
+if (random(512) = 0) {
+    obj_add(npc_coord, mystic_boots_light, 1, ^lootdrop_duration);
+    return;
+}
+
+def_int $random = random(128);
+if ($random < 21) {
+    obj_add(npc_coord, limpwurt_root, 1, ^lootdrop_duration);
+} else if ($random < 37) {
+    obj_add(npc_coord, coins, 15, ^lootdrop_duration);
+} else if ($random < 49) {
+    obj_add(npc_coord, coins, 28, ^lootdrop_duration);
+} else if ($random < 61) {
+    obj_add(npc_coord, coins, 5, ^lootdrop_duration);
+} else if ($random < 65) {
+    obj_add(npc_coord, coins, 62, ^lootdrop_duration);
+} else if ($random < 68) {
+    obj_add(npc_coord, coins, 42, ^lootdrop_duration);
+} else if ($random < 69) {
+    obj_add(npc_coord, coins, 1, ^lootdrop_duration);
+} else if ($random < 87) { // seed table
+    obj_add(npc_coord, coins, 42, ^lootdrop_duration);
+} else if ($random < 93) {
+    obj_add(npc_coord, naturerune, 2, ^lootdrop_duration);
+} else if ($random < 97) {
+    obj_add(npc_coord, naturerune, 4, ^lootdrop_duration);
+} else if ($random < 100) {
+    obj_add(npc_coord, lawrune, 2, ^lootdrop_duration);
+} else if ($random < 102) {
+    obj_add(npc_coord, waterrune, 2, ^lootdrop_duration);
+} else if ($random < 104) {
+    obj_add(npc_coord, naturerune, 6, ^lootdrop_duration);
+} else if ($random < 106) {
+    obj_add(npc_coord, firerune, 7, ^lootdrop_duration);
+} else if ($random < 116) {
+    obj_add(npc_coord, ~randomherb, ^lootdrop_duration);
+} else if ($random < 119) {
+    obj_add(npc_coord, iron_sword, 1, ^lootdrop_duration);
+} else if ($random < 122) {
+    obj_add(npc_coord, steel_dagger, 1, ^lootdrop_duration);
+} else if ($random < 123) {
+    obj_add(npc_coord, iron_armoured_boots, 1, ^lootdrop_duration);
+} else if ($random < 124) {
+    obj_add(npc_coord, steel_longsword, 1, ^lootdrop_duration);
+} else if ($random < 125) {
+    obj_add(npc_coord, iron_javelin, 5, ^lootdrop_duration);
+} else if ($random < 127) {
+    obj_add(npc_coord, ~randomjewel, ^lootdrop_duration);
+}
+
+[ai_applayer2,slayer_cockatrice]
+if(inv_total(worn, slayer_mirror_shield) < 1) {
+    ~cockatrice_gaze;
+    return;
+}
+npc_setmode(opplayer2);
+
+[ai_opplayer2,slayer_cockatrice]
+if(inv_total(worn, slayer_mirror_shield) < 1) {
+    npc_setmode(applayer2); // works pretty much the same as banshees 
+    return;
+}
+gosub(npc_default_attack);
+
+[proc,cockatrice_gaze]
+if (%death = ^true) {
+    npc_setmode(null);
+    return;
+}
+if (%npc_action_delay > map_clock) return;
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) { // Doesnt change mode! Keeps trying!
+    return;
+}
+def_int $damage;
+// protect from melee works here but not stat based otherwise, always static damage
+// doesn't prevent drain either
+if (~check_protect_prayer(^melee_style) = true) $damage = 0;
+else $damage = calc((stat_base(hitpoints) * 12) / 100);
+// reduction is 40% (current) for att/str/range/mage, 20% def/pray/agil
+// stat reduction isnt queued
+stat_drain(attack, 0, 40);
+stat_drain(strength, 0, 40);
+stat_drain(ranged, 0, 40);
+stat_drain(magic, 0, 40);
+stat_drain(defence, 0, 20);
+stat_drain(prayer, 0, 20);
+stat_drain(agility, 0, 20);
+npc_anim(npc_param(attack_anim), 0);
+~player_projectile(npc_coord, coord, uid, slayer_cockatrice_zap, 23, 32, 0, 0, 0, 16, 2); // TODO: recheck this
+if (npc_param(attack_sound) ! null) {
+    sound_synth(npc_param(attack_sound), 0, 0);
+}
+if_close;
+~npc_set_attack_vars;
+%npc_action_delay = add(map_clock, 4);
+queue(combat_damage_player, 0, $damage);
+if (npc_param(poison_severity) > 0 & $damage > 0) {
+    queue(poison_player, 0, npc_param(poison_severity));
+}
+queue*(playerhit_n_retaliate, 0)(npc_uid);

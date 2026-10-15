@@ -1,0 +1,54 @@
+[ai_queue3,_slayer_basilisk]
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+
+// Default drop from config.
+obj_add(npc_coord, npc_param(death_drop), 1, ^lootdrop_duration);
+
+// pre-roll
+if (random(512) = 0) {
+    obj_add(npc_coord, mystic_hat_light, 1, ^lootdrop_duration);
+    return;
+}
+
+def_int $random = random(128);
+
+if ($random < 35) {
+    obj_add(npc_coord, ~randomherb, ^lootdrop_duration);
+} else if ($random < 40) {
+    obj_add(npc_coord, ~randomjewel, ^lootdrop_duration);
+} else if ($random < 41) {
+    obj_add(npc_coord, coins, 440, ^lootdrop_duration);
+} else if ($random < 46) {
+    obj_add(npc_coord, coins, 11, ^lootdrop_duration);
+} else if ($random < 51) {
+    obj_add(npc_coord, coins, 132, ^lootdrop_duration);
+} else if ($random < 68) {
+    obj_add(npc_coord, coins, 200, ^lootdrop_duration);
+} else if ($random < 97) {
+    obj_add(npc_coord, coins, 44, ^lootdrop_duration);
+} else if ($random < 100) {
+    obj_add(npc_coord, adamantite_ore, 1, ^lootdrop_duration);
+} else if ($random < 101) {
+    obj_add(npc_coord, naturerune, 37, ^lootdrop_duration);
+} else if ($random < 104) {
+    obj_add(npc_coord, lawrune, 3, ^lootdrop_duration);
+} else if ($random < 109) {
+    obj_add(npc_coord, naturerune, 15, ^lootdrop_duration);
+} else if ($random < 117) {
+    obj_add(npc_coord, waterrune, 75, ^lootdrop_duration);
+} else if ($random < 118) {
+    obj_add(npc_coord, rune_dagger, 1, ^lootdrop_duration);
+} else if ($random < 119) {
+    obj_add(npc_coord, mithril_kiteshield, 1, ^lootdrop_duration);
+} else if ($random < 120) {
+    obj_add(npc_coord, adamant_full_helm, 1, ^lootdrop_duration);
+} else if ($random < 122) {
+    obj_add(npc_coord, mithril_spear, 1, ^lootdrop_duration);
+} else if ($random < 125) {
+    obj_add(npc_coord, steel_battleaxe, 1, ^lootdrop_duration);
+} else if ($random < 128) {
+    obj_add(npc_coord, mithril_axe, 1, ^lootdrop_duration);
+}

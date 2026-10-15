@@ -1,0 +1,36 @@
+[label,player_special_attack]
+// order of checks is from osrs
+if (~npc_is_attackable() = false) {
+    return;
+}
+if (~sa_enough_energy = false) {
+    return;
+}
+def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+// maul was rewritten in late 2006 (sept?) to queue the hits to make them "instant"
+// here they just run on the next tick in interactions and bypass action delay
+// shown a lot here: https://www.youtube.com/watch?v=rx_jEFVtrHs
+// and https://youtu.be/XOE4NWuQR5c?si=YPM0yKaTGHaVm9B8
+if($weapon = granite_maul) {
+    @pvm_granite_maul_sa;
+}
+if (%action_delay > map_clock) {
+    p_opnpc(2);
+    return;
+}
+if (npc_stat(hitpoints) = 0) {
+    p_stopaction;
+    return;
+}
+%action_delay = add(map_clock, oc_param($weapon, attackrate));
+p_opnpc(2);
+ switch_obj($weapon) {
+    case dragon_dagger, dragon_dagger_p, dragon_dagger_p+, dragon_dagger_p++ : @pvm_dragon_dagger_sa;
+    case dragon_longsword : @pvm_dragon_longsword_sa;
+    case dragon_mace : @pvm_dragon_mace_sa;
+    case magic_shortbow : @pvm_magic_shortbow_sa;
+    case magic_longbow : @pvm_magic_longbow_sa;
+    case rune_thrownaxe : @pvm_rune_thrownaxe_sa;
+    case dragon_spear, dragon_spear_p, dragon_spear_p+, dragon_spear_p++, tbwt_dragon_spear_kp : @pvm_dragon_spear_sa;
+    case abyssal_whip : @pvm_abyssal_whip_sa;
+}
