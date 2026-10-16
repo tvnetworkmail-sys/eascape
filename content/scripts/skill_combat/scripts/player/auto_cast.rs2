@@ -40,6 +40,9 @@ if (p_finduid(uid) = true) {
     }
     // set auto cast varp
     %autocast_spell = $spell;
+    // EASCape: choosing a spell switches autocast on straight away (the "Attack with" box still
+    // switches it off and on again)
+    %autocast_set = 1;
     if_settext(combat_staff_2:auto_spell, db_getfield($spell_data, magic_spell_table:name, 0));
 
     ~initalltabs;
