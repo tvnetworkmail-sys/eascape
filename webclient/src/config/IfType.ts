@@ -94,6 +94,7 @@ export default class IfType {
     modelAnim: number = -1;
     modelAnim2: number = -1;
     modelZoom: number = 0;
+    modelRotation: number = 0; // 377 IF_SETROTATION
     modelXAn: number = 0;
     modelYAn: number = 0;
     targetVerb: string | null = null;

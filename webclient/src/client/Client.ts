@@ -64,6 +64,7 @@ import JagFile from '#/io/JagFile.js';
 import Packet from '#/io/Packet.js';
 import OnDemand from '#/io/OnDemand.js';
 import { ServerProt, ServerProtSizes } from '#/io/ServerProt.js';
+import { writeInvButton, writeOpHeld, writeOpLoc, writeOpNpc, writeOpObj, writeOpPlayer } from '#/io/OpWrites.js';
 
 import { reverseDnsLookup } from '#/util/WebDns.js';
 
@@ -72,7 +73,7 @@ import WordPack from '#/wordfilter/WordPack.js';
 
 import JagFX from '#/sound/JagFX.js';
 
-const CLIENT_VERSION = 289;
+const CLIENT_VERSION = 377;
 
 const MAX_PLAYER_COUNT = 2048;
 const LOCAL_PLAYER_INDEX = 2047;
@@ -173,6 +174,18 @@ export class Client extends GameShell {
     private daysSinceRecoveriesChanged: number = 0;
     private unreadMessages: number = 0;
     private warnMembersInNonMembers: number = 0;
+    // 377 full-screen interfaces (the welcome screen): a main one and an overlay drawn over the
+    // whole window instead of the game
+    private fullscreenId: number = -1;
+    private fullscreenOverlayId: number = -1;
+    private nameDialog: boolean = false; // 377: the chatbox prompt asks for a name, not an amount
+    private areaFullscreen: PixMap | null = null;
+    // 377 last login info
+    private daysSincePasswordChanged: number = 0;
+    private currentDay: number = 0;
+    private previousLoginDay: number = 0;
+    private daysOfMembersRemaining: number = 0;
+    private recoveriesLastChangedDay: number = 0;
 
     private onDemand: OnDemand | null = null;
     public db: Database | null = null;
@@ -1813,7 +1826,7 @@ export class Client extends GameShell {
                 this.ptype1 = -1;
                 this.ptype2 = -1;
                 this.psize = 0;
-                this.timeoutTimer = performance.now();
+            this.timeoutTimer = performance.now();
                 this.rebootTimer = 0;
                 this.logoutTimer = 0;
                 this.hintType = 0;
@@ -2288,10 +2301,10 @@ export class Client extends GameShell {
                         }
 
                         this.out.p1Enc(ClientProt.INV_BUTTOND);
-                        this.out.p2(this.objDragComId);
-                        this.out.p2(this.objDragSlot);
-                        this.out.p2(this.hoveredSlot);
-                        this.out.p1(mode);
+                        this.out.p2_alt3(this.hoveredSlot);
+                        this.out.p1_alt1(mode);
+                        this.out.p2_alt2(this.objDragComId);
+                        this.out.p2_alt1(this.objDragSlot);
                     }
                 } else if ((this.oneMouseButton === 1 || this.isAddFriendOption(this.menuNumEntries - 1)) && this.menuNumEntries > 2) {
                     this.openMenu();
@@ -2308,7 +2321,7 @@ export class Client extends GameShell {
         if (Client.cyclelogic7 > 62) {
             Client.cyclelogic7 = 0;
 
-            this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC7);
+            // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
         }
 
         if (World.groundX !== -1) {
@@ -2523,6 +2536,16 @@ export class Client extends GameShell {
         this.menuOption[0] = 'Cancel';
         this.menuAction[0] = MiniMenuAction.CANCEL;
         this.menuNumEntries = 1;
+
+        if (this.fullscreenId !== -1) {
+            // 377: a full-screen interface takes the whole window
+            this.lastOverComId = 0;
+            this.addComponentOptions(IfType.list[this.fullscreenId], this.mouseX, this.mouseY, 0, 0, 0);
+            if (this.lastOverComId !== this.overMainComId) {
+                this.overMainComId = this.lastOverComId;
+            }
+            return;
+        }
 
         this.addPrivateChatOptions();
         this.lastOverComId = 0;
@@ -2943,8 +2966,7 @@ export class Client extends GameShell {
         if (Client.cyclelogic4 > 192) {
             Client.cyclelogic4 = 0;
 
-            this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC4);
-            this.out.p1(232);
+            // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
         }
 
         while (true) {
@@ -3022,6 +3044,28 @@ export class Client extends GameShell {
                                 userhash = JString.toUserhash(this.socialInput);
                                 this.delIgnore(userhash);
                             }
+                        }
+                    } else if (this.dialogInputOpen && this.nameDialog) {
+                        // 377: P_NAMEDIALOG
+                        if (key >= 32 && key <= 122 && this.dialogInput.length < 12) {
+                            this.dialogInput = this.dialogInput + String.fromCharCode(key);
+                            this.redrawChat = true;
+                        }
+
+                        if (key === 8 && this.dialogInput.length > 0) {
+                            this.dialogInput = this.dialogInput.substring(0, this.dialogInput.length - 1);
+                            this.redrawChat = true;
+                        }
+
+                        if (key === 13 || key === 10) {
+                            if (this.dialogInput.length > 0) {
+                                this.out.p1Enc(ClientProt.RESUME_P_NAMEDIALOG);
+                                this.out.p8(JString.toUserhash(this.dialogInput));
+                            }
+
+                            this.dialogInputOpen = false;
+                            this.nameDialog = false;
+                            this.redrawChat = true;
                         }
                     } else if (this.dialogInputOpen) {
                         if (key >= 48 && key <= 57 && this.dialogInput.length < 10) {
@@ -3896,6 +3940,11 @@ export class Client extends GameShell {
             return;
         }
 
+        if (this.fullscreenId !== -1) {
+            this.drawFullscreen();
+            return;
+        }
+
         if (this.redrawFrame) {
             this.redrawFrame = false;
 
@@ -4272,8 +4321,7 @@ export class Client extends GameShell {
             if (Client.cyclelogic6 > 122) {
                 Client.cyclelogic6 = 0;
 
-                this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC6);
-                this.out.p1(62);
+                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
             }
         }
 
@@ -4391,28 +4439,7 @@ export class Client extends GameShell {
         if (Client.cyclelogic1 > 1174) {
             Client.cyclelogic1 = 0;
 
-            this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC1);
-            this.out.p1(0);
-            const start = this.out.pos;
-            if (((Math.random() * 2.0) | 0) === 0) {
-                this.out.p2(11499);
-            }
-            this.out.p2(10548);
-            if (((Math.random() * 2.0) | 0) == 0) {
-                this.out.p1(139);
-            }
-            if (((Math.random() * 2.0) | 0) == 0) {
-                this.out.p1(94);
-            }
-            this.out.p2(51693);
-            this.out.p1(16);
-            this.out.p2(15036);
-            if (((Math.random() * 2.0) | 0) == 0) {
-                this.out.p1(65);
-            }
-            this.out.p1((Math.random() * 256.0) | 0);
-            this.out.p2(22990);
-            this.out.psize1(this.out.pos - start);
+            // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
         }
     }
 
@@ -4591,13 +4618,19 @@ export class Client extends GameShell {
             }
 
             if (index >= this.playerCount) {
-                const npc = (entity as ClientNpc).type;
+                let npc: NpcType | null = (entity as ClientNpc).type;
+                if (npc && npc.multinpc !== null) {
+                    npc = npc.getMultiNpc(this.var); // 377: an NPC that shows as another, or none
+                }
+                if (!npc) {
+                    continue;
+                }
 
-                if (npc && npc.headicon >= 0 && npc.headicon < this.headicons.length) {
+                if (npc.headicon >= 0 && npc.headicon < this.headiconsPrayer.length) {
                     this.getOverlayPosEntity(entity, entity.height + 15);
 
                     if (this.projectX > -1) {
-                        this.headicons[npc.headicon]?.plotSprite(this.projectX - 12, this.projectY - 30);
+                        this.headiconsPrayer[npc.headicon]?.plotSprite(this.projectX - 12, this.projectY - 30);
                     }
                 }
 
@@ -4605,22 +4638,24 @@ export class Client extends GameShell {
                     this.getOverlayPosEntity(entity, entity.height + 15);
 
                     if (this.projectX > -1) {
-                        this.headicons[2]?.plotSprite(this.projectX - 12, this.projectY - 28);
+                        this.headiconsHint[0]?.plotSprite(this.projectX - 12, this.projectY - 28);
                     }
                 }
             } else {
                 let y: number = 30;
 
                 const player: ClientPlayer = entity as ClientPlayer;
-                if (player.headicons !== 0) {
+                if (player.headiconPk !== -1 || player.headiconPrayer !== -1) {
                     this.getOverlayPosEntity(entity, entity.height + 15);
 
                     if (this.projectX > -1) {
-                        for (let icon: number = 0; icon < 8; icon++) {
-                            if ((player.headicons & (0x1 << icon)) !== 0) {
-                                this.headicons[icon]?.plotSprite(this.projectX - 12, this.projectY - y);
-                                y -= 25;
-                            }
+                        if (player.headiconPk !== -1) {
+                            this.headiconsPk[player.headiconPk]?.plotSprite(this.projectX - 12, this.projectY - y);
+                            y += 25;
+                        }
+                        if (player.headiconPrayer !== -1) {
+                            this.headiconsPrayer[player.headiconPrayer]?.plotSprite(this.projectX - 12, this.projectY - y);
+                            y += 25;
                         }
                     }
                 }
@@ -4629,7 +4664,7 @@ export class Client extends GameShell {
                     this.getOverlayPosEntity(entity, entity.height + 15);
 
                     if (this.projectX > -1) {
-                        this.headicons[7]?.plotSprite(this.projectX - 12, this.projectY - y);
+                        this.headiconsHint[1]?.plotSprite(this.projectX - 12, this.projectY - y);
                     }
                 }
             }
@@ -4805,14 +4840,14 @@ export class Client extends GameShell {
     }
 
     private coordArrow(): void {
-        if (this.hintType !== 2 || !this.headicons[2]) {
+        if (this.hintType !== 2 || !this.headiconsHint[0]) {
             return;
         }
 
         this.getOverlayPos(((this.hintTileX - this.mapBuildBaseX) << 7) + this.hintOffsetX, ((this.hintTileZ - this.mapBuildBaseZ) << 7) + this.hintOffsetZ, this.hintHeight * 2);
 
         if (this.projectX > -1 && Client.loopCycle % 20 < 10) {
-            this.headicons[2].plotSprite(this.projectX - 12, this.projectY - 28);
+            this.headiconsHint[0].plotSprite(this.projectX - 12, this.projectY - 28);
         }
     }
 
@@ -4872,7 +4907,7 @@ export class Client extends GameShell {
             if (Client.cyclelogic5 > 57) {
                 Client.cyclelogic5 = 0;
 
-                this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC5);
+                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
             }
         }
 
@@ -4896,7 +4931,7 @@ export class Client extends GameShell {
         }
 
         if (this.inMultizone === 1) {
-            this.headicons[1]?.plotSprite(472, 296);
+            this.overlayMultiway?.plotSprite(472, 296);
         }
 
         // custom: taken from later client
@@ -5407,8 +5442,7 @@ export class Client extends GameShell {
         if (Client.cyclelogic3 > 112) {
             Client.cyclelogic3 = 0;
 
-            this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC3);
-            this.out.p1(50);
+            // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
         }
     }
 
@@ -5576,24 +5610,7 @@ export class Client extends GameShell {
         if (Client.cyclelogic2 > 1086) {
             Client.cyclelogic2 = 0;
 
-            this.out.p1Enc(ClientProt.ANTICHEAT_CYCLELOGIC2);
-            this.out.p1(0);
-            const start = this.out.pos;
-            if (((Math.random() * 2.0) | 0) == 0) {
-                this.out.p2(16791);
-            }
-            this.out.p1(254);
-            this.out.p2((Math.random() * 65536.0) | 0);
-            this.out.p2(16128);
-            this.out.p2(52610);
-            this.out.p2((Math.random() * 65536.0) | 0);
-            this.out.p2(55420);
-            if (((Math.random() * 2.0) | 0) == 0) {
-                this.out.p2(35025);
-            }
-            this.out.p2(46628);
-            this.out.p1((Math.random() * 256.0) | 0);
-            this.out.psize1(this.out.pos - start);
+            // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
         }
 
         if (shape === LocShape.CENTREPIECE_STRAIGHT || shape === LocShape.CENTREPIECE_DIAGONAL || shape === LocShape.GROUND_DECOR) {
@@ -5625,9 +5642,26 @@ export class Client extends GameShell {
         this.crossCycle = 0;
 
         this.out.p1Enc(opcode);
-        this.out.p2(x + this.mapBuildBaseX);
-        this.out.p2(z + this.mapBuildBaseZ);
-        this.out.p2(locId);
+        const lx = x + this.mapBuildBaseX;
+        const lz = z + this.mapBuildBaseZ;
+        if (opcode === ClientProt.OPLOC1) writeOpLoc(this.out, 1, lx, lz, locId);
+        else if (opcode === ClientProt.OPLOC2) writeOpLoc(this.out, 2, lx, lz, locId);
+        else if (opcode === ClientProt.OPLOC3) writeOpLoc(this.out, 3, lx, lz, locId);
+        else if (opcode === ClientProt.OPLOC4) writeOpLoc(this.out, 4, lx, lz, locId);
+        else if (opcode === ClientProt.OPLOC5) writeOpLoc(this.out, 5, lx, lz, locId);
+        else if (opcode === ClientProt.OPLOCT) {
+            this.out.p2(this.targetComId);
+            this.out.p2_alt1(locId);
+            this.out.p2_alt2(lx);
+            this.out.p2_alt1(lz);
+        } else if (opcode === ClientProt.OPLOCU) {
+            this.out.p2_alt1(locId);
+            this.out.p2_alt1(this.objSelectedComId);
+            this.out.p2_alt1(this.objComId);
+            this.out.p2_alt1(lz);
+            this.out.p2(this.objSelectedSlot);
+            this.out.p2_alt3(lx);
+        }
         return true;
     }
 
@@ -5870,14 +5904,10 @@ export class Client extends GameShell {
                 this.out.p1(bufferSize + bufferSize + 3);
             }
 
-            if (this.keyHeld[5] === 1) {
-                this.out.p1(1);
-            } else {
-                this.out.p1(0);
-            }
-
-            this.out.p2(startX + this.mapBuildBaseX);
-            this.out.p2(startZ + this.mapBuildBaseZ);
+            // 377: start x, ctrl held, start z, then each step's x and z (z as 128 - dz)
+            this.out.p2_alt3(startX + this.mapBuildBaseX);
+            this.out.p1(this.keyHeld[5] === 1 ? 1 : 0);
+            this.out.p2_alt3(startZ + this.mapBuildBaseZ);
 
             this.minimapFlagX = this.routeX[0];
             this.minimapFlagZ = this.routeZ[0];
@@ -5885,7 +5915,7 @@ export class Client extends GameShell {
             for (let i: number = 1; i < bufferSize; i++) {
                 length--;
                 this.out.p1(this.routeX[length] - startX);
-                this.out.p1(this.routeZ[length] - startZ);
+                this.out.p1_alt3(this.routeZ[length] - startZ);
             }
 
             return true;
@@ -5949,6 +5979,7 @@ export class Client extends GameShell {
             this.ptype0 = this.ptype;
 
             if (this.ptype === ServerProt.IF_OPENCHAT) {
+                this.closeFullscreen(); // 377
                 const comId: number = this.in.g2();
                 this.ifAnimReset(comId);
 
@@ -5968,8 +5999,9 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_OPENMAIN_SIDE) {
-                const mainComId: number = this.in.g2();
-                const sideComId: number = this.in.g2();
+                this.closeFullscreen(); // 377
+                const mainComId: number = this.in.g2_alt2();
+                const sideComId: number = this.in.g2_alt3();
 
                 if (this.chatModalId !== -1) {
                     this.chatModalId = -1;
@@ -5992,6 +6024,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_CLOSE) {
+                this.closeFullscreen(); // 377
                 if (this.sideModalId !== -1) {
                     this.sideModalId = -1;
                     this.redrawSide = true;
@@ -6016,8 +6049,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETICON) {
-                let comId: number = this.in.g2();
-                const icon: number = this.in.g1();
+                const icon: number = this.in.g1_alt3();
+                let comId: number = this.in.g2_alt2();
                 if (comId === 65535) {
                     comId = -1;
                 }
@@ -6031,7 +6064,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_OPENMAIN) {
-                const comId: number = this.in.g2();
+                this.closeFullscreen(); // 377
+                const comId: number = this.in.g2_alt3();
                 this.ifAnimReset(comId);
 
                 if (this.sideModalId !== -1) {
@@ -6058,7 +6092,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_OPENSIDE) {
-                const comId: number = this.in.g2();
+                this.closeFullscreen(); // 377
+                const comId: number = this.in.g2_alt3();
                 this.ifAnimReset(comId);
 
                 if (this.chatModalId !== -1) {
@@ -6082,7 +6117,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SHOWICON) {
-                this.activeIcon = this.in.g1();
+                this.activeIcon = this.in.g1_alt2();
 
                 this.redrawSide = true;
                 this.redrawIcons = true;
@@ -6102,9 +6137,67 @@ export class Client extends GameShell {
                 return true;
             }
 
+            if (this.ptype === ServerProt.IF_OPENFULL) {
+                // 377: a full-screen interface (the welcome screen) and an overlay on it
+                const overlayId: number = this.in.g2b_alt1();
+                const mainId: number = this.in.g2_alt2();
+
+                this.sideModalId = -1;
+                this.chatModalId = -1;
+                this.mainModalId = -1;
+                this.fullscreenId = mainId;
+                this.fullscreenOverlayId = overlayId;
+                this.dialogInputOpen = false;
+                this.resumedPauseButton = false;
+                this.redrawSide = true;
+                this.redrawChat = true;
+
+                this.ptype = -1;
+                return true;
+            }
+
+            if (this.ptype === ServerProt.IF_SETANGLE) {
+                // 377: the camera angle and zoom of an interface model
+                const xan: number = this.in.g2_alt2();
+                const comId: number = this.in.g2_alt3();
+                const zoom: number = this.in.g2_alt2();
+                const yan: number = this.in.g2_alt1();
+
+                const com: IfType = IfType.list[comId];
+                com.modelXAn = xan;
+                com.modelYAn = yan;
+                com.modelZoom = zoom;
+
+                this.ptype = -1;
+                return true;
+            }
+
+            if (this.ptype === ServerProt.IF_SETROTATION) {
+                // 377: an interface model that keeps turning (not drawn by the 377 client yet either)
+                const xSpeed: number = this.in.g2();
+                const comId: number = this.in.g2_alt2();
+                const ySpeed: number = this.in.g2_alt1();
+                IfType.list[comId].modelRotation = (xSpeed << 16) + ySpeed;
+
+                this.ptype = -1;
+                return true;
+            }
+
+            if (this.ptype === ServerProt.P_NAMEDIALOG) {
+                // 377: ask for a name in the chatbox (RESUME_P_NAMEDIALOG sends it back)
+                this.socialInputOpen = false;
+                this.dialogInputOpen = true;
+                this.nameDialog = true;
+                this.dialogInput = '';
+                this.redrawChat = true;
+
+                this.ptype = -1;
+                return true;
+            }
+
             if (this.ptype === ServerProt.IF_SETCOLOUR) {
                 const comId: number = this.in.g2();
-                const colour: number = this.in.g2();
+                const colour: number = this.in.g2_alt2();
 
                 const r: number = (colour >> 10) & 0x1f;
                 const g: number = (colour >> 5) & 0x1f;
@@ -6116,8 +6209,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETHIDE) {
-                const comId: number = this.in.g2();
                 const hide = this.in.g1() === 1;
+                const comId: number = this.in.g2();
 
                 IfType.list[comId].hide = hide;
 
@@ -6126,9 +6219,9 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETOBJECT) {
-                const comId: number = this.in.g2();
-                const objId: number = this.in.g2();
                 const zoom: number = this.in.g2();
+                const objId: number = this.in.g2_alt1();
+                const comId: number = this.in.g2_alt3();
 
                 const type: ObjType = ObjType.list(objId);
                 IfType.list[comId].model1Type = 4;
@@ -6142,8 +6235,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETMODEL) {
-                const comId: number = this.in.g2();
-                const modelId: number = this.in.g2();
+                const modelId: number = this.in.g2_alt3();
+                const comId: number = this.in.g2_alt3();
 
                 IfType.list[comId].model1Type = 1;
                 IfType.list[comId].model1Id = modelId;
@@ -6153,8 +6246,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETANIM) {
-                const comId: number = this.in.g2();
-                const seqId: number = this.in.g2b();
+                const comId: number = this.in.g2_alt3();
+                const seqId: number = this.in.g2b_alt2();
 
                 const com: IfType = IfType.list[comId];
                 com.modelAnim = seqId;
@@ -6168,7 +6261,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETPLAYERHEAD) {
-                const comId = this.in.g2();
+                const comId = this.in.g2_alt3();
 
                 if (this.localPlayer) {
                     IfType.list[comId].model1Type = 3;
@@ -6184,7 +6277,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETTEXT) {
-                const comId: number = this.in.g2();
+                const comId: number = this.in.g2_alt3();
                 const text = this.in.gjstr();
 
                 IfType.list[comId].text = text;
@@ -6198,8 +6291,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETNPCHEAD) {
-                const comId: number = this.in.g2();
-                const npcId: number = this.in.g2();
+                const npcId: number = this.in.g2_alt2();
+                const comId: number = this.in.g2_alt1();
 
                 IfType.list[comId].model1Type = 2;
                 IfType.list[comId].model1Id = npcId;
@@ -6209,9 +6302,9 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.IF_SETPOSITION) {
+                const y: number = this.in.g2b_alt1();
+                const x: number = this.in.g2b_alt1();
                 const comId: number = this.in.g2();
-                const x: number = this.in.g2b();
-                const y: number = this.in.g2b();
 
                 const com: IfType = IfType.list[comId];
                 com.x = x;
@@ -6223,7 +6316,7 @@ export class Client extends GameShell {
 
             if (this.ptype === ServerProt.IF_SETSCROLLPOS) {
                 const comId: number = this.in.g2();
-                let pos: number = this.in.g2();
+                let pos: number = this.in.g2_alt3();
 
                 const com = IfType.list[comId];
                 if (typeof com !== 'undefined' && com.type === ComponentType.TYPE_LAYER) {
@@ -6260,7 +6353,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.TUT_OPEN) {
-                this.tutComId = this.in.g2b();
+                this.tutComId = this.in.g2b_alt1();
                 this.redrawChat = true;
 
                 this.ptype = -1;
@@ -6268,7 +6361,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.UPDATE_INV_STOP_TRANSMIT) {
-                const comId = this.in.g2();
+                const comId = this.in.g2_alt1();
                 const inv: IfType = IfType.list[comId];
 
                 if (!inv.linkObjType || !inv.linkObjNumber) {
@@ -6297,11 +6390,11 @@ export class Client extends GameShell {
 
                 const size: number = this.in.g2();
                 for (let i: number = 0; i < size; i++) {
-                    inv.linkObjType[i] = this.in.g2();
+                    inv.linkObjType[i] = this.in.g2_alt3();
 
-                    let count: number = this.in.g1();
+                    let count: number = this.in.g1_alt2();
                     if (count === 255) {
-                        count = this.in.g4();
+                        count = this.in.g4_alt1();
                     }
 
                     inv.linkObjNumber[i] = count;
@@ -6673,7 +6766,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.UPDATE_REBOOT_TIMER) {
-                this.rebootTimer = this.in.g2() * 30;
+                this.rebootTimer = this.in.g2_alt1() * 30;
 
                 this.ptype = -1;
                 return true;
@@ -6682,9 +6775,9 @@ export class Client extends GameShell {
             if (this.ptype === ServerProt.UPDATE_STAT) {
                 this.redrawSide = true;
 
-                const stat: number = this.in.g1();
-                const xp: number = this.in.g4();
+                const stat: number = this.in.g1_alt2();
                 const level: number = this.in.g1();
+                const xp: number = this.in.g4();
 
                 this.statXP[stat] = xp;
                 this.statEffectiveLevel[stat] = level;
@@ -6735,46 +6828,38 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.UPDATE_PID) {
-                this.selfSlot = this.in.g2();
                 this.membersAccount = this.in.g1();
+                this.selfSlot = this.in.g2_alt1();
 
                 this.ptype = -1;
                 return true;
             }
 
             if (this.ptype === ServerProt.LAST_LOGIN_INFO) {
-                this.lastAddress = this.in.g4();
-                this.daysSinceLastLogin = this.in.g2();
-                this.daysSinceRecoveriesChanged = this.in.g1();
-                this.unreadMessages = this.in.g2();
-                this.warnMembersInNonMembers = this.in.g1();
+                // 377: days are counted from an epoch the server picks; the welcome screen (which
+                // the server opens itself, with IF_OPENFULL) shows them as dates
+                this.daysSincePasswordChanged = this.in.g2_alt1();
+                this.in.g2_alt3();
+                this.in.g2();
+                this.in.g2();
+                this.currentDay = this.in.g2_alt1();
+                this.unreadMessages = this.in.g2_alt2();
+                this.previousLoginDay = this.in.g2_alt2();
+                this.daysOfMembersRemaining = this.in.g2();
+                this.lastAddress = this.in.g4_alt1();
+                this.recoveriesLastChangedDay = this.in.g2_alt3();
+                this.in.g1_alt1();
+                this.daysSinceLastLogin = this.previousLoginDay === 0 ? 0 : this.currentDay - this.previousLoginDay;
 
-                if (this.lastAddress !== 0 && this.mainModalId === -1) {
+                if (this.lastAddress !== 0) {
                     // custom: we don't have access to the user's DNS resolver in a browser, but we can use DNS over HTTPS (DoH)
                     this.dnsReq = null;
-                    let ipStr = JString.formatIPv4(this.lastAddress);
+                    const ipStr = JString.formatIPv4(this.lastAddress);
                     if (!ipStr.startsWith('127.')) {
                         // we're using localhost as a privacy flag for now
                         reverseDnsLookup(ipStr).then(results => {
                             this.dnsReq = results[0];
                         });
-                    }
-
-                    this.closeModal();
-
-                    let contentType: number = 650;
-                    if (this.daysSinceRecoveriesChanged !== 201 || this.warnMembersInNonMembers == 1) {
-                        contentType = 655;
-                    }
-
-                    this.reportAbuseInput = '';
-                    this.reportAbuseMuteOption = false;
-
-                    for (let i: number = 0; i < IfType.list.length; i++) {
-                        if (IfType.list[i] && IfType.list[i].clientCode === contentType) {
-                            this.mainModalId = IfType.list[i].layerId;
-                            break;
-                        }
                     }
                 }
 
@@ -6792,6 +6877,7 @@ export class Client extends GameShell {
             if (this.ptype === ServerProt.P_COUNTDIALOG) {
                 this.socialInputOpen = false;
                 this.dialogInputOpen = true;
+                this.nameDialog = false;
                 this.dialogInput = '';
                 this.redrawChat = true;
 
@@ -6811,9 +6897,9 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.SET_PLAYER_OP) {
-                const index = this.in.g1();
-                const priority = this.in.g1();
+                const index = this.in.g1_alt2();
                 let op: string | null = this.in.gjstr();
+                const priority = this.in.g1();
 
                 if (index >= 1 && index <= 5) {
                     if (op.toLowerCase() === 'null') {
@@ -6836,8 +6922,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.REBUILD_NORMAL) {
-                const zoneX: number = this.in.g2();
                 const zoneZ: number = this.in.g2();
+                const zoneX: number = this.in.g2_alt3();
 
                 if (this.mapBuildCentreZoneX === zoneX && this.mapBuildCentreZoneZ === zoneZ && this.sceneState === 2) {
                     this.ptype = -1;
@@ -6989,8 +7075,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.VARP_SMALL) {
-                const varpId: number = this.in.g2();
-                const value: number = this.in.g1b();
+                const varpId: number = this.in.g2_alt2();
+                const value: number = this.in.g1b_alt3();
 
                 this.varServ[varpId] = value;
 
@@ -7010,8 +7096,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.VARP_LARGE) {
-                const varpId: number = this.in.g2();
-                const value: number = this.in.g4();
+                const value: number = this.in.g4_alt3();
+                const varpId: number = this.in.g2_alt1();
 
                 this.varServ[varpId] = value;
 
@@ -7062,7 +7148,7 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.MIDI_SONG) {
-                let songId: number = this.in.g2();
+                let songId: number = this.in.g2_alt3();
                 if (songId == 65535) {
                     songId = -1;
                 }
@@ -7080,8 +7166,8 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.MIDI_JINGLE) {
-                const jingleId: number = this.in.g2();
-                const delay: number = this.in.g2();
+                const jingleId: number = this.in.g2_alt1();
+                const delay: number = this.in.g3_alt3();
 
                 if (this.midiActive && !Client.lowMem) {
                     this.midiSong = jingleId;
@@ -7095,16 +7181,16 @@ export class Client extends GameShell {
             }
 
             if (this.ptype === ServerProt.UPDATE_ZONE_PARTIAL_FOLLOWS) {
-                this.zoneUpdateX = this.in.g1();
-                this.zoneUpdateZ = this.in.g1();
+                this.zoneUpdateX = this.in.g1_alt2();
+                this.zoneUpdateZ = this.in.g1_alt1();
 
                 this.ptype = -1;
                 return true;
             }
 
             if (this.ptype === ServerProt.UPDATE_ZONE_FULL_FOLLOWS) {
-                this.zoneUpdateX = this.in.g1();
-                this.zoneUpdateZ = this.in.g1();
+                this.zoneUpdateZ = this.in.g1_alt3();
+                this.zoneUpdateX = this.in.g1_alt2();
 
                 for (let x: number = this.zoneUpdateX; x < this.zoneUpdateX + 8; x++) {
                     for (let z: number = this.zoneUpdateZ; z < this.zoneUpdateZ + 8; z++) {
@@ -7127,7 +7213,7 @@ export class Client extends GameShell {
 
             if (this.ptype === ServerProt.UPDATE_ZONE_PARTIAL_ENCLOSED) {
                 this.zoneUpdateX = this.in.g1();
-                this.zoneUpdateZ = this.in.g1();
+                this.zoneUpdateZ = this.in.g1_alt1();
 
                 while (this.in.pos < this.psize) {
                     const opcode: number = this.in.g1();
@@ -7139,6 +7225,7 @@ export class Client extends GameShell {
             }
 
             if (
+                this.ptype === ServerProt.SOUND_AREA ||
                 this.ptype === ServerProt.OBJ_COUNT ||
                 this.ptype === ServerProt.P_LOCMERGE ||
                 this.ptype === ServerProt.OBJ_REVEAL ||
@@ -7182,13 +7269,34 @@ export class Client extends GameShell {
     }
 
     private zonePacket(buf: Packet, opcode: number): void {
-        const pos: number = buf.g1();
-        let x: number = this.zoneUpdateX + ((pos >> 4) & 0x7);
-        let z: number = this.zoneUpdateZ + (pos & 0x7);
+        // 377: the tile byte sits in a different place (and byte order) in each message
+        let x: number = 0;
+        let z: number = 0;
+        const tile = (pos: number): void => {
+            x = this.zoneUpdateX + ((pos >> 4) & 0x7);
+            z = this.zoneUpdateZ + (pos & 0x7);
+        };
+        if (opcode === ServerProt.MAP_PROJANIM || opcode === ServerProt.MAP_ANIM || opcode === ServerProt.OBJ_COUNT || opcode === ServerProt.SOUND_AREA) {
+            tile(buf.g1());
+        }
 
-        if (opcode === ServerProt.LOC_ADD_CHANGE) {
+        if (opcode === ServerProt.SOUND_AREA) {
+            // 377: a sound for everyone within a radius of the tile
+            const wave: number = buf.g2();
             const info: number = buf.g1();
-            const id: number = buf.g2();
+            const radius: number = (info >> 4) & 0xf;
+            const loops: number = info & 0x7;
+            const me = this.localPlayer;
+            if (me && Math.abs(me.routeX[0] - x) <= radius && Math.abs(me.routeZ[0] - z) <= radius && this.waveEnabled && !Client.lowMem && this.waveCount < 50) {
+                this.waveIds[this.waveCount] = wave;
+                this.waveLoops[this.waveCount] = loops;
+                this.waveDelay[this.waveCount] = JagFX.delays[wave];
+                this.waveCount++;
+            }
+        } else if (opcode === ServerProt.LOC_ADD_CHANGE) {
+            const info: number = buf.g1_alt2();
+            const id: number = buf.g2_alt3();
+            tile(buf.g1_alt1());
 
             const shape: number = info >> 2;
             const rotate: number = info & 0x3;
@@ -7198,7 +7306,8 @@ export class Client extends GameShell {
                 this.locChangeCreate(this.minusedlevel, x, z, layer, id, shape, rotate, 0, -1);
             }
         } else if (opcode === ServerProt.LOC_DEL) {
-            const info: number = buf.g1();
+            tile(buf.g1_alt3());
+            const info: number = buf.g1_alt3();
 
             const shape: number = info >> 2;
             const rotate: number = info & 0x3;
@@ -7208,8 +7317,9 @@ export class Client extends GameShell {
                 this.locChangeCreate(this.minusedlevel, x, z, layer, -1, shape, rotate, 0, -1);
             }
         } else if (opcode === ServerProt.LOC_ANIM) {
-            const info: number = buf.g1();
             const seq: number = buf.g2();
+            const info: number = buf.g1_alt1();
+            tile(buf.g1());
 
             let shape: number = info >> 2;
             const rotate = info & 0x3;
@@ -7255,7 +7365,8 @@ export class Client extends GameShell {
             }
         } else if (opcode === ServerProt.OBJ_ADD) {
             const type: number = buf.g2();
-            const count: number = buf.g2();
+            tile(buf.g1_alt2());
+            const count: number = buf.g2_alt2();
 
             if (x >= 0 && z >= 0 && x < BuildArea.SIZE && z < BuildArea.SIZE) {
                 const obj: ClientObj = new ClientObj(type, count);
@@ -7267,7 +7378,8 @@ export class Client extends GameShell {
                 this.showObject(x, z);
             }
         } else if (opcode === ServerProt.OBJ_DEL) {
-            const type: number = buf.g2();
+            const type: number = buf.g2_alt2();
+            tile(buf.g1_alt1());
 
             if (x >= 0 && z >= 0 && x < BuildArea.SIZE && z < BuildArea.SIZE) {
                 const objs = this.groundObj[this.minusedlevel][x][z];
@@ -7321,9 +7433,10 @@ export class Client extends GameShell {
                 this.spotanims.push(spot);
             }
         } else if (opcode === ServerProt.OBJ_REVEAL) {
-            const id: number = buf.g2();
-            const count: number = buf.g2();
-            const pid: number = buf.g2();
+            tile(buf.g1_alt1());
+            const count: number = buf.g2_alt3();
+            const id: number = buf.g2_alt2();
+            const pid: number = buf.g2_alt2();
 
             if (x >= 0 && z >= 0 && x < BuildArea.SIZE && z < BuildArea.SIZE && pid !== this.selfSlot) {
                 if (!this.groundObj[this.minusedlevel][x][z]) {
@@ -7335,19 +7448,20 @@ export class Client extends GameShell {
                 this.showObject(x, z);
             }
         } else if (opcode === ServerProt.P_LOCMERGE) {
+            const id: number = buf.g2();
             const info: number = buf.g1();
             const shape: number = info >> 2;
             const rotate: number = info & 0x3;
             const layer: number = LOC_SHAPE_TO_LAYER[shape];
 
-            const id: number = buf.g2();
-            const t1: number = buf.g2();
-            const t2: number = buf.g2();
-            const pid: number = buf.g2();
-            let east: number = buf.g1b();
-            let south: number = buf.g1b();
-            let west: number = buf.g1b();
+            let west: number = buf.g1b_alt2();
+            tile(buf.g1_alt1());
+            let east: number = buf.g1b_alt1();
+            const t2: number = buf.g2_alt2();
+            const pid: number = buf.g2_alt1();
             let north: number = buf.g1b();
+            let south: number = buf.g1b_alt1();
+            const t1: number = buf.g2();
 
             let player: ClientPlayer | null;
             if (pid === this.selfSlot) {
@@ -7705,10 +7819,11 @@ export class Client extends GameShell {
                     this.entityUpdateIds[this.entityUpdateCount++] = LOCAL_PLAYER_INDEX;
                 }
             } else if (op === 3) {
-                this.minusedlevel = buf.gBit(2);
-                const localX: number = buf.gBit(7);
-                const localZ: number = buf.gBit(7);
+                // 377: jump, level, z, x
                 const jump: number = buf.gBit(1);
+                this.minusedlevel = buf.gBit(2);
+                const localZ: number = buf.gBit(7);
+                const localX: number = buf.gBit(7);
 
                 this.localPlayer?.teleport(jump === 1, localX, localZ);
 
@@ -7855,17 +7970,7 @@ export class Client extends GameShell {
     }
 
     private getPlayerPosDecodeExtended(player: ClientPlayer, index: number, mask: number, buf: Packet): void {
-        if ((mask & PlayerUpdate.APPEARANCE) !== 0) {
-            const length: number = buf.g1();
-
-            const data: Uint8Array = new Uint8Array(length);
-            const appearance: Packet = new Packet(data);
-            buf.gdata(length, 0, data);
-
-            this.playerAppearanceBuffer[index] = appearance;
-            player.setAppearance(appearance);
-        }
-
+        // 377: the order the 377 client reads them in
         if ((mask & PlayerUpdate.ANIM) !== 0) {
             let seqId: number = buf.g2();
             if (seqId === 65535) {
@@ -7876,7 +7981,7 @@ export class Client extends GameShell {
                 player.primaryAnimLoop = 0;
             }
 
-            const delay: number = buf.g1();
+            const delay: number = buf.g1_alt3();
             if (player.primaryAnim === seqId && seqId !== -1) {
                 const restartMode = SeqType.list[seqId].duplicatebehaviour;
 
@@ -7898,13 +8003,6 @@ export class Client extends GameShell {
             }
         }
 
-        if ((mask & PlayerUpdate.FACEENTITY) !== 0) {
-            player.faceEntity = buf.g2();
-            if (player.faceEntity === 65535) {
-                player.faceEntity = -1;
-            }
-        }
-
         if ((mask & PlayerUpdate.SAY) !== 0) {
             player.chatMessage = buf.gjstr();
             player.chatColour = 0;
@@ -7916,14 +8014,23 @@ export class Client extends GameShell {
             }
         }
 
-        if ((mask & PlayerUpdate.HITMARK) !== 0) {
-            const damage = buf.g1();
-            const damageType = buf.g1();
+        if ((mask & PlayerUpdate.EXACTMOVE) !== 0) {
+            player.exactStartX = buf.g1_alt1();
+            player.exactStartZ = buf.g1_alt2();
+            player.exactEndX = buf.g1_alt3();
+            player.exactEndZ = buf.g1();
+            player.exactMoveEnd = buf.g2() + Client.loopCycle;
+            player.exactMoveStart = buf.g2_alt2() + Client.loopCycle;
+            player.exactMoveFacing = buf.g1();
 
-            player.addHitmark(Client.loopCycle, damageType, damage);
-            player.combatCycle = Client.loopCycle + 400;
-            player.health = buf.g1();
-            player.totalHealth = buf.g1();
+            player.abortRoute();
+        }
+
+        if ((mask & PlayerUpdate.FACEENTITY) !== 0) {
+            player.faceEntity = buf.g2_alt2();
+            if (player.faceEntity === 65535) {
+                player.faceEntity = -1;
+            }
         }
 
         if ((mask & PlayerUpdate.FACESQUARE) !== 0) {
@@ -7931,11 +8038,54 @@ export class Client extends GameShell {
             player.faceSquareZ = buf.g2();
         }
 
+        if ((mask & PlayerUpdate.SPOTANIM) !== 0) {
+            player.spotanimId = buf.g2_alt2();
+            const heightDelay: number = buf.g4_alt2();
+
+            player.spotanimHeight = heightDelay >> 16;
+            player.spotanimLastCycle = Client.loopCycle + (heightDelay & 0xffff);
+            player.spotanimFrame = 0;
+            player.spotanimCycle = 0;
+
+            if (player.spotanimLastCycle > Client.loopCycle) {
+                player.spotanimFrame = -1;
+            }
+
+            if (player.spotanimId === 65535) {
+                player.spotanimId = -1;
+            }
+        }
+
+        if ((mask & PlayerUpdate.APPEARANCE) !== 0) {
+            const length: number = buf.g1();
+
+            const data: Uint8Array = new Uint8Array(length);
+            const appearance: Packet = new Packet(data);
+            buf.gdata_alt1(data, 0, length); // 377: reversed
+
+            this.playerAppearanceBuffer[index] = appearance;
+            player.setAppearance(appearance);
+        }
+
+        if ((mask & PlayerUpdate.HITMARK) !== 0) {
+            const damage = buf.g1_alt1();
+            const damageType = buf.g1_alt3();
+
+            player.addHitmark(Client.loopCycle, damageType, damage);
+            player.combatCycle = Client.loopCycle + 300;
+            player.health = buf.g1_alt2();
+            player.totalHealth = buf.g1();
+        }
+
         if ((mask & PlayerUpdate.CHAT) !== 0) {
             const colourEffect: number = buf.g2();
-            const type: number = buf.g1();
-            const length: number = buf.g1();
+            const type: number = buf.g1_alt2();
+            const length: number = buf.g1_alt1();
             const start: number = buf.pos;
+            // 377: the packed chat bytes are +128 each
+            const packed: Uint8Array = new Uint8Array(length);
+            buf.gdata_alt2(packed, 0, length);
+            const chatBuf: Packet = new Packet(packed);
 
             if (player.name && player.ready) {
                 const username: bigint = JString.toUserhash(player.name);
@@ -7952,7 +8102,7 @@ export class Client extends GameShell {
 
                 if (!ignored && this.chatDisabled === 0) {
                     try {
-                        const uncompressed: string = WordPack.unpack(buf, length);
+                        const uncompressed: string = WordPack.unpack(chatBuf, length);
                         const filtered: string = WordFilter.filter(uncompressed);
                         player.chatMessage = filtered;
                         player.chatColour = colourEffect >> 8;
@@ -7975,43 +8125,13 @@ export class Client extends GameShell {
             buf.pos = start + length;
         }
 
-        if ((mask & PlayerUpdate.SPOTANIM) !== 0) {
-            player.spotanimId = buf.g2();
-            const heightDelay: number = buf.g4();
-
-            player.spotanimHeight = heightDelay >> 16;
-            player.spotanimLastCycle = Client.loopCycle + (heightDelay & 0xffff);
-            player.spotanimFrame = 0;
-            player.spotanimCycle = 0;
-
-            if (player.spotanimLastCycle > Client.loopCycle) {
-                player.spotanimFrame = -1;
-            }
-
-            if (player.spotanimId === 65535) {
-                player.spotanimId = -1;
-            }
-        }
-
-        if ((mask & PlayerUpdate.EXACTMOVE) !== 0) {
-            player.exactStartX = buf.g1();
-            player.exactStartZ = buf.g1();
-            player.exactEndX = buf.g1();
-            player.exactEndZ = buf.g1();
-            player.exactMoveEnd = buf.g2() + Client.loopCycle;
-            player.exactMoveStart = buf.g2() + Client.loopCycle;
-            player.exactMoveFacing = buf.g1();
-
-            player.abortRoute();
-        }
-
         if ((mask & PlayerUpdate.HITMARK2) !== 0) {
-            const damage = buf.g1();
-            const damageType = buf.g1();
+            const damage = buf.g1_alt3();
+            const damageType = buf.g1_alt2();
 
             player.addHitmark(Client.loopCycle, damageType, damage);
-            player.combatCycle = Client.loopCycle + 400;
-            player.health = buf.g1();
+            player.combatCycle = Client.loopCycle + 300;
+            player.health = buf.g1_alt3();
             player.totalHealth = buf.g1();
         }
     }
@@ -8122,6 +8242,7 @@ export class Client extends GameShell {
     }
 
     private getNpcPosNewVis(buf: Packet, size: number): void {
+        // 377: index (14 bits), update flag, dz, dx, jump, type (13 bits)
         while (buf.bitPos + 21 < size * 8) {
             const index: number = buf.gBit(14);
             if (index === 16383) {
@@ -8135,23 +8256,9 @@ export class Client extends GameShell {
             const npc: ClientNpc | null = this.npc[index];
             this.npcIds[this.npcCount++] = index;
 
-            if (npc) {
-                npc.cycle = Client.loopCycle;
-                npc.type = NpcType.list(buf.gBit(11));
-                npc.size = npc.type.size;
-                npc.turnspeed = npc.type.turnspeed;
-                npc.walkanim = npc.type.walkanim;
-                npc.walkanim_b = npc.type.walkanim_b;
-                npc.walkanim_l = npc.type.walkanim_r;
-                npc.walkanim_r = npc.type.walkanim_l;
-                npc.readyanim = npc.type.readyanim;
-            } else {
-                buf.gBit(11);
-            }
-
-            let dx: number = buf.gBit(5);
-            if (dx > 15) {
-                dx -= 32;
+            const extendedInfo: number = buf.gBit(1);
+            if (extendedInfo === 1) {
+                this.entityUpdateIds[this.entityUpdateCount++] = index;
             }
 
             let dz: number = buf.gBit(5);
@@ -8159,14 +8266,28 @@ export class Client extends GameShell {
                 dz -= 32;
             }
 
-            const jump = buf.gBit(1);
-            if (this.localPlayer) {
-                npc?.teleport(jump === 1, this.localPlayer.routeX[0] + dx, this.localPlayer.routeZ[0] + dz);
+            let dx: number = buf.gBit(5);
+            if (dx > 15) {
+                dx -= 32;
             }
 
-            const extendedInfo: number = buf.gBit(1);
-            if (extendedInfo === 1) {
-                this.entityUpdateIds[this.entityUpdateCount++] = index;
+            const jump = buf.gBit(1);
+            const type: number = buf.gBit(13);
+
+            if (npc) {
+                npc.cycle = Client.loopCycle;
+                npc.type = NpcType.list(type);
+                npc.size = npc.type.size;
+                npc.turnspeed = npc.type.turnspeed;
+                npc.walkanim = npc.type.walkanim;
+                npc.walkanim_b = npc.type.walkanim_b;
+                npc.walkanim_l = npc.type.walkanim_r;
+                npc.walkanim_r = npc.type.walkanim_l;
+                npc.readyanim = npc.type.readyanim;
+
+                if (this.localPlayer) {
+                    npc.teleport(jump === 1, this.localPlayer.routeX[0] + dx, this.localPlayer.routeZ[0] + dz);
+                }
             }
         }
 
@@ -8183,14 +8304,60 @@ export class Client extends GameShell {
 
             const mask: number = buf.g1();
 
-            if ((mask & NpcUpdate.HITMARK2) !== 0) {
-                const damage = buf.g1();
-                const damageType = buf.g1();
+            if ((mask & NpcUpdate.CHANGETYPE) !== 0) {
+                npc.type = NpcType.list(buf.g2_alt2());
+                npc.size = npc.type.size;
+                npc.turnspeed = npc.type.turnspeed;
+                npc.walkanim = npc.type.walkanim;
+                npc.walkanim_b = npc.type.walkanim_b;
+                npc.walkanim_l = npc.type.walkanim_r;
+                npc.walkanim_r = npc.type.walkanim_l;
+                npc.readyanim = npc.type.readyanim;
+            }
+
+            if ((mask & NpcUpdate.FACEENTITY) !== 0) {
+                npc.faceEntity = buf.g2_alt1();
+                if (npc.faceEntity === 65535) {
+                    npc.faceEntity = -1;
+                }
+            }
+
+            if ((mask & NpcUpdate.HITMARK) !== 0) {
+                const damage = buf.g1_alt1();
+                const damageType = buf.g1_alt1();
 
                 npc.addHitmark(Client.loopCycle, damageType, damage);
-                npc.combatCycle = Client.loopCycle + 400;
+                npc.combatCycle = Client.loopCycle + 300;
                 npc.health = buf.g1();
-                npc.totalHealth = buf.g1();
+                npc.totalHealth = buf.g1_alt3();
+            }
+
+            if ((mask & NpcUpdate.SPOTANIM) !== 0) {
+                npc.spotanimId = buf.g2();
+                const info: number = buf.g4_alt2();
+
+                npc.spotanimHeight = info >> 16;
+                npc.spotanimLastCycle = Client.loopCycle + (info & 0xffff);
+                npc.spotanimFrame = 0;
+                npc.spotanimCycle = 0;
+
+                if (npc.spotanimLastCycle > Client.loopCycle) {
+                    npc.spotanimFrame = -1;
+                }
+
+                if (npc.spotanimId === 65535) {
+                    npc.spotanimId = -1;
+                }
+            }
+
+            if ((mask & NpcUpdate.SAY) !== 0) {
+                npc.chatMessage = buf.gjstr();
+                npc.chatTimer = 100;
+            }
+
+            if ((mask & NpcUpdate.FACESQUARE) !== 0) {
+                npc.faceSquareX = buf.g2_alt3();
+                npc.faceSquareZ = buf.g2_alt1();
             }
 
             if ((mask & NpcUpdate.ANIM) !== 0) {
@@ -8203,7 +8370,7 @@ export class Client extends GameShell {
                     npc.primaryAnimLoop = 0;
                 }
 
-                const delay: number = buf.g1();
+                const delay: number = buf.g1_alt3();
                 if (npc.primaryAnim === anim && anim !== -1) {
                     const restartMode = SeqType.list[anim].duplicatebehaviour;
 
@@ -8225,60 +8392,14 @@ export class Client extends GameShell {
                 }
             }
 
-            if ((mask & NpcUpdate.FACEENTITY) !== 0) {
-                npc.faceEntity = buf.g2();
-                if (npc.faceEntity === 65535) {
-                    npc.faceEntity = -1;
-                }
-            }
-
-            if ((mask & NpcUpdate.SAY) !== 0) {
-                npc.chatMessage = buf.gjstr();
-                npc.chatTimer = 100;
-            }
-
-            if ((mask & NpcUpdate.HITMARK) !== 0) {
-                const damage = buf.g1();
-                const damageType = buf.g1();
+            if ((mask & NpcUpdate.HITMARK2) !== 0) {
+                const damage = buf.g1_alt3();
+                const damageType = buf.g1_alt3();
 
                 npc.addHitmark(Client.loopCycle, damageType, damage);
-                npc.combatCycle = Client.loopCycle + 400;
+                npc.combatCycle = Client.loopCycle + 300;
                 npc.health = buf.g1();
-                npc.totalHealth = buf.g1();
-            }
-
-            if ((mask & NpcUpdate.CHANGETYPE) !== 0) {
-                npc.type = NpcType.list(buf.g2());
-                npc.size = npc.type.size;
-                npc.turnspeed = npc.type.turnspeed;
-                npc.walkanim = npc.type.walkanim;
-                npc.walkanim_b = npc.type.walkanim_b;
-                npc.walkanim_l = npc.type.walkanim_r;
-                npc.walkanim_r = npc.type.walkanim_l;
-                npc.readyanim = npc.type.readyanim;
-            }
-
-            if ((mask & NpcUpdate.SPOTANIM) !== 0) {
-                npc.spotanimId = buf.g2();
-                const info: number = buf.g4();
-
-                npc.spotanimHeight = info >> 16;
-                npc.spotanimLastCycle = Client.loopCycle + (info & 0xffff);
-                npc.spotanimFrame = 0;
-                npc.spotanimCycle = 0;
-
-                if (npc.spotanimLastCycle > Client.loopCycle) {
-                    npc.spotanimFrame = -1;
-                }
-
-                if (npc.spotanimId === 65535) {
-                    npc.spotanimId = -1;
-                }
-            }
-
-            if ((mask & NpcUpdate.FACESQUARE) !== 0) {
-                npc.faceSquareX = buf.g2();
-                npc.faceSquareZ = buf.g2();
+                npc.totalHealth = buf.g1_alt2();
             }
         }
     }
@@ -8611,8 +8732,7 @@ export class Client extends GameShell {
                         Client.oplogic7++;
                     }
                     if (Client.oplogic7 >= 123) {
-                        this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC7);
-                        this.out.p4(0);
+                        // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                     }
 
                     this.out.p1Enc(ClientProt.OPOBJ1);
@@ -8629,8 +8749,7 @@ export class Client extends GameShell {
                 if (action === MiniMenuAction.OP_OBJ4) {
                     Client.oplogic8 += c;
                     if (Client.oplogic8 >= 75) {
-                        this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC8);
-                        this.out.p1(19);
+                        // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                     }
 
                     this.out.p1Enc(ClientProt.OPOBJ4);
@@ -8639,16 +8758,13 @@ export class Client extends GameShell {
                 if (action === MiniMenuAction.OP_OBJ5) {
                     Client.oplogic3 += this.mapBuildBaseZ;
                     if (Client.oplogic3 >= 118) {
-                        this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC3);
-                        this.out.p4(0);
+                        // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                     }
 
                     this.out.p1Enc(ClientProt.OPOBJ5);
                 }
 
-                this.out.p2(b + this.mapBuildBaseX);
-                this.out.p2(c + this.mapBuildBaseZ);
-                this.out.p2(a);
+                writeOpObj(this.out, action === MiniMenuAction.OP_OBJ1 ? 1 : action === MiniMenuAction.OP_OBJ2 ? 2 : action === MiniMenuAction.OP_OBJ3 ? 3 : action === MiniMenuAction.OP_OBJ4 ? 4 : 5, b + this.mapBuildBaseX, c + this.mapBuildBaseZ, a);
             }
         }
 
@@ -8678,10 +8794,10 @@ export class Client extends GameShell {
                 this.crossCycle = 0;
 
                 this.out.p1Enc(ClientProt.OPOBJT);
-                this.out.p2(b + this.mapBuildBaseX);
+                this.out.p2_alt1(a);
                 this.out.p2(c + this.mapBuildBaseZ);
-                this.out.p2(a);
-                this.out.p2(this.targetComId);
+                this.out.p2_alt1(this.targetComId);
+                this.out.p2_alt3(b + this.mapBuildBaseX);
             }
         }
 
@@ -8698,12 +8814,12 @@ export class Client extends GameShell {
                 this.crossCycle = 0;
 
                 this.out.p1Enc(ClientProt.OPOBJU);
-                this.out.p2(b + this.mapBuildBaseX);
-                this.out.p2(c + this.mapBuildBaseZ);
-                this.out.p2(a);
-                this.out.p2(this.objComId);
-                this.out.p2(this.objSelectedSlot);
-                this.out.p2(this.objSelectedComId);
+                this.out.p2_alt3(this.objSelectedSlot);
+                this.out.p2_alt2(this.objComId);
+                this.out.p2_alt3(c + this.mapBuildBaseZ);
+                this.out.p2_alt3(b + this.mapBuildBaseX);
+                this.out.p2_alt1(this.objSelectedComId);
+                this.out.p2_alt1(a);
             }
         }
 
@@ -8737,7 +8853,7 @@ export class Client extends GameShell {
                     this.out.p1Enc(ClientProt.OPNPC5);
                 }
 
-                this.out.p2(a);
+                writeOpNpc(this.out, action === MiniMenuAction.OP_NPC1 ? 1 : action === MiniMenuAction.OP_NPC2 ? 2 : action === MiniMenuAction.OP_NPC3 ? 3 : action === MiniMenuAction.OP_NPC4 ? 4 : 5, a);
             }
         }
 
@@ -8767,8 +8883,8 @@ export class Client extends GameShell {
                 this.crossCycle = 0;
 
                 this.out.p1Enc(ClientProt.OPNPCT);
-                this.out.p2(a);
-                this.out.p2(this.targetComId);
+                this.out.p2_alt2(this.targetComId);
+                this.out.p2_alt1(a);
             }
         }
 
@@ -8785,9 +8901,9 @@ export class Client extends GameShell {
 
                 this.out.p1Enc(ClientProt.OPNPCU);
                 this.out.p2(a);
-                this.out.p2(this.objComId);
+                this.out.p2_alt1(this.objComId);
+                this.out.p2_alt3(this.objSelectedComId);
                 this.out.p2(this.objSelectedSlot);
-                this.out.p2(this.objSelectedComId);
             }
         }
 
@@ -8798,8 +8914,7 @@ export class Client extends GameShell {
         if (action === MiniMenuAction.OP_LOC2) {
             Client.oplogic1 += c;
             if (Client.oplogic1 >= 139) {
-                this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC1);
-                this.out.p4(0);
+                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
             }
 
             this.interactWithLoc(b, c, a, ClientProt.OPLOC2);
@@ -8808,8 +8923,7 @@ export class Client extends GameShell {
         if (action === MiniMenuAction.OP_LOC3) {
             Client.oplogic2++;
             if (Client.oplogic2 >= 124) {
-                this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC2);
-                this.out.p2(37954);
+                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
             }
 
             this.interactWithLoc(b, c, a, ClientProt.OPLOC3);
@@ -8838,17 +8952,11 @@ export class Client extends GameShell {
         }
 
         if (action === MiniMenuAction.TGT_LOC) {
-            if (this.interactWithLoc(b, c, a, ClientProt.OPLOCT)) {
-                this.out.p2(this.targetComId);
-            }
+            this.interactWithLoc(b, c, a, ClientProt.OPLOCT); // 377: writes the spell too
         }
 
         if (action === MiniMenuAction.USEHELD_ONLOC) {
-            if (this.interactWithLoc(b, c, a, ClientProt.OPLOCU)) {
-                this.out.p2(this.objComId);
-                this.out.p2(this.objSelectedSlot);
-                this.out.p2(this.objSelectedComId);
-            }
+            this.interactWithLoc(b, c, a, ClientProt.OPLOCU); // 377: writes the used item too
         }
 
         if (action === MiniMenuAction.OP_PLAYER1 || action === MiniMenuAction.OP_PLAYER2 || action === MiniMenuAction.OP_PLAYER3 || action === MiniMenuAction.OP_PLAYER4 || action === MiniMenuAction.OP_PLAYER5) {
@@ -8864,8 +8972,7 @@ export class Client extends GameShell {
                 if (action === MiniMenuAction.OP_PLAYER1) {
                     Client.oplogic4++;
                     if (Client.oplogic4 >= 52) {
-                        this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC4);
-                        this.out.p1(131);
+                        // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                     }
 
                     this.out.p1Enc(ClientProt.OPPLAYER1);
@@ -8882,8 +8989,7 @@ export class Client extends GameShell {
                 if (action === MiniMenuAction.OP_PLAYER4) {
                     Client.oplogic5 += a;
                     if (Client.oplogic5 >= 66) {
-                        this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC5);
-                        this.out.p1(154);
+                        // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                     }
 
                     this.out.p1Enc(ClientProt.OPPLAYER4);
@@ -8893,7 +8999,7 @@ export class Client extends GameShell {
                     this.out.p1Enc(ClientProt.OPPLAYER5);
                 }
 
-                this.out.p2(a);
+                writeOpPlayer(this.out, action === MiniMenuAction.OP_PLAYER1 ? 1 : action === MiniMenuAction.OP_PLAYER2 ? 2 : action === MiniMenuAction.OP_PLAYER3 ? 3 : action === MiniMenuAction.OP_PLAYER4 ? 4 : 5, a);
             }
         }
 
@@ -8915,8 +9021,7 @@ export class Client extends GameShell {
                         if (action === MiniMenuAction.ACCEPT_TRADEREQ) {
                             Client.oplogic5 += a;
                             if (Client.oplogic5 >= 66) {
-                                this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC5);
-                                this.out.p1(154);
+                                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                             }
 
                             this.out.p1Enc(ClientProt.OPPLAYER4);
@@ -8925,14 +9030,13 @@ export class Client extends GameShell {
                         if (action === MiniMenuAction.ACCEPT_DUELREQ) {
                             Client.oplogic4++;
                             if (Client.oplogic4 >= 52) {
-                                this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC4);
-                                this.out.p1(131);
+                                // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                             }
 
                             this.out.p1Enc(ClientProt.OPPLAYER1);
                         }
 
-                        this.out.p2(this.playerIds[i]);
+                        writeOpPlayer(this.out, action === MiniMenuAction.ACCEPT_TRADEREQ ? 4 : 1, this.playerIds[i]);
                         found = true;
                         break;
                     }
@@ -8957,7 +9061,7 @@ export class Client extends GameShell {
 
                 this.out.p1Enc(ClientProt.OPPLAYERT);
                 this.out.p2(a);
-                this.out.p2(this.targetComId);
+                this.out.p2_alt1(this.targetComId);
             }
         }
 
@@ -8972,10 +9076,10 @@ export class Client extends GameShell {
                 this.crossCycle = 0;
 
                 this.out.p1Enc(ClientProt.OPPLAYERU);
-                this.out.p2(a);
-                this.out.p2(this.objComId);
-                this.out.p2(this.objSelectedSlot);
+                this.out.p2_alt1(this.objComId);
+                this.out.p2_alt3(this.objSelectedSlot);
                 this.out.p2(this.objSelectedComId);
+                this.out.p2_alt2(a);
             }
         }
 
@@ -8995,8 +9099,7 @@ export class Client extends GameShell {
             if (action === MiniMenuAction.OP_HELD4) {
                 Client.oplogic9++;
                 if (Client.oplogic9 >= 116) {
-                    this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC9);
-                    this.out.p3(13018169);
+                    // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                 }
 
                 this.out.p1Enc(ClientProt.OPHELD4);
@@ -9006,9 +9109,7 @@ export class Client extends GameShell {
                 this.out.p1Enc(ClientProt.OPHELD5);
             }
 
-            this.out.p2(a);
-            this.out.p2(b);
-            this.out.p2(c);
+            writeOpHeld(this.out, action === MiniMenuAction.OP_HELD1 ? 1 : action === MiniMenuAction.OP_HELD2 ? 2 : action === MiniMenuAction.OP_HELD3 ? 3 : action === MiniMenuAction.OP_HELD4 ? 4 : 5, a, b, c);
 
             this.selectedCycle = 0;
             this.selectedComId = c;
@@ -9082,10 +9183,10 @@ export class Client extends GameShell {
 
         if (action === MiniMenuAction.TGT_HELD) {
             this.out.p1Enc(ClientProt.OPHELDT);
-            this.out.p2(a);
-            this.out.p2(b);
-            this.out.p2(c);
             this.out.p2(this.targetComId);
+            this.out.p2_alt2(c);
+            this.out.p2_alt2(b);
+            this.out.p2_alt2(a);
 
             this.selectedCycle = 0;
             this.selectedComId = c;
@@ -9104,11 +9205,11 @@ export class Client extends GameShell {
         if (action === MiniMenuAction.USEHELD_ONHELD) {
             this.out.p1Enc(ClientProt.OPHELDU);
             this.out.p2(a);
-            this.out.p2(b);
-            this.out.p2(c);
-            this.out.p2(this.objComId);
-            this.out.p2(this.objSelectedSlot);
-            this.out.p2(this.objSelectedComId);
+            this.out.p2_alt1(this.objSelectedSlot);
+            this.out.p2_alt1(this.objComId);
+            this.out.p2_alt3(this.objSelectedComId);
+            this.out.p2_alt2(b);
+            this.out.p2_alt2(c);
 
             this.selectedCycle = 0;
             this.selectedComId = c;
@@ -9130,8 +9231,7 @@ export class Client extends GameShell {
                     Client.oplogic6++;
                 }
                 if (Client.oplogic6 >= 133) {
-                    this.out.p1Enc(ClientProt.ANTICHEAT_OPLOGIC6);
-                    this.out.p2(6118);
+                    // 377: anticheat message dropped (its numbers and sizes changed; the server ignores them)
                 }
 
                 this.out.p1Enc(ClientProt.INV_BUTTON1);
@@ -9153,9 +9253,7 @@ export class Client extends GameShell {
                 this.out.p1Enc(ClientProt.INV_BUTTON5);
             }
 
-            this.out.p2(a);
-            this.out.p2(b);
-            this.out.p2(c);
+            writeInvButton(this.out, action === MiniMenuAction.INV_BUTTON1 ? 1 : action === MiniMenuAction.INV_BUTTON2 ? 2 : action === MiniMenuAction.INV_BUTTON3 ? 3 : action === MiniMenuAction.INV_BUTTON4 ? 4 : 5, a, b, c);
 
             this.selectedCycle = 0;
             this.selectedComId = c;
@@ -10982,8 +11080,49 @@ export class Client extends GameShell {
         }
     }
 
+    /** 377: draws the full-screen interface (and its overlay) over the whole window. */
+    private drawFullscreen(): void {
+        if (!this.areaFullscreen) {
+            this.areaFullscreen = new PixMap(765, 503);
+        }
+        this.areaFullscreen.setPixels();
+        Pix2D.cls();
+
+        for (const id of [this.fullscreenId, this.fullscreenOverlayId]) {
+            if (id === -1) {
+                continue;
+            }
+            const com: IfType = IfType.list[id];
+            if (com.width === 512 && com.height === 334 && com.type === ComponentType.TYPE_LAYER) {
+                com.width = 765;
+                com.height = 503;
+            }
+            this.animateInterface(id, this.worldUpdateNum);
+            this.drawInterface(com, 0, 0, 0);
+        }
+
+        if (!this.isMenuOpen) {
+            this.buildMinimenu();
+            this.drawFeedback();
+        } else {
+            this.drawMinimenu();
+        }
+
+        this.areaFullscreen.draw(0, 0);
+        this.redrawFrame = true; // the normal frame is drawn again once it closes
+    }
+
+    private closeFullscreen(): void {
+        this.fullscreenId = -1;
+        this.fullscreenOverlayId = -1;
+        this.redrawFrame = true;
+        this.redrawSide = true;
+        this.redrawChat = true;
+    }
+
     private closeModal(): void {
         this.out.p1Enc(ClientProt.CLOSE_MODAL);
+        this.closeFullscreen();
 
         if (this.sideModalId !== -1) {
             this.sideModalId = -1;
@@ -11178,7 +11317,7 @@ export class Client extends GameShell {
             this.b12?.centreString(this.socialInputHeader, 239, 40, Colour.BLACK);
             this.b12?.centreString(this.socialInput + '*', 239, 60, Colour.DARKBLUE);
         } else if (this.dialogInputOpen) {
-            this.b12?.centreString('Enter amount:', 239, 40, Colour.BLACK);
+            this.b12?.centreString(this.nameDialog ? 'Enter name:' : 'Enter amount:', 239, 40, Colour.BLACK);
             this.b12?.centreString(this.dialogInput + '*', 239, 60, Colour.DARKBLUE);
         } else if (this.tutComMessage) {
             this.b12?.centreString(this.tutComMessage, 239, 40, Colour.BLACK);

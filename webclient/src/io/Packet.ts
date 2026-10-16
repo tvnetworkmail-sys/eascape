@@ -289,4 +289,53 @@ export default class Packet extends Linkable2 {
         this.p1(rawEnc.length);
         this.pdata(rawEnc, 0, rawEnc.length);
     }
+
+    // ---- 377: the "alt" byte orders and transforms (same names and maths as the 377 server's
+    // Packet). alt1 = +128 / little-endian, alt2 = negate / mixed, alt3 = 128- / mixed.
+
+    g1_alt1(): number { return (this.data[this.pos++] - 128) & 0xff; }
+    g1_alt2(): number { return (0 - this.data[this.pos++]) & 0xff; }
+    g1_alt3(): number { return (128 - this.data[this.pos++]) & 0xff; }
+    g1b_alt1(): number { const v = (this.data[this.pos++] - 128) & 0xff; return v > 127 ? v - 256 : v; }
+    g1b_alt2(): number { const v = (0 - this.data[this.pos++]) & 0xff; return v > 127 ? v - 256 : v; }
+    g1b_alt3(): number { const v = (128 - this.data[this.pos++]) & 0xff; return v > 127 ? v - 256 : v; }
+
+    g2_alt1(): number { this.pos += 2; return (this.data[this.pos - 1] << 8) + this.data[this.pos - 2]; }
+    g2_alt2(): number { this.pos += 2; return (this.data[this.pos - 2] << 8) + ((this.data[this.pos - 1] - 128) & 0xff); }
+    g2_alt3(): number { this.pos += 2; return (this.data[this.pos - 1] << 8) + ((this.data[this.pos - 2] - 128) & 0xff); }
+    g2b_alt1(): number { const v = this.g2_alt1(); return v > 32767 ? v - 65536 : v; }
+    g2b_alt2(): number { const v = this.g2_alt2(); return v > 32767 ? v - 65536 : v; }
+    g2b_alt3(): number { const v = this.g2_alt3(); return v > 32767 ? v - 65536 : v; }
+
+    g3_alt1(): number { this.pos += 3; return (this.data[this.pos - 1] << 16) + (this.data[this.pos - 2] << 8) + this.data[this.pos - 3]; }
+    g3_alt2(): number { this.pos += 3; return (this.data[this.pos - 3] << 16) + (this.data[this.pos - 1] << 8) + this.data[this.pos - 2]; }
+    g3_alt3(): number { this.pos += 3; return (this.data[this.pos - 2] << 16) + (this.data[this.pos - 3] << 8) + this.data[this.pos - 1]; }
+
+    g4_alt1(): number { this.pos += 4; return ((this.data[this.pos - 1] << 24) | (this.data[this.pos - 2] << 16) | (this.data[this.pos - 3] << 8) | this.data[this.pos - 4]) | 0; }
+    g4_alt2(): number { this.pos += 4; return ((this.data[this.pos - 2] << 24) | (this.data[this.pos - 1] << 16) | (this.data[this.pos - 4] << 8) | this.data[this.pos - 3]) | 0; }
+    g4_alt3(): number { this.pos += 4; return ((this.data[this.pos - 3] << 24) | (this.data[this.pos - 4] << 16) | (this.data[this.pos - 1] << 8) | this.data[this.pos - 2]) | 0; }
+
+    gdata_alt1(dst: Uint8Array | Int8Array, off: number, len: number): void { for (let i = off + len - 1; i >= off; i--) dst[i] = this.data[this.pos++]; }
+    gdata_alt2(dst: Uint8Array | Int8Array, off: number, len: number): void { for (let i = off; i < off + len; i++) dst[i] = (this.data[this.pos++] - 128) & 0xff; }
+    gdata_alt3(dst: Uint8Array | Int8Array, off: number, len: number): void { for (let i = off + len - 1; i >= off; i--) dst[i] = (this.data[this.pos++] - 128) & 0xff; }
+
+    p1_alt1(v: number): void { this.data[this.pos++] = (v + 128) & 0xff; }
+    p1_alt2(v: number): void { this.data[this.pos++] = (0 - v) & 0xff; }
+    p1_alt3(v: number): void { this.data[this.pos++] = (128 - v) & 0xff; }
+
+    p2_alt1(v: number): void { this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; }
+    p2_alt2(v: number): void { this.data[this.pos++] = (v >> 8) & 0xff; this.data[this.pos++] = (v + 128) & 0xff; }
+    p2_alt3(v: number): void { this.data[this.pos++] = (v + 128) & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; }
+
+    p3_alt1(v: number): void { this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; this.data[this.pos++] = (v >> 16) & 0xff; }
+    p3_alt2(v: number): void { this.data[this.pos++] = (v >> 16) & 0xff; this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; }
+    p3_alt3(v: number): void { this.data[this.pos++] = (v >> 8) & 0xff; this.data[this.pos++] = (v >> 16) & 0xff; this.data[this.pos++] = v & 0xff; }
+
+    p4_alt1(v: number): void { this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; this.data[this.pos++] = (v >> 16) & 0xff; this.data[this.pos++] = (v >> 24) & 0xff; }
+    p4_alt2(v: number): void { this.data[this.pos++] = (v >> 8) & 0xff; this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 24) & 0xff; this.data[this.pos++] = (v >> 16) & 0xff; }
+    p4_alt3(v: number): void { this.data[this.pos++] = (v >> 16) & 0xff; this.data[this.pos++] = (v >> 24) & 0xff; this.data[this.pos++] = v & 0xff; this.data[this.pos++] = (v >> 8) & 0xff; }
+
+    pdata_alt1(src: Uint8Array, off: number, len: number): void { for (let i = off + len - 1; i >= off; i--) this.data[this.pos++] = src[i]; }
+    pdata_alt2(src: Uint8Array, off: number, len: number): void { for (let i = off; i < off + len; i++) this.data[this.pos++] = (src[i] + 128) & 0xff; }
+    pdata_alt3(src: Uint8Array, off: number, len: number): void { for (let i = off + len - 1; i >= off; i--) this.data[this.pos++] = (src[i] + 128) & 0xff; }
 }

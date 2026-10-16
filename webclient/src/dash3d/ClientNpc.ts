@@ -8,14 +8,15 @@ import AnimFrame from '#/dash3d/AnimFrame.js';
 import Model from '#/dash3d/Model.js';
 
 export const enum NpcUpdate {
-    HITMARK2 = 0x1,
+    // 377 mask bits (the 377 server's NpcInfoProt)
+    CHANGETYPE = 0x1,
     ANIM = 0x2,
-    FACEENTITY = 0x4,
-    SAY = 0x8,
-    HITMARK = 0x10,
-    CHANGETYPE = 0x20,
-    SPOTANIM = 0x40,
-    FACESQUARE = 0x80
+    SPOTANIM = 0x4,
+    FACESQUARE = 0x8,
+    HITMARK2 = 0x10,
+    SAY = 0x20,
+    FACEENTITY = 0x40,
+    HITMARK = 0x80,
 }
 
 export default class ClientNpc extends ClientEntity {

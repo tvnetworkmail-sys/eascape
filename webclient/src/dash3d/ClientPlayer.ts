@@ -18,17 +18,18 @@ import Packet from '#/io/Packet.js';
 import { TypedArray1d } from '#/util/Arrays.js';
 
 export const enum PlayerUpdate {
-    APPEARANCE = 0x1,
-    ANIM = 0x2,
-    FACEENTITY = 0x4,
-    SAY = 0x8,
-    HITMARK = 0x10,
-    FACESQUARE = 0x20,
+    // 377 mask bits (the 377 server's PlayerInfoProt)
+    FACEENTITY = 0x1,
+    FACESQUARE = 0x2,
+    APPEARANCE = 0x4,
+    ANIM = 0x8,
+    SAY = 0x10,
+    BIG_UPDATE = 0x20,
     CHAT = 0x40,
-    BIG_UPDATE = 0x80,
-    SPOTANIM = 0x100,
-    EXACTMOVE = 0x200,
-    HITMARK2 = 0x400,
+    HITMARK2 = 0x80,
+    EXACTMOVE = 0x100,
+    SPOTANIM = 0x200,
+    HITMARK = 0x400,
 }
 
 const enum HairColour {
@@ -200,7 +201,9 @@ export default class ClientPlayer extends ClientEntity {
     name: string | null = null;
     ready: boolean = false;
     gender: number = 0;
-    headicons: number = 0;
+    // 377: a skull icon and a prayer icon (-1 = none) instead of a bit set
+    headiconPk: number = -1;
+    headiconPrayer: number = -1;
     appearance: Uint16Array = new Uint16Array(12);
     colour: Uint16Array = new Uint16Array(5);
     combatLevel: number = 0;
@@ -227,7 +230,8 @@ export default class ClientPlayer extends ClientEntity {
         buf.pos = 0;
 
         this.gender = buf.g1();
-        this.headicons = buf.g1();
+        this.headiconPk = buf.g1b();
+        this.headiconPrayer = buf.g1b();
         this.transmog = null;
         this.team = 0;
 
