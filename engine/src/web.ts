@@ -106,6 +106,17 @@ fastify.route({
     }
 });
 
+// EASCape: the web client page (the 274 engine's /rs2.cgi, which the 377 engine doesn't have yet)
+fastify.get<{ Querystring: { lowmem?: string } }>('/rs2.cgi', async (req, reply) => {
+    const lowmem = tryParseInt(req.query.lowmem, 0);
+
+    return reply.viewAsync('client.ejs', {
+        nodeid: Environment.NODE_ID,
+        members: Environment.NODE_MEMBERS,
+        lowmem
+    });
+});
+
 // cache routes
 
 fastify.get('/crc:cachebust', async (_req, reply) => {

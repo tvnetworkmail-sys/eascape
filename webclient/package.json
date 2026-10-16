@@ -8,7 +8,9 @@
     },
     "scripts": {
         "build": "bun run bundle.ts",
-        "build:dev": "bun run bundle.ts dev"
+        "build:dev": "bun run bundle.ts dev",
+        "deploy": "bun run bundle.ts && cp out/client.js out/ondemandworker.js out/tinymidipcm.wasm ../engine/public/client/",
+        "check377": "bun run --preload ./test/browser-stub.ts test/decode377.ts"
     },
     "dependencies": {
         "fflate": "^0.8.2"

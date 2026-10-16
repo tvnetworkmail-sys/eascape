@@ -8,6 +8,7 @@ import Model from '#/dash3d/Model.js';
 
 import JagFile from '#/io/JagFile.js';
 import Packet from '#/io/Packet.js';
+import VarBitType from '#/config/VarBitType.js';
 
 import { TypedArray1d } from '#/util/Arrays.js';
 import type OnDemand from '#/io/OnDemand.js';
@@ -57,6 +58,9 @@ export default class LocType {
     forcedecor: boolean = false;
     breakroutefinding: boolean = false;
     raiseobject: number = 0;
+    multiloc: Int32Array | null = null;
+    multivarbit: number = -1;
+    multivarp: number = -1;
 
     static init(config: JagFile): void {
         this.dat = new Packet(config.read('loc.dat'));
@@ -134,6 +138,9 @@ export default class LocType {
         this.forcedecor = false;
         this.breakroutefinding = false;
         this.raiseobject = -1;
+        this.multiloc = null;
+        this.multivarbit = -1;
+        this.multivarp = -1;
     }
 
     decode(dat: Packet): void {
@@ -146,12 +153,14 @@ export default class LocType {
 
             if (code === 1) {
                 const count: number = dat.g1();
-                this.model = new Int32Array(count);
-                this.shape = new Int32Array(count);
+                if (count > 0) {
+                    this.model = new Int32Array(count);
+                    this.shape = new Int32Array(count);
 
-                for (let i: number = 0; i < count; i++) {
-                    this.model[i] = dat.g2();
-                    this.shape[i] = dat.g1();
+                    for (let i: number = 0; i < count; i++) {
+                        this.model[i] = dat.g2();
+                        this.shape[i] = dat.g1();
+                    }
                 }
             } else if (code === 2) {
                 this.name = dat.gjstr();
@@ -159,11 +168,13 @@ export default class LocType {
                 this.desc = dat.gjstr();
             } else if (code === 5) {
                 const count: number = dat.g1();
-                this.model = new Int32Array(count);
-                this.shape = null;
+                if (count > 0) {
+                    this.model = new Int32Array(count);
+                    this.shape = null;
 
-                for (let i: number = 0; i < count; i++) {
-                    this.model[i] = dat.g2();
+                    for (let i: number = 0; i < count; i++) {
+                        this.model[i] = dat.g2();
+                    }
                 }
             } else if (code === 14) {
                 this.width = dat.g1();
@@ -242,6 +253,25 @@ export default class LocType {
                 this.breakroutefinding = true;
             } else if (code === 75) {
                 this.raiseobject = dat.g1();
+            } else if (code === 77) {
+                // 377: a varbit or a varp (65535 = none) picks which loc this one is
+                this.multivarbit = dat.g2();
+                if (this.multivarbit === 65535) {
+                    this.multivarbit = -1;
+                }
+                this.multivarp = dat.g2();
+                if (this.multivarp === 65535) {
+                    this.multivarp = -1;
+                }
+                const count: number = dat.g1();
+                this.multiloc = new Int32Array(count + 1);
+
+                for (let i: number = 0; i <= count; i++) {
+                    this.multiloc[i] = dat.g2();
+                    if (this.multiloc[i] === 65535) {
+                        this.multiloc[i] = -1;
+                    }
+                }
             }
         }
 
@@ -265,6 +295,26 @@ export default class LocType {
         if (this.raiseobject === -1) {
             this.raiseobject = this.blockwalk ? 1 : 0;
         }
+    }
+
+    /** The loc this multiloc currently shows (377 LocType.getMultiLoc), or null for none. */
+    getMultiLoc(vars: ArrayLike<number>): LocType | null {
+        if (this.multiloc === null) {
+            return this;
+        }
+        let index = -1;
+        if (this.multivarbit !== -1) {
+            const varbit = VarBitType.list[this.multivarbit];
+            const bits = varbit.endbit - varbit.startbit;
+            const mask = bits >= 31 ? -1 : (1 << (bits + 1)) - 1;
+            index = (vars[varbit.basevar] >> varbit.startbit) & mask;
+        } else if (this.multivarp !== -1) {
+            index = vars[this.multivarp];
+        }
+        if (index < 0 || index >= this.multiloc.length || this.multiloc[index] === -1) {
+            return null;
+        }
+        return LocType.list(this.multiloc[index]);
     }
 
     checkModel(shape: number): boolean {

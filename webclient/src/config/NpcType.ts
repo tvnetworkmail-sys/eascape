@@ -5,6 +5,7 @@ import Model from '#/dash3d/Model.js';
 
 import JagFile from '#/io/JagFile.js';
 import Packet from '#/io/Packet.js';
+import VarBitType from '#/config/VarBitType.js';
 
 import { TypedArray1d } from '#/util/Arrays.js';
 
@@ -40,6 +41,12 @@ export default class NpcType {
     contrast: number = 0;
     headicon: number = -1;
     turnspeed: number = 32;
+    // 377: an NPC that shows as one of several others, picked by a varbit or varp (multinpc),
+    // and NPCs you can't click (active = false)
+    multivarbit: number = -1;
+    multivarp: number = -1;
+    multinpc: Int32Array | null = null;
+    active: boolean = true;
 
     static init(config: JagFile): void {
         this.dat = new Packet(config.read('npc.dat'));
@@ -80,6 +87,26 @@ export default class NpcType {
         npc.decode(this.dat);
 
         return npc;
+    }
+
+    /** The NPC this multinpc currently shows (377 NpcType.getMultiNpc), or null for none. */
+    getMultiNpc(vars: ArrayLike<number>): NpcType | null {
+        if (this.multinpc === null) {
+            return this;
+        }
+        let index = -1;
+        if (this.multivarbit !== -1) {
+            const varbit = VarBitType.list[this.multivarbit];
+            const bits = varbit.endbit - varbit.startbit;
+            const mask = bits >= 31 ? -1 : (1 << (bits + 1)) - 1;
+            index = (vars[varbit.basevar] >> varbit.startbit) & mask;
+        } else if (this.multivarp !== -1) {
+            index = vars[this.multivarp];
+        }
+        if (index < 0 || index >= this.multinpc.length || this.multinpc[index] === -1) {
+            return null;
+        }
+        return NpcType.list(this.multinpc[index]);
     }
 
     decode(dat: Packet): void {
@@ -160,6 +187,25 @@ export default class NpcType {
                 this.headicon = dat.g2();
             } else if (code === 103) {
                 this.turnspeed = dat.g2();
+            } else if (code === 106) {
+                this.multivarbit = dat.g2();
+                if (this.multivarbit === 65535) {
+                    this.multivarbit = -1;
+                }
+                this.multivarp = dat.g2();
+                if (this.multivarp === 65535) {
+                    this.multivarp = -1;
+                }
+                const count: number = dat.g1();
+                this.multinpc = new Int32Array(count + 1);
+                for (let i: number = 0; i <= count; i++) {
+                    this.multinpc[i] = dat.g2();
+                    if (this.multinpc[i] === 65535) {
+                        this.multinpc[i] = -1;
+                    }
+                }
+            } else if (code === 107) {
+                this.active = false;
             }
         }
     }

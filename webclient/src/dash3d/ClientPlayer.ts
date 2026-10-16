@@ -204,6 +204,7 @@ export default class ClientPlayer extends ClientEntity {
     appearance: Uint16Array = new Uint16Array(12);
     colour: Uint16Array = new Uint16Array(5);
     combatLevel: number = 0;
+    team: number = 0;
     baseId: bigint = 0n;
     lowMemory: boolean = false;
     modelCacheKey: bigint = -1n;
@@ -228,6 +229,7 @@ export default class ClientPlayer extends ClientEntity {
         this.gender = buf.g1();
         this.headicons = buf.g1();
         this.transmog = null;
+        this.team = 0;
 
         for (let part: number = 0; part < 12; part++) {
             const msb: number = buf.g1();
@@ -238,6 +240,13 @@ export default class ClientPlayer extends ClientEntity {
                 if (part === 0 && this.appearance[0] === 65535) {
                     this.transmog = NpcType.list(buf.g2());
                     break;
+                }
+
+                if (this.appearance[part] >= 512 && this.appearance[part] - 512 < ObjType.numDefinitions) {
+                    const team = ObjType.list(this.appearance[part] - 512).team;
+                    if (team !== 0) {
+                        this.team = team;
+                    }
                 }
             }
         }

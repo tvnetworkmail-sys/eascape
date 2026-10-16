@@ -72,7 +72,7 @@ import WordPack from '#/wordfilter/WordPack.js';
 
 import JagFX from '#/sound/JagFX.js';
 
-const CLIENT_VERSION = 274;
+const CLIENT_VERSION = 289;
 
 const MAX_PLAYER_COUNT = 2048;
 const LOCAL_PLAYER_INDEX = 2047;
@@ -251,10 +251,16 @@ export class Client extends GameShell {
     private minimap: Pix32 | null = null;
     private compass: Pix32 | null = null;
     private mapedge: Pix32 | null = null;
-    private mapscene: (Pix8 | null)[] = new TypedArray1d(50, null);
-    private mapfunction: (Pix32 | null)[] = new TypedArray1d(50, null);
+    private mapscene: (Pix8 | null)[] = new TypedArray1d(100, null);
+    private mapfunction: (Pix32 | null)[] = new TypedArray1d(100, null);
     private hitmarks: (Pix32 | null)[] = new TypedArray1d(20, null);
     private headicons: (Pix32 | null)[] = new TypedArray1d(20, null);
+    // 377 splits the head icons into skulls, prayers and hint arrows, and adds the multi-combat
+    // overlay and a fifth minimap dot
+    private headiconsPk: (Pix32 | null)[] = new TypedArray1d(32, null);
+    private headiconsPrayer: (Pix32 | null)[] = new TypedArray1d(32, null);
+    private headiconsHint: (Pix32 | null)[] = new TypedArray1d(32, null);
+    private overlayMultiway: Pix32 | null = null;
     private mapmarker1: Pix32 | null = null;
     private mapmarker2: Pix32 | null = null;
     private cross: (Pix32 | null)[] = new TypedArray1d(8, null);
@@ -262,6 +268,7 @@ export class Client extends GameShell {
     private mapdots2: Pix32 | null = null;
     private mapdots3: Pix32 | null = null;
     private mapdots4: Pix32 | null = null;
+    private mapdots5: Pix32 | null = null;
     private scrollbar1: Pix8 | null = null;
     private scrollbar2: Pix8 | null = null;
     private modIcons: Pix8[] = [];
@@ -474,7 +481,7 @@ export class Client extends GameShell {
     private runenergy: number = 0;
     private runweight: number = 0;
     private staffmodlevel: number = 0;
-    private var: number[] = [];
+    public var: number[] = [];
     private varServ: number[] = [];
 
     private chatInterface: IfType = new IfType();
@@ -1018,37 +1025,32 @@ export class Client extends GameShell {
             this.mapedge = Pix32.depack(media, 'mapedge', 0);
             this.mapedge.trim();
 
-            try {
-                for (let i: number = 0; i < 50; i++) {
-                    this.mapscene[i] = Pix8.depack(media, 'mapscene', i);
-                }
-            } catch (_e) {
-                // empty
+            // the 377 client's sprite counts (Client.load)
+            for (let i: number = 0; i < 72; i++) {
+                this.mapscene[i] = Pix8.depack(media, 'mapscene', i);
             }
 
-            try {
-                for (let i: number = 0; i < 50; i++) {
-                    this.mapfunction[i] = Pix32.depack(media, 'mapfunction', i);
-                }
-            } catch (_e) {
-                // empty
+            for (let i: number = 0; i < 70; i++) {
+                this.mapfunction[i] = Pix32.depack(media, 'mapfunction', i);
             }
 
-            try {
-                for (let i: number = 0; i < 20; i++) {
-                    this.hitmarks[i] = Pix32.depack(media, 'hitmarks', i);
-                }
-            } catch (_e) {
-                // empty
+            for (let i: number = 0; i < 5; i++) {
+                this.hitmarks[i] = Pix32.depack(media, 'hitmarks', i);
             }
 
-            try {
-                for (let i: number = 0; i < 20; i++) {
-                    this.headicons[i] = Pix32.depack(media, 'headicons', i);
-                }
-            } catch (_e) {
-                // empty
+            for (let i: number = 0; i < 6; i++) {
+                this.headiconsPk[i] = Pix32.depack(media, 'headicons_pk', i);
             }
+
+            for (let i: number = 0; i < 9; i++) {
+                this.headiconsPrayer[i] = Pix32.depack(media, 'headicons_prayer', i);
+            }
+
+            for (let i: number = 0; i < 6; i++) {
+                this.headiconsHint[i] = Pix32.depack(media, 'headicons_hint', i);
+            }
+
+            this.overlayMultiway = Pix32.depack(media, 'overlay_multiway', 0);
 
             this.mapmarker1 = Pix32.depack(media, 'mapmarker', 0);
             this.mapmarker2 = Pix32.depack(media, 'mapmarker', 1);
@@ -1061,6 +1063,7 @@ export class Client extends GameShell {
             this.mapdots2 = Pix32.depack(media, 'mapdots', 1);
             this.mapdots3 = Pix32.depack(media, 'mapdots', 2);
             this.mapdots4 = Pix32.depack(media, 'mapdots', 3);
+            this.mapdots5 = Pix32.depack(media, 'mapdots', 4);
 
             this.scrollbar1 = Pix8.depack(media, 'scrollbar', 0);
             this.scrollbar2 = Pix8.depack(media, 'scrollbar', 1);
@@ -1137,7 +1140,7 @@ export class Client extends GameShell {
             const randB: number = ((Math.random() * 21.0) | 0) - 10;
             const rand: number = ((Math.random() * 41.0) | 0) - 20;
 
-            for (let i: number = 0; i < 50; i++) {
+            for (let i: number = 0; i < 100; i++) {
                 if (this.mapfunction[i]) {
                     this.mapfunction[i]?.rgbAdjust(randR + rand, randG + rand, randB + rand);
                 }
@@ -1234,6 +1237,7 @@ export class Client extends GameShell {
 
             World.resetVisCalc(distance, 500, 800, 512, 334);
             WordFilter.unpack(wordenc);
+            ClientLocAnim.app = this;
 
             if (!this.mouseTrackingInterval) {
                 this.mouseTrackingInterval = setInterval(() => {
@@ -3093,64 +3097,63 @@ export class Client extends GameShell {
                                 this.out.p1(this.chatInput.length - 2 + 1);
                                 this.out.pjstr(this.chatInput.substring(2));
                             } else {
+                                const colourText: string = this.chatInput.toLowerCase();
                                 let colour: number = 0;
-                                if (this.chatInput.startsWith('yellow:')) {
+                                if (colourText.startsWith('yellow:')) {
                                     colour = 0;
                                     this.chatInput = this.chatInput.substring(7);
-                                }
-                                if (this.chatInput.startsWith('red:')) {
+                                } else if (colourText.startsWith('red:')) {
                                     colour = 1;
                                     this.chatInput = this.chatInput.substring(4);
-                                }
-                                if (this.chatInput.startsWith('green:')) {
+                                } else if (colourText.startsWith('green:')) {
                                     colour = 2;
                                     this.chatInput = this.chatInput.substring(6);
-                                }
-                                if (this.chatInput.startsWith('cyan:')) {
+                                } else if (colourText.startsWith('cyan:')) {
                                     colour = 3;
                                     this.chatInput = this.chatInput.substring(5);
-                                }
-                                if (this.chatInput.startsWith('purple:')) {
+                                } else if (colourText.startsWith('purple:')) {
                                     colour = 4;
                                     this.chatInput = this.chatInput.substring(7);
-                                }
-                                if (this.chatInput.startsWith('white:')) {
+                                } else if (colourText.startsWith('white:')) {
                                     colour = 5;
                                     this.chatInput = this.chatInput.substring(6);
-                                }
-                                if (this.chatInput.startsWith('flash1:')) {
+                                } else if (colourText.startsWith('flash1:')) {
                                     colour = 6;
                                     this.chatInput = this.chatInput.substring(7);
-                                }
-                                if (this.chatInput.startsWith('flash2:')) {
+                                } else if (colourText.startsWith('flash2:')) {
                                     colour = 7;
                                     this.chatInput = this.chatInput.substring(7);
-                                }
-                                if (this.chatInput.startsWith('flash3:')) {
+                                } else if (colourText.startsWith('flash3:')) {
                                     colour = 8;
                                     this.chatInput = this.chatInput.substring(7);
-                                }
-                                if (this.chatInput.startsWith('glow1:')) {
+                                } else if (colourText.startsWith('glow1:')) {
                                     colour = 9;
                                     this.chatInput = this.chatInput.substring(6);
-                                }
-                                if (this.chatInput.startsWith('glow2:')) {
+                                } else if (colourText.startsWith('glow2:')) {
                                     colour = 10;
                                     this.chatInput = this.chatInput.substring(6);
-                                }
-                                if (this.chatInput.startsWith('glow3:')) {
+                                } else if (colourText.startsWith('glow3:')) {
                                     colour = 11;
                                     this.chatInput = this.chatInput.substring(6);
                                 }
 
+                                const effectText: string = this.chatInput.toLowerCase();
                                 let effect: number = 0;
-                                if (this.chatInput.startsWith('wave:')) {
+                                if (effectText.startsWith('wave:')) {
                                     effect = 1;
                                     this.chatInput = this.chatInput.substring(5);
-                                }
-                                if (this.chatInput.startsWith('scroll:')) {
+                                } else if (effectText.startsWith('wave2:')) {
                                     effect = 2;
+                                    this.chatInput = this.chatInput.substring(6);
+                                } else if (effectText.startsWith('shake:')) {
+                                    effect = 3;
+                                    this.chatInput = this.chatInput.substring(6);
+                                } else if (effectText.startsWith('scroll:')) {
+                                    effect = 4;
                                     this.chatInput = this.chatInput.substring(7);
+                                } else if (effectText.startsWith('slide:')) {
+                                    effect = 5;
+                                    this.chatInput = this.chatInput.substring(6);
                                 }
 
                                 this.out.p1Enc(ClientProt.MESSAGE_PUBLIC);
@@ -4148,7 +4151,7 @@ export class Client extends GameShell {
                 this.p12?.centreStringTag('Off', 184, 41, Colour.RED, true);
             }
 
-            this.p12?.centreStringTag('Trade/duel', 324, 28, Colour.WHITE, true);
+            this.p12?.centreStringTag('Trade/compete', 324, 28, Colour.WHITE, true);
             if (this.chatTradeMode === 0) {
                 this.p12?.centreStringTag('On', 324, 41, Colour.GREEN, true);
             }
@@ -4645,13 +4648,17 @@ export class Client extends GameShell {
                     this.chatTimer[this.chatCount] = entity.chatTimer;
                     this.chats[this.chatCount++] = entity.chatMessage as string;
 
-                    if (this.chatEffects === 0 && entity.chatEffect === 1) {
+                    if (this.chatEffects === 0 && entity.chatEffect >= 1 && entity.chatEffect <= 3) {
                         this.chatHeight[this.chatCount] += 10;
                         this.chatY[this.chatCount] += 5;
                     }
 
-                    if (this.chatEffects === 0 && entity.chatEffect === 2) {
+                    if (this.chatEffects === 0 && entity.chatEffect === 4) {
                         this.chatWidth[this.chatCount] = 60;
+                    }
+
+                    if (this.chatEffects === 0 && entity.chatEffect === 5) {
+                        this.chatHeight[this.chatCount] += 5;
                     }
                 }
             }
@@ -4767,11 +4774,30 @@ export class Client extends GameShell {
                     this.b12?.centreStringWave(message, this.projectX, this.projectY + 1, Colour.BLACK, this.sceneCycle);
                     this.b12?.centreStringWave(message, this.projectX, this.projectY, colour, this.sceneCycle);
                 } else if (this.chatEffect[i] === 2) {
+                    this.b12?.centreStringWave2(message, this.projectX, this.projectY + 1, Colour.BLACK, this.sceneCycle);
+                    this.b12?.centreStringWave2(message, this.projectX, this.projectY, colour, this.sceneCycle);
+                } else if (this.chatEffect[i] === 3) {
+                    this.b12?.centreStringWave3(message, this.projectX, this.projectY + 1, Colour.BLACK, this.sceneCycle, 150 - this.chatTimer[i]);
+                    this.b12?.centreStringWave3(message, this.projectX, this.projectY, colour, this.sceneCycle, 150 - this.chatTimer[i]);
+                } else if (this.chatEffect[i] === 4) {
                     const w: number = this.b12?.stringWid(message) ?? 0;
                     const offsetX: number = ((150 - this.chatTimer[i]) * (w + 100)) / 150;
                     Pix2D.setClipping(this.projectX - 50, 0, this.projectX + 50, 334);
                     this.b12?.drawString(message, this.projectX + 50 - offsetX, this.projectY + 1, Colour.BLACK);
                     this.b12?.drawString(message, this.projectX + 50 - offsetX, this.projectY, colour);
+                    Pix2D.resetClipping();
+                } else if (this.chatEffect[i] === 5) {
+                    const delta: number = 150 - this.chatTimer[i];
+                    let offsetY: number = 0;
+                    if (delta < 25) {
+                        offsetY = delta - 25;
+                    } else if (delta > 125) {
+                        offsetY = delta - 125;
+                    }
+
+                    Pix2D.setClipping(0, this.projectY - (this.b12?.height ?? 0) - 1, 512, this.projectY + 5);
+                    this.b12?.centreString(message, this.projectX, this.projectY + offsetY + 1, Colour.BLACK);
+                    this.b12?.centreString(message, this.projectX, this.projectY + offsetY, colour);
                     Pix2D.resetClipping();
                 }
             }
@@ -6269,7 +6295,7 @@ export class Client extends GameShell {
                     throw new Error();
                 }
 
-                const size: number = this.in.g1();
+                const size: number = this.in.g2();
                 for (let i: number = 0; i < size; i++) {
                     inv.linkObjType[i] = this.in.g2();
 
@@ -6301,7 +6327,7 @@ export class Client extends GameShell {
                 }
 
                 while (this.in.pos < this.psize) {
-                    const slot: number = this.in.g1();
+                    const slot: number = this.in.gsmart();
                     const id: number = this.in.g2();
 
                     let count: number = this.in.g1();
@@ -9300,7 +9326,13 @@ export class Client extends GameShell {
             lastTypecode = typecode;
 
             if (entityType === 2 && this.world && this.world.typeCode2(this.minusedlevel, x, z, typecode) >= 0) {
-                const loc: LocType = LocType.list(typeId);
+                let loc: LocType | null = LocType.list(typeId);
+                if (loc.multiloc !== null) {
+                    loc = loc.getMultiLoc(this.var);
+                    if (loc === null) {
+                        continue;
+                    }
+                }
 
                 if (this.useMode === 1) {
                     this.menuOption[this.menuNumEntries] = 'Use ' + this.objSelectedName + ' with @cya@' + loc.name;
@@ -9596,6 +9628,14 @@ export class Client extends GameShell {
                 if (op.toLowerCase() === 'attack') {
                     if (player.combatLevel > this.localPlayer.combatLevel) {
                         priority = MiniMenuAction._PRIORITY;
+                    }
+
+                    if (this.localPlayer.team !== 0 && player.team !== 0) {
+                        if (this.localPlayer.team === player.team) {
+                            priority = MiniMenuAction._PRIORITY;
+                        } else {
+                            priority = 0;
+                        }
                     }
                 } else if (this.playerOpPriority[i]) {
                     priority = MiniMenuAction._PRIORITY;
@@ -11350,6 +11390,14 @@ export class Client extends GameShell {
                     if (userhash === this.friendUserhash[j] && this.friendNodeId[j] !== 0) {
                         friend = true;
                         break;
+                    }
+                }
+
+                if (this.localPlayer.team !== 0 && player.team !== 0) {
+                    if (this.localPlayer.team === player.team) {
+                        friend = true;
+                    } else {
+                        friend = false;
                     }
                 }
 

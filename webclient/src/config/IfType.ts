@@ -24,6 +24,7 @@ export const enum ComponentType {
     TYPE_GRAPHIC = 5,
     TYPE_MODEL = 6,
     TYPE_INV_TEXT = 7,
+    TYPE_TOOLTIP = 8, // 377: a text box shown while the mouse rests on its layer
 };
 
 export const enum ButtonType {
@@ -177,7 +178,7 @@ export default class IfType {
             }
 
             if (com.type === ComponentType.TYPE_UNUSED) {
-                data.pos += 3;
+                data.pos += 3; // 377: a g2 and a flag, not used by the client
             }
 
             if (com.type === ComponentType.TYPE_INV) {
@@ -319,6 +320,10 @@ export default class IfType {
                         com.iop[i] = null;
                     }
                 }
+            }
+
+            if (com.type === ComponentType.TYPE_TOOLTIP) {
+                com.text = data.gjstr();
             }
 
             if (com.buttonType === ButtonType.BUTTON_TARGET || com.type === ComponentType.TYPE_INV) {
