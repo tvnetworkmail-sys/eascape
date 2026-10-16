@@ -1356,8 +1356,24 @@ export default class Player extends PathingEntity {
         const stream = Packet.alloc(0);
 
         stream.p1(this.gender);
-        stream.p1(0xff); // prayer icon?
-        stream.p1(0xff); // skull icon?
+        // EASCape: the 377 client reads the skull icon then the prayer icon (sprite index, -1 for
+        // none) from the headicons_pk and headicons_prayer sprites. Scripts still keep the 274
+        // headicons bitmask (headicon.constant): bit 0 skull, bits 3/4/5 protect melee/range/magic.
+        // Sprite order checked against content/sprites: prayer 0 melee, 1 missiles, 2 magic.
+        let skull = -1;
+        if ((this.headicons & (1 << 0)) !== 0) {
+            skull = 0;
+        }
+        let prayer = -1;
+        if ((this.headicons & (1 << 3)) !== 0) {
+            prayer = 0;
+        } else if ((this.headicons & (1 << 4)) !== 0) {
+            prayer = 1;
+        } else if ((this.headicons & (1 << 5)) !== 0) {
+            prayer = 2;
+        }
+        stream.p1(skull & 0xff);
+        stream.p1(prayer & 0xff);
 
         const skippedSlots = [];
 
