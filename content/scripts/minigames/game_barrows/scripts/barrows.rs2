@@ -280,9 +280,40 @@ if (($bit = 14 | $bit = 18 | $bit = 19 | $bit = 21) & testbit(%barrows, ^barrows
     ~barrows_puzzle_open;
     return;
 }
-sound_synth(barrows_door_open, 1, 0);
-~walk_through_door;
+~barrows_door_walk_through;
 ~barrows_door_spawn;
+
+// both halves swing open for 3 ticks while you walk through, the way Lost City opens its other
+// double doors (doubledoors.rs2). The doors have no open version of their own, so the open
+// halves are the plain (option-less) door at the open angle. In the map the _r half is on the
+// right-hand side as Lost City counts it (tunnels, map square 55_151: _r at 14_54, _l at 15_54,
+// facing south).
+[proc,barrows_door_walk_through]
+def_coord $loc_coord = loc_coord;
+def_int $x;
+def_int $z;
+$x, $z = ~door_open(loc_angle, loc_shape);
+def_boolean $entering = ~check_axis_locactive(coord);
+def_coord $dest = $loc_coord;
+if ($entering = true) {
+    if (coord ! $loc_coord) {
+        p_teleport($loc_coord);
+        p_delay(1);
+    }
+    $dest = movecoord($loc_coord, $x, 0, $z);
+}
+p_teleport($dest);
+if (~barrows_door_is_right(loc_type) = true) {
+    ~open_double_doors_right2(3, barrows_door, barrows_door_inactive_r, barrows_door_inactive_l, barrows_door_open);
+} else {
+    ~open_double_doors_left2(3, barrows_door, barrows_door_inactive_l, barrows_door_inactive_r, barrows_door_open);
+}
+
+[proc,barrows_door_is_right](loc $loc)(boolean)
+switch_loc ($loc) {
+    case barrows_door_a_r, barrows_door_b_r, barrows_door_c_r, barrows_door_d_r, barrows_door_e_r, barrows_door_f_r, barrows_door_g_r, barrows_door_h_r, barrows_door_i_r, barrows_door_j_r, barrows_door_k_r, barrows_door_l_r, barrows_door_m_r, barrows_door_n_r, barrows_door_o_r, barrows_door_p_r : return(true);
+}
+return(false);
 
 [proc,barrows_door_bit](loc $loc)(int)
 switch_loc ($loc) {
@@ -395,6 +426,7 @@ softtimer(barrows_collapse, 3);
 // killed (each piece at most once); otherwise a number from 1 to R picks from the table below.
 
 [proc,barrows_reward]
+inv_clear(trail_rewardinv);
 def_int $killed = ~barrows_killed_total;
 def_int $rp = add(%barrows_killed_monster, multiply(2, $killed));
 def_int $given = 0; // which of the 24 pieces have dropped already, one bit each
@@ -415,8 +447,10 @@ while ($roll < $rolls) {
         ~barrows_table_roll($rp);
     }
 }
+~barrows_reward_show;
 
 // a random piece belonging to a brother you killed that hasn't been given yet, or -1
+
 [proc,barrows_pick_piece](int $given)(int)
 def_int $count = 0;
 def_int $i = 0;
@@ -493,12 +527,20 @@ if ($x <= 380) {
 return(add($min, scale(sub($x, $from), sub($to, $from), sub($max, $min))));
 
 // into the pack, or onto the floor if there's no room (OSRS wiki)
+// each reward goes into your pack (onto the floor if it's full) and into the reward window
 [proc,barrows_give](namedobj $obj, int $count)
+inv_add(trail_rewardinv, $obj, $count);
 if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
     inv_add(inv, $obj, $count);
 } else {
     obj_add(coord, $obj, $count, ^lootdrop_duration);
 }
+
+// EASCape: the loot shows in a window, like the later Barrows chest. It's the 2006 treasure
+// trail reward window (chest, items, Close Window), which is what the later one grew out of.
+[proc,barrows_reward_show]
+inv_transmit(trail_rewardinv, trail_reward:inv);
+if_openmain(trail_reward);
 
 // ---------------------------------------------------------------------------------------------
 // being underground: the overlay, the hidden minimap, the prayer drain and the collapse
