@@ -10067,6 +10067,12 @@ export class Client extends GameShell {
             childX += child.x;
             childY += child.y;
 
+            // EASCape: the server can hide any component (if_sethide), not just layers; the
+            // Barrows brothers' faces use it to disappear again
+            if (child.hide && child.type !== ComponentType.TYPE_LAYER) {
+                continue;
+            }
+
             if (child.clientCode > 0) {
                 this.clientComponent(child);
             }
