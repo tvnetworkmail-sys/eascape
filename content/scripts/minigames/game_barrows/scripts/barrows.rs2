@@ -536,11 +536,11 @@ if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
     obj_add(coord, $obj, $count, ^lootdrop_duration);
 }
 
-// EASCape: the loot shows in a window, like the later Barrows chest. It's the 2006 treasure
-// trail reward window (chest, items, Close Window), which is what the later one grew out of.
+// EASCape: the loot shows in a "Barrows chest" window laid out like the later game's (your
+// call, 16 Oct 2026): title, close button, the open chest and the items (barrows_chest.if)
 [proc,barrows_reward_show]
-inv_transmit(trail_rewardinv, trail_reward:inv);
-if_openmain(trail_reward);
+inv_transmit(trail_rewardinv, barrows_chest:inv);
+if_openmain(barrows_chest);
 
 // ---------------------------------------------------------------------------------------------
 // being underground: the overlay, the hidden minimap, the prayer drain and the collapse
