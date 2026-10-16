@@ -6232,6 +6232,7 @@ export class Client extends GameShell {
                 IfType.list[comId].modelXAn = type.xan2d;
                 IfType.list[comId].modelYAn = type.yan2d;
                 IfType.list[comId].modelZoom = ((type.zoom2d * 100) / zoom) | 0;
+                IfType.list[comId].preloadModel();
 
                 this.ptype = -1;
                 return true;

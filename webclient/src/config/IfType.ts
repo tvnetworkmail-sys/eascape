@@ -400,6 +400,11 @@ export default class IfType {
         return tmp;
     }
 
+    // EASCape: start loading the component's model now, so it can be drawn the moment it's shown
+    preloadModel(): void {
+        this.getModel(this.model1Type, this.model1Id, null);
+    }
+
     private getModel(type: number, id: number, localPlayer: ClientPlayer | null): Model | null {
         let model = IfType.modelCache.find(BigInt((type << 16) + id));
         if (model) {

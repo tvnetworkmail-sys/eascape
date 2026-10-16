@@ -516,8 +516,11 @@ if (~barrows_looted = true) {
 [proc,barrows_enter_underground]
 ~barrows_check_setup;
 if_openoverlay(inter_98);
+~barrows_faces_preload;
 ~barrows_faces_hide;
-minimap_toggle(2);
+// the 2006 game hid the minimap down here (the OSRS wiki: a much later miniquest gives "the
+// ability to use your minimap within the Barrows tunnels"); EASCape keeps it on (your call,
+// 16 Oct 2026)
 clearsofttimer(barrows_drain);
 softtimer(barrows_drain, 30);
 if (~barrows_looted = true & coordy(coord) = 0) {
@@ -539,7 +542,8 @@ def_int $face = random(6);
 def_component $com = ~barrows_face_com($face);
 if_setobject($com, ~barrows_face_obj(random(12)), 100);
 if_sethide($com, false);
-queue(barrows_face_clear, 3, $face);
+// shown for one tick, as 2009scape does (it clears the face on its next pulse)
+queue(barrows_face_clear, 1, $face);
 
 [queue,barrows_face_clear](int $face)
 if_sethide(~barrows_face_com($face), true);
@@ -552,6 +556,14 @@ switch_int ($face) {
     case 3 : return(inter_98:com_4);
     case 4 : return(inter_98:com_5);
     case default : return(inter_98:com_6);
+}
+
+// give the client all 12 faces once, so each is loaded before it has to flash up
+[proc,barrows_faces_preload]
+def_int $i = 0;
+while ($i < 12) {
+    if_setobject(~barrows_face_com(modulo($i, 6)), ~barrows_face_obj($i), 100);
+    $i = add($i, 1);
 }
 
 [proc,barrows_faces_hide]
