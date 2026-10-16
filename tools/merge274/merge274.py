@@ -164,6 +164,8 @@ for t in ('obj', 'npc', 'loc', 'seq', 'spotanim', 'synth', 'varp', 'varbit', 'id
     bid = {v: k for k, v in b.items()}
     for name, i in a.items():
         if name not in b and i in bid:
+            if t == 'varp' and name in rdpack(os.path.join(MM, 'varbit.377')):
+                continue  # 377 uses this name for a varbit
             tgt = varptrans if t == 'varp' else modeltrans if t == 'model' else trans
             if name in tgt and tgt[name] != bid[i]:
                 tgt[name] = None
@@ -320,6 +322,47 @@ if newc:
     report['constant_added'] += [c.split(' ')[0] for c in newc]
 
 # ---- scripts and interfaces: file merges
+
+# ---- hunk-level merge for scripts: where 377 and 274 changed the same lines, keep 377's lines
+# if they mention anything that only exists in the 2006 game (so 2006 content is never lost),
+# otherwise take 274's (its fixes)
+IDENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+def tokens_of(root):
+    t = set()
+    for p_ in files(root):
+        if p_.rsplit('.', 1)[-1] in ('rs2', 'obj', 'npc', 'loc', 'if', 'inv', 'varp', 'varbit', 'constant', 'enum', 'dbrow', 'dbtable', 'param', 'struct', 'seq', 'spotanim'):
+            t.update(IDENT.findall(open(os.path.join(root, p_), encoding='utf-8', errors='surrogateescape').read()))
+    return t
+ONLY2006 = tokens_of(O) - tokens_of(T)
+def smart_merge(opath, bpath, tpath, target):
+    out = subprocess.run(['git', 'merge-file', '-p', '--diff3', '-L', 'ours', '-L', 'base', '-L', 'theirs', opath, bpath, tpath], capture_output=True).stdout.decode('utf-8', 'surrogateescape')
+    if '<<<<<<< ours' not in out:
+        return out
+    res, mode, ours, theirs = [], None, [], []
+    for line in out.split('\n'):
+        if line.startswith('<<<<<<< ours'):
+            mode, ours, theirs = 'ours', [], []
+            continue
+        if mode and line.startswith('||||||| base'):
+            mode = 'base'
+            continue
+        if mode and line.startswith('======='):
+            mode = 'theirs'
+            continue
+        if mode and line.startswith('>>>>>>> theirs'):
+            keep377 = bool(set(IDENT.findall('\n'.join(ours))) & ONLY2006)
+            res.extend(ours if keep377 else theirs)
+            report['hunk_kept_377' if keep377 else 'hunk_took_274'].append(target)
+            mode = None
+            continue
+        if mode == 'ours':
+            ours.append(line)
+        elif mode == 'theirs':
+            theirs.append(line)
+        elif mode is None:
+            res.append(line)
+    return '\n'.join(res)
+
 ofiles_by_base = collections.defaultdict(list)
 for p in files(OUT):
     ofiles_by_base[os.path.basename(p)].append(p)
@@ -372,12 +415,20 @@ for p in files(T):
         report['file_kept_377'].append(target)
         continue
     orig = open(opath, 'rb').read()
-    r = subprocess.run(['git', 'merge-file', '--ours' if level == 1 else '--theirs', '-q', opath, bpath, tpath])
-    res = open(opath, 'rb').read()
-    if res.count(b'/*') != res.count(b'*/'):
+    res = smart_merge(opath, bpath, tpath, target).encode('utf-8', 'surrogateescape')
+    open(opath, 'wb').write(res)
+    def balanced(b):
+        return b.count(b'/*') == b.count(b'*/') and b.count(b'{') == b.count(b'}')
+    if not balanced(res) or level == 1:
+        # mixing hunks broke the structure: let 377 win every clash in this file instead
         open(opath, 'wb').write(orig)
-        report['file_kept_377'].append(target + ' (merge broke a comment)')
-        continue
+        subprocess.run(['git', 'merge-file', '--ours', '-q', opath, bpath, tpath])
+        res = open(opath, 'rb').read()
+        if not balanced(res):
+            open(opath, 'wb').write(orig)
+            report['file_kept_377'].append(target + ' (merge broke the structure)')
+            continue
+        report['file_merged_377_wins'].append(target)
     report['file_merged'].append(target)
 
 touched = set(report['file_merged']) | set(report['file_added']) | {p for p in files(OUT) if p.startswith('_merge274')}

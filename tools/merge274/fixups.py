@@ -46,10 +46,11 @@ rewards = {
 for path, (old, new) in rewards.items():
     edit(path, old, new)
 
-# 3. 274 changed this proc to return a boolean; 377's overlay still stores it as an int.
-edit('minigames/game_trawler/scripts/trawler_overlay.rs2',
-     'def_int $net_ripped = ~trawler_net_ripped;',
-     'def_int $net_ripped = 0;\nif (~trawler_net_ripped = true) $net_ripped = 1;')
+# 3. trawler: only needed when 274's boolean version of the net proc won
+if 'trawler_net_ripped]()(boolean)' in open('scripts/minigames/game_trawler/scripts/trawler_net.rs2').read():
+    edit('minigames/game_trawler/scripts/trawler_overlay.rs2',
+         'def_int $net_ripped = ~trawler_net_ripped;',
+         'def_int $net_ripped = 0;\nif (~trawler_net_ripped = true) $net_ripped = 1;')
 
 # 4. 377's troll thrower calls the ranged hit proc without the protect-prayer flag 274 added.
 edit('areas/area_burthorpe/scripts/death_troll_thrower.rs2',
@@ -78,4 +79,33 @@ if ($deposit > 0) {
 }
 return(true);
 ''')
+# 6. 377's stairs file has placeholder scripts for the Barrows crypt stairs; Barrows has its own
+p6 = 'scripts/ladders+stairs/scripts/stairs.rs2'
+t6 = open(p6, encoding='utf-8').read()
+for b in ('ahrim', 'dharok', 'guthan', 'karil', 'torag', 'verac'):
+    t6 = re.sub(r'(?ms)^\[oploc1,barrows_stairs_' + b + r'\]\n.*?(?=^\[)', '', t6)
+open(p6, 'w', encoding='utf-8').write(t6)
+# 7. treasure trail puzzles: 377's version of these procs takes the puzzle box / one message
+edit('areas/area_edgeville/scripts/oziach.rs2', 'if(~trail_puzzle_complete = true)', 'if(~trail_puzzle_complete(trail_clue_hard_riddle014_puzzlebox) = true)')
+edit('areas/area_falador/scripts/goblin_village/general_bentnoze.rs2', 'if(~trail_puzzle_complete = true)', 'if(~trail_puzzle_complete(trail_clue_hard_riddle017_puzzlebox) = true)')
+edit('quests/quest_regicide/scripts/lord_iorwerth.rs2', '"<p,neutral>Before I will help you, human, you must complete this for me!", "Lord Iorwerth has given you a puzzle box!")', '"Lord Iorwerth has given you a puzzle box!")')
+
+# 8. Regicide's furnace uses the normal 377 furnace (274's smelting is laid out differently)
+open('scripts/_merge274/scripts/eascape_furnace.rs2', 'w').write('''// EASCape: Regicide's furnace (merged from 274) works like every other 377 furnace
+[label,use_furnace]
+switch_obj (last_useitem) {
+    case gold_bar, perfect_gold_bar : @craft_gold_interface;
+    case silver_bar : @craft_silver;
+    case steel_bar : @smelt_cannonballs;
+    case bucket_sand, soda_ash : @smelt_glass;
+    case default :
+        if (oc_category(last_useitem) = category_91) {
+            @smelt_ore(last_useitem);
+        }
+        ~displaymessage(^dm_default);
+}
+''')
+# 9. the Gnome Ball tab while on the pitch (377 has it, the 274 side had it switched off)
+edit('skill_combat/scripts/player/player_attackstyles.rs2', '    // if_settab(gnomeball, 0);', '    if_settab(gnomeball, 0);')
+edit('skill_combat/scripts/player/player_attackstyles.rs2', '    // .if_settab(gnomeball, 0);', '    .if_settab(gnomeball, 0);')
 print('fixups done')

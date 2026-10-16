@@ -64,28 +64,97 @@ if (p_finduid(uid) = true) {
 [if_button,controls:com_24] @controls_emote(emote_clap);
 
 [if_button,controls:com_41]
-if(testbit(%emote_access, ^macro_mime_glass_wall) = ^false) {
-    @lockemote_mime_event;
+if (p_finduid(uid) = true) {
+    if(%emote_glasswall = ^false) {
+        @lockemote_mime_event;
+    }
+    @controls_emote(emote_glass_wall);
 }
-@controls_emote(emote_glass_wall);
 
 [if_button,controls:com_42]
-if(testbit(%emote_access, ^macro_mime_glass_box) = ^false) {
-    @lockemote_mime_event;
+if (p_finduid(uid) = true) {
+    if(%emote_glassbox = ^false) {
+        @lockemote_mime_event;
+    }
+    @controls_emote(emote_glass_box);
 }
-@controls_emote(emote_glass_box);
 
 [if_button,controls:com_43]
-if(testbit(%emote_access, ^macro_mime_climb_rope) = ^false) {
-    @lockemote_mime_event;
+if (p_finduid(uid) = true) {
+    if(%emote_climbrope = ^false) {
+        @lockemote_mime_event;
+    }
+    @controls_emote(emote_climbing_rope);
 }
-@controls_emote(emote_climbing_rope);
 
 [if_button,controls:com_44]
-if(testbit(%emote_access, ^macro_mime_lean) = ^false) {
-    @lockemote_mime_event;
+if (p_finduid(uid) = true) {
+    if(%emote_lean = ^false) {
+        @lockemote_mime_event;
+    }
+    @controls_emote(emote_mime_lean);
 }
-@controls_emote(emote_mime_lean);
+
+[if_button,controls:com_45] @controls_emote(emote_blow_kiss);
+[if_button,controls:com_55] @controls_emote(emote_panic);
+[if_button,controls:com_56] @controls_emote(emote_dance_scottish);
+[if_button,controls:com_57] @controls_emote(emote_dance_spin);
+[if_button,controls:com_58] @controls_emote(emote_dance_headbang);
+[if_button,controls:com_59] @controls_emote(emote_jump_with_joy);
+[if_button,controls:com_60] @controls_emote(emote_ya_boo_sucks);
+[if_button,controls:com_61] @controls_emote(emote_yawn);
+[if_button,controls:com_62] @controls_emote(emote_fremmenik_salute);
+[if_button,controls:com_63] @controls_emote(emote_shrug);
+
+[if_button,controls:com_76]
+if (p_finduid(uid) = true) {
+    if(%lost_tribe_quest < 7) {
+        @lockemote_lost_tribe;
+    }
+    @controls_emote(human_cave_goblin_bow);
+}
+
+[if_button,controls:com_77]
+if (p_finduid(uid) = true) {
+    if(%lost_tribe_quest < 7) {
+        @lockemote_lost_tribe;
+    }
+    @controls_emote(human_cave_goblin_dance);
+}
+
+[if_button,controls:com_78] 
+if (p_finduid(uid) = true) {
+    if(%emote_terrified = ^false) {
+        ~mesbox("This emote can be unlocked by doing a Halloween seasonal event."); // TODO: confirm for 2005-2006
+        return;
+    }
+    @controls_emote(terrified_emote);
+}
+
+[if_button,controls:com_84]
+if (p_finduid(uid) = true) {
+    if(%emote_zombie_walk = ^false) {
+        @lockemote_gravedigger_event;
+    }
+    @controls_emote(zombie_walk_emote);
+}
+
+[if_button,controls:com_85]
+if (p_finduid(uid) = true) {
+    if(%emote_zombie_dance = ^false) {
+        @lockemote_gravedigger_event;
+    }
+    @controls_emote(zombie_dance);
+}
+
+[if_button,controls:com_86]
+if (p_finduid(uid) = true) {
+    if(%emote_bunny_hop = ^false) {
+        ~mesbox("This emote can be unlocked by doing an Easter seasonal event."); // TODO: confirm for 2005-2006
+        return;
+    }
+    // @controls_emote(bunny_hop);
+}
 
 [label,controls_emote](seq $anim)
 if_close;
@@ -98,9 +167,12 @@ if (~inzone_coord_pair_table(trawler_wreck_zones, coord) = true) {
 }
 p_stopaction;
 anim($anim, 20);
-// p_delay(~seqlength20ms($anim));
 
 [label,lockemote_mime_event]
-if (p_finduid(uid) = true) {
-    ~mesbox("You can't use that emote yet."); // https://www.youtube.com/watch?v=Ke-iZF6aZ98&t=185s july 06 (https://www.youtube.com/watch?v=s083tB35i-8&t=80s changed late 06)
-}
+~mesbox("This emote can be unlocked during the mime random event.");
+
+[label,lockemote_gravedigger_event]
+~mesbox("This emote can be unlocked during the gravedigger random event.");
+
+[label,lockemote_lost_tribe]
+~mesbox("This emote can be unlocked during the Lost Tribe quest.");

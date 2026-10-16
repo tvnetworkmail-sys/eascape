@@ -117,6 +117,9 @@ if ($maxhit ! null) {
 }
 ~npc_poison_player;
 spotanim_pl(db_getfield($spell_data, magic_spell_table:spotanim_target, 0), $duration);
+if (db_getfieldcount($spell_data, magic_spell_table:sound_hit) > 0) {
+    sound_synth(db_getfield($spell_data, magic_spell_table:sound_hit, 0), 0, $duration);
+}
 queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
 
 [proc,npc_stat_change_effect](dbrow $spell_data)

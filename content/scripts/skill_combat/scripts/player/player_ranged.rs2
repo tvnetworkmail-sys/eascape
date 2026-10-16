@@ -48,7 +48,11 @@ if (~player_npc_hit_roll(%damagetype) = true) {
             $maxhit = 0;
         }
     }
-    $damage = randominc(~npc_max_dealt($maxhit, 0));
+    if((npc_param(slayer_category) = ^slayer_kurask | npc_param(slayer_category) = ^slayer_turoth) 
+        & (oc_category($rhand) ! weapon_bow | inv_total(worn, slayer_broad_arrows) = 0)) {
+        $maxhit = 0;
+    }
+    $damage = randominc(min($maxhit, npc_param(max_dealt)));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     ~give_combat_experience(%damagestyle, $damage_capped, %npc_combat_xp_multiplier);
     npc_heropoints($damage_capped);

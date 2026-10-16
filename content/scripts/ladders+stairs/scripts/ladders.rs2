@@ -66,6 +66,7 @@ p_arrivedelay;
 p_arrivedelay;
 ~climb_ladder(movecoord(coord(), 0, -1, 0), true);
 
+// TODO 377 enable after Black Knights' Fortress is ported
 [oploc1,loc_1749]
 p_arrivedelay;
 switch_coord (loc_coord) {
@@ -194,3 +195,33 @@ if ($option = 1) {
 
 [label,unhandled_ladder](coord $loccoord)
 mes("Unhandled ladder: <~coord_tostring($loccoord)>");
+
+[oploc1,loc_11727]
+p_arrivedelay;
+~climb_ladder(movecoord(coord(), 0, 1, 0), true);
+
+[oploc1,loc_11728]
+p_arrivedelay;
+~climb_ladder(movecoord(coord(), 0, -1, 0), false);
+
+[oploc1,roving_golrie_ladder_to_cellar]
+~climb_ladder(0_39_149_37_20, false);
+
+[oploc1,roving_golrie_ladder_from_cellar]
+~climb_ladder(0_39_49_37_20, true);
+
+[oploc1,castlewars_saradomin_spawnladder]
+p_arrivedelay;
+~climb_ladder(movecoord(coord, 0, 1, 0), true);
+
+[oploc1,castlewars_zamorak_spawnladder]
+p_arrivedelay;
+~climb_ladder(movecoord(coord, 0, 1, 0), true);
+
+[oploc1,castlewars_laddertop]
+p_arrivedelay;
+~climb_ladder(movecoord(coord, 0, -1, 0), true); // https://youtu.be/rrYcZsMBOgM?t=79
+
+[oploc1,castlewars_ladder_cellar_directional]
+p_arrivedelay;
+~climb_ladder(movecoord(coord, 0, 0, 6400), true);

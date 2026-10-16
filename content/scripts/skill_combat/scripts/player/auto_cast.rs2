@@ -39,21 +39,21 @@ if (p_finduid(uid) = true) {
         return;
     }
     // set auto cast varp
-    %varp_59 = $spell;
+    %autocast_spell = $spell;
     if_settext(combat_staff_2:auto_spell, db_getfield($spell_data, magic_spell_table:name, 0));
 
     ~initalltabs;
 }
 
 [proc,player_autocast_enabled]()(boolean)
-if (testbit(%autocast_set, 0) = ^true & %varp_59 > 0) {
+if (testbit(%autocast_set, 0) = ^true & %autocast_spell > 0) {
     return(true);
 }
 return(false);
 
 [proc,player_autocast_reset]
 %autocast_set = 0;
-%varp_59 = null;
+%autocast_spell = null;
 
 [proc,.player_autocast_reset]
 .%autocast_set = 0;

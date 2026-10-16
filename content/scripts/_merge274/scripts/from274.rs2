@@ -23,6 +23,17 @@ if (playermember = ^false) {
 }
 return(true);
 
+// from 274: general_use/scripts/windmills.rs2
+[label,millbase_opu]
+if (last_useitem = pot_empty) {
+    if (%flour > 0) p_oploc(1);
+    else @empty_flour_bin;
+} else if(last_useitem = pot_flour) {
+    mes("This pot is already full.");
+} else {
+    ~displaymessage(^dm_default);
+}
+
 // from 274: macro events/scripts/macro_events.rs2
 [proc,macro_events_set_tabs]
 if_settab(null, 0);
@@ -96,4 +107,18 @@ switch_int(~p_choice2("I'd like some mountain goat stew, please.", 1, "No thanks
         }
     case 2 : @eadgar_nothanks;
 }
+
+// from 274: minigames/game_trail/scripts/trail_clue_helper.rs2
+[label,trail_clue_loc_interact](obj $clue)
+if(oc_category($clue) = trail_clue_hard) @trail_clue_hard_loc_interact($clue);
+if(oc_category($clue) = trail_clue_medium) @trail_clue_medium_loc_interact($clue);
+else @trail_clue_easy_loc_interact($clue);
+
+// from 274: minigames/game_trail/scripts/easy/trail_clue_easy.rs2
+[label,trail_clue_easy_loc_interact](obj $clue)
+~progress_clue_easy($clue, "You've found another clue scroll!");
+
+// from 274: minigames/game_trail/scripts/hard/trail_clue_hard.rs2
+[label,trail_clue_hard_loc_interact](obj $clue)
+~progress_clue_hard($clue, "You've found another clue scroll!");
 

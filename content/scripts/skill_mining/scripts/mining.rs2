@@ -191,8 +191,13 @@ if ($data = null) {
     ~displaymessage(^dm_default);
     return;
 }
-inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
-stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
+if (stat_base(mining) >= 30 & map_members = ^true) {
+    inv_add(inv, blankrune_high, 1);
+    stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
+} else {
+    inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
+    stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
+}
 // mes("You manage to mine an unbound rune stone."); probably removed with law altar?
 p_oploc(3);
 
