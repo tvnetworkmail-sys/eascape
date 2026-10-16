@@ -4921,6 +4921,9 @@ export class Client extends GameShell {
             this.drawInterface(IfType.list[this.mainModalId], 0, 0, 0);
         }
 
+        // EASCape plugin: Barrows panel, prayer drain timer and puzzle answer
+        this.barrowsOverlays();
+
         this.getSpecialArea();
 
         if (!this.isMenuOpen) {
@@ -11578,10 +11581,175 @@ export class Client extends GameShell {
             this.minimapDrawDot(anchorY, this.mapmarker1, anchorX);
         }
 
+        // EASCape plugin: Barrows brothers' letters on the minimap
+        this.barrowsMinimap();
+
         // the white square local player position in the center of the minimap.
         Pix2D.fillRect(97, 78, 3, 3, Colour.WHITE);
 
         this.areaGame?.setPixels();
+    }
+
+    // ---- EASCape plugin: Barrows (RuneLite's "Barrows Brothers" plugin, built in) ----
+    // Same features as RuneLite's plugin (runelite-client/.../plugins/barrows), less the chest
+    // value (we don't do item prices). Varp ids are from content/pack/varp.pack, interface ids from
+    // content/pack/interface.pack; the varbit layout is from the 377 all.varbit.
+    private static readonly BARROWS_VARP = 452; // %barrows: puzzle answer slot + 1 in bits 26-28
+    private static readonly BARROWS_KILLS_VARP = 453; // bits 0-5 brothers killed, 6-15 monster levels
+    private static readonly BARROWS_OVERLAY_IF = 4535; // inter_98, the in-game Barrows overlay
+    private static readonly BARROWS_PUZZLE_IF = 4543; // inter_99, the puzzle
+    private static readonly BARROWS_PUZZLE_ANSWER_COM = 4550; // inter_99:com_6 (com_7, com_8 follow)
+    // name and mound tile of each brother (RuneLite's BarrowsBrothers)
+    private static readonly BARROWS_BROTHERS: [string, number, number][] = [
+        ['Ahrim', 3566, 3289],
+        ['Dharok', 3575, 3298],
+        ['Guthan', 3577, 3283],
+        ['Karil', 3566, 3275],
+        ['Torag', 3553, 3283],
+        ['Verac', 3557, 3298]
+    ];
+    // our crypts drain prayer every 30 ticks (barrows.rs2), 18 seconds
+    private static readonly BARROWS_DRAIN_MS = 18000;
+    private barrowsDrainStart: number = -1;
+
+    private barrowsKilled(index: number): boolean {
+        return ((this.var[Client.BARROWS_KILLS_VARP] >> index) & 0x1) === 1;
+    }
+
+    private barrowsWorldX(): number {
+        return this.localPlayer ? this.mapBuildBaseX + (this.localPlayer.x >> 7) : -1;
+    }
+
+    private barrowsWorldZ(): number {
+        return this.localPlayer ? this.mapBuildBaseZ + (this.localPlayer.z >> 7) : -1;
+    }
+
+    private barrowsMinimap(): void {
+        if (!this.localPlayer || !this.p12) {
+            return;
+        }
+        // only when the Barrows map square (55_51) is loaded
+        if (this.mapBuildBaseX >= 3584 || this.mapBuildBaseX + BuildArea.SIZE <= 3520 || this.mapBuildBaseZ >= 3328 || this.mapBuildBaseZ + BuildArea.SIZE <= 3264) {
+            return;
+        }
+        const angle: number = (this.orbitCameraYaw + this.macroMinimapAngle) & 0x7ff;
+        const sin: number = ((Pix3D.sinTable[angle] * 256) / (this.macroMinimapZoom + 256)) | 0;
+        const cos: number = ((Pix3D.cosTable[angle] * 256) / (this.macroMinimapZoom + 256)) | 0;
+        for (let i = 0; i < Client.BARROWS_BROTHERS.length; i++) {
+            const [name, wx, wz] = Client.BARROWS_BROTHERS[i];
+            const dx = (wx - this.mapBuildBaseX) * 4 + 2 - ((this.localPlayer.x / 32) | 0);
+            const dy = (wz - this.mapBuildBaseZ) * 4 + 2 - ((this.localPlayer.z / 32) | 0);
+            if (dx * dx + dy * dy > 6400) {
+                continue;
+            }
+            const x = (dy * sin + dx * cos) >> 16;
+            const y = (dy * cos - dx * sin) >> 16;
+            const letter = name.charAt(0);
+            const px = x + 94 + 4;
+            const py = 83 - y - 4 + 5;
+            this.p12.centreString(letter, px + 1, py + 1, Colour.BLACK);
+            this.p12.centreString(letter, px, py, this.barrowsKilled(i) ? 0xff0000 : 0x00ffff);
+        }
+    }
+
+    private barrowsOverlays(): void {
+        if (!this.localPlayer || !this.p12) {
+            return;
+        }
+        let y = 4;
+
+        // brothers slain and reward potential, while the in-game Barrows overlay is up
+        if (this.mainOverlayId === Client.BARROWS_OVERLAY_IF) {
+            const width = 129;
+            const lines = Client.BARROWS_BROTHERS.length + 1;
+            const height = lines * 15 + 8;
+            Pix2D.fillRectTrans(4, y, width, height, 0x463d32, 156);
+            Pix2D.drawRect(4, y, width, height, 0x38302a);
+            let ty = y + 15;
+            let brothers = 0;
+            for (let i = 0; i < Client.BARROWS_BROTHERS.length; i++) {
+                const slain = this.barrowsKilled(i);
+                if (slain) {
+                    brothers++;
+                }
+                this.p12.drawString(Client.BARROWS_BROTHERS[i][0], 9, ty, Colour.WHITE);
+                this.barrowsMark(width - 10, ty - 9, slain);
+                ty += 15;
+            }
+            const potential = ((this.var[Client.BARROWS_KILLS_VARP] >> 6) & 0x3ff) + brothers * 2;
+            const colour = potential >= 756 && potential < 881 ? 0x00ff00 : potential < 631 ? Colour.WHITE : Colour.YELLOW;
+            this.p12.drawString('Potential', 9, ty, Colour.WHITE);
+            this.p12.drawStringRight(((potential / 1012) * 100).toFixed(2) + '%', width, ty, colour);
+            y += height + 4;
+        }
+
+        // prayer drain countdown while in the crypts and tunnels (map square 55_151)
+        const inCrypt = this.barrowsWorldX() >> 6 === 55 && this.barrowsWorldZ() >> 6 === 151;
+        if (!inCrypt) {
+            this.barrowsDrainStart = -1;
+        } else {
+            const now = performance.now();
+            if (this.barrowsDrainStart === -1) {
+                this.barrowsDrainStart = now;
+            }
+            const left = Client.BARROWS_DRAIN_MS - ((now - this.barrowsDrainStart) % Client.BARROWS_DRAIN_MS);
+            Pix2D.fillRectTrans(4, y, 35, 35, 0x463d32, 156);
+            Pix2D.drawRect(4, y, 35, 35, 0x38302a);
+            this.sideicons[5]?.plotSprite(4 + 6, y + 4);
+            this.p12.drawStringRight(Math.ceil(left / 1000).toString(), 4 + 33, y + 33, Colour.BLACK);
+            this.p12.drawStringRight(Math.ceil(left / 1000).toString(), 4 + 32, y + 32, Colour.WHITE);
+        }
+
+        // the puzzle's right answer, boxed in green
+        if (this.mainModalId === Client.BARROWS_PUZZLE_IF) {
+            const answer = (this.var[Client.BARROWS_VARP] >> 26) & 0x7;
+            if (answer >= 1 && answer <= 3) {
+                const pos = this.barrowsComPos(IfType.list[Client.BARROWS_PUZZLE_IF], Client.BARROWS_PUZZLE_ANSWER_COM + answer - 1, 0, 0);
+                if (pos) {
+                    const com = IfType.list[Client.BARROWS_PUZZLE_ANSWER_COM + answer - 1];
+                    Pix2D.drawRect(pos[0], pos[1], com.width, com.height, 0x00ff00);
+                }
+            }
+        }
+    }
+
+    // a small green tick or red cross, 7 pixels square, top-left at x, y
+    private barrowsMark(x: number, y: number, slain: boolean): void {
+        if (slain) {
+            for (let i = 0; i < 3; i++) {
+                Pix2D.fillRect(x + i, y + 3 + i, 1, 2, 0x00ff00);
+            }
+            for (let i = 0; i < 5; i++) {
+                Pix2D.fillRect(x + 3 + i, y + 5 - i, 1, 2, 0x00ff00);
+            }
+        } else {
+            for (let i = 0; i < 7; i++) {
+                Pix2D.fillRect(x + i, y + i, 1, 1, 0xff0000);
+                Pix2D.fillRect(x + 6 - i, y + i, 1, 1, 0xff0000);
+            }
+        }
+    }
+
+    // where a component is drawn, the same way drawInterface places it
+    private barrowsComPos(layer: IfType, id: number, x: number, y: number): [number, number] | null {
+        if (!layer.children || !layer.childX || !layer.childY) {
+            return null;
+        }
+        for (let i = 0; i < layer.children.length; i++) {
+            const child = IfType.list[layer.children[i]];
+            const cx = layer.childX[i] + x + child.x;
+            const cy = layer.childY[i] + y + child.y - (layer.scrollPos ?? 0);
+            if (child.id === id) {
+                return [cx, cy];
+            }
+            if (child.type === ComponentType.TYPE_LAYER) {
+                const found = this.barrowsComPos(child, id, cx, cy);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     minimapDrawArrow(dx: number, dy: number, image: Pix32 | null) {
