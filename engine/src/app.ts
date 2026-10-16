@@ -56,6 +56,11 @@ function safeExit() {
 
 process.on('SIGINT', safeExit);
 process.on('SIGTERM', safeExit);
+// EASCape: closing the server window (Windows sends SIGHUP): save everyone first
+process.on('SIGHUP', () => {
+    World.saveAllNow();
+    safeExit();
+});
 
 process.on('uncaughtException', function (err) {
     console.error(err, 'Uncaught exception');

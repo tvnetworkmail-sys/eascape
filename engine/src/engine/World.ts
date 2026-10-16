@@ -121,7 +121,7 @@ class World {
 
     private static readonly INV_STOCKRATE: number = 100; // 1m shop restocks
 
-    private static readonly PLAYER_SAVERATE: number = 1500; // 15m autosave
+    private static readonly PLAYER_SAVERATE: number = 100; // EASCape: autosave every minute (was 15m)
     private static readonly PLAYER_COORDLOGRATE: number = 50; // 30s server check-in
 
     private static readonly AFK_EVENTRATE: number = 500; // 5m: 60/5 = 12 chances per hour
@@ -419,7 +419,7 @@ class World {
             }
 
             if (tick % World.PLAYER_SAVERATE === 0 && tick > 0) {
-                // auto-save players every 15 mins
+                // auto-save players every minute
                 this.savePlayers();
             }
 
@@ -1229,6 +1229,28 @@ class World {
         if (duration > 2) {
             // after 1 second, kick into high gear (need time to flush logout packets first)
             this.tickRate = 0;
+        }
+    }
+
+    // EASCape: save everyone straight to disk, right now. Used when the server window is
+    // closed, where Windows only gives the process a few seconds before killing it.
+    saveAllNow(): void {
+        if (Environment.LOGIN_SERVER) {
+            this.savePlayers();
+            return;
+        }
+
+        const dir = `data/players/${Environment.NODE_PROFILE}`;
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+
+        for (const player of this.playerLoop.all()) {
+            try {
+                fs.writeFileSync(`${dir}/${player.username}.sav`, player.save());
+            } catch (err) {
+                console.error(err);
+            }
         }
     }
 
