@@ -164,6 +164,7 @@ if ($freeze_time > 0) {
 }
 
 [proc,pvp_spell_success](dbrow $spell_data, int $maxhit, int $duration)
+~barrows_degrade_check;
 def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
 def_int $damagestyle = ^style_magic_normal;
 if (%damagestyle = ^style_melee_defensive) { // check varp directly
@@ -179,6 +180,11 @@ if ($maxhit = null) {
     return;
 }
 
+// Ahrim's set
+if (~barrows_worn_set = ^barrows_set_ahrim & random(4) = 0) {
+    .stat_sub(strength, 5, 0);
+    .spotanim_pl(barrows_ahirm_blighted_aura, 92, $duration);
+}
 if (~.check_protect_prayer(^magic_style) = true) {
     $maxhit = scale(6, 10, $maxhit); // reduction of 40%
 }
@@ -193,6 +199,7 @@ both_heropoints($damage);
 .queue*(pvp_retaliate, calc($duration / 30 + 1))(uid);
 
 [proc,pvp_spell_fail](dbrow $spell_data, int $duration)
+~barrows_degrade_check;
 // splash
 sound_synth(spellfail, 1, 0);
 .sound_synth(spellfail, 1, 0);

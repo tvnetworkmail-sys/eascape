@@ -787,7 +787,23 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, -1587312319);
+                // EASCape: server-only varps may be added after the 725 from 377, as long as the
+                // client sees nothing in them (one 0 byte each). The 377 ones must still match.
+                const original = 725;
+                const count = (client.data[0] << 8) | client.data[1];
+                if (count <= original) {
+                    return Packet.checkcrc(client.data, 0, client.pos, -1587312319);
+                }
+                const extra = count - original;
+                for (let i = client.pos - extra; i < client.pos; i++) {
+                    if (client.data[i] !== 0) {
+                        return false;
+                    }
+                }
+                const copy = Uint8Array.from(client.data.subarray(0, client.pos - extra));
+                copy[0] = original >> 8;
+                copy[1] = original & 0xff;
+                return Packet.checkcrc(copy, 0, copy.length, -1587312319);
             }
         );
     }

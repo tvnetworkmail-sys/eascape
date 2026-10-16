@@ -23,17 +23,35 @@ if ($rhand = null) {
     $poison_severity = oc_param($rhand, poison_severity);
 }
 
+~barrows_degrade_check;
+def_int $barrows_set = ~barrows_worn_set;
+// Verac's set: 1 in 4 go through armour, Defence and protection prayers
+def_boolean $verac = false;
+if ($barrows_set = ^barrows_set_verac & random(4) = 0) {
+    $verac = true;
+}
 def_int $damage = 0;
 // not sure if xp multipler exists for us or not?!
 // https://oldschool.runescape.wiki/w/Combat#PvP_bonus_experience
-if (~pvp_hit_roll(%damagetype) = true) {
+if ($verac = true | ~pvp_hit_roll(%damagetype) = true) {
     def_int $maxhit = %com_maxhit;
-    if (~.check_protect_prayer(^melee_style) = true) {
+    if ($barrows_set = ^barrows_set_dharok) {
+        $maxhit = ~barrows_dharok_maxhit($maxhit);
+    }
+    if ($verac = false & ~.check_protect_prayer(^melee_style) = true) {
         $maxhit = scale(6, 10, $maxhit); // reduction of 40%
     }
     $damage = min(randominc($maxhit), .stat(hitpoints)); // tick eating existed! https://oldschool.runescape.wiki/w/Update:The_Wintertodt
     ~give_combat_experience_pvp(%damagestyle, $damage, ~pvp_xp_multiplier(~.player_combat_level));
     both_heropoints($damage);
+    if ($barrows_set = ^barrows_set_guthan & $damage > 0 & random(4) = 0) {
+        stat_heal(hitpoints, $damage, 0);
+        .spotanim_pl(barrows_guthan_effect, 0, 0);
+    }
+    if ($barrows_set = ^barrows_set_torag & random(4) = 0) {
+        .healenergy(sub(0, scale(20, 100, .runenergy)));
+        .spotanim_pl(barrows_torag_effect, 0, 0);
+    }
 }
 
 anim(%com_attackanim, 0);

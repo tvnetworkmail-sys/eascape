@@ -30,11 +30,17 @@ if ($ammo = null) {
 p_opplayer(2);
 ~set_pk_vars;
 
+~barrows_degrade_check;
 def_int $damage = 0;
 // not sure if xp multipler exists for us or not?!
 // https://oldschool.runescape.wiki/w/Combat#PvP_bonus_experience
 if (~pvp_hit_roll(%damagetype) = true) {
     def_int $maxhit = %com_maxhit;
+    // Karil's set
+    if (~barrows_worn_set = ^barrows_set_karil & random(4) = 0) {
+        .stat_sub(agility, 0, 20);
+        .spotanim_pl(barrows_karil_tainted_shot, 92, 30);
+    }
     if (~.check_protect_prayer(^ranged_style) = true) {
         $maxhit = scale(6, 10, $maxhit); // reduction of 40%
     }

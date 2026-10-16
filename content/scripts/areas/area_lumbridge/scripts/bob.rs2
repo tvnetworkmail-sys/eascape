@@ -20,6 +20,10 @@ if($option = 1) {
 def_obj $item = last_useitem;
 def_int $slot = last_useslot;
 def_int $cost = oc_cost($item);
+// EASCape: Barrows equipment
+if (oc_param($item, barrows_set) > 0) {
+    @bob_repair_barrows($item, $slot);
+}
 if (oc_param($item, to_be_fixed_by_bob) = ^true) {
 // https://youtu.be/bdvD8uxlEAs?list=PLn23LiLYLb1aYjPgadhUQGX61AeHWaT4y
     if (inv_total(inv, coins) < $cost) {

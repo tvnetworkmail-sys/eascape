@@ -203,7 +203,13 @@ return($duration);
 
 
 [proc,pvm_spell_success](dbrow $spell_data, int $maxhit, int $duration)
+~barrows_degrade_check;
 def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+// Ahrim's set
+if ($maxhit ! null & ~barrows_worn_set = ^barrows_set_ahrim & random(4) = 0) {
+    npc_statsub(strength, 5, 0);
+    spotanim_npc(barrows_ahirm_blighted_aura, 92, $duration);
+}
 def_int $damagestyle = ^style_magic_normal;
 if (%damagestyle = ^style_melee_defensive) { // check varp directly
     $damagestyle = ^style_magic_defensive; // casting a spell with defensive on gives mage + def xp
@@ -251,6 +257,7 @@ spotanim_npc(db_getfield($spell_data, magic_spell_table:spotanim_target, 0), $du
 
 
 [proc,pvm_spell_fail](dbrow $spell_data, int $duration)
+~barrows_degrade_check;
 // splash
 sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
 sound_synth(spellfail, 1, $duration);

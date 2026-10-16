@@ -15,10 +15,19 @@ if (npc_stat(hitpoints) = 0) {
     return; // this means the npc is not avail to fight i.e dead
 }
 
+~barrows_degrade_check;
+def_int $barrows_set = ~barrows_worn_set;
 // check hit, give combat xp
 def_int $damage = 0;
-if (~player_npc_hit_roll(%damagetype) = true) {
+def_boolean $hit = ~player_npc_hit_roll(%damagetype);
+if ($barrows_set = ^barrows_set_verac & random(4) = 0) {
+    $hit = true; // Verac's set: this one goes through armour and Defence
+}
+if ($hit = true) {
     def_int $maxhit = %com_maxhit;
+    if ($barrows_set = ^barrows_set_dharok) {
+        $maxhit = ~barrows_dharok_maxhit($maxhit);
+    }
     if (npc_type = count_draynor & inv_total(inv, garlic) > 0) {
         $maxhit = add($maxhit, 1);
     }
@@ -32,6 +41,10 @@ if (~player_npc_hit_roll(%damagetype) = true) {
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     ~give_combat_experience(%damagestyle, $damage_capped, %npc_combat_xp_multiplier);
     npc_heropoints($damage_capped);
+    if ($barrows_set = ^barrows_set_guthan & $damage_capped > 0 & random(4) = 0) {
+        stat_heal(hitpoints, $damage_capped, 0);
+        spotanim_npc(barrows_guthan_effect, 0, 0);
+    }
 }
 
 def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);

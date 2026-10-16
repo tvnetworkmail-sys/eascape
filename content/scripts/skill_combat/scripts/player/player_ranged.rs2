@@ -30,6 +30,7 @@ if ($ammo = null) {
     return;
 }
 
+~barrows_degrade_check;
 // check hit, give combat xp
 def_int $damage = 0;
 if (~player_npc_hit_roll(%damagetype) = true) {
@@ -87,6 +88,14 @@ if ($ammo = null) {
     if($rhand = ogre_bow) mes("There is no ammo left in your quiver");
     else mes("There is no ammo left in your quiver.");
     return(null);
+}
+// EASCape: Karil's crossbow only fires bolt racks, and bolt racks only fit Karil's crossbow
+if (oc_param($rhand, barrows_set) = ^barrows_set_karil) {
+    if ($ammo ! barrows_karil_ammo) {
+        mes("You can't use that ammo with your crossbow.");
+        return(null);
+    }
+    return($ammo);
 }
 def_category $ammo_cat = oc_category($ammo);
 if (($rhand = ogre_bow & $ammo_cat ! ogre_arrows) | 

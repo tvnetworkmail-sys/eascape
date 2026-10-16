@@ -1,0 +1,167 @@
+// EASCape: Barrows equipment. Set effects, wearing down and Bob's repairs.
+//
+// From the OSRS wiki (Barrows equipment):
+// - A piece lasts 15 hours of combat: 1000 points, 250 for each of the 100, 75, 50 and 25
+//   stages. It takes a point when you go into combat, then one every 90 ticks you stay in it.
+//   The first point turns a fresh piece into its 100 version.
+// - At 0 the piece is broken: no stats and no set effect.
+// - Bob in Lumbridge repairs it for (points of wear) x 60 for a helm, 90 for a body, 80 for
+//   legs and 100 for a weapon, so a broken helm costs 60,000 coins.
+// We keep the wear inside the current stage per brother and piece, not per item, so two of
+// the same piece share one count.
+//
+// Set effects need the helm, body, legs and weapon of the same brother, none of them broken:
+// - Ahrim: a successful magic hit has a 1 in 4 chance to lower the target's Strength by 5.
+// - Dharok: the lower your hitpoints, the harder you hit:
+//   max hit x (1 + (max hp - hp) / 100 x max hp / 100).
+// - Guthan: a melee hit has a 1 in 4 chance to heal you by the damage it does.
+// - Karil: a ranged hit has a 1 in 4 chance to lower the target's Agility by 20%.
+// - Torag: a melee hit has a 1 in 4 chance to drain 20% of the target's run energy.
+// - Verac: 1 in 4 melee attacks ignore the target's armour, Defence and protection prayers.
+// NPCs have no Agility or run energy, so Karil's and Torag's only work on players.
+
+// the full set you're wearing (^barrows_set_*), or 0
+[proc,barrows_worn_set]()(int)
+def_obj $head = inv_getobj(worn, ^wearpos_hat);
+if ($head = null) return(0);
+def_int $set = oc_param($head, barrows_set);
+if ($set = 0) return(0);
+if (~barrows_worn_piece_ok(inv_getobj(worn, ^wearpos_rhand), $set) = false) return(0);
+if (~barrows_worn_piece_ok(inv_getobj(worn, ^wearpos_torso), $set) = false) return(0);
+if (~barrows_worn_piece_ok(inv_getobj(worn, ^wearpos_legs), $set) = false) return(0);
+return($set);
+
+[proc,barrows_worn_piece_ok](obj $obj, int $set)(boolean)
+if ($obj = null) return(false);
+if (oc_param($obj, barrows_set) ! $set) return(false);
+if (oc_param($obj, barrows_stage) = ^barrows_stage_broken) return(false);
+return(true);
+
+// Dharok's max hit
+[proc,barrows_dharok_maxhit](int $maxhit)(int)
+def_int $base = stat_base(hitpoints);
+def_int $missing = max(0, sub($base, stat(hitpoints)));
+return(add($maxhit, scale(multiply($missing, $base), 10000, $maxhit)));
+
+// ---- wearing down ----
+
+// called whenever you attack or get attacked
+[proc,barrows_degrade_check]
+if (%barrows_wear_next > map_clock) return;
+if (~barrows_wearing_any = false) return;
+%barrows_wear_next = add(map_clock, ^barrows_wear_ticks);
+queue(barrows_degrade, 0, 0);
+
+[proc,barrows_wearing_any]()(boolean)
+if (~barrows_degradable(inv_getobj(worn, ^wearpos_hat)) = true) return(true);
+if (~barrows_degradable(inv_getobj(worn, ^wearpos_rhand)) = true) return(true);
+if (~barrows_degradable(inv_getobj(worn, ^wearpos_torso)) = true) return(true);
+if (~barrows_degradable(inv_getobj(worn, ^wearpos_legs)) = true) return(true);
+return(false);
+
+[proc,barrows_degradable](obj $obj)(boolean)
+if ($obj = null) return(false);
+if (oc_param($obj, barrows_set) = 0) return(false);
+if (oc_param($obj, barrows_stage) = ^barrows_stage_broken) return(false);
+return(true);
+
+[queue,barrows_degrade]
+def_boolean $changed = false;
+if (~barrows_degrade_slot(^wearpos_hat) = true) $changed = true;
+if (~barrows_degrade_slot(^wearpos_rhand) = true) $changed = true;
+if (~barrows_degrade_slot(^wearpos_torso) = true) $changed = true;
+if (~barrows_degrade_slot(^wearpos_legs) = true) $changed = true;
+if ($changed = true) {
+    ~update_all(null);
+}
+
+// one point of wear on the piece in this slot; true if it changed into the next stage
+[proc,barrows_degrade_slot](int $slot)(boolean)
+def_obj $obj = inv_getobj(worn, $slot);
+if (~barrows_degradable($obj) = false) return(false);
+def_int $counter = ~barrows_counter_index($obj);
+def_namedobj $next = oc_param($obj, barrows_degrade_next);
+if (oc_param($obj, barrows_stage) = 0) {
+    // fresh: the first point makes it the 100 version
+    inv_setslot(worn, $slot, $next, 1);
+    ~barrows_wear_set($counter, 1);
+    return(true);
+}
+def_int $wear = add(~barrows_wear_get($counter), 1);
+if ($wear < ^barrows_wear_per_stage) {
+    ~barrows_wear_set($counter, $wear);
+    return(false);
+}
+inv_setslot(worn, $slot, $next, 1);
+~barrows_wear_set($counter, 0);
+if (oc_param($next, barrows_stage) = ^barrows_stage_broken) {
+    mes("Your <oc_name($obj)> has broken.");
+}
+return(true);
+
+[proc,barrows_counter_index](obj $obj)(int)
+return(add(multiply(sub(oc_param($obj, barrows_set), 1), 4), oc_param($obj, barrows_piece)));
+
+[proc,barrows_wear_get](int $counter)(int)
+def_int $start = multiply(modulo($counter, 3), 8);
+def_int $end = add($start, 7);
+switch_int (divide($counter, 3)) {
+    case 0 : return(getbit_range(%barrows_wear_0, $start, $end));
+    case 1 : return(getbit_range(%barrows_wear_1, $start, $end));
+    case 2 : return(getbit_range(%barrows_wear_2, $start, $end));
+    case 3 : return(getbit_range(%barrows_wear_3, $start, $end));
+    case 4 : return(getbit_range(%barrows_wear_4, $start, $end));
+    case 5 : return(getbit_range(%barrows_wear_5, $start, $end));
+    case 6 : return(getbit_range(%barrows_wear_6, $start, $end));
+    case 7 : return(getbit_range(%barrows_wear_7, $start, $end));
+}
+return(0);
+
+[proc,barrows_wear_set](int $counter, int $value)
+def_int $start = multiply(modulo($counter, 3), 8);
+def_int $end = add($start, 7);
+switch_int (divide($counter, 3)) {
+    case 0 : %barrows_wear_0 = setbit_range_toint(%barrows_wear_0, $value, $start, $end);
+    case 1 : %barrows_wear_1 = setbit_range_toint(%barrows_wear_1, $value, $start, $end);
+    case 2 : %barrows_wear_2 = setbit_range_toint(%barrows_wear_2, $value, $start, $end);
+    case 3 : %barrows_wear_3 = setbit_range_toint(%barrows_wear_3, $value, $start, $end);
+    case 4 : %barrows_wear_4 = setbit_range_toint(%barrows_wear_4, $value, $start, $end);
+    case 5 : %barrows_wear_5 = setbit_range_toint(%barrows_wear_5, $value, $start, $end);
+    case 6 : %barrows_wear_6 = setbit_range_toint(%barrows_wear_6, $value, $start, $end);
+    case 7 : %barrows_wear_7 = setbit_range_toint(%barrows_wear_7, $value, $start, $end);
+}
+
+// points of wear out of 1000 (0 for a fresh piece)
+[proc,barrows_points_used](obj $obj)(int)
+def_int $stage = oc_param($obj, barrows_stage);
+if ($stage = 0) return(0);
+if ($stage = ^barrows_stage_broken) return(1000);
+return(add(multiply(sub($stage, 1), ^barrows_wear_per_stage), ~barrows_wear_get(~barrows_counter_index($obj))));
+
+// ---- Bob's repairs (called from [opnpcu,bob]) ----
+// Lines are Bob's own from bob.rs2; the finishing message is 2009scape's (BobDialogue.kt).
+
+[label,bob_repair_barrows](obj $item, int $slot)
+def_int $used = ~barrows_points_used($item);
+if ($used = 0) {
+    ~chatnpc("<p,neutral>Sorry friend, but I can't do anything with that.");
+    return;
+}
+def_int $cost = multiply($used, oc_param($item, barrows_repair_rate));
+if (inv_total(inv, coins) < $cost) {
+    ~chatnpc("<p,sad>I'll need <tostring($cost)>gp to repair that.");
+    return;
+}
+~chatnpc("<p,neutral>Quite badly damaged, but easy to repair. Would you like me to repair it for <tostring($cost)>gp?");
+if (~p_choice2("Yes, please.", 1, "No, thank you.", 2) ! 1) {
+    return;
+}
+if (inv_getobj(inv, $slot) ! $item | inv_total(inv, coins) < $cost) {
+    return;
+}
+def_namedobj $repaired = oc_param($item, barrows_repaired);
+inv_delslot(inv, $slot);
+inv_del(inv, coins, $cost);
+inv_add(inv, $repaired, 1);
+~barrows_wear_set(~barrows_counter_index($item), 0);
+mes("Bob fixes your <lowercase(oc_name($repaired))> for <tostring($cost)>gp.");
