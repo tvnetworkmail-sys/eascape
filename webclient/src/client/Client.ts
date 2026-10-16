@@ -11644,6 +11644,11 @@ export class Client extends GameShell {
             }
             const x = (dy * sin + dx * cos) >> 16;
             const y = (dy * cos - dx * sin) >> 16;
+            // keep the whole letter inside the round map: pixels drawn outside it are never
+            // painted over again, which left cyan smears round the edge
+            if (x * x + y * y > 60 * 60) {
+                continue;
+            }
             const letter = name.charAt(0);
             const px = x + 94 + 4;
             const py = 83 - y - 4 + 5;
