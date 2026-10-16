@@ -571,7 +571,12 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                     return false;
                 }
 
-                const coord = args[0].split(',');
+                // EASCape: named places for testing (coordinates from our own content scripts)
+                const places: Record<string, string> = {
+                    barrows: '0,55,51,45,25', // by Ahrim's mound (barrows.rs2, barrows_mound_coord)
+                    bob: '0,50,50,32,3' // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
+                };
+                const coord = (places[args[0].toLowerCase()] ?? args[0]).split(',');
                 if (coord.length < 3) {
                     return false;
                 }

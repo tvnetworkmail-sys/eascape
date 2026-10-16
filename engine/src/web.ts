@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 import ejs from 'ejs';
@@ -110,10 +111,20 @@ fastify.route({
 fastify.get<{ Querystring: { lowmem?: string } }>('/rs2.cgi', async (req, reply) => {
     const lowmem = tryParseInt(req.query.lowmem, 0);
 
+    // the client file's time stamp goes on its address, so a browser fetches a new client as
+    // soon as one is pulled instead of running the copy it saved earlier
+    let version = 0;
+    try {
+        version = Math.floor(fs.statSync('public/client/client.js').mtimeMs);
+    } catch {
+        version = Date.now();
+    }
+
     return reply.viewAsync('client.ejs', {
         nodeid: Environment.NODE_ID,
         members: Environment.NODE_MEMBERS,
-        lowmem
+        lowmem,
+        version
     });
 });
 

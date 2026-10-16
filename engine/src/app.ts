@@ -11,8 +11,11 @@ import { printError, printInfo } from '#/util/Logger.js';
 import { startManagementWeb, startWeb } from '#/web.js';
 import OnDemand from '#/engine/OnDemand.js';
 
-if (OnDemand.cache.count(0) !== 9 || OnDemand.cache.count(2) === 0 || !fs.existsSync('data/pack/server/script.dat')) {
-    printInfo('Packing cache, please wait until you see the world is ready.');
+// EASCape: always pack on startup. It only rebuilds what changed, so after start.bat pulls new
+// content it is live straight away (it used to pack only when nothing had been packed yet, which
+// left your PC running old scripts after an update).
+{
+    printInfo('Packing cache (only what changed), please wait until you see the world is ready.');
 
     try {
         // todo: different logic so the main thread doesn't have to load pack files
