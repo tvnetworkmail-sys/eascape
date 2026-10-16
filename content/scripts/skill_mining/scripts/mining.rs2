@@ -18,7 +18,8 @@
 def_int $is_empty = loc_param(mining_rock_empty);
 if ($is_empty = ^true) {
     anim(null, 0);
-    mes("There is no ore currently available in this rock.");
+    if(loc_type = loc_4030) mes("There are no minerals currently available in this rock.");
+    else mes("There is no ore currently available in this rock.");
     sound_synth(prospect, 1, 0);
     return;
 }
@@ -36,7 +37,7 @@ if (inv_freespace(inv) < 1) {
 def_int $levelreq = db_getfield($data, mining_table:rock_level, 0);
 if (stat(mining) < $levelreq) {
     anim(null, 0);
-    ~mesbox("You need a mining level of <tostring($levelreq)> to mine this rock.");
+    ~mesbox("You need a Mining level of <tostring($levelreq)> to mine this rock."); // https://www.youtube.com/watch?v=0U6sd3J_Ngo&t=64s
     return;
 }
 // Macro events
@@ -47,7 +48,8 @@ if (afk_event = ^true & loc_category ! mining_rock_macro_gas) {
 def_obj $pickaxe = ~pickaxe_checker;
 if ($pickaxe = null) {
     anim(null, 0);
-    ~mesbox("You need a pickaxe to mine this rock. You do not have a pickaxe which you have the Mining level to use.");
+    //https://www.youtube.com/watch?v=rjQprrDDUfE
+    ~mesbox("You need a Pickaxe to mine this rock. You do not have a Pickaxe which you have the Mining level to use.");
     return;
 }
 def_int $mining_rate = oc_param($pickaxe, mining_rate);
@@ -78,13 +80,13 @@ if (inv_freespace(inv) < 1) {
 def_int $levelreq = db_getfield($data, mining_table:rock_level, 0);
 if (stat(mining) < $levelreq) {
     anim(null, 0);
-    ~mesbox("You need a mining level of <tostring($levelreq)> to mine this rock.");
+    ~mesbox("You need a Mining level of <tostring($levelreq)> to mine this rock."); // https://www.youtube.com/watch?v=0U6sd3J_Ngo&t=64s
     return;
 }
 def_obj $pickaxe = ~pickaxe_checker;
 if ($pickaxe = null) {
     anim(null, 0);
-    ~mesbox("You need a pickaxe to mine this rock. You do not have a pickaxe which you have the Mining level to use.");
+    ~mesbox("You need a Pickaxe to mine this rock. You do not have a Pickaxe which you have the Mining level to use.");
     return;
 }
 def_int $mining_rate = oc_param($pickaxe, mining_rate);
@@ -129,7 +131,7 @@ if (random($chance) = ^true) {
     def_int $respawn = ~scale_by_playercount(db_getfield($data, mining_table:rock_respawnrate, 0));
     // Temp note: dur does not need updated
     loc_change(loc_param(next_loc_stage_mining), $respawn);
-    sound_synth(mine, 1, 0);
+    sound_synth(mine, 1, 0); // Sudden says its mine
     anim(null, 0);
     // The 'perfect' gold rocks in Family Crest are the same ID as regular gold rocks, so check to 
     // give out the right ore if we're in that location. Only gold rocks are in this room.
@@ -172,7 +174,7 @@ if (random($chance) = ^true) {
     def_int $respawn = ~scale_by_playercount(db_getfield($data, mining_table:rock_respawnrate, 0));
     // Temp note: dur does not need updated
     loc_change(loc_param(next_loc_stage_mining), $respawn);
-    sound_synth(mine, 1, 0);
+    sound_synth(mine, 1, 0); // Sudden says its mine
     anim(null, 0);
     inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
     stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
@@ -189,13 +191,8 @@ if ($data = null) {
     ~displaymessage(^dm_default);
     return;
 }
-if (stat_base(mining) >= 30 & map_members = ^true) {
-    inv_add(inv, blankrune_high, 1);
-    stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
-} else {
-    inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
-    stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
-}
+inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
+stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
 // mes("You manage to mine an unbound rune stone."); probably removed with law altar?
 p_oploc(3);
 

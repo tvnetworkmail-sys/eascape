@@ -9,8 +9,7 @@ switch_obj(last_useitem) {
     case bucket_empty : mes("Only dairy cows are suitable for milking.");
     case default : mes("The cow doesn't want that."); // osrs
 }
-
-[opnpcu,cow3]
+[opnpcu,cow_beef]
 switch_obj(last_useitem) {
     case bucket_empty : mes("Only dairy cows are suitable for milking.");
     case default : mes("The cow doesn't want that."); // osrs
@@ -45,7 +44,4 @@ if(inv_total(inv, bucket_empty) = 0) {
 }
 inv_del(inv, bucket_empty, 1);
 inv_add(inv, bucket_milk, 1);
-sound_synth(milk_cow, 1, 0);
-anim(milkit, 0);
 mes("You milk the cow."); // osrs and rsc
-weakqueue(milk_cow, 8, 0);

@@ -30,7 +30,6 @@ readyanim=triffid_angry_ready
 walkanim=triffid_angry_walk
 op2=Attack
 alwaysontop=yes
-// https://youtu.be/94bDnUMTMXQ?list=PLn23LiLYLb1Y3P9S9qZbijcJihiD416jT
 wanderrange=3
 maxrange=3
 timer=20
@@ -40,18 +39,14 @@ param=death_anim,triffid_angry_death
 param=death_drop,null
 param=attack_sound,triffid_attack
 param=defend_sound,null
-// npc has no defend sound at all? or it uses the attack sound also as the defend sound.
-// I'm not sure, try to find out the information. temporary change defendsound -> null
 param=max_dealt,3
 param=combat_xp_multiplier,25
-// https://youtu.be/mah2N7nznSk?list=PLn23LiLYLb1aLE-R7X4IV6D0Jl-m2el9i for poison and hit points (estimated)
 param=poison_severity,10
-// stats are completely guessed
 attack=50
 strength=10
 defence=99
-// this video he does 209 damage, so 9 min of regen from the monster https://youtu.be/8GERe1S_4lM
 hitpoints=200
+param=death_sound,null
 
 [macro_geni]
 name=Genie
@@ -135,25 +130,22 @@ walkanim=swarm_walk
 minimap=no
 alwaysontop=yes
 timer=20
-// hits up to 2's https://youtu.be/5NgTccJZh1o
-// https://web.archive.org/web/20051125144605/http://www.tip.it/runescape/index.php?rs2monster_id=167
 strength=10
-// attack and hp is completely guessed
 attack=50
 hitpoints=255
-// these ranges are based off https://www.youtube.com/watch?v=ohRbhtCRL2c&list=PLn23LiLYLb1bhaCSJgRd1zQet3DFcY0yG&index=4
 wanderrange=3
 maxrange=3
-// attack rate is 7 ticks https://youtu.be/5NgTccJZh1o
 param=attackrate,7
 param=attack_sound,swarm_attack
-param=attack_anim,swarm_block
+param=attack_anim,swarm_attack
 param=defend_sound,null
-param=defend_anim,swarm_attack
+param=defend_anim,swarm_block
 param=death_drop,null
 param=combat_xp_multiplier,25
 param=max_dealt,0
-// TODO
+param=damagetype,^stab_style
+param=death_anim,null
+param=death_sound,null
 
 [macro_golemguardian_1]
 name=Rock Golem
@@ -172,7 +164,6 @@ alwaysontop=yes
 resizev=112
 resizeh=112
 vislevel=14
-// https://www.youtube.com/watch?v=JCEM2bxMnPM&list=PLn23LiLYLb1bQvSMxsNH6T0eM0nRU-5w0&index=8
 wanderrange=3
 maxrange=5
 timer=20
@@ -189,6 +180,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_golemguardian_2]
 name=Rock Golem
@@ -223,6 +216,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_golemguardian_3]
 name=Rock Golem
@@ -257,6 +252,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_golemguardian_4]
 name=Rock Golem
@@ -291,6 +288,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_golemguardian_5]
 name=Rock Golem
@@ -325,6 +324,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_golemguardian_6]
 name=Rock Golem
@@ -359,6 +360,8 @@ param=attack_sound,golem_attack
 param=defend_sound,golem_hit
 param=death_sound,golem_death
 param=death_drop,null
+param=damagetype,^crush_style
+param=combat_xp_multiplier,25
 
 [macro_zombie1]
 name=Zombie
@@ -558,8 +561,6 @@ walkanim=ghosthuman_walk_forward
 op2=Attack
 alwaysontop=yes
 vislevel=14
-// https://www.youtube.com/watch?v=GwSL0nKsiqk&list=PLn23LiLYLb1YtGa-AYh8WEBy8VvKFhVY6&index=1&t=128s
-// https://youtu.be/dQ0CKFrXGJY?list=PLn23LiLYLb1Y3P9S9qZbijcJihiD416jT&t=201 
 wanderrange=3
 maxrange=3
 timer=20
@@ -572,7 +573,7 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
@@ -614,7 +615,7 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
@@ -656,7 +657,7 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
@@ -698,7 +699,7 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
@@ -740,7 +741,7 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
@@ -782,12 +783,13 @@ param=damagetype,^crush_style
 param=attack_anim,human_sword_transslash
 param=defend_anim,human_sword_transdef
 param=death_anim,human_transdeath
-param=attack_sound,ghost_attack
+param=attack_sound,stabsword_slash
 param=defend_sound,ghost_hit
 param=death_sound,ghost_death
 param=death_drop,null
 param=undead,^true
 param=combat_xp_multiplier,25
+category=macro_event_shade
 
 [macro_watchman1]
 name=Watchman
@@ -808,7 +810,6 @@ readyanim=human_ready
 op2=Attack
 alwaysontop=yes
 vislevel=14
-// ranges are guessed
 wanderrange=3
 maxrange=5
 timer=20
@@ -816,17 +817,13 @@ hitpoints=20
 attack=9
 strength=9
 defence=9
-// i assume the stats are identical to other random events
 category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail
-// https://storage.googleapis.com/tannerdino/images/watchman.PNG here we can see defend animation.
-
+param=defend_sound,sound_784
 
 [macro_watchman2]
 name=Watchman
@@ -858,10 +855,9 @@ category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail (This information is taken from watchman.)
+param=defend_sound,sound_784
 
 [macro_watchman3]
 name=Watchman
@@ -893,10 +889,9 @@ category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail (This information is taken from watchman.)
+param=defend_sound,sound_784
 
 [macro_watchman4]
 name=Watchman
@@ -928,10 +923,9 @@ category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail (This information is taken from watchman.)
+param=defend_sound,sound_784
 
 [macro_watchman5]
 name=Watchman
@@ -963,10 +957,9 @@ category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail (This information is taken from watchman.)
+param=defend_sound,sound_784
 
 [macro_watchman6]
 name=Watchman
@@ -998,10 +991,9 @@ category=macro_event_watchman
 param=attack_anim,human_blunt_pound
 param=defend_anim,human_blunt_def
 param=attack_sound,mace_crush
-// param=defend_sound, TODO Try to figure out what the original sound was.
 param=damagetype,^crush_style
 param=combat_xp_multiplier,25
-// defend_sound blade3_mail (This information is taken from watchman.)
+param=defend_sound,sound_784
 
 [macro_dryhadguardian_1]
 name=Tree spirit
@@ -1021,7 +1013,6 @@ op2=Attack
 minimap=no
 alwaysontop=yes
 vislevel=14
-// https://youtu.be/pA_CIZNH04E?list=PLn23LiLYLb1Y3P9S9qZbijcJihiD416jT&t=96
 wanderrange=3
 maxrange=5
 timer=20
@@ -1038,6 +1029,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_dryhadguardian_2]
 name=Tree spirit
@@ -1073,6 +1065,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_dryhadguardian_3]
 name=Tree spirit
@@ -1108,6 +1101,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_dryhadguardian_4]
 name=Tree spirit
@@ -1143,6 +1137,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_dryhadguardian_5]
 name=Tree spirit
@@ -1178,6 +1173,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_dryhadguardian_6]
 name=Tree spirit
@@ -1213,6 +1209,7 @@ param=attack_sound,null
 param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
+param=death_drop,null
 
 [macro_bigfish]
 name=Big fish
@@ -1240,14 +1237,12 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=14
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=25
 attack=9
 strength=9
 defence=9
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9&t=16
 timer=20
 param=damagetype,^crush_style
 param=attack_anim,troll_attack
@@ -1258,6 +1253,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_rivertrollguardian_2]
 name=River troll
@@ -1272,7 +1268,6 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=29
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=40
@@ -1289,6 +1284,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_rivertrollguardian_3]
 name=River troll
@@ -1303,7 +1299,6 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=49
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=60
@@ -1320,6 +1315,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_rivertrollguardian_4]
 name=River troll
@@ -1334,7 +1330,6 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=79
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=85
@@ -1351,6 +1346,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_rivertrollguardian_5]
 name=River troll
@@ -1365,7 +1361,6 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=120
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=120
@@ -1382,6 +1377,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_rivertrollguardian_6]
 name=River troll
@@ -1396,7 +1392,6 @@ readyanim=troll_ready
 op2=Attack
 alwaysontop=yes
 vislevel=159
-// https://youtu.be/4sXuqebe18k?list=PLn23LiLYLb1am4weMQzkWn5m9b3m9fXv9
 wanderrange=3
 maxrange=5
 hitpoints=170
@@ -1413,6 +1408,7 @@ param=defend_sound,null
 param=death_sound,null
 param=combat_xp_multiplier,25
 category=macro_event_river_troll
+param=death_drop,null
 
 [macro_whirlpool_freshfish]
 name=Fishing spot
@@ -1507,19 +1503,17 @@ op1=Talk-to
 alwaysontop=yes
 head1=npc_macro_dwarf_head
 head2=npc_mcannonguard_headi2
-// https://youtu.be/Ww-PkAr4vt4?list=PLn23LiLYLb1Y3P9S9qZbijcJihiD416jT
 wanderrange=50
 maxrange=52
 timer=10
-// https://youtu.be/azxoPxBRe3c
 hitpoints=255
 attack=50
 strength=1
 param=attack_anim,dwarf_stone_launch
 param=attackrate,4
 param=attack_sound,thrown
-// stats are completely guessed
-// TODO sounds
+param=defend_anim,null
+param=death_anim,null
 
 [macro_mime]
 name=Mime
@@ -1548,6 +1542,7 @@ recol6d=2114
 vislevel=hide
 readyanim=human_ready
 alwaysontop=yes
+timer=5
 
 [macro_theatre_saradomin]
 name=Strange watcher
@@ -3101,6 +3096,7 @@ vislevel=hide
 op1=Chop down
 op3=hidden
 param=ent_tree_loc,tree
+defaultmode=none
 
 [macro_ent_tree2]
 name=Tree
@@ -3114,7 +3110,7 @@ readyanim=seq_1675
 vislevel=hide
 op1=Chop down
 op3=hidden
-//TODO: Recol doesnt match any trees with that desc?
+defaultmode=none
 
 [macro_ent_tree3]
 name=Tree
@@ -3142,6 +3138,7 @@ op1=Chop down
 op3=hidden
 param=ent_tree_loc,deadtree1
 moverestrict=nomove
+defaultmode=none
 
 [macro_ent_dead_tree2]
 name=Dead tree
@@ -3157,6 +3154,7 @@ op1=Chop down
 op3=hidden
 param=ent_tree_loc,lightdeadtree1
 moverestrict=nomove
+defaultmode=none
 
 [macro_ent_dead_tree3]
 name=Dead tree
@@ -3303,6 +3301,7 @@ vislevel=hide
 op1=Chop down
 op3=hidden
 param=ent_tree_loc,magictree
+defaultmode=none
 
 [macro_ent_maple]
 name=Maple tree
@@ -3315,6 +3314,8 @@ vislevel=hide
 op1=Chop down
 op3=hidden
 param=ent_tree_loc,mapletree
+defaultmode=none
+wanderrange=0
 
 [macro_ent_willow1]
 name=Willow
@@ -3367,6 +3368,7 @@ vislevel=hide
 op1=Chop down
 op3=hidden
 param=ent_tree_loc,oaktree
+defaultmode=none
 
 [macro_ent_yew]
 name=Yew
@@ -3379,6 +3381,7 @@ vislevel=hide
 op1=Chop down
 op3=hidden
 param=ent_tree_loc,yewtree
+defaultmode=none
 
 [macro_ent_evergreen1]
 name=Evergreen

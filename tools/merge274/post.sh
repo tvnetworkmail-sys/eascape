@@ -1,0 +1,3 @@
+cd /home/claude/eascape/content && python3 /tmp/claude-0/-home-claude/75994f91-c279-5580-8356-99c172c3a22d/scratchpad/fixups.py /tmp/claude-0/-home-claude/75994f91-c279-5580-8356-99c172c3a22d/scratchpad
+cd /home/claude/eascape/content && python3 /tmp/claude-0/-home-claude/75994f91-c279-5580-8356-99c172c3a22d/scratchpad/post_ifids.py /tmp/claude-0/-home-claude/75994f91-c279-5580-8356-99c172c3a22d/scratchpad
+cd /home/claude/eascape/content && grep -rh --include=*.loc --include=*.npc --include=*.obj "^category=" scripts | cut -d= -f2 | tr -d "\r" | sed "s/ *$//" | awk '!s[$0]++' | awk '{print NR-1"="$0}' > pack/category.pack

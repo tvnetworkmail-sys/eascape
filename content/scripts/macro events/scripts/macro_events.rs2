@@ -60,6 +60,9 @@ if (~inzone_coord_pair_table(trawler_game_zones, $coord) = true | ~inzone_coord_
 if (~in_tutorial_island($coord) = true) {
     return(false);
 }
+if (~inzone_coord_pair_table(games_room_zones, $coord) = true) { // https://runescape.salmoneus.net/forums/topic/244971-no-random-events/ Not sure about '04 - 07' but in '08 they weren't allowed. Were updated to be allowed in 2009.
+    return(false);
+}
 return(true);
 
 // this proc is only used for spawning randoms
@@ -92,27 +95,28 @@ if (npc_finduid(%macro_event_uid) = true) {
 }
 
 [proc,macro_event_npc](int $event)(npc)
-def_npc $event_npc;
-if (map_members = ^true) {
-    $event_npc = enum(int, npc, general_macro_events_members, $event);
-} else {
-    $event_npc = enum(int, npc, general_macro_events_free, $event);
-}
-return($event_npc);
+return(enum(int, npc, general_macro_events, $event));
 
 [proc,macro_event_set_random]()(int)
-if (map_members = ^true) {
-    return(~random_range(1, enum_getoutputcount(general_macro_events_members)));
-} else {
-    return(~random_range(1, enum_getoutputcount(general_macro_events_free)));
+def_int $random = ~random_range(1, enum_getoutputcount(general_macro_events));
+
+if ($random >= ^teleport_macro_start & (random(4) ! 0 | ~wilderness_level(coord) > 20)) {
+    //Only give teleport events 25% of the time they are rolled and only under 20 wildy
+    while ($random >= ^teleport_macro_start) {
+        $random = ~random_range(1, sub(^teleport_macro_start, 1));
+    }
 }
+
+if(map_members = ^false) {
+    while($random = ^macro_triffidseed) $random = ~random_range(1, sub(^teleport_macro_start, 1));
+}
+return($random);
 
 // used for skilling random events
 [proc,macro_event_general_count]()(int)
-if (map_members = ^true) {
-    return(enum_getoutputcount(general_macro_events_members));
-}
-return(enum_getoutputcount(general_macro_events_free));
+def_int $count = enum_getoutputcount(general_macro_events);
+if(map_members = ^false) $count = sub($count, ^members_macro_count);
+return($count);
 
 // teleports the player to a random location, using the coords in configs/macro_events_teleports.enum
 [queue,macro_event_fail_teleport]

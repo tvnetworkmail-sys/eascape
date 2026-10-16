@@ -27,7 +27,8 @@ mes("You pick the <$pocket>.");
 return(stat_random(thieving, db_getfield($data, pickpocket:success_chance, 0)));
 
 [proc,fail_pick_pocket](int $damage, int $stun_ticks, string $pocket)
-npc_say("What do you think you're doing?");
+if(npc_category = viking_citizen) ~viking_citizen_fail_say;
+else npc_say("What do you think you're doing?");
 mes("You fail to pick the <$pocket>.");
 npc_setmode(playerface);
 p_delay(0);
@@ -36,7 +37,7 @@ spotanim_pl(stunned_thieving, 124, 0);
 anim(%com_defendanim, 0);
 npc_anim(npc_param(attack_anim), 0);
 if (npc_param(attack_sound) ! null) {
-    sound_synth(npc_param(attack_sound), 0, 0);
+    sound_synth(npc_param(attack_sound), 1, 0);
 }
 sound_synth(stunned, 1, 0);
 p_delay(0);
@@ -57,6 +58,7 @@ if (~stealing_check_for_guard($data) = true) {
 } else if (~stealing_check_for_owner($data) = true) {
    return;
 }
+p_arrivedelay;
 def_int $experience = db_getfield($data, stealing:experience, 0);
 // osrs is 2x respawn speed, since they removed the scale by playercount
 def_int $respawn_ticks = ~scale_by_playercount(db_getfield($data, stealing:respawn_ticks, 0));
@@ -66,31 +68,38 @@ sound_synth(pick, 1, 0);
 p_delay(0); 
 switch_loc (loc_type) {
     case bakers_stall_stealing : 
-        longqueue(stolen_from_stall_baker, ^baker_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_baker, ^baker_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^baker_stall_index);
     case tea_stall : 
-        longqueue(stolen_from_stall_tea, ^tea_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_tea, ^tea_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^tea_stall_index);
     case silk_stall_stealing : 
-        longqueue(stolen_from_stall_silk, ^silk_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_silk, ^silk_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^silk_stall_index);
     case fur_stall_stealing : 
-        longqueue(stolen_from_stall_fur, ^fur_stall_timer, ^discard, 0); 
+        longqueue(stolen_from_stall_fur, ^fur_stall_timer, 0, ^discard); 
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^fur_stall_index);
     case silver_stall_stealing : 
-        longqueue(stolen_from_stall_silver, ^silver_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_silver, ^silver_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^silver_stall_index);
     case spice_stall_stealing : 
-        longqueue(stolen_from_stall_spice, ^spice_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_spice, ^spice_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^spice_stall_index);
     case gem_stall_stealing : 
-        longqueue(stolen_from_stall_gem, ^gem_stall_timer, ^discard, 0);
+        longqueue(stolen_from_stall_gem, ^gem_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^gem_stall_index);
+    case viking_fur_market : 
+        longqueue(stolen_from_stall_vikingfur, ^vikingfur_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^vikingfur_stall_index);
+    case viking_fish_market : 
+        longqueue(stolen_from_stall_vikingfish, ^vikingfish_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^vikingfish_stall_index);
 }
 ~stealing_check_for_reward($data);
 stat_advance(thieving, $experience);
 // Temp note: dur does not need updated
-loc_change(market, $respawn_ticks);
+if(loc_type = viking_fur_market | loc_type = viking_fish_market) loc_change(viking_market, $respawn_ticks);
+else loc_change(market, $respawn_ticks);
 
 [label,activate_trapped_chest]
 p_arrivedelay;

@@ -29,7 +29,7 @@ def_int $duration = 64;
 $duration = ~player_projectile(npc_coord, coord, uid, npc_param(proj_travel), 36, 36, 31, 8, 15, 128, 1);
 
 if (~check_protect_prayer(^ranged_style) = false) { // bypasses defence, but checks prayer
-    ~playerhit_n_ranged(randominc($maxhit), $duration, npc_param(attackrate));
+    ~playerhit_n_ranged(true, randominc($maxhit), $duration, npc_param(attackrate));
     return;
 }
-~playerhit_n_ranged(0, $duration, npc_param(attackrate));
+~playerhit_n_ranged(true, 0, $duration, npc_param(attackrate));

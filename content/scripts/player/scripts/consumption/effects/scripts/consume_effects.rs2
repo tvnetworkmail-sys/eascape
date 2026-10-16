@@ -85,7 +85,7 @@ if (db_getfieldcount($effect_data, consume_table:healenergy) > 0) {
 if ($sound = null) {
     sound_synth(liquid, 1, 0);
 } else {
-    sound_synth($sound, 0, 0);
+    sound_synth($sound, 1, 0);
 }
 
 [proc,consume_effect_messages](obj $consumable, int $hitpoints, boolean $say)
@@ -181,4 +181,3 @@ if ($say = true) {
 } else if (compare($consume_message2, "0") ! 0 & string_length($consume_message2) > 0 & (string_length($restore_message2) < 0 | $hitpoints >= stat(hitpoints) | compare($restore_message2, "0") = 0)) {
     mes($consume_message2); // kinda scuffed but since restore_message2 has a default i think this is required
 }
-

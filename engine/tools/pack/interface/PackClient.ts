@@ -42,7 +42,9 @@ export function packClientInterface(cache: FileStream, modelFlags: number[]) {
     }
 
     const packed = fs.readFileSync('data/pack/client/interface');
-    if (Environment.BUILD_VERIFY && !Packet.checkcrc(packed, 0, packed.length, 1433713710)) {
+    // EASCape: interfaces merged in from Lost City's 274 game are added to our cache, so the
+    // archive no longer matches the original 377 one. Every other check stays on.
+    if (false && Environment.BUILD_VERIFY && !Packet.checkcrc(packed, 0, packed.length, 1433713710)) {
         throw new Error('interface checksum mismatch!\nYou can disable this safety check by setting BUILD_VERIFY=false');
     }
 

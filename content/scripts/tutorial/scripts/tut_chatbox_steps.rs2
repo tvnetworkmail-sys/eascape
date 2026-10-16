@@ -15,28 +15,30 @@ tut_flash(^tab_game_options);
 // Removing "Feel free to" before try it in this room
 [proc,tutorial_step_interact_with_scenery]
 hint_coord(^hint_west, 0_48_48_26_35, 128);
-~tutorialstep("Interacting with scenery", "You can interact with many items of scenery by simply clicking|on them. Right clicking will also give more options. Try it with the things in this room, then click on the door indicated with the yellow arrow to go through to the next instructor.");
+// todo: line breaks are forcing an additional page (something is wrong with our proc, split, or string width)
+// ~tutorialstep("Interacting with scenery", "You can interact with many items of scenery by simply clicking|on them. Right clicking will also give more options. Feel free to|try it with the things in this room, then click on the door|indicated with the yellow arrow to go through to the next instructor.");
+~tutorialstep("Interacting with scenery", "You can interact with many items of scenery by simply clicking on them. Right clicking will also give more options. Feel free to try it with the things in this room, then click on the door indicated with the yellow arrow to go through to the next instructor.");
 
 [proc,tutorial_step_moving_around]
-~tutorialstep("Moving around", "Follow the path to find the next instructor. Clicking on the|ground will walk you to that point. Talk to the survival expert by|the pond to continue the tutorial. Remember you can rotate|the view by pressing the arrow keys.");
+~tutorialstep("Moving around", "Follow the path to find the next instructor.|Clicking on the ground will walk you to that point.|Talk to the survival expert by the pond to continue the tutorial.|Remember you can rotate the view by pressing the arrow keys.");
 ~set_hint_icon_newbie_survival_instructor;
 
 [proc,tutorial_step_view_inventory]
 hint_stop();
-~tutorialstep("Viewing the items that you were given.", "Click on the flashing backpack icon to the right side of the main window to view your inventory. Your inventory is a list of everything you have in your backpack.");
+~tutorialstep("Viewing the items that you were given.", "Click on the flashing backpack icon to the|right side of the main window to view your inventory.|Your inventory is a list of everything you have in your backpack.");
 inv_transmit(inv, inventory:inv);
 if_settab(inventory, ^tab_inventory);
 tut_flash(^tab_inventory);
 
 [proc,tutorial_step_cut_tree]
 hint_coord(^hint_west, 0_48_48_28_23, 175);
-~tutorialstep("Cut down a tree", "You can click on the backpack icon at any time to view|the items you currently have in your inventory. You will see that you now have an axe in your inventory. Use this to get some logs by clicking on the indicated tree.");
+~tutorialstep("Cut down a tree", "You can click on the backpack icon at any time|to view the items that you currently have in your inventory.|You will see that you now have an axe in your inventory.|Use this to get some logs by clicking on the indicated tree.");
 
 [proc,tutorial_please_wait_woodcutting]
-~tutorialstep("Please wait...", "|Your character is now attempting to cut down the tree. Sit back|for a moment whilst <text_gender("he", "she")> does all the hard work.");
+~tutorialstep("Please wait...", "|Your character is now attempting to cut down the tree.|Sit back for a moment whilst <text_gender("he", "she")> does all the hard work.");
 
 [proc,tutorial_step_build_fire]
-~tutorialstep("Building a fire", "Well done - you managed to cut some logs from the tree! Next, use the tinderbox in your inventory to light the logs.|a) First click on the tinderbox to use it.|b) Then click on the logs in your inventory to light them.");
+~tutorialstep("Building a fire", "Well done - you managed to cut some logs from the tree!|Next use the tinderbox in your inventory to light the logs.|a) First click on the tinderbox to 'use it'.|b) Then click on the logs in your inventory to light them.");
 
 [proc,tutorial_please_wait_firemaking]
 ~tutorialstep("Please wait...", "|Your character is now attempting to light the fire.|This should only take a few seconds.");
@@ -44,27 +46,27 @@ hint_coord(^hint_west, 0_48_48_28_23, 175);
 [proc,tutorial_step_you_gained_experience]
 if_settab(stats, ^tab_skills);
 tut_flash(^tab_skills);
-~tutorialstep("", "You gained some experience.|Click on the flashing bar graph icon near the inventory button|to see your skill abilities.");
+~tutorialstep("You gained some experience...", "Click on the flashing bar graph icon|near the inventory button|to see your skill abilities.");
 
 [proc,tutorial_step_view_stats]
-~tutorialstep("These are your stats.", "Here you will see how good your skills are. As you move your|mouse over any of the icons in this panel, you can see the exact amount of experience you have and how much is needed to get to the next level. Speak to Bryanna to continue.");
+~tutorialstep("These are your stats.", "Here you will see how good your skills are. Moving your|mouse over the icons will show you the exact amount of|experience for that skill in the bottom panel.|Speak to the instructor to continue.");
 ~set_hint_icon_newbie_survival_instructor;
 
 [proc,tutorial_step_catch_shrimp]
-~tutorialstep("Catch some Shrimp.", "Click on the fishing spot, indicated by the flashing arrow.|Remember you can check your inventory by clicking the|backpack icon.");
+~tutorialstep("Catch some Shrimp.", "Click on the fishing spot, indicated by the flashing arrow.|Remember you can check your inventory by clicking|the backpack icon.");
 
 [proc,tutorial_please_wait_fishing]
-~tutorialstep("Please wait...", "This should only take a few seconds.|As you gain fishing experience you'll find that there are many|types of fish and many ways to catch them.");
+~tutorialstep("Please wait...", "This should only take a few seconds.|As you gain fishing experience you'll find that|there are many types of fish and|many ways to catch them.");
 
 [proc,tutorial_step_cook_shrimp]
-~tutorialstep("Cooking your shrimp.", "Now you have caught some shrimp let's cook it. First light a|fire: Chop down a tree and then use the tinderbox on the logs.|If you've lost your axe or tinderbox Brynna will give you|another.");
+~tutorialstep("Cooking your shrimp.", "Now right click on the shrimp and select the use option.|Next left click on the fire you just lit.|If while doing this you look in the top left of the screen,|you will see the instruction that you're giving your character.");
 
 [proc,tutorial_step_burn_shrimp]
-~tutorialstep("Burning your shrimp.", "You have just burnt your first shrimp. This is normal. As you|get more experience in cooking you will burn stuff less. Let's|try cooking, without burning it this time. First catch some|shrimp, then use them on a fire.");
+~tutorialstep("Burning your shrimp.", "You have just burnt your first shrimp. This is normal.|As you get more experience in cooking you will burn stuff less.|Let's try cooking without burning it this time.|First catch some shrimp, then use them on a fire.");
 
 [proc,tutorial_step_survival_recap]
 hint_coord(^hint_east, 0_48_48_17_20, 100);
-~tutorialstep("Well done, you've just cooked your first RuneScape meal.", "If you'd like a recap on anything you've learned so far speak|to Brynna. You can now move onto the next instructor. Follow the path and click on the gate shown. Remember you can move|the camera with the arrow keys.");
+~tutorialstep("Well done, you've just cooked your first RuneScape meal.", "If you'd like a recap on anything you've learned so far speak|to Brynna. You can now move on to the next instructor.|Click to the gate shown and follow the path.|Remember you can move the camera with the arrow keys.");
 
 [proc,tutorial_step_go_to_chef]
 hint_coord(^hint_east, 0_48_48_6_12, 150);
@@ -118,7 +120,8 @@ if (p_finduid(uid) = true) {
 
 [proc,tutorial_step_enter_newbie_quest_instructor_house]
 hint_coord(^hint_south, 0_48_48_14_54, 150);
-~tutorialstep("Run to the next guide.", "Now that you have run turned on follow the path, until you|come to the end. You may notice that your energy left goes|down. If this reaches zero you'll stop running. Click on the door|to pass through it.");
+// https://i.imgur.com/N6U6KGj.png
+~tutorialstep("Run to the next guide.", "Now that you have run turned on follow the path,|until you come to the end. You may notice that your|energy left goes down. If this reaches zero you'll stop running.|Click on the door to pass through it.");
 
 [proc,tutorial_step_talk_to_newbie_quest_instructor]
 ~set_hint_icon_newbie_quest_instructor;
@@ -141,7 +144,8 @@ hint_coord(^hint_center, 0_48_48_16_47, 0);
 
 [proc,tutorial_step_talk_to_newbie_mining_instructor]
 ~set_hint_icon_newbie_mining_instructor;
-~tutorialstep("Mining and smithing.", "Next let's get you a weapon, or more to the point, you can|make your first weapon yourself. Don't panic, the mining|instructor will help you. Talk to him and he'll tell you all about it.");
+// https://i.imgur.com/eiUVQyy.png
+~tutorialstep("Mining and smithing.", "Next let's get you a weapon, or more to the point,|you can make your first weapon yourself.|Don't panic, the mining instructor will help you.|Talk to him and he'll tell you all about it.");
 
 [proc,tutorial_please_wait_prospecting]
 ~tutorialstep("Please wait...", "|Your character is now attempting to prospect the rock. This should take only a few seconds.");
@@ -229,7 +233,8 @@ if_settab(wornitems, ^tab_wornitems);
 tut_flash(^tab_wornitems);
 
 [proc,tutorial_step_worn_inventory]
-~tutorialstep("This is your worn inventory.", "From here you can see what items you have equipped. Let's|get one of those slots filled, go back to your inventory and |right click your dagger, select wield from the menu.");
+// https://i.imgur.com/jXg2Nz1.png
+~tutorialstep("This is your worn inventory.", "From here you can see what items you have equipped.|Let's get one of those slots filled, go back to your inventory|and right click your dagger, select wield from the menu.");
 
 [proc,tutorial_step_dagger_equipped]
 ~set_hint_icon_newbie_combat_instructor;
@@ -254,7 +259,8 @@ hint_stop();
 ~tutorialstep("Attacking.", "|To attack the rat right click it and select the attack option. You will then walk over to it and start hitting it.");
 
 [proc,tutorial_step_sit_back_and_watch_melee]
-~tutorialstep("Sit back and watch.", "While you are fighting you will see a bar over your head. The|bar shows how much health you have left. Your opponent will have one too. You will continue to attack the rat unti it's dead|or you do something else.");
+// https://i.imgur.com/BjjyjQK.png
+~tutorialstep("Sit back and watch.", "While you are fighting you will see a bar over your head.|The bar shows how much health you have left. Your opponent|will have one too. You will continue to|attack the rat until it's dead or you do something else.");
 
 [proc,tutorial_step_first_kill_melee]
 ~set_hint_icon_newbie_combat_instructor;
@@ -286,7 +292,8 @@ hint_coord(^hint_east, 0_48_48_57_52, 150);
 
 [proc,tutorial_to_the_chapel]
 ~set_hint_icon_brother_noob;
-~tutorialstep("", "Follow the path to the chapel and enter it.|Once inside talk to the monk. He'll tell you all about prayer.");
+// https://i.imgur.com/jWAjH0f.png
+~tutorialstep("", "Follow the path to the chapel and enter it.|Once inside talk to the monk.|He'll tell you all about prayer.");
 
 [proc,tutorial_your_prayer_menu]
 hint_stop();
@@ -319,7 +326,8 @@ hint_coord(^hint_north, 0_48_48_50_30, 125);
 
 [proc,tutorial_your_final_instructor_2]
 ~set_hint_icon_newbie_magic_instructor;
-~tutorialstep("Your final instructor!", "Just follow the path to the wizards house, where you will be shown how to cast spells. Just talk with the mage indicated to find out more.");
+// https://i.imgur.com/e6iOtDj.png
+~tutorialstep("Your final instructor!", "Just follow the path to the wizards house,|where you will be shown how to cast spells.|Just talk with the mage indicated to find out more.");
 
 [proc,tutorial_open_your_final_menu]
 tut_flash(^tab_magic);
@@ -337,4 +345,5 @@ if_settab(magic, ^tab_magic);
 
 [proc,tutorial_cast_wind_strike_success]
 ~set_hint_icon_newbie_magic_instructor;
-~tutorialstep("You have almost completed the tutorial!", "|All you need to do now is move on to the mainland. Just speak with Terrova and he'll teleport you to Lumbridge Castle.");
+// http://i2.photobucket.com/albums/y29/ASadEmoKid/Thebank.jpg
+~tutorialstep("You have almost completed the tutorial!", "|All you need to do now is move on to the mainland.|Just speak with Terrova and he'll teleport you to Castle Lumbridge.|");

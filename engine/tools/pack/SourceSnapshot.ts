@@ -50,8 +50,10 @@ export class SourceSnapshot {
                 }
 
                 const key = makeKey(root, ext);
-                const current = this.latest.get(key) ?? 0;
+                // EASCape: read the current value after the await; reading it before let parallel
+                // stats overwrite each other, so a newly changed file could be missed
                 const modified = (await fs.stat(target)).mtimeMs;
+                const current = this.latest.get(key) ?? 0;
                 if (modified > current) {
                     this.latest.set(key, modified);
                 }

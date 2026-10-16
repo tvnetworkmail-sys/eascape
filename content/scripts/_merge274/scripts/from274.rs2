@@ -1,0 +1,99 @@
+// from 274: interface_bank/scripts/bank.rs2
+[proc,bank_check_allowed](obj $obj, int $send_mes)(boolean)
+if (oc_param($obj, unbankable) = ^true) {
+    if($send_mes = ^true) mes("A magical force prevents you from banking this item!"); // osrs
+    return(false);
+}
+
+// https://www.youtube.com/watch?v=W5iZgykts2A // No mes when creating boxes via actions
+if ($obj = macro_cube) {
+    ~try_add_macro_cube;
+    return(false);
+}
+
+if (playermember = ^false) {
+    // check for f2p bank limits, use the player's membership status rather than world type
+    if ((inv_total(bank, oc_uncert($obj)) = 0) & (sub(inv_size(bank), inv_freespace(bank)) >= ^bank_free_slots)) {
+        // https://youtu.be/yv-H5-IoRLs?t=9 (2006)
+        // https://web.archive.org/web/20041126073829/http://img39.imageshack.us/img39/3412/firemaking.jpg (2004)
+        mes("You need to subscribe for a members account if you want to");
+        mes("store any more items in the bank.");
+        return(false);
+    }
+}
+return(true);
+
+// from 274: macro events/scripts/macro_events.rs2
+[proc,macro_events_set_tabs]
+if_settab(null, 0);
+if_settab(null, 1);
+if_settab(null, 2);
+if_settab(null, 3);
+if_settab(null, 4);
+if_settab(null, 5);
+if_settab(null, 6);
+if_settab(null, 11);
+if_settab(null, 12);
+if_settabactive(^tab_friends);
+
+// from 274: macro events/scripts/macro_events.rs2
+[proc,macro_return_teleport]
+if(%macro_event_target_coord = null | map_blocked(%macro_event_target_coord) = true) {
+    mes("Whoops, you couldn't be returned to where you came from.");
+    p_teleport(map_findsquare(0_50_50_21_18, 0, 2, ^map_findsquare_lineofwalk));
+    return;
+}
+p_teleport(%macro_event_target_coord);
+
+// from 274: music/scripts/music.rs2
+[proc,music_jingle](midi $jingle)
+// we only offset for music looping
+// the client will handle playing the last song after this jingle ends
+%musicstart = add(map_clock, midi_length($jingle));
+midi_jingle($jingle);
+
+// from 274: music/scripts/music.rs2
+[proc,.music_jingle](midi $jingle)
+.%musicstart = add(map_clock, midi_length($jingle));
+.midi_jingle($jingle);
+
+// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
+[label,eadgar_default_tree]
+switch_int(~p_choice3("Why do you live so close to the trolls?", 1, "What do you have to offer?", 2, "No thanks, Eadgar.", 3)) {
+    case 1 : @eadgar_live_so_close;
+    case 2 : @eadgar_what_do_you_have;
+    case 3 : @eadgar_nothanks;    
+}
+
+// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
+[label,eadgar_live_so_close]
+~chatplayer("<p,confused>Why do you live so close to the trolls? Isn't it dangerous?");
+~chatnpc("<p,happy>Well, I suppose I do keep getting captured by the trolls and thrown in prison...But they always release me in the end, I'm far too old and skinny for their tastes.");
+~chatnpc("<p,happy>In any case, this is my home, and I'm not leaving it. And this area has the tastiest goats!");
+
+// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
+[label,eadgar_what_do_you_have]
+~chatplayer("<p,confused>What do you have to offer?");
+~chatnpc("<p,happy>The chef's recommendation for today is mountain goat stew. I'll give some stew in exchange for logs for my fire. They're hard to come by around here.");
+switch_int(~p_choice2("I'd like some mountain goat stew, please.", 1, "No thanks, Eadgar.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I'd like some mountain goat stew, please.");
+        if(inv_totalcat(inv, category_22) = 0) {
+            ~chatnpc("<p,angry>You don't have any logs! I may be mad, but I'm not stupid!");
+            return;
+        }
+        ~inv_delcat(inv, category_22);
+        ~chatnpc("<p,happy>Here you go! Enjoy!");
+        if_close;
+        mes("You get a bowl of mountain goat stew.");
+        anim(human_eat, 0);
+        sound_synth(eat, 1, 0);
+        p_delay(1);
+        mes("You eat the mountain goat stew.");
+        if (stat(hitpoints) < stat_base(hitpoints)) {
+            mes("It heals some health.");
+            stat_heal(hitpoints, 20, 0);
+        }
+    case 2 : @eadgar_nothanks;
+}
+

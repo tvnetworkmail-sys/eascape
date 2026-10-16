@@ -1,4 +1,4 @@
-[oploc1,plaguesewerpipe_open]
+[oploc1,plaguesewerpipe]
 switch_int(%elenaquest) {
     case ^quest_elena_opened_tunnel, ^quest_elena_tied_rope : ~mesbox("The grill is too secure.|You can't pull it off alone.");
     case ^quest_elena_opened_pipe, ^quest_elena_shown_picture, ^quest_elena_returned_book, ^quest_elena_spoken_martha_ted, ^quest_elena_spoke_to_milli, ^quest_elena_spoke_to_plague_house, ^quest_elena_spoke_to_clerk, ^quest_elena_spoke_to_bravek, ^quest_elena_spoke_cured_bravek, ^quest_elena_freed_elena :
@@ -16,7 +16,7 @@ switch_int(%elenaquest) {
     case default : ~displaymessage(^dm_default);
 }
 
-[oplocu,plague_grill]
+[oplocu,plaguesewerpipe]
 switch_int(%elenaquest) {
     case ^quest_elena_opened_tunnel :
         switch_obj(last_useitem) {
@@ -36,7 +36,7 @@ if(%elena_pipe_used >= map_clock) {
     mes("The pipe is being used"); 
     return;
 }
-%elena_pipe_used = calc(map_clock + 5);
+%elena_pipe_used = calc(map_clock + 6);
 sound_synth(squeeze_in, 1, 0);
 mes("You climb through the sewer pipe.");
 ~agility_exactmove(human_doublepipesqueeze, 30, 5, coord, movecoord(coord, 0, 0, -3), 30, 126, ^exact_south, true);

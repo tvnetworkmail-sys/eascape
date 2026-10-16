@@ -1,0 +1,17 @@
+// EASCape: 274's "deposit and tell me if it worked" bank proc, for scripts merged from 274.
+[proc,bank_deposit_try](inv $inv, obj $obj, int $amount, int $slot, int $mes)(boolean)
+def_int $overflow = inv_itemspace2(bank, oc_uncert($obj), $amount, ^max_32bit_int);
+if (sub(^max_32bit_int, $amount) < inv_total(bank, $obj)) {
+    if ($mes = ^true) mes("You already have a full stack of that item in the bank.");
+    return(false);
+}
+if ($overflow >= $amount) {
+    if ($mes = ^true) mes("You don't have enough space in your bank account.");
+    return(false);
+}
+def_int $deposit = sub($amount, $overflow);
+if ($deposit > 0) {
+    session_log(^log_moderator, "Deposited <oc_debugname($obj)> x<tostring($deposit)> into bank");
+    inv_moveitem_uncert($inv, bank, $obj, $deposit);
+}
+return(true);

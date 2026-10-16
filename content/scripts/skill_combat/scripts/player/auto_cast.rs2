@@ -26,7 +26,9 @@ if_settab(staff_spells, 0);
 
 [if_button,staff_spells:cancelspell]
 if_close;
-~initalltabs;
+if (p_finduid(uid) = true) {
+    ~initalltabs;
+}
 
 // todo: allow setting autocast to go through delays.
 [label,set_autocast_spell](int $spell)
@@ -37,21 +39,21 @@ if (p_finduid(uid) = true) {
         return;
     }
     // set auto cast varp
-    %autocast_spell = $spell;
+    %varp_59 = $spell;
     if_settext(combat_staff_2:auto_spell, db_getfield($spell_data, magic_spell_table:name, 0));
 
     ~initalltabs;
 }
 
 [proc,player_autocast_enabled]()(boolean)
-if (testbit(%autocast_set, 0) = ^true & %autocast_spell > 0) {
+if (testbit(%autocast_set, 0) = ^true & %varp_59 > 0) {
     return(true);
 }
 return(false);
 
 [proc,player_autocast_reset]
 %autocast_set = 0;
-%autocast_spell = null;
+%varp_59 = null;
 
 [proc,.player_autocast_reset]
 .%autocast_set = 0;

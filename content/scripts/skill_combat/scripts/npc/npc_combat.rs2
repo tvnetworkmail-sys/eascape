@@ -5,14 +5,22 @@
 
 // a default melee retaliate script.
 [proc,npc_default_retaliate]
-if (finduid(%npc_aggressive_player) = false | ~npc_retal_ready = false) {
+if (finduid(%npc_aggressive_player) = false) {
     return;
 }
-%npc_action_delay = add(map_clock, divide(npc_param(attackrate), 2)); // flinch
-%npc_attacking_uid = %npc_aggressive_player;
+
 if (npc_stat(hitpoints) <= npc_param(retreat)) {
     npc_setmode(playerescape);
-} else {
+}
+
+if (~npc_retal_ready = false) {
+    return;
+}
+
+%npc_action_delay = add(map_clock, divide(npc_param(attackrate), 2)); // flinch
+%npc_attacking_uid = %npc_aggressive_player;
+
+if (npc_stat(hitpoints) > npc_param(retreat)) {
     npc_setmode(opplayer2);
     if (npc_inrange = false) {
         npc_setmode(playerescape);
@@ -21,15 +29,23 @@ if (npc_stat(hitpoints) <= npc_param(retreat)) {
 
 // mostly used for ranged and magic npc's
 [proc,npc_default_retaliate_ap]
-if (finduid(%npc_aggressive_player) = false | ~npc_retal_ready = false) {
+if (finduid(%npc_aggressive_player) = false) {
     return;
 }
-%npc_action_delay = add(map_clock, divide(npc_param(attackrate), 2));
-%npc_attacking_uid = %npc_aggressive_player;
+
 // default to ap
 if (npc_stat(hitpoints) <= npc_param(retreat)) {
     npc_setmode(playerescape);
-} else {
+}
+
+if (~npc_retal_ready = false) {
+    return;
+}
+
+%npc_action_delay = add(map_clock, divide(npc_param(attackrate), 2));
+%npc_attacking_uid = %npc_aggressive_player;
+
+if (npc_stat(hitpoints) > npc_param(retreat)) {
     npc_setmode(applayer2);
     if (npc_inrange = false) {
         npc_setmode(playerescape);
@@ -54,7 +70,7 @@ if (~npc_check_notcombat_self = false) { // Doesnt change mode! Keeps trying!
 anim(%com_defendanim, 0);
 npc_anim(npc_param(attack_anim), 0);
 if (npc_param(attack_sound) ! null) {
-    sound_synth(npc_param(attack_sound), 0, 0);
+    sound_synth(npc_param(attack_sound), 1, 0);
 }
 ~npc_meleeattack;
 
@@ -188,6 +204,29 @@ if (npc_type = wormbrain & (~quest_dragon_getting_map_parts = false | inv_total(
     mes("The goblin is already in prison. You have no reason to attack him.");
     return (false);
 }
+
+if(npc_type = horror_dagannoth_jr4 | npc_category = dagannoth_mother) {
+    if (%npc_aggressive_player ! uid) {
+        mes("It's not after you...");
+        return (false);
+    }
+    if(npc_category = dagannoth_mother) {
+        if (~check_protect_prayer(^ranged_style) = false) {
+            npc_setmode(applayer2);
+        }
+    }
+}
+
+if(npc_category = troll_spectator) {
+    return (~troll_spectator_can_attack);
+}
+if (npc_type = priestperilguarddog) {
+    if(~priestperilguarddog_attack = false) {
+        return (false);
+    }
+    mes("Your spells do not seem to affect it.");
+    return(false);
+}
 if (npc_type = grip) {
     return(~grip_attack);
 }
@@ -268,7 +307,7 @@ return (false);
 
 
 [proc,npc_retal_ready]()(boolean)
-if ((add(%npc_action_delay, 8) < map_clock) | (npc_getmode ! applayer2 & npc_getmode ! opplayer2 & npc_getmode ! playerescape)) {
+if ((add(%npc_action_delay, 8) < map_clock) | (npc_getmode ! applayer2 & npc_getmode ! opplayer2)) {
     return (true);
 }
 return (false);
@@ -314,7 +353,6 @@ if (inv_getobj(worn, ^wearpos_ring) = ring_of_recoil & map_members = ^true & npc
     npc_queue(2, $recoil_damage, 0);
     ~ring_of_recoil_lose_charge($recoil_damage);
 }
-p_preventlogout("You can't log out until 10 seconds after the end of combat.", 16);
 ~damage_self($damage);
 
 [proc,npc_retaliate](int $queue_delay)
@@ -333,7 +371,7 @@ if(.%npc_lastcombat < map_clock) .%npc_lastcombat = map_clock;
 %aggressive_npc = npc_uid;
 
 [proc,npc_check_notcombat]()(boolean)
-if (map_multiway(npc_coord) = false) { // checks npc coord ALWAYS!
+if (map_multiway(npc_coord) = false & nc_param(npc_type, npc_forcemulti) = ^false) { // checks npc coord ALWAYS!
     if (add(%lastcombat_pvp, 8) > map_clock) {
         return(false);
     }
@@ -344,9 +382,48 @@ if (map_multiway(npc_coord) = false) { // checks npc coord ALWAYS!
 return(true);
 
 [proc,npc_check_notcombat_self]()(boolean)
-if (map_multiway(npc_coord) = false) {
+if (map_multiway(npc_coord) = false & nc_param(npc_type, npc_forcemulti) = ^false) {
     if (add(%npc_lastcombat, 8) > map_clock & %npc_aggressive_player ! null & %npc_aggressive_player ! uid) {
         return(false);
     }
 }
 return(true);
+
+[proc,npc_max_dealt](int $maxhit, int $spell)(int)
+if(npc_type = horror_dagganoth_air) {
+    if($spell = ^wind_strike | $spell = ^wind_bolt | $spell = ^wind_blast | $spell = ^wind_wave) {
+        return ($maxhit);
+    }
+    return (0);
+}
+if(npc_type = horror_dagganoth_water) {
+    if($spell = ^water_strike | $spell = ^water_bolt | $spell = ^water_blast | $spell = ^water_wave) {
+        return ($maxhit);
+    }
+    return (0);
+}
+if(npc_type = horror_dagganoth_earth) {
+    if($spell = ^earth_strike | $spell = ^earth_bolt | $spell = ^earth_blast | $spell = ^earth_wave) {
+        return ($maxhit);
+    }
+    return (0);
+}
+if(npc_type = horror_dagganoth_fire) {
+    if($spell = ^fire_strike | $spell = ^fire_bolt | $spell = ^fire_blast | $spell = ^fire_wave) {
+        return ($maxhit);
+    }
+    return (0);
+}
+if(npc_type = horror_dagganoth_melee) {
+    if ($spell = 0 & (%damagestyle = ^style_melee_accurate | %damagestyle = ^style_melee_aggressive | %damagestyle = ^style_melee_defensive | %damagestyle = ^style_melee_controlled)) {
+        return ($maxhit);
+    }
+    return (0);
+}
+if(npc_type = horror_dagganoth_ranged) {
+    if ($spell = 0 & %damagetype = ^ranged_style) {
+        return ($maxhit);
+    }
+    return (0);
+}
+return (min($maxhit, npc_param(max_dealt)));
