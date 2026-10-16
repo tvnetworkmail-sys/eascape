@@ -1,0 +1,83 @@
+// EASCape test-mode commands. Typed without the ~ (::maxstats, ::barrowset); they only work
+// while the server is in test mode, like every other cheat.
+
+// every skill to 99, hitpoints and prayer topped up
+[debugproc,maxstats]
+if (p_finduid(uid) = false) {
+    return;
+}
+// stat_advance takes tenths of xp: 130344310 = 13,034,431 xp, level 99
+stat_advance(attack, 130344310);
+stat_advance(defence, 130344310);
+stat_advance(strength, 130344310);
+stat_advance(hitpoints, 130344310);
+stat_advance(ranged, 130344310);
+stat_advance(prayer, 130344310);
+stat_advance(magic, 130344310);
+stat_advance(cooking, 130344310);
+stat_advance(woodcutting, 130344310);
+stat_advance(fletching, 130344310);
+stat_advance(fishing, 130344310);
+stat_advance(firemaking, 130344310);
+stat_advance(crafting, 130344310);
+stat_advance(smithing, 130344310);
+stat_advance(mining, 130344310);
+stat_advance(herblore, 130344310);
+stat_advance(agility, 130344310);
+stat_advance(thieving, 130344310);
+stat_advance(slayer, 130344310);
+stat_advance(farming, 130344310);
+stat_advance(runecraft, 130344310);
+stat_heal(hitpoints, 0, 100);
+stat_heal(prayer, 0, 100);
+mes("All your skills are now 99.");
+
+// a Barrows magic setup. The OSRS wiki's Barrows/Strategies low-level magic loadout, keeping only
+// items that existed in May 2006; where the wiki's item didn't exist yet, the next one in its
+// list (or the nearest 2006 item) is used:
+//   Berserker helm, Guthix cape (wiki: Guthix cloak), amulet of glory (wiki: amulet of air),
+//   air battlestaff, Mystic robe top and bottom, rune kiteshield, Mystic gloves (wiki: combat
+//   bracelet), rune boots, ring of dueling.
+// Everything you were wearing and carrying goes to your bank first.
+[debugproc,barrowset]
+if (p_finduid(uid) = false) {
+    return;
+}
+~eascape_bank_everything(inv);
+~eascape_bank_everything(worn);
+inv_setslot(worn, ^wearpos_hat, viking_helmet_crush, 1);
+inv_setslot(worn, ^wearpos_back, guthix_cape, 1);
+inv_setslot(worn, ^wearpos_front, amulet_of_glory_4, 1);
+inv_setslot(worn, ^wearpos_rhand, air_battlestaff, 1);
+inv_setslot(worn, ^wearpos_torso, mystic_robe_top, 1);
+inv_setslot(worn, ^wearpos_lhand, rune_kiteshield, 1);
+inv_setslot(worn, ^wearpos_legs, mystic_robe_bottom, 1);
+inv_setslot(worn, ^wearpos_hands, mystic_gloves, 1);
+inv_setslot(worn, ^wearpos_feet, rune_armoured_boots, 1);
+inv_setslot(worn, ^wearpos_ring, ring_of_dueling_8, 1);
+~update_all(null);
+// pack: spade, restore potion, blood runes for Wind Wave (the staff gives the air runes),
+// 14 prayer potions and 11 sharks
+inv_add(inv, spade, 1);
+inv_add(inv, 4dosestatrestore, 1);
+inv_add(inv, bloodrune, 1000);
+inv_add(inv, 4doseprayerrestore, 14);
+inv_add(inv, shark, 11);
+// spares in the bank
+inv_add(bank, 4doseprayerrestore, 100);
+inv_add(bank, shark, 100);
+inv_add(bank, 4dosestatrestore, 10);
+inv_add(bank, bloodrune, 5000);
+mes("Barrows set ready: magic gear on, supplies in your pack and 100 prayer potions in the bank.");
+mes("Set Wind Wave to autocast on your staff's combat tab.");
+
+[proc,eascape_bank_everything](inv $inv)
+def_int $slot = 0;
+def_obj $obj;
+while ($slot < inv_size($inv)) {
+    $obj = inv_getobj($inv, $slot);
+    if ($obj ! null) {
+        inv_moveitem($inv, bank, $obj, inv_total($inv, $obj));
+    }
+    $slot = add($slot, 1);
+}

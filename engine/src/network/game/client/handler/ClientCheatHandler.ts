@@ -36,6 +36,9 @@ import Environment from '#/util/Environment.js';
 import { printDebug } from '#/util/Logger.js';
 import { tryParseInt } from '#/util/TryParse.js';
 
+// EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset'];
+
 export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
     handle(message: ClientCheat, player: Player): boolean {
         if (message.input.length > 80) {
@@ -45,9 +48,14 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
         const { input: cheat } = message;
 
         const args: string[] = cheat.toLowerCase().split(' ');
-        const cmd: string | undefined = args.shift();
+        let cmd: string | undefined = args.shift();
         if (cmd === undefined || cmd.length <= 0) {
             return false;
+        }
+
+        // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
+        if (!Environment.NODE_PRODUCTION && EASCAPE_TEST_COMMANDS.includes(cmd)) {
+            cmd = Environment.NODE_DEBUGPROC_CHAR + cmd;
         }
 
         if (player.staffModLevel >= 2) {

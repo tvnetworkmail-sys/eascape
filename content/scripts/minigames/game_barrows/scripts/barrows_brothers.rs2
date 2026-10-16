@@ -1,0 +1,126 @@
+// EASCape: how the six Barrows brothers fight.
+//
+// Stats are on their npc configs. Max hits come out of those stats the same way as for every
+// other monster, and match the OSRS wiki (Dharok 29, Guthan 24, Torag 23, Verac 23, Karil 20,
+// Ahrim 20 with Fire Wave). Effects, from each brother's OSRS wiki page:
+// - Ahrim: Fire Wave. A successful hit has a 1 in 5 chance to lower your Strength by 5; Protect
+//   from Magic stops the damage but not this. (The wiki also says he can cast Confuse, Weaken and
+//   Curse, but not how often; not added until we find out.)
+// - Dharok: his max hit goes up 1% for each hitpoint he's missing (57 at 1 hitpoint).
+// - Guthan: a successful hit has a 1 in 4 chance to heal him by the damage; Protect from Melee
+//   stops it.
+// - Karil: a successful hit has a 1 in 4 chance to lower your Agility by 20%; Protect from
+//   Missiles stops the damage but not this.
+// - Torag: a successful hit has a 1 in 4 chance to drain 20% of your run energy, even through
+//   Protect from Melee.
+// - Verac: 1 in 4 of his attacks ignore your Defence and armour and go through Protect from
+//   Melee, with a max hit of 15 when you're praying.
+
+[ai_queue1,barrows_ahrim] ~npc_default_retaliate_ap;
+[ai_queue1,barrows_karil] ~npc_default_retaliate_ap;
+[ai_queue1,barrows_dharok] gosub(npc_default_retaliate);
+[ai_queue1,barrows_guthan] gosub(npc_default_retaliate);
+[ai_queue1,barrows_torag] gosub(npc_default_retaliate);
+[ai_queue1,barrows_verac] gosub(npc_default_retaliate);
+
+[ai_opplayer2,barrows_ahrim] ~barrows_ahrim_attack;
+[ai_applayer2,barrows_ahrim] ~barrows_ahrim_attack;
+[ai_opplayer2,barrows_karil] ~barrows_karil_attack;
+[ai_applayer2,barrows_karil] ~barrows_karil_attack;
+[ai_opplayer2,barrows_dharok] ~barrows_melee_attack;
+[ai_opplayer2,barrows_guthan] ~barrows_melee_attack;
+[ai_opplayer2,barrows_torag] ~barrows_melee_attack;
+[ai_opplayer2,barrows_verac] ~barrows_melee_attack;
+
+[proc,barrows_ahrim_attack]
+if (~npc_combat_spell_checks = false) {
+    return;
+}
+npc_setmode(applayer2);
+def_dbrow $spell_data = ~get_spell_data(^fire_wave);
+def_int $duration = ~npc_spell_cast($spell_data, npc_param(attackrate));
+if (~npc_player_hit_roll(^magic_style) = true) {
+    if (random(5) = 0) {
+        stat_sub(strength, 5, 0);
+        spotanim_pl(barrows_ahirm_blighted_aura, 92, $duration);
+    }
+    if (~check_protect_prayer(^magic_style) = false) {
+        ~npc_spell_success($spell_data, db_getfield($spell_data, magic_spell_table:maxhit, 0), $duration);
+        ~npc_set_attack_vars;
+        return;
+    }
+}
+~npc_spell_fail($spell_data, $duration);
+~npc_set_attack_vars;
+
+[proc,barrows_karil_attack]
+if (%npc_action_delay > map_clock) {
+    npc_setmode(applayer2);
+    return;
+}
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) {
+    return;
+}
+npc_setmode(applayer2);
+npc_anim(npc_param(attack_anim), 0);
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+def_int $duration = ~player_projectile(npc_coord, coord, uid, npc_param(proj_travel), 40, 36, 32, 15, 0, 11, 5);
+if (randominc(~npc_ranged_attack_roll) > randominc(~player_defence_roll_specific(^ranged_style))) {
+    if (random(4) = 0) {
+        stat_sub(agility, 0, 20);
+        spotanim_pl(barrows_karil_tainted_shot, 92, $duration);
+    }
+    ~playerhit_n_ranged(true, randominc(~npc_ranged_maxhit), $duration, npc_param(attackrate));
+    return;
+}
+~playerhit_n_ranged(true, 0, $duration, npc_param(attackrate));
+
+[proc,barrows_melee_attack]
+if (%death = ^true) {
+    npc_setmode(null);
+    return;
+}
+if (%npc_action_delay > map_clock) return;
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) {
+    return;
+}
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+if (npc_param(attack_sound) ! null) {
+    sound_synth(npc_param(attack_sound), 1, 0);
+}
+
+def_int $maxhit = ~npc_melee_maxhit;
+if (npc_type = barrows_dharok) {
+    $maxhit = scale(add(100, sub(npc_basestat(hitpoints), npc_stat(hitpoints))), 100, $maxhit);
+}
+
+// Verac's special: lands whatever your Defence, and goes through Protect from Melee
+if (npc_type = barrows_verac & random(4) = 0) {
+    if (~check_protect_prayer(^melee_style) = true) $maxhit = 15;
+    ~playerhit_n_melee(false, randominc($maxhit), npc_param(attackrate));
+    return;
+}
+
+if (randominc(~npc_melee_attack_roll) > randominc(~player_defence_roll_specific(npc_param(damagetype)))) {
+    def_int $damage = randominc($maxhit);
+    if (npc_type = barrows_torag & random(4) = 0) {
+        healenergy(sub(0, scale(20, 100, runenergy)));
+        spotanim_pl(barrows_torag_effect, 0, 0);
+    }
+    if (npc_type = barrows_guthan & random(4) = 0 & ~check_protect_prayer(^melee_style) = false) {
+        npc_statheal(hitpoints, $damage, 0);
+        spotanim_pl(barrows_guthan_effect, 0, 0);
+    }
+    ~playerhit_n_melee(true, $damage, npc_param(attackrate));
+    return;
+}
+~playerhit_n_melee(true, 0, npc_param(attackrate));

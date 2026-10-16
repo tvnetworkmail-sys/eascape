@@ -12,6 +12,12 @@ if(inzone(0_45_46_40_54, 0_45_46_43_55, coord) = true) {
     }
 }
 
+// Barrows: digging on top of a brother's mound breaks into his crypt
+def_int $barrows_mound = ~barrows_dig_index;
+if ($barrows_mound ! -1) {
+    @barrows_dig($barrows_mound);
+}
+
 // Everything else
 p_arrivedelay;
 p_stopaction;

@@ -1,0 +1,653 @@
+// EASCape: Barrows, as it was on 2 May 2006.
+//
+// Sources (facts only, nothing from memory):
+// - OSRS wiki (the August 2007 game, the closest documented version to May 2006):
+//   Barrows tunnels (prayer drain, door spawns, chest room, collapse, reset), Chest (Barrows)
+//   (reward potential and the reward table), each brother's monster page (stats and effects).
+//   Only their pre-2013 behaviour is used; later OSRS changes are left out.
+// - 2009scape (content/minigame/barrows) for how it fits together: crypt and exit locations,
+//   tunnel entry corners, the door layouts, the puzzle shapes, messages, the collapse.
+// - Our own 2006 game data: loc, npc, obj, varp/varbit names and the map.
+//
+// Things marked "unconfirmed" are our best reading where no 2006 source gives the detail.
+
+// ---------------------------------------------------------------------------------------------
+// brothers
+
+[proc,barrows_brother_npc](int $index)(npc)
+switch_int ($index) {
+    case ^barrows_ahrim : return(barrows_ahrim);
+    case ^barrows_dharok : return(barrows_dharok);
+    case ^barrows_guthan : return(barrows_guthan);
+    case ^barrows_karil : return(barrows_karil);
+    case ^barrows_torag : return(barrows_torag);
+    case ^barrows_verac : return(barrows_verac);
+}
+return(null);
+
+[proc,barrows_brother_index](npc $npc)(int)
+switch_npc ($npc) {
+    case barrows_ahrim : return(^barrows_ahrim);
+    case barrows_dharok : return(^barrows_dharok);
+    case barrows_guthan : return(^barrows_guthan);
+    case barrows_karil : return(^barrows_karil);
+    case barrows_torag : return(^barrows_torag);
+    case barrows_verac : return(^barrows_verac);
+}
+return(-1);
+
+[proc,barrows_killed](int $index)(boolean)
+if (testbit(%barrows_kills, $index) = ^true) return(true);
+return(false);
+
+[proc,barrows_killed_total]()(int)
+def_int $total = 0;
+def_int $i = 0;
+while ($i < 6) {
+    if (~barrows_killed($i) = true) $total = add($total, 1);
+    $i = add($i, 1);
+}
+return($total);
+
+// where you land when you dig into a brother's mound (2009scape BarrowsCrypt)
+[proc,barrows_crypt_coord](int $index)(coord)
+switch_int ($index) {
+    case ^barrows_ahrim : return(3_55_151_37_39);
+    case ^barrows_dharok : return(3_55_151_36_54);
+    case ^barrows_guthan : return(3_55_151_14_40);
+    case ^barrows_karil : return(3_55_151_26_20);
+    case ^barrows_torag : return(3_55_151_48_19);
+    case ^barrows_verac : return(3_55_151_58_42);
+}
+return(null);
+
+// the top of each mound: where you dig, and where the crypt stairs bring you out
+[proc,barrows_mound_coord](int $index)(coord)
+switch_int ($index) {
+    case ^barrows_ahrim : return(0_55_51_45_25);
+    case ^barrows_dharok : return(0_55_51_55_34);
+    case ^barrows_guthan : return(0_55_51_57_19);
+    case ^barrows_karil : return(0_55_51_45_12);
+    case ^barrows_torag : return(0_55_51_33_19);
+    case ^barrows_verac : return(0_55_51_37_34);
+}
+return(null);
+
+[proc,barrows_tunnel_brother]()(int)
+return(getbit_range(%barrows, ^barrows_bit_tunnel_start, ^barrows_bit_tunnel_end));
+
+[proc,barrows_looted]()(boolean)
+if (testbit(%barrows, ^barrows_bit_looted) = ^true) return(true);
+return(false);
+
+// ---------------------------------------------------------------------------------------------
+// the run: setting up, shuffling the tunnels, resetting after a loot
+
+[proc,barrows_check_setup]
+if (testbit(%barrows, ^barrows_bit_set_up) = ^false) {
+    %barrows = setbit_range_toint(%barrows, random(6), ^barrows_bit_tunnel_start, ^barrows_bit_tunnel_end);
+    %barrows = setbit(%barrows, ^barrows_bit_set_up);
+    ~barrows_shuffle;
+}
+
+// pick one of the door layouts and an entry corner (layouts from 2009scape; each one leaves
+// exactly one of the four chest-room doors open, which matches the OSRS wiki description)
+[proc,barrows_shuffle]
+def_int $layout;
+switch_int (random(8)) {
+    case 0 : $layout = 55328769;
+    case 1 : $layout = 2867201;
+    case 2 : $layout = 44582944;
+    case 3 : $layout = 817160;
+    case 4 : $layout = 537688072;
+    case 5 : $layout = 40763408;
+    case 6 : $layout = 44320784;
+    case default : $layout = 23478274;
+}
+// doors a-p are bits 10-25, the entry corners (ladder rooms) a, c, g, i are bits 6-9
+%barrows = setbit_range_toint(%barrows, getbit_range($layout, 10, 25), 10, 25);
+%barrows = setbit_range_toint(%barrows, 0, 6, 9);
+%barrows = setbit(%barrows, add(6, random(4)));
+
+[proc,barrows_reset]
+%barrows_kills = 0;
+%barrows = 0;
+~barrows_check_setup;
+
+// ---------------------------------------------------------------------------------------------
+// digging in, the crypts and the stairs
+
+[proc,barrows_dig_index]()(int)
+def_int $i = 0;
+while ($i < 6) {
+    if (distance(coord, ~barrows_mound_coord($i)) <= 2) return($i);
+    $i = add($i, 1);
+}
+return(-1);
+
+[label,barrows_dig](int $index)
+p_arrivedelay;
+anim(human_dig, 0);
+~barrows_check_setup;
+mes("You've broken into a crypt!");
+p_telejump(~barrows_crypt_coord($index));
+
+[oploc1,barrows_stairs_ahrim] ~barrows_climb_out(^barrows_ahrim);
+[oploc1,barrows_stairs_dharok] ~barrows_climb_out(^barrows_dharok);
+[oploc1,barrows_stairs_guthan] ~barrows_climb_out(^barrows_guthan);
+[oploc1,barrows_stairs_karil] ~barrows_climb_out(^barrows_karil);
+[oploc1,barrows_stairs_torag] ~barrows_climb_out(^barrows_torag);
+[oploc1,barrows_stairs_verac] ~barrows_climb_out(^barrows_verac);
+
+[proc,barrows_climb_out](int $index)
+p_telejump(~barrows_mound_coord($index));
+
+[oploc1,barrow_ahrim_sarcophagus] ~barrows_search(^barrows_ahrim);
+[oploc1,barrow_dharok_sarcophagus] ~barrows_search(^barrows_dharok);
+[oploc1,barrow_guthan_sarcophagus] ~barrows_search(^barrows_guthan);
+[oploc1,barrow_karil_sarcophagus] ~barrows_search(^barrows_karil);
+[oploc1,barrow_torag_sarcophagus] ~barrows_search(^barrows_torag);
+[oploc1,barrow_verac_sarcophagus] ~barrows_search(^barrows_verac);
+
+[proc,barrows_search](int $index)
+~barrows_check_setup;
+if ($index = ~barrows_tunnel_brother) {
+    ~mesbox("You find a hidden tunnel, do you want to enter?");
+    if (~p_choice2("Yeah I'm fearless!", 1, "No way, that looks scary!", 2) = 1) {
+        p_telejump(~barrows_tunnel_entry);
+    }
+    return;
+}
+mes("You don't find anything.");
+if (~barrows_killed($index) = true | ~barrows_brother_out($index) = true) {
+    return;
+}
+~barrows_spawn_brother($index, map_findsquare(loc_coord, 1, 2, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
+
+// the corner room whose ladder is showing (2009scape TunnelEntranceDialogue)
+[proc,barrows_tunnel_entry]()(coord)
+if (testbit(%barrows, 7) = ^true) return(0_55_151_48_47);
+if (testbit(%barrows, 6) = ^true) return(0_55_151_14_47);
+if (testbit(%barrows, 9) = ^true) return(0_55_151_48_13);
+return(0_55_151_14_13);
+
+// the tunnel ladders lead up into the crypt of the brother whose tomb has the tunnel
+[oploc1,barrows_ladder_a] ~barrows_ladder_up;
+[oploc1,barrows_ladder_c] ~barrows_ladder_up;
+[oploc1,barrows_ladder_g] ~barrows_ladder_up;
+[oploc1,barrows_ladder_i] ~barrows_ladder_up;
+
+[proc,barrows_ladder_up]
+anim(human_reachforladder, 0);
+p_delay(0);
+p_telejump(~barrows_crypt_coord(~barrows_tunnel_brother));
+
+// ---------------------------------------------------------------------------------------------
+// spawning brothers and tunnel monsters
+
+// a brother of yours already out and looking for you nearby
+[proc,barrows_brother_out](int $index)(boolean)
+def_npc $type = ~barrows_brother_npc($index);
+npc_huntall(coord, 20, 0);
+while (npc_findnext = true) {
+    if (npc_type = $type & %npc_aggressive_player = uid) return(true);
+}
+return(false);
+
+[proc,barrows_spawn_brother](int $index, coord $coord, string $shout)
+// 500 ticks: if you leave without killing him he gives up and goes back to his rest
+npc_add($coord, ~barrows_brother_npc($index), 500);
+npc_say($shout);
+~barrows_npc_target_player;
+hint_npc;
+
+// make the active npc go after the active player
+[proc,barrows_npc_target_player]
+%npc_aggressive_player = uid;
+%npc_attacking_uid = uid;
+%npc_lastcombat = map_clock;
+npc_settimer(30);
+if (npc_type = barrows_ahrim | npc_type = barrows_karil) {
+    npc_setmode(applayer2);
+} else {
+    npc_setmode(opplayer2);
+}
+
+// OSRS wiki (Barrows tunnels): each door you open can summon something, out of 128:
+// a brother you haven't killed 12, skeleton 52, bloodworm 32, crypt rat 32. Nothing new
+// comes if the room already holds 11 or more enemies. After looting, every door summons a
+// brother you didn't kill on this run.
+[proc,barrows_door_spawn]
+def_coord $spot = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+if (~barrows_looted = true) {
+    def_int $alive = ~barrows_random_alive_brother;
+    if ($alive ! -1) {
+        ~barrows_spawn_brother($alive, $spot, "You dare steal from us!");
+    }
+    return;
+}
+if (~barrows_enemies_near >= 11) {
+    return;
+}
+def_int $roll = random(128);
+if ($roll < 12) {
+    def_int $brother = ~barrows_random_alive_brother;
+    if ($brother ! -1 & ~barrows_brother_out($brother) = false) {
+        ~barrows_spawn_brother($brother, $spot, "You dare disturb my rest!");
+    }
+    return;
+}
+def_npc $monster = barrows_rat;
+if ($roll < 64) {
+    $monster = barrows_skeleton_armed;
+    if (random(2) = 0) $monster = barrows_skeleton_unarmed;
+} else if ($roll < 96) {
+    $monster = barrows_bloodworm;
+}
+npc_add($spot, $monster, 300);
+~barrows_npc_target_player;
+
+[proc,barrows_random_alive_brother]()(int)
+def_int $alive = sub(6, ~barrows_killed_total);
+if ($alive = 0) return(-1);
+def_int $pick = random($alive);
+def_int $i = 0;
+while ($i < 6) {
+    if (~barrows_killed($i) = false) {
+        if ($pick = 0) return($i);
+        $pick = sub($pick, 1);
+    }
+    $i = add($i, 1);
+}
+return(-1);
+
+// how many monsters are in the room with you (a room is about 14 tiles across)
+[proc,barrows_enemies_near]()(int)
+def_int $count = 0;
+npc_huntall(coord, 7, 0);
+while (npc_findnext = true) {
+    $count = add($count, 1);
+}
+return($count);
+
+// ---------------------------------------------------------------------------------------------
+// tunnel doors and the chest-room puzzle
+
+[oploc1,_barrows_door]
+def_int $bit = ~barrows_door_bit(loc_type);
+// the four doors into the chest room (e north, i west, j east, l south) have the puzzle
+if (($bit = 14 | $bit = 18 | $bit = 19 | $bit = 21) & testbit(%barrows, ^barrows_bit_puzzle_solved) = ^false & ~barrows_looted = false) {
+    ~barrows_puzzle_open;
+    return;
+}
+sound_synth(barrows_door_open, 1, 0);
+~walk_through_door;
+~barrows_door_spawn;
+
+[proc,barrows_door_bit](loc $loc)(int)
+switch_loc ($loc) {
+    case barrows_door_a_r, barrows_door_a_l : return(10);
+    case barrows_door_b_r, barrows_door_b_l : return(11);
+    case barrows_door_c_r, barrows_door_c_l : return(12);
+    case barrows_door_d_r, barrows_door_d_l : return(13);
+    case barrows_door_e_r, barrows_door_e_l : return(14);
+    case barrows_door_f_r, barrows_door_f_l : return(15);
+    case barrows_door_g_r, barrows_door_g_l : return(16);
+    case barrows_door_h_r, barrows_door_h_l : return(17);
+    case barrows_door_i_r, barrows_door_i_l : return(18);
+    case barrows_door_j_r, barrows_door_j_l : return(19);
+    case barrows_door_k_r, barrows_door_k_l : return(20);
+    case barrows_door_l_r, barrows_door_l_l : return(21);
+    case barrows_door_m_r, barrows_door_m_l : return(22);
+    case barrows_door_n_r, barrows_door_n_l : return(23);
+    case barrows_door_o_r, barrows_door_o_l : return(24);
+    case barrows_door_p_r, barrows_door_p_l : return(25);
+}
+return(-1);
+
+// four puzzles, three shapes in a row and three answers, one of them right (models and which
+// answer is correct from 2009scape BarrowsPuzzle). The answers are shown in a random order.
+[proc,barrows_puzzle_open]
+def_int $first_question;
+def_int $correct;
+switch_int (random(4)) {
+    case 0 : $first_question = 6734; $correct = 6731;
+    case 1 : $first_question = 6728; $correct = 6725;
+    case 2 : $first_question = 6722; $correct = 6719;
+    case default : $first_question = 6716; $correct = 6713;
+}
+if_setmodel(inter_99:com_1, $first_question);
+if_setmodel(inter_99:com_2, add($first_question, 1));
+if_setmodel(inter_99:com_3, add($first_question, 2));
+// answer models are $correct, +1, +2; put them on the three buttons in a random order
+def_int $slot = random(3);
+def_int $other1 = modulo(add($slot, 1), 3);
+def_int $other2 = modulo(add($slot, 2), 3);
+~barrows_puzzle_set_answer($slot, $correct);
+~barrows_puzzle_set_answer($other1, add($correct, 1));
+~barrows_puzzle_set_answer($other2, add($correct, 2));
+%barrows = setbit_range_toint(%barrows, add($slot, 1), ^barrows_bit_answer_start, ^barrows_bit_answer_end);
+if_openmain(inter_99);
+
+[proc,barrows_puzzle_set_answer](int $slot, int $model)
+switch_int ($slot) {
+    case 0 : if_setmodel(inter_99:com_6, $model);
+    case 1 : if_setmodel(inter_99:com_7, $model);
+    case default : if_setmodel(inter_99:com_8, $model);
+}
+
+[if_button,inter_99:com_6] ~barrows_puzzle_answer(0);
+[if_button,inter_99:com_7] ~barrows_puzzle_answer(1);
+[if_button,inter_99:com_8] ~barrows_puzzle_answer(2);
+
+[proc,barrows_puzzle_answer](int $slot)
+if_close;
+if (getbit_range(%barrows, ^barrows_bit_answer_start, ^barrows_bit_answer_end) = add($slot, 1)) {
+    %barrows = setbit(%barrows, ^barrows_bit_puzzle_solved);
+    sound_synth(barrows_door_unlock, 1, 0);
+    mes("You hear the doors' locking mechanism grind open.");
+    return;
+}
+mes("You got the puzzle wrong! You can hear the catacombs moving around you.");
+~barrows_shuffle;
+
+// ---------------------------------------------------------------------------------------------
+// the chest
+
+// op1 is Open on the closed chest and Search on the open one; op2 (open chest only) is Close
+[oploc1,barrows_stone_chest]
+if (%barrows_chest_open = 1) {
+    @barrows_chest_search;
+}
+// opening it brings out the brother whose crypt has the tunnel, if you haven't met him yet
+~barrows_check_setup;
+def_int $index = ~barrows_tunnel_brother;
+if (~barrows_killed($index) = false & ~barrows_brother_out($index) = false) {
+    ~barrows_spawn_brother($index, map_findsquare(loc_coord, 1, 4, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
+}
+%barrows_chest_open = 1;
+
+[oploc2,barrows_stone_chest]
+%barrows_chest_open = 0;
+
+[label,barrows_chest_search]
+if (~barrows_looted = true) {
+    mes("The chest is empty.");
+    return;
+}
+// you have to have killed something this run to get anything (OSRS wiki, Chest (Barrows))
+if (%barrows_killed_count = 0) {
+    mes("The chest is empty."); // unconfirmed message
+    return;
+}
+%barrows = setbit(%barrows, ^barrows_bit_looted);
+~barrows_reward;
+// the layout shifts once the chest is looted (OSRS wiki, Barrows tunnels)
+~barrows_shuffle;
+%barrows = setbit(%barrows, ^barrows_bit_looted);
+clearsofttimer(barrows_collapse);
+softtimer(barrows_collapse, 3);
+
+// ---------------------------------------------------------------------------------------------
+// rewards (OSRS wiki, Chest (Barrows)): reward potential R = S + 2N, where S is the combat
+// levels of everything killed this run (at most 1000) and N the brothers killed. One roll plus
+// one per brother. Each roll has a 1 in (450 - 58N) chance of a Barrows piece from a brother you
+// killed (each piece at most once); otherwise a number from 1 to R picks from the table below.
+
+[proc,barrows_reward]
+def_int $killed = ~barrows_killed_total;
+def_int $rp = add(%barrows_killed_monster, multiply(2, $killed));
+def_int $given = 0; // which of the 24 pieces have dropped already, one bit each
+def_int $rolls = add(1, $killed);
+def_int $roll = 0;
+while ($roll < $rolls) {
+    $roll = add($roll, 1);
+    if ($killed > 0 & random(sub(450, multiply(58, $killed))) = 0) {
+        def_int $piece = ~barrows_pick_piece($given);
+        if ($piece ! -1) {
+            $given = setbit($given, $piece);
+            ~barrows_give(~barrows_piece_obj($piece), 1);
+            // next roll
+        } else {
+            ~barrows_table_roll($rp);
+        }
+    } else {
+        ~barrows_table_roll($rp);
+    }
+}
+
+// a random piece belonging to a brother you killed that hasn't been given yet, or -1
+[proc,barrows_pick_piece](int $given)(int)
+def_int $count = 0;
+def_int $i = 0;
+while ($i < 24) {
+    if (~barrows_killed(divide($i, 4)) = true & testbit($given, $i) = ^false) $count = add($count, 1);
+    $i = add($i, 1);
+}
+if ($count = 0) return(-1);
+def_int $pick = random($count);
+$i = 0;
+while ($i < 24) {
+    if (~barrows_killed(divide($i, 4)) = true & testbit($given, $i) = ^false) {
+        if ($pick = 0) return($i);
+        $pick = sub($pick, 1);
+    }
+    $i = add($i, 1);
+}
+return(-1);
+
+[proc,barrows_piece_obj](int $piece)(namedobj)
+switch_int ($piece) {
+    case 0 : return(barrows_ahrim_head);
+    case 1 : return(barrows_ahrim_weapon);
+    case 2 : return(barrows_ahrim_body);
+    case 3 : return(barrows_ahrim_legs);
+    case 4 : return(barrows_dharok_head);
+    case 5 : return(barrows_dharok_weapon);
+    case 6 : return(barrows_dharok_body);
+    case 7 : return(barrows_dharok_legs);
+    case 8 : return(barrows_guthan_head);
+    case 9 : return(barrows_guthan_weapon);
+    case 10 : return(barrows_guthan_body);
+    case 11 : return(barrows_guthan_legs);
+    case 12 : return(barrows_karil_head);
+    case 13 : return(barrows_karil_weapon);
+    case 14 : return(barrows_karil_body);
+    case 15 : return(barrows_karil_legs);
+    case 16 : return(barrows_torag_head);
+    case 17 : return(barrows_torag_weapon);
+    case 18 : return(barrows_torag_body);
+    case 19 : return(barrows_torag_legs);
+    case 20 : return(barrows_verac_head);
+    case 21 : return(barrows_verac_weapon);
+    case 22 : return(barrows_verac_body);
+    case default : return(barrows_verac_legs);
+}
+
+// the non-Barrows table. Higher numbers unlock better items; within an item's band the amount
+// grows with the number (our reading of the wiki's "RP for max quantity" column).
+[proc,barrows_table_roll](int $rp)
+if ($rp < 1) return;
+def_int $x = add(random($rp), 1);
+if ($x <= 380) {
+    ~barrows_give(coins, ~barrows_band_amount($x, 1, 380, 2, 774));
+} else if ($x <= 505) {
+    ~barrows_give(mindrune, ~barrows_band_amount($x, 381, 505, 253, 336));
+} else if ($x <= 630) {
+    ~barrows_give(chaosrune, ~barrows_band_amount($x, 506, 630, 112, 139));
+} else if ($x <= 755) {
+    ~barrows_give(deathrune, ~barrows_band_amount($x, 631, 755, 70, 83));
+} else if ($x <= 880) {
+    ~barrows_give(bloodrune, ~barrows_band_amount($x, 756, 880, 37, 43));
+} else if ($x <= 1005) {
+    ~barrows_give(barrows_karil_ammo, ~barrows_band_amount($x, 881, 1005, 35, 40));
+} else if ($x <= 1008) {
+    ~barrows_give(keyhalf2, 1); // loop half
+} else if ($x <= 1011) {
+    ~barrows_give(keyhalf1, 1); // tooth half
+} else {
+    ~barrows_give(dragon_med_helm, 1);
+}
+
+[proc,barrows_band_amount](int $x, int $from, int $to, int $min, int $max)(int)
+return(add($min, scale(sub($x, $from), sub($to, $from), sub($max, $min))));
+
+// into the pack, or onto the floor if there's no room (OSRS wiki)
+[proc,barrows_give](namedobj $obj, int $count)
+if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
+    inv_add(inv, $obj, $count);
+} else {
+    obj_add(coord, $obj, $count, ^lootdrop_duration);
+}
+
+// ---------------------------------------------------------------------------------------------
+// being underground: the overlay, the hidden minimap, the prayer drain and the collapse
+
+// the crypts (level 3) and the tunnels (level 0) are the same map square
+[mapzone,0_55_151] ~barrows_enter_underground;
+[mapzoneexit,0_55_151]
+~barrows_leave_underground;
+clearsofttimer(barrows_collapse);
+// leaving after looting resets the run (OSRS wiki, Barrows tunnels)
+if (~barrows_looted = true) {
+    ~barrows_reset;
+}
+
+[proc,barrows_enter_underground]
+~barrows_check_setup;
+if_openoverlay(inter_98);
+minimap_toggle(2);
+clearsofttimer(barrows_drain);
+softtimer(barrows_drain, 30);
+if (~barrows_looted = true & coordy(coord) = 0) {
+    clearsofttimer(barrows_collapse);
+    softtimer(barrows_collapse, 3);
+}
+
+[proc,barrows_leave_underground]
+if_openoverlay(null);
+minimap_toggle(0);
+clearsofttimer(barrows_drain);
+
+// every 18 seconds a brother's face appears and drains 8 prayer, plus 1 for each brother
+// killed this run (OSRS wiki, Barrows tunnels)
+[softtimer,barrows_drain]
+stat_sub(prayer, add(8, ~barrows_killed_total), 0);
+def_int $face = random(6);
+def_obj $model = ~barrows_face_obj(random(12));
+switch_int ($face) {
+    case 0 : if_setobject(inter_98:com_1, $model, 100);
+    case 1 : if_setobject(inter_98:com_2, $model, 100);
+    case 2 : if_setobject(inter_98:com_3, $model, 100);
+    case 3 : if_setobject(inter_98:com_4, $model, 100);
+    case 4 : if_setobject(inter_98:com_5, $model, 100);
+    case default : if_setobject(inter_98:com_6, $model, 100);
+}
+queue(barrows_face_clear, 3, $face);
+
+[queue,barrows_face_clear](int $face)
+switch_int ($face) {
+    case 0 : if_setobject(inter_98:com_1, null, 0);
+    case 1 : if_setobject(inter_98:com_2, null, 0);
+    case 2 : if_setobject(inter_98:com_3, null, 0);
+    case 3 : if_setobject(inter_98:com_4, null, 0);
+    case 4 : if_setobject(inter_98:com_5, null, 0);
+    case default : if_setobject(inter_98:com_6, null, 0);
+}
+
+[proc,barrows_face_obj](int $n)(obj)
+switch_int ($n) {
+    case 0 : return(barrows_interface_ahrim);
+    case 1 : return(barrows_interface_ahrim_green);
+    case 2 : return(barrows_interface_dharok);
+    case 3 : return(barrows_interface_dharok_green);
+    case 4 : return(barrows_interface_guthan);
+    case 5 : return(barrows_interface_guthan_green);
+    case 6 : return(barrows_interface_karil);
+    case 7 : return(barrows_interface_karil_green);
+    case 8 : return(barrows_interface_torag);
+    case 9 : return(barrows_interface_torag_green);
+    case 10 : return(barrows_interface_verac);
+    case default : return(barrows_interface_verac_green);
+}
+
+// after looting, rocks fall now and then (2009scape: a 1 in 15 chance every 3 ticks of up to
+// 4 damage; the OSRS wiki only says "occasional damage")
+[softtimer,barrows_collapse]
+if (~barrows_looted = false | coordy(coord) ! 0) {
+    clearsofttimer(barrows_collapse);
+    return;
+}
+if (random(15) = 0) {
+    spotanim_map(goblincaves_roofcollapse, coord, 0, 0);
+    ~damage_self(random(5));
+}
+
+// ---------------------------------------------------------------------------------------------
+// kills: everything killed down here adds its combat level to the reward potential (at most
+// 1000) and one to the kill count; brothers are marked as killed
+
+[proc,barrows_add_kill](int $level)
+%barrows_killed_monster = min(^barrows_rp_cap, add(%barrows_killed_monster, $level));
+%barrows_killed_count = add(%barrows_killed_count, 1);
+
+[ai_queue3,barrows_bloodworm] ~barrows_monster_death(52);
+[ai_queue3,barrows_rat] ~barrows_monster_death(43);
+[ai_queue3,barrows_giantrat] ~barrows_monster_death(76);
+[ai_queue3,barrows_spider] ~barrows_monster_death(56);
+[ai_queue3,barrows_giantspider] ~barrows_monster_death(79);
+[ai_queue3,barrows_skeleton_unarmed] ~barrows_monster_death(77);
+[ai_queue3,barrows_skeleton_armed] ~barrows_monster_death(77);
+
+[proc,barrows_monster_death](int $level)
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(barrows_kill_credit, 0, $level);
+}
+
+// the killer gets the credit in their own script (varps can only be changed from there)
+[queue,barrows_kill_credit](int $level)
+~barrows_add_kill($level);
+
+[ai_queue3,barrows_ahrim] ~barrows_brother_death;
+[ai_queue3,barrows_dharok] ~barrows_brother_death;
+[ai_queue3,barrows_guthan] ~barrows_brother_death;
+[ai_queue3,barrows_karil] ~barrows_brother_death;
+[ai_queue3,barrows_torag] ~barrows_brother_death;
+[ai_queue3,barrows_verac] ~barrows_brother_death;
+
+[proc,barrows_brother_death]
+def_int $index = ~barrows_brother_index(npc_type);
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(barrows_brother_credit, 0, $index);
+}
+
+[queue,barrows_brother_credit](int $index)
+hint_stop;
+%barrows_kills = setbit(%barrows_kills, $index);
+// Ahrim and Karil are combat level 98, the other four 115 (2006 game data)
+if ($index = ^barrows_ahrim | $index = ^barrows_karil) {
+    ~barrows_add_kill(98);
+} else {
+    ~barrows_add_kill(115);
+}
+
+// a brother whose player has left (logged out, teleported, gone up the stairs) gives up
+[ai_timer,barrows_ahrim] ~barrows_brother_timer;
+[ai_timer,barrows_dharok] ~barrows_brother_timer;
+[ai_timer,barrows_guthan] ~barrows_brother_timer;
+[ai_timer,barrows_karil] ~barrows_brother_timer;
+[ai_timer,barrows_torag] ~barrows_brother_timer;
+[ai_timer,barrows_verac] ~barrows_brother_timer;
+
+[proc,barrows_brother_timer]
+~npc_poison_timer;
+npc_settimer(30);
+if (finduid(%npc_aggressive_player) = false) {
+    npc_del;
+    return;
+}
+if (coordy(coord) ! coordy(npc_coord) | distance(coord, npc_coord) > 20) {
+    npc_del;
+}
