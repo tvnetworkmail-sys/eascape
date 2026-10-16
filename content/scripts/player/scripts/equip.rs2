@@ -47,9 +47,11 @@ if (p_finduid(uid) = true) {
             ~set_tutorial_progress;
         }
         else if (%tutorial = ^newbie_combat_instructor_unequipping_items) {
+            // either order: sword then shield, or shield then sword
+            def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
             def_obj $shield = inv_getobj(worn, ^wearpos_lhand);
 
-            if ($previous_weapon = bronze_sword & $shield = wooden_shield) {
+            if ($weapon = bronze_sword & $shield = wooden_shield) {
                 %tutorial = ^newbie_combat_instructor_open_combat_interface;
                 ~set_tutorial_progress;
             }
