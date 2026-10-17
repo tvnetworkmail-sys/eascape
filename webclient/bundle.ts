@@ -55,7 +55,9 @@ async function applyTerser(script: BunOutput): Promise<boolean> {
         },
         mangle: {
             nth_identifier: nth_identifier,
-            properties: {
+            // EASCape: property names are kept, so the EASCape app's runtime and plugins can read
+            // the client's fields by their real names (see src/client/LostLite.ts)
+            properties: false && {
                 reserved: [
                     // stdlib
                     'willReadFrequently',

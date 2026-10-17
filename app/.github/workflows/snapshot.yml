@@ -1,0 +1,24 @@
+name: Snapshot live clients
+
+# Developer tool: saves each world's current client.js to the "bundles" branch, so the
+# patcher can be developed against the real files. Run by hand (Actions > Run workflow).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and commit
+        shell: bash
+        run: |
+          mkdir out && cd out
+          git init -q -b bundles
+          for w in 2 3 5 7; do curl -fsSL --retry 3 -o "client-w$w.js" "https://w$w-2004.lostcity.rs/client/client.js"; done
+          sha1sum client-w*.js > SHA1SUMS
+          git add -A
+          git -c user.name=snapshot -c user.email=snapshot@users.noreply.github.com commit -qm "Live clients $(date -u +%F)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" bundles

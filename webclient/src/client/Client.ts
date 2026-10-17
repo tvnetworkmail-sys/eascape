@@ -5,6 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
+import { lostlite, lostliteConfigure, lostliteSetLoopCycle } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -1504,6 +1505,9 @@ export class Client extends GameShell {
     }
 
     private async titleScreenDraw(): Promise<void> {
+        // LostLite: lets the app fill in a remembered username and password
+        this.llHook()?.title(this);
+
         await this.prepareTitle();
         this.imageTitle4?.setPixels();
         this.imageTitlebox?.plotSprite(0, 0);
@@ -1542,7 +1546,7 @@ export class Client extends GameShell {
                 y += 30;
             }
 
-            this.b12?.drawStringTag(`Username: ${this.loginUser}${this.loginSelect === 0 && Client.loopCycle % 40 < 20 ? '@yel@|' : ''}`, w / 2 - 90, y, Colour.WHITE, true);
+            this.b12?.drawStringTag(`Username: ${lostlite()?.hideUser ? '*'.repeat(this.loginUser.length) : this.loginUser}${this.loginSelect === 0 && Client.loopCycle % 40 < 20 ? '@yel@|' : ''}`, w / 2 - 90, y, Colour.WHITE, true);
             y += 15;
 
             this.b12?.drawStringTag(`Password: ${JString.getRepeatedCharacter(this.loginPass)}${this.loginSelect === 1 && Client.loopCycle % 40 < 20 ? '@yel@|' : ''}`, w / 2 - 88, y, Colour.WHITE, true);
@@ -2264,7 +2268,7 @@ export class Client extends GameShell {
                     this.hoveredSlotComId = -1;
                     this.buildMinimenu();
 
-                    if (this.hoveredSlotComId === this.objDragComId && this.hoveredSlot !== this.objDragSlot) {
+                    if (this.hoveredSlotComId === this.objDragComId && this.hoveredSlot !== this.objDragSlot && !lostlite()?.invDrag(this.objDragComId, this.objDragSlot, this.hoveredSlot, this.bankArrangeMode)) { // LostLite: bank placeholders
                         const com: IfType = IfType.list[this.objDragComId];
 
                         let mode = 0;
@@ -2622,6 +2626,9 @@ export class Client extends GameShell {
                 }
             }
         }
+
+        // LostLite: the menu is complete (Menu Entry Swapper and others work here)
+        this.llHook()?.menuBuilt(this);
     }
 
     // todo: order
@@ -4243,7 +4250,7 @@ export class Client extends GameShell {
             const yaw: number = (this.orbitCameraYaw + this.macroCameraAngle) & 0x7ff;
 
             if (this.localPlayer) {
-                this.camFollow(pitch, yaw, this.orbitCameraX, this.getAvH(this.localPlayer.x, this.localPlayer.z, this.minusedlevel) - 50, this.orbitCameraZ, pitch * 3 + 600);
+                this.camFollow(pitch, yaw, this.orbitCameraX, this.getAvH(this.localPlayer.x, this.localPlayer.z, this.minusedlevel) - 50, this.orbitCameraZ, ((pitch * 3 + 600) * (lostlite()?.zoom ?? 1)) | 0); // LostLite: scroll-wheel zoom
             }
         }
 
@@ -4251,7 +4258,8 @@ export class Client extends GameShell {
         if (this.cinemaCam) {
             level = this.roofCheck2();
         } else {
-            level = this.roofCheck();
+            // LostLite: Hide roofs always draws your own level, like standing indoors
+            level = lostlite()?.hideRoofs ? this.minusedlevel : this.roofCheck();
         }
 
         const camX: number = this.camX;
@@ -4299,7 +4307,10 @@ export class Client extends GameShell {
         this.entityOverlays();
         this.coordArrow();
         this.textureRunAnims(cycle);
+        // LostLite: overlays under the open interface and the menu, then over them
+        this.llHook()?.frame(this, 0);
         this.otherOverlays();
+        this.llHook()?.frame(this, 1);
         this.areaGame?.draw(4, 4);
 
         this.camX = camX;
@@ -5927,7 +5938,21 @@ export class Client extends GameShell {
         return type !== 1;
     }
 
+    // LostLite: the EASCape app's runtime, configured on first use (null in a plain browser)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private llHook(): any {
+        const ll = lostlite();
+        if (ll) {
+            lostliteSetLoopCycle(() => Client.loopCycle);
+            lostliteConfigure();
+        }
+        return ll;
+    }
+
     private async tcpIn(): Promise<boolean> {
+        // LostLite: captures the live client; called many times a frame while connected
+        this.llHook()?.tick(this);
+
         if (!this.stream) {
             return false;
         }
@@ -8705,6 +8730,11 @@ export class Client extends GameShell {
             return;
         }
 
+        // LostLite: entries the app added run the app's own handler
+        if (this.llHook()?.menuClick(this, optionId)) {
+            return;
+        }
+
         if (this.dialogInputOpen) {
             this.dialogInputOpen = false;
             this.redrawChat = true;
@@ -11323,7 +11353,12 @@ export class Client extends GameShell {
 
         this.chatback?.plotSprite(0, 0);
 
-        if (this.socialInputOpen) {
+        // LostLite: plugin prompts (bank search) drawn like the game's own "Enter amount:"
+        const llPrompt = lostlite()?.chatPrompt;
+        if (llPrompt) {
+            this.b12?.centreString(llPrompt[0], 239, 40, Colour.BLACK);
+            this.b12?.centreString(llPrompt[1], 239, 60, Colour.DARKBLUE);
+        } else if (this.socialInputOpen) {
             this.b12?.centreString(this.socialInputHeader, 239, 40, Colour.BLACK);
             this.b12?.centreString(this.socialInput + '*', 239, 60, Colour.DARKBLUE);
         } else if (this.dialogInputOpen) {

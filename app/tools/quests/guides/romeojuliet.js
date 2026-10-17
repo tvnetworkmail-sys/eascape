@@ -1,0 +1,42 @@
+// Romeo & Juliet. Based on Quest Helper's RomeoAndJuliet (BSD 2-Clause, (c) 2020 Zoinkwiz),
+// with Lost City's 2004 stages.
+module.exports = {
+  quest: 'romeojuliet',
+  difficulty: 'Novice',
+  start: 'Talk to Romeo in Varrock Square.',
+  items: {
+    message: { name: 'Message', obj: 'julietmessage', tip: 'Juliet gives you another if you lose it' },
+    berries: { name: 'Cadava berries', obj: 'cadavaberries', tip: 'From the bushes south-east of Varrock' },
+    potion: { name: 'Cadava potion', obj: 'cadava' },
+  },
+  zones: { julietRoom: [3147, 3425, 3166, 3443, 1] },
+  steps: {
+    romeo: { text: 'Talk to Romeo in Varrock Square.', npc: 'romeo', at: [3211, 3425, 0], options: ['Can I help find her for you?'] },
+    goUp: { text: "Climb the stairs in Juliet's house, west of Varrock.", loc: 'stairs', at: [3156, 3435, 0] },
+    juliet: { text: 'Talk to Juliet upstairs in her house west of Varrock.', npc: 'juliet', at: [3158, 3425, 1] },
+    goDown: { text: 'Climb down the stairs.', loc: 'stairstop', at: [3156, 3435, 1] },
+    message: { text: "Bring Juliet's message to Romeo in Varrock Square.", npc: 'romeo', at: [3211, 3425, 0], items: ['message'] },
+    lawrence: { text: 'Talk to Father Lawrence in the church in north-east Varrock.', npc: 'father_lawrence', at: [3254, 3475, 0] },
+    berries: { text: 'Pick up some cadava berries by the bushes south-east of Varrock.', obj: 'cadavaberries', at: [3273, 3375, 0] },
+    apothecary: { text: 'Bring the cadava berries to the Apothecary in south-west Varrock.', npc: 'apothecary', at: [3195, 3404, 0], items: ['berries'] },
+    goUp2: { text: "Bring the potion to Juliet: climb the stairs in her house.", loc: 'stairs', at: [3156, 3435, 0], items: ['potion'] },
+    potion: { text: 'Give the cadava potion to Juliet.', npc: 'juliet', at: [3158, 3425, 1], items: ['potion'] },
+    goDown2: { text: 'Climb down the stairs.', loc: 'stairstop', at: [3156, 3435, 1] },
+    finish: { text: 'Talk to Romeo in Varrock Square to finish the quest.', npc: 'romeo', at: [3211, 3425, 0] },
+  },
+  stages: {
+    0: [[null, 'romeo']],
+    10: [['in:julietRoom', 'juliet'], [null, 'goUp']],
+    20: [['in:julietRoom', 'goDown'], [null, 'message']],
+    30: [[null, 'lawrence']],
+    40: [['have:berries', 'apothecary'], ['have:potion & in:julietRoom', 'potion'], ['have:potion', 'goUp2'], [null, 'berries']],
+    50: [['have:potion & in:julietRoom', 'potion'], ['have:potion', 'goUp2'], ['have:berries', 'apothecary'], [null, 'berries']],
+    '60-99': [['in:julietRoom', 'goDown2'], [null, 'finish']],
+  },
+  sections: [
+    { title: 'Starting off', steps: ['romeo', 'goUp', 'juliet', 'goDown', 'message'] },
+    { title: 'The cadava potion', steps: ['lawrence', 'berries', 'apothecary', 'goUp2', 'potion'] },
+    { title: 'Finishing up', steps: ['goDown2', 'finish'] },
+  ],
+  rewards: ['5 Quest Points'],
+};

@@ -292,6 +292,13 @@ export default class PixFont extends Linkable2 {
     }
 
     updateState(tag: string): number {
+        // LostLite: the app's own "@~xxxxxx@" colour tags
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ll = (globalThis as any).__lostlite;
+        if (tag[0] === '~' && ll) {
+            return ll.tagColour(tag);
+        }
+
         if (tag === 'red') {
             return Colour.RED;
         } else if (tag === 'gre') {

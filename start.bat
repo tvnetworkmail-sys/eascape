@@ -5,6 +5,6 @@ if exist .git (
     echo Checking for updates...
     git pull
 )
-cd engine
-call npm start
-pause
+rem Everything after the update lives in launch.bat, so an update never changes this file
+rem while it is running.
+call "%~dp0launch.bat"

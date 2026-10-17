@@ -1838,6 +1838,13 @@ export default class Model extends ModelSource {
             }
         }
 
+        // LostLite: the projected model, for NPC hull highlights
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ll = (globalThis as any).__lostlite;
+        if (ll && ll.hullWanted) {
+            ll.modelDrawn(this, typecode, Model.vertexScreenX, Model.vertexScreenY, this.numPoints);
+        }
+
         try {
             // try catch for example a model being drawn from 3d can crash like at baxtorian falls
             this.render2(clipped, picking, typecode);
