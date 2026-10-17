@@ -94,7 +94,7 @@ window.Panels = window.Panels || [];
     const pin = h('button.icon-btn.pin', { tip: isPinned ? 'Unpin plugin' : 'Pin plugin', onclick: () => { setPinned(p.id, !isPinned); App.renderPanel(false); } },
       icon(isPinned ? 'star_on.png' : 'star_off.png'));
     const name = h('span.name', p.notChecked
-      ? { text: p.name, style: 'opacity:0.45', tip: `${p.name}:\n${p.description}\n\nNot checked for 2006 yet, so it stays off for now.` }
+      ? { text: `${p.name} *`, tip: `${p.name}:\n${p.description}\n\n* Not checked for 2006 yet: it may show 2004 things or miss 2006 ones.` }
       : { text: p.name, tip: `${p.name}:\n${p.description}` });
     const row = h('div.plugin-item', {}, pin, name);
     row.addEventListener('contextmenu', (e) => UI.popup(e, [
@@ -106,7 +106,7 @@ window.Panels = window.Panels || [];
     } else {
       row.append(h('span.cfg'));
     }
-    if (p.alwaysOn || p.notChecked) row.append(h('span.toggle'));
+    if (p.alwaysOn) row.append(h('span.toggle'));
     else row.append(UI.toggle(p.enabled, (on) => { setEnabled(p.id, on); App.renderPanel(false); }, p.enabled ? 'Disable plugin' : 'Enable plugin'));
     return row;
   }
@@ -127,7 +127,7 @@ window.Panels = window.Panels || [];
     const top = h('div.config-top', {},
       h('button.icon-btn.back', { tip: 'Back', onclick: () => { view.editing = null; App.renderPanel(true); } }, icon('config_back_icon.png')),
       h('span.title', { text: p.name, tip: p.description }),
-      p.alwaysOn || p.notChecked ? null : UI.toggle(p.enabled, (on) => { setEnabled(id, on); App.renderPanel(false); }, p.enabled ? 'Disable plugin' : 'Enable plugin'));
+      p.alwaysOn ? null : UI.toggle(p.enabled, (on) => { setEnabled(id, on); App.renderPanel(false); }, p.enabled ? 'Disable plugin' : 'Enable plugin'));
 
     const main = h('div.config-main');
     const cfg = p.config;

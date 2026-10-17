@@ -4,8 +4,9 @@
 // shape RuneLite uses ("runelite.<name>plugin").
 const descriptors = require('../plugins');
 
-// EASCape: plugins come from LostLite, made for the 2004 game. Each stays off until it has
-// been checked against the 2006 game (plan step 4.2) and its id is added here.
+// EASCape: plugins come from LostLite, made for the 2004 game. Until one has been checked
+// against the 2006 game (plan step 4.2) and its id added here, the sidebar marks it as not
+// checked yet. It still runs and can be switched on and off as normal (your call, 17 Oct 2026).
 const CHECKED_2006 = new Set([]);
 
 function notChecked(d) {
@@ -29,13 +30,12 @@ class PluginManager {
     const d = this.get(id);
     if (!d) return false;
     if (d.alwaysOn) return true;
-    if (notChecked(d)) return false;
     return this.config.get('lostlite', `${id}Plugin`, d.enabledByDefault !== false);
   }
 
   setEnabled(id, on) {
     const d = this.get(id);
-    if (!d || d.alwaysOn || notChecked(d)) return;
+    if (!d || d.alwaysOn) return;
     this.config.set('lostlite', `${id}Plugin`, !!on);
   }
 
