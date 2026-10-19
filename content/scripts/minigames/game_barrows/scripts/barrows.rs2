@@ -640,8 +640,26 @@ if (~barrows_looted = false | coordy(coord) ! 0) {
 }
 if (random(15) = 0) {
     spotanim_map(goblincaves_roofcollapse, coord, 0, 0);
-    ~damage_self(random(5));
+    ~barrows_rock_hit(random(5));
 }
+
+// like ~damage_self, but it leaves the loot window open (your call, 19 Oct 2026)
+[proc,barrows_rock_hit](int $amount)
+if (stat(hitpoints) = 0) {
+    ~player_die;
+    return;
+}
+if ($amount > 0) {
+    damage(uid, 1, $amount);
+    ~human_hit_sound;
+} else {
+    damage(uid, 0, 0);
+}
+if (stat(hitpoints) = 0) {
+    ~player_die;
+    return;
+}
+~ring_of_life_check;
 
 // ---------------------------------------------------------------------------------------------
 // kills: everything killed down here adds its combat level to the reward potential (at most
