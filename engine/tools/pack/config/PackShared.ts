@@ -737,7 +737,11 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 122666554);
+                // EASCape: 377's obj checksum was 122666554; ours differs because the grimy herbs are named
+                // like the later game's ("Grimy guam leaf", your call 19 Oct 2026). Any other change to
+                // the item data still fails this check.
+                if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
+                return Packet.checkcrc(client.data, 0, client.pos, -2106244734);
             }
         );
     }
