@@ -87,6 +87,7 @@ export default class IfType {
     colour2Over: number = 0;
     graphic: Pix32 | null = null;
     graphic2: Pix32 | null = null;
+    graphicHover: Pix32 | null = null; // EASCape: shown under the mouse
     model1Type: number = 0;
     model1Id: number = 0;
     model2Id: number = 0;
@@ -255,6 +256,10 @@ export default class IfType {
                 if (media && graphic.length > 0) {
                     const index: number = graphic.lastIndexOf(',');
                     com.graphic = this.getSprite(media, graphic.substring(0, index), parseInt(graphic.substring(index + 1), 10));
+                    // EASCape: our X close button has a pressed-in look (the next image) under the mouse
+                    if (graphic.substring(0, index) === 'eascape_close') {
+                        com.graphicHover = this.getSprite(media, 'eascape_close', parseInt(graphic.substring(index + 1), 10) + 1);
+                    }
                 }
 
                 const activeGraphic: string = data.gjstr();

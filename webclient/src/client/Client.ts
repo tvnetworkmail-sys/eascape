@@ -9810,7 +9810,7 @@ export class Client extends GameShell {
             childX += child.x;
             childY += child.y;
 
-            if ((child.overLayerId >= 0 || child.colourOver !== 0) && mouseX >= childX && mouseY >= childY && mouseX < childX + child.width && mouseY < childY + child.height) {
+            if ((child.overLayerId >= 0 || child.colourOver !== 0 || child.graphicHover) && mouseX >= childX && mouseY >= childY && mouseX < childX + child.width && mouseY < childY + child.height) {
                 if (child.overLayerId >= 0) {
                     this.lastOverComId = child.overLayerId;
                 } else {
@@ -10364,6 +10364,11 @@ export class Client extends GameShell {
                     image = child.graphic2;
                 } else {
                     image = child.graphic;
+                }
+
+                // EASCape: a pressed-in image under the mouse (our X close button)
+                if (child.graphicHover && (this.overChatComId === child.id || this.overSideComId === child.id || this.overMainComId === child.id)) {
+                    image = child.graphicHover;
                 }
 
                 image?.plotSprite(childX, childY);
