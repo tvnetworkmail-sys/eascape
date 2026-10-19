@@ -1,0 +1,46 @@
+// EASCape: the 2006 potions the 377 content couldn't make (Void's recipes): Saradomin brew
+// (toadflax potion + crushed bird's nest, 81 Herblore), Antidote+ (coconut milk + toadflax, then
+// yew roots, 68) and Antidote++ (coconut milk + irit, then magic roots, 79)
+[opheldu,crushed_bird_nest] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,vial_coconut_milk] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,unfinished_antidote+] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,unfinished_antidote++] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,yew_roots] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,magic_roots] ~attempt_brew_potion(last_useslot, last_slot);
+
+// a pestle and mortar on an empty bird's nest makes a crushed nest (Void: crushing.recipes.toml)
+[opheldu,bird_nest_empty] ~attempt_grind_ingredient(last_useslot, last_slot);
+
+// coconut milk (Void, cooking.recipes.toml): break a coconut with a hammer, then pour its milk
+// into an empty vial, which leaves the shell
+[opheldu,coconut]
+if (last_useitem = hammer) {
+    ~coconut_break(last_slot);
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,coconut_break](int $slot)
+if (inv_getobj(inv, $slot) ! coconut) return;
+inv_setslot(inv, $slot, coconut_half, 1);
+mes("You break the coconut with the hammer.");
+
+[opheldu,coconut_half]
+if (last_useitem = vial_empty) {
+    ~coconut_milk(last_slot, last_useslot);
+    return;
+}
+~displaymessage(^dm_default);
+
+[opheldu,vial_empty]
+if (last_useitem = coconut_half) {
+    ~coconut_milk(last_useslot, last_slot);
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,coconut_milk](int $coconut_slot, int $vial_slot)
+if (inv_getobj(inv, $coconut_slot) ! coconut_half | inv_getobj(inv, $vial_slot) ! vial_empty) return;
+inv_setslot(inv, $vial_slot, vial_coconut_milk, 1);
+inv_setslot(inv, $coconut_slot, coconut_shell, 1);
+mes("You fill the vial with coconut milk.");

@@ -18,3 +18,30 @@ def_obj $consumable = last_item;
 inv_setslot(inv, last_slot, oc_param($consumable, next_obj_stage), 1);
 ~consume_effect_messages($consumable, stat(hitpoints), false);
 
+
+// EASCape: from Void (PotionEffects.kt): Antidote+ protects for 9 minutes, Antidote++ for 12.
+// One step of %poison is 18 seconds (super antipoison's -20 is its 6 minutes).
+[label,consume_effect_antidote_plus]
+sound_synth(liquid, 1, 0);
+anim(human_eat, 0);
+def_obj $consumable = last_item;
+%poison = min(%poison, -30);
+~set_poison_timer;
+inv_setslot(inv, last_slot, oc_param($consumable, next_obj_stage), 1);
+~consume_effect_messages($consumable, stat(hitpoints), false);
+
+[label,consume_effect_antidote_plus_plus]
+sound_synth(liquid, 1, 0);
+anim(human_eat, 0);
+def_obj $consumable = last_item;
+%poison = min(%poison, -40);
+~set_poison_timer;
+inv_setslot(inv, last_slot, oc_param($consumable, next_obj_stage), 1);
+~consume_effect_messages($consumable, stat(hitpoints), false);
+
+// Guthix rest (Void): eases poison by one step, then its stat and run energy effect
+[label,consume_effect_guthix_rest]
+if (%poison > 0) {
+    %poison = sub(%poison, 1);
+}
+jump(consume_effect_stat);
