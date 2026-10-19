@@ -117,3 +117,19 @@ if (p_finduid(uid) = false) {
 }
 mes("Fight Cave: starting at wave <tostring(max(1, min($wave, ^fightcave_wave_jad)))>.");
 ~fightcave_enter(max(1, min($wave, ^fightcave_wave_jad)));
+
+// every hit kills whatever you're fighting (melee, ranged and combat spells), until ::onehitoff
+// or you log out
+[debugproc,onehit]
+if (p_finduid(uid) = false) {
+    return;
+}
+%eascape_onehit = ^true;
+mes("One-hit is on: everything you hit dies. ::onehitoff turns it off.");
+
+[debugproc,onehitoff]
+if (p_finduid(uid) = false) {
+    return;
+}
+%eascape_onehit = ^false;
+mes("One-hit is off: your hits are back to normal.");

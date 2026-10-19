@@ -37,7 +37,7 @@ import { printDebug } from '#/util/Logger.js';
 import { tryParseInt } from '#/util/TryParse.js';
 
 // EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
-const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave'];
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff'];
 
 export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
     handle(message: ClientCheat, player: Player): boolean {
