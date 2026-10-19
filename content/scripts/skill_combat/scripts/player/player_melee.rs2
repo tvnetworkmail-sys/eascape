@@ -65,7 +65,10 @@ anim(%com_attackanim, 0);
 sound_synth(%com_attacksound, 1, 0);
 ~npc_retaliate(0);
 // EASCape test mode: ::onehit kills whatever you hit
-if (%eascape_onehit = ^true) $damage = npc_stat(hitpoints);
+if (%eascape_onehit = ^true) {
+    $damage = npc_stat(hitpoints);
+    npc_heropoints($damage); // so the kill still gets its drop
+}
 npc_queue(2, $damage, 0);
 npc_anim(npc_param(defend_anim), 20); 
 if (npc_param(defend_sound) ! null) {

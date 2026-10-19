@@ -24,6 +24,7 @@ p_teleport(^fightcave_start);
 %fightcave_left = 0;
 %fightcave_healers = 0;
 queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
+softtimer(fightcave_watch, 5);
 ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You're on your own now, Jal-Yt. Prepare to fight|for your life!");
 
 [proc,in_fightcave](coord $coord)(boolean)
@@ -63,6 +64,7 @@ if (%fightcave_wave = 0) {
 %fightcave_healers = 0;
 mes("Your wave will start in 10 seconds.");
 queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
+softtimer(fightcave_watch, 5);
 
 // ---- waves
 
@@ -164,11 +166,52 @@ if (%fightcave_wave = 0) {
 %fightcave_left = 0;
 %fightcave_healers = 0;
 %fightcave_run = add(%fightcave_run, 1);
+clearsofttimer(fightcave_watch);
 ~fightcave_give(tzhaar_cape_fire, 1);
 ~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
 mes("You were victorious!");
 p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
 ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You even defeated TzTok-Jad, I am most impressed!|Please accept this gift as a reward.");
+
+// ---- a check every 5 ticks that the wave can't get stuck: if none of your monsters are left
+// in the cave but the wave still counts some, the wave is over; with Jad, he's gone or down
+
+[softtimer,fightcave_watch]
+if (%fightcave_wave = 0 | ~in_fightcave(coord) = false) {
+    clearsofttimer(fightcave_watch);
+    return;
+}
+if (%fightcave_left = 0) {
+    return; // between waves
+}
+def_player_uid $me = uid;
+def_int $run = %fightcave_run;
+def_int $alive = 0;
+def_boolean $jad = false;
+npc_findallany(^fightcave_centre, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = $me & %npc_int = $run & npc_type ! tzhaar_fightcave_swarm_boss_cleric) {
+        if (npc_type = tzhaar_fightcave_swarm_boss) {
+            if (npc_stat(hitpoints) > 0) $jad = true;
+        } else {
+            $alive = add($alive, 1);
+        }
+    }
+}
+if (p_finduid($me) = false) {
+    return;
+}
+if (%fightcave_wave >= ^fightcave_wave_jad) {
+    if ($jad = false) {
+        queue(fightcave_victory, 0, 0);
+    }
+    return;
+}
+if ($alive = 0) {
+    %fightcave_left = 0;
+    %fightcave_wave = add(%fightcave_wave, 1);
+    queue(fightcave_spawn_wave, ^fightcave_wave_delay, %fightcave_run);
+}
 
 // ---- dying in the cave: safe, like the duel arena
 

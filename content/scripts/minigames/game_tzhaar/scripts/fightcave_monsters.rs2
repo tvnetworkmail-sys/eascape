@@ -206,10 +206,18 @@ queue*(playerhit_n_retaliate, 0)(npc_uid);
 // ---- deaths
 
 [proc,fightcave_death](int $more)
+def_player_uid $owner = %npc_aggressive_player;
+def_int $run = %npc_int;
 gosub(npc_death);
-if (finduid(%npc_aggressive_player) = true & ~fightcave_owner_here = true) {
-    queue(fightcave_killed, 0, $more);
+if (finduid($owner) = true) {
+    if (~fightcave_owner_still($owner, $run) = true) queue(fightcave_killed, 0, $more);
 }
+
+// the owner is online, in the cave, on the same run (read before the monster is gone)
+[proc,fightcave_owner_still](player_uid $owner, int $run)(boolean)
+if (finduid($owner) = false) return(false);
+if (%fightcave_run ! $run) return(false);
+return(~in_fightcave(coord));
 
 // two small Tz-Kek come out
 [proc,fightcave_kek_death]
@@ -220,7 +228,7 @@ gosub(npc_death);
 if (finduid($owner) = false) {
     return;
 }
-if (%fightcave_run ! $run | ~in_fightcave(coord) = false) {
+if (~fightcave_owner_still($owner, $run) = false) {
     return;
 }
 queue(fightcave_killed, 0, 2);
@@ -230,10 +238,13 @@ npc_add(map_findsquare(movecoord($at, -2, 0, -2), 0, 1, ^map_findsquare_lineofwa
 ~fightcave_npc_owner($owner, $run);
 
 [proc,fightcave_jad_death]
-gosub(npc_death);
-if (finduid(%npc_aggressive_player) = true & ~fightcave_owner_here = true) {
-    queue(fightcave_victory, 0, 0);
+def_player_uid $owner = %npc_aggressive_player;
+def_int $run = %npc_int;
+// the win is queued before his death animation, so nothing after it can stop it
+if (finduid($owner) = true) {
+    if (~fightcave_owner_still($owner, $run) = true) queue(fightcave_victory, 3, 0);
 }
+gosub(npc_death);
 
 // ---- Jad's healers (%npc_int2 on Jad: 0 none yet, 1 out, 2 may come again)
 
