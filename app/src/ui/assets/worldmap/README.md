@@ -1,4 +1,6 @@
-Rendered by tools/worldmap/render.py from Lost City's revision 274 map data
-(github.com/LostCityRS/Content, branch 274). Re-run it if the map data changes:
+Rendered by tools/worldmap/render.py from EASCape's revision 377 map data (content/ in this
+repo: maps, packs, sprites and textures). Re-run it if the map data changes:
 
-    python3 tools/worldmap/render.py <Content checkout> src/ui/assets/worldmap
+    python3 tools/worldmap/render.py ../content src/ui/assets/worldmap
+
+Place names come from content/maps/labels.txt.

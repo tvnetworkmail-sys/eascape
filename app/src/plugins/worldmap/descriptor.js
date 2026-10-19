@@ -1,5 +1,5 @@
 'use strict';
-// World map (3.5): the 2004 world drawn from Lost City's 274 map data in the minimap's own
+// World map (3.5): the 2006 world drawn from EASCape's 377 map data in the minimap's own
 // style, opened from the globe by the minimap. Markers from other plugins come later.
 module.exports = {
   id: 'worldmap',

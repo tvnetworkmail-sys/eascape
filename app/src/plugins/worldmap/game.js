@@ -1,6 +1,6 @@
 'use strict';
 // World map (3.5): opens over the game from the globe by the minimap (or its hotkey).
-// The map pictures are drawn ahead of time from Lost City's 274 map data by
+// The map pictures are drawn ahead of time from EASCape's 377 map data by
 // tools/worldmap/render.py (the 2004 minimap's own colours, walls and scenery), one picture
 // per 64 x 64 region and floor. This draws them with place names, map icons and you.
 const fs = require('fs');
