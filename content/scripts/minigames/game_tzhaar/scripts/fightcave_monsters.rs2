@@ -106,6 +106,7 @@ if (~fightcave_attack_ready = false) return;
 npc_setmode(applayer2);
 if (npc_range(coord) <= 1) {
     npc_anim($melee_anim, 0);
+    ~fightcave_attack_sound;
     def_int $damage = 0;
     if (randominc(~npc_melee_attack_roll) > randominc(~player_defence_roll_specific(^crush_style))) {
         $damage = randominc($maxhit);
@@ -114,7 +115,9 @@ if (npc_range(coord) <= 1) {
     return;
 }
 npc_anim(npc_param(attack_anim), 0);
-~fightcave_attack_sound;
+if (npc_param(rangeattack_sound) ! null) {
+    sound_synth(npc_param(rangeattack_sound), 1, 0);
+}
 %npc_action_delay = add(map_clock, npc_param(attackrate));
 def_int $duration = ~player_projectile(npc_coord, coord, uid, $projectile, 60, 36, 32, 15, 0, 11, 5);
 def_int $roll;
@@ -181,16 +184,19 @@ if ($style = 0) {
     ~playerhit_n_melee(true, $damage, npc_param(attackrate));
     return;
 }
-// timing from 2009scape (TzhaarFightCaveNPC): the hit lands 1 + (distance x 0.4, rounded up)
-// ticks later; the magic ball leaves after 70 client cycles and arrives at 52 + 10 x distance
-def_int $distance = distance(npc_coord, coord);
+// timing and sounds from Void (GregHib/void: TzTokJad.kt, tzhaar_fight_cave.combat/gfx.toml):
+// the hit lands 5 ticks after he attacks (3 ticks, then 64 client cycles); the magic ball leaves
+// after 86 client cycles and flies 8 per square beyond the first; Fire Wave's cast sound for
+// magic, its impact sound when either lands
+def_int $distance = max(0, sub(distance(npc_coord, coord), 1));
 if ($style = 1) {
     npc_anim(lordmagmus_fire, 0);
-    projanim_pl(npc_coord, uid, tzhaar_fire_spit_travel, 96, 36, 70, max(80, add(52, multiply($distance, 10))), 15, 11);
+    sound_synth(firewave_cast_and_fire, 1, 0);
+    projanim_pl(npc_coord, uid, tzhaar_fire_spit_travel, 50, 36, 86, add(86, max(8, multiply($distance, 8))), 16, 11);
 } else {
     npc_anim(lordmagmus_smash, 0);
 }
-npc_queue(4, $style, add(1, divide(add(multiply($distance, 4), 9), 10)));
+npc_queue(4, $style, 5);
 
 // the magic or ranged hit lands
 [ai_queue4,tzhaar_fightcave_swarm_boss]
@@ -210,6 +216,7 @@ if ($style = 1) {
     }
     if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
 }
+sound_synth(firewave_hit, 1, 0);
 queue(combat_damage_player, 0, $damage);
 queue*(playerhit_n_retaliate, 0)(npc_uid);
 
@@ -274,10 +281,10 @@ npc_add(0_37_79_43_28, tzhaar_fightcave_swarm_boss_cleric, 12000);
 npc_add(0_37_79_30_35, tzhaar_fightcave_swarm_boss_cleric, 12000);
 ~fightcave_npc_owner($owner, $run);
 
-// Yt-HurKot (2009scape, TzhaarFightCaveNPC): they go to Jad and "attack" him to heal him. Once
-// within (size / 2) + 1 = 3 squares of his centre, each swing (every 5 ticks) has a 1 in 2
-// chance to heal him by 5 + 0..max hit (14). Hit one and it fights you instead. They leave
-// once he's gone.
+// Yt-HurKot (Void, TzHaarHealers.kt): they walk to Jad; once within 4 squares of him, every 4
+// ticks they heal him by 5 (Void's 50 on its x10 hitpoints) while he's hurt, with the heal
+// animation, the heal graphic on Jad and the self-heal sound. Hit one and it fights you instead.
+// They leave once he's gone.
 [proc,fightcave_healer_timer]
 npc_settimer(1);
 if (~fightcave_owner_here = false) {
@@ -293,11 +300,15 @@ if (npc_find($here, tzhaar_fightcave_swarm_boss, 40, 0) = false) {
     if (npc_finduid($self) = true) npc_del;
     return;
 }
-def_coord $centre = movecoord(npc_coord, 2, 0, 2); // Jad is 5 squares across
+def_coord $jad = npc_coord;
+def_coord $centre = movecoord($jad, 2, 0, 2); // Jad is 5 squares across
+// squares from Jad's edge
+def_int $dx = max(0, max(sub(coordx($jad), coordx($here)), sub(coordx($here), add(coordx($jad), 4))));
+def_int $dz = max(0, max(sub(coordz($jad), coordz($here)), sub(coordz($here), add(coordz($jad), 4))));
 if (npc_finduid($self) = false) {
     return;
 }
-if (distance($here, $centre) > 3) {
+if (max($dx, $dz) > 4) {
     npc_walk($centre);
     return;
 }
@@ -305,19 +316,20 @@ npc_facesquare($centre);
 if (%npc_action_delay > map_clock) {
     return;
 }
-%npc_action_delay = add(map_clock, npc_param(attackrate));
-npc_anim(lizard_cleric_heal, 0);
-if (random(2) = 0) {
-    return;
-}
-def_int $heal = add(5, randominc(14));
+%npc_action_delay = add(map_clock, 4);
 if (npc_find($here, tzhaar_fightcave_swarm_boss, 40, 0) = false) {
     return;
 }
-if (npc_stat(hitpoints) > 0) {
-    npc_statheal(hitpoints, $heal, 0);
-    spotanim_npc(tzhaar_heal, 96, 0);
+if (npc_stat(hitpoints) > 0 & npc_stat(hitpoints) < npc_basestat(hitpoints)) {
+    npc_statheal(hitpoints, 5, 0);
+    spotanim_npc(tzhaar_heal, 0, 0);
+    if (finduid(%npc_aggressive_player) = true) {
+        sound_synth(selfheal, 1, 0); // the player whose Jad it is
+    }
     if (npc_stat(hitpoints) >= npc_basestat(hitpoints)) {
         %npc_int2 = 2; // healed to full: they may come again
+    }
+    if (npc_finduid($self) = true) {
+        npc_anim(lizard_cleric_heal, 0);
     }
 }
