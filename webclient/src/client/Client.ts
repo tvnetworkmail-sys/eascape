@@ -236,7 +236,6 @@ export class Client extends GameShell {
     private mapl: Uint8Array[][] | null = null;
     private groundh: Int32Array[][] | null = null;
     private collision: (CollisionMap | null)[] = new TypedArray1d(BuildArea.LEVELS, null);
-    private textureBuffer: Int8Array = new Int8Array(16384);
 
     private zoneUpdateX: number = 0;
     private zoneUpdateZ: number = 0;
@@ -4863,46 +4862,42 @@ export class Client extends GameShell {
     }
 
     // todo: order
+    // EASCape: the moving textures. 17 and 24 as in the 274 client; 34 and 40 as well, from
+    // 2006Scape's client (40 is the lava on the worn fire cape). Each texture keeps its own spare
+    // buffer, so a small texture's pixels never end up as a bigger one's buffer.
+    private static readonly ANIMATED_TEXTURES: number[] = [17, 24, 34, 40];
+    private textureSpare: Map<number, Int8Array> = new Map();
+
     private textureRunAnims(cycle: number): void {
-        if (!Client.lowMem) {
-            if (Pix3D.texCycle[17] >= cycle) {
-                const texture: Pix8 | null = Pix3D.textures[17];
-                if (!texture) {
-                    return;
-                }
+        if (Client.lowMem) {
+            return;
+        }
 
-                const bottom: number = texture.wi * texture.hi - 1;
-                const adjustment: number = texture.wi * this.worldUpdateNum * 2;
-
-                const src: Int8Array = texture.data;
-                const dst: Int8Array = this.textureBuffer;
-                for (let i: number = 0; i <= bottom; i++) {
-                    dst[i] = src[(i - adjustment) & bottom];
-                }
-
-                texture.data = dst;
-                this.textureBuffer = src;
-                Pix3D.pushTexture(17);
+        for (const id of Client.ANIMATED_TEXTURES) {
+            if (Pix3D.texCycle[id] < cycle) {
+                continue;
             }
 
-            if (Pix3D.texCycle[24] >= cycle) {
-                const texture: Pix8 | null = Pix3D.textures[24];
-                if (!texture) {
-                    return;
-                }
-                const bottom: number = texture.wi * texture.hi - 1;
-                const adjustment: number = texture.wi * this.worldUpdateNum * 2;
-
-                const src: Int8Array = texture.data;
-                const dst: Int8Array = this.textureBuffer;
-                for (let i: number = 0; i <= bottom; i++) {
-                    dst[i] = src[(i - adjustment) & bottom];
-                }
-
-                texture.data = dst;
-                this.textureBuffer = src;
-                Pix3D.pushTexture(24);
+            const texture: Pix8 | null = Pix3D.textures[id];
+            if (!texture) {
+                continue;
             }
+
+            const bottom: number = texture.wi * texture.hi - 1;
+            const adjustment: number = texture.wi * this.worldUpdateNum * 2;
+
+            const src: Int8Array = texture.data;
+            let dst: Int8Array | undefined = this.textureSpare.get(id);
+            if (!dst || dst.length !== src.length) {
+                dst = new Int8Array(src.length);
+            }
+            for (let i: number = 0; i <= bottom; i++) {
+                dst[i] = src[(i - adjustment) & bottom];
+            }
+
+            texture.data = dst;
+            this.textureSpare.set(id, src);
+            Pix3D.pushTexture(id);
         }
     }
 
