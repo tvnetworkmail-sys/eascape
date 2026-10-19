@@ -62,8 +62,12 @@ def_int $done = sub(%fightcave_wave, 1);
 p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
 if ($done > 0) {
     ~fightcave_give(tzhaar_token, multiply($done, add($done, 1)));
-    ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Well done in the cave, here, take TokKul as a reward.");
+    // a queue, so dying (whose script is still resetting you) never waits on the dialogue
+    queue(fightcave_tokkul_chat, 1, 0);
 }
+
+[queue,fightcave_tokkul_chat]
+~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Well done in the cave, here, take TokKul as a reward.");
 
 [proc,fightcave_give](namedobj $obj, int $count)
 if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
