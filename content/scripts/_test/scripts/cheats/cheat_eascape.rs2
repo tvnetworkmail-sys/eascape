@@ -273,3 +273,14 @@ mes("zanaris, elenaquest, dragonquest, seaslugquest, arthur, treequest, waterfal
 mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest, junglepotion, ikov");
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
+
+// every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
+// run energy, poison cured
+[debugproc,restore]
+if (p_finduid(uid) = false) {
+    return;
+}
+~stat_reset_all;
+healenergy(10000);
+~clear_poison;
+mes("Your stats are back to normal.");

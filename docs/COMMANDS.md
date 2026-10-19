@@ -8,6 +8,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | Command | What it does |
 |---|---|
 | `::maxstats` | Every skill to 99, hitpoints and prayer topped up |
+| `::restore` | Every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full run energy, poison cured |
 | `::barrowset` | Banks what you have, then gives the Barrows magic setup, the ranged switch for Ahrim and supplies |
 | `::barrowsgear` | Every Barrows piece and 1,000 bolt racks in your bank; a broken and a 50 Dharok's helm and 100,000 coins in your pack |
 | `::onehit` / `::onehitoff` | Every melee, ranged or spell hit kills what you're fighting / back to normal (also off when you log out) |
