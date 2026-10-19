@@ -194,6 +194,10 @@ if ($option = 1) {
 }
 
 [label,unhandled_ladder](coord $loccoord)
+// EASCape: where the map data says it leads (eascape_world)
+if (~eascape_link_go($loccoord, 1) = true) {
+    return;
+}
 mes("Unhandled ladder: <~coord_tostring($loccoord)>");
 
 [oploc1,loc_11727]

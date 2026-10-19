@@ -1192,5 +1192,9 @@ if ($option = 1) {
 }
 
 [label,unhandled_stairs](coord $coord)
+// EASCape: where the map data says it leads (eascape_world)
+if (~eascape_link_go($coord, 1) = true) {
+    return;
+}
 mes("Unhandled stairs: <lc_debugname(loc_type)> at");
 mes(~coord_tostring($coord)); // split line because its so hard to see the coord

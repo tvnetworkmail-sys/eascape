@@ -1,0 +1,42 @@
+// EASCape: doors and ways up and down that the 377 content had nothing behind (mostly places
+// added after 2004: the Slayer Tower, Morytania, the Fremennik lands...). Your call (19 Oct 2026):
+// open everything for now; quest locks go back as each quest is built.
+// - Doors swing open as you walk through and shut behind you, like the game's other doors.
+// - Ladders, stairs, trapdoors, cave entrances: to where eascape_links.dbrow says they lead.
+
+[proc,eascape_door_walk]
+if (loc_shape ! wall_straight & loc_shape ! wall_diagonal) {
+    mes("Nothing interesting happens.");
+    return;
+}
+~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+
+// $op: the option clicked (one loc can lead two ways, up and down)
+[proc,eascape_link](int $op)
+p_arrivedelay;
+if (~eascape_link_go(loc_coord, $op) = false) {
+    mes("Nothing interesting happens.");
+}
+
+// also used by the stairs and ladders that had no coordinates yet; true if it found a way
+[proc,eascape_link_go](coord $from, int $op)(boolean)
+db_find(eascape_links:from, $from);
+def_dbrow $row = db_findnext;
+def_dbrow $use = null;
+while ($row ! null) {
+    if ($use = null | db_getfield($row, eascape_links:op, 0) = $op) {
+        $use = $row;
+    }
+    $row = db_findnext;
+}
+if ($use = null) {
+    return(false);
+}
+def_coord $to = db_getfield($use, eascape_links:to, 0);
+// stand where you stood by this one, by the other one; if that's blocked, the nearest free square
+def_coord $dest = movecoord(coord, sub(coordx($to), coordx($from)), sub(coordy($to), coordy($from)), sub(coordz($to), coordz($from)));
+if (map_blocked($dest) = true) {
+    $dest = map_findsquare($to, 1, 3, ^map_findsquare_lineofwalk);
+}
+~climb_ladder($dest, db_getfield($use, eascape_links:up, 0));
+return(true);
