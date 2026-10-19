@@ -1,0 +1,53 @@
+// EASCape: boss kill counts (your call, 19 Oct 2026), messages as in Void (KillTracker.kt).
+// Called from npc_death with the killer found; the count is kept on the killer, in a queue.
+[proc,eascape_boss_kc]
+if (npc_type = tzhaar_fightcave_swarm_boss) {
+    queue(eascape_boss_kc, 0, 1);
+} else if (npc_type = king_dragon) {
+    queue(eascape_boss_kc, 0, 2);
+} else if (npc_type = kalphite_flyingqueen) {
+    queue(eascape_boss_kc, 0, 3);
+} else if (npc_type = chaoselemental) {
+    queue(eascape_boss_kc, 0, 4);
+} else if (npc_type = dagcave_melee_boss) {
+    queue(eascape_boss_kc, 0, 5);
+} else if (npc_type = dagcave_magic_boss) {
+    queue(eascape_boss_kc, 0, 6);
+} else if (npc_type = dagcave_ranged_boss) {
+    queue(eascape_boss_kc, 0, 7);
+} else if (npc_type = mole_giant) {
+    queue(eascape_boss_kc, 0, 8);
+}
+
+[queue,eascape_boss_kc](int $boss)
+switch_int ($boss) {
+    case 1 :
+        %kc_tztok_jad = add(%kc_tztok_jad, 1);
+        mes("Your TzTok-Jad kill count is: @red@<tostring(%kc_tztok_jad)>@bla@.");
+    case 2 :
+        %kc_king_black_dragon = add(%kc_king_black_dragon, 1);
+        mes("Your King Black Dragon kill count is: @red@<tostring(%kc_king_black_dragon)>@bla@.");
+    case 3 :
+        %kc_kalphite_queen = add(%kc_kalphite_queen, 1);
+        mes("Your Kalphite Queen kill count is: @red@<tostring(%kc_kalphite_queen)>@bla@.");
+    case 4 :
+        %kc_chaos_elemental = add(%kc_chaos_elemental, 1);
+        mes("Your Chaos Elemental kill count is: @red@<tostring(%kc_chaos_elemental)>@bla@.");
+    case 5 :
+        %kc_dagannoth_rex = add(%kc_dagannoth_rex, 1);
+        mes("Your Dagannoth Rex kill count is: @red@<tostring(%kc_dagannoth_rex)>@bla@.");
+    case 6 :
+        %kc_dagannoth_prime = add(%kc_dagannoth_prime, 1);
+        mes("Your Dagannoth Prime kill count is: @red@<tostring(%kc_dagannoth_prime)>@bla@.");
+    case 7 :
+        %kc_dagannoth_supreme = add(%kc_dagannoth_supreme, 1);
+        mes("Your Dagannoth Supreme kill count is: @red@<tostring(%kc_dagannoth_supreme)>@bla@.");
+    case 8 :
+        %kc_giant_mole = add(%kc_giant_mole, 1);
+        mes("Your Giant Mole kill count is: @red@<tostring(%kc_giant_mole)>@bla@.");
+}
+
+// Void (BarrowsChest.kt): "Your Barrows chest count is: <n>."
+[proc,eascape_barrows_kc]
+%kc_barrows_chest = add(%kc_barrows_chest, 1);
+mes("Your Barrows chest count is: @red@<tostring(%kc_barrows_chest)>@bla@.");

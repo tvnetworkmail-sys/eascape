@@ -11,6 +11,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::barrowset` | Banks what you have, then gives the Barrows magic setup, the ranged switch for Ahrim and supplies |
 | `::barrowsgear` | Every Barrows piece and 1,000 bolt racks in your bank; a broken and a 50 Dharok's helm and 100,000 coins in your pack |
 | `::onehit` / `::onehitoff` | Every melee, ranged or spell hit kills what you're fighting / back to normal (also off when you log out) |
+| `::questdone priestperil` | Marks a quest complete on your own account, to test past its locks (`::questdone naturespirit` for Nature Spirit's Mort Myre gate). `::questdone list` shows every quest's name |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

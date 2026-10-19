@@ -11393,7 +11393,8 @@ export class Client extends GameShell {
 
                 if (type === 0) {
                     if (y > 0 && y < 110) {
-                        font?.drawString(message, 4, y, Colour.BLACK);
+                        // EASCape: game messages draw colour tags (@red@ and so on), like interface text
+                        font?.drawStringTag(message, 4, y, Colour.BLACK, false);
                     }
 
                     line++;

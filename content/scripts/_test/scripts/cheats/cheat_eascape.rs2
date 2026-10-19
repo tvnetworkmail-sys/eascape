@@ -133,3 +133,143 @@ if (p_finduid(uid) = false) {
 }
 %eascape_onehit = ^false;
 mes("One-hit is off: your hits are back to normal.");
+
+// every quest that counts quest points, set to complete on your own account (::questdone list
+// shows the names). Your call, 19 Oct 2026: for testing past quest locks. Built from
+// count_questpoints in general/scripts/quests.rs2.
+[debugproc,questdone](string $name)
+if (p_finduid(uid) = false) {
+    return;
+}
+if (compare($name, "list") = 0) {
+    ~questdone_list;
+    return;
+}
+if (compare($name, "runemysteries") = 0) {
+    %runemysteries = ^runemysteries_complete;
+} else if (compare($name, "doricquest") = 0) {
+    %doricquest = ^doric_complete;
+} else if (compare($name, "cookquest") = 0) {
+    %cookquest = ^cook_complete;
+} else if (compare($name, "rjquest") = 0) {
+    %rjquest = ^romeojuliet_complete;
+} else if (compare($name, "hetty") = 0) {
+    %hetty = ^hetty_complete;
+} else if (compare($name, "chompybird") = 0) {
+    %chompybird = ^chompybird_complete;
+} else if (compare($name, "prieststart") = 0) {
+    %prieststart = ^priest_complete;
+} else if (compare($name, "squire") = 0) {
+    %squire = ^squire_complete;
+} else if (compare($name, "imp") = 0) {
+    %imp = ^imp_complete;
+} else if (compare($name, "druidquest") = 0) {
+    %druidquest = ^druid_complete;
+} else if (compare($name, "druidspirit") = 0 | compare($name, "naturespirit") = 0) {
+    %druidspirit = ^druidspirit_complete;
+} else if (compare($name, "goblinquest") = 0) {
+    %goblinquest = ^gobdip_complete;
+} else if (compare($name, "sheep") = 0) {
+    %sheep = ^sheep_complete;
+} else if (compare($name, "fluffs") = 0) {
+    %fluffs = ^fluffs_complete;
+} else if (compare($name, "demonstart") = 0) {
+    %demonstart = ^demon_complete;
+} else if (compare($name, "princequest") = 0) {
+    %princequest = ^prince_complete;
+} else if (compare($name, "spy") = 0) {
+    %spy = ^blackknight_complete;
+} else if (compare($name, "haunted") = 0) {
+    %haunted = ^haunted_complete;
+} else if (compare($name, "hunt") = 0) {
+    %hunt = ^hunt_complete;
+} else if (compare($name, "drunkmonkquest") = 0) {
+    %drunkmonkquest = ^drunkmonk_complete;
+} else if (compare($name, "vampire") = 0) {
+    %vampire = ^vampire_complete;
+} else if (compare($name, "totemquest") = 0) {
+    %totemquest = ^totem_complete;
+} else if (compare($name, "fishingcompo") = 0) {
+    %fishingcompo = ^fishingcompo_complete;
+} else if (compare($name, "scorpcatcher") = 0) {
+    %scorpcatcher = ^scorpcatcher_complete;
+} else if (compare($name, "zanaris") = 0) {
+    %zanaris = ^zanaris_complete;
+} else if (compare($name, "elenaquest") = 0) {
+    %elenaquest = ^elena_complete;
+} else if (compare($name, "dragonquest") = 0) {
+    %dragonquest = ^dragon_complete;
+} else if (compare($name, "seaslugquest") = 0) {
+    %seaslugquest = ^seaslug_complete;
+} else if (compare($name, "arthur") = 0) {
+    %arthur = ^arthur_complete;
+} else if (compare($name, "treequest") = 0) {
+    %treequest = ^tree_complete;
+} else if (compare($name, "waterfall_quest") = 0) {
+    %waterfall_quest = ^waterfall_complete;
+} else if (compare($name, "grail") = 0) {
+    %grail = ^grail_complete;
+} else if (compare($name, "ballquest") = 0) {
+    %ballquest = ^ball_complete;
+} else if (compare($name, "murderquest") = 0) {
+    %murderquest = ^murder_complete;
+} else if (compare($name, "hazeelcultquest") = 0) {
+    %hazeelcultquest = ^hazeelcult_complete;
+} else if (compare($name, "heroquest") = 0) {
+    %heroquest = ^hero_complete;
+} else if (compare($name, "itgronigen") = 0) {
+    %itgronigen = ^itgronigen_complete;
+} else if (compare($name, "arenaquest") = 0) {
+    %arenaquest = ^arena_complete;
+} else if (compare($name, "junglepotion") = 0) {
+    %junglepotion = ^junglepotion_complete;
+} else if (compare($name, "ikov") = 0) {
+    %ikov = ^ikov_completed_armadyl;
+} else if (compare($name, "biohazard") = 0) {
+    %biohazard = ^biohazard_complete;
+} else if (compare($name, "sheepherderquest") = 0) {
+    %sheepherderquest = ^sheepherder_complete;
+} else if (compare($name, "mcannon") = 0) {
+    %mcannon = ^mcannon_complete;
+} else if (compare($name, "grandtree") = 0) {
+    %grandtree = ^grandtree_complete;
+} else if (compare($name, "upass") = 0) {
+    %upass = ^upass_complete;
+} else if (compare($name, "zombiequeen") = 0) {
+    %zombiequeen = ^zombiequeen_complete;
+} else if (compare($name, "crestquest") = 0) {
+    %crestquest = ^crest_complete;
+} else if (compare($name, "itexamlevel") = 0) {
+    %itexamlevel = ^itexam_complete;
+} else if (compare($name, "desertrescue") = 0) {
+    %desertrescue = ^desertrescue_complete;
+} else if (compare($name, "itwatchtower") = 0) {
+    %itwatchtower = ^itwatchtower_complete;
+} else if (compare($name, "legendsquest") = 0) {
+    %legendsquest = ^legends_complete;
+} else if (compare($name, "priestperil") = 0 | compare($name, "priest_in_peril") = 0) {
+    %priestperil = ^priestperil_complete;
+} else if (compare($name, "death_equiproom") = 0) {
+    %death_equiproom = ^death_complete;
+} else if (compare($name, "troll_quest") = 0) {
+    %troll_quest = ^troll_complete;
+} else if (compare($name, "troll_love") = 0) {
+    %troll_love = ^troll_love_complete;
+} else if (compare($name, "golem_a") = 0) {
+    %golem_a = ^golem_complete;
+} else {
+    mes("No quest called <$name>. Try ::questdone list.");
+    return;
+}
+~update_questpoints;
+~update_questlist;
+mes("Quest marked complete: <$name>.");
+
+[proc,questdone_list]
+mes("runemysteries, doricquest, cookquest, rjquest, hetty, chompybird, prieststart, squire");
+mes("imp, druidquest, druidspirit, goblinquest, sheep, fluffs, demonstart, princequest");
+mes("spy, haunted, hunt, drunkmonkquest, vampire, totemquest, fishingcompo, scorpcatcher");
+mes("zanaris, elenaquest, dragonquest, seaslugquest, arthur, treequest, waterfall_quest, grail");
+mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest, junglepotion, ikov");
+mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
+mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
