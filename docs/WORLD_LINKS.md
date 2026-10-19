@@ -16,9 +16,14 @@ wired up from the map data itself:
 - Quest doors are open for now (your call, 19 Oct 2026). Their locks go back as each quest is
   built.
 
+Where Void (GregHib/void, data/**/*.teles.toml) says a ladder, staircase or trapdoor puts you,
+that comes first (866 of its teleports match a 2006 loc). Void's rules: move by a set amount, go
+to an exact square, or go to the square of an area nearest to where you stood.
+
 Regenerate after map changes:
 
     python3 tools/world_links/analyse.py
+    python3 tools/world_links/void_teles.py <Void checkout>
     python3 tools/world_links/gen.py tools/world_links content/scripts/eascape_world
 
 Not covered (no counterpart in the map): agility obstacles and shortcuts on one level, and

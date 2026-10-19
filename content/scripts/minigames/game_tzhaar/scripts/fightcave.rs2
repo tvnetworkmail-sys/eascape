@@ -60,6 +60,7 @@ def_int $done = sub(%fightcave_wave, 1);
 %fightcave_run = add(%fightcave_run, 1); // your monsters see this and go
 ~fightcave_clear_monsters;
 p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
+~stat_reset_all; // back to your normal levels (your call, 19 Oct 2026)
 if ($done > 0) {
     ~fightcave_give(tzhaar_token, multiply($done, add($done, 1)));
     // a queue, so dying (whose script is still resetting you) never waits on the dialogue
@@ -187,6 +188,7 @@ if (%fightcave_wave = 0) {
 %fightcave_run = add(%fightcave_run, 1);
 clearsofttimer(fightcave_watch);
 ~fightcave_clear_monsters;
+~stat_reset_all; // back to your normal levels (your call, 19 Oct 2026)
 ~fightcave_give(tzhaar_cape_fire, 1);
 ~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
 mes("You were victorious!");

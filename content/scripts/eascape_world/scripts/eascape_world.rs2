@@ -20,23 +20,45 @@ if (~eascape_link_go(loc_coord, $op) = false) {
 
 // also used by the stairs and ladders that had no coordinates yet; true if it found a way
 [proc,eascape_link_go](coord $from, int $op)(boolean)
+// the row for this square and option; Void's rows (kind 1-3) come first in the table
 db_find(eascape_links:from, $from);
 def_dbrow $row = db_findnext;
 def_dbrow $use = null;
+def_dbrow $any = null;
 while ($row ! null) {
-    if ($use = null | db_getfield($row, eascape_links:op, 0) = $op) {
+    if ($any = null) $any = $row;
+    if ($use = null & db_getfield($row, eascape_links:op, 0) = $op) {
         $use = $row;
     }
     $row = db_findnext;
 }
 if ($use = null) {
+    $use = $any;
+}
+if ($use = null) {
     return(false);
 }
 def_coord $to = db_getfield($use, eascape_links:to, 0);
-// stand where you stood by this one, by the other one; if that's blocked, the nearest free square
-def_coord $dest = movecoord(coord, sub(coordx($to), coordx($from)), sub(coordy($to), coordy($from)), sub(coordz($to), coordz($from)));
-if (map_blocked($dest) = true) {
-    $dest = map_findsquare($to, 1, 3, ^map_findsquare_lineofwalk);
+def_int $kind = db_getfield($use, eascape_links:kind, 0);
+def_coord $dest;
+if ($kind = 1) {
+    // Void: move by this much
+    $dest = movecoord(coord, db_getfield($use, eascape_links:dx, 0), db_getfield($use, eascape_links:dl, 0), db_getfield($use, eascape_links:dz, 0));
+} else if ($kind = 2) {
+    // Void: exactly here
+    $dest = $to;
+} else if ($kind = 3) {
+    // Void: the square of this area nearest to where you stood
+    def_int $x = max(coordx($to), min(coordx(coord), add(coordx($to), sub(db_getfield($use, eascape_links:w, 0), 1))));
+    def_int $z = max(coordz($to), min(coordz(coord), add(coordz($to), sub(db_getfield($use, eascape_links:h, 0), 1))));
+    $dest = movecoord($to, sub($x, coordx($to)), 0, sub($z, coordz($to)));
+} else {
+    // from the map: stand where you stood by this one, by the other one; if that's blocked,
+    // the nearest free square
+    $dest = movecoord(coord, sub(coordx($to), coordx($from)), sub(coordy($to), coordy($from)), sub(coordz($to), coordz($from)));
+    if (map_blocked($dest) = true) {
+        $dest = map_findsquare($to, 1, 3, ^map_findsquare_lineofwalk);
+    }
 }
 ~climb_ladder($dest, db_getfield($use, eascape_links:up, 0));
 return(true);
@@ -174,8 +196,101 @@ return(true);
 [oploc1,wild_door] ~eascape_door_walk;
 [oploc1,wild_doubledoor_l] ~eascape_door_walk;
 [oploc1,wild_doubledoor_r] ~eascape_door_walk;
-[oploc1,ikov_trapdoor] ~eascape_link(1);
+[oploc1,loc_10708] ~eascape_link(1);
+[oploc1,loc_10707] ~eascape_link(1);
+[oploc1,loc_10699] ~eascape_link(1);
+[oploc1,wild_laddertop] ~eascape_link(1);
+[oploc1,wild_ladder] ~eascape_link(1);
+[oploc3,wild_ladder_middle] ~eascape_link(3);
+[oploc2,wild_ladder_middle] ~eascape_link(2);
+[oploc1,sword_haunted_well] ~eascape_link(1);
+[oploc1,sword_haunted_well_go_up] ~eascape_link(1);
+[oploc1,swamp_cave_climbing_rope] ~eascape_link(1);
+[oploc1,tog_cave_up] ~eascape_link(1);
+[oploc1,draynor_killerwatt_portal2] ~eascape_link(1);
+[oploc1,vampire_ladder] ~eascape_link(1);
+[oploc1,vc_ladder] ~eascape_link(1);
+[oploc1,vc_laddertop] ~eascape_link(1);
+[oploc1,vc_manhole_open] ~eascape_link(1);
+[oploc1,fairy_ladder_wind_up] ~eascape_link(1);
+[oploc1,fairy_ladder_wind_down] ~eascape_link(1);
+[oploc1,dungeon_tree_closed] ~eascape_link(1);
+[oploc1,karam_dungeon_exit] ~eascape_link(1);
+[oploc1,ardougneshipplank_off] ~eascape_link(1);
+[oploc1,sarimshipplank_off] ~eascape_link(1);
+[oploc1,dagannoth_caveentrance_rock] ~eascape_link(1);
+[oploc1,dagannoth_rocky_steps] ~eascape_link(1);
+[oploc1,dagexp_bossroomladder_up] ~eascape_link(1);
+[oploc1,dagexp_bossroomladder_down] ~eascape_link(1);
+[oploc1,dagannoth_caveentrance_ice] ~eascape_link(1);
+[oploc2,dagannoth_ladder_base_ext2] ~eascape_link(2);
+[oploc3,dagannoth_ladder_base_ext2] ~eascape_link(3);
+[oploc1,dagexp_entrance_ladder] ~eascape_link(1);
+[oploc1,dagexp_ladder2] ~eascape_link(1);
+[oploc1,dagexp_ladder1] ~eascape_link(1);
+[oploc1,dagexp_ladder4] ~eascape_link(1);
+[oploc1,dagexp_ladder3] ~eascape_link(1);
+[oploc1,dagexp_ladder6] ~eascape_link(1);
+[oploc1,dagexp_ladder5] ~eascape_link(1);
+[oploc1,dagexp_ladder8] ~eascape_link(1);
+[oploc1,dagexp_ladder7] ~eascape_link(1);
+[oploc1,dagexp_ladder9] ~eascape_link(1);
+[oploc1,dagexp_ladder10] ~eascape_link(1);
+[oploc1,dagexp_ladder12] ~eascape_link(1);
+[oploc1,dagexp_ladder11] ~eascape_link(1);
+[oploc1,dagexp_ladder13] ~eascape_link(1);
+[oploc1,dagexp_ladder14] ~eascape_link(1);
+[oploc1,dagexp_ladder16] ~eascape_link(1);
+[oploc1,dagexp_ladder15] ~eascape_link(1);
+[oploc1,dagexp_ladder17] ~eascape_link(1);
+[oploc1,dagexp_ladder18] ~eascape_link(1);
+[oploc1,dagexp_ladder20] ~eascape_link(1);
+[oploc1,dagexp_ladder19] ~eascape_link(1);
+[oploc1,dagexp_ladder22] ~eascape_link(1);
+[oploc1,dagexp_ladder21] ~eascape_link(1);
+[oploc1,dagexp_ladder23] ~eascape_link(1);
+[oploc1,dagexp_ladder24] ~eascape_link(1);
+[oploc1,dagexp_ladder25] ~eascape_link(1);
+[oploc1,dagexp_ladder26] ~eascape_link(1);
+[oploc1,dagexp_ladder28] ~eascape_link(1);
+[oploc1,dagexp_ladder27] ~eascape_link(1);
+[oploc1,dagexp_ladder30] ~eascape_link(1);
+[oploc1,dagexp_ladder29] ~eascape_link(1);
+[oploc1,dagexp_ladder32] ~eascape_link(1);
+[oploc1,dagexp_ladder31] ~eascape_link(1);
+[oploc1,dagexp_ladder34] ~eascape_link(1);
+[oploc1,dagexp_ladder33] ~eascape_link(1);
+[oploc1,deal_ladder_up] ~eascape_link(1);
+[oploc1,deal_laddertop] ~eascape_link(1);
+[oploc1,ahoy_ghostship_ladder] ~eascape_link(1);
+[oploc1,ahoy_ghostship_laddertop] ~eascape_link(1);
+[oploc1,loc_9308] ~eascape_link(1);
+[oploc1,loc_9307] ~eascape_link(1);
+[oploc1,ahoy_ladder_from_cellar] ~eascape_link(1);
+[oploc1,loc_9319] ~eascape_link(1);
+[oploc1,loc_9320] ~eascape_link(1);
 [oploc1,troll_stronghold_top_exit_right] ~eascape_link(1);
+[oploc1,loc_12581] ~eascape_link(1);
+[oploc1,loc_5812] ~eascape_link(1);
+[oploc1,loc_5835] ~eascape_link(1);
+[oploc1,vc_ladder_down] ~eascape_link(1);
+[oploc1,mourning_hideout_trap_door] ~eascape_link(1);
+[oploc1,mourner_hideout_ladder1] ~eascape_link(1);
+[oploc1,brimhavenshipplank_off] ~eascape_link(1);
+[oploc1,prison_ladder_up] ~eascape_link(1);
+[oploc1,prison_laddertop] ~eascape_link(1);
+[oploc1,prison_trapdoor] ~eascape_link(1);
+[oploc1,ship_to_entrana_off] ~eascape_link(1);
+[oploc1,karamjashipplank_off] ~eascape_link(1);
+[oploc1,pest_ship_sarim_off] ~eascape_link(1);
+[oploc1,loc_11740] ~eascape_link(1);
+[oploc1,loc_11741] ~eascape_link(1);
+[oploc1,loc_11739] ~eascape_link(1);
+[oploc1,loc_11742] ~eascape_link(1);
+[oploc1,loc_12616] ~eascape_link(1);
+[oploc1,wild_laddertop_dungeon] ~eascape_link(1);
+[oploc1,pest_ship_island_off] ~eascape_link(1);
+[oploc1,ikov_trapdoor] ~eascape_link(1);
 [oploc1,boardgames_ladderup] ~eascape_link(1);
 [oploc1,hauntedmine_ladder] ~eascape_link(1);
 [oploc1,hauntedmine_ladder_1w] ~eascape_link(1);
@@ -185,27 +300,21 @@ return(true);
 [oploc1,icegate_right] ~eascape_link(1);
 [oploc1,route_cavewalltunnel] ~eascape_link(1);
 [oploc1,thrttavernbasementladder] ~eascape_link(1);
-[oploc1,dungeon_tree_closed] ~eascape_link(1);
 [oploc1,loc_5130] ~eascape_link(1);
 [oploc1,loc_5131] ~eascape_link(1);
-[oploc1,ahoy_ghostship_ladder] ~eascape_link(1);
-[oploc1,ahoy_ghostship_laddertop] ~eascape_link(1);
 [oploc1,ahoy_ghostshipladder_angled] ~eascape_link(1);
 [oploc1,ahoy_ghostshipladder_top_angled] ~eascape_link(1);
 [oploc1,osf_ham_ladder] ~eascape_link(1);
-[oploc1,loc_5812] ~eascape_link(1);
 [oploc3,mdaughter_lake_tree] ~eascape_link(3);
 [oploc1,mdaughter_caveentrance] ~eascape_link(1);
 [oploc1,mdaughter_caveexit] ~eascape_link(1);
 [oploc1,mdaughter_caveexit_fake] ~eascape_link(1);
-[oploc1,swamp_cave_climbing_rope] ~eascape_link(1);
 [oploc1,goblin_cave_entrance] ~eascape_link(1);
 [oploc1,feud_laddertop_norim] ~eascape_link(1);
 [oploc1,feud_ladder] ~eascape_link(1);
 [oploc1,ikov_trapdoor_down] ~eascape_link(1);
 [oploc1,4d_ladder2] ~eascape_link(1);
 [oploc1,vampire_trap1] ~eascape_link(1);
-[oploc1,vampire_ladder] ~eascape_link(1);
 [oploc1,trollrescue_troll_cave_entrance] ~eascape_link(1);
 [oploc1,trollrescue_troll_cave_exit] ~eascape_link(1);
 [oploc1,fd_shadowladder] ~eascape_link(1);
@@ -228,8 +337,6 @@ return(true);
 [oploc2,elf_village_ladder_mid] ~eascape_link(2);
 [oploc3,elf_village_ladder_mid] ~eascape_link(3);
 [oploc1,elf_village_ladder_top] ~eascape_link(1);
-[oploc1,mourner_hideout_ladder1] ~eascape_link(1);
-[oploc1,dagannoth_caveentrance_ice] ~eascape_link(1);
 [oploc1,dagannoth_ladder_base] ~eascape_link(1);
 [oploc2,dagannoth_ladder_base] ~eascape_link(2);
 [oploc3,dagannoth_ladder_base] ~eascape_link(3);
@@ -240,56 +347,11 @@ return(true);
 [oploc1,loc_9305] ~eascape_link(1);
 [oploc1,loc_9306] ~eascape_link(1);
 [oploc1,loc_9316] ~eascape_link(1);
-[oploc1,loc_9319] ~eascape_link(1);
-[oploc1,loc_9320] ~eascape_link(1);
 [oploc1,loc_9327] ~eascape_link(1);
 [oploc1,loc_9337] ~eascape_link(1);
-[oploc1,prison_ladder_up] ~eascape_link(1);
-[oploc1,prison_laddertop] ~eascape_link(1);
-[oploc1,prison_trapdoor] ~eascape_link(1);
 [oploc1,ship_ladder_no_approach] ~eascape_link(1);
 [oploc1,ship_laddertop_no_approach] ~eascape_link(1);
-[oploc1,deal_ladder_up] ~eascape_link(1);
-[oploc1,deal_laddertop] ~eascape_link(1);
 [oploc1,dagannoth_ladder_base_ext2] ~eascape_link(1);
-[oploc2,dagannoth_ladder_base_ext2] ~eascape_link(2);
-[oploc1,dagexp_ladder1] ~eascape_link(1);
-[oploc1,dagexp_ladder2] ~eascape_link(1);
-[oploc1,dagexp_ladder3] ~eascape_link(1);
-[oploc1,dagexp_ladder4] ~eascape_link(1);
-[oploc1,dagexp_ladder5] ~eascape_link(1);
-[oploc1,dagexp_ladder6] ~eascape_link(1);
-[oploc1,dagexp_ladder7] ~eascape_link(1);
-[oploc1,dagexp_ladder8] ~eascape_link(1);
-[oploc1,dagexp_ladder9] ~eascape_link(1);
-[oploc1,dagexp_ladder10] ~eascape_link(1);
-[oploc1,dagexp_ladder11] ~eascape_link(1);
-[oploc1,dagexp_ladder12] ~eascape_link(1);
-[oploc1,dagexp_ladder13] ~eascape_link(1);
-[oploc1,dagexp_ladder14] ~eascape_link(1);
-[oploc1,dagexp_ladder15] ~eascape_link(1);
-[oploc1,dagexp_ladder16] ~eascape_link(1);
-[oploc1,dagexp_ladder17] ~eascape_link(1);
-[oploc1,dagexp_ladder18] ~eascape_link(1);
-[oploc1,dagexp_ladder19] ~eascape_link(1);
-[oploc1,dagexp_ladder20] ~eascape_link(1);
-[oploc1,dagexp_ladder21] ~eascape_link(1);
-[oploc1,dagexp_ladder22] ~eascape_link(1);
-[oploc1,dagexp_ladder23] ~eascape_link(1);
-[oploc1,dagexp_ladder24] ~eascape_link(1);
-[oploc1,dagexp_ladder25] ~eascape_link(1);
-[oploc1,dagexp_ladder26] ~eascape_link(1);
-[oploc1,dagexp_ladder27] ~eascape_link(1);
-[oploc1,dagexp_ladder28] ~eascape_link(1);
-[oploc1,dagexp_ladder29] ~eascape_link(1);
-[oploc1,dagexp_ladder30] ~eascape_link(1);
-[oploc1,dagexp_ladder31] ~eascape_link(1);
-[oploc1,dagexp_ladder32] ~eascape_link(1);
-[oploc1,dagexp_ladder33] ~eascape_link(1);
-[oploc1,dagexp_ladder34] ~eascape_link(1);
-[oploc1,dagexp_bossroomladder_up] ~eascape_link(1);
-[oploc1,vc_laddertop] ~eascape_link(1);
-[oploc1,vc_ladder] ~eascape_link(1);
 [oploc1,vc_blank_trellis_top_trigger] ~eascape_link(1);
 [oploc1,vc_trellis_base] ~eascape_link(1);
 [oploc1,elid_crevice_clickzone] ~eascape_link(1);
@@ -299,8 +361,6 @@ return(true);
 [oploc1,champions_arenaladder] ~eascape_link(1);
 [oploc1,champions_trap_door_closed] ~eascape_link(1);
 [oploc1,champions_ladderup] ~eascape_link(1);
-[oploc1,loc_10707] ~eascape_link(1);
-[oploc1,loc_10708] ~eascape_link(1);
 [oploc1,magictraining_temple_door] ~eascape_link(1);
 [oploc1,loc_10778] ~eascape_link(1);
 [oploc1,loc_10779] ~eascape_link(1);
@@ -317,14 +377,7 @@ return(true);
 [oploc1,enakh_temple_pillar_ladder_top] ~eascape_link(1);
 [oploc1,boardgames_runeversi_ladderup_experienced] ~eascape_link(1);
 [oploc1,boardgames_runesquares_ladderup_experienced] ~eascape_link(1);
-[oploc1,loc_11739] ~eascape_link(1);
-[oploc1,loc_11740] ~eascape_link(1);
-[oploc1,loc_11741] ~eascape_link(1);
-[oploc1,loc_11742] ~eascape_link(1);
-[oploc1,fairy_ladder_wind_up] ~eascape_link(1);
-[oploc1,fairy_ladder_wind_down] ~eascape_link(1);
 [oploc1,loc_12570] ~eascape_link(1);
-[oploc1,loc_12581] ~eascape_link(1);
 [oploc1,loc_12622] ~eascape_link(1);
 [oploc1,burgh_temple_library_ladder_up] ~eascape_link(1);
 [oploc1,burgh_ivandis_tomb_entrance] ~eascape_link(1);
@@ -335,12 +388,7 @@ return(true);
 [oploc1,burgh_ladder_hatch_up] ~eascape_link(1);
 [oploc1,soulbane_rope_up] ~eascape_link(1);
 [oploc1,soulbane_rope_down] ~eascape_link(1);
-[oploc1,wild_ladder] ~eascape_link(1);
-[oploc1,wild_laddertop] ~eascape_link(1);
 [oploc1,wild_ladder_middle] ~eascape_link(1);
-[oploc2,wild_ladder_middle] ~eascape_link(2);
-[oploc3,wild_ladder_middle] ~eascape_link(3);
-[oploc1,wild_laddertop_dungeon] ~eascape_link(1);
 [oploc1,dwarf_keldagrim_bookcase_ladder] ~eascape_link(1);
 [oploc1,mm_eastern_warehouse_trapdoor] ~eascape_link(1);
 [oploc1,mm_bridge_ladder] ~eascape_link(1);

@@ -21,7 +21,7 @@ for dp,_,fs in os.walk(C+'/scripts'):
 trig=set()
 for dp,_,fs in os.walk(C+'/scripts'):
     for f in fs:
-        if f.endswith('.rs2') and f!='eascape_links.rs2':
+        if f.endswith('.rs2') and f!='eascape_world.rs2':
             for m in re.finditer(r'^\[(?:op|ap)loc(\d),([^\]]+)\]',open(os.path.join(dp,f),encoding='utf-8',errors='replace').read(),re.M):
                 trig.add((int(m.group(1)),m.group(2)))
 def handled(n,o):
