@@ -263,23 +263,42 @@ if (finduid($owner) = true) {
 }
 gosub(npc_death);
 
-// ---- Jad's healers (%npc_int2 on Jad: 0 none yet, 1 out, 2 may come again)
+// ---- Jad's healers (Void, TzhaarFightCave.kt): when Jad drops below half his hitpoints, enough
+// Yt-HurKot come to make four (counting any still alive); they only come again after he's been
+// healed back to full. %npc_int2 on Jad: 0 they may come, 1 they've come since he was last full.
 
 [proc,fightcave_jad_healers_check]
-if (npc_stat(hitpoints) <= 0 | npc_stat(hitpoints) >= ^fightcave_healer_hp) return;
+if (npc_stat(hitpoints) <= 0 | npc_stat(hitpoints) >= divide(npc_basestat(hitpoints), 2)) return;
 if (%npc_int2 = 1) return;
 %npc_int2 = 1;
+def_npc_uid $jad = npc_uid;
 def_player_uid $owner = %npc_aggressive_player;
 def_int $run = %npc_int;
+def_int $alive = 0;
+npc_findallany(^fightcave_centre, 40, 0);
+while (npc_findnext = true) {
+    if (npc_type = tzhaar_fightcave_swarm_boss_cleric & %npc_aggressive_player = $owner & npc_stat(hitpoints) > 0) {
+        $alive = add($alive, 1);
+    }
+}
 // 2006Scape's healer spots
-npc_add(0_37_79_22_45, tzhaar_fightcave_swarm_boss_cleric, 12000);
-~fightcave_npc_owner($owner, $run);
-npc_add(0_37_79_23_21, tzhaar_fightcave_swarm_boss_cleric, 12000);
-~fightcave_npc_owner($owner, $run);
-npc_add(0_37_79_43_28, tzhaar_fightcave_swarm_boss_cleric, 12000);
-~fightcave_npc_owner($owner, $run);
-npc_add(0_37_79_30_35, tzhaar_fightcave_swarm_boss_cleric, 12000);
-~fightcave_npc_owner($owner, $run);
+def_int $i = $alive;
+while ($i < 4) {
+    npc_add(~fightcave_healer_spot($i), tzhaar_fightcave_swarm_boss_cleric, 12000);
+    ~fightcave_npc_owner($owner, $run);
+    $i = add($i, 1);
+}
+if (npc_finduid($jad) = false) {
+    return;
+}
+
+[proc,fightcave_healer_spot](int $i)(coord)
+switch_int ($i) {
+    case 0 : return(0_37_79_22_45);
+    case 1 : return(0_37_79_23_21);
+    case 2 : return(0_37_79_43_28);
+    case default : return(0_37_79_30_35);
+}
 
 // Yt-HurKot (Void, TzHaarHealers.kt): they walk to Jad; once within 4 squares of him, every 4
 // ticks they heal him by 5 (Void's 50 on its x10 hitpoints) while he's hurt, with the heal
@@ -313,10 +332,12 @@ if (max($dx, $dz) > 4) {
     return;
 }
 npc_facesquare($centre);
-if (%npc_action_delay > map_clock) {
+// every 4 ticks (%npc_int2 on the healer counts them)
+%npc_int2 = add(%npc_int2, 1);
+if (%npc_int2 < 4) {
     return;
 }
-%npc_action_delay = add(map_clock, 4);
+%npc_int2 = 0;
 if (npc_find($here, tzhaar_fightcave_swarm_boss, 40, 0) = false) {
     return;
 }
@@ -327,7 +348,7 @@ if (npc_stat(hitpoints) > 0 & npc_stat(hitpoints) < npc_basestat(hitpoints)) {
         sound_synth(selfheal, 1, 0); // the player whose Jad it is
     }
     if (npc_stat(hitpoints) >= npc_basestat(hitpoints)) {
-        %npc_int2 = 2; // healed to full: they may come again
+        %npc_int2 = 0; // healed to full: they may come again
     }
     if (npc_finduid($self) = true) {
         npc_anim(lizard_cleric_heal, 0);
