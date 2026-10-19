@@ -18,6 +18,7 @@
 [oploc1,loc_9357] ~fightcave_leave(false); // the way out, inside the cave
 
 [proc,fightcave_enter](int $wave)
+~fightcave_clear_monsters;
 p_teleport(^fightcave_start);
 %fightcave_run = add(%fightcave_run, 1);
 %fightcave_wave = $wave;
@@ -26,6 +27,25 @@ p_teleport(^fightcave_start);
 queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
 softtimer(fightcave_watch, 5);
 ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You're on your own now, Jal-Yt. Prepare to fight|for your life!");
+
+// removes every monster in the cave that is yours (on any run), so none are left behind when
+// you leave, win, die or start again; a few passes, as removing them while looking can skip one
+[proc,fightcave_clear_monsters]
+def_player_uid $me = uid;
+def_int $pass = 0;
+while ($pass < 3) {
+    $pass = add($pass, 1);
+    npc_findallany(^fightcave_centre, 40, 0);
+    while (npc_findnext = true) {
+        if (%npc_aggressive_player = $me) {
+            npc_del;
+        }
+    }
+}
+// back to being able to change your things (looking at monsters lets go of them)
+if (p_finduid($me) = false) {
+    return;
+}
 
 [proc,in_fightcave](coord $coord)(boolean)
 return(inzone(^fightcave_sw, ^fightcave_ne, $coord));
@@ -37,6 +57,7 @@ def_int $done = sub(%fightcave_wave, 1);
 %fightcave_left = 0;
 %fightcave_healers = 0;
 %fightcave_run = add(%fightcave_run, 1); // your monsters see this and go
+~fightcave_clear_monsters;
 p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
 if ($done > 0) {
     ~fightcave_give(tzhaar_token, multiply($done, add($done, 1)));
@@ -62,6 +83,7 @@ if (%fightcave_wave = 0) {
 %fightcave_run = add(%fightcave_run, 1);
 %fightcave_left = 0;
 %fightcave_healers = 0;
+~fightcave_clear_monsters;
 mes("Your wave will start in 10 seconds.");
 queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
 softtimer(fightcave_watch, 5);
@@ -167,6 +189,7 @@ if (%fightcave_wave = 0) {
 %fightcave_healers = 0;
 %fightcave_run = add(%fightcave_run, 1);
 clearsofttimer(fightcave_watch);
+~fightcave_clear_monsters;
 ~fightcave_give(tzhaar_cape_fire, 1);
 ~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
 mes("You were victorious!");
