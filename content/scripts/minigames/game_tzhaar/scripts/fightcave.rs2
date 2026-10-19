@@ -7,7 +7,7 @@
 //   monster of a wave dies (2006Scape). Waves are made from Tz-Kih (counts 1), Tz-Kek (3),
 //   Tok-Xil (7), Yt-MejKot (15) and Ket-Zek (31): wave N holds the biggest that fit into N, then
 //   the biggest that fit what's left, and so on (that's how 2006Scape's 63-wave table is built).
-//   They spawn at eight fixed spots, in 2006Scape's order.
+//   Which monsters come, and where, follow Void's wave and rotation table (fightcave_waves.enum).
 // - Tokkul when you leave or die: N x (N + 1), N being the waves you finished (OSRS wiki). Killing
 //   Jad gives the fire cape and 8,032 tokkul.
 // - Log out and you start the same wave again 10 seconds after you log back in.
@@ -22,6 +22,7 @@
 p_teleport(^fightcave_start);
 %fightcave_run = add(%fightcave_run, 1);
 %fightcave_wave = $wave;
+%fightcave_rotation = add(1, random(15)); // Void: one of 15 rotations per run
 %fightcave_left = 0;
 %fightcave_healers = 0;
 queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
@@ -99,32 +100,20 @@ mes("You are now on wave @red@<tostring($wave)>@bla@.");
 if ($wave >= ^fightcave_wave_jad) {
     %fightcave_left = 1;
     %fightcave_healers = 0;
-    if (random(2) = 0) {
-        ~fightcave_spawn(tzhaar_fightcave_swarm_boss, 0_37_79_32_34);
-    } else {
-        ~fightcave_spawn(tzhaar_fightcave_swarm_boss, 0_37_79_51_24);
-    }
+    ~fightcave_spawn(tzhaar_fightcave_swarm_boss, ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, multiply(add(multiply(^fightcave_wave_jad, 16), max(1, min(%fightcave_rotation, 15))), 8))));
     ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Look out, here comes TzTok-Jad!");
     return;
 }
-def_int $left = $wave;
-def_int $spot = 0;
-def_int $value;
-while ($left > 0) {
-    $value = ~fightcave_biggest($left);
-    ~fightcave_spawn(~fightcave_monster($value), ~fightcave_spot($spot));
-    $left = sub($left, $value);
-    $spot = add($spot, 1);
+// the wave's monsters and where each appears, from Void (fightcave_waves.enum)
+def_int $rotation = max(1, min(%fightcave_rotation, 15));
+def_int $n = 0;
+def_int $value = enum(int, int, fightcave_wave_npcs, add(multiply($wave, 8), $n));
+while ($value > 0) {
+    ~fightcave_spawn(~fightcave_monster($value), ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, add(multiply(add(multiply($wave, 16), $rotation), 8), $n))));
+    $n = add($n, 1);
+    $value = enum(int, int, fightcave_wave_npcs, add(multiply($wave, 8), $n));
 }
-%fightcave_left = $spot;
-
-// the biggest monster value that fits
-[proc,fightcave_biggest](int $left)(int)
-if ($left >= 31) return(31);
-if ($left >= 15) return(15);
-if ($left >= 7) return(7);
-if ($left >= 3) return(3);
-return(1);
+%fightcave_left = $n;
 
 [proc,fightcave_monster](int $value)(npc)
 switch_int ($value) {
@@ -135,18 +124,22 @@ switch_int ($value) {
     case default : return(tzhaar_fightcave_swarm_1a);
 }
 
-// 2006Scape's eight spawn spots
-[proc,fightcave_spot](int $spot)(coord)
-switch_int (modulo($spot, 8)) {
-    case 0 : return(0_37_79_35_38);
-    case 1 : return(0_37_79_22_40);
-    case 2 : return(0_37_79_24_21);
-    case 3 : return(0_37_79_40_24);
-    case 4 : return(0_37_79_45_52);
-    case 5 : return(0_37_79_13_50);
-    case 6 : return(0_37_79_11_16);
-    case default : return(0_37_79_52_26);
+// a random square in one of Void's five spawn areas (tzhaar_fight_cave.areas.toml)
+[proc,fightcave_spawn_tile](int $area)(coord)
+def_coord $sw;
+def_int $size = 7;
+switch_int ($area) {
+    case 2 : $sw = 0_37_79_10_46; $size = 8; // north-west
+    case 3 : $sw = 0_37_79_11_14; // south-west
+    case 4 : $sw = 0_37_79_34_14; // south
+    case 5 : $sw = 0_37_79_48_24; // south-east
+    case default : $sw = 0_37_79_29_29; // centre
 }
+def_coord $tile = movecoord($sw, random($size), 0, random($size));
+if (map_blocked($tile) = true) {
+    $tile = map_findsquare($tile, 0, 3, ^map_findsquare_lineofwalk);
+}
+return($tile);
 
 // a monster that goes for the active player and nobody else
 [proc,fightcave_spawn](npc $type, coord $coord)
@@ -170,8 +163,8 @@ if (npc_type = tzhaar_fightcave_swarm_3a | npc_type = tzhaar_fightcave_swarm_5a 
 
 // a kill counted for the owner; $more is how many new monsters the kill made (a Tz-Kek's two)
 [queue,fightcave_killed](int $more)
-if (%fightcave_wave = 0) {
-    return;
+if (%fightcave_wave = 0 | %fightcave_left <= 0) {
+    return; // the wave already ended (the 5-tick check got there first)
 }
 %fightcave_left = add(sub(%fightcave_left, 1), $more);
 if (%fightcave_left > 0) {

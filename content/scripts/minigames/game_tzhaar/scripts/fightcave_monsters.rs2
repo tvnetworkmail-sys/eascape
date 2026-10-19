@@ -344,9 +344,8 @@ if (npc_find($here, tzhaar_fightcave_swarm_boss, 40, 0) = false) {
 if (npc_stat(hitpoints) > 0 & npc_stat(hitpoints) < npc_basestat(hitpoints)) {
     npc_statheal(hitpoints, 5, 0);
     spotanim_npc(tzhaar_heal, 0, 0);
-    if (finduid(%npc_aggressive_player) = true) {
-        sound_synth(selfheal, 1, 0); // the player whose Jad it is
-    }
+    // (no heal sound: the 2006 client plays one sound at a time, and four healers' sounds
+    // would drown out Jad's attacks)
     if (npc_stat(hitpoints) >= npc_basestat(hitpoints)) {
         %npc_int2 = 0; // healed to full: they may come again
     }
