@@ -1,0 +1,18 @@
+// EASCape: the Slayer Tower's spikey chains, as in Void (SlayerTower.kt): 61 Agility for the chain
+// on the ground floor (3422, 3550), 71 for the one higher up, and 3 Agility XP a climb. Where they
+// take you is in eascape_links (Void's slayer_tower.teles.toml). Void slips you off the chain
+// now and then by a success roll it marks as unknown, so that isn't copied.
+[oploc1,loc_9319] ~slayer_tower_chain(1);
+[oploc1,loc_9320] ~slayer_tower_chain(1);
+
+[proc,slayer_tower_chain](int $op)
+def_int $need = 71;
+if (loc_coord = 0_53_55_30_30 | loc_coord = 1_53_55_30_30) {
+    $need = 61;
+}
+if (stat(agility) < $need) {
+    mes("You need an Agility level of <tostring($need)> to negotiate this obstacle.");
+    return;
+}
+~eascape_link($op);
+stat_advance(agility, 30);

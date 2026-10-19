@@ -15,8 +15,9 @@ out = os.path.join(HERE, '..', '..', 'src', 'plugins', 'agility', 'agility.json'
 
 text = open(src).read()
 body = text[text.index('{', text.index('enum AgilityShortcut')) + 1:]
-body = body[:body.index(';')]
-entries = re.split(r'\)\s*,\s*(?=//|\n\s*[A-Z_0-9]+\()', body)
+# one entry per constant: from "\tNAME(" to the next one
+starts = [m.start() for m in re.finditer(r'^\t[A-Z_0-9]+\(', body, re.M)]
+entries = [body[a:b] for a, b in zip(starts, starts[1:] + [len(body)])]
 ids = {}
 for l in open(os.path.join(content, 'pack', 'loc.pack')):
     if '=' in l:
@@ -49,5 +50,50 @@ for e in entries:
             continue
         short[str(lid)] = level
         added += 1
+# entries whose objects have newer numbers: the loc at RuneLite's spot (within 2 squares) whose
+# name shares a word with RuneLite's description ("Spikey Chain (Floor 1)" -> "Spikey chain")
+names = {}
+cur = None
+for dp, _, fs in os.walk(os.path.join(content, 'scripts')):
+    for f in fs:
+        if f.endswith('.loc'):
+            for line in open(os.path.join(dp, f), encoding='utf-8', errors='replace'):
+                line = line.strip()
+                m2 = re.match(r'^\[(.+)\]$', line)
+                if m2:
+                    cur = m2.group(1)
+                elif cur and line.startswith('name='):
+                    names.setdefault(cur, line[5:])
+                elif cur and line in ('op1=Mine', 'op2=Prospect'):
+                    names[cur] = ''  # a rock to mine, never a shortcut
+at = {}
+for fn in os.listdir(os.path.join(content, 'maps')):
+    m2 = re.match(r'm(\d+)_(\d+)\.jm2', fn)
+    if not m2:
+        continue
+    mx, mz = int(m2.group(1)), int(m2.group(2))
+    sec = None
+    for line in open(os.path.join(content, 'maps', fn)):
+        if line.startswith('===='):
+            sec = line.strip('= \n')
+        elif sec == 'LOC' and ':' in line:
+            h, r = line.split(':')
+            lv, lx, lz = map(int, h.split())
+            at.setdefault((lv, mx * 64 + lx, mz * 64 + lz), []).append(int(r.split()[0]))
+byid = {v: k for k, v in ids.items()}
+for e in entries:
+    m = re.search(r'([A-Z_0-9]+)\(\s*(\d+)\s*,\s*"([^"]*)"\s*,\s*new WorldPoint\((\d+),\s*(\d+),\s*(\d+)\)', e)
+    if not m:
+        continue
+    level, desc = int(m.group(2)), m.group(3).lower()
+    x, z, lv = int(m.group(4)), int(m.group(5)), int(m.group(6))
+    words = {w for w in re.findall(r'[a-z]+', desc) if len(w) > 2}
+    for dx in range(-2, 3):
+        for dz in range(-2, 3):
+            for lid in at.get((lv, x + dx, z + dz), []):
+                nm = names.get(byid.get(lid, ''), '').lower()
+                if str(lid) not in short and words & set(re.findall(r'[a-z]+', nm)):
+                    short[str(lid)] = level
+                    added += 1
 json.dump(data, open(out, 'w'), separators=(',', ':'), sort_keys=True)
 print(f'added {added} shortcut locs; {len(short)} in all')
