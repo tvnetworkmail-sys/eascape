@@ -16,6 +16,7 @@ import IfType from '#/config/IfType.js';
 import JString from '#/datastruct/JString.js';
 import Pix2D from '#/graphics/Pix2D.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
+import { DRAW_RADIUS } from '#/dash3d/DrawDistance.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lostlite(): any {
@@ -192,10 +193,10 @@ const FIELDS = {
     }
 };
 
-// what the client offers; draw distance isn't built in yet (the 2006 renderer differs from 2004's)
+// what the client offers
 const FEATURES = {
     zoom: true,
-    drawDistance: null,
+    drawDistance: DRAW_RADIUS, // built in, always the most the loaded map allows (DrawDistance.ts)
     rotate: true,
     menu: true,
     menuHover: true,
@@ -231,7 +232,7 @@ export function lostliteConfigure(): void {
         readMethod: 'tcpIn (built in)',
         fields: FIELDS,
         features: FEATURES,
-        warnings: ['Draw distance: not built into the 2006 client yet'],
+        warnings: [],
         length: 0,
         builtIn: true
     });

@@ -11666,8 +11666,38 @@ export class Client extends GameShell {
         return this.localPlayer ? this.mapBuildBaseZ + (this.localPlayer.z >> 7) : -1;
     }
 
+    // the Barrows Brothers plugin's settings: from the EASCape app's sidebar, or RuneLite's
+    // defaults when the client runs in a plain browser
+    private barrowsSettings(): { enabled: boolean; showBrotherLoc: boolean; brotherLocColor: number; deadBrotherLocColor: number; showPuzzleAnswer: boolean; showPrayerDrainTimer: boolean } {
+        const ll = lostlite();
+        const cfg = ll ? ll.barrows ?? { enabled: false } : { enabled: true };
+        const colour = (value: unknown, fallback: number): number => {
+            const m = /([0-9a-f]{6})$/i.exec(String(value ?? ''));
+            return m ? parseInt(m[1], 16) : fallback;
+        };
+        return {
+            enabled: cfg.enabled !== false,
+            showBrotherLoc: cfg.showBrotherLoc !== false,
+            brotherLocColor: colour(cfg.brotherLocColor, 0x00ffff),
+            deadBrotherLocColor: colour(cfg.deadBrotherLocColor, 0xff0000),
+            showPuzzleAnswer: cfg.showPuzzleAnswer !== false,
+            showPrayerDrainTimer: cfg.showPrayerDrainTimer !== false
+        };
+    }
+
+    // above ground at the mounds (map square 55_51) or down in the crypts and tunnels (55_151)
+    private barrowsArea(): boolean {
+        const mx = this.barrowsWorldX() >> 6;
+        const mz = this.barrowsWorldZ() >> 6;
+        return mx === 55 && (mz === 51 || mz === 151);
+    }
+
     private barrowsMinimap(): void {
         if (!this.localPlayer || !this.p12) {
+            return;
+        }
+        const settings = this.barrowsSettings();
+        if (!settings.enabled || !settings.showBrotherLoc) {
             return;
         }
         // only when the Barrows map square (55_51) is loaded
@@ -11695,7 +11725,7 @@ export class Client extends GameShell {
             const px = x + 94 + 4;
             const py = 83 - y - 4 + 5;
             this.p12.centreString(letter, px + 1, py + 1, Colour.BLACK);
-            this.p12.centreString(letter, px, py, this.barrowsKilled(i) ? 0xff0000 : 0x00ffff);
+            this.p12.centreString(letter, px, py, this.barrowsKilled(i) ? settings.deadBrotherLocColor : settings.brotherLocColor);
         }
     }
 
@@ -11703,10 +11733,16 @@ export class Client extends GameShell {
         if (!this.localPlayer || !this.p12) {
             return;
         }
+        const settings = this.barrowsSettings();
+        if (!settings.enabled) {
+            this.barrowsDrainStart = -1;
+            return;
+        }
         let y = 4;
 
-        // brothers slain and reward potential, while the in-game Barrows overlay is up
-        if (this.mainOverlayId === Client.BARROWS_OVERLAY_IF) {
+        // brothers slain and reward potential, anywhere at Barrows (RuneLite shows it while the
+        // game's own Barrows overlay is up; EASCape shows it above ground too, your call)
+        if (this.barrowsArea()) {
             const width = 129;
             const lines = Client.BARROWS_BROTHERS.length + 1;
             const height = lines * 15 + 8;
@@ -11732,8 +11768,8 @@ export class Client extends GameShell {
 
         // prayer drain countdown while in the crypts and tunnels (map square 55_151)
         const inCrypt = this.barrowsWorldX() >> 6 === 55 && this.barrowsWorldZ() >> 6 === 151;
-        if (!inCrypt) {
-            this.barrowsDrainStart = -1;
+        if (!inCrypt || !settings.showPrayerDrainTimer) {
+            this.barrowsDrainStart = inCrypt ? this.barrowsDrainStart : -1;
         } else {
             const now = performance.now();
             if (this.barrowsDrainStart === -1) {
@@ -11748,7 +11784,7 @@ export class Client extends GameShell {
         }
 
         // the puzzle's right answer, boxed in green
-        if (this.mainModalId === Client.BARROWS_PUZZLE_IF) {
+        if (settings.showPuzzleAnswer && this.mainModalId === Client.BARROWS_PUZZLE_IF) {
             const answer = (this.var[Client.BARROWS_VARP] >> 26) & 0x7;
             if (answer >= 1 && answer <= 3) {
                 const pos = this.barrowsComPos(IfType.list[Client.BARROWS_PUZZLE_IF], Client.BARROWS_PUZZLE_ANSWER_COM + answer - 1, 0, 0);

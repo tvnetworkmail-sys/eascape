@@ -9,6 +9,7 @@ import { Int32Array2d, TypedArray1d } from '#/util/Arrays.js';
 import PointNormal from '#/dash3d/PointNormal.js';
 import ModelSource from '#/dash3d/ModelSource.js';
 import type OnDemandProvider from '#/io/OnDemandProvider.js';
+import { drawFar } from '#/dash3d/DrawDistance.js';
 
 class Metadata {
     src: Uint8Array | null = null;
@@ -1720,7 +1721,7 @@ export default class Model extends ModelSource {
         const radiusCosEyePitch: number = (this.radius * cosEyePitch) >> 16;
 
         const maxZ: number = midZ + radiusCosEyePitch;
-        if (maxZ <= 50 || midZ >= 3500) {
+        if (maxZ <= 50 || midZ >= drawFar()) { // EASCape: draw distance (DrawDistance.ts)
             return;
         }
 

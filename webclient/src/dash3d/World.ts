@@ -20,6 +20,7 @@ import Model from '#/dash3d/Model.js';
 import { Int32Array3d, TypedArray1d, TypedArray2d, TypedArray3d, TypedArray4d } from '#/util/Arrays.js';
 import type ModelSource from '#/dash3d/ModelSource.js';
 import type PointNormal from '#/dash3d/PointNormal.js';
+import { DRAW_RADIUS, DRAW_FAR } from '#/dash3d/DrawDistance.js';
 
 const PRETAB = Uint8Array.of(19, 55, 38, 155, 255, 110, 137, 205, 76);
 const MIDTAB = Uint8Array.of(160, 192, 80, 96, 0, 144, 80, 48, 160);
@@ -113,7 +114,7 @@ export default class World {
     static groundX: number = -1;
     static groundZ: number = -1;
 
-    private static visBacking: boolean[][][][] = new TypedArray4d(8, 32, 51, 51, false);
+    private static visBacking: boolean[][][][] = new TypedArray4d(8, 32, DRAW_RADIUS * 2 + 1, DRAW_RADIUS * 2 + 1, false);
     private static visBackingDirty: boolean[][] | null = null;
 
     static numActiveOccluders: number = 0;
@@ -863,7 +864,7 @@ export default class World {
         this.xOrig = (viewportWidth / 2) | 0;
         this.yOrig = (viewportHeight / 2) | 0;
 
-        const visBacking: boolean[][][][] = new TypedArray4d(9, 32, 53, 53, false);
+        const visBacking: boolean[][][][] = new TypedArray4d(9, 32, DRAW_RADIUS * 2 + 3, DRAW_RADIUS * 2 + 3, false);
         for (let pitch: number = 128; pitch <= 384; pitch += 32) {
             for (let yaw: number = 0; yaw < 2048; yaw += 64) {
                 this.cameraSinX = Pix3D.sinTable[pitch];
@@ -873,8 +874,8 @@ export default class World {
 
                 const pitchLevel: number = ((pitch - 128) / 32) | 0;
                 const yawLevel: number = (yaw / 64) | 0;
-                for (let dx: number = -26; dx <= 26; dx++) {
-                    for (let dz: number = -26; dz <= 26; dz++) {
+                for (let dx: number = -(DRAW_RADIUS + 1); dx <= DRAW_RADIUS + 1; dx++) {
+                    for (let dz: number = -(DRAW_RADIUS + 1); dz <= DRAW_RADIUS + 1; dz++) {
                         const x: number = dx * 128;
                         const z: number = dz * 128;
 
@@ -886,7 +887,7 @@ export default class World {
                             }
                         }
 
-                        visBacking[pitchLevel][yawLevel][dx + 25 + 1][dz + 25 + 1] = visible;
+                        visBacking[pitchLevel][yawLevel][dx + DRAW_RADIUS + 1][dz + DRAW_RADIUS + 1] = visible;
                     }
                 }
             }
@@ -894,35 +895,35 @@ export default class World {
 
         for (let pitchLevel: number = 0; pitchLevel < 8; pitchLevel++) {
             for (let yawLevel: number = 0; yawLevel < 32; yawLevel++) {
-                for (let x: number = -25; x < 25; x++) {
-                    for (let z: number = -25; z < 25; z++) {
+                for (let x: number = -DRAW_RADIUS; x < DRAW_RADIUS; x++) {
+                    for (let z: number = -DRAW_RADIUS; z < DRAW_RADIUS; z++) {
                         let visible: boolean = false;
 
                         check_areas: for (let dx: number = -1; dx <= 1; dx++) {
                             for (let dz: number = -1; dz <= 1; dz++) {
-                                if (visBacking[pitchLevel][yawLevel][x + dx + 25 + 1][z + dz + 25 + 1]) {
+                                if (visBacking[pitchLevel][yawLevel][x + dx + DRAW_RADIUS + 1][z + dz + DRAW_RADIUS + 1]) {
                                     visible = true;
                                     break check_areas;
                                 }
 
-                                if (visBacking[pitchLevel][(yawLevel + 1) % 31][x + dx + 25 + 1][z + dz + 25 + 1]) {
+                                if (visBacking[pitchLevel][(yawLevel + 1) % 31][x + dx + DRAW_RADIUS + 1][z + dz + DRAW_RADIUS + 1]) {
                                     visible = true;
                                     break check_areas;
                                 }
 
-                                if (visBacking[pitchLevel + 1][yawLevel][x + dx + 25 + 1][z + dz + 25 + 1]) {
+                                if (visBacking[pitchLevel + 1][yawLevel][x + dx + DRAW_RADIUS + 1][z + dz + DRAW_RADIUS + 1]) {
                                     visible = true;
                                     break check_areas;
                                 }
 
-                                if (visBacking[pitchLevel + 1][(yawLevel + 1) % 31][x + dx + 25 + 1][z + dz + 25 + 1]) {
+                                if (visBacking[pitchLevel + 1][(yawLevel + 1) % 31][x + dx + DRAW_RADIUS + 1][z + dz + DRAW_RADIUS + 1]) {
                                     visible = true;
                                     break check_areas;
                                 }
                             }
                         }
 
-                        this.visBacking[pitchLevel][yawLevel][x + 25][z + 25] = visible;
+                        this.visBacking[pitchLevel][yawLevel][x + DRAW_RADIUS][z + DRAW_RADIUS] = visible;
                     }
                 }
             }
@@ -935,7 +936,7 @@ export default class World {
         const pz: number = (y * this.cameraSinX + tmp * this.cameraCosX) >> 16;
         const py: number = (y * this.cameraCosX - tmp * this.cameraSinX) >> 16;
 
-        if (pz < 50 || pz > 3500) {
+        if (pz < 50 || pz > DRAW_FAR) {
             return false;
         }
 
@@ -979,22 +980,22 @@ export default class World {
         World.gz = (eyeZ / 128) | 0;
         World.maxLevel = maxLevel;
 
-        World.minX = World.gx - 25;
+        World.minX = World.gx - DRAW_RADIUS;
         if (World.minX < 0) {
             World.minX = 0;
         }
 
-        World.minZ = World.gz - 25;
+        World.minZ = World.gz - DRAW_RADIUS;
         if (World.minZ < 0) {
             World.minZ = 0;
         }
 
-        World.maxX = World.gx + 25;
+        World.maxX = World.gx + DRAW_RADIUS;
         if (World.maxX > this.maxTileX) {
             World.maxX = this.maxTileX;
         }
 
-        World.maxZ = World.gz + 25;
+        World.maxZ = World.gz + DRAW_RADIUS;
         if (World.maxZ > this.maxTileZ) {
             World.maxZ = this.maxTileZ;
         }
@@ -1011,7 +1012,7 @@ export default class World {
                         continue;
                     }
 
-                    if (tile.drawLevel <= maxLevel && (World.visBackingDirty[x + 25 - World.gx][z + 25 - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
+                    if (tile.drawLevel <= maxLevel && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
                         tile.drawFront = true;
                         tile.drawBack = true;
                         tile.drawSprites = tile.spriteCount > 0;
@@ -1027,7 +1028,7 @@ export default class World {
 
         for (let level: number = this.minLevel; level < this.maxTileLevel; level++) {
             const tiles: (Square | null)[][] = this.squares[level];
-            for (let dx: number = -25; dx <= 0; dx++) {
+            for (let dx: number = -DRAW_RADIUS; dx <= 0; dx++) {
                 const rightTileX: number = World.gx + dx;
                 const leftTileX: number = World.gx - dx;
 
@@ -1035,7 +1036,7 @@ export default class World {
                     continue;
                 }
 
-                for (let dz: number = -25; dz <= 0; dz++) {
+                for (let dz: number = -DRAW_RADIUS; dz <= 0; dz++) {
                     const forwardTileZ: number = World.gz + dz;
                     const backwardTileZ: number = World.gz - dz;
                     let tile: Square | null;
@@ -1082,7 +1083,7 @@ export default class World {
 
         for (let level: number = this.minLevel; level < this.maxTileLevel; level++) {
             const tiles: (Square | null)[][] = this.squares[level];
-            for (let dx: number = -25; dx <= 0; dx++) {
+            for (let dx: number = -DRAW_RADIUS; dx <= 0; dx++) {
                 const rightTileX: number = World.gx + dx;
                 const leftTileX: number = World.gx - dx;
 
@@ -1090,7 +1091,7 @@ export default class World {
                     continue;
                 }
 
-                for (let dz: number = -25; dz <= 0; dz++) {
+                for (let dz: number = -DRAW_RADIUS; dz <= 0; dz++) {
                     const forwardTileZ: number = World.gz + dz;
                     const backgroundTileZ: number = World.gz - dz;
                     let tile: Square | null;
@@ -1255,16 +1256,16 @@ export default class World {
             let deltaMaxTileX: number;
 
             if (occluder.type === 1) {
-                deltaMaxY = occluder.minTileX + 25 - World.gx;
-                if (deltaMaxY >= 0 && deltaMaxY <= 50) {
-                    deltaMinTileZ = occluder.minTileZ + 25 - World.gz;
+                deltaMaxY = occluder.minTileX + DRAW_RADIUS - World.gx;
+                if (deltaMaxY >= 0 && deltaMaxY <= DRAW_RADIUS * 2) {
+                    deltaMinTileZ = occluder.minTileZ + DRAW_RADIUS - World.gz;
                     if (deltaMinTileZ < 0) {
                         deltaMinTileZ = 0;
                     }
 
-                    deltaMaxTileZ = occluder.maxTileZ + 25 - World.gz;
-                    if (deltaMaxTileZ > 50) {
-                        deltaMaxTileZ = 50;
+                    deltaMaxTileZ = occluder.maxTileZ + DRAW_RADIUS - World.gz;
+                    if (deltaMaxTileZ > DRAW_RADIUS * 2) {
+                        deltaMaxTileZ = DRAW_RADIUS * 2;
                     }
 
                     let ok: boolean = false;
@@ -1296,17 +1297,17 @@ export default class World {
                     }
                 }
             } else if (occluder.type === 2) {
-                deltaMaxY = occluder.minTileZ + 25 - World.gz;
+                deltaMaxY = occluder.minTileZ + DRAW_RADIUS - World.gz;
 
-                if (deltaMaxY >= 0 && deltaMaxY <= 50) {
-                    deltaMinTileZ = occluder.minTileX + 25 - World.gx;
+                if (deltaMaxY >= 0 && deltaMaxY <= DRAW_RADIUS * 2) {
+                    deltaMinTileZ = occluder.minTileX + DRAW_RADIUS - World.gx;
                     if (deltaMinTileZ < 0) {
                         deltaMinTileZ = 0;
                     }
 
-                    deltaMaxTileZ = occluder.maxTileX + 25 - World.gx;
-                    if (deltaMaxTileZ > 50) {
-                        deltaMaxTileZ = 50;
+                    deltaMaxTileZ = occluder.maxTileX + DRAW_RADIUS - World.gx;
+                    if (deltaMaxTileZ > DRAW_RADIUS * 2) {
+                        deltaMaxTileZ = DRAW_RADIUS * 2;
                     }
 
                     let ok: boolean = false;
@@ -1341,25 +1342,25 @@ export default class World {
                 deltaMaxY = occluder.minY - World.cy;
 
                 if (deltaMaxY > 128) {
-                    deltaMinTileZ = occluder.minTileZ + 25 - World.gz;
+                    deltaMinTileZ = occluder.minTileZ + DRAW_RADIUS - World.gz;
                     if (deltaMinTileZ < 0) {
                         deltaMinTileZ = 0;
                     }
 
-                    deltaMaxTileZ = occluder.maxTileZ + 25 - World.gz;
-                    if (deltaMaxTileZ > 50) {
-                        deltaMaxTileZ = 50;
+                    deltaMaxTileZ = occluder.maxTileZ + DRAW_RADIUS - World.gz;
+                    if (deltaMaxTileZ > DRAW_RADIUS * 2) {
+                        deltaMaxTileZ = DRAW_RADIUS * 2;
                     }
 
                     if (deltaMinTileZ <= deltaMaxTileZ) {
-                        let deltaMinTileX: number = occluder.minTileX + 25 - World.gx;
+                        let deltaMinTileX: number = occluder.minTileX + DRAW_RADIUS - World.gx;
                         if (deltaMinTileX < 0) {
                             deltaMinTileX = 0;
                         }
 
-                        deltaMaxTileX = occluder.maxTileX + 25 - World.gx;
-                        if (deltaMaxTileX > 50) {
-                            deltaMaxTileX = 50;
+                        deltaMaxTileX = occluder.maxTileX + DRAW_RADIUS - World.gx;
+                        if (deltaMaxTileX > DRAW_RADIUS * 2) {
+                            deltaMaxTileX = DRAW_RADIUS * 2;
                         }
 
                         let ok: boolean = false;

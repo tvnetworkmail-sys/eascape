@@ -7,7 +7,9 @@ const descriptors = require('../plugins');
 // EASCape: plugins come from LostLite, made for the 2004 game. Until one has been checked
 // against the 2006 game (plan step 4.2) and its id added here, the sidebar marks it as not
 // checked yet. It still runs and can be switched on and off as normal (your call, 17 Oct 2026).
-const CHECKED_2006 = new Set([]);
+const CHECKED_2006 = new Set([
+  'barrows', // made for EASCape's 2006 Barrows (17 Oct 2026)
+]);
 
 function notChecked(d) {
   return !d.alwaysOn && !CHECKED_2006.has(d.id);
