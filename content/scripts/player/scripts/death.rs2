@@ -11,6 +11,13 @@ p_delay(3);
 %death = ^false;
 
 [queue,player_death_default]
+// EASCape: the TzHaar Fight Cave and Fight Pit are safe
+if (~in_fightcave(coord) = true) {
+    @player_death_fightcave;
+}
+if (~in_fightpit_arena(coord) = true) {
+    @player_death_fightpit;
+}
 if (~in_castlewars_game(coord) = true) {
     @player_death_castlewars;
 }

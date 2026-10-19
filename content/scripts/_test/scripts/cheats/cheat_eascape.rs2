@@ -109,3 +109,11 @@ inv_add(inv, barrows_dharok_head_broken, 1);
 inv_add(inv, barrows_dharok_head_50, 1);
 inv_add(inv, coins, 100000);
 mes("Every Barrows piece is in your bank. Use the helms in your pack on Bob in Lumbridge.");
+
+// into the TzHaar Fight Cave starting at wave N (63 = TzTok-Jad), e.g. ::fightwave 63
+[debugproc,fightwave](int $wave)
+if (p_finduid(uid) = false) {
+    return;
+}
+mes("Fight Cave: starting at wave <tostring(max(1, min($wave, ^fightcave_wave_jad)))>.");
+~fightcave_enter(max(1, min($wave, ^fightcave_wave_jad)));

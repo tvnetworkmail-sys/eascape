@@ -37,7 +37,7 @@ import { printDebug } from '#/util/Logger.js';
 import { tryParseInt } from '#/util/TryParse.js';
 
 // EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
-const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear'];
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave'];
 
 export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
     handle(message: ClientCheat, player: Player): boolean {
@@ -574,7 +574,9 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                 // EASCape: named places for testing (coordinates from our own content scripts)
                 const places: Record<string, string> = {
                     barrows: '0,55,51,45,25', // by Ahrim's mound (barrows.rs2, barrows_mound_coord)
-                    bob: '0,50,50,32,3' // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
+                    bob: '0,50,50,32,3', // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
+                    tzhaar: '0,38,80,6,48', // Mor Ul Rek, by the Fight Cave entrance (2006Scape's way out of the cave)
+                    fightpit: '0,37,80,31,57' // outside the Fight Pit's waiting room door (maps/m37_80.jm2)
                 };
                 const coord = (places[args[0].toLowerCase()] ?? args[0]).split(',');
                 if (coord.length < 3) {

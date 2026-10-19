@@ -1,0 +1,251 @@
+// EASCape: the TzHaar Fight Pit.
+//
+// From the OSRS wiki (TzHaar Fight Pit) and 2006Scape (FightPits.java):
+// - The hot vent door into the waiting room; a round starts once two or more are waiting and
+//   a countdown of 80 ticks has run (2006Scape), and everyone waiting goes into the arena.
+// - Last one standing wins: tokkul equal to the combat levels of everyone beaten that round,
+//   and a red skull for an hour (OSRS wiki). Dying is safe and puts you back in the waiting room.
+// - A round that runs on brings in TzHaar monsters: Tz-Kih at 1:30, Tz-Kek at 3:30, Tok-Xil at
+//   5:30 (OSRS wiki; the 2006 game data has only these three for the pit). One comes for each
+//   player still in the arena (how many isn't written down anywhere; that's our choice).
+// - The viewing orb in the waiting room shows the arena from five places.
+// TzHaar-Mej-Kah runs it (his timer, every tick): %npc_int2 1 while a round is on, %npc_int the
+// countdown or the round's age in ticks, %npc_lastattack the tokkul for the winner,
+// %npc_aggressive_player the champion.
+
+[proc,in_fightpit_wait](coord $coord)(boolean)
+return(inzone(^fightpit_wait_sw, ^fightpit_wait_ne, $coord));
+
+[proc,in_fightpit_arena](coord $coord)(boolean)
+return(inzone(^fightpit_arena_sw, ^fightpit_arena_ne, $coord));
+
+// ---- doors
+
+// into or out of the waiting room
+[oploc1,loc_9369]
+if (coordz(coord) > coordz(loc_coord)) {
+    p_teleport(movecoord(loc_coord, 0, 0, -1));
+    ~fightpit_overlay;
+} else {
+    p_teleport(movecoord(loc_coord, 0, 0, 1));
+    if_openoverlay(null);
+}
+
+// out of the arena (counts as losing if a round is on)
+[oploc1,loc_9368]
+if (coordz(coord) < coordz(loc_coord)) {
+    set_player_op(null, 2, ^false);
+    p_teleport(^fightpit_wait_spot);
+    ~fightpit_overlay;
+} else {
+    mes("You'll go in when the next round starts.");
+}
+
+[proc,fightpit_attackable]()(boolean)
+if (~in_fightpit_arena(coord) = false | ~in_fightpit_arena(.coord) = false) {
+    return(false);
+}
+if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
+    if (%npc_int2 = 1) return(true);
+}
+return(false);
+
+[proc,fightpit_overlay]
+if_openoverlay(inter_62);
+~fightpit_champion_text;
+
+[proc,fightpit_champion_text]
+def_string $name = "TzHaar-Xil-Huz";
+if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
+    if (.finduid(%npc_aggressive_player) = true) {
+        $name = "JalYt-Ket-<.displayname>";
+    }
+}
+if_settext(inter_62:com_0, "Current Champion: <$name>");
+
+// ---- the round, run by TzHaar-Mej-Kah
+
+[ai_timer,tzhaar_fightpit_master]
+def_int $waiting = map_playercount(^fightpit_wait_sw, ^fightpit_wait_ne);
+def_int $fighting = map_playercount(^fightpit_arena_sw, ^fightpit_arena_ne);
+if (%npc_int2 = 0) {
+    if ($waiting < 2) {
+        %npc_int = 0;
+        return;
+    }
+    %npc_int = add(%npc_int, 1);
+    if (%npc_int < ^fightpit_countdown) {
+        return;
+    }
+    // start: everyone waiting goes in
+    %npc_int2 = 1;
+    %npc_int = 0;
+    %npc_lastattack = 0;
+    huntall(^fightpit_wait_spot, 8, 0);
+    while (huntnext = true) {
+        if (~in_fightpit_wait(coord) = true) {
+            queue(fightpit_start, 0, 0);
+        }
+    }
+    return;
+}
+%npc_int = add(%npc_int, 1);
+// the round is over when one or nobody is left (wait a few ticks for everyone to arrive)
+if (%npc_int > 5 & $fighting <= 1) {
+    if ($fighting = 1) {
+        def_int $tokkul = %npc_lastattack;
+        huntall(0_37_80_31_24, 32, 0);
+        while (huntnext = true) {
+            if (~in_fightpit_arena(coord) = true) {
+                %npc_aggressive_player = uid;
+                queue(fightpit_win, 0, $tokkul);
+            }
+        }
+    }
+    %npc_int2 = 0;
+    %npc_int = 0;
+    %npc_lastattack = 0;
+    return;
+}
+if (modulo(%npc_int, 3) = 0) {
+    huntall(0_37_80_31_36, 32, 0);
+    while (huntnext = true) {
+        if (~in_fightpit_arena(coord) = true | ~in_fightpit_wait(coord) = true) {
+            queue(fightpit_remaining, 0, $fighting);
+        }
+    }
+}
+if (%npc_int = ^fightpit_kih_at) ~fightpit_monsters(tzhaar_fightpit_swarm_1a);
+if (%npc_int = ^fightpit_kek_at) ~fightpit_monsters(tzhaar_fightpit_swarm_2a);
+if (%npc_int = ^fightpit_xil_at) ~fightpit_monsters(tzhaar_fightpit_swarm_3a);
+
+// one monster for each player in the arena, going for that player
+[proc,fightpit_monsters](npc $type)
+def_npc_uid $self = npc_uid;
+huntall(0_37_80_31_24, 32, 0);
+while (huntnext = true) {
+    if (~in_fightpit_arena(coord) = true) {
+        npc_add(map_findsquare(coord, 3, 6, ^map_findsquare_lineofwalk), $type, 3000);
+        %npc_aggressive_player = uid;
+        %npc_attacking_uid = uid;
+        %npc_lastcombat = map_clock;
+        npc_settimer(10);
+        if ($type = tzhaar_fightpit_swarm_3a) {
+            npc_setmode(applayer2);
+        } else {
+            npc_setmode(opplayer2);
+        }
+    }
+}
+// back to Mej-Kah for the rest of his timer
+if (npc_finduid($self) = false) {
+    return;
+}
+
+[queue,fightpit_start]
+if_close;
+p_teleport(movecoord(^fightpit_start_sw, random(13), 0, random(13)));
+set_player_op("Attack", 2, ^true);
+~fightpit_overlay;
+
+[queue,fightpit_remaining](int $count)
+%tzhaar_fightpit_remaining = $count;
+
+[queue,fightpit_win](int $tokkul)
+set_player_op(null, 2, ^false);
+p_teleport(^fightpit_wait_spot);
+if ($tokkul > 0) {
+    ~fightcave_give(tzhaar_token, $tokkul);
+}
+mes("You are the champion!");
+~headicon_add(^headicon_pits_champion);
+softtimer(fightpit_champion, ^fightpit_skull_ticks);
+%tzhaar_fightpit_remaining = 0;
+~fightpit_overlay;
+
+[softtimer,fightpit_champion]
+~headicon_del(^headicon_pits_champion);
+clearsofttimer(fightpit_champion);
+
+// ---- the pit's monsters: they leave when the round is over
+
+[ai_timer,tzhaar_fightpit_swarm_1a] ~fightpit_monster_timer;
+[ai_timer,tzhaar_fightpit_swarm_2a] ~fightpit_monster_timer;
+[ai_timer,tzhaar_fightpit_swarm_3a] ~fightpit_monster_timer;
+[ai_opplayer2,tzhaar_fightpit_swarm_1a] ~fightcave_melee(4);
+[ai_opplayer2,tzhaar_fightpit_swarm_2a] ~fightcave_melee(7);
+[ai_applayer2,tzhaar_fightpit_swarm_3a] ~fightcave_ranged(13, ^ranged_style, magmaquris_punch, tzhaar_spine_attack);
+[ai_opplayer2,tzhaar_fightpit_swarm_3a] ~fightcave_ranged(13, ^ranged_style, magmaquris_punch, tzhaar_spine_attack);
+[ai_queue1,tzhaar_fightpit_swarm_3a] ~npc_default_retaliate_ap;
+
+[proc,fightpit_monster_timer]
+npc_settimer(10);
+if (map_playercount(^fightpit_arena_sw, ^fightpit_arena_ne) <= 1) {
+    npc_del;
+}
+
+// ---- dying in the arena: safe, back to the waiting room
+
+[label,player_death_fightpit]
+~player_death;
+mes("Oh dear you are dead!");
+midi_jingle(death2);
+~combat_clearqueue;
+clearqueue(player_death_default);
+if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
+    if (%npc_int2 = 1) {
+        %npc_lastattack = add(%npc_lastattack, ~player_combat_level);
+    }
+}
+set_player_op(null, 2, ^false);
+p_teleport(^fightpit_wait_spot);
+buildappearance(worn);
+~prayer_deactivate_all;
+anim(null, 0);
+p_stopaction;
+~stat_reset_all;
+healenergy(10000);
+~clear_poison;
+~update_all(null);
+~initalltabs;
+~player_end_poison;
+~fightpit_overlay;
+
+// logging back in inside the pit puts you outside it (2006Scape)
+[proc,fightpit_login]
+if (~in_fightpit_wait(coord) = true | ~in_fightpit_arena(coord) = true) {
+    p_teleport(^fightpit_outside);
+}
+
+// ---- the viewing orb
+
+[oploc1,loc_9391]
+if (~in_fightpit_wait(coord) = false) {
+    return;
+}
+if_openside(inter_68);
+~fightpit_orb_view(1);
+
+[if_button,inter_68:com_11] ~fightpit_orb_view(1);
+[if_button,inter_68:com_12] ~fightpit_orb_view(2);
+[if_button,inter_68:com_13] ~fightpit_orb_view(3);
+[if_button,inter_68:com_14] ~fightpit_orb_view(4);
+[if_button,inter_68:com_15] ~fightpit_orb_view(5);
+[if_button,inter_68:com_5]
+%tzhaar_fightpit_orb = 0;
+cam_reset;
+if_close;
+
+// centre, north-west, north-east, south-east, south-west of the arena
+[proc,fightpit_orb_view](int $view)
+%tzhaar_fightpit_orb = $view;
+def_coord $at;
+switch_int ($view) {
+    case 2 : $at = 0_37_80_20_36;
+    case 3 : $at = 0_37_80_42_36;
+    case 4 : $at = 0_37_80_42_14;
+    case 5 : $at = 0_37_80_20_14;
+    case default : $at = 0_37_80_31_25;
+}
+cam_moveto(movecoord($at, 0, 0, -6), 900, 100, 100);
+cam_lookat($at, 0, 100, 100);

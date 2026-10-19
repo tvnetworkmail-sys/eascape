@@ -1,0 +1,191 @@
+// EASCape: the TzHaar Fight Cave.
+//
+// From the OSRS wiki (TzHaar Fight Cave, TzTok-Jad) and 2006Scape (FightCaves.java,
+// PlayerAssistant.java, DialogueHandler.java):
+// - 63 waves; the last is TzTok-Jad. Dying is safe: you keep everything.
+// - The first wave comes 16 ticks after you go in, each next one 15 ticks after the last
+//   monster of a wave dies (2006Scape). Waves are made from Tz-Kih (counts 1), Tz-Kek (3),
+//   Tok-Xil (7), Yt-MejKot (15) and Ket-Zek (31): wave N holds the biggest that fit into N, then
+//   the biggest that fit what's left, and so on (that's how 2006Scape's 63-wave table is built).
+//   They spawn at eight fixed spots, in 2006Scape's order.
+// - Tokkul when you leave or die: N x (N + 1), N being the waves you finished (OSRS wiki). Killing
+//   Jad gives the fire cape and 8,032 tokkul.
+// - Log out and you start the same wave again 10 seconds after you log back in.
+// The cave isn't a copy per player (the 2006 engine has no instances): everyone shares it, but
+// each player's monsters only go for, and can only be hit by, that player.
+
+[oploc1,loc_9356] ~fightcave_enter(1); // the cave entrance in Mor Ul Rek
+[oploc1,loc_9357] ~fightcave_leave(false); // the way out, inside the cave
+
+[proc,fightcave_enter](int $wave)
+p_teleport(^fightcave_start);
+%fightcave_run = add(%fightcave_run, 1);
+%fightcave_wave = $wave;
+%fightcave_left = 0;
+%fightcave_healers = 0;
+queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
+~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You're on your own now, Jal-Yt. Prepare to fight|for your life!");
+
+[proc,in_fightcave](coord $coord)(boolean)
+return(inzone(^fightcave_sw, ^fightcave_ne, $coord));
+
+// leaving, by the exit or by dying: tokkul for the waves you finished, back to the city
+[proc,fightcave_leave](boolean $died)
+def_int $done = sub(%fightcave_wave, 1);
+%fightcave_wave = 0;
+%fightcave_left = 0;
+%fightcave_healers = 0;
+%fightcave_run = add(%fightcave_run, 1); // your monsters see this and go
+p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
+if ($done > 0) {
+    ~fightcave_give(tzhaar_token, multiply($done, add($done, 1)));
+    ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Well done in the cave, here, take TokKul as a reward.");
+}
+
+[proc,fightcave_give](namedobj $obj, int $count)
+if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
+    inv_add(inv, $obj, $count);
+} else {
+    obj_add(coord, $obj, $count, ^lootdrop_duration);
+}
+
+// back in after logging out mid-run (called from login.rs2)
+[proc,fightcave_login]
+if (~in_fightcave(coord) = false) {
+    return;
+}
+if (%fightcave_wave = 0) {
+    p_teleport(^fightcave_city);
+    return;
+}
+%fightcave_run = add(%fightcave_run, 1);
+%fightcave_left = 0;
+%fightcave_healers = 0;
+mes("Your wave will start in 10 seconds.");
+queue(fightcave_spawn_wave, ^fightcave_first_delay, %fightcave_run);
+
+// ---- waves
+
+[queue,fightcave_spawn_wave](int $run)
+if ($run ! %fightcave_run | %fightcave_wave = 0 | ~in_fightcave(coord) = false) {
+    return;
+}
+def_int $wave = %fightcave_wave;
+mes("You are now on wave @red@<tostring($wave)>@bla@.");
+if ($wave >= ^fightcave_wave_jad) {
+    %fightcave_left = 1;
+    %fightcave_healers = 0;
+    if (random(2) = 0) {
+        ~fightcave_spawn(tzhaar_fightcave_swarm_boss, 0_37_79_32_34);
+    } else {
+        ~fightcave_spawn(tzhaar_fightcave_swarm_boss, 0_37_79_51_24);
+    }
+    ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Look out, here comes TzTok-Jad!");
+    return;
+}
+def_int $left = $wave;
+def_int $spot = 0;
+def_int $value;
+while ($left > 0) {
+    $value = ~fightcave_biggest($left);
+    ~fightcave_spawn(~fightcave_monster($value), ~fightcave_spot($spot));
+    $left = sub($left, $value);
+    $spot = add($spot, 1);
+}
+%fightcave_left = $spot;
+
+// the biggest monster value that fits
+[proc,fightcave_biggest](int $left)(int)
+if ($left >= 31) return(31);
+if ($left >= 15) return(15);
+if ($left >= 7) return(7);
+if ($left >= 3) return(3);
+return(1);
+
+[proc,fightcave_monster](int $value)(npc)
+switch_int ($value) {
+    case 31 : return(tzhaar_fightcave_swarm_5a);
+    case 15 : return(tzhaar_fightcave_swarm_4a);
+    case 7 : return(tzhaar_fightcave_swarm_3a);
+    case 3 : return(tzhaar_fightcave_swarm_2a);
+    case default : return(tzhaar_fightcave_swarm_1a);
+}
+
+// 2006Scape's eight spawn spots
+[proc,fightcave_spot](int $spot)(coord)
+switch_int (modulo($spot, 8)) {
+    case 0 : return(0_37_79_35_38);
+    case 1 : return(0_37_79_22_40);
+    case 2 : return(0_37_79_24_21);
+    case 3 : return(0_37_79_40_24);
+    case 4 : return(0_37_79_45_52);
+    case 5 : return(0_37_79_13_50);
+    case 6 : return(0_37_79_11_16);
+    case default : return(0_37_79_52_26);
+}
+
+// a monster that goes for the active player and nobody else
+[proc,fightcave_spawn](npc $type, coord $coord)
+npc_add($coord, $type, 12000);
+~fightcave_npc_owner(uid, %fightcave_run);
+
+[proc,fightcave_npc_owner](player_uid $owner, int $run)
+%npc_aggressive_player = $owner;
+%npc_attacking_uid = $owner;
+%npc_macro_event_target = $owner; // "It's not after you." to anyone else
+%npc_int = $run;
+%npc_lastcombat = map_clock;
+npc_settimer(5);
+if (npc_type = tzhaar_fightcave_swarm_3a | npc_type = tzhaar_fightcave_swarm_5a | npc_type = tzhaar_fightcave_swarm_boss) {
+    npc_setmode(applayer2);
+} else if (npc_type = tzhaar_fightcave_swarm_boss_cleric) {
+    npc_setmode(null);
+} else {
+    npc_setmode(opplayer2);
+}
+
+// a kill counted for the owner; $more is how many new monsters the kill made (a Tz-Kek's two)
+[queue,fightcave_killed](int $more)
+if (%fightcave_wave = 0) {
+    return;
+}
+%fightcave_left = add(sub(%fightcave_left, 1), $more);
+if (%fightcave_left > 0) {
+    return;
+}
+%fightcave_wave = add(%fightcave_wave, 1);
+queue(fightcave_spawn_wave, ^fightcave_wave_delay, %fightcave_run);
+
+[queue,fightcave_victory]
+if (%fightcave_wave = 0) {
+    return;
+}
+%fightcave_wave = 0;
+%fightcave_left = 0;
+%fightcave_healers = 0;
+%fightcave_run = add(%fightcave_run, 1);
+~fightcave_give(tzhaar_cape_fire, 1);
+~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
+mes("You were victorious!");
+p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
+~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You even defeated TzTok-Jad, I am most impressed!|Please accept this gift as a reward.");
+
+// ---- dying in the cave: safe, like the duel arena
+
+[label,player_death_fightcave]
+~player_death;
+mes("Oh dear you are dead!");
+midi_jingle(death2);
+~combat_clearqueue;
+clearqueue(player_death_default);
+~fightcave_leave(true);
+buildappearance(worn);
+~prayer_deactivate_all;
+anim(null, 0);
+p_stopaction;
+~stat_reset_all;
+healenergy(10000);
+~clear_poison;
+~update_all(null);
+~initalltabs;
+~player_end_poison;

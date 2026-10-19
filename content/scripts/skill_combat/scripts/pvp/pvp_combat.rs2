@@ -48,6 +48,10 @@ if ($wilderness_level < $combat_level_diff) {
 return(true);
 
 [proc,pvp_is_attackable]()(boolean)
+// EASCape: the Fight Pit, while a round is on
+if (~in_fightpit_arena(coord) = true | ~in_fightpit_arena(.coord) = true) {
+    return(~fightpit_attackable);
+}
 if (~in_duel_arena(coord) = true) {
     if (~duel_arena_checks = false) {
         return(false);
@@ -75,6 +79,10 @@ if (~player_autocast_enabled = false & ~inzone_coord_pair_table(mage_arena, coor
 
 // For magic
 [proc,pvp_is_attackable_opt]()(boolean)
+// EASCape: the Fight Pit, while a round is on
+if (~in_fightpit_arena(coord) = true | ~in_fightpit_arena(.coord) = true) {
+    return(~fightpit_attackable);
+}
 if (~in_duel_arena(coord) = true) {
     if (~duel_arena_checks = false) {
         return(false);

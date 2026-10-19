@@ -1358,11 +1358,16 @@ export default class Player extends PathingEntity {
         stream.p1(this.gender);
         // EASCape: the 377 client reads the skull icon then the prayer icon (sprite index, -1 for
         // none) from the headicons_pk and headicons_prayer sprites. Scripts still keep the 274
-        // headicons bitmask (headicon.constant): bit 0 skull, bits 3/4/5 protect melee/range/magic.
+        // headicons bitmask (headicon.constant): bit 0 skull, bits 3/4/5 protect melee/range/magic,
+        // bit 8 the Fight Pit champion's red skull.
         // Sprite order checked against content/sprites: prayer 0 melee, 1 missiles, 2 magic.
         let skull = -1;
         if ((this.headicons & (1 << 0)) !== 0) {
             skull = 0;
+        }
+        // bit 8: the Fight Pit champion's red skull (headicons_pk sprite 1)
+        if ((this.headicons & (1 << 8)) !== 0) {
+            skull = 1;
         }
         let prayer = -1;
         if ((this.headicons & (1 << 3)) !== 0) {

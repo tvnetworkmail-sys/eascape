@@ -1,5 +1,9 @@
 // requires .active_player and active_player
 [proc,deserves_pk_skull]()(boolean)
+// EASCape: no skull for fighting in the Fight Pit
+if (~in_fightpit_arena(coord) = true) {
+    return(false);
+}
 // if (~in_duel_arena(coord) = true) {
 //     return(false);
 // }
