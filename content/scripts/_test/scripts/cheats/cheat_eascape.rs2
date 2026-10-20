@@ -634,3 +634,37 @@ if (inv_freespace(inv) > 0) {
 } else {
     inv_add(bank, $obj, 1);
 }
+
+// ::dtpack - every item Desert Treasure needs, from the OSRS wiki's item list (your call,
+// 20 Oct 2026: one pack per quest for quick testing). Eblis takes the logs, bars and glass
+// as notes; the lockpicks come unnoted and noted (the chest uses them up).
+[debugproc,dtpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 24) {
+    mes("::dtpack needs 24 free inventory spaces (it gives 24 kinds of item).");
+    return;
+}
+inv_add(inv, coins, 10000); // the 650 gp drink, carpets and boats
+inv_add(inv, cert_magic_logs, 12);
+inv_add(inv, cert_steel_bar, 6);
+inv_add(inv, cert_molten_glass, 6);
+inv_add(inv, ashes, 1);
+inv_add(inv, charcoal, 1);
+inv_add(inv, bloodrune, 1);
+inv_add(inv, bones, 1);
+inv_add(inv, silver_bar, 1); // Ruantun's pot
+inv_add(inv, fd_crushed_garlic, 1); // garlic powder
+inv_add(inv, spicespot, 1);
+inv_add(inv, cake, 1); // the troll child's sweet
+inv_add(inv, death_spikedboots, 1); // the ice ledge
+inv_add(inv, death_climbingboots, 1); // the way to Trollheim
+inv_add(inv, slayer_facemask, 1); // the smoke dungeon
+inv_add(inv, tinderbox, 1); // the four torches
+inv_add(inv, ice_gloves, 1); // to hold a weapon against Fareed
+inv_add(inv, shantay_pass, 10);
+inv_add(inv, water_skin4, 2);
+inv_add(inv, lockpick, 3);
+inv_add(inv, cert_lockpick, 50);
+mes("Desert Treasure pack: everything the quest needs. Combat gear, food, potions and runes are up to you.");
