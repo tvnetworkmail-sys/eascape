@@ -43,6 +43,14 @@ if (inv_total(inv, $rune3) < $rune_count3 & $rune3 ! null) {
     mes("You do not have enough <~string_removeright(oc_name($rune3), 5)> Runes to cast this spell.");
     return (false);
 }
+// EASCape: the fourth rune of an Ancient Magicks spell
+def_namedobj $rune4;
+def_int $rune_count4;
+$rune4, $rune_count4 = ~spell_rune4($spell_data);
+if ($rune4 ! null & $rune_count4 > 0 & inv_total(inv, $rune4) < $rune_count4) {
+    mes("You do not have enough <~string_removeright(oc_name($rune4), 5)> Runes to cast this spell.");
+    return (false);
+}
 // check if worn is correct
 if (db_getfieldcount($spell_data, magic_spell_table:wornrequired) > 0 & inv_total(worn, db_getfield($spell_data, magic_spell_table:wornrequired, 0)) < 1) {
     mes(db_getfield($spell_data, magic_spell_table:worn_reqmessage, 0));
@@ -104,6 +112,12 @@ if ($rune_count2 > 0) {
 if ($rune_count3 > 0) {
     inv_del(inv, $rune3, $rune_count3);
 }
+def_namedobj $rune4;
+def_int $rune_count4;
+$rune4, $rune_count4 = ~spell_rune4($spell_data);
+if ($rune4 ! null & $rune_count4 > 0) {
+    inv_del(inv, $rune4, $rune_count4);
+}
 
 [proc,give_spell_xp](dbrow $spell_data)
 stat_advance(magic, db_getfield($spell_data, magic_spell_table:experience, 0));
@@ -152,3 +166,22 @@ if($spell = ^magic_dart) {
     $maxhit = calc((stat(magic) / 10) + 10);
 }
 return($maxhit);
+
+// EASCape: the fourth rune (Ancient Magicks), none if the staff you wield gives it
+[proc,spell_rune4](dbrow $spell_data)(namedobj, int)
+if (db_getfieldcount($spell_data, magic_spell_table:runesrequired4) = 0) {
+    return(null, 0);
+}
+def_namedobj $rune;
+def_int $count;
+$rune, $count = db_getfield($spell_data, magic_spell_table:runesrequired4, 0);
+def_obj $staff = inv_getobj(worn, ^wearpos_rhand);
+db_find(magic_staff_table:staff, $staff);
+def_dbrow $staff_data = db_findnext;
+while ($staff_data ! null) {
+    if (db_getfield($staff_data, magic_staff_table:rune, 0) = $rune) {
+        return($rune, 0);
+    }
+    $staff_data = db_findnext;
+}
+return($rune, $count);

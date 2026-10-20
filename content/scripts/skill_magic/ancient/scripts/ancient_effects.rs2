@@ -1,0 +1,97 @@
+// EASCape: what the Ancient Magicks do beyond damage (Void: content/skill/magic/book/ancient): blood
+// spells heal a quarter of the damage up to the spell's cap, smoke spells have a 1 in 5 chance to
+// poison, shadow spells drain Attack (the stat_change rows), ice spells freeze (freeze_time rows).
+// Bursts and barrages also hit up to 8 more monsters around the target in multi-combat areas
+// (OSRS wiki's "Multi (AoE)").
+
+// called by pvm_spell_success with the damage rolled
+[proc,ancient_spell_effect](int $spell, int $damage)
+if ($damage <= 0) {
+    return;
+}
+def_int $heal = 0;
+switch_int ($spell) {
+    case ^blood_rush : $heal = 4;
+    case ^blood_burst : $heal = 5;
+    case ^blood_blitz : $heal = 6;
+    case ^blood_barrage : $heal = 11;
+}
+if ($heal > 0) {
+    stat_heal(hitpoints, min(divide($damage, 4), $heal), 0);
+    return;
+}
+def_int $poison = 0;
+switch_int ($spell) {
+    case ^smoke_rush, ^smoke_burst : $poison = 10; // 2 damage a hit (poison.rs2: (severity + 4) / 5)
+    case ^smoke_blitz, ^smoke_barrage : $poison = 20; // 4
+}
+if ($poison > 0 & random(5) = 0) {
+    ~npc_poison_start($poison);
+}
+
+[proc,ancient_is_multi](int $spell)(boolean)
+switch_int ($spell) {
+    case ^smoke_burst, ^shadow_burst, ^blood_burst, ^ice_burst, ^smoke_barrage, ^shadow_barrage, ^blood_barrage, ^ice_barrage : return(true);
+}
+return(false);
+
+// the other monsters around the target, after the target itself was hit
+[proc,ancient_aoe](dbrow $spell_data, int $maxhit, int $duration)
+def_int $spell = db_getfield($spell_data, magic_spell_table:spell, 0);
+if (~ancient_is_multi($spell) = false | map_multiway(npc_coord) = false) {
+    return;
+}
+def_npc_uid $main = npc_uid;
+def_coord $centre = npc_coord;
+def_int $count = 0;
+npc_huntall($centre, 1, 0);
+while (npc_findnext = true) {
+    if ($count < 8 & npc_uid ! $main & npc_stat(hitpoints) > 0 & compare(nc_op(npc_type, 2), "") ! 0) {
+        $count = add($count, 1);
+        def_int $damage = 0;
+        if (~player_npc_hit_roll(^magic_style) = true) {
+            $damage = randominc(min($maxhit, npc_param(max_dealt)));
+            $damage = ~dt_spell_damage($spell, $damage);
+            npc_queue(2, $damage, calc($duration / 30 + 1));
+            def_int $capped = min($damage, npc_stat(hitpoints));
+            ~give_combat_experience(^style_magic_normal, $capped, %npc_combat_xp_multiplier);
+            npc_heropoints($capped);
+            ~pvm_stat_change_effect($spell_data);
+            ~pvm_freeze_effect($spell_data);
+            // blood heals from every monster hit; smoke's poison only on the target itself
+            if ($spell = ^blood_burst & $damage > 0) stat_heal(hitpoints, min(divide($damage, 4), 5), 0);
+            if ($spell = ^blood_barrage & $damage > 0) stat_heal(hitpoints, min(divide($damage, 4), 11), 0);
+        }
+        spotanim_npc(db_getfield($spell_data, magic_spell_table:spotanim_target, 0), $duration);
+        ~npc_retaliate(calc($duration / 30 + 1));
+    }
+}
+if (npc_finduid($main) = false) {
+    return;
+}
+
+// the eight teleports (zaros_vertical_casting and zaros_teleport from the 377 cache)
+[label,ancient_teleport](int $spell)
+if_close;
+if (p_finduid(uid) = true) {
+    def_dbrow $spell_data = ~get_spell_data($spell);
+    if (~check_spell_requirements($spell_data) = false) {
+        return;
+    }
+    if (~wilderness_level(coord) > 20) {
+        mes("A mysterious force blocks your teleport spell!");
+        mes("You can't use this teleport after level 20 wilderness.");
+        return;
+    }
+    if (~pre_tele_checks(coord) = false) {
+        return;
+    }
+    ~delete_spell_runes($spell_data);
+    ~give_spell_xp($spell_data);
+    p_stopaction;
+    sound_synth(teleport_all, 1, 0);
+    anim(zaros_vertical_casting, 0);
+    spotanim_pl(zaros_teleport, 0, 0);
+    p_delay(2);
+    ~p_telejump_safe(map_findsquare(db_getfield($spell_data, magic_spell_table:tele_coord, 0), 0, 2, ^map_findsquare_lineofwalk));
+}
