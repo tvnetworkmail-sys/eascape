@@ -220,62 +220,138 @@ const root = path.join(__dirname, '..', 'src');
   console.log('xp drops: ok');
 }
 
-// ---------------------------------------------------------------- xp tracker panel
+// ---------------------------------------------------------------- xp tracker (game side)
 function loadTracker(conf, clock) {
-  let onEvent = null;
-  const panels = [];
-  const state = { loggedIn: true };
-  const sandbox = {
-    UI: { h: () => ({}) },
-    App: { state, config: (id, k, d) => (k in conf ? conf[k] : d), setConfig: (id, k, v) => { conf[k] = JSON.parse(JSON.stringify(v)); }, renderPanel() {} },
-    Date: { now: () => clock.t }, Math, Map, Object, Array, Number, String, JSON, setInterval() {},
+  let onRuntime = null;
+  let reported = null;
+  const sent = [];
+  let tick = null;
+  const ctx = {
+    config: (k) => conf[k],
+    state: (k, d) => (k in conf ? conf[k] : d),
+    setState: (k, v) => { conf[k] = JSON.parse(JSON.stringify(v)); },
+    onRuntime: (fn) => { onRuntime = fn; return () => {}; },
+    report: (d) => { reported = d; },
+    sendToGame: (m) => sent.push(m),
+    log() {},
   };
-  sandbox.window = { Panels: panels, lostlite: { onEvent: (fn) => { onEvent = fn; } }, addEventListener() {} };
-  vm.runInNewContext(fs.readFileSync(path.join(root, 'ui', 'panels', 'xptracker.js'), 'utf8'), sandbox);
-  return { xt: sandbox.window.__xpTracker, send: (d) => onEvent({ type: 'patch', data: d }), panels, state };
+  const realNow = Date.now;
+  const realInterval = global.setInterval;
+  Date.now = () => clock.t;
+  global.setInterval = (fn) => { tick = fn; return 1; };
+  delete require.cache[require.resolve(path.join(root, 'plugins', 'xptracker', 'game.js'))];
+  const inst = require(path.join(root, 'plugins', 'xptracker', 'game.js'))(ctx);
+  inst.start();
+  global.setInterval = realInterval;
+  return {
+    inst, sent,
+    send: (type, data) => onRuntime(type, data),
+    ticks: (n) => { for (let i = 0; i < n; i++) { clock.t += 1000; tick(); } },
+    rep: () => reported,
+    restore: () => { Date.now = realNow; },
+  };
 }
 {
   const clock = { t: 1e9 };
   const conf = {};
-  let { xt, send, panels, state } = loadTracker(conf, clock);
-  assert.strictEqual(xt.XP[1], 83, 'level 2 at 83 xp');
-  assert.strictEqual(xt.XP[98], 13034431, 'level 99 at 13,034,431');
-  assert.strictEqual(xt.levelFor(83), 2);
-  assert.deepStrictEqual([xt.short(8040), xt.short(21300), xt.short(353840), xt.short(1256000)], ['8040', '21.3K', '353.8K', '1.25M'], 'RuneLite number style');
-  const stats = (wc) => ({ stats: [{ skill: 'woodcutting', xp: wc }, { skill: 'attack', xp: 0 }] });
-  send({ player: { name: 'Tester' } });
-  send(stats(1000));
-  for (let i = 0; i < 60; i++) { clock.t += 1000; xt.tick(clock.t); }
-  send(stats(1025));
-  for (let i = 0; i < 60; i++) { clock.t += 1000; xt.tick(clock.t); }
-  send(stats(1050));
-  const s = xt.session().get('woodcutting');
-  assert.ok(s && s.start === 1000 && s.xp === 1050 && s.actions === 2, 'session counts gains');
-  assert.ok(!xt.session().has('attack'), 'untrained skills not shown');
-  assert.strictEqual(s.active, 60000, 'a minute logged in since the first gain');
-  assert.strictEqual(Math.round(xt.rate(s)), 3000, '50 xp in a minute = 3,000/hr');
-  // logged out time doesn't count
-  send({ loggedIn: false });
-  state.loggedIn = false;
-  for (let i = 0; i < 30; i++) { clock.t += 1000; xt.tick(clock.t); }
-  assert.strictEqual(s.active, 60000, 'paused while logged out');
-  assert.ok(conf.sessions && conf.sessions.tester && conf.sessions.tester.woodcutting.xp === 1050, 'saved on logout');
-  // LostLite closed and opened again (hours later): carries on where it left off
+  let t = loadTracker(conf, clock);
+  const stats = (wc, sl = 0) => [{ skill: 'woodcutting', xp: wc }, { skill: 'attack', xp: 0 }, { skill: 'slayer', xp: sl }];
+  t.send('player', { name: 'Tester' });
+  t.send('stats', stats(1000));
+  t.ticks(60);
+  t.send('stats', stats(1025));
+  t.ticks(60);
+  t.send('stats', stats(1050));
+  let wc = t.rep().skills.find((s) => s.skill === 'woodcutting');
+  assert.ok(wc && wc.xpGained === 50 && wc.actions === 2, `counts gains: ${JSON.stringify(wc)}`);
+  assert.ok(!t.rep().skills.some((s) => s.skill === 'attack'), 'untrained skills not shown');
+  assert.strictEqual(wc.xpHour, 3000, '50 xp in a minute = 3,000/hr (time counted from the first gain)');
+  assert.strictEqual(wc.startLevel, 9, 'level 9 at 1,050 xp (level 10 is 1,154)');
+  t.send('stats', stats(1050, 300));
+  assert.ok(t.rep().skills.some((s) => s.skill === 'slayer' && s.xpGained === 300), 'Slayer counted');
+  // logged out time doesn't count (Pause on logout)
+  t.send('login-state', false);
+  t.ticks(30);
+  t.send('login-state', true);
+  t.send('stats', stats(1050, 300));
+  t.ticks(1);
+  wc = t.rep().skills.find((s) => s.skill === 'woodcutting');
+  assert.strictEqual(wc.xpHour, Math.floor((3600 / 61) * 50), 'paused while logged out (61 s: the minute and the one after logging back in)');
+  assert.ok(conf.saves && conf.saves.tester && conf.saves.tester.skills.woodcutting, 'saved');
+  // pause by hand, then XP unpauses it
+  conf.command = { action: 'pause', skill: 'woodcutting' };
+  t.inst.configChanged('command');
+  assert.ok(t.rep().skills.find((s) => s.skill === 'woodcutting').paused, 'paused');
+  t.send('stats', stats(1060, 300));
+  t.ticks(1);
+  assert.ok(!t.rep().skills.find((s) => s.skill === 'woodcutting').paused, 'XP unpauses it');
+  // the canvas boxes go to the page side
+  conf.command = { action: 'canvas', skill: 'slayer' };
+  t.inst.configChanged('command');
+  assert.deepStrictEqual(t.sent[t.sent.length - 1].config.boxes.map((b) => b.skill), ['slayer'], 'slayer on the canvas');
+  t.inst.stop();
+  t.restore();
+  // EASCape closed and opened again: carries on; XP gained in another client meanwhile isn't counted
   clock.t += 5 * 3600000;
-  ({ xt, send, state } = loadTracker(conf, clock));
-  send({ player: { name: 'Tester' } });
-  send({ loggedIn: true });
-  send(stats(1080)); // 30 xp gained in another client meanwhile: not counted
-  const s2 = xt.session().get('woodcutting');
-  assert.ok(s2 && s2.xp === 1080 && s2.xp - s2.start === 50 && s2.active === 60000, `restored: ${JSON.stringify(s2)}`);
-  send(stats(1100));
-  assert.strictEqual(s2.xp - s2.start, 70, 'keeps counting');
+  t = loadTracker(conf, clock);
+  t.send('player', { name: 'Tester' });
+  t.send('stats', stats(1090, 300));
+  wc = t.rep().skills.find((s) => s.skill === 'woodcutting');
+  assert.ok(wc && wc.xpGained === 60 && wc.xp === 1090, `restored: ${JSON.stringify(wc)}`);
+  t.send('stats', stats(1100, 300));
+  assert.strictEqual(t.rep().skills.find((s) => s.skill === 'woodcutting').xpGained, 70, 'keeps counting');
+  // Reset starts the skill again from its XP now
+  conf.command = { action: 'reset', skill: 'woodcutting' };
+  t.inst.configChanged('command');
+  assert.ok(!t.rep().skills.some((s) => s.skill === 'woodcutting'), 'reset takes it off');
   // another account has its own
-  send({ player: { name: 'Alt' } });
-  assert.strictEqual(xt.session().size, 0, 'alt starts empty');
-  send({ player: { name: 'Tester' } });
-  assert.strictEqual(xt.session().get('woodcutting').xp, 1100, 'back to the main');
+  t.send('player', { name: 'Alt' });
+  assert.strictEqual(t.rep().skills.length, 0, 'alt starts empty');
+  t.restore();
+  // the old tracker's save carries over
+  const old = { sessions: { olduser: { mining: { start: 500, xp: 800, active: 120000, actions: 3, lastGain: 1 } } } };
+  t = loadTracker(old, clock);
+  t.send('player', { name: 'OldUser' });
+  t.send('stats', [{ skill: 'mining', xp: 800 }]);
+  const mi = t.rep().skills.find((s) => s.skill === 'mining');
+  assert.ok(mi && mi.xpGained === 300 && mi.xpHour === 9000, `carried over: ${JSON.stringify(mi)}`);
+  t.restore();
   console.log('xp tracker: ok');
+}
+
+
+// ---------------------------------------------------------------- slayer (page side)
+{
+  const window = { postMessage() {}, addEventListener() {} };
+  const ctx = vm.createContext({ window, document: { getElementById: () => null }, setInterval() {}, setTimeout() {}, clearTimeout() {}, performance: { now: () => 0 }, Date, Int32Array, Math, String, Array, Object, RegExp, Proxy, Map, Set, JSON, Number, isFinite, parseInt });
+  vm.runInContext(fs.readFileSync(path.join(root, 'runtime', 'runtime.js'), 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(path.join(root, 'plugins', 'slayer', 'page.js'), 'utf8'), ctx);
+  const ll = vm.runInContext('window.__lostlite', ctx);
+  ll.configure({ fields: { addChat: 'ac', varps: 'v', localPlayer: 'lp', playerName: 'nm' }, features: {} });
+  const tasks = require(path.join(root, 'plugins', 'slayer', 'tasks.json'));
+  const added = [];
+  const client = { ac(type, text, sender) { added.push([type, text, sender]); }, v: [], lp: { nm: 'Tester' } };
+  client.v[395] = 49; // ^slayer_dustdevil
+  client.v[394] = 20;
+  ll.client = client;
+  ll.loggedIn = true;
+  ll.hookChat(client);
+  ll.pluginConfig({ id: 'slayer', enabled: true, config: { infobox: true, itemoverlay: true, statTimeout: 5, taskCommand: true, tasks } });
+  const boxes = () => ll.infoBoxProviders.get('slayer')(0);
+  assert.strictEqual(tasks[49].name, 'Dust Devils', 'task table from the server data');
+  assert.ok(tasks[49].npcs.includes('Dust devil'), 'its monsters');
+  let b = boxes();
+  assert.ok(b.length === 1 && b[0].text === '20' && /Dust Devils/.test(b[0].tooltip), `task box: ${JSON.stringify(b)}`);
+  assert.strictEqual(JSON.stringify(ll.itemText(4155, 0)), JSON.stringify({ text: '20', colour: 0xffffff }), 'count on the gem');
+  assert.strictEqual(ll.itemText(995, 0), null, 'nothing on other items');
+  client.v[394] = 15;
+  client.ac(2, '!task', 'Tester');
+  assert.strictEqual(added[added.length - 1][1], 'Slayer Task: Dust Devils: 5/20 killed', '!task says the task');
+  client.ac(2, '!task', 'Someone');
+  assert.strictEqual(added[added.length - 1][1], '!task', 'only your own');
+  client.v[394] = 0;
+  assert.strictEqual(boxes().length, 0, 'no box once the task is done');
+  console.log('slayer: ok');
 }
 
 

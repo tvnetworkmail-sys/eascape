@@ -32,6 +32,7 @@ module.exports = [
   require('./mining/descriptor'),
   require('./agility/descriptor'),
   require('./barrows/descriptor'),
+  require('./slayer/descriptor'),
   require('./cooking/descriptor'),
   require('./fishing/descriptor'),
   require('./loottracker/descriptor'),

@@ -10204,6 +10204,14 @@ export class Client extends GameShell {
                                         this.p11?.drawString(this.invNumber(count), slotX + dx + 1, slotY + 10 + dy, Colour.BLACK);
                                         this.p11?.drawString(this.invNumber(count), slotX + dx, slotY + 9 + dy, Colour.YELLOW);
                                     }
+
+                                    // LostLite: text a plugin draws on the item (the Slayer plugin's count on the
+                                    // gem), like RuneLite's item overlays: top left, white with a shadow
+                                    const tag = lostlite()?.itemText?.(id, child.id);
+                                    if (tag && tag.text) {
+                                        this.p11?.drawString(String(tag.text), slotX + dx, slotY + 11 + dy, Colour.BLACK);
+                                        this.p11?.drawString(String(tag.text), slotX + dx - 1, slotY + 10 + dy, typeof tag.colour === 'number' ? tag.colour : Colour.WHITE);
+                                    }
                                 }
                             }
                         } else if (child.invBackground && slot < 20) {

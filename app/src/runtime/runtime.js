@@ -10,7 +10,7 @@
 
   const SKILLS = ['attack', 'defence', 'strength', 'hitpoints', 'ranged', 'prayer', 'magic',
     'cooking', 'woodcutting', 'fletching', 'fishing', 'firemaking', 'crafting', 'smithing',
-    'mining', 'herblore', 'agility', 'thieving', null, null, 'runecraft'];
+    'mining', 'herblore', 'agility', 'thieving', 'slayer', 'farming', 'runecraft'];
   const LOGOUT_AFTER_MS = 3000;
 
   /** Andrew's monotone chain convex hull. */
@@ -178,6 +178,29 @@
       this.screenDraws.set(id, fn);
     },
 
+    // ---- text drawn on inventory items (RuneLite's WidgetItemOverlay, e.g. the Slayer
+    // plugin's count on the enchanted gem): each provider gets (objId, componentId) and
+    // returns { text, colour } or null. Called by the client as it draws each item.
+    itemTextProviders: new Map(),
+
+    addItemText(id, fn) {
+      this.itemTextProviders.set(id, fn);
+    },
+
+    itemText(obj, com) {
+      for (const [id, fn] of this.itemTextProviders) {
+        const pl = this.pagePlugins.get(id);
+        if (pl && !pl.enabled) continue;
+        try {
+          const r = fn(obj, com);
+          if (r && r.text) return r;
+        } catch {
+          /* never stop the game drawing its items */
+        }
+      }
+      return null;
+    },
+
     // ---- chat messages (2.7): every line the game adds to the chat box, as it's added.
     // addChat(type, text, sender): 0 game message, 1 public (with a crown), 2 public,
     // 3 private from, 4 trade request, 5 friend logged in/out, 6 private to, 7 private from
@@ -190,11 +213,14 @@
       const orig = c[f.addChat];
       const self = this;
       c[f.addChat] = function addChat(type, text, sender) {
+        let replaced = null;
         try {
-          self.onChat(type, text, sender);
+          replaced = self.onChat(type, text, sender);
         } catch {
           /* never stop the game adding its message */
         }
+        // a plugin can change the line (RuneLite's setRuneLiteFormatMessage, for !task)
+        if (typeof replaced === 'string') return orig.call(this, type, replaced, sender);
         return orig.apply(this, arguments);
       };
     },
@@ -221,6 +247,7 @@
         }
       }
       post('chat', msg);
+      return typeof msg.replace === 'string' ? msg.replace : null;
     },
 
     chatLog: [],
