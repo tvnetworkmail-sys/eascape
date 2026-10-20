@@ -1,0 +1,206 @@
+// Desert Treasure: the Diamond of Shadow. Rasolo south of the Baxtorian Falls wants the gilded
+// cross from the secure chest in the Bandit Camp (Thieving 53, three locks, a lockpick breaks on
+// every slip and the trap hurts and can poison; OSRS wiki), and gives the ring of visibility for
+// it. Wearing the ring shows the ladder east of Rasolo (fd_ladder_present), and Damis waits in the
+// far east of the Shadow Dungeon below, in two forms. Leaving after the first form keeps it
+// beaten (OSRS wiki). Places from Quest Helper and the map.
+
+// ---------------------------------------------------------------- Rasolo
+
+[opnpc1,shadow_warrior_rasool]
+~chatnpc("<p,happy>Greetings, traveller! Rasolo, wandering merchant, at your service.");
+if (%deserttreasure >= ^dt_diamonds & %fd_shadowwarrior_quest < ^dt_shadow_ring) {
+    if (%fd_shadowwarrior_quest = ^dt_shadow_rasolo) {
+        if (inv_total(inv, fd_sword_cross) > 0) {
+            @dt_rasolo_cross;
+        }
+        ~chatnpc("<p,quiz>Do you have my gilded cross yet? The bandits keep it in a secure chest in the south of their camp.");
+        return;
+    }
+    @multi2("Ask about the Diamonds of Azzanadra", dt_rasolo_ask, "Let me see your wares.", dt_rasolo_trade);
+}
+if (%fd_shadowwarrior_quest >= ^dt_shadow_ring & ~obj_gettotal(fd_ring_visibility) = 0) {
+    ~chatplayer("<p,sad>I've lost the ring you gave me.");
+    ~chatnpc("<p,neutral>Careless! Luckily I have another.");
+    inv_add(inv, fd_ring_visibility, 1);
+    ~objbox(fd_ring_visibility, "Rasolo gives you another ring of visibility.", 250, 0, 0);
+    return;
+}
+@multi2("Let me see your wares.", dt_rasolo_trade, "Goodbye.", dt_rasolo_bye);
+
+[label,dt_rasolo_trade]
+~openshop_activenpc;
+
+[label,dt_rasolo_bye]
+~chatplayer("<p,neutral>Goodbye.");
+
+[label,dt_rasolo_ask]
+~chatplayer("<p,quiz>I'm looking for the Diamonds of Azzanadra.");
+~chatnpc("<p,shifty>Shh! The Diamond of Shadow... yes, I know of it. The warrior Damis guards it, deep below these hills. But you'll never see him, nor the way down, with your own eyes.");
+~chatnpc("<p,neutral>I have a ring that lets you see what is hidden. I'll trade it for something the bandits in the desert stole from me: a gilded cross. Bring it back, and the ring is yours.");
+switch_int (~p_choice2("Yes", 1, "No", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I'll get your cross back.");
+        %fd_shadowwarrior_quest = ^dt_shadow_rasolo;
+        ~chatnpc("<p,neutral>They keep it in a secure chest in the south of their camp. It's well trapped, so bring plenty of lockpicks.");
+    case 2 :
+        ~chatplayer("<p,neutral>No.");
+}
+
+[label,dt_rasolo_cross]
+~chatplayer("<p,happy>I've got your gilded cross.");
+inv_del(inv, fd_sword_cross, 1);
+inv_add(inv, fd_ring_visibility, 1);
+%fd_shadowwarrior_quest = ^dt_shadow_ring;
+~objbox(fd_ring_visibility, "You give Rasolo the cross, and he gives you a ring of visibility.", 250, 0, 0);
+~chatnpc("<p,happy>Wonderful! Wear the ring and look to the east. You'll see the way down.");
+
+[opnpcu,shadow_warrior_rasool]
+if (last_useitem = fd_sword_cross & %fd_shadowwarrior_quest = ^dt_shadow_rasolo) {
+    @dt_rasolo_cross;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- the Bandit Camp's secure chest
+
+[oploc1,fd_bandit_shutchest]
+if (%fd_banditchest_disarmed = 1) {
+    @dt_bandit_chest_search;
+}
+if (%fd_shadowwarrior_quest < ^dt_shadow_rasolo) {
+    mes("This chest is securely locked.");
+    return;
+}
+if (stat(thieving) < 53) {
+    mes("You need a Thieving level of 53 to pick these locks.");
+    return;
+}
+if (inv_total(inv, lockpick) = 0) {
+    mes("The chest has three locks. You'll need a lockpick.");
+    return;
+}
+mes("You start picking the locks...");
+def_int $lock = 1;
+while ($lock <= 3) {
+    anim(human_pickupfloor, 0);
+    p_delay(1);
+    if (stat_random(thieving, 40, 140) = false) {
+        inv_del(inv, lockpick, 1);
+        mes("You slip and set off a trap! Your lockpick breaks.");
+        ~damage_self(calc(randominc(1) + 2));
+        if (random(2) = 0) {
+            queue(poison_player, 0, 20);
+        }
+        return;
+    }
+    mes("You pick lock <tostring($lock)>.");
+    $lock = add($lock, 1);
+}
+%fd_banditchest_disarmed = 1;
+mes("The chest springs open.");
+@dt_bandit_chest_search;
+
+[label,dt_bandit_chest_search]
+anim(human_openchest, 0);
+p_delay(0);
+loc_change(fd_bandit_openchest, 10);
+if (~obj_gettotal(fd_sword_cross) > 0 | %fd_shadowwarrior_quest >= ^dt_shadow_ring) {
+    mes("The chest is empty.");
+    return;
+}
+inv_add(inv, fd_sword_cross, 1);
+stat_advance(thieving, 1500);
+~objbox(fd_sword_cross, "You find a gilded cross inside the chest.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the ring and the ladder
+
+[proc,dt_ring_check]
+if (inv_total(worn, fd_ring_visibility) > 0) {
+    if (%fd_ladder_present = 0) %fd_ladder_present = 1;
+} else if (%fd_ladder_present = 1) {
+    %fd_ladder_present = 0;
+}
+
+[oploc1,fd_shadowladder1]
+p_arrivedelay;
+anim(human_reachforladder, 0);
+p_delay(0);
+p_teleport(map_findsquare(0_41_79_6_16, 0, 2, ^map_findsquare_lineofwalk));
+mes("You climb down into the darkness.");
+settimer(dt_shadow, 4);
+
+[oploc1,fd_shadowladder]
+p_arrivedelay;
+anim(human_reachforladder, 0);
+p_delay(0);
+p_teleport(map_findsquare(0_39_53_52_29, 0, 2, ^map_findsquare_lineofwalk));
+cleartimer(dt_shadow);
+
+[proc,dt_in_shadow_dungeon]()(boolean)
+return(inzone(0_41_78_0_51, 0_43_80_5_5, coord));
+
+// in the Shadow Dungeon: Damis appears in the far east room when you're there wearing the ring
+[timer,dt_shadow]
+if (~dt_in_shadow_dungeon = false) {
+    cleartimer(dt_shadow);
+    %fd_shadowwar_intro = 0;
+    return;
+}
+if (inzone(0_42_79_47_44, 0_42_79_63_63, coord) = false) {
+    return;
+}
+if (%fd_shadowwarrior_quest >= ^dt_shadow_done) {
+    // a lost diamond turns up again
+    if (%fd_shadowwar_intro = 0 & ~dt_have_diamond(fd_dark_diamond) = false & %fd_column_shadow = 0) {
+        %fd_shadowwar_intro = 1;
+        obj_add(0_42_79_57_59, fd_dark_diamond, 1, 200);
+        mes("You see something glinting in the shadows.");
+    }
+    return;
+}
+if (%fd_shadowwarrior_quest < ^dt_shadow_ring | inv_total(worn, fd_ring_visibility) = 0) {
+    return;
+}
+if (npc_find(coord, fd_damis_normal, 14, 0) = true | npc_find(coord, fd_damis_tougher, 14, 0) = true) {
+    return;
+}
+if (%fd_shadowwarrior_quest = ^dt_shadow_ring) {
+    npc_add(0_42_79_57_59, fd_damis_normal, 500);
+} else {
+    npc_add(0_42_79_57_59, fd_damis_tougher, 500);
+}
+npc_say("You have come for the Diamond of Shadow? Then you will die in the dark!");
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+[ai_queue3,fd_damis_normal]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_damis1_killed, 0, 0);
+}
+
+[queue,dt_damis1_killed]
+if (%fd_shadowwarrior_quest = ^dt_shadow_ring) {
+    %fd_shadowwarrior_quest = ^dt_shadow_damis1;
+}
+mes("Damis falls... and rises again, stronger!");
+npc_add(0_42_79_57_59, fd_damis_tougher, 500);
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+[ai_queue3,fd_damis_tougher]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_damis2_killed, 0, 0);
+}
+
+[queue,dt_damis2_killed]
+if (%fd_shadowwarrior_quest >= ^dt_shadow_done) {
+    return;
+}
+%fd_shadowwarrior_quest = ^dt_shadow_done;
+%fd_shadowwar_intro = 1;
+if (~dt_have_diamond(fd_dark_diamond) = false) {
+    obj_add(coord, fd_dark_diamond, 1, 200);
+}
+mes("Damis is defeated. The Diamond of Shadow lies where he fell.");

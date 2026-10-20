@@ -1,0 +1,245 @@
+// Desert Treasure: the Diamond of Ice. The crying troll child north of Trollheim (a sweet cheers
+// him up), the ice gate, five ice trolls to thaw the cave (fd_icewarrior_trollskilled; the cave
+// entrance melts a little with each, a multiloc in the 377 cache), Kamil on the path beyond, the
+// ice ledge (spiked boots), the gate at the top of the ice path and the two ice blocks holding the
+// child's parents. Past the ice gate the cold drains your stats and run energy (OSRS wiki: "Your
+// stats drain every few seconds, your run energy drops to 0, and cold hits deal 1 damage"); how
+// much each time is our choice. Places from Quest Helper and the map.
+
+[proc,dt_in_ice_lands]()(boolean)
+if (inzone(0_44_58_23_4, 0_44_58_52_29, coord) = true) return(true); // the trolls by the cave
+if (inzone(0_44_58_56_2, 0_45_58_23_59, coord) = true) return(true); // the path to Kamil
+if (inzone(0_44_58_1_36, 0_45_60_12_29, coord) = true) return(true); // the path to the ledge
+if (inzone(1_44_59_14_9, 1_44_59_54_49, coord) = true) return(true); // the ice path
+if (inzone(2_44_59_7_31, 2_44_59_39_36, coord) = true) return(true); // the top
+return(false);
+
+// ---------------------------------------------------------------- the troll child
+
+[opnpc1,fourdiamonds_troll_child]
+if (%fd_icewarrior_subquest = 0) {
+    mes("The troll child is crying too much to talk. Perhaps something sweet would cheer him up.");
+    return;
+}
+if (%fd_icewarrior_subquest = ^dt_ice_cake) {
+    ~chatnpc("<p,sad>Thank you for the cake, nice human. Mummy and Daddy went up the path to fight the scary ice man, and they never came back.");
+    ~chatnpc("<p,quiz>Will you find them?");
+    switch_int (~p_choice2("Yes", 1, "No", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>I'll find your parents.");
+            %fd_icewarrior_subquest = ^dt_ice_talked;
+            ~chatnpc("<p,happy>Go through the ice gate. Be careful, it's really cold in there!");
+        case 2 :
+            ~chatplayer("<p,neutral>No.");
+    }
+    return;
+}
+if (%fd_icewarrior_subquest = ^dt_ice_freed | (%fd_icewarrior_subquest = ^dt_ice_done & ~dt_have_diamond(fd_icediamond) = false & %fd_column_ice = 0)) {
+    ~chatnpc("<p,happy>You saved Mummy and Daddy! They found this shiny thing on the ice man. You can have it.");
+    inv_add(inv, fd_icediamond, 1);
+    %fd_icewarrior_subquest = ^dt_ice_done;
+    ~objbox(fd_icediamond, "The troll child gives you the Diamond of Ice.", 250, 0, 0);
+    ~dt_stranger_watch;
+    return;
+}
+if (%fd_icewarrior_subquest = ^dt_ice_done) {
+    ~chatnpc("<p,happy>Thank you, nice human!");
+    return;
+}
+~chatnpc("<p,sad>Please find Mummy and Daddy!");
+
+[opnpcu,fourdiamonds_troll_child]
+if (%fd_icewarrior_subquest ! 0 | %deserttreasure < ^dt_diamonds) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_obj $sweet = last_useitem;
+switch_obj ($sweet) {
+    case cake, partial_cake, cake_slice, chocolate_cake, partial_chocolate_cake, chocolate_slice, chocolate_bar, apple_pie, half_an_apple_pie, banana, cooking_apple, orange, redberries, redberry_pie, half_a_redberry_pie, pineapple_pizza, half_pineapple_pizza :
+        inv_del(inv, $sweet, 1);
+        %fd_icewarrior_subquest = ^dt_ice_cake;
+        mes("You give the troll child the <oc_name($sweet)>. He stops crying.");
+    case default :
+        ~chatnpc("<p,sad>I don't want that!");
+}
+
+// ---------------------------------------------------------------- the ice gate and the cold
+
+[oploc1,icegate_left] ~dt_ice_gate;
+[oploc1,icegate_right] ~dt_ice_gate;
+
+[proc,dt_ice_gate]
+p_arrivedelay;
+if (coordx(coord) < coordx(loc_coord)) {
+    if (%fd_icewarrior_subquest < ^dt_ice_talked) {
+        mes("The gate is frozen shut.");
+        return;
+    }
+    mes("You squeeze through the ice gate.");
+    p_teleport(map_findsquare(movecoord(coord, 3, 0, 0), 0, 2, ^map_findsquare_lineofwalk));
+    settimer(dt_cold, 15);
+    return;
+}
+mes("You squeeze back through the ice gate.");
+p_teleport(map_findsquare(movecoord(coord, -3, 0, 0), 0, 2, ^map_findsquare_lineofwalk));
+cleartimer(dt_cold);
+
+[timer,dt_cold]
+if (~dt_in_ice_lands = false) {
+    cleartimer(dt_cold);
+    return;
+}
+mes("The cold saps your strength.");
+stat_sub(attack, 1, 0);
+stat_sub(strength, 1, 0);
+stat_sub(defence, 1, 0);
+stat_sub(ranged, 1, 0);
+stat_sub(magic, 1, 0);
+stat_sub(agility, 1, 0);
+p_run(0);
+~damage_self(1);
+~dt_kamil_check;
+~dt_ice_blocks_check;
+
+// ---------------------------------------------------------------- the ice trolls and the cave
+
+[ai_queue3,trollrescue_icetroll_melee1] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee2] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee3] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee4] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee5] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee6] @dt_icetroll_death;
+[ai_queue3,trollrescue_icetroll_melee7] @dt_icetroll_death;
+
+[label,dt_icetroll_death]
+gosub(npc_default_death);
+if (npc_findhero = ^true) {
+    queue(dt_icetroll_killed, 0, 0);
+}
+
+[queue,dt_icetroll_killed]
+if (%fd_icewarrior_subquest < ^dt_ice_talked | %fd_icewarrior_trollskilled >= 5) {
+    return;
+}
+%fd_icewarrior_trollskilled = add(%fd_icewarrior_trollskilled, 1);
+mes("A chunk of ice falls away from the cave entrance...");
+
+[oploc1,trollrescue_troll_cave_entrance]
+if (%fd_icewarrior_trollskilled < 5) {
+    mes("The cave entrance is blocked with ice. The ice trolls must be keeping it frozen.");
+    return;
+}
+~eascape_link(1);
+
+[oploc1,trollrescue_troll_cave_exit] ~eascape_link(1);
+
+// ---------------------------------------------------------------- Kamil
+
+[proc,dt_kamil_check]
+if (%fd_icewarrior_subquest ! ^dt_ice_talked | %fd_icewarrior_dead = 1) {
+    return;
+}
+if (inzone(0_44_58_39_38, 0_44_58_54_53, coord) = false) {
+    return;
+}
+if (npc_find(coord, icediamond_icewarrior, 12, 0) = true) {
+    return;
+}
+mes("You can feel an evil presence nearby...");
+npc_add(0_44_58_47_45, icediamond_icewarrior, 500);
+npc_say("You will not take the Diamond of Ice from me!");
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+[ai_queue3,icediamond_icewarrior]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_kamil_killed, 0, 0);
+}
+
+[queue,dt_kamil_killed]
+%fd_icewarrior_dead = 1;
+if (%fd_icewarrior_subquest = ^dt_ice_talked) {
+    %fd_icewarrior_subquest = ^dt_ice_kamil;
+}
+mes("Kamil shatters into pieces of ice. The child's parents must be further up the path.");
+
+// ---------------------------------------------------------------- the ice ledge, the gate, the parents
+
+[oploc1,trollrescue_blankmodel]
+p_arrivedelay;
+if (coordy(loc_coord) = 0) {
+    if (inv_total(worn, death_spikedboots) = 0) {
+        mes("The ice is too slippery to climb without spiked boots.");
+        return;
+    }
+    mes("You climb up onto the ice ledge.");
+    p_teleport(map_findsquare(1_44_59_21_29, 0, 2, ^map_findsquare_lineofwalk));
+    return;
+}
+mes("You climb down from the ice ledge.");
+p_teleport(map_findsquare(0_44_59_21_27, 0, 2, ^map_findsquare_lineofwalk));
+
+[oploc1,icegate_left_small] ~dt_ice_top_gate;
+[oploc1,icegate_right_small] ~dt_ice_top_gate;
+
+[proc,dt_ice_top_gate]
+p_arrivedelay;
+mes("You squeeze through the ice gate.");
+p_teleport(map_findsquare(2_44_59_35_34, 0, 2, ^map_findsquare_lineofwalk));
+~dt_ice_blocks_check;
+
+[oploc1,trollrescue_blankmodel2]
+p_arrivedelay;
+mes("You step down from the ledge.");
+p_teleport(map_findsquare(1_44_59_35_33, 0, 2, ^map_findsquare_lineofwalk));
+
+// the two blocks (or, once they're free, the parents) at the end of the path
+[proc,dt_ice_blocks_check]
+if (inzone(2_44_59_7_31, 2_44_59_39_36, coord) = false | %fd_icewarrior_subquest < ^dt_ice_kamil) {
+    return;
+}
+if (%fd_icewarrior_dadfree = 0 & npc_find(coord, fd_trollblock1, 20, 0) = false) {
+    npc_add(2_44_59_10_32, fd_trollblock1, 500);
+}
+if (%fd_icewarrior_mumfree = 0 & npc_find(coord, fd_trollblock2, 20, 0) = false) {
+    npc_add(2_44_59_10_36, fd_trollblock2, 500);
+}
+if (%fd_icewarrior_subquest >= ^dt_ice_freed) {
+    if (npc_find(coord, fd_troll_dad, 20, 0) = false) npc_add(2_44_59_12_32, fd_troll_dad, 300);
+    if (npc_find(coord, fd_troll_mum, 20, 0) = false) npc_add(2_44_59_12_36, fd_troll_mum, 300);
+}
+
+[opnpc2,fd_trollblock1] ~dt_smash_ice(1);
+[opnpc2,fd_trollblock2] ~dt_smash_ice(2);
+
+[proc,dt_smash_ice](int $block)
+if (%fd_icewarrior_subquest < ^dt_ice_kamil) {
+    mes("The ice is too thick to break while Kamil's magic still holds it.");
+    return;
+}
+mes("You smash at the ice...");
+def_int $hits = 0;
+while ($hits < 3) {
+    anim(%com_attackanim, 0);
+    p_delay(1);
+    $hits = add($hits, 1);
+}
+npc_del;
+if ($block = 1) {
+    %fd_icewarrior_dadfree = 1;
+    mes("The ice shatters and the troll father is free!");
+} else {
+    %fd_icewarrior_mumfree = 1;
+    mes("The ice shatters and the troll mother is free!");
+}
+if (%fd_icewarrior_dadfree = 1 & %fd_icewarrior_mumfree = 1) {
+    %fd_icewarrior_subquest = ^dt_ice_freed;
+    ~dt_ice_blocks_check;
+}
+
+[opnpc1,fd_troll_dad] ~dt_troll_parents;
+[opnpc1,fd_troll_mum] ~dt_troll_parents;
+
+[proc,dt_troll_parents]
+~chatnpc("<p,happy>Thank you, human! That ice warrior froze us solid. Our child is waiting by the gate; go and see him, he has something for you.");

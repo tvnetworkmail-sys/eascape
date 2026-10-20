@@ -1,0 +1,250 @@
+// Desert Treasure: the Diamond of Blood. Malak in the Canifis pub, who must be asked how to kill
+// Dessous before Ruantun will make the silver pot; Ruantun in the Draynor sewers (a silver bar);
+// the High Priest of Entrana's blessing; Malak's bite for the blood; garlic powder and spice in
+// either order; the vampyre tomb south-east of Canifis; Dessous. Only a blessed pot of blood,
+// garlic and spices draws out a Dessous who can die (the wiki: "If it doesn't, Dessous
+// regenerates to full HP"); the 377 cache has an unkillable Dessous for the other case.
+
+[proc,dt_pot_blessed](obj $pot)(namedobj)
+switch_obj ($pot) {
+    case fd_silver_pot : return(fd_silver_pot_blessed);
+    case fd_silver_pot_blood : return(fd_silver_pot_blood_blessed);
+    case fd_silver_pot_blood_garlic : return(fd_silver_pot_blood_garlic_blessed);
+    case fd_silver_pot_blood_spiced : return(fd_silver_pot_blood_spiced_blessed);
+    case fd_silver_pot_blood_garlic_spiced : return(fd_silver_pot_blood_garlic_spiced_blessed);
+}
+return(null);
+
+// all eight of Ruantun's pots that you could be carrying
+[proc,dt_pot_total]()(int)
+return(calc(inv_total(inv, fd_silver_pot) + inv_total(inv, fd_silver_pot_blessed) + inv_total(inv, fd_silver_pot_blood) + inv_total(inv, fd_silver_pot_blood_blessed)
+    + inv_total(inv, fd_silver_pot_blood_garlic) + inv_total(inv, fd_silver_pot_blood_garlic_blessed) + inv_total(inv, fd_silver_pot_blood_spiced) + inv_total(inv, fd_silver_pot_blood_spiced_blessed)
+    + inv_total(inv, fd_silver_pot_blood_garlic_spiced) + inv_total(inv, fd_silver_pot_blood_garlic_spiced_blessed)));
+
+// ---------------------------------------------------------------- Malak
+
+[opnpc1,fourdiamonds_vampire_lord]
+if (%deserttreasure < ^dt_diamonds) {
+    ~chatnpc("<p,neutral>What do you want, human? Leave me to my drink.");
+    return;
+}
+if (%fdvw_subquest = 0) {
+    ~chatnpc("<p,quiz>A human, in my village? What brings you here?");
+    @multi2("I am looking for a special Diamond...", dt_malak_diamond, "Nothing.", dt_malak_nothing);
+}
+if (%fdvw_subquest = ^dt_blood_malak) {
+    @multi2("How can I kill Dessous?", dt_malak_how, "Nothing.", dt_malak_nothing);
+}
+if (%fdvw_subquest >= ^dt_blood_killed) {
+    if (%fdvw_subquest = ^dt_blood_killed | (~dt_have_diamond(fd_blood_diamond) = false & %fd_column_blood = 0)) {
+        ~chatnpc("<p,happy>You have rid me of Dessous! As promised, here is the Diamond of Blood.");
+        inv_add(inv, fd_blood_diamond, 1);
+        %fdvw_subquest = ^dt_blood_done;
+        ~objbox(fd_blood_diamond, "Malak gives you the Diamond of Blood.", 250, 0, 0);
+        ~dt_stranger_watch;
+        return;
+    }
+    ~chatnpc("<p,neutral>Our business is done, human.");
+    return;
+}
+// asked how: fill a blessed pot with blood
+def_obj $pot = null;
+if (inv_total(inv, fd_silver_pot_blessed) > 0) {
+    $pot = fd_silver_pot_blessed;
+} else if (inv_total(inv, fd_silver_pot) > 0) {
+    $pot = fd_silver_pot;
+}
+if ($pot ! null) {
+    ~chatplayer("<p,neutral>I have the silver pot.");
+    ~chatnpc("<p,neutral>Good. Hold still. This will only sting a little...");
+    mes("Malak bites you and fills the pot with your blood.");
+    ~damage_self(5);
+    inv_del(inv, $pot, 1);
+    if ($pot = fd_silver_pot_blessed) {
+        inv_add(inv, fd_silver_pot_blood_blessed, 1);
+    } else {
+        inv_add(inv, fd_silver_pot_blood, 1);
+    }
+    ~chatnpc("<p,neutral>Now add the garlic powder and the spices, then pour it on Dessous' tomb in the graveyard to the south-east.");
+    return;
+}
+@dt_malak_instructions;
+
+[label,dt_malak_nothing]
+~chatplayer("<p,neutral>Nothing.");
+
+[label,dt_malak_diamond]
+~chatplayer("<p,neutral>I am looking for a special Diamond... the Diamond of Blood.");
+~chatnpc("<p,shifty>The Diamond of Blood. Yes, I know where it is. A vampyre warrior named Dessous took it, and he is no friend of mine.");
+~chatnpc("<p,quiz>Kill Dessous for me and the diamond is yours. Do we have a bargain?");
+switch_int (~p_choice2("Yes", 1, "No", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes.");
+        %fdvw_subquest = ^dt_blood_malak;
+        ~chatnpc("<p,neutral>Good. Talk to me again when you want to know how.");
+    case 2 :
+        ~chatplayer("<p,neutral>No.");
+}
+
+[label,dt_malak_how]
+~chatplayer("<p,quiz>How can I kill Dessous?");
+%fdvw_subquest = ^dt_blood_asked;
+@dt_malak_instructions;
+
+[label,dt_malak_instructions]
+~chatnpc("<p,neutral>Dessous sleeps in his tomb in the graveyard south-east of here. To wake him you'll need a pot of silver, blessed, and filled with blood, garlic and spices.");
+~chatnpc("<p,neutral>Ruantun in the sewers under Draynor Village can make the pot from a silver bar. The High Priest on Entrana will bless it. Bring it to me for the blood.");
+
+// ---------------------------------------------------------------- Ruantun
+
+[opnpc1,malak]
+if (%fdvw_subquest < ^dt_blood_asked) {
+    ~chatnpc("<p,angry>Who are you? Go away, I'm busy.");
+    return;
+}
+if (%fdvw_subquest >= ^dt_blood_killed) {
+    ~chatnpc("<p,neutral>I've no more work for you.");
+    return;
+}
+if (~dt_pot_total > 0) {
+    ~chatnpc("<p,neutral>You already have one of my pots.");
+    return;
+}
+if (inv_total(inv, silver_bar) = 0) {
+    ~chatnpc("<p,neutral>Malak sent you? Then you want a silver pot. Bring me a silver bar and I'll make one.");
+    return;
+}
+~chatplayer("<p,neutral>Malak sent me. Could you make me a silver pot?");
+~chatnpc("<p,neutral>Give me the bar.");
+inv_del(inv, silver_bar, 1);
+inv_add(inv, fd_silver_pot, 1);
+~objbox(fd_silver_pot, "Ruantun makes you a silver pot from the bar.", 250, 0, 0);
+
+[opnpcu,malak]
+if (last_useitem = silver_bar) {
+    @dt_ruantun_bar;
+}
+~displaymessage(^dm_default);
+
+[label,dt_ruantun_bar]
+if (%fdvw_subquest < ^dt_blood_asked | ~dt_pot_total > 0 | %fdvw_subquest >= ^dt_blood_killed) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, silver_bar, 1);
+inv_add(inv, fd_silver_pot, 1);
+~objbox(fd_silver_pot, "Ruantun makes you a silver pot from the bar.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the High Priest's blessing
+
+// called by [opnpcu,high_priest_of_entrana]
+[proc,dt_priest_bless]()(boolean)
+def_obj $pot = last_useitem;
+def_namedobj $blessed = ~dt_pot_blessed($pot);
+if ($blessed = null) {
+    return(false);
+}
+~chatplayer("<p,neutral>Would you bless this pot for me?");
+~chatnpc("<p,neutral>A silver pot? Very well, I shall bless it in Saradomin's name.");
+inv_del(inv, $pot, 1);
+inv_add(inv, $blessed, 1);
+~objbox($blessed, "The High Priest blesses the pot.", 250, 0, 0);
+return(true);
+
+// ---------------------------------------------------------------- garlic and spice
+
+[opheldu,garlic]
+~attempt_grind_ingredient(last_useslot, last_slot);
+
+[opheldu,fd_crushed_garlic]
+switch_obj (last_useitem) {
+    case fd_silver_pot_blood, fd_silver_pot_blood_blessed, fd_silver_pot_blood_spiced, fd_silver_pot_blood_spiced_blessed : ~dt_pot_add(last_useitem, fd_crushed_garlic);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,fd_silver_pot_blood] ~dt_pot_add(fd_silver_pot_blood, last_useitem);
+[opheldu,fd_silver_pot_blood_blessed] ~dt_pot_add(fd_silver_pot_blood_blessed, last_useitem);
+[opheldu,fd_silver_pot_blood_garlic] ~dt_pot_add(fd_silver_pot_blood_garlic, last_useitem);
+[opheldu,fd_silver_pot_blood_garlic_blessed] ~dt_pot_add(fd_silver_pot_blood_garlic_blessed, last_useitem);
+[opheldu,fd_silver_pot_blood_spiced] ~dt_pot_add(fd_silver_pot_blood_spiced, last_useitem);
+[opheldu,fd_silver_pot_blood_spiced_blessed] ~dt_pot_add(fd_silver_pot_blood_spiced_blessed, last_useitem);
+
+[proc,dt_pot_add](obj $pot, obj $add)
+def_namedobj $next = null;
+if ($add = fd_crushed_garlic) {
+    switch_obj ($pot) {
+        case fd_silver_pot_blood : $next = fd_silver_pot_blood_garlic;
+        case fd_silver_pot_blood_blessed : $next = fd_silver_pot_blood_garlic_blessed;
+        case fd_silver_pot_blood_spiced : $next = fd_silver_pot_blood_garlic_spiced;
+        case fd_silver_pot_blood_spiced_blessed : $next = fd_silver_pot_blood_garlic_spiced_blessed;
+    }
+} else if ($add = spicespot) {
+    switch_obj ($pot) {
+        case fd_silver_pot_blood : $next = fd_silver_pot_blood_spiced;
+        case fd_silver_pot_blood_blessed : $next = fd_silver_pot_blood_spiced_blessed;
+        case fd_silver_pot_blood_garlic : $next = fd_silver_pot_blood_garlic_spiced;
+        case fd_silver_pot_blood_garlic_blessed : $next = fd_silver_pot_blood_garlic_spiced_blessed;
+    }
+}
+if ($next = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, $add, 1);
+inv_del(inv, $pot, 1);
+inv_add(inv, $next, 1);
+if ($add = spicespot) {
+    mes("You add the spices to the pot.");
+} else {
+    mes("You add the garlic powder to the pot.");
+}
+
+// ---------------------------------------------------------------- the tomb and Dessous
+
+[oplocu,vampire_big_grave_noblood]
+if (last_useitem ! fd_silver_pot_blood_garlic_spiced_blessed & last_useitem ! fd_silver_pot_blood_garlic_spiced) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%fdvw_subquest < ^dt_blood_asked | %fdvw_subquest >= ^dt_blood_killed) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (npc_find(coord, blooddiamond_vampirewarrior, 10, 0) = true | npc_find(coord, blooddiamond_vampirewarrior_unkillable, 10, 0) = true) {
+    mes("Dessous is already awake!");
+    return;
+}
+def_obj $pot = last_useitem;
+anim(human_pickuptable, 0);
+inv_del(inv, $pot, 1);
+mes("You pour the blood over the tomb...");
+loc_change(vampire_big_grave_withblood, 100);
+p_delay(1);
+if ($pot = fd_silver_pot_blood_garlic_spiced_blessed) {
+    npc_add(movecoord(loc_coord, 2, 0, 1), blooddiamond_vampirewarrior, 500);
+} else {
+    npc_add(movecoord(loc_coord, 2, 0, 1), blooddiamond_vampirewarrior_unkillable, 500);
+}
+npc_say("Who dares disturb my rest?");
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+[ai_queue3,blooddiamond_vampirewarrior]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_dessous_killed, 0, 0);
+}
+
+[queue,dt_dessous_killed]
+if (%fdvw_subquest < ^dt_blood_killed) {
+    %fdvw_subquest = ^dt_blood_killed;
+}
+mes("Dessous crumbles to dust. You should tell Malak.");
+
+// the wrong pot: Dessous heals himself whenever he's hurt badly
+[ai_queue2,blooddiamond_vampirewarrior_unkillable]
+~npc_default_damage(last_int);
+if (npc_stat(hitpoints) < 30) {
+    npc_statheal(hitpoints, 0, 100);
+    npc_say("Your pitiful pot cannot hold me!");
+}

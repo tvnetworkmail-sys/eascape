@@ -71,6 +71,7 @@ if (p_finduid(uid) = true) {
     }
 
     ~update_all($previous_weapon);
+    ~dt_ring_check; // EASCape: Desert Treasure's ring of visibility shows the shadow ladder
 }
 
 [proc,unequip](int $slot)
@@ -107,6 +108,7 @@ if (p_finduid(uid) = true) {
 // Called whenever an obj is removed from the 'worn' inv, intented to be used as a central hook point for
 // handling unequipping effects
 [proc,on_unequip](obj $obj)
+~dt_ring_check; // EASCape: Desert Treasure's ring of visibility
 if ($obj = castlewars_saradomin_banner | $obj = castlewars_zamorak_banner) {
     ~castlewars_flag_drop(inv, $obj);
 }

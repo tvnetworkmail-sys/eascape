@@ -1,0 +1,190 @@
+// Desert Treasure: the four obelisks around the Jaldraocht Pyramid (Magic 50; each diamond fits only
+// its own obelisk and can't be taken back, OSRS wiki), the way down the pyramid with its traps
+// ("Randomly activated traps send you back to the pyramid entrance with no damage"; how often is
+// our choice), the temple at the bottom, Azzanadra, and the end of the quest. Also the Stranger
+// who comes for the diamonds while you carry them, and the altar that swaps your spellbook.
+
+// ---------------------------------------------------------------- the obelisks
+
+[oplocu,desert_treasure_oblix1] ~dt_obelisk(fd_blood_diamond, 1);
+[oplocu,desert_treasure_oblix2] ~dt_obelisk(fd_diamond_fire, 2);
+[oplocu,desert_treasure_oblix3] ~dt_obelisk(fd_icediamond, 3);
+[oplocu,desert_treasure_oblix4] ~dt_obelisk(fd_dark_diamond, 4);
+
+[proc,dt_obelisk](namedobj $diamond, int $column)
+def_obj $item = last_useitem;
+if ($item ! fd_blood_diamond & $item ! fd_diamond_fire & $item ! fd_icediamond & $item ! fd_dark_diamond) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%deserttreasure < ^dt_diamonds) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if ($item ! $diamond) {
+    mes("The diamond doesn't fit this obelisk.");
+    return;
+}
+if (stat(magic) < 50) {
+    mes("You need a Magic level of 50 to use the power of the obelisk.");
+    return;
+}
+inv_del(inv, $item, 1);
+anim(human_pickuptable, 0);
+switch_int ($column) {
+    case 1 : %fd_column_blood = 1;
+    case 2 : %fd_column_fire = 1;
+    case 3 : %fd_column_ice = 1;
+    case 4 : %fd_column_shadow = 1;
+}
+mes("You place the <oc_name($item)> in the obelisk. It glows with a strange power.");
+if (%deserttreasure = ^dt_diamonds) {
+    %deserttreasure = ^dt_placing;
+}
+if (calc(%fd_column_blood + %fd_column_fire + %fd_column_ice + %fd_column_shadow) = 4) {
+    %deserttreasure = ^dt_pyramid;
+    mes("@dbl@With all four diamonds in place, you hear stone grinding against stone at the top of the pyramid.");
+}
+
+// ---------------------------------------------------------------- the pyramid
+
+[oploc1,desert_laddertop]
+if (%deserttreasure < ^dt_pyramid) {
+    mes("The way into the pyramid is sealed by some ancient power.");
+    return;
+}
+settimer(dt_pyramid_traps, 5);
+~eascape_link(1);
+
+// the floors above the temple (levels 1-3 of the pyramid's own space)
+[proc,dt_in_pyramid_floors]()(boolean)
+if (inzone(3_45_77_13_16, 3_45_77_51_45, coord) = true) return(true);
+if (inzone(2_44_77_7_8, 2_44_77_58_49, coord) = true) return(true);
+if (inzone(1_43_77_6_7, 1_43_77_59_52, coord) = true) return(true);
+return(false);
+
+[timer,dt_pyramid_traps]
+if (~dt_in_pyramid_floors = false) {
+    // down at the temple, or out
+    if (inzone(0_49_144_50_53, 0_51_145_2_59, coord) = false) {
+        cleartimer(dt_pyramid_traps);
+    }
+    return;
+}
+if (random(25) = 0) {
+    mes("@red@You step on a pressure plate and the floor gives way beneath you!");
+    p_delay(1);
+    p_teleport(map_findsquare(0_50_45_33_0, 0, 3, ^map_findsquare_lineofwalk));
+    mes("You find yourself outside the pyramid again.");
+}
+
+// the doorway into Azzanadra's temple at the bottom
+[oploc1,dt_ancient_temple_door_open] ~dt_temple_door;
+[oploc1,dt_ancient_temple_door_open_mirror] ~dt_temple_door;
+
+[proc,dt_temple_door]
+if (%deserttreasure < ^dt_pyramid) {
+    mes("The door won't open.");
+    return;
+}
+if (%deserttreasure = ^dt_pyramid) {
+    %deserttreasure = ^dt_azzanadra;
+}
+p_arrivedelay;
+if (coordz(coord) >= coordz(loc_coord)) {
+    p_teleport(map_findsquare(0_50_145_33_41, 0, 2, ^map_findsquare_lineofwalk));
+} else {
+    p_teleport(map_findsquare(0_50_145_33_46, 0, 2, ^map_findsquare_lineofwalk));
+}
+
+// after the quest the pyramid's own door leads straight to the altar (OSRS wiki: "After first
+// traversing the pyramid, you can enter through its back door for a shortcut to the altar")
+[oploc1,four_diamonds_door_mirror]
+if (%deserttreasure < ^deserttreasure_complete) {
+    mes("The door is sealed shut.");
+    return;
+}
+p_arrivedelay;
+p_teleport(map_findsquare(0_50_145_33_33, 0, 2, ^map_findsquare_lineofwalk));
+
+// ---------------------------------------------------------------- Azzanadra
+
+[opnpc1,azzanadra]
+if (%deserttreasure < ^dt_pyramid | %deserttreasure >= ^deserttreasure_complete) {
+    return;
+}
+~chatnpc("<p,neutral>Free... after so many centuries, I am free! Mortal, it was you who returned the diamonds to the obelisks?");
+~chatplayer("<p,neutral>It was. Who are you?");
+~chatnpc("<p,neutral>I am Azzanadra, servant of Zaros, imprisoned here by the gods who betrayed him. You have done me a great service, and I shall repay it.");
+~chatnpc("<p,neutral>I will teach you the magic of the old empire. Pray at the altar here whenever you wish to change between it and your own spells.");
+queue(dt_complete, 0, 0);
+
+[queue,dt_complete]
+if (%deserttreasure >= ^deserttreasure_complete) {
+    return;
+}
+%deserttreasure = ^deserttreasure_complete;
+stat_advance(magic, 200000);
+session_log(^log_adventure, "Quest complete: Desert Treasure");
+~send_quest_complete(questlist:deserttreasure, staff_of_zaros, 250, ^deserttreasure_questpoints, "You have completed Desert Treasure!", "3 Quest Points|20,000 Magic XP|Ancient Magicks|An ancient staff from Eblis");
+
+// ---------------------------------------------------------------- the altar
+
+[oploc1,dt_zaros_altar]
+if (%deserttreasure < ^deserttreasure_complete) {
+    mes("You feel an ancient power, but it does not answer you.");
+    return;
+}
+anim(human_pray, 0);
+p_delay(1);
+stat_sub(prayer, stat(prayer), 0);
+if (%alternate_spells = 1) {
+    %alternate_spells = 0;
+    mes("You feel a strange drain upon your memory... You return to your normal magic.");
+} else {
+    %alternate_spells = 1;
+    mes("You feel a strange wisdom fill your mind... You learn the Ancient Magicks.");
+}
+~dt_set_spellbook;
+
+[proc,dt_set_spellbook]
+if (%alternate_spells = 1 & %deserttreasure >= ^deserttreasure_complete) {
+    if_settab(inter_267, ^tab_magic);
+} else {
+    if_settab(magic, ^tab_magic);
+}
+
+// ---------------------------------------------------------------- the Stranger
+
+// while you carry a diamond of Azzanadra a Stranger may come for it (OSRS wiki); started whenever
+// you're given a diamond and at login
+[proc,dt_diamonds_carried]()(int)
+return(calc(inv_total(inv, fd_blood_diamond) + inv_total(inv, fd_diamond_fire) + inv_total(inv, fd_icediamond) + inv_total(inv, fd_dark_diamond)));
+
+[proc,dt_stranger_watch]
+if (~dt_diamonds_carried > 0 & %deserttreasure < ^deserttreasure_complete) {
+    settimer(dt_stranger, 100);
+}
+
+[timer,dt_stranger]
+if (~dt_diamonds_carried = 0 | %deserttreasure >= ^deserttreasure_complete) {
+    cleartimer(dt_stranger);
+    return;
+}
+if (random(6) ! 0 | npc_find(coord, fourdiamonds_assasin, 10, 0) = true) {
+    return;
+}
+def_coord $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+npc_add($at, fourdiamonds_assasin, 200);
+npc_say("Give me the diamond!");
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+// picking up a dropped diamond also starts the Stranger's watch
+[opobj3,fd_diamond_fire]
+settimer(dt_stranger, 100);
+@pickup_obj;
+
+[opobj3,fd_dark_diamond]
+settimer(dt_stranger, 100);
+@pickup_obj;
