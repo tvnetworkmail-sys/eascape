@@ -1,0 +1,116 @@
+// Quest Helper: which step of Desert Treasure you're on (the steps are deserttreasure_helper.dbrow),
+// from %deserttreasure and the quest's own varbits for each diamond. The diamonds go in Quest
+// Helper's order (Smoke, Shadow, Blood, Ice), except that the one whose place you're in comes first.
+[proc,questhelper_deserttreasure]()(int)
+def_int $s = %deserttreasure;
+if ($s >= ^deserttreasure_complete) {
+    return(0);
+}
+switch_int ($s) {
+    case ^dt_not_started : return(1);
+    case ^dt_got_etchings :
+        if (inv_total(inv, four_diamonds_etchings) = 0) return(1);
+        return(2);
+    case ^dt_gave_etchings, 3 : return(3);
+    case ^dt_got_translation :
+        if (inv_total(inv, four_diamonds_translation_primer) = 0) return(3);
+        return(4);
+    case ^dt_gave_translation : return(5);
+    case ^dt_agreed_help : return(6);
+    case ^dt_bought_drink : return(7);
+    case ^dt_heard_diamonds : return(8);
+    case ^dt_eblis_items : return(9);
+    case ^dt_eblis_mirrors : return(10);
+}
+if ($s >= ^dt_pyramid) {
+    if (inzone(0_50_145_27_30, 0_50_145_39_43, coord) = true) return(58);
+    if (inzone(0_49_144_50_53, 0_51_145_2_59, coord) = true) return(57);
+    if (inzone(1_43_77_6_7, 1_43_77_59_52, coord) = true) return(56);
+    if (inzone(2_44_77_7_8, 2_44_77_58_49, coord) = true) return(55);
+    if (inzone(3_45_77_13_16, 3_45_77_51_45, coord) = true) return(54);
+    return(53);
+}
+// a diamond is "got" once you have it anywhere or it's in its obelisk
+def_boolean $smoke = false;
+if (%fd_column_fire = 1 | ~obj_gettotal(fd_diamond_fire) > 0) $smoke = true;
+def_boolean $shadow = false;
+if (%fd_column_shadow = 1 | ~obj_gettotal(fd_dark_diamond) > 0) $shadow = true;
+def_boolean $blood = false;
+if (%fd_column_blood = 1 | ~obj_gettotal(fd_blood_diamond) > 0) $blood = true;
+def_boolean $ice = false;
+if (%fd_column_ice = 1 | ~obj_gettotal(fd_icediamond) > 0) $ice = true;
+if ($smoke = true & $shadow = true & $blood = true & $ice = true) {
+    if (%fd_column_blood = 0) return(49);
+    if (%fd_column_fire = 0) return(50);
+    if (%fd_column_ice = 0) return(51);
+    return(52);
+}
+// where you are picks the diamond
+if ($smoke = false & ~dt_in_smoke_dungeon = true) return(~questhelper_dt_smoke);
+if ($shadow = false & ~dt_in_shadow_dungeon = true) return(~questhelper_dt_shadow);
+if ($ice = false & ~dt_in_ice_lands = true) return(~questhelper_dt_ice);
+if ($smoke = false) return(~questhelper_dt_smoke);
+if ($shadow = false) return(~questhelper_dt_shadow);
+if ($blood = false) return(~questhelper_dt_blood);
+return(~questhelper_dt_ice);
+
+[proc,questhelper_dt_smoke]()(int)
+if (%fd_killed_firewarrior = 1) {
+    if (inzone(0_51_146_41_16, 0_51_146_62_49, coord) = true) return(19); // the diamond in the room
+    if (~dt_in_smoke_dungeon = true) return(17); // through the gate again
+    return(11);
+}
+if (~dt_in_smoke_dungeon = false) return(11);
+if (inzone(0_51_146_41_16, 0_51_146_62_49, coord) = true) return(18); // Fareed
+if (%fd_firewargate = 1 | inv_total(inv, fd_firekey) > 0) return(17);
+if (~dt_torches_lit = 4) return(16);
+if (%fd_torch_count1 = 0) return(12);
+if (%fd_torch_count2 = 0) return(13);
+if (%fd_torch_count4 = 0) return(14);
+return(15);
+
+[proc,questhelper_dt_shadow]()(int)
+def_int $q = %fd_shadowwarrior_quest;
+if ($q < ^dt_shadow_rasolo) return(20);
+if ($q = ^dt_shadow_rasolo) {
+    if (inv_total(inv, fd_sword_cross) > 0) return(22);
+    return(21);
+}
+if (~dt_in_shadow_dungeon = false) return(23);
+if (inzone(0_42_79_47_44, 0_42_79_63_63, coord) = false) return(24);
+if ($q >= ^dt_shadow_done) return(26);
+return(25);
+
+[proc,questhelper_dt_blood]()(int)
+def_int $v = %fdvw_subquest;
+if ($v = 0) return(27);
+if ($v = ^dt_blood_malak) return(28);
+if ($v >= ^dt_blood_killed) return(37);
+if (npc_find(coord, blooddiamond_vampirewarrior, 10, 0) = true | npc_find(coord, blooddiamond_vampirewarrior_unkillable, 10, 0) = true) return(36);
+if (inv_total(inv, fd_silver_pot_blood_garlic_spiced_blessed) > 0) return(35);
+if (inv_total(inv, fd_silver_pot_blood_garlic_blessed) > 0) return(34); // spice next
+if (inv_total(inv, fd_silver_pot_blood_spiced_blessed) > 0 | inv_total(inv, fd_silver_pot_blood_blessed) > 0) return(33); // garlic
+if (inv_total(inv, fd_silver_pot_blessed) > 0) return(32); // Malak's bite
+if (~dt_pot_total > 0) return(31); // not blessed yet
+if (inzone(0_48_150_6_41, 0_48_151_57_35, coord) = true) return(30); // Ruantun
+return(29);
+
+[proc,questhelper_dt_ice]()(int)
+def_int $s = %fd_icewarrior_subquest;
+if ($s = 0) return(38);
+if ($s = ^dt_ice_cake) return(39);
+if ($s = ^dt_ice_talked) {
+    if (%fd_icewarrior_trollskilled < 5) {
+        if (inzone(0_44_58_23_4, 0_44_58_52_29, coord) = true) return(41);
+        return(40);
+    }
+    if (inzone(0_44_58_56_2, 0_45_58_23_59, coord) = true | inzone(0_44_58_1_36, 0_45_60_12_29, coord) = true) return(43);
+    return(42);
+}
+if ($s = ^dt_ice_kamil) {
+    if (inzone(2_44_59_7_31, 2_44_59_39_36, coord) = true) return(46);
+    if (inzone(1_44_59_14_9, 1_44_59_54_49, coord) = true) return(45);
+    return(44);
+}
+if ($s = ^dt_ice_freed & inzone(2_44_59_7_31, 2_44_59_39_36, coord) = true) return(47);
+return(48);
