@@ -44497,7 +44497,7 @@ vislevel=74
 head1=obj_pickpocket_guide_man
 head2=idk_man_jaw_short_head
 head3=npc_gem_trader_head
-// EASCape: combat from Void (bandit_bandit_camp); hitpoints and hits are Void's divided by 10
+// EASCape: combat from Void (bandit_bandit_camp, crush, max 70); hitpoints and hits are Void's divided by 10
 hitpoints=65
 attack=65
 strength=65
@@ -44506,8 +44506,8 @@ magic=1
 ranged=1
 respawnrate=15
 param=attackbonus,11
-param=damagetype,^stab_style
-param=eascape_maxhit,3
+param=damagetype,^crush_style
+param=eascape_maxhit,7
 param=attack_anim,human_sword_stab
 param=eascape_drops,void_drop_bandit_bandit_camp_drop_table
 param=defend_anim,human_sword_def
@@ -44673,17 +44673,17 @@ vislevel=57
 head1=obj_pickpocket_guide_man
 head2=idk_man_jaw_short_head
 head3=npc_gem_trader_head
-// EASCape: combat from Void (bandit_bandit_camp); hitpoints and hits are Void's divided by 10
-hitpoints=65
-attack=65
-strength=65
-defence=65
+// EASCape: level 57 bandit; Void has only the level 74 one, so stats from the OSRS wiki (Bandit (Bandit Camp): 50 hp/att/str/def, crush, max 6); drops as Void's
+hitpoints=50
+attack=50
+strength=50
+defence=50
 magic=1
 ranged=1
 respawnrate=15
 param=attackbonus,11
-param=damagetype,^stab_style
-param=eascape_maxhit,3
+param=damagetype,^crush_style
+param=eascape_maxhit,6
 param=attack_anim,human_sword_stab
 param=eascape_drops,void_drop_bandit_bandit_camp_drop_table
 param=defend_anim,human_sword_def
@@ -45389,6 +45389,24 @@ vislevel=hide
 walkanim=deserttreasure_mummy_walk
 readyanim=deserttreasure_mummy_ready
 op2=Attack
+// EASCape: the sarcophagus mummy (OSRS wiki, Mummy (Ancient Pyramid sarcophagus): level 96, 1 hitpoint,
+// 255 Attack, 2 Strength, 50 Defence, crush, max 1, every 4 ticks; only magic or fire arrows can
+// kill it; it then burns as the level 98 one with 10 hitpoints)
+hitpoints=1
+attack=255
+strength=2
+defence=50
+magic=1
+ranged=1
+param=attackrate,4
+param=damagetype,^crush_style
+param=eascape_maxhit,1
+param=attack_anim,deserttreasure_mummy_attack
+param=defend_anim,deserttreasure_mummy_block
+param=death_anim,deserttreasure_mummy_death
+param=attack_sound,mummy_attack
+param=defend_sound,mummy_hit
+param=death_sound,mummy_death
 
 [deserttreasure_mummy_1_on_fire]
 name=Mummy
@@ -45409,6 +45427,23 @@ readyanim=deserttreasure_mummy_walk_on_fire
 op2=Attack
 ambient=60
 contrast=60
+// EASCape: the burning sarcophagus mummy (OSRS wiki: level 98, 10 hitpoints, otherwise as the 96;
+// it drops ashes)
+hitpoints=10
+attack=255
+strength=2
+defence=50
+magic=1
+ranged=1
+param=attackrate,4
+param=damagetype,^crush_style
+param=eascape_maxhit,1
+param=attack_anim,deserttreasure_mummy_attack
+param=defend_anim,deserttreasure_mummy_block
+param=death_anim,deserttreasure_mummy_death
+param=attack_sound,mummy_attack
+param=defend_sound,mummy_hit
+param=death_sound,mummy_death
 
 [mummy_f_turn_to_ash]
 name=Mummy
@@ -45677,6 +45712,20 @@ vislevel=92
 // EASCape: aggression from Void (scarabs: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
+// EASCape: Scarabs (OSRS wiki: level 92, 25 hitpoints, 255 Attack, 2 Strength, 10 Defence, slash, max 1
+// every tick, poisonous (3))
+hitpoints=25
+attack=255
+strength=2
+defence=10
+magic=1
+ranged=1
+param=attackrate,1
+param=damagetype,^slash_style
+param=eascape_maxhit,1
+param=poison_severity,11
+param=attack_anim,scarab_attack
+param=defend_anim,scarab_parry
 
 [azzanadra]
 walkanim=ghost_walk

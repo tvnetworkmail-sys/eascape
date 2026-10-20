@@ -1,9 +1,18 @@
-// Desert Treasure: the Diamond of Blood. Malak in the Canifis pub, who must be asked how to kill
-// Dessous before Ruantun will make the silver pot; Ruantun in the Draynor sewers (a silver bar);
-// the High Priest of Entrana's blessing; Malak's bite for the blood; garlic powder and spice in
-// either order; the vampyre tomb south-east of Canifis; Dessous. Only a blessed pot of blood,
-// garlic and spices draws out a Dessous who can die (the wiki: "If it doesn't, Dessous
-// regenerates to full HP"); the 377 cache has an unkillable Dessous for the other case.
+// Desert Treasure: the Diamond of Blood. Malak in the Canifis pub (who must be asked how to kill
+// Dessous before Ruantun will make the pot), Ruantun in the Draynor sewers, the High Priest of
+// Entrana, Malak's knife for the blood, garlic powder and spice, the vampyre tomb south-east of
+// Canifis, and Dessous. Dialogue and messages: the OSRS wiki's quest transcript (the versions from
+// before The Blood Moon Rises) and Transcript:Ruantun. Mechanics: the OSRS wiki (Dessous, Silver
+// pot, the quest walkthrough):
+//   - Malak's cut takes 5 hitpoints but never kills
+//   - Dessous rises for any pot of blood, but only a blessed pot of blood, garlic and spices
+//     lets him die; otherwise at 0 he says "You will never defeat me" and heals in full
+//   - his melee hits every 3 ticks for up to 19; his bat attack ("Hssssssssssss") is a magic
+//     and a ranged hit of 5 each; he switches to whichever your protection prayer doesn't stop
+//   - out of melee range he sometimes teleports next to you, more often when you pray; after a
+//     third teleport he gets bored and goes back to his tomb (a new pot is needed)
+//   - Malak takes every silver pot when he hands over the diamond
+// How often he teleports isn't recorded; our choice is below.
 
 [proc,dt_pot_blessed](obj $pot)(namedobj)
 switch_obj ($pot) {
@@ -15,125 +24,267 @@ switch_obj ($pot) {
 }
 return(null);
 
-// all eight of Ruantun's pots that you could be carrying
+// all of Ruantun's pots that you could be carrying
 [proc,dt_pot_total]()(int)
 return(calc(inv_total(inv, fd_silver_pot) + inv_total(inv, fd_silver_pot_blessed) + inv_total(inv, fd_silver_pot_blood) + inv_total(inv, fd_silver_pot_blood_blessed)
     + inv_total(inv, fd_silver_pot_blood_garlic) + inv_total(inv, fd_silver_pot_blood_garlic_blessed) + inv_total(inv, fd_silver_pot_blood_spiced) + inv_total(inv, fd_silver_pot_blood_spiced_blessed)
     + inv_total(inv, fd_silver_pot_blood_garlic_spiced) + inv_total(inv, fd_silver_pot_blood_garlic_spiced_blessed)));
 
+[proc,dt_pot_take_all]
+inv_del(inv, fd_silver_pot, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blessed, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_blessed, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_garlic, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_garlic_blessed, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_spiced, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_spiced_blessed, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_garlic_spiced, ^max_32bit_int);
+inv_del(inv, fd_silver_pot_blood_garlic_spiced_blessed, ^max_32bit_int);
+
+// ---------------------------------------------------------------- the Hair of the Dog
+
+// coming into the tavern for the first time while looking for the diamonds
+// started on coming into Canifis' map square (music/move.rs2)
+[proc,dt_canifis_entered]
+settimer(dt_canifis, 2);
+
+[timer,dt_canifis]
+if (inzone(0_54_54_0_0, 0_54_54_63_63, coord) = false | %fdvw_cutscene = 1 | %deserttreasure < ^dt_diamonds) {
+    cleartimer(dt_canifis);
+    return;
+}
+if (inzone(0_54_54_33_8, 0_54_54_45_18, coord) = false) {
+    return;
+}
+cleartimer(dt_canifis);
+%fdvw_cutscene = 1;
+queue(dt_tavern_scene, 0, 0);
+
+[queue,dt_tavern_scene]
+~chatnpc_specific("Roavar", werewolfinnkeeper, "<p,scared>M-my lord Malak, what brings you here?");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,angry>Hmm? You know very well that your tithe is due, Roavar. I am here to collect.");
+~chatnpc_specific("Roavar", werewolfinnkeeper, "<p,scared>Y-yes of course, sire, but surely your graciousness is too important to perform such menial duties? Is this not Gadderanks job, your most high beneficence?");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,angry>Indeed it is Roavar, but I cannot find that incompetent fool. And assuming you are not the one who wishes to tell Lord Drakan that his tithe has not been collected, I saw fit to take on the duty myself this time.");
+~chatnpc_specific("Roavar", werewolfinnkeeper, "<p,scared>Of course, my lord, I meant no disrespect.");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,quiz>So you have the tithe ready for me?");
+~chatnpc_specific("Roavar", werewolfinnkeeper, "<p,scared>Of course, my lord. I trust you will find it all there and in good order.");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,angry>Hmm... Well, for your sake, you had better hope that indeed it is. The mood I am in for having to come to this wolfen cesspit means any shortfall is coming from you directly.");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,shifty>Then again... perhaps this was not a total waste of my time after all.");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,angry>You there!");
+~chatplayer("<p,scared>M-me?");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,neutral>Yes, you. Your bearing suggests you are not one of the usual peasants, and your stench suggests you are not one of these filthy wolfen folk.");
+~chatnpc_specific("Malak", fourdiamonds_vampire_lord, "<p,neutral>Come here, I would like to know what you are doing here.");
+
 // ---------------------------------------------------------------- Malak
 
 [opnpc1,fourdiamonds_vampire_lord]
-if (%deserttreasure < ^dt_diamonds) {
-    ~chatnpc("<p,neutral>What do you want, human? Leave me to my drink.");
+def_int $v = %fdvw_subquest;
+if (%deserttreasure >= ^deserttreasure_complete | ($v >= ^dt_blood_done & ~obj_gettotal(fd_blood_diamond) > 0) | ($v >= ^dt_blood_done & %fd_column_blood = 1)) {
+    ~chatnpc("<p,angry>Be lucky I have let you live, meat. Our deal is done, I wish no further dealing with you.");
     return;
 }
-if (%fdvw_subquest = 0) {
-    ~chatnpc("<p,quiz>A human, in my village? What brings you here?");
-    @multi2("I am looking for a special Diamond...", dt_malak_diamond, "Nothing.", dt_malak_nothing);
+if (%deserttreasure < ^dt_diamonds) {
+    return;
 }
-if (%fdvw_subquest = ^dt_blood_malak) {
-    @multi2("How can I kill Dessous?", dt_malak_how, "Nothing.", dt_malak_nothing);
+if ($v >= ^dt_blood_done) {
+    ~chatplayer("<p,angry>Where is the Diamond of Blood? I know you have it!");
+    ~chatnpc("<p,angry>Do not take that tone of voice with me, meat. Here, take your bauble. I have no use for it.");
+    ~dt_pot_take_all;
+    inv_add(inv, fd_blood_diamond, 1);
+    // the Stranger: "5-10 mins after ... Malak returns a lost one" (Mod Ash)
+    ~dt_stranger_after(500, 1000);
+    return;
 }
-if (%fdvw_subquest >= ^dt_blood_killed) {
-    if (%fdvw_subquest = ^dt_blood_killed | (~dt_have_diamond(fd_blood_diamond) = false & %fd_column_blood = 0)) {
-        ~chatnpc("<p,happy>You have rid me of Dessous! As promised, here is the Diamond of Blood.");
-        inv_add(inv, fd_blood_diamond, 1);
-        %fdvw_subquest = ^dt_blood_done;
-        ~objbox(fd_blood_diamond, "Malak gives you the Diamond of Blood.", 250, 0, 0);
-        ~dt_stranger_watch;
+if ($v = ^dt_blood_killed) {
+    ~chatnpc("<p,shifty>Ah, the wandering hero returns! I take it you have dispatched poor old Dessous for me?");
+    ~chatplayer("<p,angry>Quit playing games with me, Malak. I want that diamond, and I want it now!");
+    ~chatnpc("<p,angry>Do not take that tone of voice with me, meat. You should be thankful I have allowed you your life.");
+    ~chatnpc("<p,neutral>Here, take your precious little bauble.");
+    inv_add(inv, fd_blood_diamond, 1);
+    %fdvw_subquest = ^dt_blood_done;
+    ~dt_pot_take_all;
+    ~chatnpc("<p,angry>I will take that silver pot from you as well, humans are not meant to possess such artefacts. Now get out of my sight, our deal is complete, and if I see you here again I will not hesitate to take you to Lord Drakan.");
+    ~chatnpc("<p,shifty>He will be extremely pleased to meet the murderer of poor Dessous, I suspect.");
+    return;
+}
+if ($v >= ^dt_blood_malak) {
+    // the blessed pot: Malak's knife
+    def_obj $pot = null;
+    if (inv_total(inv, fd_silver_pot_blessed) > 0) {
+        $pot = fd_silver_pot_blessed;
+    } else if (inv_total(inv, fd_silver_pot) > 0) {
+        $pot = fd_silver_pot;
+    }
+    if ($pot ! null & $v = ^dt_blood_asked) {
+        ~chatplayer("<p,neutral>I found Ruantun in Draynors sewers. He made me this pot, now where can I get some fresh blood to fill it with?");
+        mes("Malak cuts you and pours some of your blood into the pot.");
+        ~damage_self(min(5, sub(stat(hitpoints), 1)));
+        inv_del(inv, $pot, 1);
+        if ($pot = fd_silver_pot_blessed) {
+            inv_add(inv, fd_silver_pot_blood_blessed, 1);
+        } else {
+            inv_add(inv, fd_silver_pot_blood, 1);
+        }
+        ~chatplayer("<p,angry>Ow!");
+        ~chatnpc("<p,happy>There you go. As fresh as it gets.");
+        ~chatplayer("<p,angry>Thanks for nothing.");
+        ~chatnpc("<p,neutral>Come and speak to me again when you have managed to kill Dessous.");
         return;
     }
-    ~chatnpc("<p,neutral>Our business is done, human.");
-    return;
-}
-// asked how: fill a blessed pot with blood
-def_obj $pot = null;
-if (inv_total(inv, fd_silver_pot_blessed) > 0) {
-    $pot = fd_silver_pot_blessed;
-} else if (inv_total(inv, fd_silver_pot) > 0) {
-    $pot = fd_silver_pot;
-}
-if ($pot ! null) {
-    ~chatplayer("<p,neutral>I have the silver pot.");
-    ~chatnpc("<p,neutral>Good. Hold still. This will only sting a little...");
-    mes("Malak bites you and fills the pot with your blood.");
-    ~damage_self(5);
-    inv_del(inv, $pot, 1);
-    if ($pot = fd_silver_pot_blessed) {
-        inv_add(inv, fd_silver_pot_blood_blessed, 1);
-    } else {
-        inv_add(inv, fd_silver_pot_blood, 1);
+    ~chatnpc("<p,angry>Why are you still here? I notice Dessous still lives.");
+    switch_int (~p_choice3("Where can I find Dessous?", 1, "How do I kill Dessous again?", 2, "Actually, I don't need to know anything.", 3)) {
+        case 1 :
+            ~chatplayer("<p,quiz>Where can I find this Dessous?");
+            ~chatnpc("<p,neutral>He currently resides in a graveyard to the South-East of here. You will not be able to move the gravestone which he lies beneath however, you will need to find some way to lure him out from his tomb.");
+            ~chatplayer("<p,quiz>And how exactly would I go about doing that?");
+            ~chatnpc("<p,neutral>Come and see my when you have prepared a silver ritual pot in the manner I have told you.");
+            ~chatnpc("<p,neutral>I will ensure that you get some fresh blood that you may taint with garlic and spices, to lure our Dessous.");
+        case 2 :
+            ~chatplayer("<p,quiz>How am I supposed to kill Dessous again?");
+            ~chatnpc("<p,neutral>Take a silver bar to the man in the Draynor sewers. He will fashion a ritualistic pot for you, which you should then take to Entrana and get blessed.");
+            ~chatnpc("<p,neutral>When you have done that, come back here and speak to me, I will provide you with some fresh blood which you will then crush some garlic into, and then add some spices to hide the garlic.");
+            ~chatnpc("<p,neutral>In this way, you will be able to lure him from his tomb and he should be sufficiently weakened to be vulnerable to your attacks.");
+            if (%fdvw_subquest = ^dt_blood_malak) {
+                %fdvw_subquest = ^dt_blood_asked;
+            }
+        case 3 :
+            ~chatplayer("<p,neutral>Never mind, I will figure out all I need to know by myself.");
+            ~chatnpc("<p,neutral>As you wish. Come and see me when you have managed to kill Dessous.");
     }
-    ~chatnpc("<p,neutral>Now add the garlic powder and the spices, then pour it on Dessous' tomb in the graveyard to the south-east.");
     return;
 }
-@dt_malak_instructions;
-
-[label,dt_malak_nothing]
-~chatplayer("<p,neutral>Nothing.");
+~chatnpc("<p,angry>A human, eh? Give me one good reason why I should not just take you to Lord Drakan now.");
+~chatnpc("<p,angry>You had better make it a good one too, or you will not survive the night, I'll wager.");
+while (1 = 1) {
+    switch_int (~p_choice5("I am here to worship Zamorak", 1, "I am here to praise Lord Drakan", 2, "I am here to worship you, oh mighty Malak", 3, "I am here to kill Lord Drakan", 4, "I am looking for a special Diamond...", 5)) {
+        case 1 :
+            ~chatplayer("<p,happy>I am here to worship the almighty Zamorak! Yay! Go Zamorak!");
+            ~chatnpc("<p,angry>I see. You are a moron. You have probably settled right in with the rest of the idiots in this pathetic excuse for a village.");
+            ~chatnpc("<p,angry>Unfortunately for you, that is not a good enough reason to explain your presence here.");
+            ~chatnpc("<p,angry>Now tell me the reason for your coming here, or I will ensure you suffer a horrible fate indeed.");
+        case 2 :
+            ~chatplayer("<p,happy>I am here only to serve the mighty Drakan. Yup, Drakan, he's the man.");
+            if (%vampire = ^vampire_complete) {
+                ~chatnpc("<p,angry>I see. I would perhaps be more inclined to believe you if I could not smell the death blood of his brother Draynor upon you.");
+                ~chatnpc("<p,angry>What are you real intentions here?");
+            } else {
+                ~chatnpc("<p,angry>Really? That is interesting, that you would want to give your life by tresspassing in this land for such an unbelievable reason.");
+                ~chatnpc("<p,angry>Now speak, what is your purpose in coming here?");
+            }
+        case 3 :
+            ~chatplayer("<p,happy>I came here looking for you, oh mighty Malak, so that I might serve your glory.");
+            ~chatnpc("<p,angry>Please. Do not think that I am so vain and foolish as to allow you to avoid my question with such obvious sycophancy.");
+            ~chatnpc("<p,angry>Now tell me the reason behind your being here, or I will ensure that you suffer.");
+        case 4 :
+            ~chatplayer("<p,angry>I am here to kill Lord Drakan, and every stinking one of his vampyre brood!");
+            ~chatnpc("<p,laugh>Hah! Most entertaining, human!");
+            ~chatnpc("<p,angry>Now tell me the reason you are here, or we shall soon see who will be killing whom.");
+        case 5 :
+            @dt_malak_diamond;
+    }
+}
 
 [label,dt_malak_diamond]
-~chatplayer("<p,neutral>I am looking for a special Diamond... the Diamond of Blood.");
-~chatnpc("<p,shifty>The Diamond of Blood. Yes, I know where it is. A vampyre warrior named Dessous took it, and he is no friend of mine.");
-~chatnpc("<p,quiz>Kill Dessous for me and the diamond is yours. Do we have a bargain?");
-switch_int (~p_choice2("Yes", 1, "No", 2)) {
-    case 1 :
-        ~chatplayer("<p,neutral>Yes.");
-        %fdvw_subquest = ^dt_blood_malak;
-        ~chatnpc("<p,neutral>Good. Talk to me again when you want to know how.");
-    case 2 :
-        ~chatplayer("<p,neutral>No.");
+~chatplayer("<p,neutral>I am here looking for a special diamond... I have reason to believe it is somewhere in this vicinity, and it is probably in the possession of a warrior of Zamorak.");
+~chatplayer("<p,quiz>I'm fairly sure it will have some kind of magical aura or something too. I don't suppose you've seen it, or know where it might be?");
+~chatnpc("<p,shifty>Interesting... Well perhaps we can come to a little... arrangement, human.");
+~chatnpc("<p,shifty>I may have information that may assist you, but you in turn will have to do something for me. What do you say? Do you think we could come to some form of agreement?");
+~chatplayer("<p,quiz>Well, what kind of something? No offence, but you're not exactly the trustworthy type...");
+~chatnpc("<p,shifty>Ah, you have a healthy sense of paranoia, I see. It is not a particularly unfair request on my part...");
+~chatnpc("<p,neutral>All I ask is that you ensure that the current owner of the diamond is killed. For my part, I will let you know his whereabouts, and how exactly to kill him.");
+~chatnpc("<p,neutral>When he is dead, you may take the diamond from his corpse and do with it what you will. I have no interest in such baubles.");
+~chatnpc("<p,neutral>So what say you? A life for a diamond. As a mark of good faith, I will give you some information free:");
+~chatnpc("<p,neutral>The current owner of this diamond is named Dessous.");
+if (~p_choice2("Yes", 1, "No", 2) = 2) {
+    ~chatplayer("<p,neutral>I don't trust you, or anything you say. I'm afraid I have to decline.");
+    ~chatnpc("<p,neutral>As you wish human. I doubt anybody near here knows of the diamond you seek, however.");
+    ~chatnpc("<p,neutral>If you wish to claim it as your own, you have little choice but to accept my bargain. I will wait here until such time as you change your mind.");
+    return;
 }
-
-[label,dt_malak_how]
-~chatplayer("<p,quiz>How can I kill Dessous?");
-%fdvw_subquest = ^dt_blood_asked;
-@dt_malak_instructions;
-
-[label,dt_malak_instructions]
-~chatnpc("<p,neutral>Dessous sleeps in his tomb in the graveyard south-east of here. To wake him you'll need a pot of silver, blessed, and filled with blood, garlic and spices.");
-~chatnpc("<p,neutral>Ruantun in the sewers under Draynor Village can make the pot from a silver bar. The High Priest on Entrana will bless it. Bring it to me for the blood.");
+~chatplayer("<p,neutral>Well... I can't see any drawback. Okay, I accept your offer. Now tell me what you know.");
+%fdvw_subquest = ^dt_blood_malak;
+~chatnpc("<p,laugh>What I know? Hah! After you have been alive for as long as I, the things I know are enough to fill a library.");
+~chatnpc("<p,neutral>I'm afraid you will need to be a little more specific.");
+while (1 = 1) {
+    switch_int (~p_choice4("Why do you want Dessous dead?", 1, "Where can I find Dessous?", 2, "How can I kill Dessous?", 3, "Actually, I don't need to know anything.", 4)) {
+        case 1 :
+            ~chatplayer("<p,quiz>I don't see exactly how this bargain benefits you... Why exactly do you want Dessous killed anyway?");
+            ~chatnpc("<p,angry>That is an impertinent question to demand from myself.");
+            ~chatnpc("<p,neutral>However, if it will help seal our deal, I will let you know some of the details.");
+            ~chatnpc("<p,neutral>As you may or may not know, myself and my blood kin are the rulers of this land, all serving under Lord Drakan. However, we tend not to die of old age or similar natural causes, which means that to gain another Lords tithe or land, there often need to be...");
+            ~chatnpc("<p,shifty>Unnatural causes of death involved. Let us just say, that Dessous is in control of some land that I myself would like some say in, and that it is not in my interest to be seen to be responsible for the death of a fellow Lord.");
+            ~chatnpc("<p,shifty>It would however be extremely advantageous to myself should some random human adventurer take it upon themself to remove this rival for me... Do you understand?");
+            ~chatplayer("<p,neutral>Yes... I think so...");
+            ~chatnpc("<p,happy>Good, we understand each other then. We will both benefit from the death of Dessous.");
+        case 2 :
+            ~chatplayer("<p,quiz>Where can I find this Dessous?");
+            ~chatnpc("<p,neutral>He currently resides in a graveyard to the South-East of here. You will not be able to move the gravestone which he lies beneath however, you will need to find some way to lure him out from his tomb.");
+            ~chatplayer("<p,quiz>And how exactly would I go about doing that?");
+            ~chatnpc("<p,neutral>Well, he is a vampyre, so fresh blood would almost certainly entice him out.");
+            ~chatnpc("<p,neutral>However, even though he is a frail and decrepit example of our species, he will be able to kill a weakling human such as yourself extremely easily. Having him in a bloodlust as he does so, will not make your job any easier.");
+        case 3 :
+            ~chatplayer("<p,quiz>So what advice can you give me on killing Dessous?");
+            ~chatnpc("<p,neutral>As ancient and weak as Dessous is, he is still more than a match for the likes of you.");
+            ~chatnpc("<p,neutral>That is, assuming you were to fight him fairly.");
+            ~chatnpc("<p,shifty>My proposal would be for you to even the odds up a little bit...");
+            ~chatplayer("<p,quiz>How would I go about doing that?");
+            ~chatnpc("<p,neutral>Well, my plan would be as follows. First, take a silver bar to the man living in the sewers in Draynor. He was an assistant to Count Draynor in some of his...");
+            ~chatnpc("<p,neutral>more interesting experiments many years past. Tell him you need a sacrificial offering pot. He will know what you speak of, it is a unique type of container used in various ancient vampyric ceremonies.");
+            ~chatnpc("<p,neutral>Then take the pot to Entrana and get it blessed by the Head Monk. This will lend the pot some holy power.");
+            ~chatnpc("<p,neutral>If you then bring that silver pot back to me, I will provide you with some fresh blood, to put into it. To that pot of blood, you will add some crushed garlic, and some spice to disguise the smell.");
+            ~chatnpc("<p,neutral>Use that pot of blood upon Dessous' tomb, and he will be unable to resist rising and drinking from it.");
+            ~chatnpc("<p,neutral>The combination of garlic, silver, and blessings from Saradomin will act upon him as a poison, and allow you to kill him.");
+            ~chatnpc("<p,neutral>This is just my suggestion of course, you may ignore it if you wish, although I offer no guarantees of your ability to defeat him otherwise.");
+            %fdvw_subquest = ^dt_blood_asked;
+            ~chatnpc("<p,quiz>Was there anything else you wanted?");
+        case 4 :
+            ~chatplayer("<p,neutral>Never mind, I will figure out all I need to know by myself.");
+            ~chatnpc("<p,neutral>As you wish. Come and see me when you have managed to kill Dessous.");
+            return;
+    }
+}
 
 // ---------------------------------------------------------------- Ruantun
 
 [opnpc1,malak]
-if (%fdvw_subquest < ^dt_blood_asked) {
-    ~chatnpc("<p,angry>Who are you? Go away, I'm busy.");
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,neutral>You ssshould not be down here...");
+if (%fdvw_subquest = ^dt_blood_asked & ~dt_pot_total = 0) {
+    ~chatplayer("<p,quiz>Are you an assistant to Count Draynor?");
+    ~chatnpc("<p,neutral>I usssed to have that honour... Why do you ssseek me?");
+    if (inv_total(inv, silver_bar) > 0) {
+        ~chatplayer("<p,neutral>I have a silver bar with me, I was wondering if you could make it into a 'sacrificial offering pot' for me?");
+        inv_del(inv, silver_bar, 1);
+        inv_add(inv, fd_silver_pot, 1);
+        ~chatnpc("<p,neutral>Yesss, of courssse... There you are, put it to good usssse...");
+        return;
+    }
+    ~chatplayer("<p,neutral>I understand that you can make me a 'sacrificial offering pot' if I bring you a bar of silver?");
+    ~chatnpc("<p,quiz>And where did you hear thisss?");
+    ~chatplayer("<p,neutral>It was from Malak in Canifis.");
+    ~chatnpc("<p,neutral>Ah, I sssee... Yesss, I know how to make sssuch an item... It has been many yearsss sssince I have needed to however...");
+    ~chatnpc("<p,neutral>It is not my wisssh to quessstion your desssire for sssuch an item. I wasss merely sssurprisssed that one sssuch as you would make sssuch a requessst...");
+    ~chatnpc("<p,neutral>I will happily make you thisss pot, but you mussst bring me a bar of sssilver... Alasss, I can no longer collect my own ingredientsss, and mussst remain here...");
     return;
 }
-if (%fdvw_subquest >= ^dt_blood_killed) {
-    ~chatnpc("<p,neutral>I've no more work for you.");
-    return;
+switch_int (~p_choice3("Who are you?", 1, "Why are you down here?", 2, "Can I use your anvil?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,neutral>My name isss unimportant... I live only to ssserve my massster.");
+        ~chatplayer("<p,confused>Um... Okay then.");
+    case 2 :
+        ~chatplayer("<p,quiz>Why are you down here?");
+        ~chatnpc("<p,neutral>Thisss isss where I belong... Beingsss sssuch as myssself cannot abide in the light... It is in the darknesss where we find our homesss...");
+        ~chatplayer("<p,confused>Uh... Okay then.");
+    case 3 :
+        ~chatplayer("<p,quiz>Can I use your anvil?");
+        ~chatnpc("<p,neutral>Of courssse you may... I have very little ussse for it nowadaysss...");
+        ~chatplayer("<p,confused>Uh... Thanks, I guess.");
 }
-if (~dt_pot_total > 0) {
-    ~chatnpc("<p,neutral>You already have one of my pots.");
-    return;
-}
-if (inv_total(inv, silver_bar) = 0) {
-    ~chatnpc("<p,neutral>Malak sent you? Then you want a silver pot. Bring me a silver bar and I'll make one.");
-    return;
-}
-~chatplayer("<p,neutral>Malak sent me. Could you make me a silver pot?");
-~chatnpc("<p,neutral>Give me the bar.");
-inv_del(inv, silver_bar, 1);
-inv_add(inv, fd_silver_pot, 1);
-~objbox(fd_silver_pot, "Ruantun makes you a silver pot from the bar.", 250, 0, 0);
 
 [opnpcu,malak]
-if (last_useitem = silver_bar) {
-    @dt_ruantun_bar;
-}
-~displaymessage(^dm_default);
-
-[label,dt_ruantun_bar]
-if (%fdvw_subquest < ^dt_blood_asked | ~dt_pot_total > 0 | %fdvw_subquest >= ^dt_blood_killed) {
-    ~displaymessage(^dm_default);
-    return;
-}
-inv_del(inv, silver_bar, 1);
-inv_add(inv, fd_silver_pot, 1);
-~objbox(fd_silver_pot, "Ruantun makes you a silver pot from the bar.", 250, 0, 0);
+~chatnpc("<p,neutral>I have no ussse for that...");
 
 // ---------------------------------------------------------------- the High Priest's blessing
 
@@ -144,11 +295,21 @@ def_namedobj $blessed = ~dt_pot_blessed($pot);
 if ($blessed = null) {
     return(false);
 }
-~chatplayer("<p,neutral>Would you bless this pot for me?");
-~chatnpc("<p,neutral>A silver pot? Very well, I shall bless it in Saradomin's name.");
+~chatnpc("<p,happy>Many greetings. Welcome to our fair island.");
+~chatplayer("<p,neutral>Hi, I was wondering, can you quickly bless this for me?");
+if ($pot = fd_silver_pot) {
+    inv_del(inv, $pot, 1);
+    inv_add(inv, $blessed, 1);
+    ~chatnpc("<p,neutral>A somewhat strange request, but I see no harm in it. There you go. May Saradomin walk with you.");
+    return(true);
+}
+~chatnpc("<p,shock>A somewhat strange request, but I see no harm in... Wait a moment... is that BLOOD?");
+~chatplayer("<p,shifty>Erm... yes...");
+~chatnpc("<p,shock>Why do you want me to bless a pot full of someones blood???");
+~chatplayer("<p,happy>Oh, don't worry, it's not 'someones', it's my own!");
 inv_del(inv, $pot, 1);
 inv_add(inv, $blessed, 1);
-~objbox($blessed, "The High Priest blesses the pot.", 250, 0, 0);
+~chatnpc("<p,confused>I... see... Well it is an unusual thing, but I see no harm in it. Take this, and walk in peace with Saradomin.");
 return(true);
 
 // ---------------------------------------------------------------- garlic and spice
@@ -194,30 +355,33 @@ inv_del(inv, $add, 1);
 inv_del(inv, $pot, 1);
 inv_add(inv, $next, 1);
 if ($add = spicespot) {
-    mes("You add the spices to the pot.");
+    mes("You add some spices to the pot.");
 } else {
-    mes("You add the garlic powder to the pot.");
+    mes("You add some crushed garlic to the pot.");
 }
 
 // ---------------------------------------------------------------- the tomb and Dessous
 
 [oplocu,vampire_big_grave_noblood]
-if (last_useitem ! fd_silver_pot_blood_garlic_spiced_blessed & last_useitem ! fd_silver_pot_blood_garlic_spiced) {
+def_obj $pot = last_useitem;
+if ($pot = fd_silver_pot | $pot = fd_silver_pot_blessed) {
+    mes("There is nothing in the pot to pour onto the grave.");
+    return;
+}
+if (~dt_pot_has_blood($pot) = false) {
     ~displaymessage(^dm_default);
     return;
 }
-if (%fdvw_subquest < ^dt_blood_asked | %fdvw_subquest >= ^dt_blood_killed) {
+if (%fdvw_subquest < ^dt_blood_malak | %fdvw_subquest >= ^dt_blood_killed) {
     mes("Nothing interesting happens.");
     return;
 }
-if (npc_find(coord, blooddiamond_vampirewarrior, 10, 0) = true | npc_find(coord, blooddiamond_vampirewarrior_unkillable, 10, 0) = true) {
-    mes("Dessous is already awake!");
+if (npc_find(coord, blooddiamond_vampirewarrior, 12, 0) = true | npc_find(coord, blooddiamond_vampirewarrior_unkillable, 12, 0) = true) {
     return;
 }
-def_obj $pot = last_useitem;
 anim(human_pickuptable, 0);
 inv_del(inv, $pot, 1);
-mes("You pour the blood over the tomb...");
+mes("You pour the blood from the pot onto the tomb.");
 loc_change(vampire_big_grave_withblood, 100);
 p_delay(1);
 if ($pot = fd_silver_pot_blood_garlic_spiced_blessed) {
@@ -225,9 +389,66 @@ if ($pot = fd_silver_pot_blood_garlic_spiced_blessed) {
 } else {
     npc_add(movecoord(loc_coord, 2, 0, 1), blooddiamond_vampirewarrior_unkillable, 500);
 }
-npc_say("Who dares disturb my rest?");
+spotanim_npc(vampire_coffin_jump, 0, 0);
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
+
+[proc,dt_pot_has_blood](obj $pot)(boolean)
+switch_obj ($pot) {
+    case fd_silver_pot_blood, fd_silver_pot_blood_blessed, fd_silver_pot_blood_garlic, fd_silver_pot_blood_garlic_blessed,
+        fd_silver_pot_blood_spiced, fd_silver_pot_blood_spiced_blessed, fd_silver_pot_blood_garlic_spiced, fd_silver_pot_blood_garlic_spiced_blessed : return(true);
+}
+return(false);
+
+[ai_opplayer2,blooddiamond_vampirewarrior] ~dt_dessous_attack;
+[ai_opplayer2,blooddiamond_vampirewarrior_unkillable] ~dt_dessous_attack;
+
+// Dessous: teleports to you now and then when you're out of reach (more often when you pray;
+// 1 in 4 a turn praying, 1 in 12 otherwise, is our choice), and bored after the third time;
+// melee or the bats, whichever your prayer doesn't stop
+[proc,dt_dessous_attack]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+def_boolean $praying = false;
+if (~check_protect_prayer(^melee_style) = true | ~check_protect_prayer(^magic_style) = true | ~check_protect_prayer(^ranged_style) = true) {
+    $praying = true;
+}
+if (~dt_in_melee_range = false) {
+    def_int $chance = 12;
+    if ($praying = true) $chance = 4;
+    if (random($chance) = 0) {
+        %dt_dessous_teleports = add(%dt_dessous_teleports, 1);
+        if (%dt_dessous_teleports > 3) {
+            // the wiki records only that he says he is "bored of toying with you" and leaves
+            mes("Dessous gets bored of toying with you and returns to his grave.");
+            npc_del;
+            return;
+        }
+        npc_tele(map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk));
+        %npc_action_delay = add(map_clock, 1);
+        return;
+    }
+}
+// the bats, when your prayer is on melee, or he can't reach you
+if (~check_protect_prayer(^melee_style) = true | ~dt_in_melee_range = false) {
+    npc_say("Hssssssssssss");
+    npc_anim(vampire_summonbats, 0);
+    def_int $duration = ~player_projectile(npc_coord, coord, uid, vampire_bats, 40, 36, 32, 15, 0, 11, 5);
+    def_int $magic = 5;
+    def_int $ranged = 5;
+    if (~check_protect_prayer(^magic_style) = true) $magic = 0;
+    if (~check_protect_prayer(^ranged_style) = true) $ranged = 0;
+    if_close;
+    anim(%com_defendanim, $duration);
+    queue(combat_damage_player, calc($duration / 30), $magic);
+    queue(combat_damage_player, add(calc($duration / 30), random(2)), $ranged);
+    queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
+    ~npc_set_attack_vars;
+    %npc_action_delay = add(map_clock, npc_param(attackrate));
+    return;
+}
+~dt_npc_melee(19);
 
 [ai_queue3,blooddiamond_vampirewarrior]
 gosub(npc_death);
@@ -239,12 +460,17 @@ if (npc_findhero = ^true) {
 if (%fdvw_subquest < ^dt_blood_killed) {
     %fdvw_subquest = ^dt_blood_killed;
 }
-mes("Dessous crumbles to dust. You should tell Malak.");
+~chatplayer("<p,neutral>Well that's Dessous dead, but where is the Diamond he was supposed to have?");
+~chatplayer("<p,angry>If Malak lied to me about it, he is going to pay!");
+// the Stranger: "1.5 - 2.0 mins after killing ... blood warrior" (Mod Ash) - though he only comes
+// for a diamond you carry
+~dt_stranger_after(250, 333);
 
-// the wrong pot: Dessous heals himself whenever he's hurt badly
+// the wrong pot: at 0 he heals in full instead of dying
 [ai_queue2,blooddiamond_vampirewarrior_unkillable]
-~npc_default_damage(last_int);
-if (npc_stat(hitpoints) < 30) {
-    npc_statheal(hitpoints, 0, 100);
-    npc_say("Your pitiful pot cannot hold me!");
+if (last_int >= npc_stat(hitpoints)) {
+    npc_statheal(hitpoints, npc_basestat(hitpoints), 0);
+    npc_say("You will never defeat me");
+    return;
 }
+~npc_default_damage(last_int);

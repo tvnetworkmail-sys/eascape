@@ -138,11 +138,11 @@ const drawn = [];
 const origRect = null;
 cmd({ type: 'plugin-config', id: 'cluescroll', enabled: true, config: { clue: null, puzzle: PZ, solvePuzzle: true } });
 texts.length = 0; ll.frame(client, 1);
-assert.ok(texts.some((t) => t.str === 'Puzzle solver: 3 moves left'), texts.map((t) => t.str).join('|'));
+assert.ok(texts.some((t) => t.str === 'Puzzle solver: click the outlined piece'), texts.map((t) => t.str).join('|'));
 // follow the plan: the count drops without re-solving
 slide(board, 18); com.io = board.map((v) => (v === 24 ? 0 : pieceObj[v] + 1));
 texts.length = 0; ll.frame(client, 1);
-assert.ok(texts.some((t) => t.str === 'Puzzle solver: 2 moves left'));
+assert.ok(texts.some((t) => t.str === 'Puzzle solver: click the outlined piece'));
 slide(board, 23); slide(board, 24); com.io = board.map((v) => (v === 24 ? 0 : pieceObj[v] + 1));
 texts.length = 0; ll.frame(client, 1);
 assert.ok(texts.some((t) => /Puzzle solved/.test(t.str)));

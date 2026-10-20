@@ -1,0 +1,96 @@
+// Desert Treasure: the bandits of the Bandit Camp (OSRS wiki, Bandit (Bandit Camp) and the quest
+// transcript). They are descendants of the followers of Zaros and attack anyone wearing an item of
+// Saradomin or Zamorak - which items count is the 377 cache's own saradominitem / zamorakitem obj
+// params (robes, capes, staffs, holy and unholy symbols, the god rune armour and books). Talking
+// to them can also end in a fight, and attacking one brings the others nearby.
+
+[opnpc1,fourdiamonds_sword_bandit_1] ~dt_bandit_talk;
+[opnpc1,fourdiamonds_sword_bandit_free] ~dt_bandit_talk;
+[opnpc1,fourdiamonds_sword_bandit_sitsouth] ~dt_bandit_talk;
+[opnpc1,fourdiamonds_sword_bandit_sitnorth] ~dt_bandit_talk;
+[opnpc1,fourdiamonds_sword_bandit_siteast] ~dt_bandit_talk;
+[opnpc1,fourdiamonds_sword_bandit_sitwest] ~dt_bandit_talk;
+
+[opnpc3,fourdiamonds_sword_bandit_1] @attempt_pick_pocket(npc_type);
+[opnpc3,fourdiamonds_sword_bandit_free] @attempt_pick_pocket(npc_type);
+
+[proc,dt_bandit_talk]
+~chatnpc("<p,angry>What do you want?");
+~chatplayer("<p,neutral>I'm here on an archaeological expedition for the Museum of Varrock.");
+~chatplayer("<p,neutral>I believe there may be some interesting artefacts in the area.");
+switch_int (random(5)) {
+    case 0 : ~chatnpc("<p,neutral>I'm sure there are many secrets buried beneath the sands here. The thing about this being a desert, is that they're likely to stay that way.");
+    case 1 : ~chatnpc("<p,sad>The gods forsake us, and drove us to this place. Anything of worth has been long gone.");
+    case 2 : ~chatnpc("<p,angry>Do I look like I care who you are or where you came from?");
+    case 3 :
+        ~chatnpc("<p,angry>You're crazy. The only thing you will find out here in the desert is your death.");
+        // "The bandits start attacking the player."
+        if (compare(nc_op(npc_type, 2), "") ! 0) {
+            %npc_aggressive_player = uid;
+            npc_setmode(opplayer2);
+        }
+        ~dt_bandits_rally(coord);
+    case default : ~chatnpc("<p,angry>I have no interest in the world that betrayed my people. Search where you will, you will find nothing.");
+}
+
+// the other bandits around join in: "You picked the wrong place to start trouble!"
+[proc,dt_bandits_rally](coord $at)
+npc_huntall($at, 5, 0);
+while (npc_findnext = true) {
+    if (~dt_is_bandit(npc_type) = true & npc_getmode ! opplayer2 & npc_stat(hitpoints) > 0) {
+        npc_say("You picked the wrong place to start trouble!");
+        %npc_aggressive_player = uid;
+        npc_setmode(opplayer2);
+    }
+}
+
+[proc,dt_is_bandit](npc $type)(boolean)
+if ($type = fourdiamonds_sword_bandit_1 | $type = fourdiamonds_sword_bandit_free) return(true);
+return(false);
+
+// attacked: fight back as usual, and the rest of the camp comes too
+[ai_queue1,fourdiamonds_sword_bandit_1]
+def_coord $at = npc_coord;
+gosub(npc_default_retaliate);
+if (finduid(%npc_aggressive_player) = true) {
+    ~dt_bandits_rally($at);
+}
+[ai_queue1,fourdiamonds_sword_bandit_free]
+def_coord $at = npc_coord;
+gosub(npc_default_retaliate);
+if (finduid(%npc_aggressive_player) = true) {
+    ~dt_bandits_rally($at);
+}
+
+// ---------------------------------------------------------------- god items
+
+// started on coming into the camp's map squares (music/move.rs2) and at login
+[proc,dt_bandit_camp_entered]
+settimer(dt_bandit_watch, 2);
+
+[timer,dt_bandit_watch]
+if (inzone(0_49_46_0_0, 0_51_46_63_63, coord) = false) {
+    cleartimer(dt_bandit_watch);
+    return;
+}
+def_int $god = 0;
+if (inv_totalparam(worn, saradominitem) > 0) {
+    $god = 1;
+} else if (inv_totalparam(worn, zamorakitem) > 0) {
+    $god = 2;
+}
+if ($god = 0) {
+    return;
+}
+npc_huntall(coord, 5, 0);
+while (npc_findnext = true) {
+    if (~dt_is_bandit(npc_type) = true & npc_getmode ! opplayer2 & npc_stat(hitpoints) > 0) {
+        if ($god = 1) {
+            npc_say("Time to die, Saradominist filth!");
+        } else {
+            npc_say("Prepare to suffer, Zamorakian scum!");
+        }
+        %npc_aggressive_player = uid;
+        npc_setmode(opplayer2);
+    }
+}

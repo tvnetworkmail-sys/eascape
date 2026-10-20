@@ -88,7 +88,10 @@ function locType(id) {
     blockwalk: yes(c.blockwalk, true),
     active: c.active !== undefined ? yes(c.active, false) : c.ops.length > 0,
     // Doors and gates: the route walks through them (you open them on the way).
-    door: c.ops.some((o) => o === 'open' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through'),
+    // EASCape: also the climbing rocks you climb across (Death Plateau, Trollheim, the Ice Path
+    // ledges) - the route climbs over them.
+    door: c.ops.some((o) => o === 'open' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through' || o === 'go-through')
+      || (/climbingrocks|climbing_rocks|climbrock/.test(c.name || '') && c.ops.some((o) => o === 'climb')),
   };
 }
 
@@ -243,7 +246,7 @@ const seenLink = new Set();
 let unresolved = 0;
 
 // Only ways up, down, in and out (not agility shortcuts, quest traps or wrong maze exits).
-const KEEP = /jumping_spot|ladder|stair|trapdoor|manhole|hatch|steps|cellar|rope|tunnel|cave_entrance|caveentrance|cave_exit|caveexit|passage|dungeon/;
+const KEEP = /jumping_spot|ladder|stair|trapdoor|manhole|hatch|steps|cellar|rope|tunnel|cave_entrance|caveentrance|cave_exit|caveexit|passage|dungeon|_entrance|_exit/;
 const SKIP = /wrong|trap_|fail|_dead|mazeportal/;
 
 function link(inst, dest, name, op) {
@@ -274,6 +277,29 @@ function destinations(text, inst) {
     rest = rest.slice(mm.index + mm[0].length);
   }
   return out.filter(Boolean);
+}
+
+// EASCape: a closed trapdoor or door is only on the map in its closed form; its script turns it
+// into the open one (loc_change), and that one's script is the way down. So the open form is
+// also found where the closed one stands.
+{
+  const OPEN = /^\[oploc\d,(\w+)\]/;
+  for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
+    let cur = null;
+    for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
+      const s = raw.trim();
+      const m = OPEN.exec(s);
+      if (m) { cur = m[1]; continue; }
+      if (s.startsWith('[')) { cur = null; continue; }
+      const c = cur && /loc_change\(\s*(\w+)\s*,/.exec(s);
+      if (!c || c[1] === cur || !instances.has(cur)) continue;
+      if (!instances.has(c[1])) instances.set(c[1], []);
+      const list = instances.get(c[1]);
+      for (const inst of instances.get(cur)) {
+        if (!list.some((o) => o.x === inst.x && o.z === inst.z && o.level === inst.level)) list.push(inst);
+      }
+    }
+  }
 }
 
 const TRIG = /^\[oploc(\d),(\w+)\]/;
@@ -311,6 +337,39 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       }
     }
     if (!(instances.get(names[0]) || []).length) unresolved++;
+  }
+}
+
+// EASCape: the links table (eascape_world/configs/eascape_links.dbrow) says where the ladders,
+// stairs, trapdoors and cave entrances go that the scripts send to ~eascape_link (most of the
+// 377 ones). Each row is a loc square and option: kind 0/2/3 go to "to", kind 1 moves by dx/dz/dl.
+{
+  const file = path.join(root, 'scripts', 'eascape_world', 'configs', 'eascape_links.dbrow');
+  if (fs.existsSync(file)) {
+    const at = new Map();
+    for (const [nm, list] of instances) for (const inst of list) at.set(`${inst.x},${inst.z},${inst.level}`, { inst, nm });
+    let row = null;
+    const flush = () => {
+      if (!row || !row.from) return;
+      const found = at.get(`${row.from.x},${row.from.z},${row.from.level}`);
+      const inst = found ? found.inst : { x: row.from.x, z: row.from.z, level: row.from.level, w: 1, l: 1 };
+      const d = row.kind === 1 ? { x: row.from.x + row.dx, z: row.from.z + row.dz, level: row.from.level + row.dl } : row.to;
+      if (!d || d.level < 0 || d.level > 3) return;
+      const key = `${inst.x},${inst.z},${inst.level}>${JSON.stringify({ to: [d.x, d.z, d.level] })}`;
+      if (seenLink.has(key)) return;
+      seenLink.add(key);
+      transports.push({ x: inst.x, z: inst.z, level: inst.level, w: inst.w, l: inst.l, to: [d.x, d.z, d.level], name: found ? found.nm : 'link', op: row.op });
+    };
+    for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
+      const s = raw.trim();
+      if (s.startsWith('[')) { flush(); row = { op: 1, kind: 0, dx: 0, dz: 0, dl: 0 }; continue; }
+      const m = /^data=(\w+),(.*)$/.exec(s);
+      if (!m || !row) continue;
+      if (m[1] === 'from') row.from = coord(m[2]);
+      else if (m[1] === 'to') row.to = coord(m[2]);
+      else if (['op', 'kind', 'dx', 'dz', 'dl'].includes(m[1])) row[m[1]] = +m[2];
+    }
+    flush();
   }
 }
 

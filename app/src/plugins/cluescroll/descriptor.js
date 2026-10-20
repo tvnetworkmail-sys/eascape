@@ -17,7 +17,7 @@ module.exports = {
       { key: 'displayHintArrows', name: 'Display hint arrows', description: 'Point the game\'s hint arrow at the clue\'s NPC or spot', type: 'boolean', default: true, position: 0 },
       { key: 'highlight', name: 'Highlight NPC or spot', description: 'Outline the NPC to talk to, or the tile to dig or search', type: 'boolean', default: true, position: 1 },
       { key: 'showOnMap', name: 'Show on world map', description: 'Mark where to go on the world map', type: 'boolean', default: true, position: 2 },
-      { key: 'solvePuzzle', name: 'Puzzle solver', description: 'When a puzzle box is open, show which pieces to click to solve it', type: 'boolean', default: true, position: 3 },
+      { key: 'solvePuzzle', name: 'Puzzle solver', description: 'When a puzzle box is open, show the next piece to click', type: 'boolean', default: true, position: 3 },
       { key: 'highlightColor', name: 'Highlight color', description: 'Colour of the outlines', type: 'color', default: '#FF9040', position: 4 },
     ],
   },

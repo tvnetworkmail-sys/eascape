@@ -99,6 +99,11 @@ if (%eascape_onehit = ^true | ~player_npc_hit_roll(^magic_style) = true) {
 [proc,pvm_combat_spell_checks](dbrow $spell_data)(boolean)
 if_close;
 p_stopaction;
+// EASCape: Desert Treasure's Stranger only fights the one he came for (OSRS wiki)
+if (npc_type = fourdiamonds_assasin & %npc_aggressive_player ! uid) {
+    mes("He's not after you...");
+    return(false);
+}
 if (map_clock < %action_delay) {
     p_opnpct(db_getfield($spell_data, magic_spell_table:spellcom, 0));
     return(false);
@@ -221,6 +226,7 @@ sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
 def_int $damage = randominc(min($maxhit, npc_param(max_dealt)));
 // EASCape: Desert Treasure's Fareed (water spells only) and Kamil (fire spells only)
 $damage = ~dt_spell_damage(db_getfield($spell_data, magic_spell_table:spell, 0), $damage);
+~dt_mummy_mark; // the pyramid's sarcophagus mummies take only magic and fire arrows
 // EASCape: Ancient Magicks' heal and poison (skill_magic/ancient)
 ~ancient_spell_effect(db_getfield($spell_data, magic_spell_table:spell, 0), $damage);
 if(npc_type = salarin_the_twisted) {

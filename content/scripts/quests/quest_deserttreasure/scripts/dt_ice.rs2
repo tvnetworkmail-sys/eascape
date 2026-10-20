@@ -1,52 +1,78 @@
-// Desert Treasure: the Diamond of Ice. The crying troll child north of Trollheim (a sweet cheers
-// him up), the ice gate, five ice trolls to thaw the cave (fd_icewarrior_trollskilled; the cave
-// entrance melts a little with each, a multiloc in the 377 cache), Kamil on the path beyond, the
-// ice ledge (spiked boots), the gate at the top of the ice path and the two ice blocks holding the
-// child's parents. Past the ice gate the cold drains your stats and run energy (OSRS wiki: "Your
-// stats drain every few seconds, your run energy drops to 0, and cold hits deal 1 damage"); how
-// much each time is our choice. Places from Quest Helper and the map.
+// Desert Treasure: the Diamond of Ice. The crying troll child north of Trollheim, the ice gate,
+// five ice trolls to thaw the cave, Kamil on the Ice Path, the ice ledge (spiked boots), the gate
+// at the top and the two ice blocks holding the child's parents. Dialogue and messages: the OSRS
+// wiki's quest transcript and the troll child's and ice troll's transcripts. Mechanics: the OSRS
+// wiki (Chill, Ice Path, Kamil, Troll child, Ice block, the walkthrough):
+//   - the chill past the gate is Lost City's own chill (area_trollweiss/chill.rs2: every stat down
+//     one every 10 ticks to a floor of 1, run and special energy to 0), over the wiki's area
+//   - the sweets the child takes are the wiki's list (partly eaten pies, cakes and pizzas too)
+//   - Kamil hits up to 23 with melee; his spell ("Sallamakar Ro!") always hits 5 and freezes you
+//     so you can't move, attack, eat or teleport; out of melee range he casts it very often; only
+//     fire spells hurt him (dt_smoke.rs2: dt_spell_damage); he drops 2 chocolate cakes and a
+//     super restore(4)
+//   - on the ledge path you may slip every 6 seconds (Agility: 128/256 at level 1 to 255/256 at 99)
+//   - each ice block has 10 hitpoints
+// How long his freeze lasts ("several seconds"), how much a slip hurts and how hard a swing at the
+// ice hits aren't recorded; our choices are noted where they're used.
 
 [proc,dt_in_ice_lands]()(boolean)
-if (inzone(0_44_58_23_4, 0_44_58_52_29, coord) = true) return(true); // the trolls by the cave
-if (inzone(0_44_58_56_2, 0_45_58_23_59, coord) = true) return(true); // the path to Kamil
-if (inzone(0_44_58_1_36, 0_45_60_12_29, coord) = true) return(true); // the path to the ledge
-if (inzone(1_44_59_14_9, 1_44_59_54_49, coord) = true) return(true); // the ice path
-if (inzone(2_44_59_7_31, 2_44_59_39_36, coord) = true) return(true); // the top
+if (inzone(0_44_58_24_0, 0_45_58_63_63, coord) = true) return(true); // past the gate, to Kamil
+if (inzone(0_44_59_1_0, 2_45_59_0_63, coord) = true) return(true); // the Ice Path and the top
 return(false);
+
+[proc,dt_on_ice_ledge]()(boolean)
+return(inzone(1_44_59_0_0, 1_45_59_63_63, coord));
 
 // ---------------------------------------------------------------- the troll child
 
 [opnpc1,fourdiamonds_troll_child]
-if (%fd_icewarrior_subquest = 0) {
-    mes("The troll child is crying too much to talk. Perhaps something sweet would cheer him up.");
+def_int $s = %fd_icewarrior_subquest;
+~chatplayer("<p,neutral>Hello there.");
+if (%deserttreasure >= ^deserttreasure_complete) {
+    ~chatnpc("<p,happy>Thanks for rescuing my mum and dad!");
     return;
 }
-if (%fd_icewarrior_subquest = ^dt_ice_cake) {
-    ~chatnpc("<p,sad>Thank you for the cake, nice human. Mummy and Daddy went up the path to fight the scary ice man, and they never came back.");
-    ~chatnpc("<p,quiz>Will you find them?");
-    switch_int (~p_choice2("Yes", 1, "No", 2)) {
-        case 1 :
-            ~chatplayer("<p,neutral>I'll find your parents.");
-            %fd_icewarrior_subquest = ^dt_ice_talked;
-            ~chatnpc("<p,happy>Go through the ice gate. Be careful, it's really cold in there!");
-        case 2 :
-            ~chatplayer("<p,neutral>No.");
+if ($s = 0) {
+    ~chatnpc("<p,sad>Waaaaaaa!");
+    ~mesbox("This troll seems very upset about something. Maybe some sweet food would take his mind off things?");
+    return;
+}
+if ($s = ^dt_ice_cake) {
+    ~chatnpc("<p,sad>-sniff- H-hello there.");
+    ~chatplayer("<p,quiz>Why so sad, little troll?");
+    ~chatnpc("<p,sad>It was the bad man! He hurt my mommy and daddy! He made them all freezey!");
+    ~chatplayer("<p,confused>Bad man...?");
+    ~chatnpc("<p,angry>He said it was because they stole his diamond! But they never did! They found it, and didn't know who it belonged to!");
+    ~chatnpc("<p,sad>My mommy always told me stealing is wrong, they would never steal from someone!");
+    ~chatnpc("<p,sad>Then he did some wavey hand thing and my mommy and daddy got frozified!");
+    ~chatplayer("<p,neutral>A diamond you say? Listen, I think I might be able to help your parents, but I need that Diamond in return.");
+    ~chatnpc("<p,sad>-sniff- I don't think they really wanted it anyway, they would have given it back to the bad man if he'd asked before freezifying them...");
+    ~chatnpc("<p,neutral>I give you my promise, that if you unfreeze my mommy and daddy, you can have the stupid diamond.");
+    ~chatnpc("<p,quiz>Do we have a deal?");
+    if (~p_choice2("Yes", 1, "No", 2) = 1) {
+        ~chatplayer("<p,happy>Absolutely. Don't worry kid, I'll get your parents back to you safe and sound.");
+        %fd_icewarrior_subquest = ^dt_ice_talked;
+        return;
     }
+    ~chatplayer("<p,neutral>Sorry, I can't make any promises about that, and I don't think I have the time to waste trying to defrost some stupid ice trolls.");
+    ~chatnpc("<p,sad>Waaaaaaa!");
     return;
 }
-if (%fd_icewarrior_subquest = ^dt_ice_freed | (%fd_icewarrior_subquest = ^dt_ice_done & ~dt_have_diamond(fd_icediamond) = false & %fd_column_ice = 0)) {
-    ~chatnpc("<p,happy>You saved Mummy and Daddy! They found this shiny thing on the ice man. You can have it.");
-    inv_add(inv, fd_icediamond, 1);
-    %fd_icewarrior_subquest = ^dt_ice_done;
-    ~objbox(fd_icediamond, "The troll child gives you the Diamond of Ice.", 250, 0, 0);
-    ~dt_stranger_watch;
+if ($s >= ^dt_ice_done) {
+    if (~obj_gettotal(fd_icediamond) = 0 & %fd_column_ice = 0) {
+        ~chatplayer("<p,sad>I lost that diamond of Ice you gave me...");
+        ~chatnpc("<p,happy>That's okay, it blew back on an icy wind... It's almost like it wants to stay here! Here, take it back, you've earned it.");
+        inv_add(inv, fd_icediamond, 1);
+        ~dt_stranger_after(500, 1000);
+        return;
+    }
+    ~chatnpc("<p,happy>Thanks for all your help! I'm surprised you managed to survive the blizzard, being a thin skinned fleshy and all!");
+    ~chatplayer("<p,happy>What can I say? I'm a lot tougher than I look.");
     return;
 }
-if (%fd_icewarrior_subquest = ^dt_ice_done) {
-    ~chatnpc("<p,happy>Thank you, nice human!");
-    return;
-}
-~chatnpc("<p,sad>Please find Mummy and Daddy!");
+~chatnpc("<p,quiz>You didn't free my mommy and daddy yet?");
+~chatplayer("<p,neutral>Not yet...");
+~chatnpc("<p,sad>Please try harder! I love my mommy and daddy!");
 
 [opnpcu,fourdiamonds_troll_child]
 if (%fd_icewarrior_subquest ! 0 | %deserttreasure < ^dt_diamonds) {
@@ -55,51 +81,66 @@ if (%fd_icewarrior_subquest ! 0 | %deserttreasure < ^dt_diamonds) {
 }
 def_obj $sweet = last_useitem;
 switch_obj ($sweet) {
-    case cake, partial_cake, cake_slice, chocolate_cake, partial_chocolate_cake, chocolate_slice, chocolate_bar, apple_pie, half_an_apple_pie, banana, cooking_apple, orange, redberries, redberry_pie, half_a_redberry_pie, pineapple_pizza, half_pineapple_pizza :
+    case apple_pie, half_an_apple_pie, banana, cake, partial_cake, cake_slice, chocolate_bar, chocolate_cake, partial_chocolate_cake, chocolate_slice, chocolaty_milk,
+        cooking_apple, orange, orange_chunks, orange_slices, pineapple_chunks, pineapple_pizza, half_pineapple_pizza, pineapple_ring, redberries, redberry_pie, half_a_redberry_pie :
         inv_del(inv, $sweet, 1);
+        ~chatplayer("<p,happy>Hey there little troll... Take this and dry those tears...");
         %fd_icewarrior_subquest = ^dt_ice_cake;
-        mes("You give the troll child the <oc_name($sweet)>. He stops crying.");
+        ~chatnpc("<p,sad>(sniff)");
     case default :
-        ~chatnpc("<p,sad>I don't want that!");
+        ~chatnpc("<p,sad>WAAAAAAAA!");
+        ~mesbox("It doesn't look like that will cheer him up at all...");
 }
 
-// ---------------------------------------------------------------- the ice gate and the cold
+// ---------------------------------------------------------------- the ice gate
 
 [oploc1,icegate_left] ~dt_ice_gate;
 [oploc1,icegate_right] ~dt_ice_gate;
 
 [proc,dt_ice_gate]
 p_arrivedelay;
-if (coordx(coord) < coordx(loc_coord)) {
+if (coordx(coord) <= coordx(loc_coord)) {
     if (%fd_icewarrior_subquest < ^dt_ice_talked) {
-        mes("The gate is frozen shut.");
+        ~mesbox("The bars are frozen tightly shut and a sturdy layer of ice prevents you from slipping through.");
         return;
     }
-    mes("You squeeze through the ice gate.");
-    p_teleport(map_findsquare(movecoord(coord, 3, 0, 0), 0, 2, ^map_findsquare_lineofwalk));
-    settimer(dt_cold, 15);
+    if (%fd_trollchild_intro = 0) {
+        %fd_trollchild_intro = 1;
+        if (npc_find(coord, fourdiamonds_troll_child, 10, 0) = true) {
+            ~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,sad>Oh, I'm sorry. My mommy says that we ice trolls are so cold we can freeze the air around us when we are upset or angry.");
+            ~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,neutral>I'm afraid I must have frozen those gates too much when I was crying, but since you told me you are going to help rescue my mommy and daddy you should be able to squeeze through the bars.");
+            ~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,happy>You are much smaller than most trolls, it should be easy for you!");
+        }
+        return;
+    }
+    mes("You squeeze through the large icy bars of the gate.");
+    p_teleport(map_findsquare(movecoord(coord, 2, 0, 0), 0, 1, ^map_findsquare_lineofwalk));
+    settimer(dt_icepath, 2);
+    ~refresh_chill;
     return;
 }
-mes("You squeeze back through the ice gate.");
-p_teleport(map_findsquare(movecoord(coord, -3, 0, 0), 0, 2, ^map_findsquare_lineofwalk));
-cleartimer(dt_cold);
+mes("You squeeze through the large icy bars of the gate.");
+p_teleport(map_findsquare(movecoord(coord, -2, 0, 0), 0, 1, ^map_findsquare_lineofwalk));
+cleartimer(dt_icepath);
+~refresh_chill;
 
-[timer,dt_cold]
+// the friendly ice troll just inside the gate
+[opnpc1,i_troll_guard]
+~chatnpc("<p,laugh>Hur hur hur! Well look here, a puny fleshy human!");
+~chatnpc("<p,neutral>You should beware of the icy wind that runs through this valley, it will bring a fleshy like you to a cold end indeed!");
+
+// every 2 ticks past the gate: Kamil's clearing, the ledge, the ice blocks
+[timer,dt_icepath]
 if (~dt_in_ice_lands = false) {
-    cleartimer(dt_cold);
+    cleartimer(dt_icepath);
     return;
 }
-mes("The cold saps your strength.");
-stat_sub(attack, 1, 0);
-stat_sub(strength, 1, 0);
-stat_sub(defence, 1, 0);
-stat_sub(ranged, 1, 0);
-stat_sub(magic, 1, 0);
-stat_sub(agility, 1, 0);
-p_run(0);
-~damage_self(1);
+p_run(0); // "players cannot run after passing the Ice Gate" (OSRS wiki, Ice Path)
 ~dt_kamil_check;
-~dt_ice_blocks_check;
+// a slip on the ledge path every 6 seconds; how much it hurts isn't recorded (1-6 is our choice)
+if (~dt_on_ice_ledge = true & calc(map_clock % 10) < 2 & stat_random(agility, 128, 255) = false) {
+    ~damage_self(calc(randominc(5) + 1));
+}
 
 // ---------------------------------------------------------------- the ice trolls and the cave
 
@@ -122,14 +163,15 @@ if (%fd_icewarrior_subquest < ^dt_ice_talked | %fd_icewarrior_trollskilled >= 5)
     return;
 }
 %fd_icewarrior_trollskilled = add(%fd_icewarrior_trollskilled, 1);
-mes("A chunk of ice falls away from the cave entrance...");
+mes("A chunk of ice falls away from the cave entrance.");
 
 [oploc1,trollrescue_troll_cave_entrance]
 if (%fd_icewarrior_trollskilled < 5) {
-    mes("The cave entrance is blocked with ice. The ice trolls must be keeping it frozen.");
+    mes("The entrance to the cave is covered in too much ice to get through.");
     return;
 }
 ~eascape_link(1);
+settimer(dt_icepath, 2);
 
 [oploc1,trollrescue_troll_cave_exit] ~eascape_link(1);
 
@@ -142,18 +184,48 @@ if (%fd_icewarrior_subquest ! ^dt_ice_talked | %fd_icewarrior_dead = 1) {
 if (inzone(0_44_58_39_38, 0_44_58_54_53, coord) = false) {
     return;
 }
-if (npc_find(coord, icediamond_icewarrior, 12, 0) = true) {
+if (npc_find(coord, icediamond_icewarrior, 14, 0) = true) {
     return;
 }
 mes("You can feel an evil presence nearby...");
 npc_add(0_44_58_47_45, icediamond_icewarrior, 500);
-npc_say("You will not take the Diamond of Ice from me!");
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
 
+[ai_opplayer2,icediamond_icewarrior]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+// his freezing spell: very often from range, now and then up close
+def_int $chance = 4;
+if (~dt_in_melee_range = false) $chance = 1;
+if (random($chance) = 0) {
+    npc_say("Sallamakar Ro!");
+    npc_anim(human_caststrike, 0);
+    if (~dt_npc_spell(5, 5, ice_barrage_travel, ice_barrage_impact, ^magic_style) = true) {
+        // "unable to move or attack for several seconds" (8 ticks is our choice)
+        queue(dt_frozen, 1, 8);
+    }
+    return;
+}
+if (~dt_in_melee_range = false) {
+    npc_setmode(opplayer2);
+    return;
+}
+~dt_npc_melee(23);
+
+// Kamil's ice: you can't move, attack, eat or teleport until it thaws
+[queue,dt_frozen](int $ticks)
+p_stopaction;
+p_delay($ticks);
+
 [ai_queue3,icediamond_icewarrior]
+def_coord $at = npc_coord;
 gosub(npc_death);
 if (npc_findhero = ^true) {
+    obj_add($at, chocolate_cake, 1, ^lootdrop_duration);
+    obj_add($at, chocolate_cake, 1, ^lootdrop_duration);
+    obj_add($at, 4dose2restore, 1, ^lootdrop_duration);
     queue(dt_kamil_killed, 0, 0);
 }
 
@@ -162,7 +234,9 @@ if (npc_findhero = ^true) {
 if (%fd_icewarrior_subquest = ^dt_ice_talked) {
     %fd_icewarrior_subquest = ^dt_ice_kamil;
 }
-mes("Kamil shatters into pieces of ice. The child's parents must be further up the path.");
+// the Stranger: "10-15 mins after killing the ice warrior" (Mod Ash)
+~dt_stranger_after(1000, 1500);
+~chatplayer("<p,neutral>Well, that must have been the 'bad man' that the troll kid was on about... His parents must be up ahead somewhere.");
 
 // ---------------------------------------------------------------- the ice ledge, the gate, the parents
 
@@ -170,14 +244,12 @@ mes("Kamil shatters into pieces of ice. The child's parents must be further up t
 p_arrivedelay;
 if (coordy(loc_coord) = 0) {
     if (inv_total(worn, death_spikedboots) = 0) {
-        mes("The ice is too slippery to climb without spiked boots.");
+        ~chatplayer("<p,neutral>I don't think I'll make much headway along that icy slope without some spiked boots...");
         return;
     }
-    mes("You climb up onto the ice ledge.");
     p_teleport(map_findsquare(1_44_59_21_29, 0, 2, ^map_findsquare_lineofwalk));
     return;
 }
-mes("You climb down from the ice ledge.");
 p_teleport(map_findsquare(0_44_59_21_27, 0, 2, ^map_findsquare_lineofwalk));
 
 [oploc1,icegate_left_small] ~dt_ice_top_gate;
@@ -185,61 +257,95 @@ p_teleport(map_findsquare(0_44_59_21_27, 0, 2, ^map_findsquare_lineofwalk));
 
 [proc,dt_ice_top_gate]
 p_arrivedelay;
-mes("You squeeze through the ice gate.");
+mes("You Squeeze through the large icy bars of the gate.");
 p_teleport(map_findsquare(2_44_59_35_34, 0, 2, ^map_findsquare_lineofwalk));
-~dt_ice_blocks_check;
 
 [oploc1,trollrescue_blankmodel2]
 p_arrivedelay;
-mes("You step down from the ledge.");
 p_teleport(map_findsquare(1_44_59_35_33, 0, 2, ^map_findsquare_lineofwalk));
 
-// the two blocks (or, once they're free, the parents) at the end of the path
-[proc,dt_ice_blocks_check]
-if (inzone(2_44_59_7_31, 2_44_59_39_36, coord) = false | %fd_icewarrior_subquest < ^dt_ice_kamil) {
+// the two blocks at the end of the path are multinpcs on the map (troll_block_1 / _2): an ice
+// block, then the freed troll father / mother
+[opnpc1,troll_block_1] ~dt_troll_block_talk(1);
+[opnpc1,troll_block_2] ~dt_troll_block_talk(2);
+[opnpc2,troll_block_1] ~dt_smash_ice(1);
+[opnpc2,troll_block_2] ~dt_smash_ice(2);
+
+[proc,dt_troll_block_talk](int $block)
+def_int $dad = %fd_icewarrior_dadfree;
+def_int $mum = %fd_icewarrior_mumfree;
+if (($block = 1 & $dad = 0) | ($block = 2 & $mum = 0)) {
+    ~mesbox("There is a thick layer of ice covering this troll. You will have to find some way of shattering it.");
     return;
 }
-if (%fd_icewarrior_dadfree = 0 & npc_find(coord, fd_trollblock1, 20, 0) = false) {
-    npc_add(2_44_59_10_32, fd_trollblock1, 500);
+if ($dad = 1 & $mum = 0) {
+    ~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>Oh thank you! It was really cold in there! But please, you must free my wife as well! Our son is depending on us!");
+    return;
 }
-if (%fd_icewarrior_mumfree = 0 & npc_find(coord, fd_trollblock2, 20, 0) = false) {
-    npc_add(2_44_59_10_36, fd_trollblock2, 500);
+if ($mum = 1 & $dad = 0) {
+    ~chatnpc_specific("Troll mother", fd_troll_mum, "<p,happy>Wow, thanks for breaking me out of that ice! But please, my husband is still trapped in there!");
+    return;
 }
-if (%fd_icewarrior_subquest >= ^dt_ice_freed) {
-    if (npc_find(coord, fd_troll_dad, 20, 0) = false) npc_add(2_44_59_12_32, fd_troll_dad, 300);
-    if (npc_find(coord, fd_troll_mum, 20, 0) = false) npc_add(2_44_59_12_36, fd_troll_mum, 300);
-}
+~dt_troll_reunion;
 
-[opnpc2,fd_trollblock1] ~dt_smash_ice(1);
-[opnpc2,fd_trollblock2] ~dt_smash_ice(2);
-
+// a swing at the ice: 10 hitpoints a block. Each swing lands on a roll of your Attack (64/256 at
+// level 1 to 255/256 at 99) for up to your max hit; both our choice ("with low stats it may be
+// difficult to deal damage accurately").
 [proc,dt_smash_ice](int $block)
 if (%fd_icewarrior_subquest < ^dt_ice_kamil) {
-    mes("The ice is too thick to break while Kamil's magic still holds it.");
     return;
 }
-mes("You smash at the ice...");
-def_int $hits = 0;
-while ($hits < 3) {
-    anim(%com_attackanim, 0);
-    p_delay(1);
-    $hits = add($hits, 1);
+if (($block = 1 & %fd_icewarrior_dadfree = 1) | ($block = 2 & %fd_icewarrior_mumfree = 1)) {
+    return;
 }
-npc_del;
+~player_combat_stat;
+def_int $hp = 10;
+while ($hp > 0) {
+    anim(%com_attackanim, 0);
+    def_int $damage = 0;
+    if (stat_random(attack, 64, 255) = true) {
+        $damage = randominc(max(1, %com_maxhit));
+    }
+    $hp = sub($hp, $damage);
+    p_delay(3);
+}
 if ($block = 1) {
     %fd_icewarrior_dadfree = 1;
-    mes("The ice shatters and the troll father is free!");
 } else {
     %fd_icewarrior_mumfree = 1;
-    mes("The ice shatters and the troll mother is free!");
 }
 if (%fd_icewarrior_dadfree = 1 & %fd_icewarrior_mumfree = 1) {
     %fd_icewarrior_subquest = ^dt_ice_freed;
-    ~dt_ice_blocks_check;
 }
 
-[opnpc1,fd_troll_dad] ~dt_troll_parents;
-[opnpc1,fd_troll_mum] ~dt_troll_parents;
-
-[proc,dt_troll_parents]
-~chatnpc("<p,happy>Thank you, human! That ice warrior froze us solid. Our child is waiting by the gate; go and see him, he has something for you.");
+// both free: they take you back to their son at the gate, and he hands over the diamond
+[proc,dt_troll_reunion]
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>Phew! Am I glad to be out of that big ice cube! Are you okay too darling?");
+~chatnpc_specific("Troll mother", fd_troll_mum, "<p,quiz>Yes, I thought we were done for! Why ever did that nasty Kamil freeze us up there anyway?");
+~chatplayer("<p,neutral>He must have been trying to protect his Diamond...");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,confused>You mean that diamond I found the other day belonged to him? But why didn't he just ask for it back? It's not like I really want it or anything!");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,quiz>And how did you know we had that diamond anyway, fleshy?");
+~chatplayer("<p,neutral>Your son told me. That's why I rescued you, it is very important that I have that diamond...");
+~chatnpc_specific("Troll mother", fd_troll_mum, "<p,sad>Ooohhhhh, my poor baby! He must have been so worried about us...");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>Yes, but he certainly inherited his Dad's smarts!");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>If he'd told this fleshy that he had the Diamond and not us, we might never have been rescued!");
+~chatplayer("<p,shock>Wait... what? That stupid little troll kid had the diamond all along?");
+~chatnpc_specific("Troll mother", fd_troll_mum, "<p,angry>Don't you talk about my baby like that!");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,neutral>Now, now dear, all's well that ends well. We've been freed and this fleshy has certainly earned himself that diamond.");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>Let's get out of this terrible place and see our son!");
+p_teleport(map_findsquare(0_44_58_19_27, 0, 2, ^map_findsquare_lineofwalk));
+cleartimer(dt_icepath);
+p_delay(1);
+~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,happy>Mommy! Daddy! You're free!");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,happy>That's right son, and it's all thanks to this brave adventurer here. Now, make sure you hand over that diamond he was looking for.");
+~chatnpc_specific("Troll father", fd_troll_dad, "<p,neutral>It has been nothing but trouble for us, let's just get back to our cave and have dinner.");
+~chatnpc_specific("Troll mother", fd_troll_mum, "<p,happy>That's right son, it's your favorite tonight too! A big plate of raw mackerel!");
+~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,happy>RAW MACKEREL! YUMMY!");
+~chatnpc_specific("Troll child", fourdiamonds_troll_child_okay, "<p,happy>Here ya go! Thanks for getting my mom and dad away from the bad man!");
+if (~obj_gettotal(fd_icediamond) = 0) {
+    inv_add(inv, fd_icediamond, 1);
+}
+%fd_icewarrior_subquest = ^dt_ice_done;
+~chatplayer("<p,neutral>Don't worry about it, just as long as I don't have to go back into that blizzard.");
+// the Stranger: "5-10 mins after the troll child ... " (Mod Ash)
+~dt_stranger_after(500, 1000);

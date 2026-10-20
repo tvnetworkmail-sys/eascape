@@ -77,6 +77,7 @@ if (%eascape_onehit = ^true) {
     $damage = npc_stat(hitpoints);
     npc_heropoints($damage); // so the kill still gets its drop
 }
+if (~dt_fire_arrow($ammo) = true) ~dt_mummy_mark; // EASCape: Desert Treasure's sarcophagus mummies
 npc_queue(2, $damage, calc($delay / 30));
 npc_anim(npc_param(defend_anim), sub($delay, 30)); // delay npc this tick
 if (npc_param(defend_sound) ! null) {
@@ -141,6 +142,13 @@ return($delay);
 [proc,ranged_dropammo_npc](obj $ammo, int $delay)
 if($ammo = holy_water) {
     ~ranged_dropammo_holywater(npc_coord, $delay);
+    return;
+}
+// EASCape: Desert Treasure's Fareed burns all ammunition but ice arrows to ashes beneath him
+// (OSRS wiki, Fareed)
+if (npc_type = firediamond_firewarrior & $ammo ! ice_arrow) {
+    inv_del(worn, $ammo, 1);
+    obj_add(npc_coord, ashes, 1, ^lootdrop_duration);
     return;
 }
 if (random(^dropammo_chance) ! 0) {

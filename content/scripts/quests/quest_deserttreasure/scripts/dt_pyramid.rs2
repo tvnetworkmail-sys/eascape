@@ -1,8 +1,22 @@
-// Desert Treasure: the four obelisks around the Jaldraocht Pyramid (Magic 50; each diamond fits only
-// its own obelisk and can't be taken back, OSRS wiki), the way down the pyramid with its traps
-// ("Randomly activated traps send you back to the pyramid entrance with no damage"; how often is
-// our choice), the temple at the bottom, Azzanadra, and the end of the quest. Also the Stranger
-// who comes for the diamonds while you carry them, and the altar that swaps your spellbook.
+// Desert Treasure: the four obelisks around the Jaldraocht Pyramid, the pyramid itself, Azzanadra,
+// the end of the quest, the altar that swaps your spellbook, and the Stranger who comes for the
+// diamonds. Messages and dialogue: the OSRS wiki's quest transcript and Transcript:Stranger.
+// Mechanics: the OSRS wiki (Ancient Pyramid, Scarabs, Mummy (Ancient Pyramid sarcophagus),
+// Sarcophagus (Ancient Pyramid), Altar (Ancient Pyramid), Stranger, the walkthrough):
+//   - each diamond fits only its own obelisk (Magic 50) and can't be taken back
+//   - inside, scarabs erupt from the floor and mummies burst out of sarcophagi within 2 squares;
+//     each time you stop and can't move until the animation is over
+//   - on levels 1-3 traps open under you now and then and drop you outside, south of the
+//     pyramid, unhurt; Agility and Thieving help you avoid them
+//   - a sarcophagus search finds treasure 11 times in 201; the altar room's are already looted
+//     and spawn nothing
+//   - the altar drains all your Prayer and swaps between the Ancient Magicks and your own spells
+//   - the Stranger: one try per diamond, a set time after you get it (Mod Ash's times, below),
+//     never underground, upstairs or in the quest's boss areas, and never again once he's dead;
+//     he hits up to 115% of your own max hit with a poisoned dragon dagger, often with its
+//     special attack
+// How often the scarabs, mummies and traps come isn't recorded anywhere; the chances below are
+// our choice, as is how much Agility and Thieving help.
 
 // ---------------------------------------------------------------- the obelisks
 
@@ -17,16 +31,13 @@ if ($item ! fd_blood_diamond & $item ! fd_diamond_fire & $item ! fd_icediamond &
     ~displaymessage(^dm_default);
     return;
 }
-if (%deserttreasure < ^dt_diamonds) {
+if ($item ! $diamond | %deserttreasure < ^dt_diamonds) {
     mes("Nothing interesting happens.");
     return;
 }
-if ($item ! $diamond) {
-    mes("The diamond doesn't fit this obelisk.");
-    return;
-}
 if (stat(magic) < 50) {
-    mes("You need a Magic level of 50 to use the power of the obelisk.");
+    mes("You are not a powerful enough mage to breach the protective aura.");
+    mes("You need a magic level of at least 50 to enter the Pyramid.");
     return;
 }
 inv_del(inv, $item, 1);
@@ -37,46 +48,204 @@ switch_int ($column) {
     case 3 : %fd_column_ice = 1;
     case 4 : %fd_column_shadow = 1;
 }
-mes("You place the <oc_name($item)> in the obelisk. It glows with a strange power.");
+mes("The diamond is absorbed into the pillar...");
 if (%deserttreasure = ^dt_diamonds) {
     %deserttreasure = ^dt_placing;
 }
 if (calc(%fd_column_blood + %fd_column_fire + %fd_column_ice + %fd_column_shadow) = 4) {
     %deserttreasure = ^dt_pyramid;
-    mes("@dbl@With all four diamonds in place, you hear stone grinding against stone at the top of the pyramid.");
+    mes("The force preventing access to the Pyramid has now vanished.");
 }
 
-// ---------------------------------------------------------------- the pyramid
+// ---------------------------------------------------------------- into the pyramid
 
 [oploc1,desert_laddertop]
 if (%deserttreasure < ^dt_pyramid) {
-    mes("The way into the pyramid is sealed by some ancient power.");
+    mes("This passage doesn't seem to lead anywhere...");
     return;
 }
-settimer(dt_pyramid_traps, 5);
+settimer(dt_pyramid, 4);
 ~eascape_link(1);
 
-// the floors above the temple (levels 1-3 of the pyramid's own space)
+// levels 1-3 (the traps) and level 4 (the temple) of the pyramid
 [proc,dt_in_pyramid_floors]()(boolean)
-if (inzone(3_45_77_13_16, 3_45_77_51_45, coord) = true) return(true);
-if (inzone(2_44_77_7_8, 2_44_77_58_49, coord) = true) return(true);
-if (inzone(1_43_77_6_7, 1_43_77_59_52, coord) = true) return(true);
+if (inzone(3_45_77_0_0, 3_45_77_63_63, coord) = true) return(true);
+if (inzone(2_44_77_0_0, 2_44_77_63_63, coord) = true) return(true);
+if (inzone(1_43_77_0_0, 1_43_77_63_63, coord) = true) return(true);
 return(false);
 
-[timer,dt_pyramid_traps]
-if (~dt_in_pyramid_floors = false) {
-    // down at the temple, or out
-    if (inzone(0_49_144_50_53, 0_51_145_2_59, coord) = false) {
-        cleartimer(dt_pyramid_traps);
-    }
+[proc,dt_in_pyramid_temple]()(boolean)
+return(inzone(0_49_144_50_53, 0_51_145_2_59, coord));
+
+[proc,dt_in_altar_room]()(boolean)
+return(inzone(0_50_145_27_30, 0_50_145_39_43, coord));
+
+// every 4 ticks inside: a trap (levels 1-3), scarabs from the floor, a mummy from a sarcophagus
+[timer,dt_pyramid]
+def_boolean $floors = ~dt_in_pyramid_floors;
+if ($floors = false & ~dt_in_pyramid_temple = false) {
+    cleartimer(dt_pyramid);
     return;
 }
-if (random(25) = 0) {
-    mes("@red@You step on a pressure plate and the floor gives way beneath you!");
-    p_delay(1);
-    p_teleport(map_findsquare(0_50_45_33_0, 0, 3, ^map_findsquare_lineofwalk));
-    mes("You find yourself outside the pyramid again.");
+if (%deserttreasure >= ^deserttreasure_complete & $floors = false) {
+    return; // the back way to the altar after the quest is quiet
 }
+if ($floors = true & random(12) = 0) {
+    // Agility and Thieving each give a chance to step clear
+    if (stat_random(agility, 0, 128) = false & stat_random(thieving, 0, 128) = false) {
+        ~dt_pyramid_trap;
+        return;
+    }
+}
+if (~dt_in_altar_room = true) {
+    return;
+}
+if (random(16) = 0) {
+    ~dt_scarabs;
+    return;
+}
+if (random(4) = 0) {
+    ~dt_sarcophagus_near;
+}
+
+[proc,dt_pyramid_trap]
+p_stopaction;
+loc_add(coord, deserttreasure_pitfall_animated, 0, grounddecor, 3);
+p_delay(1);
+p_teleport(map_findsquare(0_50_45_33_0, 0, 3, ^map_findsquare_lineofwalk));
+cleartimer(dt_pyramid);
+
+// scarabs boil up out of a crack beside you
+[proc,dt_scarabs]
+def_coord $at = map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk);
+if ($at = coord) {
+    return;
+}
+p_stopaction;
+spotanim_map(deserttreasure_cracks_floor_spotanim, $at, 0, 0);
+p_delay(2);
+npc_add($at, scarab_swarm, 100);
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+// a sarcophagus within 2 squares bursts open
+[proc,dt_sarcophagus_near]
+def_int $dx = -2;
+while ($dx <= 2) {
+    def_int $dz = -2;
+    while ($dz <= 2) {
+        def_coord $c = movecoord(coord, $dx, 0, $dz);
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door, deserttreasure_sarcophigi_door_inac) = true) return;
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door_2, deserttreasure_sarcophigi_door_inac2) = true) return;
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door_3, deserttreasure_sarcophigi_door_inac3) = true) return;
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door_4, deserttreasure_sarcophigi_door_inac4) = true) return;
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door_5, deserttreasure_sarcophigi_door_inac5) = true) return;
+        if (~dt_sarcophagus_try($c, deserttreasure_sarcophigi_door_6, deserttreasure_sarcophigi_door_inac6) = true) return;
+        $dz = add($dz, 1);
+    }
+    $dx = add($dx, 1);
+}
+
+[proc,dt_sarcophagus_try](coord $c, loc $closed, loc $open)(boolean)
+if (loc_find($c, $closed) = false) {
+    return(false);
+}
+def_seq $emerge = deserttreasure_mummy_emerge;
+switch_int (loc_angle) {
+    case 0 : $emerge = deserttreasure_mummy_emerge_west;
+    case 2 : $emerge = deserttreasure_mummy_emerge_east;
+    case 3 : $emerge = deserttreasure_mummy_emerge_south;
+}
+loc_change($open, 100);
+p_stopaction;
+npc_add(map_findsquare($c, 0, 1, ^map_findsquare_lineofwalk), deserttreasure_mummy_1, 100);
+npc_anim($emerge, 0);
+npc_say("Rawr!");
+p_delay(2);
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+return(true);
+
+// the sarcophagus mummy: only magic or fire arrows harm it (dt_mummy_mark), then it burns
+[ai_queue2,deserttreasure_mummy_1]
+if (%dt_mummy_hit = 1) {
+    %dt_mummy_hit = 0;
+    ~npc_default_damage(last_int);
+    return;
+}
+~npc_default_damage(0);
+
+[proc,dt_mummy_mark]
+if (npc_type = deserttreasure_mummy_1) {
+    %dt_mummy_hit = 1;
+}
+
+[proc,dt_fire_arrow](obj $ammo)(boolean)
+switch_obj ($ammo) {
+    case litarrow, iron_litarrow, steel_litarrow, mithril_litarrow, adamant_litarrow, rune_litarrow : return(true);
+}
+return(false);
+
+[ai_queue3,deserttreasure_mummy_1]
+npc_changetype(deserttreasure_mummy_1_on_fire, 100);
+npc_statheal(hitpoints, 10, 0);
+if (npc_findhero = ^true) {
+    %npc_aggressive_player = uid;
+    npc_setmode(opplayer2);
+}
+
+[ai_queue3,deserttreasure_mummy_1_on_fire]
+def_coord $at = npc_coord;
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    obj_add($at, ashes, 1, ^lootdrop_duration);
+}
+
+// searching a sarcophagus (Mod Ash: "11/201 chance of getting loot at all" and the list)
+[oploc1,deserttreasure_sarcophigi_door] ~dt_search_sarcophagus;
+[oploc1,deserttreasure_sarcophigi_door_2] ~dt_search_sarcophagus;
+[oploc1,deserttreasure_sarcophigi_door_3] ~dt_search_sarcophagus;
+[oploc1,deserttreasure_sarcophigi_door_4] ~dt_search_sarcophagus;
+[oploc1,deserttreasure_sarcophigi_door_5] ~dt_search_sarcophagus;
+[oploc1,deserttreasure_sarcophigi_door_6] ~dt_search_sarcophagus;
+
+[proc,dt_search_sarcophagus]
+anim(human_pickuptable, 0);
+p_delay(1);
+if (~dt_in_altar_room = true) {
+    mes("It seems like someone has already looted this Sarcophagus...");
+    return;
+}
+if (random(201) >= 11) {
+    mes("You don't find anything interesting.");
+    return;
+}
+mes("You find some treasure!");
+switch_int (random(13)) {
+    case 0 : inv_add(inv, coins, 1000);
+    case 1 : inv_add(inv, ring_of_dueling_4, 1);
+    case 2 : inv_add(inv, cert_gold_bar, 10);
+    case 3 : inv_add(inv, ~dt_uncut_gem, 1);
+    case 4 : inv_add(inv, casket, 1);
+    case 5 : inv_add(inv, coins, 26);
+    case 6 : inv_add(inv, gold_bar, 1);
+    case 7 :
+        inv_add(inv, silver_bar, 3);
+        inv_add(inv, gold_bar, 3);
+    case 8 : inv_add(inv, mithril_scimitar, 1);
+    case 9 : inv_add(inv, sapphire_necklace, 1);
+    case 10 : inv_add(inv, sapphire_ring, 1);
+    case 11 : inv_add(inv, unstrung_emerald_amulet, 1);
+    case default : inv_add(inv, emerald_ring, 1);
+}
+
+[proc,dt_uncut_gem]()(namedobj)
+switch_int (random(4)) {
+    case 0 : return(uncut_sapphire);
+    case 1 : return(uncut_emerald);
+    case 2 : return(uncut_ruby);
+}
+return(uncut_diamond);
 
 // the doorway into Azzanadra's temple at the bottom
 [oploc1,dt_ancient_temple_door_open] ~dt_temple_door;
@@ -84,7 +253,7 @@ if (random(25) = 0) {
 
 [proc,dt_temple_door]
 if (%deserttreasure < ^dt_pyramid) {
-    mes("The door won't open.");
+    mes("This passage doesn't seem to lead anywhere...");
     return;
 }
 if (%deserttreasure = ^dt_pyramid) {
@@ -97,11 +266,10 @@ if (coordz(coord) >= coordz(loc_coord)) {
     p_teleport(map_findsquare(0_50_145_33_46, 0, 2, ^map_findsquare_lineofwalk));
 }
 
-// after the quest the pyramid's own door leads straight to the altar (OSRS wiki: "After first
-// traversing the pyramid, you can enter through its back door for a shortcut to the altar")
+// after the quest the pyramid's back door leads straight to the altar
 [oploc1,four_diamonds_door_mirror]
 if (%deserttreasure < ^deserttreasure_complete) {
-    mes("The door is sealed shut.");
+    mes("This passage doesn't seem to lead anywhere...");
     return;
 }
 p_arrivedelay;
@@ -113,10 +281,17 @@ p_teleport(map_findsquare(0_50_145_33_33, 0, 2, ^map_findsquare_lineofwalk));
 if (%deserttreasure < ^dt_pyramid | %deserttreasure >= ^deserttreasure_complete) {
     return;
 }
-~chatnpc("<p,neutral>Free... after so many centuries, I am free! Mortal, it was you who returned the diamonds to the obelisks?");
-~chatplayer("<p,neutral>It was. Who are you?");
-~chatnpc("<p,neutral>I am Azzanadra, servant of Zaros, imprisoned here by the gods who betrayed him. You have done me a great service, and I shall repay it.");
-~chatnpc("<p,neutral>I will teach you the magic of the old empire. Pray at the altar here whenever you wish to change between it and your own spells.");
+~chatnpc("<p,happy>I knew they could not trap me here for long! Well done, friend. Tell me, how goes the war?");
+~chatplayer("<p,confused>War?");
+~chatnpc("<p,shock>You do not know of the war for our survival? More time must have passed than I had thought...");
+~chatnpc("<p,quiz>Tell me, what news of great Paddewwa? Do the shining spires of Lassar still stand? And what of glorious Annakarl? The fortress is still intact?");
+~chatplayer("<p,sad>Er... sorry, I've never heard of them...");
+~chatnpc("<p,shock>No! My lord... what has become of you? I cannot hear your voice anymore!");
+~chatnpc("<p,sad>My thanks to you friend for your help in freeing me from this accursed place, but it seems I have much to do to make amends. If our empire no longer stands, it means that we must have failed my lord...");
+~chatnpc("<p,sad>How long have I been trapped here? Master... have you truly been dispatched from this world?");
+~chatnpc("<p,neutral>My friend, for your efforts in freeing me, I offer you the gift of knowledge. We Mahjarrat were once granted powerful ancient magicks by our lord. I now bestow their power upon you.");
+~chatnpc("<p,neutral>They will replace the knowledge you previously had, but you may switch between them by praying at the altar in this room at any time. May you use them well.");
+~chatnpc("<p,neutral>I trust that we shall meet again, but now I must leave you. Feel free to use the portal I shall create to return here easily in the future!");
 queue(dt_complete, 0, 0);
 
 [queue,dt_complete]
@@ -124,15 +299,22 @@ if (%deserttreasure >= ^deserttreasure_complete) {
     return;
 }
 %deserttreasure = ^deserttreasure_complete;
-stat_advance(magic, 200000);
+stat_advance(magic, 200069); // "20,006.9, in fact!" (Mod Ash)
+// "At quest completion, you will be switched to the Ancient Magicks spellbook"
+%alternate_spells = 1;
+~dt_set_spellbook;
 session_log(^log_adventure, "Quest complete: Desert Treasure");
-~send_quest_complete(questlist:deserttreasure, staff_of_zaros, 250, ^deserttreasure_questpoints, "You have completed Desert Treasure!", "3 Quest Points|20,000 Magic XP|Ancient Magicks|An ancient staff from Eblis");
+~send_quest_complete(questlist:deserttreasure, staff_of_zaros, 250, ^deserttreasure_questpoints, "You have completed Desert Treasure!", "3 Quest Points|20,000 Magic XP|Ancient Magicks");
+queue(dt_after_azzanadra, 1, 0);
+
+[queue,dt_after_azzanadra]
+~chatplayer("<p,neutral>I should go and let Eblis know what's happened here...");
 
 // ---------------------------------------------------------------- the altar
 
 [oploc1,dt_zaros_altar]
 if (%deserttreasure < ^deserttreasure_complete) {
-    mes("You feel an ancient power, but it does not answer you.");
+    mes("This altar seems to do nothing...");
     return;
 }
 anim(human_pray, 0);
@@ -140,10 +322,10 @@ p_delay(1);
 stat_sub(prayer, stat(prayer), 0);
 if (%alternate_spells = 1) {
     %alternate_spells = 0;
-    mes("You feel a strange drain upon your memory... You return to your normal magic.");
+    mes("You feel a strange drain upon your memory...");
 } else {
     %alternate_spells = 1;
-    mes("You feel a strange wisdom fill your mind... You learn the Ancient Magicks.");
+    mes("You feel a strange wisdom fill your mind...");
 }
 ~dt_set_spellbook;
 
@@ -153,38 +335,90 @@ if (%alternate_spells = 1 & %deserttreasure >= ^deserttreasure_complete) {
 } else {
     if_settab(magic, ^tab_magic);
 }
+~autocast_check_book;
 
 // ---------------------------------------------------------------- the Stranger
 
-// while you carry a diamond of Azzanadra a Stranger may come for it (OSRS wiki); started whenever
-// you're given a diamond and at login
 [proc,dt_diamonds_carried]()(int)
 return(calc(inv_total(inv, fd_blood_diamond) + inv_total(inv, fd_diamond_fire) + inv_total(inv, fd_icediamond) + inv_total(inv, fd_dark_diamond)));
 
-[proc,dt_stranger_watch]
-if (~dt_diamonds_carried > 0 & %deserttreasure < ^deserttreasure_complete) {
-    settimer(dt_stranger, 100);
-}
-
-[timer,dt_stranger]
-if (~dt_diamonds_carried = 0 | %deserttreasure >= ^deserttreasure_complete) {
-    cleartimer(dt_stranger);
+// a try at sending the Stranger, $min to $max ticks from now (once each time you get a diamond)
+[proc,dt_stranger_after](int $min, int $max)
+if (%fd_killed_ninja = 1) {
     return;
 }
-if (random(6) ! 0 | npc_find(coord, fourdiamonds_assasin, 10, 0) = true) {
+settimer(dt_stranger, ~random_range($min, $max));
+
+[timer,dt_stranger]
+cleartimer(dt_stranger); // one try only
+if (%fd_killed_ninja = 1 | ~dt_diamonds_carried = 0) {
+    return;
+}
+// not underground, not upstairs, not in the boss areas
+if (coordy(coord) ! 0 | coordz(coord) >= 6400) {
+    return;
+}
+if (~dt_in_ice_lands = true | inzone(0_55_53_0_0, 0_55_53_63_63, coord) = true) {
     return;
 }
 def_coord $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
-npc_add($at, fourdiamonds_assasin, 200);
-npc_say("Give me the diamond!");
+npc_add($at, fourdiamonds_assasin, 500);
+if (inv_total(inv, fd_diamond_fire) > 0) {
+    npc_say("Hand over the Diamond of Smoke, or suffer!");
+} else if (inv_total(inv, fd_blood_diamond) > 0) {
+    npc_say("You are not worthy of holding that Diamond of Blood!");
+} else if (inv_total(inv, fd_icediamond) > 0) {
+    npc_say("That Ice Diamond is mine, thief!");
+} else {
+    npc_say("The Diamond of Shadow is not yours to take!");
+}
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
 
-// picking up a dropped diamond also starts the Stranger's watch
-[opobj3,fd_diamond_fire]
-settimer(dt_stranger, 100);
-@pickup_obj;
+// he hits up to 115% of your own max hit, poisoned, often with the dragon dagger's special
+[ai_opplayer2,fourdiamonds_assasin]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+~player_combat_stat;
+def_int $max = max(1, scale(115, 100, %com_maxhit));
+if (random(3) = 0) {
+    // the special: two quick stabs
+    npc_anim(puncture, 0);
+    spotanim_npc(sp_attack_puncture_spotanim, 92, 0);
+    def_int $hit1 = 0;
+    def_int $hit2 = 0;
+    if (~eascape_npc_roll(^slash_style, ^slash_style) = true) $hit1 = randominc($max);
+    if (~eascape_npc_roll(^slash_style, ^slash_style) = true) $hit2 = randominc($max);
+    anim(%com_defendanim, 0);
+    ~playerhit_n_melee(true, $hit1, ~random_range(2, 4));
+    if (~check_protect_prayer(^melee_style) = false) {
+        queue(combat_damage_player, 0, $hit2);
+    }
+} else {
+    def_int $hit = 0;
+    npc_anim(npc_param(attack_anim), 0);
+    if (~eascape_npc_roll(^slash_style, ^slash_style) = true) $hit = randominc($max);
+    anim(%com_defendanim, 0);
+    ~playerhit_n_melee(true, $hit, ~random_range(2, 5));
+}
+~npc_poison_player;
 
-[opobj3,fd_dark_diamond]
-settimer(dt_stranger, 100);
-@pickup_obj;
+// only the one he came for can fight him
+[opnpc2,fourdiamonds_assasin]
+if (%npc_aggressive_player ! uid) {
+    mes("He has no interest in fighting you.");
+    return;
+}
+@player_combat_start;
+
+[ai_queue3,fourdiamonds_assasin]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_stranger_killed, 0, 0);
+}
+
+[queue,dt_stranger_killed]
+%fd_killed_ninja = 1;
+~chatplayer("<p,confused>I wonder what that was all about?");
+

@@ -281,26 +281,18 @@
       }
     }
     const moves = solved.moves;
-    const status = !moves ? 'Puzzle solver: no solution found' : moves.length ? `Puzzle solver: ${moves.length} moves left` : 'Puzzle solved! Close it and hand it back.';
+    const status = !moves ? 'Puzzle solver: no solution found' : moves.length ? 'Puzzle solver: click the outlined piece' : 'Puzzle solved! Close it and hand it back.';
     const w = g.textWidth(status);
     g.fillRect(GRID.x - 2, GRID.y - 16, Math.max(w + 6, 5 * GRID.step), 14, BG, 180);
     g.text(status, GRID.x + 1, GRID.y - 5, moves && !moves.length ? 0x00ff00 : 0xffff00);
     if (!moves || !moves.length) return;
-    // The next three clicks: 1 is outlined and has an arrow to where it slides.
-    let gap = board.indexOf(GAP);
-    for (let k = 0; k < Math.min(3, moves.length); k++) {
-      const cell = moves[k];
-      const b = cellBox(cell);
-      const colour = k === 0 ? 0xffff00 : k === 1 ? 0xffa500 : 0xff6000;
-      g.rect(b.x, b.y, GRID.size - 1, GRID.size - 1, colour);
-      if (k === 0) {
-        g.rect(b.x + 1, b.y + 1, GRID.size - 3, GRID.size - 3, colour);
-        arrow(g, cell, gap, colour);
-      } else {
-        g.text(String(k + 1), b.x + 3, b.y + 13, colour);
-      }
-      gap = cell;
-    }
+    // EASCape: only the next move - the piece to click, outlined, with an arrow to where it
+    // slides (you make every move yourself).
+    const cell = moves[0];
+    const b = cellBox(cell);
+    g.rect(b.x, b.y, GRID.size - 1, GRID.size - 1, 0xffff00);
+    g.rect(b.x + 1, b.y + 1, GRID.size - 3, GRID.size - 3, 0xffff00);
+    arrow(g, cell, board.indexOf(GAP), 0xffff00);
   }
 
   ll.__puzzleSolve = solvePuzzle;

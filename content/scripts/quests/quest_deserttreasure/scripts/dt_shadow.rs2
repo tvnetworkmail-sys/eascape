@@ -1,59 +1,155 @@
-// Desert Treasure: the Diamond of Shadow. Rasolo south of the Baxtorian Falls wants the gilded
-// cross from the secure chest in the Bandit Camp (Thieving 53, three locks, a lockpick breaks on
-// every slip and the trap hurts and can poison; OSRS wiki), and gives the ring of visibility for
-// it. Wearing the ring shows the ladder east of Rasolo (fd_ladder_present), and Damis waits in the
-// far east of the Shadow Dungeon below, in two forms. Leaving after the first form keeps it
-// beaten (OSRS wiki). Places from Quest Helper and the map.
+// Desert Treasure: the Diamond of Shadow. Rasolo south of the Baxtorian Falls wants his gilded
+// cross back from Laheeb's secure chest in the Bandit Camp, and trades his ring of visibility for
+// it. Wearing the ring shows the ladder east of Rasolo (fd_ladder_present), and Damis waits at
+// the far end of the Shadow Dungeon below, in two forms. Dialogue and messages: the OSRS wiki's
+// quest transcript and Transcript:Rasolo. Mechanics: the OSRS wiki (Secure chest, Damis, the
+// quest walkthrough):
+//   - each of the three locks: 52/256 at Thieving 1 to 128/256 at 99; a slip resets them, snaps
+//     the lockpick and hurts for 2-3, and may poison for up to 6; once open it stays open and
+//     a lost cross can be taken again; 150 Thieving xp
+//   - Damis' first form (level 103) and second (level 174, attacks every 3 ticks); while in melee
+//     distance the second form drains 5% + 1 of your current Prayer every tick; beating the first
+//     form is kept if you leave; the diamond drops where he falls and, if lost, is back on the
+//     floor when you cross into his cave again
+
+[proc,dt_in_shadow_dungeon]()(boolean)
+return(inzone(0_41_78_0_51, 0_43_80_5_5, coord));
+
+// Damis' cave at the far end (a multi-combat area)
+[proc,dt_in_damis_cave]()(boolean)
+return(inzone(0_42_79_47_44, 0_42_79_63_63, coord));
 
 // ---------------------------------------------------------------- Rasolo
 
 [opnpc1,shadow_warrior_rasool]
-~chatnpc("<p,happy>Greetings, traveller! Rasolo, wandering merchant, at your service.");
-if (%deserttreasure >= ^dt_diamonds & %fd_shadowwarrior_quest < ^dt_shadow_ring) {
-    if (%fd_shadowwarrior_quest = ^dt_shadow_rasolo) {
-        if (inv_total(inv, fd_sword_cross) > 0) {
-            @dt_rasolo_cross;
-        }
-        ~chatnpc("<p,quiz>Do you have my gilded cross yet? The bandits keep it in a secure chest in the south of their camp.");
+def_int $q = %fd_shadowwarrior_quest;
+if ($q >= ^dt_shadow_done | %deserttreasure >= ^deserttreasure_complete) {
+    @dt_rasolo_after;
+}
+if ($q = ^dt_shadow_rasolo) {
+    @dt_rasolo_waiting;
+}
+if ($q >= ^dt_shadow_ring) {
+    ~chatnpc("<p,quiz>So how goes your quest? Did you manage to find the Diamond you were looking for yet?");
+    ~chatplayer("<p,neutral>Not yet...");
+    if (~obj_gettotal(fd_ring_visibility) = 0) {
+        ~chatplayer("<p,sad>I lost that ring you gave me...");
+        ~chatnpc("<p,happy>Then by all means, take another. Only a foolish merchant would give away his only stock!");
+        inv_add(inv, fd_ring_visibility, 1);
         return;
     }
-    @multi2("Ask about the Diamonds of Azzanadra", dt_rasolo_ask, "Let me see your wares.", dt_rasolo_trade);
-}
-if (%fd_shadowwarrior_quest >= ^dt_shadow_ring & ~obj_gettotal(fd_ring_visibility) = 0) {
-    ~chatplayer("<p,sad>I've lost the ring you gave me.");
-    ~chatnpc("<p,neutral>Careless! Luckily I have another.");
-    inv_add(inv, fd_ring_visibility, 1);
-    ~objbox(fd_ring_visibility, "Rasolo gives you another ring of visibility.", 250, 0, 0);
+    ~chatnpc("<p,neutral>Well, his lair is very close to here. I suggest you look around for it.");
     return;
 }
-@multi2("Let me see your wares.", dt_rasolo_trade, "Goodbye.", dt_rasolo_bye);
-
-[label,dt_rasolo_trade]
-~openshop_activenpc;
-
-[label,dt_rasolo_bye]
-~chatplayer("<p,neutral>Goodbye.");
-
-[label,dt_rasolo_ask]
-~chatplayer("<p,quiz>I'm looking for the Diamonds of Azzanadra.");
-~chatnpc("<p,shifty>Shh! The Diamond of Shadow... yes, I know of it. The warrior Damis guards it, deep below these hills. But you'll never see him, nor the way down, with your own eyes.");
-~chatnpc("<p,neutral>I have a ring that lets you see what is hidden. I'll trade it for something the bandits in the desert stole from me: a gilded cross. Bring it back, and the ring is yours.");
-switch_int (~p_choice2("Yes", 1, "No", 2)) {
-    case 1 :
-        ~chatplayer("<p,neutral>I'll get your cross back.");
-        %fd_shadowwarrior_quest = ^dt_shadow_rasolo;
-        ~chatnpc("<p,neutral>They keep it in a secure chest in the south of their camp. It's well trapped, so bring plenty of lockpicks.");
+if ($q = ^dt_shadow_declined) {
+    ~chatplayer("<p,quiz>Where can I find this Damis again?");
+    ~chatnpc("<p,neutral>I have already told you, he is of the shadows. You will see neither him nor his lair without the aid of magic.");
+    @dt_rasolo_offer;
+}
+~chatnpc("<p,happy>Greetings friend. I am Rasolo, the famous merchant. Would you care to see my wares?");
+def_int $choice;
+if (%deserttreasure >= ^dt_diamonds) {
+    $choice = ~p_choice3("Yes", 1, "No", 2, "Ask about the Diamonds of Azzanadra", 3);
+} else {
+    $choice = ~p_choice2("Yes", 1, "No", 2);
+}
+switch_int ($choice) {
+    case 1 : ~openshop_activenpc;
     case 2 :
-        ~chatplayer("<p,neutral>No.");
+        ~chatplayer("<p,neutral>No, not really.");
+        ~chatnpc("<p,neutral>As you wish. I will travel wherever the business takes me.");
+    case 3 :
+        ~chatplayer("<p,neutral>No, actually I was looking for something specific...");
+        ~chatnpc("<p,quiz>Hmmmm? And what would that be?");
+        ~chatplayer("<p,neutral>I am looking for one of the Diamonds of Azzanadra. I have reason to believe it may be somewhere around here...");
+        ~chatnpc("<p,shifty>Ahhh... The Shadow Diamond...");
+        ~chatnpc("<p,shifty>I know the object of which you speak. It is guarded by a fearsome warrior known as Damis, they say, who lives in the shadows, invisible to prying eyes...");
+        ~chatplayer("<p,quiz>How can I find this 'Damis' then?");
+        @dt_rasolo_offer;
+}
+
+[label,dt_rasolo_offer]
+~chatnpc("<p,shifty>Well now... perhaps we can help each other out here.");
+~chatnpc("<p,shifty>I have in my possession a small trinket, a ring, that allows its wearer to see the unseen...");
+~chatplayer("<p,quiz>How much do you want for it?");
+~chatnpc("<p,neutral>Ah, but it is not for sale... As such...");
+~chatnpc("<p,neutral>I am offering to trade it for an item that was rightfully mine, but that was stolen by a bandit named Laheeb.");
+~chatnpc("<p,neutral>The item in question is a gilded cross, that has some sentimental value to myself. I wish for you to recover this item for me, and I will happily let you have my ring of visibility.");
+~chatplayer("<p,quiz>Where can I find this Laheeb?");
+~dt_rasolo_laheeb;
+~chatnpc("<p,neutral>He will have hidden his stolen treasure somewhere in that village, I am sure of it. When you find his loot, you will find my gilded cross. Return it to me, and I will reward you with my ring of visibility, so that you may find Damis. Does this seem fair to you?");
+if (~p_choice2("Yes", 1, "No", 2) = 1) {
+    ~chatplayer("<p,happy>Not a problem. I'll be back with your cross before you know it.");
+    %fd_shadowwarrior_quest = ^dt_shadow_rasolo;
+    return;
+}
+~chatplayer("<p,neutral>Sounds like too much effort to me. I'll find this Damis by myself.");
+~chatnpc("<p,neutral>As you wish.");
+%fd_shadowwarrior_quest = ^dt_shadow_declined;
+
+[proc,dt_rasolo_laheeb]
+~chatnpc("<p,neutral>Well, as a travelling merchant I have roamed these lands for many years...");
+~chatnpc("<p,neutral>To the far east of here there is an area that is dry, and barren like the desert... it is called...");
+~chatplayer("<p,neutral>Al Kharid?");
+~chatnpc("<p,neutral>...Yes, Al Kharid. Now, to the south of Al Kharid there is a passageway, it is called the...");
+~chatplayer("<p,neutral>Shantay Pass.");
+~chatnpc("<p,neutral>...Yes. I didn't realise you had travelled there yourself.");
+~chatnpc("<p,neutral>Anyway, when you have gone through the Shantay Pass, you will find yourself in a hostile desert... You will need to bring water with you to keep your life. Now, to the south-west of this pass, you will find a small village...");
+~chatplayer("<p,neutral>The Bedabin camp.");
+~chatnpc("<p,confused>If you know where Laheeb lives, why did you ask me?");
+~chatplayer("<p,neutral>I don't. Sorry, please continue.");
+~chatnpc("<p,neutral>Well, okay then. Anyway, south of this encampment there is an area where few have ever been... It is a village of murderous bandits, and treacherous thieves... This is where Laheeb makes his home.");
+
+[label,dt_rasolo_waiting]
+~chatnpc("<p,quiz>Have you retrieved my gilded cross for me yet?");
+if (inv_total(inv, fd_sword_cross) > 0) {
+    @dt_rasolo_cross;
+}
+~chatplayer("<p,neutral>No, not yet...");
+~chatnpc("<p,quiz>Well what seems to be the problem?");
+while (1 = 1) {
+    switch_int (~p_choice3("Where can I find Laheeb?", 1, "Can't I just buy your ring?", 2, "Is Damis near here, then?", 3)) {
+        case 1 :
+            ~chatplayer("<p,quiz>Where can I find this Laheeb?");
+            ~dt_rasolo_laheeb;
+            return;
+        case 2 :
+            ~chatplayer("<p,quiz>Can't I just buy your ring?");
+            ~chatnpc("<p,neutral>No, it is not for sale. Some things are more important than money, and the return of my gilded cross is one of them.");
+        case 3 :
+            ~chatplayer("<p,quiz>Is Damis near here, then?");
+            ~chatnpc("<p,shifty>You would be surprised to know just how close he is...");
+    }
 }
 
 [label,dt_rasolo_cross]
-~chatplayer("<p,happy>I've got your gilded cross.");
+~chatplayer("<p,happy>Yes I have!");
 inv_del(inv, fd_sword_cross, 1);
 inv_add(inv, fd_ring_visibility, 1);
 %fd_shadowwarrior_quest = ^dt_shadow_ring;
-~objbox(fd_ring_visibility, "You give Rasolo the cross, and he gives you a ring of visibility.", 250, 0, 0);
-~chatnpc("<p,happy>Wonderful! Wear the ring and look to the east. You'll see the way down.");
+~chatnpc("<p,happy>Excellent, excellent. Here, take this ring. While you wear it, you will be able to see the things that live in shadows...");
+~chatnpc("<p,neutral>And you will be able to find the entrance to Damis' lair.");
+
+[label,dt_rasolo_after]
+~chatnpc("<p,happy>Many thanks for returning my heirloom to me, adventurer. Would you like to buy something?");
+switch_int (~p_choice3("Yes", 1, "No", 2, "I lost that ring you gave me...", 3)) {
+    case 1 : ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,neutral>No, not really.");
+        ~chatnpc("<p,neutral>As you wish. I will travel wherever the business takes me.");
+    case 3 :
+        ~chatplayer("<p,sad>I lost that ring you gave me...");
+        if (~obj_gettotal(fd_ring_visibility) > 0) {
+            ~chatnpc("<p,confused>Are you sure? I don't have it anymore...");
+            return;
+        }
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>Well, should you need a replacement, I suggest you free up some inventory room first...");
+            return;
+        }
+        ~chatnpc("<p,happy>Then by all means, take another. Only a foolish merchant would give away his only stock!");
+        inv_add(inv, fd_ring_visibility, 1);
+}
 
 [opnpcu,shadow_warrior_rasool]
 if (last_useitem = fd_sword_cross & %fd_shadowwarrior_quest = ^dt_shadow_rasolo) {
@@ -61,43 +157,73 @@ if (last_useitem = fd_sword_cross & %fd_shadowwarrior_quest = ^dt_shadow_rasolo)
 }
 ~displaymessage(^dm_default);
 
-// ---------------------------------------------------------------- the Bandit Camp's secure chest
+// Hadley, the tourist guide by the falls (called first by his own script; quest_waterfall)
+[proc,dt_hadley]()(boolean)
+if (%deserttreasure < ^dt_diamonds | %fd_shadowwarrior_quest >= ^dt_shadow_done) {
+    return(false);
+}
+if (~p_choice2("Ask about Waterfall Quest", 1, "Ask about Desert Treasure Quest", 2) = 1) {
+    return(false);
+}
+if (%fd_shadowwarrior_quest = 0) {
+    ~chatplayer("<p,quiz>I don't suppose you know anything about some kind of diamond nearby here, do you?");
+    ~chatnpc("<p,happy>I am afraid not <text_gender("Sir", "Madam")>. But isn't our waterfall very pretty?");
+    ~chatplayer("<p,neutral>Um... yeah, I guess.");
+    ~chatnpc("<p,neutral>There was a very scruffy looking merchant in here the other day, perhaps he might have the item you are looking for?");
+    return(true);
+}
+~chatplayer("<p,quiz>I don't suppose you've ever heard of someone named Damis, have you?");
+~chatnpc("<p,neutral>I heard a rumour many years ago, that there was a warrior by that name who had a secret hideout somewhere in these parts, but I have never seen it myself.");
+~chatnpc("<p,neutral>And why would you be looking for such a criminal element when you could be admiring the tranquil beauty of the waterfall, anyway?");
+return(true);
+
+// ---------------------------------------------------------------- Laheeb's secure chest
 
 [oploc1,fd_bandit_shutchest]
 if (%fd_banditchest_disarmed = 1) {
     @dt_bandit_chest_search;
 }
 if (%fd_shadowwarrior_quest < ^dt_shadow_rasolo) {
-    mes("This chest is securely locked.");
+    ~chatplayer("<p,neutral>These bandits are hostile enough without me trying to rob them!");
     return;
 }
 if (stat(thieving) < 53) {
-    mes("You need a Thieving level of 53 to pick these locks.");
+    mes("You need a Thieving level of 53 to open this chest.");
+    return;
+}
+~mesbox("Your skill as a thief allows you to see some kind of elaborate booby trapped locking mechanism on this chest.");
+if (~p_choice2("Yes", 1, "No", 2) = 2) {
     return;
 }
 if (inv_total(inv, lockpick) = 0) {
-    mes("The chest has three locks. You'll need a lockpick.");
+    mes("You will need a lockpick for this lock.");
     return;
 }
-mes("You start picking the locks...");
 def_int $lock = 1;
 while ($lock <= 3) {
+    if ($lock = 1) mes("You attempt to pick the first lock...");
+    if ($lock = 2) mes("You attempt to pick the second lock...");
+    if ($lock = 3) mes("You attempt to pick the final lock...");
     anim(human_pickupfloor, 0);
     p_delay(1);
-    if (stat_random(thieving, 40, 140) = false) {
+    if (stat_random(thieving, 52, 128) = false) {
+        mes("...and fail. The locking mechanism has reset itself.");
         inv_del(inv, lockpick, 1);
-        mes("You slip and set off a trap! Your lockpick breaks.");
+        mes("Your lock pick snapped while attempting to pick the lock.");
         ~damage_self(calc(randominc(1) + 2));
+        // "may also apply up to 6 points of recurrent poison" (the chance isn't recorded)
         if (random(2) = 0) {
-            queue(poison_player, 0, 20);
+            queue(poison_player, 0, 26);
         }
         return;
     }
-    mes("You pick lock <tostring($lock)>.");
+    if ($lock = 1) mes("...You successfully picked the first lock!");
+    if ($lock = 2) mes("...You successfully picked the second lock!");
+    if ($lock = 3) mes("You manage to pick final lock.");
     $lock = add($lock, 1);
 }
 %fd_banditchest_disarmed = 1;
-mes("The chest springs open.");
+stat_advance(thieving, 1500);
 @dt_bandit_chest_search;
 
 [label,dt_bandit_chest_search]
@@ -105,12 +231,11 @@ anim(human_openchest, 0);
 p_delay(0);
 loc_change(fd_bandit_openchest, 10);
 if (~obj_gettotal(fd_sword_cross) > 0 | %fd_shadowwarrior_quest >= ^dt_shadow_ring) {
-    mes("The chest is empty.");
+    mes("You find nothing of interest inside the chest.");
     return;
 }
 inv_add(inv, fd_sword_cross, 1);
-stat_advance(thieving, 1500);
-~objbox(fd_sword_cross, "You find a gilded cross inside the chest.", 250, 0, 0);
+mes("Inside the chest, hidden under some rags, you find a Gilded Cross.");
 
 // ---------------------------------------------------------------- the ring and the ladder
 
@@ -126,8 +251,7 @@ p_arrivedelay;
 anim(human_reachforladder, 0);
 p_delay(0);
 p_teleport(map_findsquare(0_41_79_6_16, 0, 2, ^map_findsquare_lineofwalk));
-mes("You climb down into the darkness.");
-settimer(dt_shadow, 4);
+settimer(dt_shadow, 1);
 
 [oploc1,fd_shadowladder]
 p_arrivedelay;
@@ -136,42 +260,73 @@ p_delay(0);
 p_teleport(map_findsquare(0_39_53_52_29, 0, 2, ^map_findsquare_lineofwalk));
 cleartimer(dt_shadow);
 
-[proc,dt_in_shadow_dungeon]()(boolean)
-return(inzone(0_41_78_0_51, 0_43_80_5_5, coord));
-
-// in the Shadow Dungeon: Damis appears in the far east room when you're there wearing the ring
+// every tick in the Shadow Dungeon: Damis' cave, his prayer drain, the lost diamond
 [timer,dt_shadow]
 if (~dt_in_shadow_dungeon = false) {
     cleartimer(dt_shadow);
     %fd_shadowwar_intro = 0;
     return;
 }
-if (inzone(0_42_79_47_44, 0_42_79_63_63, coord) = false) {
+if (~dt_in_damis_cave = false) {
+    %fd_shadowwar_intro = 0;
     return;
 }
+// the second form drains Prayer while next to you
+if (npc_find(coord, fd_damis_tougher, 1, 0) = true & stat(prayer) > 0) {
+    stat_sub(prayer, add(divide(stat(prayer), 20), 1), 0);
+}
+if (%fd_shadowwar_intro = 1) {
+    return;
+}
+%fd_shadowwar_intro = 1; // once each time you come into the cave
 if (%fd_shadowwarrior_quest >= ^dt_shadow_done) {
-    // a lost diamond turns up again
-    if (%fd_shadowwar_intro = 0 & ~dt_have_diamond(fd_dark_diamond) = false & %fd_column_shadow = 0) {
-        %fd_shadowwar_intro = 1;
+    if (~obj_gettotal(fd_dark_diamond) = 0 & %fd_column_shadow = 0) {
         obj_add(0_42_79_57_59, fd_dark_diamond, 1, 200);
-        mes("You see something glinting in the shadows.");
     }
     return;
 }
 if (%fd_shadowwarrior_quest < ^dt_shadow_ring | inv_total(worn, fd_ring_visibility) = 0) {
+    %fd_shadowwar_intro = 0; // he shows himself only to the ring
     return;
 }
-if (npc_find(coord, fd_damis_normal, 14, 0) = true | npc_find(coord, fd_damis_tougher, 14, 0) = true) {
+if (npc_find(coord, fd_damis_normal, 16, 0) = true | npc_find(coord, fd_damis_tougher, 16, 0) = true) {
     return;
 }
+mes("A voice seems to come from the walls around you;");
+mes("'You... do not be... long in this... place...");
+mes("Turn... back now, or... prepare... to meet your... doom...'");
 if (%fd_shadowwarrior_quest = ^dt_shadow_ring) {
     npc_add(0_42_79_57_59, fd_damis_normal, 500);
 } else {
     npc_add(0_42_79_57_59, fd_damis_tougher, 500);
 }
-npc_say("You have come for the Diamond of Shadow? Then you will die in the dark!");
+npc_say("You should... have listened to me!");
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
+
+// Damis' shouts as he fights
+[ai_opplayer2,fd_damis_normal] ~dt_damis_attack;
+[ai_opplayer2,fd_damis_tougher] ~dt_damis_attack;
+
+[proc,dt_damis_attack]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+if (random(8) = 0) {
+    if (~check_protect_prayer(^melee_style) = true & random(2) = 0) {
+        npc_say("Your pathetic skill won't help you now!");
+    } else {
+        switch_int (random(6)) {
+            case 0 : npc_say("I will crush you utterly!");
+            case 1 : npc_say("You are no match for my power!");
+            case 2 : npc_say("Taste my blade and feel my wrath!");
+            case 3 : npc_say("I... am... invincible!");
+            case 4 : npc_say("You will regret ever coming here!");
+            case default : npc_say("Hah! I fear not your feeble power!");
+        }
+    }
+}
+~dt_npc_melee(npc_param(eascape_maxhit));
 
 [ai_queue3,fd_damis_normal]
 gosub(npc_death);
@@ -183,10 +338,16 @@ if (npc_findhero = ^true) {
 if (%fd_shadowwarrior_quest = ^dt_shadow_ring) {
     %fd_shadowwarrior_quest = ^dt_shadow_damis1;
 }
-mes("Damis falls... and rises again, stronger!");
 npc_add(0_42_79_57_59, fd_damis_tougher, 500);
+npc_say("This armour... is for restraint, not... protection...");
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
+queue(dt_damis_power, 2, 0);
+
+[queue,dt_damis_power]
+if (npc_find(coord, fd_damis_tougher, 16, 0) = true) {
+    npc_say("Now I show... you... my true... power!");
+}
 
 [ai_queue3,fd_damis_tougher]
 gosub(npc_death);
@@ -199,8 +360,6 @@ if (%fd_shadowwarrior_quest >= ^dt_shadow_done) {
     return;
 }
 %fd_shadowwarrior_quest = ^dt_shadow_done;
-%fd_shadowwar_intro = 1;
-if (~dt_have_diamond(fd_dark_diamond) = false) {
+if (~obj_gettotal(fd_dark_diamond) = 0) {
     obj_add(coord, fd_dark_diamond, 1, 200);
 }
-mes("Damis is defeated. The Diamond of Shadow lies where he fell.");

@@ -10741,11 +10741,14 @@ export class Client extends GameShell {
                     register = (varp & (0x1 << lsb)) === 0 ? 0 : 1;
                 } else if (opcode === 14) {
                     // push_varbit {varbit}
-                    const varbit: VarBitType = VarBitType.list[script[pc++]];
-                    const { basevar, startbit, endbit } = varbit;
-
-                    const mask = Client.readbit[endbit - startbit];
-                    register = (this.var[basevar] >> startbit) & mask;
+                    const varbit: VarBitType | undefined = VarBitType.list[script[pc++]];
+                    if (varbit) {
+                        const { basevar, startbit, endbit } = varbit;
+                        const mask = Client.readbit[endbit - startbit];
+                        register = (this.var[basevar] >> startbit) & mask;
+                    } else {
+                        register = 0; // EASCape: an unknown varbit reads as 0 instead of crashing
+                    }
                 } else if (opcode === 15) {
                     // subtract
                     nextArithmetic = 1;

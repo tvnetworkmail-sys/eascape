@@ -1,0 +1,64 @@
+// Desert Treasure: what the four guardians' and the Stranger's attacks have in common (the
+// mechanics themselves are in each diamond's file, from the OSRS wiki's boss pages).
+
+// a melee swing: one accuracy roll in the npc's own style, damage up to $maxhit, Protect from
+// Melee stops it
+[proc,dt_npc_melee](int $maxhit)
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+if (npc_param(attack_sound) ! null) {
+    sound_synth(npc_param(attack_sound), 1, 0);
+}
+def_int $damage = 0;
+if (~eascape_npc_roll(npc_param(damagetype), npc_param(damagetype)) = true) {
+    $damage = randominc($maxhit);
+}
+~playerhit_n_melee(true, $damage, npc_param(attackrate));
+
+// a spell: $fixed > 0 is a hit that always lands for that much (Kamil, Dessous), otherwise an
+// accuracy roll against Magic defence for up to $maxhit. Protect from Magic stops it. True if
+// it hit.
+[proc,dt_npc_spell](int $maxhit, int $fixed, spotanim $travel, spotanim $impact, int $style)(boolean)
+def_int $duration = 30;
+if ($travel ! null) {
+    $duration = ~player_projectile(npc_coord, coord, uid, $travel, 40, 36, 32, 15, 0, 11, 5);
+}
+def_int $damage = 0;
+def_boolean $hit = false;
+if ($fixed > 0) {
+    $damage = $fixed;
+    $hit = true;
+} else if (~eascape_npc_roll(^magic_style, ^magic_style) = true) {
+    $damage = randominc($maxhit);
+    $hit = true;
+}
+if ($hit = true) {
+    if ($impact ! null) {
+        spotanim_pl($impact, 92, $duration);
+    }
+    ~eascape_npc_proj_hit($damage, $duration, $style);
+    return(true);
+}
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+queue*(playerhit_n_retaliate, 1)(npc_uid);
+~npc_set_attack_vars;
+return(false);
+
+// how far the npc is from you (1 = next to you)
+[proc,dt_npc_distance]()(int)
+return(max(abs(calc(coordx(coord) - coordx(npc_coord))), abs(calc(coordz(coord) - coordz(npc_coord)))));
+
+[proc,dt_in_melee_range]()(boolean)
+if (~dt_npc_distance <= 1) {
+    return(true);
+}
+return(false);
+
+// logging in: the shadow ladder, and the timers of whichever Desert Treasure place you're in
+[proc,dt_login]
+~dt_ring_check;
+if (~dt_in_smoke_dungeon = true) settimer(dt_smoke, 20);
+if (~dt_in_shadow_dungeon = true) settimer(dt_shadow, 1);
+if (~dt_in_ice_lands = true) settimer(dt_icepath, 2);
+if (~dt_in_pyramid_floors = true | ~dt_in_pyramid_temple = true) settimer(dt_pyramid, 4);
+if (inzone(0_49_46_0_0, 0_51_46_63_63, coord) = true) settimer(dt_bandit_watch, 2);

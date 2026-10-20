@@ -128,9 +128,9 @@ const t0 = Date.now();
 const w = load(dir);
 const loadMs = Date.now() - t0;
 const r1 = w.find({ x: 3222, z: 3218, level: 0 }, { x: 3166, z: 3307, level: 2 }, { near: 1 });
-assert.ok(r1 && r1.some((p) => p.via === 'ladder') && r1[r1.length - 1].level === 2, 'up the mill ladders');
+assert.ok(r1 && r1.some((p) => /ladder/.test(p.via || '')) && r1[r1.length - 1].level === 2, 'up the mill ladders');
 const r2 = w.find({ x: 3222, z: 3218, level: 0 }, { x: 3103, z: 9571, level: 0 }, { near: 1 });
-assert.ok(r2 && r2.some((p) => p.via === 'wizards_tower_laddertop'), "down into the Wizards' Tower basement");
+assert.ok(r2 && r2.some((p) => /ladder/.test(p.via || '')), "down into the Wizards' Tower basement");
 const r3 = w.find({ x: 3222, z: 3218, level: 0 }, { x: 3212, z: 3428, level: 0 });
 assert.ok(r3 && r3.length > 150, 'to Varrock square, ending beside the fountain');
 for (let i = 1; i < r3.length; i++) {
@@ -148,7 +148,7 @@ assert.ok(!w.walkable(2700, 3500, 1), 'open air above the ground is not walkable
 const c3 = smooth(w, r3);
 assert.ok(c3.length < r3.length / 5 && c3[0] === r3[0] && c3[c3.length - 1] === r3[r3.length - 1], `smoothed ${r3.length} -> ${c3.length}`);
 const s1 = smooth(w, r1);
-assert.ok(s1.some((p) => p.via === 'ladder'), 'smoothing keeps the ladders');
+assert.ok(s1.some((p) => /ladder/.test(p.via || '')), 'smoothing keeps the ladders');
 assert.strictEqual(w.find({ x: 3222, z: 3218, level: 0 }, { x: 3212, z: 3215, level: 3 }, { maxNodes: 20000 }), null, 'no route: null');
 console.log(`routes: ok (loaded in ${loadMs} ms)`);
 

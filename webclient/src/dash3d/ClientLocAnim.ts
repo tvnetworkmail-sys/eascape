@@ -18,6 +18,7 @@ export default class ClientLocAnim extends ModelSource {
     readonly heightNE: number;
     readonly heightNW: number;
     readonly multivarbit: number;
+    readonly multivarp: number;
     readonly multiloc: Int32Array | null;
     anim: SeqType | null = null;
     animFrame: number = 0;
@@ -48,6 +49,7 @@ export default class ClientLocAnim extends ModelSource {
 
         const loc = LocType.list(index);
         this.multivarbit = loc.multivarbit;
+        this.multivarp = loc.multivarp;
         this.multiloc = loc.multiloc;
     }
 
@@ -86,12 +88,16 @@ export default class ClientLocAnim extends ModelSource {
         if (this.multiloc === null) {
             loc = LocType.list(this.index);
         } else {
-            const varbit = VarBitType.list[this.multivarbit];
-            const basevar = varbit.basevar;
-            const startbit = varbit.startbit;
-            const endbit = varbit.endbit;
-            const mask = Client.readbit[endbit - startbit];
-            const index = (ClientLocAnim.app.var[basevar] >> startbit) & mask;
+            // EASCape: a multiloc may switch on a varbit or on a whole varp (multivarbit is -1
+            // then); reading VarBitType.list[-1] crashed the client near those locs
+            let index = -1;
+            const varbit = this.multivarbit !== -1 ? VarBitType.list[this.multivarbit] : undefined;
+            if (varbit) {
+                const mask = Client.readbit[varbit.endbit - varbit.startbit];
+                index = (ClientLocAnim.app.var[varbit.basevar] >> varbit.startbit) & mask;
+            } else if (this.multivarp !== -1) {
+                index = ClientLocAnim.app.var[this.multivarp];
+            }
 
             if (index < 0 || index >= this.multiloc.length || this.multiloc[index] === -1) {
                 return null;

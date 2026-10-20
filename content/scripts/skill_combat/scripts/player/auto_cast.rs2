@@ -22,6 +22,12 @@ if (p_finduid(uid) = false) { // cant open autocast interface if delayed
     return;
 }
 %autocast_set = 0;
+// EASCape: the ancient staff on the Ancient Magicks shows their spells instead (the 377 interface
+// that has the name questscroll_itgronigen is that "Select a Combat Spell" list)
+if (inv_getobj(worn, ^wearpos_rhand) = staff_of_zaros & %alternate_spells = 1) {
+    if_settab(questscroll_itgronigen, 0);
+    return;
+}
 if_settab(staff_spells, 0);
 
 [if_button,staff_spells:cancelspell]
@@ -61,3 +67,30 @@ return(false);
 [proc,.player_autocast_reset]
 .%autocast_set = 0;
 .%autocast_spell = null;
+
+// EASCape: the Ancient Magicks' list (buttons in the interface's order)
+[if_button,questscroll_itgronigen:com_6] if_close; if (p_finduid(uid) = true) ~initalltabs;
+[if_button,questscroll_itgronigen:com_7] @set_autocast_spell(^ice_rush);
+[if_button,questscroll_itgronigen:com_18] @set_autocast_spell(^ice_blitz);
+[if_button,questscroll_itgronigen:com_29] @set_autocast_spell(^ice_burst);
+[if_button,questscroll_itgronigen:com_40] @set_autocast_spell(^ice_barrage);
+[if_button,questscroll_itgronigen:com_51] @set_autocast_spell(^blood_rush);
+[if_button,questscroll_itgronigen:com_62] @set_autocast_spell(^blood_blitz);
+[if_button,questscroll_itgronigen:com_71] @set_autocast_spell(^blood_burst);
+[if_button,questscroll_itgronigen:com_82] @set_autocast_spell(^blood_barrage);
+[if_button,questscroll_itgronigen:com_93] @set_autocast_spell(^smoke_rush);
+[if_button,questscroll_itgronigen:com_106] @set_autocast_spell(^smoke_blitz);
+[if_button,questscroll_itgronigen:com_119] @set_autocast_spell(^smoke_burst);
+[if_button,questscroll_itgronigen:com_132] @set_autocast_spell(^smoke_barrage);
+[if_button,questscroll_itgronigen:com_145] @set_autocast_spell(^shadow_rush);
+[if_button,questscroll_itgronigen:com_158] @set_autocast_spell(^shadow_blitz);
+[if_button,questscroll_itgronigen:com_171] @set_autocast_spell(^shadow_burst);
+[if_button,questscroll_itgronigen:com_184] @set_autocast_spell(^shadow_barrage);
+
+// a spell from the other book can't stay set when you change books
+[proc,autocast_check_book]
+def_boolean $ancient = false;
+if (%autocast_spell >= ^smoke_rush & %autocast_spell <= ^ice_barrage) $ancient = true;
+if (%autocast_spell > 0 & (($ancient = true & %alternate_spells = 0) | ($ancient = false & %alternate_spells = 1))) {
+    ~player_autocast_reset;
+}
