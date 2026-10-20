@@ -1,0 +1,146 @@
+// Quest Helper: which step of The Tourist Trap you're on (the steps are desertrescue_helper.dbrow),
+// from %desertrescue, the bits of %desertrescue_map_mechanisms (Siad distracted, the bookcase, the
+// tent, the cart driver), what you carry and where you are: the camp, Siad's room, the tent, the
+// mine (and its deep part past the cart), or one of the cells if the guards caught you.
+[proc,questhelper_desertrescue]()(int)
+if (%desertrescue >= ^desertrescue_complete) {
+    return(0);
+}
+if (%desertrescue = ^desertrescue_not_started) {
+    return(1); // Irena
+}
+if (%desertrescue = ^desertrescue_started) {
+    return(2); // the Mercenary Captain
+}
+if (%desertrescue = ^desertrescue_approached_captain) {
+    return(3);
+}
+if (%desertrescue = ^desertrescue_killed_capt) {
+    return(4); // the gate
+}
+if (%desertrescue >= ^desertrescue_saved_ana) {
+    return(34); // Irena's rewards
+}
+// caught by the guards
+if (inzone(0_51_47_18_23, 0_51_47_22_28, coord) = true) {
+    return(35);
+}
+if (inzone(0_51_147_16_24, 0_51_147_27_33, coord) = true) {
+    return(36);
+}
+def_boolean $mine = inzone(0_50_146_60_56, 0_52_148_2_8, coord);
+def_boolean $deep = inzone(0_51_147_31_20, 0_52_148_2_8, coord);
+if (%desertrescue = ^desertrescue_entered_camp) {
+    return(5); // the slave
+}
+if (%desertrescue = ^desertrescue_spoken_slave) {
+    return(6);
+}
+if (%desertrescue = ^desertrescue_freed_slave) {
+    return(7);
+}
+if (%desertrescue = ^desertrescue_traded_clothes) {
+    return(8); // into the mine
+}
+if (%desertrescue = ^desertrescue_entered_mine) {
+    if ($mine = true) {
+        return(9);
+    }
+    return(8);
+}
+if (%desertrescue >= ^desertrescue_finding_pineapple & %desertrescue <= ^desertrescue_finished_dart & $mine = true) {
+    return(10); // out of the mine
+}
+if (%desertrescue = ^desertrescue_finding_pineapple) {
+    return(11); // Al Shabim
+}
+if (%desertrescue = ^desertrescue_given_bedobin_key) {
+    if (testbit(%desertrescue_map_mechanisms, ^desertrescue_distracted_siad) = ^true) {
+        return(14); // his chest
+    }
+    if (testbit(%desertrescue_map_mechanisms, ^desertrescue_sailing) = ^true) {
+        return(13); // talk sailing
+    }
+    return(12); // his bookcase
+}
+if (%desertrescue = ^desertrescue_retrieved_plans) {
+    return(15);
+}
+if (%desertrescue = ^desertrescue_shown_plans_shabim) {
+    if (inzone(0_49_47_29_39, 0_49_47_40_45, coord) = true) {
+        return(17); // the anvil
+    }
+    return(16); // the tent guard
+}
+if (%desertrescue = ^desertrescue_made_dart_tip) {
+    return(18);
+}
+if (%desertrescue = ^desertrescue_finished_dart) {
+    return(19);
+}
+if (%desertrescue = ^desertrescue_learned_darts) {
+    if (inv_total(inv, tentipineapple) = 0) {
+        return(11); // another from Al Shabim
+    }
+    if ($mine = true) {
+        return(20);
+    }
+    return(8);
+}
+def_int $barrel = inv_total(inv, thminebarrel_empty);
+def_int $ana = inv_total(inv, thanainabarrel);
+if (%desertrescue = ^desertrescue_given_pineapple | %desertrescue = ^desertrescue_used_mine_cart) {
+    if ($mine = false) {
+        return(8);
+    }
+    if ($deep = true) {
+        if ($barrel > 0) {
+            return(23); // Ana
+        }
+        return(25); // back for a barrel
+    }
+    if ($barrel = 0) {
+        return(21);
+    }
+    return(22); // the cart
+}
+if (%desertrescue = ^desertrescue_caught_ana) {
+    if ($ana > 0) {
+        return(24); // on the cart
+    }
+    return(23);
+}
+if (%desertrescue = ^desertrescue_ana_minecart) {
+    if ($deep = true) {
+        return(25);
+    }
+    if ($mine = true) {
+        return(26);
+    }
+    return(8);
+}
+if (%desertrescue = ^desertrescue_retrieved_ana_minecart) {
+    if ($mine = true) {
+        return(27); // the lift
+    }
+    return(8);
+}
+if (%desertrescue = ^desertrescue_ana_lift) {
+    if ($mine = true) {
+        return(10);
+    }
+    return(28); // the winch
+}
+if (%desertrescue = ^desertrescue_retrieved_ana_lift) {
+    return(29);
+}
+if (%desertrescue = ^desertrescue_retrieved_ana_liftbarrel) {
+    return(30);
+}
+if (%desertrescue = ^desertrescue_ana_on_mining_cart) {
+    if (testbit(%desertrescue_map_mechanisms, ^desertrescue_ready_rescue) = ^true) {
+        return(32);
+    }
+    return(31); // the driver
+}
+return(33); // escaped: Ana to Irena

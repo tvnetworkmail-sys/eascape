@@ -1,0 +1,174 @@
+// Quest Helper: which step of The Dig Site you're on (the steps are itexam_helper.dbrow), from the
+// quest's own progress procs (~itexam_progress, the students' errands, the quest bits), what you
+// carry and whether you're down a shaft.
+[proc,questhelper_itexam]()(int)
+def_int $p = ~itexam_progress;
+if ($p >= ^itexam_complete) {
+    return(0);
+}
+if ($p = ^itexam_not_started) {
+    return(1); // the Examiner
+}
+if ($p = ^itexam_stamping) {
+    if (inv_total(inv, recommendedletter) > 0) {
+        return(3);
+    }
+    if (inv_total(inv, digplainletter) > 0) {
+        return(2); // the Curator
+    }
+    return(1);
+}
+def_int $green = ~itexam_errand_progress(^itexam_errand_student1);
+def_int $purple = ~itexam_errand_progress(^itexam_errand_student2);
+def_int $orange = ~itexam_errand_progress(^itexam_errand_student3);
+if ($p = ^itexam_first_exam) {
+    if ($green = 0) {
+        return(4);
+    }
+    if ($green = 1) {
+        if (inv_total(inv, rock_sample1) > 0) {
+            return(6);
+        }
+        return(5); // pickpocket a workman
+    }
+    if ($purple = 0) {
+        return(7);
+    }
+    if ($purple = 1) {
+        if (inv_total(inv, rock_sample3) > 0) {
+            return(9);
+        }
+        return(8); // the bushes
+    }
+    if ($orange = 0) {
+        return(10);
+    }
+    if ($orange = 1) {
+        if (inv_total(inv, rock_sample2) > 0) {
+            return(14);
+        }
+        if (~itexam_testbit(^itexam_bit_panning_guide_tea_given) = ^false) {
+            return(11); // tea for the panning guide
+        }
+        if (add(inv_total(inv, tray_empty), inv_total(inv, tray_mud)) = 0) {
+            return(12);
+        }
+        return(13); // pan
+    }
+    return(15); // the first exam
+}
+if ($p = ^itexam_second_exam) {
+    if ($green ! 2) {
+        return(16);
+    }
+    if ($purple ! 2) {
+        return(17);
+    }
+    if ($orange ! 2) {
+        return(18);
+    }
+    return(19);
+}
+if ($p = ^itexam_third_exam) {
+    if ($green ! 2) {
+        return(20);
+    }
+    if ($purple ! 2) {
+        return(21); // she wants an opal
+    }
+    if ($orange ! 2) {
+        return(22);
+    }
+    return(23);
+}
+if ($p = ^itexam_impress_archeological_expert) {
+    if (inv_total(inv, digexpertscroll) > 0) {
+        return(28); // to a workman
+    }
+    if (inv_total(inv, digtalisman) > 0 | ~itexam_testbit(^itexam_bit_shown_ancient_symbol) = ^true) {
+        return(27); // the expert
+    }
+    if (inv_total(inv, specimen_jar) = 0) {
+        return(24);
+    }
+    if (inv_total(inv, specimen_brush) = 0) {
+        return(25);
+    }
+    return(26); // dig at a level 3 site
+}
+// down a shaft (before the blast: the private dig in the west, the bricks in the east)
+def_boolean $cave = inzone(0_52_153_7_13, 0_52_153_62_53, coord);
+def_boolean $private = false;
+if ($cave = true & coordx(coord) < 3360) {
+    $private = true;
+}
+if ($p = ^itexam_mineshaft_permit) {
+    def_int $winch2 = 29;
+    if (~itexam_testbit(^itexam_bit_private_winch_rope_attached) = ^true) {
+        $winch2 = 30;
+    }
+    if (inv_total(inv, digcompound) > 0) {
+        if ($cave = true & $private = false) {
+            return(43); // on the bricks
+        }
+        if ($private = true) {
+            return(33);
+        }
+        if (~itexam_testbit(^itexam_bit_winch_rope_attached) = ^true) {
+            return(42);
+        }
+        return(41);
+    }
+    def_int $mixed = add(inv_total(inv, precharcoalmixture), inv_total(inv, postcharcoalmixture));
+    def_int $ammonium = add(add(inv_total(inv, ammonium_nitrate), inv_total(inv, unidentified_powder)), $mixed);
+    def_int $nitro = add(add(inv_total(inv, nitroglycerin), inv_total(inv, unidentified_liquid)), $mixed);
+    def_int $root = inv_total(inv, arcenia_root);
+    if ($cave = true) {
+        if ($root = 0) {
+            return(32);
+        }
+        if ($ammonium = 0 & inv_total(inv, digchestkey) = 0 & $private = true) {
+            return(31); // the workman's key
+        }
+        return(33); // back up
+    }
+    if ($ammonium = 0) {
+        if (inv_total(inv, digchestkey) > 0) {
+            return(34); // the chest
+        }
+        return($winch2);
+    }
+    if ($root = 0) {
+        return($winch2);
+    }
+    if ($nitro = 0) {
+        return(35); // the barrel
+    }
+    if (add(inv_total(inv, unidentified_liquid), inv_total(inv, unidentified_powder)) > 0) {
+        return(36); // the expert identifies them
+    }
+    if (inv_total(inv, postcharcoalmixture) > 0) {
+        return(40); // the arcenia root
+    }
+    if (inv_total(inv, precharcoalmixture) > 0) {
+        if (inv_total(inv, ground_charcoal) > 0) {
+            return(39);
+        }
+        return(37); // grind the charcoal
+    }
+    return(38); // ammonium nitrate on the nitroglycerin
+}
+if ($p = ^itexam_poured_compound_on_bricks) {
+    if ($cave = true) {
+        return(44); // light it
+    }
+    return(42);
+}
+// the way is open
+if (inv_total(inv, zarosstonetablet) > 0) {
+    return(46);
+}
+if (inzone(0_52_152_7_13, 0_52_152_62_53, coord) = true) {
+    return(45);
+}
+return(42);
