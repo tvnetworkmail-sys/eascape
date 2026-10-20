@@ -1,0 +1,90 @@
+// Quest Helper: which step of the Waterfall Quest you're on (the steps are waterfall_helper.dbrow),
+// from %waterfall_quest, %waterfall_golrie_and_puzzle (Golrie's pebble, the runes on the pillars),
+// what you carry and where you are.
+[proc,questhelper_waterfall]()(int)
+if (%waterfall_quest >= ^waterfall_complete) {
+    return(0);
+}
+if (%waterfall_quest = ^waterfall_not_started) {
+    return(1); // Almera
+}
+def_boolean $mound = inzone(0_39_54_14_20, 0_39_54_18_25, coord);
+if (%waterfall_quest = ^waterfall_started) {
+    if ($mound = true) {
+        return(3); // Hudon
+    }
+    return(2); // the raft
+}
+if (%waterfall_quest = ^waterfall_spoken_to_hudon) {
+    if ($mound = true) {
+        return(4); // off the island
+    }
+    if (inv_total(inv, baxtorian_book_waterfall_quest) > 0) {
+        return(7); // read it
+    }
+    if (inzone(1_39_53_16_28, 1_39_53_28_42, coord) = true) {
+        return(6); // the bookcase
+    }
+    return(5); // Hadley's stairs
+}
+if (%waterfall_quest = ^waterfall_opened_book_on_baxtorian) {
+    if (inv_total(inv, glarials_pebble_waterfall_quest) > 0) {
+        return(12); // the tombstone
+    }
+    if (inzone(0_39_149_4_4, 0_40_150_0_0, coord) = true) {
+        if (inv_total(inv, golrie_key_waterfall_quest) > 0) {
+            return(10); // open his gate
+        }
+        // through the gate already: talk to him
+        if (npc_find(coord, golrie_waterfall_quest, 3, 0) = true) {
+            return(11);
+        }
+        return(9); // the crate
+    }
+    return(8); // the gnome village cellar
+}
+def_int $amulet = add(inv_total(inv, glarials_amulet_waterfall_quest), inv_total(worn, glarials_amulet_waterfall_quest));
+def_int $urn = inv_total(inv, glarials_urn_full_waterfall_quest);
+// Glarial's tomb
+if (inzone(0_39_153_24_8, 0_40_153_0_58, coord) = true) {
+    if ($amulet = 0) {
+        return(13);
+    }
+    if ($urn = 0) {
+        return(14);
+    }
+    return(15);
+}
+// inside the falls
+if (inzone(0_39_153_59_63, 0_40_155_55_5, coord) = true) {
+    if (inzone(0_40_154_36_47, 0_40_154_52_62, coord) = true) {
+        return(24); // the chalice
+    }
+    if (inzone(0_40_154_0_47, 0_40_154_12_62, coord) = true) {
+        if (%waterfall_quest >= ^waterfall_placed_amulet) {
+            return(21); // the door again takes you up to the chalice
+        }
+        if (getbit_range(%waterfall_golrie_and_puzzle, 1, 18) = 262143) {
+            return(23); // the statue
+        }
+        return(22); // the pillars
+    }
+    if (inv_total(inv, baxtorian_key_waterfall_quest) = 0) {
+        return(20); // the crate
+    }
+    return(21); // the door
+}
+// outside: the ledge door needs the amulet (another from the chest if it's on the statue) and the chalice the urn
+if ($amulet = 0 | $urn = 0) {
+    return(12); // back into the tomb
+}
+if (inzone(0_39_54_14_6, 0_39_54_16_8, coord) = true) {
+    return(19); // the ledge: the door
+}
+if (inzone(0_39_54_15_10, 0_39_54_18_14, coord) = true) {
+    return(18); // by the rock: the tree
+}
+if ($mound = true) {
+    return(17); // the rock
+}
+return(16); // the raft

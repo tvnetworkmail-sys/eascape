@@ -1,0 +1,111 @@
+// Quest Helper: which step of Priest in Peril you're on (the steps are priestperil_helper.dbrow),
+// from %priestperil, what you carry and whether you're under the mausoleum or up in the temple.
+[proc,questhelper_priestperil]()(int)
+if (%priestperil >= ^priestperil_complete) {
+    return(0);
+}
+// under the mausoleum (the dog's room, the monuments and Drezel's room past them)
+def_boolean $under = inzone(0_53_154_0_16, 0_53_154_63_63, coord);
+def_int $level = coordy(coord);
+if (%priestperil = ^priestperil_not_started) {
+    return(1); // King Roald
+}
+if (%priestperil = ^priestperil_started) {
+    return(2); // knock at the temple door
+}
+if (%priestperil = ^priestperil_agree_to_kill_dog) {
+    if ($under = true) {
+        return(4); // kill the dog
+    }
+    return(3); // down the trapdoor
+}
+if (%priestperil = ^priestperil_killed_dog) {
+    if ($under = true) {
+        return(5); // back up
+    }
+    return(6); // tell Roald
+}
+if (%priestperil = ^priestperil_return_to_drezel) {
+    if ($under = true) {
+        return(5);
+    }
+    if ($level = 2) {
+        return(9); // talk through the cell door
+    }
+    if ($level = 1) {
+        return(8);
+    }
+    return(7);
+}
+def_int $water = add(inv_total(inv, bucket_murkywater), inv_total(inv, bucket_blessedwater));
+if (%priestperil = ^priestperil_find_drezel_key) {
+    if (inv_total(inv, pipkey_iron) > 0) {
+        if ($under = true) {
+            // fill a bucket while you're down here: Drezel needs it next
+            if ($water = 0 & inv_total(inv, bucket_empty) > 0) {
+                return(13);
+            }
+            return(15);
+        }
+        return(~questhelper_priestperil_top(18)); // the iron key on the cell door
+    }
+    if (inv_total(inv, pipkey_gold) > 0) {
+        if ($under = true) {
+            return(12); // swap it at the monument
+        }
+        return(11);
+    }
+    if ($under = true) {
+        return(5);
+    }
+    return(10); // the monks
+}
+if (%priestperil = ^priestperil_unlocked_drezel) {
+    if (inv_total(inv, bucket_blessedwater) > 0) {
+        if ($under = true) {
+            return(15);
+        }
+        return(~questhelper_priestperil_top(20)); // on the coffin
+    }
+    if (inv_total(inv, bucket_murkywater) > 0) {
+        if ($under = true) {
+            return(15);
+        }
+        return(~questhelper_priestperil_top(19)); // Drezel blesses it
+    }
+    if ($under = true) {
+        return(13); // the well
+    }
+    return(14);
+}
+if (%priestperil = ^priestperil_poured_blessed_water) {
+    if ($under = true) {
+        return(15);
+    }
+    return(~questhelper_priestperil_top(21)); // talk to Drezel
+}
+if (%priestperil = ^priestperil_meet_in_mausoleum) {
+    if ($under = true) {
+        return(23);
+    }
+    return(22);
+}
+// bringing the 50 rune essence
+if (inv_total(inv, blankrune) > 0) {
+    if ($under = true) {
+        return(25);
+    }
+    return(22);
+}
+return(24);
+
+// the step when you're on the temple's top floor, otherwise the way up
+[proc,questhelper_priestperil_top](int $step)(int)
+def_int $level = coordy(coord);
+if ($level = 2) {
+    return($step);
+}
+if ($level = 1) {
+    return(17); // the ladder
+}
+return(16); // the stairs
