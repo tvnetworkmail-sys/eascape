@@ -1,0 +1,107 @@
+// EASCape: Ali Morrisane's flying carpet fleet, from Void (content/area/kharidian_desert/RugMerchant.kt):
+// the Rug Merchants, their stations, 200 coins a journey, and the routes the carpets fly
+// (configs/magic_carpet.dbrow, Void's patrols). Uzer's merchant shows once The Golem is done (a
+// multinpc in the 377 cache); Sophanem's and Menaphos's stay hidden until Icthlarin's Little Helper,
+// which isn't in the game yet. The flight uses the 377 cache's carpet animations.
+
+[opnpc1,magic_carpet_seller1] ~carpet_merchant("shantay_pass");
+[opnpc1,magic_carpet_seller2] ~carpet_merchant("bedabin_camp");
+[opnpc1,magic_carpet_seller4] ~carpet_merchant("north_pollnivneach");
+[opnpc1,magic_carpet_seller3] ~carpet_merchant("south_pollnivneach");
+[opnpc1,magic_carpet_seller8] ~carpet_merchant("nardah");
+[opnpc1,magic_carpet_seller5_multi] ~carpet_merchant("uzer");
+
+[proc,carpet_merchant](string $here)
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,neutral>Greetings, desert traveller. Do you require the services of Ali Morrisane's flying carpet fleet?");
+switch_int (~p_choice2("Yes please.", 1, "No thanks.", 2)) {
+    case 2 :
+        ~chatplayer("<p,neutral>No thanks.");
+        ~chatnpc("<p,neutral>Come back anytime.");
+        return;
+}
+~chatplayer("<p,happy>Yes please.");
+def_string $to = "";
+if (compare($here, "shantay_pass") = 0) {
+    ~chatnpc("<p,neutral>From here you can travel to the Bedabin camp or to the north of Pollnivneach.");
+    if (%golem_a >= ^golem_complete) {
+        switch_int (~p_choice4("I want to travel to Uzer.", 1, "I want to travel to the Bedabin camp.", 2, "I want to travel to Pollnivneach.", 3, "I don't want to travel to any of those places.", 4)) {
+            case 1 : $to = "uzer";
+            case 2 : $to = "bedabin_camp";
+            case 3 : $to = "north_pollnivneach";
+        }
+    } else {
+        switch_int (~p_choice3("I want to travel to the Bedabin camp.", 2, "I want to travel to Pollnivneach.", 3, "I don't want to travel to any of those places.", 4)) {
+            case 2 : $to = "bedabin_camp";
+            case 3 : $to = "north_pollnivneach";
+        }
+    }
+} else if (compare($here, "south_pollnivneach") = 0) {
+    ~chatnpc("<p,neutral>Travel to Menaphos and Sophanem from here would be possible, but for the strange goings on there. You can still travel from here to Nardah.");
+    switch_int (~p_choice2("I want to travel to Nardah.", 1, "Actually, I've changed my mind.", 2)) {
+        case 1 : $to = "nardah";
+    }
+} else if (compare($here, "nardah") = 0) {
+    ~chatnpc("<p,neutral>The carpets here will take you to the south of Pollnivneach.");
+    switch_int (~p_choice2("Let's go then.", 1, "I don't want to travel there.", 2)) {
+        case 1 : $to = "south_pollnivneach";
+    }
+} else {
+    ~chatnpc("<p,neutral>From here you can travel to the Shantay Pass.");
+    switch_int (~p_choice2("Take me there.", 1, "I don't want to travel there.", 2)) {
+        case 1 : $to = "shantay_pass";
+    }
+}
+if (string_length($to) = 0) {
+    ~chatnpc("<p,neutral>Fair enough, magic carpet travel isn't for everyone. Enjoy the walk.");
+    return;
+}
+~chatnpc("<p,neutral>There is a fare for this service you know: it's 200 gold per journey.");
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>I don't have enough money with me.");
+    ~chatnpc("<p,neutral>Looks like you're walking then.");
+    return;
+}
+~chatplayer("<p,happy>Here you go.");
+inv_del(inv, coins, 200);
+~carpet_fly($here, $to);
+
+[proc,carpet_fly](string $from, string $to)
+db_find(carpet_route:from, $from);
+def_dbrow $row = db_findnext;
+def_dbrow $route = null;
+while ($row ! null) {
+    if (compare(db_getfield($row, carpet_route:to, 0), $to) = 0) {
+        $route = $row;
+    }
+    $row = db_findnext;
+}
+if ($route = null) {
+    mes("The carpets aren't flying that way today.");
+    return;
+}
+if_close;
+anim(carpet_raise, 0);
+p_delay(2);
+~set_readywalkturn_bas(carpet_sit_down, carpet_bank_left, carpet_sit_down);
+def_int $i = 0;
+def_int $n = db_getfieldcount($route, carpet_route:point);
+while ($i < $n) {
+    ~carpet_glide(db_getfield($route, carpet_route:point, $i));
+    $i = add($i, 1);
+}
+~carpet_glide(db_getfield($route, carpet_route:land, 0));
+~update_bas;
+anim(carpet_land, 0);
+p_delay(1);
+
+// two squares a tick towards a point (the carpet flies over anything)
+[proc,carpet_glide](coord $dest)
+while (coord ! $dest) {
+    def_int $dx = calc(coordx($dest) - coordx(coord));
+    def_int $dz = calc(coordz($dest) - coordz(coord));
+    $dx = max(-2, min(2, $dx));
+    $dz = max(-2, min(2, $dz));
+    p_teleport(movecoord(coord, $dx, 0, $dz));
+    p_delay(0);
+}

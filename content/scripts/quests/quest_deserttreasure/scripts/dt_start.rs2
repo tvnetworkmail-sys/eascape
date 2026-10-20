@@ -335,3 +335,12 @@ switch_int (~p_choice2("Yes please.", 1, "No thanks.", 2)) {
 [proc,dt_mirror](string $text)
 anim(human_pickuptable, 0);
 ~mesbox($text);
+
+// ---------------------------------------------------------------- the Bandit Camp shop
+
+[opnpc1,dt_bandit_shopkeeper]
+~chatnpc("<p,neutral>What do you want? Buy something or clear off.");
+switch_int (~p_choice2("Let me see what you're selling.", 1, "Nothing.", 2)) {
+    case 1 : ~openshop_activenpc;
+    case 2 : ~chatplayer("<p,neutral>Nothing.");
+}
