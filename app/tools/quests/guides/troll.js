@@ -1,0 +1,42 @@
+// Troll Stronghold. Based on Quest Helper's TrollStronghold (BSD 2-Clause, (c) 2020 Zoinkwiz),
+// for this server's quest (content/scripts/quests/quest_troll, Denulth / Tenzing / Dunstan in
+// quest_death): the arena, the Troll Generals' prison key and the guards' cell keys as built here.
+module.exports = {
+  quest: 'troll',
+  difficulty: 'Experienced',
+  start: 'Talk to Denulth in his tent at the Imperial Guard camp in Burthorpe (after Death Plateau).',
+  items: {
+    boots: { name: 'Climbing boots', obj: 'death_climbingboots', qty: 1 },
+    coins: { name: 'Coins', obj: 'coins', qty: 12 },
+    prisonkey: { name: 'Prison key', obj: 'troll_key_prison', qty: 1 },
+    godrickey: { name: 'Cell key 1', obj: 'troll_key_godric', qty: 1 },
+    eadgarkey: { name: 'Cell key 2', obj: 'troll_key_eadgar', qty: 1 },
+  },
+  required: ['boots'],
+  recommended: ['coins'],
+  skills: ['Level 15 Agility', 'Level 30 Thieving (to take the cell keys without a fight)', 'Able to defeat a level 113 troll'],
+  steps: {
+    denulth: { text: 'Talk to Denulth in his tent at the Imperial Guard camp in Burthorpe and offer to get Godric back.', npc: 'death_ig_commander', at: [2896, 3528, 0], options: ['How goes your fight with the trolls?', 'Is there anything I can do to help?', "I'll get Godric back!"] },
+    boots: { text: 'Buy climbing boots from Tenzing the Sherpa, west of Burthorpe (12 coins).', npc: 'death_sherpa', at: [2820, 3556, 0], options: ['Can I buy some Climbing boots?'], items: ['coins'] },
+    arena: { text: 'Wear the climbing boots, climb up Death Plateau and go through the door into the arena.', loc: 'troll_stronghold_arena_entrance_left', at: [2897, 3618, 0], items: ['boots'] },
+    champion: { text: 'Talk to the Troll Champion (Dad), accept his challenge and defeat him (level 113).', npc: 'troll_champion', at: [2911, 3612, 0], options: ['I accept your challenge!'] },
+    arenaExit: { text: 'Leave the arena by the north door.', loc: 'troll_stronghold_arena_exit_left', at: [2916, 3629, 0] },
+    door: { text: 'Go north-west over the rocks (Agility 15) to the Troll Stronghold and go in through the door.', loc: 'troll_stronghold_door', at: [2839, 3689, 0] },
+    general: { text: 'Kill one of the Troll Generals on the top floor of the stronghold for the prison key.', npc: ['troll_general', 'troll_general2', 'troll_general3'], obj: 'troll_key_prison', at: [2831, 10086, 2] },
+    down1: { text: 'Go down the stairs in the north of the stronghold.', loc: 'troll_stronghold_stairstop', at: [2843, 10108, 2] },
+    prison: { text: 'Open the prison door with the prison key.', loc: 'troll_stronghold_prison_door_closed', at: [2848, 10107, 1], items: ['prisonkey'] },
+    down2: { text: 'Go down the stairs into the prison.', loc: 'troll_stronghold_stairstop', at: [2852, 10107, 1] },
+    keys: { text: "Pickpocket the sleeping prison guards (Thieving 30) or kill them for the cell keys: the first guard has Godric's.", npc: ['troll_prison_guard1', 'troll_prison_guard2'], obj: ['troll_key_godric', 'troll_key_eadgar'], at: [2832, 10080, 0] },
+    godric: { text: "Use cell key 1 on Godric's cell door.", loc: 'troll_celldoor_godric', at: [2832, 10078, 0], items: ['godrickey'] },
+    eadgar: { text: 'Optional: use cell key 2 on Mad Eadgar\'s cell door to free him too.', loc: 'troll_celldoor_eadgar', at: [2832, 10082, 0], items: ['eadgarkey'] },
+    leave: { text: 'Leave the stronghold by the door in the south-west of the prison level.', loc: 'troll_stronghold_exit', at: [2823, 10048, 0] },
+    dunstan: { text: 'Tell Dunstan, the smith in Burthorpe, that his son Godric is safe.', npc: 'death_smithy', at: [2919, 3574, 0] },
+  },
+  sections: [
+    { title: 'Starting off', steps: ['denulth', 'boots'] },
+    { title: 'The Troll Champion', steps: ['arena', 'champion', 'arenaExit'] },
+    { title: 'The stronghold', steps: ['door', 'general', 'down1', 'prison', 'down2'] },
+    { title: 'The prisoners', steps: ['keys', 'godric', 'eadgar', 'leave', 'dunstan'] },
+  ],
+  rewards: ['1 Quest Point', 'A law talisman', 'The way to the troll country'],
+};

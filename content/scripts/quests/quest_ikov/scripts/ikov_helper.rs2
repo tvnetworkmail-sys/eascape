@@ -1,0 +1,61 @@
+// Quest Helper: which step of the Temple of Ikov you're on (the steps are ikov_helper.dbrow), from
+// %ikov, the lever bit of %ikov_dungeon, what you carry and where you are in the temple.
+[proc,questhelper_ikov]()(int)
+if (%ikov >= ^ikov_completed_armadyl) {
+    return(0);
+}
+if (%ikov = ^ikov_not_started) {
+    return(1); // Lucien
+}
+if (%ikov = ^ikov_helping_armadyl) {
+    return(15); // kill Lucien
+}
+def_boolean $dungeon = inzone(0_40_152_60_2, 0_43_155_8_0, coord);
+if (%ikov = ^ikov_paid_winelda) {
+    if (inv_total(inv, ikov_staffofarmardyl) > 0) {
+        return(14); // to Lucien
+    }
+    if (inzone(0_41_154_6_39, 0_41_154_31_59, coord) = true) {
+        return(13); // the Guardians
+    }
+    if ($dungeon = true) {
+        return(11); // Winelda takes you across again
+    }
+    return(2);
+}
+if ($dungeon = false) {
+    return(2); // into the temple
+}
+def_int $arrows = add(inv_total(inv, ice_arrow), inv_total(worn, ice_arrow));
+if (%ikov = ^ikov_started) {
+    if (testbit(%ikov_dungeon, ^ikov_lever) = ^false) {
+        if (inv_total(inv, ikov_lever) > 0) {
+            return(6); // on the bracket
+        }
+        def_int $boots = add(~obj_gettotal(ikov_bootsoflightness), ~obj_gettotal(ikov_bootsoflightnessworn));
+        if (inzone(0_41_152_6_7, 0_41_152_36_47, coord) = true) {
+            return(4); // the boots, and back up
+        }
+        if ($boots = 0) {
+            return(3); // the dark stairs
+        }
+        return(5); // over the lava bridge for the lever
+    }
+    if ($arrows = 0) {
+        return(7); // ice arrows
+    }
+    return(8); // the trap lever
+}
+if (%ikov = ^ikov_disabled_trap) {
+    return(9);
+}
+if (%ikov = ^ikov_pulled_lever) {
+    if ($arrows = 0) {
+        return(7);
+    }
+    return(10); // the Fire Warrior
+}
+if (%ikov = ^ikov_defeated_fire_warrior) {
+    return(11); // Winelda
+}
+return(12); // her limpwurt roots

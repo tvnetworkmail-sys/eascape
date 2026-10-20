@@ -1,0 +1,59 @@
+// Quest Helper: which step of Troll Stronghold you're on (the steps are troll_helper.dbrow),
+// from %troll_quest, %troll_freed_eadgar, the keys you carry and where you are.
+[proc,questhelper_troll]()(int)
+if (%troll_quest >= ^troll_complete) {
+    return(0);
+}
+if (%troll_quest < ^troll_started) {
+    return(1); // Denulth
+}
+def_boolean $inside = inzone(0_43_156_63_56, 2_44_158_54_3, coord);
+def_boolean $arena = inzone(0_45_56_18_16, 0_45_56_36_44, coord);
+def_int $level = coordy(coord);
+if (%troll_quest = ^troll_started) {
+    if ($arena = true) {
+        return(4); // the champion
+    }
+    if (~obj_gettotal(death_climbingboots) = 0) {
+        return(2); // Tenzing's boots
+    }
+    return(3); // up to the arena
+}
+if (%troll_quest = ^troll_defeated_dad) {
+    if ($inside = true) {
+        if (inv_total(inv, troll_key_prison) = 0) {
+            return(7); // a Troll General
+        }
+        if ($level = 2) {
+            return(8);
+        }
+        return(9); // the prison door
+    }
+    if ($arena = true) {
+        return(5);
+    }
+    return(6); // the stronghold door
+}
+if (%troll_quest = ^troll_entered_prison) {
+    if ($inside = false) {
+        return(6);
+    }
+    if ($level = 2) {
+        return(8);
+    }
+    if ($level = 1) {
+        return(10);
+    }
+    if (inv_total(inv, troll_key_godric) > 0) {
+        return(12); // Godric's cell
+    }
+    return(11); // the guards' keys
+}
+// Godric is free
+if ($inside = true) {
+    if (inv_total(inv, troll_key_eadgar) > 0 & %troll_freed_eadgar = ^false & $level = 0) {
+        return(13); // Mad Eadgar too, if you like
+    }
+    return(14);
+}
+return(15); // Dunstan
