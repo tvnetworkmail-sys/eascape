@@ -1,0 +1,60 @@
+// Drop tables imported from Void (GregHib/void drops.toml): every monster with param
+// eascape_drops that dies through the default death script rolls its table here.
+// Same rules as Void's DropTable.collect: a table rolls once (0 until its roll); each entry
+// adds its chance to a running total, and the first entry the roll falls under is given
+// ("first" tables). "all" tables give every item, and roll each sub-table on its own.
+
+[proc,eascape_npc_drops](dbrow $table, coord $coord)
+def_boolean $dropped = ~eascape_drop_collect($table, 0, $coord);
+
+[proc,eascape_drop_collect](dbrow $table, int $maxroll, coord $coord)(boolean)
+def_int $kind = db_getfield($table, eascape_drop:kind, 0);
+if ($maxroll <= 0) {
+    $maxroll = db_getfield($table, eascape_drop:roll, 0);
+}
+def_int $roll = random(max($maxroll, 1));
+def_int $count = 0;
+def_int $i = 0;
+def_int $n = db_getfieldcount($table, eascape_drop:entry);
+def_namedobj $obj;
+def_int $min;
+def_int $max;
+def_int $chance;
+def_dbrow $sub;
+def_int $subroll;
+while ($i < $n) {
+    $obj, $min, $max, $chance, $sub, $subroll = db_getfield($table, eascape_drop:entry, $i);
+    $i = add($i, 1);
+    if ($chance > 0) {
+        if ($sub ! null) {
+            $count = add($count, $chance);
+            if ($roll < $count) {
+                if (~eascape_drop_collect($sub, $subroll, $coord) = true & $kind = 1) {
+                    return(true);
+                }
+            }
+        } else if ($kind = 0) {
+            ~eascape_drop_give($obj, $min, $max, $coord);
+        } else {
+            $count = add($count, $chance);
+            if ($roll < $count) {
+                ~eascape_drop_give($obj, $min, $max, $coord);
+                return(true);
+            }
+        }
+    }
+}
+if ($kind = 0) {
+    return(true);
+}
+return(false);
+
+[proc,eascape_drop_give](namedobj $obj, int $min, int $max, coord $coord)
+if ($obj = null) {
+    return;
+}
+def_int $amount = $min;
+if ($max > $min) {
+    $amount = add($min, random(add(sub($max, $min), 1)));
+}
+obj_add($coord, $obj, $amount, ^lootdrop_duration);

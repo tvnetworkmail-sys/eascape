@@ -1,0 +1,80 @@
+// EASCape: skeletal wyverns (Void: data/area/asgarnia/mudskipper_point/asgarnian_ice_dungeon/
+// skeletal_wyvern/skeletal_wyvern.combat.toml, SkeletalWyvern.kt, Equipment.kt). It picks an
+// attack by Void's weights from those that reach you: bite 5 and tail whip 5 (next to you,
+// max 13), icy breath 10 (within 5) and its ice ball 10 (within 6, max 14). The icy breath
+// hits up to 50 and freezes you; an elemental shield stops it except 1 time in 7, and then it
+// hits no more than 10.
+[ai_queue1,skeletal_wyvern1] ~npc_default_retaliate_ap;
+[ai_queue1,skeletal_wyvern2] ~npc_default_retaliate_ap;
+[ai_queue1,skeletal_wyvern3] ~npc_default_retaliate_ap;
+[ai_queue1,skeletal_wyvern4] ~npc_default_retaliate_ap;
+[ai_opplayer2,skeletal_wyvern1] npc_setmode(applayer2);
+[ai_opplayer2,skeletal_wyvern2] npc_setmode(applayer2);
+[ai_opplayer2,skeletal_wyvern3] npc_setmode(applayer2);
+[ai_opplayer2,skeletal_wyvern4] npc_setmode(applayer2);
+[ai_applayer2,skeletal_wyvern1] ~eascape_wyvern_attack;
+[ai_applayer2,skeletal_wyvern2] ~eascape_wyvern_attack;
+[ai_applayer2,skeletal_wyvern3] ~eascape_wyvern_attack;
+[ai_applayer2,skeletal_wyvern4] ~eascape_wyvern_attack;
+
+[proc,eascape_wyvern_attack]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+def_int $range = npc_range(coord);
+def_int $total = 10;
+if ($range <= 5) {
+    $total = 20;
+}
+if ($range <= 1) {
+    $total = 30;
+}
+def_int $roll = random($total);
+def_int $damage = 0;
+def_int $duration;
+if ($roll < 10) {
+    // ice ball
+    npc_anim(wyvern_skeleton_iceball, 0);
+    spotanim_npc(wyvern_skeleton_launch_iceball, 0, 0);
+    $duration = ~player_projectile(npc_coord, coord, uid, wyvern_skeleton_travel_iceball, 60, 36, 32, 15, 0, 11, 5);
+    if (~eascape_npc_roll(^ranged_style, ^ranged_style) = true) {
+        $damage = randominc(14);
+    }
+    ~eascape_npc_proj_hit($damage, $duration, ^ranged_style);
+    return;
+}
+if ($roll < 20) {
+    // icy breath
+    npc_anim(wyvern_skeleton_ice_breath, 0);
+    $duration = ~player_projectile(npc_coord, coord, uid, wyvern_skeleton_travel_breath, 60, 36, 32, 15, 0, 11, 5);
+    def_boolean $hit = false;
+    if (inv_total(worn, elemental_shield) > 0) {
+        if (random(7) = 0) {
+            $hit = true;
+        }
+    } else if (~eascape_npc_roll(^magic_style, ^magic_style) = true) {
+        $hit = true;
+    }
+    if ($hit = true) {
+        $damage = randominc(50);
+        if (inv_total(worn, elemental_shield) > 0) {
+            $damage = min($damage, 10);
+        }
+        spotanim_pl(wyvern_skeleton_impact_breath, 92, $duration);
+        mes("The wyvern's icy breath chills you to the bone!");
+        queue(npc_freeze_player, calc($duration / 30), 10);
+    }
+    ~eascape_npc_proj_hit($damage, $duration, null);
+    return;
+}
+// bite or tail whip
+if ($roll < 25) {
+    npc_anim(wyvern_skeleton_bite, 0);
+} else {
+    npc_anim(wyvern_skeleton_tail_swipe, 0);
+}
+anim(%com_defendanim, 0);
+if (~eascape_npc_roll(^slash_style, ^stab_style) = true) {
+    $damage = randominc(13);
+}
+~playerhit_n_melee(true, $damage, npc_param(attackrate));

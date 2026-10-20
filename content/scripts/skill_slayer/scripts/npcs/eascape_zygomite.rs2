@@ -1,0 +1,121 @@
+// EASCape: mutated zygomites (Void: data/area/misthalin/zanaris/zanaris.combat.toml, Zygomite.kt).
+// Picking the fungus wakes it. It attacks next to you with a magic hit against your melee
+// defence or its spores against your ranged defence, equal chance. It can't be killed
+// outright: once it's below 8 hitpoints, spray it with fungicide. Each spray uses a charge.
+[opnpc1,slayer_mutated_zygomite_adolescent_cap] @eascape_pick_fungi(slayer_mutated_zygomite_adolescent);
+[opnpc1,slayer_mutated_zygomite_adult_capt] @eascape_pick_fungi(slayer_mutated_zygomite_adult);
+
+[label,eascape_pick_fungi](npc $type)
+def_npc_uid $fungus = npc_uid;
+anim(human_fungicide_pick_zygomite, 0);
+sound_synth(pick, 1, 0);
+p_delay(0);
+npc_anim(zygomite_leap_out, 0);
+sound_synth(zygo_grow, 1, 0);
+p_delay(1);
+if (npc_finduid($fungus) = false) {
+    return;
+}
+npc_changetype($type, 3000);
+%npc_aggressive_player = uid;
+~npc_set_attack_vars;
+npc_setmode(opplayer2);
+
+[ai_queue1,slayer_mutated_zygomite_adolescent] gosub(npc_default_retaliate);
+[ai_queue1,slayer_mutated_zygomite_adult] gosub(npc_default_retaliate);
+[ai_opplayer2,slayer_mutated_zygomite_adolescent] ~eascape_zygomite_attack(7, 6);
+[ai_opplayer2,slayer_mutated_zygomite_adult] ~eascape_zygomite_attack(8, 10);
+
+[proc,eascape_zygomite_attack](int $magic_max, int $spore_max)
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+anim(%com_defendanim, 0);
+npc_anim(zygomite_attack, 0);
+def_int $damage = 0;
+if (random(2) = 0) {
+    sound_synth(zygomite_attack, 1, 0);
+    if (~eascape_npc_roll(^magic_style, ^crush_style) = true) {
+        $damage = randominc($magic_max);
+    }
+    ~eascape_npc_proj_hit($damage, 30, ^magic_style);
+    return;
+}
+sound_synth(zygo_spore_cast_and_fire, 1, 0);
+spotanim_npc(slayer_zygomite_spores_spotanim, 0, 0);
+spotanim_pl(player_human_zygomite_spores_spotanim, 0, 30);
+sound_synth(zygo_spore_impact, 1, 30);
+if (~eascape_npc_roll(^magic_style, ^ranged_style) = true) {
+    $damage = randominc($spore_max);
+}
+~eascape_npc_proj_hit($damage, 30, ^magic_style);
+
+// it can't die from a hit: it stays on 1 hitpoint until it's sprayed
+[ai_queue3,slayer_mutated_zygomite_adolescent] ~eascape_zygomite_last_legs;
+[ai_queue3,slayer_mutated_zygomite_adult] ~eascape_zygomite_last_legs;
+[proc,eascape_zygomite_last_legs]
+npc_statheal(hitpoints, 1, 0);
+if (finduid(%npc_aggressive_player) = true) {
+    mes("The zygomite is on its last legs! Finish it quickly!");
+}
+
+[opnpcu,slayer_mutated_zygomite_adolescent] @eascape_fungicide;
+[opnpcu,slayer_mutated_zygomite_adult] @eascape_fungicide;
+
+[label,eascape_fungicide]
+def_obj $pump = last_useitem;
+def_namedobj $next;
+switch_obj ($pump) {
+    case slayer_spray_pump_10 : $next = slayer_spray_pump_9;
+    case slayer_spray_pump_9 : $next = slayer_spray_pump_8;
+    case slayer_spray_pump_8 : $next = slayer_spray_pump_7;
+    case slayer_spray_pump_7 : $next = slayer_spray_pump_6;
+    case slayer_spray_pump_6 : $next = slayer_spray_pump_5;
+    case slayer_spray_pump_5 : $next = slayer_spray_pump_4;
+    case slayer_spray_pump_4 : $next = slayer_spray_pump_3;
+    case slayer_spray_pump_3 : $next = slayer_spray_pump_2;
+    case slayer_spray_pump_2 : $next = slayer_spray_pump_1;
+    case slayer_spray_pump_1 : $next = slayer_spray_pump_0;
+    case slayer_spray_pump_0 :
+        mes("The spray pump is empty! Reload it with another fungicide canister!");
+        return;
+    case default :
+        ~displaymessage(^dm_default);
+        return;
+}
+inv_setslot(inv, last_useslot, $next, 1);
+facesquare(npc_coord);
+anim(human_fungicide_pump_attack, 0);
+if (npc_stat(hitpoints) >= 8) {
+    mes("The zygomite is not weak enough to succumb to the effects of the fungicide!");
+    return;
+}
+mes("The zygomite is covered in fungicide. It bubbles away to nothing!");
+npc_queue(4, 0, 0);
+
+[ai_queue4,slayer_mutated_zygomite_adolescent] ~eascape_zygomite_death;
+[ai_queue4,slayer_mutated_zygomite_adult] ~eascape_zygomite_death;
+[proc,eascape_zygomite_death]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    ~eascape_npc_drops(npc_param(eascape_drops), npc_coord);
+}
+
+// reloading (Void: data/area/misthalin/zanaris/zanaris.recipes.toml)
+[opheldu,slayer_fungicide]
+if (last_useitem ! slayer_spray_pump_0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_delslot(inv, last_slot);
+inv_setslot(inv, last_useslot, slayer_spray_pump_10, 1);
+mes("You reload the fungicide pump.");
+
+[opheldu,slayer_spray_pump_0]
+if (last_useitem ! slayer_fungicide) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_delslot(inv, last_useslot);
+inv_setslot(inv, last_slot, slayer_spray_pump_10, 1);
+mes("You reload the fungicide pump.");

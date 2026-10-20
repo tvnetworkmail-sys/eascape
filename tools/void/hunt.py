@@ -59,6 +59,11 @@ for dp, _, fs in os.walk(os.path.join(C, 'scripts')):
         if f.endswith('.rs2'):
             trig |= set(re.findall(r'^\[ai_applayer2,([^\]]+)\]', open(os.path.join(dp, f), errors='replace').read(), re.M))
 
+from common import void_npcs as _void_npcs, unq as _unq
+_vn = _void_npcs(VOID)
+def _norm(x):
+    return re.sub(r'[^a-z]', '', (x or '').lower())
+
 changes = {}
 for name, b in blocks.items():
     if name not in ids or ids[name] not in byid:
@@ -69,6 +74,13 @@ for name, b in blocks.items():
     if name.startswith(('tzhaar_fightcave', 'tzhaar_fightpit')) or name in ('barrows_ahrim', 'barrows_dharok', 'barrows_guthan', 'barrows_karil', 'barrows_torag', 'barrows_verac'):
         continue
     mode, rng, vname = byid[ids[name]]
+    # only when Void's npc with this id is the same monster (some ids moved in Void's later cache)
+    _d = _vn.get(ids[name], {})
+    _desc = re.search(r'^desc=(.*)$', b['body'], re.M)
+    _nm = re.search(r'^name=(.*)$', b['body'], re.M)
+    _ex = _norm(_unq(_d.get('examine', '""')))
+    if not ((_desc and _ex and _ex[:12] == _norm(_desc.group(1))[:12]) or (_nm and _norm(_nm.group(1)) and _norm(_nm.group(1)) in _norm(vname))):
+        continue
     cat = re.search(r'^category=(\w+)', b['body'], re.M)
     ranged = name in trig or (cat and '_' + cat.group(1) in trig)
     if mode.startswith('aggressive') and mode != 'aggressive_npcs':

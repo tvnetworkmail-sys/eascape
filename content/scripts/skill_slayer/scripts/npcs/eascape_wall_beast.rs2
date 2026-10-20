@@ -1,0 +1,63 @@
+// EASCape: wall beasts, Lumbridge Swamp caves (Void: data/area/misthalin/lumbridge/swamp/caves/,
+// WallBeast.kt). Stepping onto the tile in front of a hole in the wall, there's a 1 in 4
+// chance the beast grabs you. A spiny helmet repels it and it comes out to fight; without one
+// it holds you by the head for 8 ticks, then lets go for 16 damage.
+// The hole hunts (eascape_wallbeast.hunt) for a player right next to it.
+[ai_applayer1,swamp_wallbeast]
+npc_setmode(none);
+if (%npc_action_delay > map_clock) {
+    return;
+}
+if (coord ! movecoord(npc_coord, 0, 0, -1)) {
+    return;
+}
+// one roll per visit: it won't try again for a few ticks
+%npc_action_delay = add(map_clock, 8);
+if (random(4) ! 0) {
+    return;
+}
+strongqueue*(eascape_wallbeast_grab, 1)(npc_uid);
+
+[queue,eascape_wallbeast_grab](npc_uid $beast)
+if (npc_finduid($beast) = false) {
+    return;
+}
+// Void puts you back on the tile if you'd stepped off it
+def_coord $spot = movecoord(npc_coord, 0, 0, -1);
+if (coord ! $spot) {
+    p_telejump($spot);
+}
+facesquare(npc_coord);
+if (inv_total(worn, wallbeast_spike_helmet) > 0) {
+    mes("Your helmet repels the wall beast!");
+    npc_anim(wall_beast_specialattack_fail, 0);
+    sound_synth(wall_beast_foiled, 1, 0);
+    p_delay(3);
+    if (npc_finduid($beast) = false) {
+        return;
+    }
+    npc_changetype(swamp_wallbeast_combat, 100);
+    npc_anim(wall_beast_specialattack_appear, 0);
+    %npc_aggressive_player = uid;
+    ~npc_set_attack_vars;
+    npc_setmode(opplayer2);
+    return;
+}
+mes("A giant hand appears and grabs your head!");
+anim(human_wall_beast_specialattack_start, 0);
+sound_synth(wall_beast_attack, 1, 0);
+npc_anim(wall_beast_specialattack_start, 0);
+p_delay(0);
+anim(human_wall_beast_specialattack_ready, 0);
+if (npc_finduid($beast) = true) {
+    npc_anim(wall_beast_specialattack_ready, 0);
+}
+p_delay(7);
+anim(human_wall_beast_specialattack_end, 0);
+if (npc_finduid($beast) = true) {
+    npc_anim(wall_beast_specialattack_end, 0);
+}
+queue(combat_damage_player, 0, 16);
+
+// the beast out of the wall fights like any other; it goes back in when its time is up
+[ai_queue1,swamp_wallbeast_combat] gosub(npc_default_retaliate);

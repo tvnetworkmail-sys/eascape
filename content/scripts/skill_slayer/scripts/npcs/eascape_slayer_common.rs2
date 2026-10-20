@@ -1,0 +1,63 @@
+// EASCape: shared by the Slayer monsters with special attacks (taken from Void's combat
+// definitions, github.com/GregHib/void; Void's hits are x10, so they're divided by 10 here).
+
+// the checks every npc attack makes first (as npc_default_attack does)
+[proc,eascape_npc_attack_ready]()(boolean)
+if (%death = ^true) {
+    npc_setmode(null);
+    return(false);
+}
+if (%npc_action_delay > map_clock) {
+    return(false);
+}
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return(false);
+}
+if (~npc_check_notcombat_self = false) {
+    return(false);
+}
+return(true);
+
+// one accuracy roll: the npc's attack in one style against the player's defence in another
+// (Void: target_hit offense / defence)
+[proc,eascape_npc_roll](int $attack_style, int $defence_style)(boolean)
+def_int $attack;
+if ($attack_style = ^magic_style) {
+    $attack = ~npc_magic_attack_roll;
+} else if ($attack_style = ^ranged_style) {
+    $attack = ~npc_ranged_attack_roll;
+} else {
+    $attack = ~npc_melee_attack_roll;
+}
+if (randominc($attack) > randominc(~player_defence_roll_specific($defence_style))) {
+    return(true);
+}
+return(false);
+
+// a hit that lands after a projectile's flight; $protect is the protection prayer that
+// blocks it (null for none)
+[proc,eascape_npc_proj_hit](int $damage, int $duration, int $protect)
+if_close;
+if ($protect ! null) {
+    if (~check_protect_prayer($protect) = true) {
+        $damage = 0;
+    }
+}
+anim(%com_defendanim, $duration);
+queue(combat_damage_player, calc($duration / 30), $damage);
+queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
+~npc_set_attack_vars;
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+
+// Void's stat drains: a whole level drains to 1, half drains half the base level
+[proc,eascape_drain_to_one](stat $stat)
+if (stat($stat) > 1) {
+    stat_sub($stat, sub(stat($stat), 1), 0);
+}
+
+[proc,eascape_drain_half](stat $stat, int $floor)
+def_int $amount = min(divide(stat_base($stat), 2), sub(stat($stat), $floor));
+if ($amount > 0) {
+    stat_sub($stat, $amount, 0);
+}

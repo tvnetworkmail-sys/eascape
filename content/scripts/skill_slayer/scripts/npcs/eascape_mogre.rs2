@@ -1,0 +1,34 @@
+// EASCape: Mogres, Mudskipper Point. Void has the Mogre's stats and drops but not how it's
+// lured, so that comes from the OSRS wiki (oldschool.runescape.wiki/w/Mogres): a fishing
+// explosive used on an Ominous Fishing Spot brings one out; the spot's Lure and Bait options
+// do nothing.
+[oploc1,ominous_fishing_spot_a] @eascape_ominous_nothing;
+[oploc2,ominous_fishing_spot_a] @eascape_ominous_nothing;
+[oploc1,ominous_fishing_spot_b] @eascape_ominous_nothing;
+[oploc2,ominous_fishing_spot_b] @eascape_ominous_nothing;
+[oploc1,ominous_fishing_spot_c] @eascape_ominous_nothing;
+[oploc2,ominous_fishing_spot_c] @eascape_ominous_nothing;
+[label,eascape_ominous_nothing]
+mes("Something seems to have scared all the fishes away...");
+
+[oplocu,ominous_fishing_spot_a] @eascape_ominous_explosive;
+[oplocu,ominous_fishing_spot_b] @eascape_ominous_explosive;
+[oplocu,ominous_fishing_spot_c] @eascape_ominous_explosive;
+[aplocu,ominous_fishing_spot_a] @eascape_ominous_explosive;
+[aplocu,ominous_fishing_spot_b] @eascape_ominous_explosive;
+[aplocu,ominous_fishing_spot_c] @eascape_ominous_explosive;
+
+[label,eascape_ominous_explosive]
+if (last_useitem ! fishing_explosive) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, fishing_explosive, 1);
+facesquare(loc_coord);
+anim(human_throw, 0);
+def_coord $spot = loc_coord;
+p_delay(1);
+npc_add($spot, mudskipper_ogre, 500);
+%npc_aggressive_player = uid;
+~npc_set_attack_vars;
+npc_setmode(opplayer2);

@@ -53,7 +53,11 @@ switch_int($target) {
     case ^slayer_crawlinghand, ^slayer_banshee, ^slayer_infernalmage, ^slayer_bloodveld, 
             ^slayer_aberrantspecter, ^slayer_gargoyle, ^slayer_nechryael, ^slayer_abyssaldemon, 
             ^slayer_ghoul, ^slayer_werewolf, ^slayer_vampire : // priest peril
-        return (false);
+        // EASCape: Priest in Peril is built, so these come once it's done
+        if(%priestperil < ^priestperil_complete) {
+            return (false);
+        }
+        return (true);
     case ^slayer_otherworldlybeing, ^slayer_mutatedzygomite :
         if(%zanaris < ^zanaris_complete) {
             return (false);
@@ -70,15 +74,19 @@ switch_int($target) {
         }
         return (true);
     case ^slayer_dagannoth : // horror from the deep
-        return (false);
+        if(%horrorquest < ^horror_complete) {
+            return (false);
+        }
+        return (true);
     case ^slayer_elf : // regicide
-        return (false);
-    case ^slayer_dustdevil : // dt
-        return (false);
-    case ^slayer_darkbeast : // mep2
-        return (false);
-    case ^slayer_mogre : // skippy miniquest
-        return (false);
+        if(%regicide_quest < ^regicide_complete) {
+            return (false);
+        }
+        return (true);
+    // EASCape: Desert Treasure, Mourning's End Part II and the Skippy miniquest aren't built
+    // yet, so these are open for now (like the quest doors); the check goes back in with each quest
+    case ^slayer_dustdevil, ^slayer_darkbeast, ^slayer_mogre :
+        return (true);
 }
 return (true);
 

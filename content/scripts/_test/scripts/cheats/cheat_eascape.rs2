@@ -347,3 +347,264 @@ inv_add(bank, vial_coconut_milk, 1000);
 inv_add(bank, vial_water, 1000);
 inv_add(inv, pestle_and_mortar, 1);
 mes("Herbs, secondaries and vials of water are in your bank.");
+
+// ::slayertask <monster> <count>: gives you that Slayer task (any master's list, no level or
+// quest check) and that many left to kill. ::slayertask list shows the monster names.
+[debugproc,slayertask](string $name, int $count)
+if (p_finduid(uid) = false) {
+    return;
+}
+if (compare($name, "list") = 0) {
+    mes("monkey, goblin, rat, spider, bird, cow, scorpion, bat, wolf, zombie");
+    mes("skeleton, ghost, bear, hillgiant, icegiant, firegiant, mossgiant");
+    mes("troll, icewarrior, ogre, hobgoblin, dog, ghoul, greendragon");
+    mes("bluedragon, reddragon, blackdragon, lesserdemon, greaterdemon");
+    mes("blackdemon, hellhound, shadowwarrior, werewolf, vampire, dagannoth");
+    mes("turoth, cavecrawler, banshee, crawlinghand, infernalmage");
+    mes("aberrantspecter, abyssaldemon, basilisk, cockatrice, kurask, gargoyle");
+    mes("pyrefiend, bloodveld, dustdevil, jelly, rockslug, nechryael, kalphite");
+    mes("earthwarrior, otherworldlybeing, elf, dwarf, bronzedragon, irondragon");
+    mes("steeldragon, wallbeast, caveslime, cavebug, shade, crocodile");
+    mes("darkbeast, mogre, lizard, feverspider, harpiebugswarm, seasnake");
+    mes("skeletalwyvern, killerwatt, mutatedzygomite, icefiend");
+    return;
+}
+def_int $target = ~eascape_slayer_lookup(lowercase($name));
+if ($target = null) {
+    mes("No Slayer monster called <$name>. Type ::slayertask list for the names.");
+    return;
+}
+if ($count < 1) {
+    $count = 10;
+}
+%slayer_target = $target;
+%slayer_count = $count;
+mes("Your Slayer task is now <tostring($count)> <~slayer_taskname>.");
+
+[proc,eascape_slayer_lookup](string $name)(int)
+if (compare($name, "monkey") = 0) {
+    return(^slayer_monkey);
+}
+if (compare($name, "goblin") = 0) {
+    return(^slayer_goblin);
+}
+if (compare($name, "rat") = 0) {
+    return(^slayer_rat);
+}
+if (compare($name, "spider") = 0) {
+    return(^slayer_spider);
+}
+if (compare($name, "bird") = 0) {
+    return(^slayer_bird);
+}
+if (compare($name, "cow") = 0) {
+    return(^slayer_cow);
+}
+if (compare($name, "scorpion") = 0) {
+    return(^slayer_scorpion);
+}
+if (compare($name, "bat") = 0) {
+    return(^slayer_bat);
+}
+if (compare($name, "wolf") = 0) {
+    return(^slayer_wolf);
+}
+if (compare($name, "zombie") = 0) {
+    return(^slayer_zombie);
+}
+if (compare($name, "skeleton") = 0) {
+    return(^slayer_skeleton);
+}
+if (compare($name, "ghost") = 0) {
+    return(^slayer_ghost);
+}
+if (compare($name, "bear") = 0) {
+    return(^slayer_bear);
+}
+if (compare($name, "hillgiant") = 0) {
+    return(^slayer_hillgiant);
+}
+if (compare($name, "icegiant") = 0) {
+    return(^slayer_icegiant);
+}
+if (compare($name, "firegiant") = 0) {
+    return(^slayer_firegiant);
+}
+if (compare($name, "mossgiant") = 0) {
+    return(^slayer_mossgiant);
+}
+if (compare($name, "troll") = 0) {
+    return(^slayer_troll);
+}
+if (compare($name, "icewarrior") = 0) {
+    return(^slayer_icewarrior);
+}
+if (compare($name, "ogre") = 0) {
+    return(^slayer_ogre);
+}
+if (compare($name, "hobgoblin") = 0) {
+    return(^slayer_hobgoblin);
+}
+if (compare($name, "dog") = 0) {
+    return(^slayer_dog);
+}
+if (compare($name, "ghoul") = 0) {
+    return(^slayer_ghoul);
+}
+if (compare($name, "greendragon") = 0) {
+    return(^slayer_greendragon);
+}
+if (compare($name, "bluedragon") = 0) {
+    return(^slayer_bluedragon);
+}
+if (compare($name, "reddragon") = 0) {
+    return(^slayer_reddragon);
+}
+if (compare($name, "blackdragon") = 0) {
+    return(^slayer_blackdragon);
+}
+if (compare($name, "lesserdemon") = 0) {
+    return(^slayer_lesserdemon);
+}
+if (compare($name, "greaterdemon") = 0) {
+    return(^slayer_greaterdemon);
+}
+if (compare($name, "blackdemon") = 0) {
+    return(^slayer_blackdemon);
+}
+if (compare($name, "hellhound") = 0) {
+    return(^slayer_hellhound);
+}
+if (compare($name, "shadowwarrior") = 0) {
+    return(^slayer_shadowwarrior);
+}
+if (compare($name, "werewolf") = 0) {
+    return(^slayer_werewolf);
+}
+if (compare($name, "vampire") = 0) {
+    return(^slayer_vampire);
+}
+if (compare($name, "dagannoth") = 0) {
+    return(^slayer_dagannoth);
+}
+if (compare($name, "turoth") = 0) {
+    return(^slayer_turoth);
+}
+if (compare($name, "cavecrawler") = 0) {
+    return(^slayer_cavecrawler);
+}
+if (compare($name, "banshee") = 0) {
+    return(^slayer_banshee);
+}
+if (compare($name, "crawlinghand") = 0) {
+    return(^slayer_crawlinghand);
+}
+if (compare($name, "infernalmage") = 0) {
+    return(^slayer_infernalmage);
+}
+if (compare($name, "aberrantspecter") = 0) {
+    return(^slayer_aberrantspecter);
+}
+if (compare($name, "abyssaldemon") = 0) {
+    return(^slayer_abyssaldemon);
+}
+if (compare($name, "basilisk") = 0) {
+    return(^slayer_basilisk);
+}
+if (compare($name, "cockatrice") = 0) {
+    return(^slayer_cockatrice);
+}
+if (compare($name, "kurask") = 0) {
+    return(^slayer_kurask);
+}
+if (compare($name, "gargoyle") = 0) {
+    return(^slayer_gargoyle);
+}
+if (compare($name, "pyrefiend") = 0) {
+    return(^slayer_pyrefiend);
+}
+if (compare($name, "bloodveld") = 0) {
+    return(^slayer_bloodveld);
+}
+if (compare($name, "dustdevil") = 0) {
+    return(^slayer_dustdevil);
+}
+if (compare($name, "jelly") = 0) {
+    return(^slayer_jelly);
+}
+if (compare($name, "rockslug") = 0) {
+    return(^slayer_rockslug);
+}
+if (compare($name, "nechryael") = 0) {
+    return(^slayer_nechryael);
+}
+if (compare($name, "kalphite") = 0) {
+    return(^slayer_kalphite);
+}
+if (compare($name, "earthwarrior") = 0) {
+    return(^slayer_earthwarrior);
+}
+if (compare($name, "otherworldlybeing") = 0) {
+    return(^slayer_otherworldlybeing);
+}
+if (compare($name, "elf") = 0) {
+    return(^slayer_elf);
+}
+if (compare($name, "dwarf") = 0) {
+    return(^slayer_dwarf);
+}
+if (compare($name, "bronzedragon") = 0) {
+    return(^slayer_bronzedragon);
+}
+if (compare($name, "irondragon") = 0) {
+    return(^slayer_irondragon);
+}
+if (compare($name, "steeldragon") = 0) {
+    return(^slayer_steeldragon);
+}
+if (compare($name, "wallbeast") = 0) {
+    return(^slayer_wallbeast);
+}
+if (compare($name, "caveslime") = 0) {
+    return(^slayer_caveslime);
+}
+if (compare($name, "cavebug") = 0) {
+    return(^slayer_cavebug);
+}
+if (compare($name, "shade") = 0) {
+    return(^slayer_shade);
+}
+if (compare($name, "crocodile") = 0) {
+    return(^slayer_crocodile);
+}
+if (compare($name, "darkbeast") = 0) {
+    return(^slayer_darkbeast);
+}
+if (compare($name, "mogre") = 0) {
+    return(^slayer_mogre);
+}
+if (compare($name, "lizard") = 0) {
+    return(^slayer_lizard);
+}
+if (compare($name, "feverspider") = 0) {
+    return(^slayer_feverspider);
+}
+if (compare($name, "harpiebugswarm") = 0) {
+    return(^slayer_harpiebugswarm);
+}
+if (compare($name, "seasnake") = 0) {
+    return(^slayer_seasnake);
+}
+if (compare($name, "skeletalwyvern") = 0) {
+    return(^slayer_skeletalwyvern);
+}
+if (compare($name, "killerwatt") = 0) {
+    return(^slayer_killerwatt);
+}
+if (compare($name, "mutatedzygomite") = 0) {
+    return(^slayer_mutatedzygomite);
+}
+if (compare($name, "icefiend") = 0) {
+    return(^slayer_icefiend);
+}
+return(null);

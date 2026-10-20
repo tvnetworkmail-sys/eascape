@@ -1,0 +1,20 @@
+# Void npc categories -> our ^slayer_ constants (content/scripts/skill_slayer/configs/slayer.constant)
+CATEGORY = {
+ 'monkeys':'monkey','goblins':'goblin','goblin':'goblin','rats':'rat','giant_rats':'rat','spiders':'spider','giant_spiders':'spider',
+ 'birds':'bird','cows':'cow','scorpions':'scorpion','bats':'bat','wolves':'wolf','zombies':'zombie','skeletons':'skeleton',
+ 'ghosts':'ghost','ghost':'ghost','bears':'bear','hill_giants':'hillgiant','ice_giants':'icegiant','fire_giants':'firegiant',
+ 'moss_giants':'mossgiant','trolls':'troll','ice_warriors':'icewarrior','ogres':'ogre','hobgoblins':'hobgoblin','hobgoblin':'hobgoblin',
+ 'dogs':'dog','ghouls':'ghoul','green_dragons':'greendragon','blue_dragons':'bluedragon','red_dragons':'reddragon',
+ 'black_dragons':'blackdragon','lesser_demons':'lesserdemon','greater_demons':'greaterdemon','black_demons':'blackdemon',
+ 'hellhounds':'hellhound','shadow_warriors':'shadowwarrior','werewolves':'werewolf','werewolf':'werewolf','vampyres':'vampire',
+ 'dagannoth':'dagannoth','turoth':'turoth','cave_crawlers':'cavecrawler','cave_crawler':'cavecrawler','banshees':'banshee',
+ 'crawling_hands':'crawlinghand','infernal_mage':'infernalmage','aberrant_spectre':'aberrantspecter','abyssal_demon':'abyssaldemon',
+ 'basilisks':'basilisk','basilisk':'basilisk','cockatrice':'cockatrice','kurask':'kurask','gargoyles':'gargoyle','pyrefiends':'pyrefiend',
+ 'bloodvelds':'bloodveld','dust_devils':'dustdevil','jellies':'jelly','rockslugs':'rockslug','nechryael':'nechryael',
+ 'kalphites':'kalphite','kalphite':'kalphite','earth_warrior':'earthwarrior','otherworldly_beings':'otherworldlybeing',
+ 'elves':'elf','elf':'elf','dwarves':'dwarf','dwarf':'dwarf','bronze_dragons':'bronzedragon','iron_dragons':'irondragon',
+ 'steel_dragons':'steeldragon','wall_beasts':'wallbeast','cave_slimes':'caveslime','cave_bugs':'cavebug','shades':'shade',
+ 'crocodiles':'crocodile','dark_beasts':'darkbeast','mogres':'mogre','lizards':'lizard','fever_spiders':'feverspider',
+ 'harpie_bug_swarms':'harpiebugswarm','sea_snakes':'seasnake','skeletal_wyverns':'skeletalwyvern','killerwatts':'killerwatt',
+ 'mutated_zygomites':'mutatedzygomite','icefiends':'icefiend','icefiend':'icefiend',
+}

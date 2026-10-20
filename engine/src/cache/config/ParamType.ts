@@ -119,6 +119,8 @@ export default class ParamType extends ConfigType {
                 return 'interface';
             case ScriptVarType.MIDI:
                 return 'midi';
+            case ScriptVarType.DBROW:
+                return 'dbrow';
             default:
                 return 'unknown';
         }

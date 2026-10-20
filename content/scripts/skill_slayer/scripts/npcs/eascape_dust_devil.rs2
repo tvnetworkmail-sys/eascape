@@ -1,0 +1,28 @@
+// EASCape: dust devils (Void: data/area/wilderness/chaos_tunnels/chaos_tunnels.combat.toml,
+// DustDevil.kt). With a face mask: an ordinary attack, max 8. Without one: the dust attack,
+// max 16, rolled against your Ranged defence, and it drains Attack, Strength, Ranged and
+// Magic to 1 and Defence, Prayer and Agility by half, whether it hits or not.
+[ai_opplayer2,slayer_dustdevil]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+sound_synth(npc_param(attack_sound), 1, 0);
+if (inv_total(worn, slayer_facemask) > 0) {
+    ~npc_meleeattack;
+    return;
+}
+def_int $duration = ~player_projectile(npc_coord, coord, uid, slayer_dustdevil_dust, 40, 36, 0, 15, 0, 11, 5);
+def_int $damage = 0;
+if (~eascape_npc_roll(^crush_style, ^ranged_style) = true) {
+    $damage = randominc(16);
+}
+~playerhit_n_melee(true, $damage, npc_param(attackrate));
+~eascape_drain_to_one(attack);
+~eascape_drain_to_one(strength);
+~eascape_drain_to_one(ranged);
+~eascape_drain_to_one(magic);
+~eascape_drain_half(defence, 1);
+~eascape_drain_half(prayer, 0);
+~eascape_drain_half(agility, 1);

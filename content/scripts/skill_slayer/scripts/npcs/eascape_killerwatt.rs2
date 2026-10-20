@@ -1,0 +1,42 @@
+// EASCape: killerwatts (Void: data/area/realm/killerwatt_plane/killerwatt_plane.combat.toml,
+// Killerwatt.kt). The ball turns into its attacking form when it's hit. Next to you it
+// strikes (max 6) or shocks you from range with equal chance; from range it only shocks.
+// The shock hits up to 8 with insulated (slayer) boots, up to 15 without them, rolled against
+// your Magic defence; Protect from Missiles stops it.
+[ai_queue1,slayer_killerwatt_ball]
+~sound_area(killerwatt_transforms, 0, npc_coord, 5);
+npc_changetype_keepall(slayer_killerwatt, 6000);
+~npc_default_retaliate_ap;
+
+[ai_queue1,slayer_killerwatt] ~npc_default_retaliate_ap;
+[ai_opplayer2,slayer_killerwatt] npc_setmode(applayer2);
+[ai_applayer2,slayer_killerwatt]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+def_int $damage = 0;
+if (npc_range(coord) <= 1 & random(2) = 0) {
+    anim(%com_defendanim, 0);
+    npc_anim(killerwatt_biped_attack, 0);
+    sound_synth(killerwatt_attack, 1, 0);
+    if (~eascape_npc_roll(^stab_style, ^stab_style) = true) {
+        $damage = randominc(6);
+    }
+    ~playerhit_n_melee(true, $damage, npc_param(attackrate));
+    return;
+}
+npc_anim(killerwatt_biped_cast, 0);
+def_int $duration = calc(30 + distance(npc_coord, coord) * 10);
+def_int $max = 15;
+if (inv_total(worn, slayer_boots) > 0) {
+    $max = 8;
+    sound_synth(killerwatt_attack, 1, 0);
+} else {
+    sound_synth(killerwatt_electrocutes, 1, 0);
+    anim(human_killerwatt_electricshock, $duration);
+    spotanim_pl(skeleton_killerwatt_electricshock, 0, $duration);
+}
+if (~eascape_npc_roll(^ranged_style, ^magic_style) = true) {
+    $damage = randominc($max);
+}
+~eascape_npc_proj_hit($damage, $duration, ^ranged_style);

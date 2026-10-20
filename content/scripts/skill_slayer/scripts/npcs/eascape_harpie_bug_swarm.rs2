@@ -1,0 +1,16 @@
+// EASCape: harpie bug swarms (Void: entity/combat/Target.kt). Your hits only land while you
+// hold a lit bug lantern in your shield hand.
+[ai_queue2,slayer_harpiebugswarm]
+def_int $damage = last_int;
+if (finduid(%npc_aggressive_player) = true) {
+    if (inv_total(worn, slayer_buglan_on) = 0) {
+        $damage = 0;
+    }
+}
+~npc_default_damage($damage);
+
+// lighting it (Void: data/skill/firemaking/light_source.tables.toml, Firemaking 33) is in
+// skill_firemaking/scripts/light_source.rs2; putting it out:
+[opheld3,slayer_buglan_on]
+inv_setslot(inv, last_slot, slayer_buglan_off, 1);
+mes("You extinguish the flame.");

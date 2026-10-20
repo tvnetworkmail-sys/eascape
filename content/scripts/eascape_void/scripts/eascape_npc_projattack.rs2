@@ -1,0 +1,58 @@
+// Ranged and magic attacks for monsters imported from Void (tools/void/slayer.py generates the
+// triggers in void_npc_attacks.rs2). Uses the npc's params: attack_anim, rangeattack_sound,
+// proj_travel, eascape_impact_gfx and eascape_maxhit (Void's max hit / 10).
+[proc,eascape_npc_projattack](int $style)
+if (%npc_action_delay > map_clock) {
+    npc_setmode(applayer2);
+    return;
+}
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) {
+    return;
+}
+def_int $attack_roll;
+def_int $maxhit = npc_param(eascape_maxhit);
+if ($style = ^magic_style) {
+    $attack_roll = ~npc_magic_attack_roll;
+    if ($maxhit < 0) {
+        $maxhit = 1;
+    }
+} else {
+    $attack_roll = ~npc_ranged_attack_roll;
+    $maxhit = ~npc_ranged_maxhit;
+}
+def_int $defence_roll = ~player_defence_roll_specific($style);
+
+npc_anim(npc_param(attack_anim), 0);
+if (npc_param(rangeattack_sound) ! null) {
+    sound_synth(npc_param(rangeattack_sound), 1, 0);
+}
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+def_int $duration = 30;
+if (npc_param(proj_travel) ! null) {
+    $duration = ~player_projectile(npc_coord, coord, uid, npc_param(proj_travel), 40, 36, 32, 15, 0, 11, 5);
+}
+if_close;
+if (randominc($attack_roll) > randominc($defence_roll)) {
+    def_int $damage = randominc($maxhit);
+    if (~check_protect_prayer($style) = true) {
+        $damage = 0;
+    }
+    anim(%com_defendanim, $duration);
+    queue(combat_damage_player, calc($duration / 30), $damage);
+    if (npc_param(eascape_impact_gfx) ! null) {
+        spotanim_pl(npc_param(eascape_impact_gfx), 92, $duration);
+    }
+    ~npc_poison_player;
+} else if ($style = ^magic_style) {
+    spotanim_pl(failedspell_impact, 92, $duration);
+    sound_synth(spellfail, 1, $duration);
+} else {
+    anim(%com_defendanim, $duration);
+    queue(combat_damage_player, calc($duration / 30), 0);
+}
+queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
+~npc_set_attack_vars;

@@ -1,5 +1,8 @@
 // returns the calculated max hit for this npc
 [proc,npc_melee_maxhit]()(int)
+if (npc_param(eascape_maxhit) >= 0) {
+    return(npc_param(eascape_maxhit)); // EASCape: Void's max hit (eascape_void)
+}
 def_int $strengthbonus = npc_param(strengthbonus);
 //npcs are essentially always on controlled
 def_int $effective_strength = ~combat_effective_stat(npc_stat(strength), 100); // no prayerbonus

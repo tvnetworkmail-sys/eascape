@@ -95,6 +95,13 @@ npc_queue(3, 0, 0);
 // a default death script.
 [proc,npc_default_death]
 gosub(npc_death);
+// EASCape: monsters imported from Void roll Void's drop table (eascape_void/scripts/eascape_drops.rs2)
+if (npc_param(eascape_drops) ! null) {
+    if (npc_findhero = ^true) {
+        ~eascape_npc_drops(npc_param(eascape_drops), npc_coord);
+    }
+    return;
+}
 def_namedobj $drop = npc_param(death_drop);
 if ($drop ! null & npc_findhero = ^true) {
     obj_add(npc_coord, $drop, 1, ^lootdrop_duration);

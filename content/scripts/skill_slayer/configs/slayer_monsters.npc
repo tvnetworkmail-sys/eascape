@@ -6,6 +6,23 @@ walkanim=cave_slime_walks
 readyanim=cave_slime_idle
 op2=Attack
 vislevel=23
+param=slayer_category,^slayer_caveslime
+// EASCape: combat from Void (cave_slime); hitpoints and hits are Void's divided by 10
+hitpoints=25
+attack=13
+strength=13
+defence=35
+magic=13
+ranged=1
+respawnrate=15
+param=damagetype,^stab_style
+param=eascape_maxhit,2
+param=attack_anim,cave_slime_attack
+param=defend_anim,cave_slime_defend
+param=death_anim,cave_slime_death
+param=eascape_drops,void_drop_cave_slime_drop_table
+// EASCape: Void cave_slime.melee_poison (3 damage)
+param=poison_severity,15
 
 [swamp_cave_bug]
 name=Cave Bug
@@ -38,6 +55,7 @@ param=slayer_category,^slayer_cavebug
 // EASCape: aggression from Void (cave_bug: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
+param=eascape_drops,void_drop_cave_bug_drop_table
 
 [slayer_lizard_massive]
 name=Lizard
@@ -305,10 +323,27 @@ walkanim=ogre_walk
 readyanim=ogre_ready
 op2=Attack
 vislevel=60
-param=slayer_category,^slayer_ogre
-// EASCape: aggression from Void (ogre_combat_training_camp: cowardly, range 5)
+param=slayer_category,^slayer_mogre
+// EASCape: aggression from Void (mogre: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
+// EASCape: combat from Void (mogre); hitpoints and hits are Void's divided by 10
+hitpoints=48
+attack=58
+strength=55
+defence=48
+magic=1
+ranged=1
+param=attackbonus,22
+param=damagetype,^crush_style
+param=eascape_maxhit,8
+param=attack_anim,ogre_attack
+param=attack_sound,giant_attack
+param=defend_anim,ogre_block
+param=death_anim,ogre_death
+param=defend_sound,giant_hit
+param=death_sound,giant_death
+param=eascape_drops,void_drop_mogre_drop_table
 
 [slayer_harpiebugswarm]
 name=Harpie Bug Swarm
@@ -321,6 +356,22 @@ vislevel=46
 // EASCape: aggression from Void (harpie_bug_swarm: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
+param=slayer_category,^slayer_harpiebugswarm
+// EASCape: combat from Void (harpie_bug_swarm); hitpoints and hits are Void's divided by 10
+hitpoints=25
+attack=54
+strength=46
+defence=32
+magic=1
+ranged=1
+respawnrate=25
+param=damagetype,^crush_style
+param=eascape_maxhit,6
+param=defend_anim,slayer_harpie_hit
+param=death_anim,slayer_harpie_death
+param=eascape_drops,void_drop_harpie_bug_swarm_drop_table
+// EASCape: the 377 data has no attack animation for the swarm; it keeps swirling
+param=attack_anim,slayer_harpie_swarm
 
 [slayer_crawling_hand_1]
 name=Crawling Hand
@@ -1091,9 +1142,10 @@ param=defend_sound,gargoyle_hit
 param=death_sound,gargoyle_death
 param=death_drop,null
 param=slayer_category,^slayer_gargoyle
-// EASCape: aggression from Void (turoth_swarming: aggressive, range 5)
+// EASCape: aggression from Void (gargoyle: aggressive, range 5)
 huntmode=aggressive_melee
 huntrange=5
+param=eascape_drops,void_drop_gargoyle_drop_table
 
 [slayer_banshee_1]
 name=Banshee
@@ -1428,6 +1480,7 @@ param=defend_sound,rockslug_hit
 param=death_sound,rockslug_death
 param=slayer_category,^slayer_rockslug
 param=damagetype,^crush_style
+param=eascape_drops,void_drop_rockslug_drop_table
 
 [slayer_dustdevil]
 name=Dust devil
@@ -1438,6 +1491,24 @@ walkanim=dustdevil_walk
 readyanim=dustdevil_ready
 op2=Attack
 vislevel=93
+param=slayer_category,^slayer_dustdevil
+// EASCape: combat from Void (dust_devil); hitpoints and hits are Void's divided by 10
+hitpoints=105
+attack=105
+strength=70
+defence=40
+magic=1
+ranged=1
+respawnrate=15
+param=damagetype,^crush_style
+param=eascape_maxhit,8
+param=attack_anim,dustdevil_attack
+param=attack_sound,dust_devil_attack
+param=defend_anim,dustdevil_defend
+param=death_anim,dustdevil_death
+param=defend_sound,dust_devil_hit
+param=death_sound,dust_devil_death
+param=eascape_drops,void_drop_dust_devil_drop_table
 
 [smoke_devil]
 name=Smokedevil
@@ -1471,6 +1542,23 @@ readyanim=turoth_ready
 op2=Attack
 vislevel=86
 param=slayer_category,^slayer_turoth
+// EASCape: combat from Void (turoth_level_87); hitpoints and hits are Void's divided by 10
+hitpoints=79
+attack=56
+strength=86
+defence=86
+magic=1
+ranged=1
+respawnrate=15
+param=damagetype,^stab_style
+param=eascape_maxhit,10
+param=attack_anim,turoth_attack
+param=attack_sound,turoth_attack
+param=defend_anim,turoth_defend
+param=death_anim,turoth_death
+param=defend_sound,turoth_hit
+param=death_sound,turoth_death
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_turoth_dad]
 name=Turoth
@@ -1502,6 +1590,7 @@ param=defend_sound,turoth_hit
 param=death_sound,turoth_death
 param=damagetype,^stab_style
 param=slayer_category,^slayer_turoth
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_turoth_mum]
 name=Turoth
@@ -1533,6 +1622,7 @@ param=defend_sound,turoth_hit
 param=death_sound,turoth_death
 param=damagetype,^stab_style
 param=slayer_category,^slayer_turoth
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_turoth_child]
 name=Turoth
@@ -1561,6 +1651,7 @@ param=defend_sound,turoth_hit
 param=death_sound,turoth_death
 param=damagetype,^stab_style
 param=slayer_category,^slayer_turoth
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_turoth_baby]
 name=Turoth
@@ -1593,6 +1684,8 @@ param=damagetype,^stab_style
 param=slayer_category,^slayer_turoth
 
 // both 88 variants are unused
+param=eascape_drops,void_drop_turoth_drop_table
+
 [slayer_turoth_dad2]
 name=Turoth
 desc=He's one big leg short!
@@ -1609,6 +1702,22 @@ resizeh=240
 resizev=240
 vislevel=88
 param=slayer_category,^slayer_turoth
+// EASCape: combat from Void (turoth_chaos_tunnels); hitpoints and hits are Void's divided by 10
+hitpoints=80
+attack=57
+strength=87
+defence=87
+magic=1
+ranged=1
+param=damagetype,^stab_style
+param=eascape_maxhit,10
+param=attack_anim,turoth_attack
+param=attack_sound,turoth_attack
+param=defend_anim,turoth_defend
+param=death_anim,turoth_death
+param=defend_sound,turoth_hit
+param=death_sound,turoth_death
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_turoth_dad3]
 name=Turoth
@@ -1626,6 +1735,22 @@ resizeh=240
 resizev=240
 vislevel=88
 param=slayer_category,^slayer_turoth
+// EASCape: combat from Void (turoth_chaos_tunnels); hitpoints and hits are Void's divided by 10
+hitpoints=80
+attack=57
+strength=87
+defence=87
+magic=1
+ranged=1
+param=damagetype,^stab_style
+param=eascape_maxhit,10
+param=attack_anim,turoth_attack
+param=attack_sound,turoth_attack
+param=defend_anim,turoth_defend
+param=death_anim,turoth_death
+param=defend_sound,turoth_hit
+param=death_sound,turoth_death
+param=eascape_drops,void_drop_turoth_drop_table
 
 [slayer_icefiend_1]
 name=Icefiend
@@ -2020,6 +2145,7 @@ defence=60
 magic=75
 param=damagetype,^magic_style
 param=defend_anim,null
+param=slayer_category,^slayer_infernalmage
 
 [slayer_infernal_mage_2]
 name=Infernal Mage
@@ -2059,6 +2185,7 @@ defence=60
 magic=75
 param=damagetype,^magic_style
 param=defend_anim,null
+param=slayer_category,^slayer_infernalmage
 
 [slayer_infernal_mage_3]
 name=Infernal Mage
@@ -2098,6 +2225,7 @@ defence=60
 magic=75
 param=damagetype,^magic_style
 param=defend_anim,null
+param=slayer_category,^slayer_infernalmage
 
 [slayer_infernal_mage_4]
 name=Infernal Mage
@@ -2137,6 +2265,7 @@ defence=60
 magic=75
 param=damagetype,^magic_style
 param=defend_anim,null
+param=slayer_category,^slayer_infernalmage
 
 [slayer_infernal_mage_5]
 name=Infernal Mage
@@ -2176,3 +2305,4 @@ defence=60
 magic=75
 param=damagetype,^magic_style
 param=defend_anim,null
+param=slayer_category,^slayer_infernalmage

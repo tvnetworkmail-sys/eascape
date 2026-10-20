@@ -1,0 +1,15 @@
+// EASCape: fever spiders (Void: data/area/morytania/braindeath_island/braindeath_island.combat.toml,
+// FeverSpider.kt). With slayer gloves: an ordinary bite, max 7. Without: the fever bite takes
+// 12.5% of your current hitpoints; Protect from Melee stops it.
+[ai_opplayer2,deal_fever_spiders1]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+sound_synth(npc_param(attack_sound), 1, 0);
+if (inv_total(worn, deal_slayer_gloves) > 0) {
+    ~npc_meleeattack;
+    return;
+}
+~playerhit_n_melee(true, scale(125, 1000, stat(hitpoints)), npc_param(attackrate));
