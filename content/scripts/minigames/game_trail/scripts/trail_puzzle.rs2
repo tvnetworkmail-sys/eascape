@@ -1,6 +1,10 @@
 [opheld1,_trail_puzzle] @trail_open_puzzle(last_item);
 
 [label,trail_open_puzzle](obj $puzzle)
+// EASCape: a board left over from a different puzzle box (another picture) starts afresh
+if(inv_freespace(trail_puzzleinv) <= 1 & ~trail_puzzle_board_is($puzzle) = false) {
+    inv_clear(trail_puzzleinv);
+}
 if(inv_freespace(trail_puzzleinv) > 1) {
     inv_clear(trail_puzzleinv); // prob shouldn't ever need this
     ~init_trail_puzzle($puzzle);
@@ -349,3 +353,20 @@ if($open_slot ! -1) {
     sound_synth(slide_puzzle, 1, 0);
     inv_movetoslot(trail_puzzleinv, trail_puzzleinv, $slot, $open_slot);
 }
+
+// EASCape: dropping a puzzle box throws away its board too, so the next box you get (from the
+// clue's NPC, or a spawned one) is a freshly mixed puzzle rather than the old, solved one
+[opheld5,_trail_puzzle]
+inv_clear(trail_puzzleinv);
+~dropslot(last_slot);
+
+// EASCape: whether the board in trail_puzzleinv is this box's picture
+[proc,trail_puzzle_board_is](obj $puzzle)(boolean)
+def_int $puztype = oc_param($puzzle, trail_puzzle);
+def_namedobj $piece = trail_slidingpuzzleb01;
+if($puztype = ^trail_puzzlec) $piece = trail_slidingpuzzlec01;
+if($puztype = ^trail_puzzled) $piece = trail_slidingpuzzled01;
+if(inv_total(trail_puzzleinv, $piece) > 0) {
+    return(true);
+}
+return(false);
