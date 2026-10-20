@@ -165,15 +165,20 @@ if (%fd_icewarrior_subquest < ^dt_ice_talked | %fd_icewarrior_trollskilled >= 5)
 %fd_icewarrior_trollskilled = add(%fd_icewarrior_trollskilled, 1);
 mes("A chunk of ice falls away from the cave entrance.");
 
+// the cave is a short way through the rock to the path beyond, east (Quest Helper: "Continue
+// along the path through the cave to the east"); the world-links guess sent you to Troll Stronghold
 [oploc1,trollrescue_troll_cave_entrance]
 if (%fd_icewarrior_trollskilled < 5) {
     mes("The entrance to the cave is covered in too much ice to get through.");
     return;
 }
-~eascape_link(1);
+p_arrivedelay;
+p_teleport(map_findsquare(0_44_58_58_7, 0, 2, ^map_findsquare_lineofwalk));
 settimer(dt_icepath, 2);
 
-[oploc1,trollrescue_troll_cave_exit] ~eascape_link(1);
+[oploc1,trollrescue_troll_cave_exit]
+p_arrivedelay;
+p_teleport(map_findsquare(0_44_58_50_6, 0, 2, ^map_findsquare_lineofwalk));
 
 // ---------------------------------------------------------------- Kamil
 

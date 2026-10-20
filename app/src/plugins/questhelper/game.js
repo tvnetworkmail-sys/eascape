@@ -251,6 +251,7 @@ module.exports = function questHelper(ctx) {
       highlight: !!ctx.config('highlight'),
       markOptions: !!ctx.config('markOptions'),
       colour: ctx.config('colour'),
+      devMarkDone: !!ctx.config('devMarkDone'), // DEV / TESTING ONLY (remove when testing is done)
     };
     const s = JSON.stringify(config);
     if (s !== lastSent) {

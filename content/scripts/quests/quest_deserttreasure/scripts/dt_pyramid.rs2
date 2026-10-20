@@ -65,7 +65,25 @@ if (%deserttreasure < ^dt_pyramid) {
     return;
 }
 settimer(dt_pyramid, 4);
-~eascape_link(1);
+~dt_pyramid_ladder(3_45_77_33_25);
+
+// the ladders between the floors: outside (the top) - level 1 - 2 - 3 - the temple (level 4).
+// The world-links guess had sent the top ladder straight to the temple and the others onto empty
+// floors; these follow the ladders' own names and places (Quest Helper's floors)
+[oploc1,desert_ladder] ~dt_pyramid_ladder(0_50_45_33_17);
+[oploc1,desert_laddertop3_2] ~dt_pyramid_ladder(2_44_77_29_36);
+[oploc1,desert_ladder2_3] ~dt_pyramid_ladder(3_45_77_29_36);
+[oploc1,desert_laddertop2_1] ~dt_pyramid_ladder(1_43_77_30_45);
+[oploc1,desert_ladder1_2] ~dt_pyramid_ladder(2_44_77_30_45);
+[oploc1,desert_laddertop1_0] ~dt_pyramid_ladder(0_50_145_32_13);
+[oploc1,desert_ladder0_1] ~dt_pyramid_ladder(1_43_77_32_13);
+
+[proc,dt_pyramid_ladder](coord $to)
+p_arrivedelay;
+anim(human_reachforladder, 0);
+p_delay(0);
+p_teleport(map_findsquare($to, 1, 1, ^map_findsquare_lineofwalk));
+settimer(dt_pyramid, 4);
 
 // levels 1-3 (the traps) and level 4 (the temple) of the pyramid
 [proc,dt_in_pyramid_floors]()(boolean)

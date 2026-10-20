@@ -240,17 +240,17 @@ function coord(s) {
 }
 
 const MOVE = /movecoord\(\s*(loc_coord|coord)(?:\(\))?\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/;
-const DEST = /(p_telejump|p_teleport|~climb_ladder|~climb_stairs|@ladder_options|@jump_basalt)\(\s*([^;]*)/;
+const DEST = /(p_telejump|p_teleport|~climb_ladder|~climb_stairs|@ladder_options|@jump_basalt|~dt_pyramid_ladder)\(\s*([^;]*)/;
 const transports = []; // {from: {x, z, level, w, l}, to: {x, z, level} | rel: {dx, dy, dz}, name, op}
 const seenLink = new Set();
 let unresolved = 0;
 
 // Only ways up, down, in and out (not agility shortcuts, quest traps or wrong maze exits).
-const KEEP = /jumping_spot|ladder|stair|trapdoor|manhole|hatch|steps|cellar|rope|tunnel|cave_entrance|caveentrance|cave_exit|caveexit|passage|dungeon|_entrance|_exit/;
+const KEEP = /jumping_spot|ladder|stair|trapdoor|manhole|hatch|steps|cellar|rope|tunnel|cave_entrance|caveentrance|cave_exit|caveexit|passage|dungeon|_entrance|_exit|withportal|barrier/;
 const SKIP = /wrong|trap_|fail|_dead|mazeportal/;
 
 function link(inst, dest, name, op) {
-  if (!KEEP.test(name) || SKIP.test(name)) return;
+  if (SKIP.test(name)) return; // EASCape: every scripted way across counts (quest wells, ropes, mine carts...), not only ladders and stairs
   const to = dest.rel ? { rel: dest.rel } : { to: [dest.x, dest.z, dest.level] };
   const key = `${inst.x},${inst.z},${inst.level}>${JSON.stringify(to)}`;
   if (seenLink.has(key)) return;
@@ -302,7 +302,45 @@ function destinations(text, inst) {
   }
 }
 
-const TRIG = /^\[oploc(\d),(\w+)\]/;
+const TRIG = /^\[oploc(\d|u),(\w+)\]/; // EASCape: and using an item on it (a rope on a rock)
+// EASCape: the way across is often in a label or proc the trigger calls (@open_camp_door,
+// ~dt_pyramid_ladder): those bodies' moves count for the trigger too (one call deep, and only
+// for labels/procs used by a few triggers, so shared helpers don't link everything)
+const bodies = new Map(); // name -> lines
+const callers = new Map(); // name -> set of trigger names
+{
+  const HEAD = /^\[(label|proc),(\w+)\]/;
+  for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
+    let cur = null;
+    let trigName = null;
+    for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
+      const s = raw.trim();
+      const h = HEAD.exec(s);
+      const tt = TRIG.exec(s);
+      if (s.startsWith('[')) { cur = h ? h[2] : null; trigName = tt ? tt[2] : null; if (cur) bodies.set(cur, []); }
+      if (cur && !h) bodies.get(cur).push(s);
+      if (trigName) {
+        for (const m of s.matchAll(/(?:@|~)(\w+)/g)) {
+          if (!callers.has(m[1])) callers.set(m[1], new Set());
+          callers.get(m[1]).add(trigName);
+        }
+      }
+    }
+  }
+}
+function expand(s) {
+  const out = [s];
+  for (const m of s.matchAll(/(?:@|~)(\w+)/g)) {
+    const b = bodies.get(m[1]);
+    if (!b || (callers.get(m[1]) || new Set()).size > 4) continue;
+    for (const line of b) if (DEST.test(line) && !/\$\w+\s*\)/.test(line.replace(/map_findsquare\(\$\w+/, ''))) out.push(line);
+    // a proc taking the destination as its argument: the call's own coords
+    if (/~dt_pyramid_ladder|~climb_ladder|~climb_stairs/.test(s)) continue;
+    const args = s.match(/\b\d_\d+_\d+_\d+_\d+\b/g);
+    if (args && b.some((line) => DEST.test(line) && /\$\w+/.test(line))) out.push(`p_teleport(${args[0]});`);
+  }
+  return out;
+}
 for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let trig = null;
@@ -311,11 +349,9 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     const s = raw.trim();
     const t = TRIG.exec(s);
     if (t) {
-      trig = { op: +t[1], name: t[2] };
+      trig = { op: t[1] === 'u' ? 0 : +t[1], name: t[2] };
       caseCoord = null;
-      if (!DEST.test(s)) continue; // the call can be on the trigger line itself
-    }
-    if (s.startsWith('[') && !t) {
+    } else if (s.startsWith('[')) {
       trig = null;
       continue;
     }
@@ -324,15 +360,18 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     const cm = /^case\s+(\d_\d+_\d+_\d+_\d+)\s*:/.exec(s);
     if (cm) caseCoord = coord(cm[1]);
     else if (/^case\s+default/.test(s)) caseCoord = 'default';
-    if (!DEST.test(s)) continue;
+    const checks = expand(s).filter((x) => DEST.test(x));
+    if (!checks.length) continue;
     for (const nm of names) {
       for (const inst of instances.get(nm) || []) {
         if (caseCoord && caseCoord !== 'default') {
           if (inst.x !== caseCoord.x || inst.z !== caseCoord.z || inst.level !== caseCoord.level) continue;
         }
-        for (const d of destinations(s, inst)) {
-          if (d.level < 0 || d.level > 3) continue;
-          link(inst, d, nm, trig.op);
+        for (const line of checks) {
+          for (const d of destinations(line, inst)) {
+            if (d.level < 0 || d.level > 3) continue;
+            link(inst, d, nm, trig.op);
+          }
         }
       }
     }
@@ -348,10 +387,25 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   if (fs.existsSync(file)) {
     const at = new Map();
     for (const [nm, list] of instances) for (const inst of list) at.set(`${inst.x},${inst.z},${inst.level}`, { inst, nm });
+    // locs whose own scripts move you some other way: their link rows are only guesses
+    const scripted = new Set();
+    for (const f of walk(path.join(root, 'scripts'), '.rs2')) {
+      let cur = null;
+      let body = '';
+      const done = () => { if (cur && !/eascape_link/.test(body)) scripted.add(cur); };
+      for (const raw of fs.readFileSync(f, 'utf8').split('\n')) {
+        const m = /^\[oploc1,(\w+)\](.*)$/.exec(raw.trim());
+        if (m) { done(); cur = m[1]; body = m[2]; continue; }
+        if (raw.startsWith('[')) { done(); cur = null; body = ''; continue; }
+        if (cur) body += raw;
+      }
+      done();
+    }
     let row = null;
     const flush = () => {
       if (!row || !row.from) return;
       const found = at.get(`${row.from.x},${row.from.z},${row.from.level}`);
+      if (found && scripted.has(found.nm)) return;
       const inst = found ? found.inst : { x: row.from.x, z: row.from.z, level: row.from.level, w: 1, l: 1 };
       const d = row.kind === 1 ? { x: row.from.x + row.dx, z: row.from.z + row.dz, level: row.from.level + row.dl } : row.to;
       if (!d || d.level < 0 || d.level > 3) return;

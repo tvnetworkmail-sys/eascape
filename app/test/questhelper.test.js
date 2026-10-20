@@ -309,3 +309,24 @@ for (const st of Object.values(sc.steps)) assert.ok(st.text && st.section < sc.s
   inst.stop();
 }
 console.log('quest helper server guides: ok');
+
+// ---- DEV / TESTING ONLY: "Mark done" on the quest list (remove with the feature)
+{
+  const sentCmds = [];
+  ll.setApi({ pix: () => ({ pixels, width: 512, height: 334 }), loopCycle: () => 0, ifList: () => L, command: (t) => { sentCmds.push(t); return true; } });
+  ll.configure({ fields: Object.assign({}, ll.fields, { menuCount: 'mc', menuOption: 'mo', menuAction: 'ma', menuParamA: 'mpa', menuParamB: 'mpb', menuParamC: 'mpc' }), features: {} });
+  client.mc = 2; client.mo = ['Cancel', 'Dragon Slayer']; client.ma = [1107, 315]; client.mpa = [0, 0]; client.mpb = [0, 0]; client.mpc = [0, 1234];
+  cmd({ type: 'plugin-config', id: 'questhelper', enabled: true, config: { devMarkDone: true } });
+  ll.menuBuilt(client);
+  assert.strictEqual(client.mc, 3, 'an entry is added');
+  assert.strictEqual(client.mo[client.mc - 1], 'Dragon Slayer', 'the left click stays reading the journal');
+  assert.strictEqual(client.mo[1], 'Mark done @lre@Dragon Slayer');
+  const handler = [...ll.pluginEntries.entries()].find(([k]) => k.startsWith('Mark done'))[1];
+  handler();
+  assert.deepStrictEqual(sentCmds, ['questdone dragonquest']);
+  client.mc = 2; client.mo = ['Cancel', 'Dragon Slayer'];
+  cmd({ type: 'plugin-config', id: 'questhelper', enabled: true, config: { devMarkDone: false } });
+  ll.menuBuilt(client);
+  assert.strictEqual(client.mc, 2, 'off: nothing added');
+}
+console.log('dev mark done: ok');

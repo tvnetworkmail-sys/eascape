@@ -294,7 +294,26 @@
     return String(s).replace(/@[a-z0-9]{3}@/gi, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   }
 
+
+  // ---- DEV / TESTING ONLY: right-click a quest in the quest list -> "Mark done" (sends
+  // ::questdone, which only works while the server is in test mode). Remove this, its option
+  // in descriptor.js and devMarkDone in game.js when testing is done (battle plan reminder).
+  const QUEST_DONE_KEYS = {"Black Knights' Fortress": "spy", "Cook's Assistant": "cookquest", "Demon Slayer": "demonstart", "Rune Mysteries Quest": "runemysteries", "Doric's Quest": "doricquest", "The Restless Ghost": "prieststart", "Goblin Diplomacy": "goblinquest", "Ernest the Chicken": "haunted", "Imp Catcher": "imp", "Pirate's Treasure": "hunt", "Prince Ali Rescue": "princequest", "Romeo & Juliet": "rjquest", "Sheep Shearer": "sheep", "The Knight's Sword": "squire", "Vampire Slayer": "vampire", "Witch's Potion": "hetty", "Watch Tower": "itwatchtower", "Waterfall Quest": "waterfall_quest", "Witch's House": "ballquest", "Biohazard": "biohazard", "Digsite Quest": "itexamlevel", "Big Chompy Bird Hunting": "chompybird", "Dwarf Cannon": "mcannon", "Family Crest": "crestquest", "Fight Arena": "arenaquest", "Fishing Contest": "fishingcompo", "Gertrude's Cat": "fluffs", "The Grand Tree": "grandtree", "Hazeel Cult": "hazeelcultquest", "Heroes Quest": "heroquest", "Jungle Potion": "junglepotion", "Legends Quest": "legendsquest", "Lost City": "zanaris", "Merlin's Crystal": "arthur", "Monk's Friend": "drunkmonkquest", "Murder Mystery": "murderquest", "Observatory Quest": "itgronigen", "Plague City": "elenaquest", "Scorpion Catcher": "scorpcatcher", "Sea Slug Quest": "seaslugquest", "Sheep Herder": "sheepherderquest", "Shilo Village": "zombiequeen", "Temple of Ikov": "ikov", "The Tourist Trap": "desertrescue", "Tree Gnome Village": "treequest", "Tribal Totem": "totemquest", "Underground Pass": "upass", "Dragon Slayer": "dragonquest", "Druidic Ritual": "druidquest", "Priest in Peril": "priestperil", "Nature Spirit": "naturespirit", "Death Plateau": "death_equiproom", "Troll Stronghold": "troll_quest", "Troll Romance": "troll_love", "The Golem": "golem_a", "Desert Treasure": "deserttreasure", "Holy Grail": "grail"};
+  function menu(c, arrays, rt) {
+    if (!cfg.devMarkDone || !ll.api || !ll.api.command) return;
+    const f = rt.fields;
+    const n = c[f.menuCount];
+    for (let i = n - 1; i >= 0; i--) {
+      const text = String(arrays[0][i] || '');
+      const key = QUEST_DONE_KEYS[text];
+      if (!key) continue;
+      rt.insertMenuEntry(c, i, `Mark done @lre@${text}`, () => ll.api.command(`questdone ${key}`));
+      return;
+    }
+  }
+
   ll.registerPlugin('questhelper', {
+    menu,
     configure(config) {
       const hinted = cfg.hinted;
       const sent = cfg.commandSent;

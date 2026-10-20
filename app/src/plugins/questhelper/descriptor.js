@@ -25,6 +25,8 @@ module.exports = {
       { key: 'hintArrow', name: 'Hint arrow', description: 'Point the game\'s yellow arrow at the next NPC, object or spot', type: 'boolean', default: true, section: 'overlay', position: 3 },
       { key: 'highlight', name: 'Highlight targets', description: 'Outline the NPC, object or item to use', type: 'boolean', default: true, section: 'overlay', position: 4 },
       { key: 'markOptions', name: 'Highlight dialogue options', description: 'Show the option to pick in green', type: 'boolean', default: true, section: 'overlay', position: 5 },
+      // DEV / TESTING ONLY - remove (with its code in page.js and game.js) when testing is done
+      { key: 'devMarkDone', name: 'Dev: "Mark done" on the quest list', description: 'TESTING ONLY: right-click a quest in the quest list to mark it complete (::questdone, server test mode). To be removed when testing is done.', type: 'boolean', default: true, position: 7 },
       { key: 'colour', name: 'Highlight colour', description: 'Colour of the outlines and the route', type: 'color', default: '#00FFFF', section: 'overlay', position: 6 },
     ],
   },
