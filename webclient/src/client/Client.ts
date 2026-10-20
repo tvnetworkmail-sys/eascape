@@ -1254,6 +1254,7 @@ export class Client extends GameShell {
             World.resetVisCalc(distance, 500, 800, 512, 334);
             WordFilter.unpack(wordenc);
             ClientLocAnim.app = this;
+            NpcType.vars = this.var; // EASCape: multinpcs resolve on the client's varps
 
             if (!this.mouseTrackingInterval) {
                 this.mouseTrackingInterval = setInterval(() => {
@@ -8944,12 +8945,13 @@ export class Client extends GameShell {
         if (action === MiniMenuAction.OP_NPC6) {
             const npc: ClientNpc | null = this.npc[a];
             if (npc && npc.type) {
+                const shownType: NpcType = npc.type.current() ?? npc.type;
                 let examine: string;
 
-                if (!npc.type.desc) {
-                    examine = "It's a " + npc.type.name + '.';
+                if (!shownType.desc) {
+                    examine = "It's a " + shownType.name + '.';
                 } else {
-                    examine = npc.type.desc;
+                    examine = shownType.desc;
                 }
 
                 this.addChat(0, examine, '');
@@ -9675,6 +9677,12 @@ export class Client extends GameShell {
     }
 
     private addNpcOptions(npc: NpcType, a: number, b: number, c: number): void {
+        // EASCape: a multinpc's name and options are those of the NPC it shows as (none: hidden)
+        const shown: NpcType | null = npc.current();
+        if (!shown) {
+            return;
+        }
+        npc = shown;
         if (this.menuNumEntries >= 400) {
             return;
         }
@@ -11637,7 +11645,7 @@ export class Client extends GameShell {
 
         for (let i: number = 0; i < this.npcCount; i++) {
             const npc: ClientNpc | null = this.npc[this.npcIds[i]];
-            if (npc && npc.isReady() && npc.type && npc.type.minimap) {
+            if (npc && npc.isReady() && npc.type && npc.type.current()?.minimap) {
                 anchorX = ((npc.x / 32) | 0) - ((this.localPlayer.x / 32) | 0);
                 anchorY = ((npc.z / 32) | 0) - ((this.localPlayer.z / 32) | 0);
                 this.minimapDrawDot(anchorY, this.mapdots2, anchorX);

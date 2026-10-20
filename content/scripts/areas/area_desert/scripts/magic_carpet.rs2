@@ -81,9 +81,15 @@ if ($route = null) {
     return;
 }
 if_close;
+// the carpet is the 377 cache's "Magic carpet" item, wielded for the ride (its model is the
+// carpet under you); your own weapon waits in eascape_carpet_hold
+~carpet_hold_weapon;
+inv_setslot(worn, ^wearpos_rhand, magic_carpet, 1);
+buildappearance(worn);
 anim(carpet_raise, 0);
 p_delay(2);
-~set_readywalkturn_bas(carpet_sit_down, carpet_bank_left, carpet_sit_down);
+~bas_set(carpet_sit_down, carpet_bank_left, carpet_sit_down, carpet_sit_down, carpet_bank_left, carpet_bank_right, null);
+buildappearance(worn);
 def_int $i = 0;
 def_int $n = db_getfieldcount($route, carpet_route:point);
 while ($i < $n) {
@@ -91,17 +97,54 @@ while ($i < $n) {
     $i = add($i, 1);
 }
 ~carpet_glide(db_getfield($route, carpet_route:land, 0));
-~update_bas;
 anim(carpet_land, 0);
 p_delay(1);
+~carpet_give_back_weapon;
+~update_bas;
+buildappearance(worn);
 
-// two squares a tick towards a point (the carpet flies over anything)
+// smoothly over the ground to a point, two squares a tick, in legs of up to 8 squares (the
+// carpet flies over anything); the old version jumped a square at a time, which looked like
+// your model glitching up and down
 [proc,carpet_glide](coord $dest)
 while (coord ! $dest) {
     def_int $dx = calc(coordx($dest) - coordx(coord));
     def_int $dz = calc(coordz($dest) - coordz(coord));
-    $dx = max(-2, min(2, $dx));
-    $dz = max(-2, min(2, $dz));
-    p_teleport(movecoord(coord, $dx, 0, $dz));
-    p_delay(0);
+    $dx = max(-8, min(8, $dx));
+    $dz = max(-8, min(8, $dz));
+    def_int $dist = max(abs($dx), abs($dz));
+    def_int $dir = ^exact_north;
+    if (abs($dx) >= abs($dz)) {
+        if ($dx > 0) $dir = ^exact_east; else $dir = ^exact_west;
+    } else if ($dz < 0) {
+        $dir = ^exact_south;
+    }
+    def_int $ticks = divide(add($dist, 1), 2);
+    p_exactmove(coord, movecoord(coord, $dx, 0, $dz), 0, multiply($ticks, 30), $dir);
+    p_delay(sub($ticks, 1));
+}
+
+[proc,carpet_hold_weapon]
+def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+if ($weapon ! null & $weapon ! magic_carpet) {
+    inv_movetoslot(worn, eascape_carpet_hold, ^wearpos_rhand, 0);
+}
+
+[proc,carpet_give_back_weapon]
+if (inv_getobj(worn, ^wearpos_rhand) = magic_carpet) {
+    inv_delslot(worn, ^wearpos_rhand);
+}
+if (inv_getobj(eascape_carpet_hold, 0) ! null) {
+    if (inv_getobj(worn, ^wearpos_rhand) = null) {
+        inv_movetoslot(eascape_carpet_hold, worn, 0, ^wearpos_rhand);
+    } else {
+        inv_moveitem(eascape_carpet_hold, inv, inv_getobj(eascape_carpet_hold, 0), inv_total(eascape_carpet_hold, inv_getobj(eascape_carpet_hold, 0)));
+    }
+}
+
+// logging in after a ride was cut short
+[proc,carpet_login]
+if (inv_getobj(worn, ^wearpos_rhand) = magic_carpet | inv_getobj(eascape_carpet_hold, 0) ! null) {
+    ~carpet_give_back_weapon;
+    buildappearance(worn);
 }

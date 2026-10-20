@@ -419,7 +419,12 @@ export default class IfType {
         if (type === 1) {
             model = Model.load(id);
         } else if (type === 2) {
-            model = NpcType.list(id).getHead();
+            // EASCape: a multinpc's chathead is the NPC it shows as (not cached: it can change)
+            const npc = NpcType.list(id);
+            if (npc.multinpc !== null) {
+                return npc.current()?.getHead() ?? null;
+            }
+            model = npc.getHead();
         } else if (type === 3) {
             if (localPlayer) {
                 model = localPlayer.getHeadModel();

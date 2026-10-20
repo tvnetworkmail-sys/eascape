@@ -89,6 +89,20 @@ export default class NpcType {
         return npc;
     }
 
+    /** EASCape: the client's varps (set by Client), for current(). */
+    static vars: ArrayLike<number> | null = null;
+
+    /** EASCape: what this NPC shows as right now - itself, or for a multinpc the NPC its varp or
+     *  varbit picks (null: nothing, hidden). The client drew, named and offered options for the
+     *  base type before, which has no model, so multinpcs (Eblis, Azzanadra, the troll child,
+     *  the Uzer carpet seller...) were invisible. */
+    current(): NpcType | null {
+        if (this.multinpc === null || !NpcType.vars) {
+            return this;
+        }
+        return this.getMultiNpc(NpcType.vars);
+    }
+
     /** The NPC this multinpc currently shows (377 NpcType.getMultiNpc), or null for none. */
     getMultiNpc(vars: ArrayLike<number>): NpcType | null {
         if (this.multinpc === null) {

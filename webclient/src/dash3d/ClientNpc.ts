@@ -68,7 +68,9 @@ export default class ClientNpc extends ClientEntity {
     }
 
     private getTempModel2(): Model | null {
-        if (!this.type) {
+        // EASCape: a multinpc shows as whichever NPC its varp picks
+        const type: NpcType | null = this.type ? this.type.current() : null;
+        if (!type) {
             return null;
         }
 
@@ -79,7 +81,7 @@ export default class ClientNpc extends ClientEntity {
                 secondaryTransform = secondarySeq.frames[this.secondaryAnimFrame];
             }
 
-            return this.type.getTempModel(secondaryTransform, -1, null);
+            return type.getTempModel(secondaryTransform, -1, null);
         } else {
             const primarySeq = SeqType.list[this.primaryAnim];
             let primaryTransform = -1;
@@ -93,7 +95,7 @@ export default class ClientNpc extends ClientEntity {
                 secondaryTransform = secondarySeq.frames[this.secondaryAnimFrame];
             }
 
-            return this.type.getTempModel(primaryTransform, secondaryTransform, primarySeq.walkmerge);
+            return type.getTempModel(primaryTransform, secondaryTransform, primarySeq.walkmerge);
         }
     }
 
