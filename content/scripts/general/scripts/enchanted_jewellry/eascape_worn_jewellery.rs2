@@ -1,0 +1,29 @@
+// EASCape: teleporting with jewellery you're wearing, like OSRS. Right-click it in the Worn
+// Equipment tab and its places show under Remove (their names are the items' wornop1-4 in
+// the item data, drawn by the client; Void's names). Each one is the tab's button 2-5.
+[inv_button2,wornitems:worn] ~eascape_worn_jewellery(last_slot, 1);
+[inv_button3,wornitems:worn] ~eascape_worn_jewellery(last_slot, 2);
+[inv_button4,wornitems:worn] ~eascape_worn_jewellery(last_slot, 3);
+[inv_button5,wornitems:worn] ~eascape_worn_jewellery(last_slot, 4);
+
+[proc,eascape_worn_jewellery](int $slot, int $where)
+if (p_finduid(uid) = false) {
+    return;
+}
+def_obj $item = inv_getobj(worn, $slot);
+if ($item = null) {
+    return;
+}
+p_clearpendingaction;
+switch_obj ($item) {
+    case amulet_of_glory_4, amulet_of_glory_3, amulet_of_glory_2, amulet_of_glory_1 :
+        ~amulet_of_glory_teleport(worn, $slot, $where);
+    case ring_of_dueling_8, ring_of_dueling_7, ring_of_dueling_6, ring_of_dueling_5, ring_of_dueling_4, ring_of_dueling_3, ring_of_dueling_2, ring_of_dueling_1 :
+        if ($where <= 2) {
+            ~ring_of_dueling_teleport(worn, $slot, $where);
+        }
+    case necklace_of_minigames_8, necklace_of_minigames_7, necklace_of_minigames_6, necklace_of_minigames_5, necklace_of_minigames_4, necklace_of_minigames_3, necklace_of_minigames_2, necklace_of_minigames_1 :
+        if ($where <= 2) {
+            ~games_necklace_teleport(worn, $slot, $where);
+        }
+}

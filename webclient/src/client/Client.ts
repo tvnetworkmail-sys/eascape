@@ -9927,6 +9927,21 @@ export class Client extends GameShell {
                                 }
                             }
 
+                            // EASCape: a worn item's own options (jewellery teleports), like OSRS, under
+                            // Remove in the Worn Equipment tab (wornitems:worn, 1688); buttons 2-5
+                            if (child.id === 1688 && obj.wornop) {
+                                for (let op: number = 3; op >= 0; op--) {
+                                    if (obj.wornop[op] && !(child.iop && child.iop[op + 1])) {
+                                        this.menuOption[this.menuNumEntries] = obj.wornop[op] + ' @lre@' + obj.name;
+                                        this.menuAction[this.menuNumEntries] = [MiniMenuAction.INV_BUTTON2, MiniMenuAction.INV_BUTTON3, MiniMenuAction.INV_BUTTON4, MiniMenuAction.INV_BUTTON5][op];
+                                        this.menuParamA[this.menuNumEntries] = obj.id;
+                                        this.menuParamB[this.menuNumEntries] = slot;
+                                        this.menuParamC[this.menuNumEntries] = child.id;
+                                        this.menuNumEntries++;
+                                    }
+                                }
+                            }
+
                             if (child.iop) {
                                 for (let op: number = 4; op >= 0; op--) {
                                     if (child.iop[op]) {

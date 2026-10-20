@@ -1,4 +1,5 @@
 import Component from '#/cache/config/Component.js';
+import ObjType from '#/cache/config/ObjType.js';
 import Player from '#/engine/entity/Player.js';
 import ScriptProvider from '#/engine/script/ScriptProvider.js';
 import ScriptRunner from '#/engine/script/ScriptRunner.js';
@@ -25,7 +26,9 @@ export default class InvButtonHandler extends ClientGameMessageHandler<InvButton
             return false;
         }
 
-        if (!com.iop || com.iop[message.op - 1] === null) {
+        // EASCape: a worn item's own option (ObjType.wornop) is the Worn Equipment tab's button 2-5
+        const wornOp = message.op >= 2 && com.comName === 'wornitems:worn' && ObjType.get(obj)?.wornop?.[message.op - 2];
+        if (!wornOp && (!com.iop || com.iop[message.op - 1] === null)) {
             // bad client: not a valid interface option
             return false;
         }

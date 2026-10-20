@@ -1,11 +1,12 @@
-[opheld4,amulet_of_glory_4] @amulet_of_glory_interface("Your amulet has three charges left.");
-[opheld4,amulet_of_glory_3] @amulet_of_glory_interface("Your amulet has two charges left.");
-[opheld4,amulet_of_glory_2] @amulet_of_glory_interface("Your amulet has one charge left.");
-[opheld4,amulet_of_glory_1] @amulet_of_glory_interface("You use your amulet's last charge.");
+// Amulet of glory. Rub it in your pack to choose a place, or (EASCape, like OSRS) right-click
+// it while you're wearing it and pick the place there (see eascape_worn_jewellery.rs2).
+[opheld4,amulet_of_glory_4] @amulet_of_glory_interface;
+[opheld4,amulet_of_glory_3] @amulet_of_glory_interface;
+[opheld4,amulet_of_glory_2] @amulet_of_glory_interface;
+[opheld4,amulet_of_glory_1] @amulet_of_glory_interface;
 [opheld4,amulet_of_glory] mes("The amulet has lost its charge.");
 
-[label,amulet_of_glory_interface](string $message)
-def_obj $item = last_item;
+[label,amulet_of_glory_interface]
 def_int $slot = last_slot;
 // https://youtu.be/Zv7Wh3TIDOc
 mes("You rub the amulet...");
@@ -16,6 +17,11 @@ if ($choice = 5) {
     mes("You remain where you were.");
     return;
 }
+~amulet_of_glory_teleport(inv, $slot, $choice);
+
+// $where: 1 Edgeville, 2 Karamja, 3 Draynor Village, 4 Al Kharid
+[proc,amulet_of_glory_teleport](inv $inv, int $slot, int $where)
+def_obj $item = inv_getobj($inv, $slot);
 if (~wilderness_level(coord) > 30) {
     // osrs
     mes("A mysterious force blocks your teleport.");
@@ -25,11 +31,17 @@ if (~wilderness_level(coord) > 30) {
 if (~pre_tele_checks(coord) = false) {
     return;
 }
-mes($message);
-switch_int($choice) {
+switch_obj ($item) {
+    case amulet_of_glory_4 : mes("Your amulet has three charges left.");
+    case amulet_of_glory_3 : mes("Your amulet has two charges left.");
+    case amulet_of_glory_2 : mes("Your amulet has one charge left.");
+    case amulet_of_glory_1 : mes("You use your amulet's last charge.");
+    case default : return;
+}
+switch_int($where) {
     case 1 : ~player_teleport_normal(0_48_54_15_40);
     case 2 : ~player_teleport_normal(0_45_49_38_40);
     case 3 : ~player_teleport_normal(0_48_50_33_51);
     case 4 : ~player_teleport_normal(0_51_49_29_27);
 }
-inv_setslot(inv, $slot, oc_param($item, next_obj_stage), 1);
+inv_setslot($inv, $slot, oc_param($item, next_obj_stage), 1);

@@ -608,3 +608,26 @@ if (compare($name, "icefiend") = 0) {
     return(^slayer_icefiend);
 }
 return(null);
+
+// ::jewels: one of each 2006 enchanted jewellery piece in your pack, fully charged: amulet of
+// glory(4), ring of dueling(8), games necklace(8), ring of wealth, ring of life, ring of
+// recoil and ring of forging. What doesn't fit goes to your bank.
+[debugproc,jewels]
+if (p_finduid(uid) = false) {
+    return;
+}
+~eascape_give(amulet_of_glory_4);
+~eascape_give(ring_of_dueling_8);
+~eascape_give(necklace_of_minigames_8);
+~eascape_give(ring_of_wealth);
+~eascape_give(ring_of_life);
+~eascape_give(ring_of_recoil);
+~eascape_give(ring_of_forging);
+mes("You get one of each enchanted jewellery piece.");
+
+[proc,eascape_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    inv_add(bank, $obj, 1);
+}

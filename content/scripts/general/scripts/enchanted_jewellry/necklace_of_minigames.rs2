@@ -1,14 +1,23 @@
+// Games necklace. 2006 had two places: the Burthorpe Games Rooms and the Barbarian Outpost
+// (2006Scape's Teles.java). Rub it in your pack, or (EASCape, like OSRS) right-click it while
+// wearing it (eascape_worn_jewellery.rs2).
 [opheld4,_necklace_of_minigames]
 // https://youtu.be/sB2oqPgruaM?si=7EKqWR-U07U1ncoR&t=272
 mes("You rub the necklace...");
-def_obj $item = last_item;
 def_int $slot = last_slot;
 p_delay(1);
-def_int $choice = ~p_choice2_header("Burthorpe Games Rooms.", 1, "Nowhere.", 2, "Where would you like to teleport to?");
-if($choice = 2) {
+// option wording: Void's GamesNecklace.kt (2006's two places)
+def_int $choice = ~p_choice3_header("Burthorpe Games Rooms.", 1, "Barbarian Outpost.", 2, "Nowhere.", 3, "Where would you like to teleport to?");
+if ($choice = 3) {
     mes("You remain where you were.");
     return;
 }
+~games_necklace_teleport(inv, $slot, $choice);
+
+// $where: 1 Burthorpe Games Rooms, 2 Barbarian Outpost (landing spot: Void's
+// barbarian_outpost_teleport area, 2519-2521, 3572-3574)
+[proc,games_necklace_teleport](inv $inv, int $slot, int $where)
+def_obj $item = inv_getobj($inv, $slot);
 if (~wilderness_level(coord) > 20) {
     // yes it actually says this in osrs
     mes("A mysterious force blocks your teleport spell!");
@@ -18,12 +27,16 @@ if (~wilderness_level(coord) > 20) {
 if (~pre_tele_checks(coord) = false) {
     return;
 }
-~player_teleport_normal(map_findsquare(0_34_77_31_12, 0, 2, ^map_findsquare_lineofwalk));
+if ($where = 1) {
+    ~player_teleport_normal(map_findsquare(0_34_77_31_12, 0, 2, ^map_findsquare_lineofwalk));
+} else {
+    ~player_teleport_normal(map_findsquare(0_39_55_24_53, 0, 1, ^map_findsquare_lineofwalk));
+}
 def_namedobj $new_necklace = oc_param($item, next_obj_stage);
 if ($new_necklace = null) {
-    inv_delslot(inv, $slot);
+    inv_delslot($inv, $slot);
     mes("Your Games Necklace crumbles to dust.");
 } else {
-    inv_setslot(inv, $slot, $new_necklace, 1);
+    inv_setslot($inv, $slot, $new_necklace, 1);
     mes("Your Games Necklace has <~pluralise(oc_param($new_necklace, charges), "use")> left.");
 }

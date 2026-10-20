@@ -39,6 +39,8 @@ export default class ObjType {
     members: boolean = false;
     op: (string | null)[] | null = null;
     iop: (string | null)[] | null = null;
+    // EASCape: options when worn (Worn Equipment buttons 2-5), like OSRS's; opcodes 116-119
+    wornop: (string | null)[] | null = null;
     manwear: number = -1;
     manwear2: number = -1;
     manwearOffset: number = 0;
@@ -112,6 +114,7 @@ export default class ObjType {
             obj.desc = "Login to a members' server to use this object.";
             obj.op = null;
             obj.iop = null;
+            obj.wornop = null;
         }
 
         return obj;
@@ -134,6 +137,7 @@ export default class ObjType {
         this.members = false;
         this.op = null;
         this.iop = null;
+        this.wornop = null;
         this.manwear = -1;
         this.manwear2 = -1;
         this.manwearOffset = 0;
@@ -266,6 +270,11 @@ export default class ObjType {
                 this.contrast = dat.g1b() * 5;
             } else if (code === 115) {
                 this.team = dat.g1();
+            } else if (code >= 116 && code <= 119) {
+                if (!this.wornop) {
+                    this.wornop = new TypedArray1d(4, null);
+                }
+                this.wornop[code - 116] = dat.gjstr();
             }
         }
     }

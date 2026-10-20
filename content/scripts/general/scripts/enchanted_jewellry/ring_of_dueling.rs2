@@ -1,13 +1,21 @@
+// Ring of dueling. 2006 had two places: the Duel Arena and Castle Wars (2006Scape's Teles.java;
+// Lost City had the Castle Wars spot but only offered the Duel Arena). Rub it in your pack,
+// or (EASCape, like OSRS) right-click it while wearing it (eascape_worn_jewellery.rs2).
 [opheld4,_category_136]
 // https://youtu.be/vGH1Nyp4IBU
 mes("You rub the ring...");
-def_obj $item = last_item;
 def_int $slot = last_slot;
 p_delay(1);
-def_int $choice = ~p_choice2_header("Al Kharid Duel Arena.", 1, "Nowhere.", 2, "Where would you like to teleport to?");
-if($choice = 2) {
+// option wording: Void's RingOfDuelling.kt (2006's two places)
+def_int $choice = ~p_choice3_header("Al Kharid Duel Arena.", 1, "Castle Wars Arena.", 2, "Nowhere.", 3, "Where would you like to teleport to?");
+if ($choice = 3) {
     return;
 }
+~ring_of_dueling_teleport(inv, $slot, $choice);
+
+// $where: 1 Duel Arena, 2 Castle Wars
+[proc,ring_of_dueling_teleport](inv $inv, int $slot, int $where)
+def_obj $item = inv_getobj($inv, $slot);
 if (~wilderness_level(coord) > 20) {
     // yes it actually says this in osrs
     mes("A mysterious force blocks your teleport spell!");
@@ -18,9 +26,9 @@ if (~pre_tele_checks(coord) = false) {
     return;
 }
 def_coord $destination;
-if ($choice = 1) {
+if ($where = 1) {
     $destination = map_findsquare(0_51_50_51_35, 0, 2, ^map_findsquare_lineofwalk);
-} else if ($choice = 2) {
+} else {
     $destination = map_findsquare(0_38_48_9_18, 0, 2, ^map_findsquare_lineofwalk);
 }
 ~player_teleport_normal($destination);
@@ -28,9 +36,9 @@ def_namedobj $new_ring = oc_param($item, next_obj_stage);
 // osrs uses lowercase in the name.
 // 2006: https://www.youtube.com/watch?v=dTLr_7HhgXw
 if ($new_ring = null) {
-    inv_delslot(inv, $slot);
+    inv_delslot($inv, $slot);
     mes("Your Ring of Dueling crumbles to dust.");
 } else {
-    inv_setslot(inv, $slot, $new_ring, 1);
+    inv_setslot($inv, $slot, $new_ring, 1);
     mes("Your Ring of Dueling has <~pluralise(oc_param($new_ring, charges), "use")> left.");
 }

@@ -148,6 +148,8 @@ export default class ObjType extends ConfigType {
     members = false;
     op: (string | null)[] = [null, null, 'Take', null, null];
     iop: (string | null)[] = [null, null, null, null, 'Drop'];
+    // EASCape: options when worn (Worn Equipment buttons 2-5), opcodes 116-119
+    wornop: (string | null)[] = [null, null, null, null];
     manwear = -1;
     manwear2 = -1;
     manwearOffset = 0;
@@ -281,6 +283,8 @@ export default class ObjType extends ConfigType {
             this.contrast = dat.g1b();
         } else if (code === 115) {
             this.team = dat.g1();
+        } else if (code >= 116 && code <= 119) {
+            this.wornop[code - 116] = dat.gjstr();
         } else if (code === 201) {
             this.respawnrate = dat.g2();
         } else if (code === 249) {

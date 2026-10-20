@@ -12,7 +12,9 @@ export function parseObjConfig(key: string, value: string): ConfigValue | null |
     const stringKeys = [
         'name', 'desc',
         'op1', 'op2', 'op3', 'op4', 'op5',
-        'iop1', 'iop2', 'iop3', 'iop4', 'iop5'
+        'iop1', 'iop2', 'iop3', 'iop4', 'iop5',
+        // EASCape: options shown when the item is worn (like OSRS's), Worn Equipment buttons 2-5
+        'wornop1', 'wornop2', 'wornop3', 'wornop4'
     ];
     // prettier-ignore
     const numberKeys = [
@@ -307,6 +309,11 @@ export function packObjConfigs(configs: Map<string, ConfigLine[]>, modelFlags: n
                 } else if (key.startsWith('op')) {
                     const index = parseInt(key.substring('op'.length)) - 1;
                     client.p1(30 + index);
+                    client.pjstr(value as string);
+                } else if (key.startsWith('wornop')) {
+                    // EASCape: opcodes 116-119, read by our client (webclient ObjType.wornop)
+                    const index = parseInt(key.substring('wornop'.length)) - 1;
+                    client.p1(116 + index);
                     client.pjstr(value as string);
                 } else if (key.startsWith('iop')) {
                     const index = parseInt(key.substring('iop'.length)) - 1;
