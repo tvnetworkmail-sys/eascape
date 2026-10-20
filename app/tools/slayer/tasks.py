@@ -62,7 +62,7 @@ GUIDE = {'pyrefiend': 'slayerguide_pyrfiend', 'darkbeast': 'slayerguide_dark_bea
          'wallbeast': 'swamp_wallbeast', 'mutatedzygomite': 'slayer_zygomite_object'}
 # 2006 items for the tasks where RuneLite's picture is a later item (a dragon mask, a POH
 # trophy...); our choice, the nearest thing the 2006 game has
-PICK = {'monkey': 'mm_normal_monkey_bones', 'goblin': 'goblin_armour', 'spider': 'red_spiders_eggs', 'cow': 'cow_hide',
+PICK = {'rat': 'eascape_slayerguide_rat', 'monkey': 'mm_normal_monkey_bones', 'goblin': 'goblin_armour', 'spider': 'red_spiders_eggs', 'cow': 'cow_hide',
         'scorpion': 'scorpioncagefull', 'bat': 'bat_bones', 'skeleton': 'bones', 'bear': 'raw_bear_meat',
         'hillgiant': 'big_bones', 'icegiant': 'big_bones', 'firegiant': 'big_bones', 'mossgiant': 'big_bones',
         'ogre': 'ogretooth', 'greendragon': 'dragonhide_green', 'bluedragon': 'dragonhide_blue',

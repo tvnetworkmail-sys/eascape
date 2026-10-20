@@ -310,6 +310,9 @@ export class Client extends GameShell {
     private titleFlames: TitleFlames | null = null;
 
     private areaSide: PixMap | null = null;
+    // EASCape: a menu too wide for the side panel (long jewellery options) floats over the whole
+    // window instead of being cut off at the panel's edge (menuArea 3, window coordinates)
+    private areaMenu: PixMap | null = null;
     private areaMap: PixMap | null = null;
     private areaGame: PixMap | null = null;
     private areaChat: PixMap | null = null;
@@ -4221,6 +4224,17 @@ export class Client extends GameShell {
 
             this.areaBackbase1?.draw(0, 453);
 
+            this.areaGame?.setPixels();
+        }
+
+        // EASCape: the floating menu, drawn last so it's over everything
+        if (this.isMenuOpen && this.menuArea === 3) {
+            if (!this.areaMenu || this.areaMenu.data.length !== this.menuWidth * this.menuHeight) {
+                this.areaMenu = new PixMap(this.menuWidth, this.menuHeight);
+            }
+            this.areaMenu.setPixels();
+            this.drawMinimenu();
+            this.areaMenu.draw(this.menuX, this.menuY);
             this.areaGame?.setPixels();
         }
 
@@ -8480,6 +8494,8 @@ export class Client extends GameShell {
                     this.redrawSide = true;
                 } else if (this.menuArea === 2) {
                     this.redrawChat = true;
+                } else if (this.menuArea === 3) {
+                    this.redrawFrame = true;
                 }
             } else {
                 let x: number = this.mouseX;
@@ -8505,6 +8521,10 @@ export class Client extends GameShell {
 
                     if (this.menuArea === 2) {
                         this.redrawChat = true;
+                    }
+
+                    if (this.menuArea === 3) {
+                        this.redrawFrame = true;
                     }
                 }
             }
@@ -8556,8 +8576,9 @@ export class Client extends GameShell {
     }
 
     private drawMinimenu(): void {
-        const x: number = this.menuX;
-        const y: number = this.menuY;
+        const floating: boolean = this.menuArea === 3;
+        const x: number = floating ? 0 : this.menuX;
+        const y: number = floating ? 0 : this.menuY;
         const w: number = this.menuWidth;
         const h: number = this.menuHeight;
         const background: number = 0x5d5447;
@@ -8579,6 +8600,9 @@ export class Client extends GameShell {
         } else if (this.menuArea === 2) {
             mouseX -= 17;
             mouseY -= 357;
+        } else if (floating) {
+            mouseX -= this.menuX;
+            mouseY -= this.menuY;
         }
 
         for (let i: number = 0; i < this.menuNumEntries; i++) {
@@ -8659,7 +8683,29 @@ export class Client extends GameShell {
         }
 
         // the sidebar/tabs area
-        if (this.mouseClickX > 553 && this.mouseClickY > 205 && this.mouseClickX < 743 && this.mouseClickY < 466) {
+        if (this.mouseClickX > 553 && this.mouseClickY > 205 && this.mouseClickX < 743 && this.mouseClickY < 466 && width > 190) {
+            // EASCape: wider than the panel: float it over the window (menuArea 3)
+            x = this.mouseClickX - ((width / 2) | 0);
+            if (x + width > 765) {
+                x = 765 - width;
+            }
+            if (x < 0) {
+                x = 0;
+            }
+            y = this.mouseClickY;
+            if (y + height > 503) {
+                y = 503 - height;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+            this.isMenuOpen = true;
+            this.menuArea = 3;
+            this.menuX = x;
+            this.menuY = y;
+            this.menuWidth = width;
+            this.menuHeight = this.menuNumEntries * 15 + 22;
+        } else if (this.mouseClickX > 553 && this.mouseClickY > 205 && this.mouseClickX < 743 && this.mouseClickY < 466) {
             x = this.mouseClickX - ((width / 2) | 0) - 553;
             if (x < 0) {
                 x = 0;

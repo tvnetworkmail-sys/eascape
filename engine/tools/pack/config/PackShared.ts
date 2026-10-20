@@ -739,10 +739,10 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
             (client: Packet, _server: Packet): boolean => {
                 // EASCape: 377's obj checksum was 122666554; ours differs because the grimy herbs are named
                 // like the later game's ("Grimy guam leaf", your call 19 Oct 2026) and the jewellery has
-                // options for when it's worn (wornop, 20 Oct 2026). Any other change to the item data
+                // options for when it's worn (wornop, 20 Oct 2026), plus the Slayer plugin's rat picture. Any other change to the item data
                 // still fails this check.
                 if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
-                return Packet.checkcrc(client.data, 0, client.pos, 533350052); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026)
+                return Packet.checkcrc(client.data, 0, client.pos, -1522472590); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026)
             }
         );
     }
