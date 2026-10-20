@@ -1045,7 +1045,7 @@
           const top = Math.max(0, y0 - y);
           const bottom = Math.min(icon.h, y1 - y);
           if (bottom <= top) continue;
-          const part = top === 0 && bottom === icon.h ? icon : { w: icon.w, h: bottom - top, px: icon.px.subarray(top * icon.w, bottom * icon.w) };
+          const part = top === 0 && bottom === icon.h ? icon : { w: icon.w, h: bottom - top, px: (icon.px.subarray || icon.px.slice).call(icon.px, top * icon.w, bottom * icon.w) }; // the icon's pixels can be a plain array
           g.image(part, x, y + top, 96);
         }
         if (y + 9 > y0 && y + 10 < y1) g.text('0', x, y + 9, 0xffff00);
