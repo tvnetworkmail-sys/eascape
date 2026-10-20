@@ -243,8 +243,16 @@ export function lostliteConfigure(): void {
         toUserhash: (name: string) => JString.toUserhash(name),
         pix: () => ({ pixels: Pix2D.pixels, width: Pix2D.width, height: Pix2D.height }),
         objIcon: (id: number, count: number) => ObjType.getSprite(id, count, 0),
-        loc: (id: number) => LocType.list(id)
+        loc: (id: number) => LocType.list(id),
+        // EASCape: send a ::command for a plugin (the Quest Helper panel's ::questhelper)
+        command: (cmd: string) => commandSender(cmd)
     });
+}
+
+// set by the client: sends a ::command (without the ::) when logged in
+let commandSender: (cmd: string) => boolean = () => false;
+export function lostliteSetCommandSender(sender: (cmd: string) => boolean): void {
+    commandSender = sender;
 }
 
 // set by the client (Client.loopCycle is static there)

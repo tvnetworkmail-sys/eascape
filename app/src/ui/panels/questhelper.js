@@ -80,6 +80,10 @@ window.Panels = window.Panels || [];
   function currentBox(v) {
     let body;
     if (v.done) body = [h('div.green', { text: 'Quest complete!' })];
+    else if (v.server && !v.following) {
+      body = [h('div.small', { text: 'Not following this quest in game.' }),
+        h('button.btn.qh-unpin', { onclick: () => command('follow') }, 'Follow this quest')];
+    } else if (v.server && !v.text) body = [h('div.small', { text: 'Waiting for the game...' })];
     else if (v.waiting) body = [h('div.small', { text: 'Waiting for your quest list... (open the quest tab in game if this stays)' })];
     else if (v.unknown || !v.text) body = [h('div.small', { text: 'Not sure where you are in this quest. Open its quest journal and the guide will catch up.' })];
     else {
@@ -112,12 +116,13 @@ window.Panels = window.Panels || [];
     for (const sec of v.sections) {
       out.push(section(`${v.key}:${sec.title}`, sec.title, sec.steps.map((st) => h('div', {
         class: `qh-step${st.current ? ' current' : ''}${st.done ? ' done' : ''}`,
-        oncontextmenu: (e) => UI.popup(e, [["I'm on this step", () => command('pin', { step: st.id })]]),
+        // the server knows where you are in its guides: no "I'm on this step"
+        oncontextmenu: v.server ? null : (e) => UI.popup(e, [["I'm on this step", () => command('pin', { step: st.id })]]),
       }, st.text))));
     }
     if (v.start && v.status !== 'done') out.push(h('div.small.muted.qh-gap', { text: `Start: ${v.start}` }));
     if (v.rewards && v.rewards.length) out.push(section(`${v.key}:rewards`, 'Rewards', v.rewards.map((r) => h('div.small', { text: r })), false));
-    out.push(h('div.small.muted.qh-credit', { text: 'Guides based on RuneLite\'s Quest Helper by Zoinkwiz, for the 2004 quests.' }));
+    out.push(h('div.small.muted.qh-credit', { text: v.server ? 'Guides based on RuneLite\'s Quest Helper by Zoinkwiz; your progress comes from the server.' : 'Guides based on RuneLite\'s Quest Helper by Zoinkwiz, for the 2004 quests.' }));
     return out;
   }
 

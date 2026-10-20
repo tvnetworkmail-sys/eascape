@@ -53,6 +53,16 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             return false;
         }
 
+        // EASCape: ::questhelper <quest|off|list> works for every player, on live too (the Quest
+        // Helper; the app's panel sends it as well)
+        if (cmd === 'questhelper') {
+            const script = ScriptProvider.getByName('[proc,questhelper_command]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args.join(' ')]), true);
+            }
+            return true;
+        }
+
         // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
         if (!Environment.NODE_PRODUCTION && EASCAPE_TEST_COMMANDS.includes(cmd)) {
             cmd = Environment.NODE_DEBUGPROC_CHAR + cmd;

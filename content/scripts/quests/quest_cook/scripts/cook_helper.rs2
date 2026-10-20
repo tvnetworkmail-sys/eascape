@@ -1,0 +1,62 @@
+// Quest Helper: which step of Cook's Assistant you're on (the steps are cook_helper.dbrow).
+// The old app guide guessed from the chat whether the mill had flour for you; the server
+// knows (%hopper_full, %flour).
+[proc,questhelper_cook]()(int)
+if (%cookquest >= ^cook_complete) {
+    return(0);
+}
+if (%cookquest = 0) {
+    return(1); // talk to the Cook
+}
+def_int $egg = inv_total(inv, egg);
+def_int $milk = inv_total(inv, bucket_milk);
+def_int $flour = inv_total(inv, pot_flour);
+if ($egg > 0 & $milk > 0 & $flour > 0) {
+    return(14); // back to the Cook
+}
+if ($milk = 0 & inv_total(inv, bucket_empty) = 0) {
+    return(2); // buy a bucket
+}
+if ($flour = 0 & inv_total(inv, pot_empty) = 0) {
+    return(3); // buy a pot
+}
+if ($egg = 0) {
+    return(4); // the egg
+}
+if ($flour = 0) {
+    def_boolean $top = inzone(2_49_51_26_38, 2_49_51_35_47, coord);
+    def_boolean $middle = inzone(1_49_51_26_38, 1_49_51_35_47, coord);
+    if (%flour > 0) {
+        // flour waiting in the bin downstairs
+        if ($top = true) {
+            return(10);
+        }
+        if ($middle = true) {
+            return(11);
+        }
+        return(12);
+    }
+    if (%hopper_full = ^true) {
+        if ($top = true) {
+            return(9); // pull the controls
+        }
+        if ($middle = true) {
+            return(7);
+        }
+        return(6);
+    }
+    if (inv_total(inv, grain) > 0) {
+        if ($top = true) {
+            return(8); // grain in the hopper
+        }
+        if ($middle = true) {
+            return(7);
+        }
+        return(6);
+    }
+    return(5); // pick wheat
+}
+if ($milk = 0) {
+    return(13); // milk a cow
+}
+return(14);

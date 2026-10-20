@@ -92,7 +92,10 @@
     const now = performance.now();
     if (now - lastPoll < 250) return;
     lastPoll = now;
-    const data = { list: {}, journal: null, dialogue: null, npcs: [] };
+    const data = { list: {}, journal: null, dialogue: null, npcs: [], server: null };
+    // EASCape: the server's Quest Helper (varps questhelper_guide 750, questhelper_step 751)
+    const vars = f.varps ? c[f.varps] : null;
+    if (vars && ll.loggedIn) data.server = { guide: vars[750] | 0, step: vars[751] | 0 };
     const L = list();
     // The quest list starts out all red; the server colours it just after login. Wait a
     // moment before believing it, or every quest would look not started.
@@ -294,8 +297,14 @@
   ll.registerPlugin('questhelper', {
     configure(config) {
       const hinted = cfg.hinted;
+      const sent = cfg.commandSent;
       cfg = config || {};
       cfg.hinted = hinted;
+      cfg.commandSent = sent;
+      // a ::questhelper command from the panel (following a quest is the server's job)
+      if (cfg.command && cfg.command.t !== cfg.commandSent && ll.api && ll.api.command) {
+        if (ll.api.command(cfg.command.text)) cfg.commandSent = cfg.command.t;
+      }
       if (!cfg.step && ll.client && hinted) {
         ll.setHint(ll.client, null);
         cfg.hinted = false;

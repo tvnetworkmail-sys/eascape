@@ -1,13 +1,23 @@
 'use strict';
 // Quest Helper, game side: runs the progress engine on what the page reports, picks the
 // current step, finds the walking route to it, and keeps the sidebar panel up to date.
+// EASCape: quests with a server guide (server-guides.json, from app/tools/quests/server.js)
+// are followed by the server, which says the step (varps 750 / 751), the chat line, the hint
+// arrow and the journal line; here they only add the highlights, the route and the options,
+// and the panel sends ::questhelper to follow or stop. The old client-side guides (guessed
+// progress) are kept for the quests not yet on the server.
 const descriptor = require('./descriptor');
 const { QuestEngine } = require('./engine');
 const progress = require('./progress.json');
-const guides = require('./guides.json');
+const oldGuides = require('./guides.json');
+const serverGuides = require('./server-guides.json');
+const guides = { ...oldGuides, ...serverGuides };
+const serverByNum = Object.fromEntries(Object.values(serverGuides).map((g) => [g.guide, g]));
 
 module.exports = function questHelper(ctx) {
-  const engine = new QuestEngine({ progress, guides });
+  const engine = new QuestEngine({ progress, guides: oldGuides });
+  let server = { guide: 0, step: 0 }; // what the server says you're following
+  let serverCmd = null; // { text, t } for the page to send
   let off = null;
   let account = null;
   let pos = null;
@@ -64,6 +74,36 @@ module.exports = function questHelper(ctx) {
     ctx.setState('selected', key || '');
   }
 
+  /** ::questhelper ... for the page to send (it's in the config for a few seconds). */
+  function sendCommand(text) {
+    serverCmd = { text: `questhelper ${text}`, t: Date.now() };
+    setTimeout(() => {
+      if (serverCmd && Date.now() - serverCmd.t >= 5000) {
+        serverCmd = null;
+        update();
+      }
+    }, 5100);
+    update();
+  }
+
+  /** The server's step for a server guide, in the shape the old engine gives. */
+  function serverCurrent(key) {
+    const g = serverGuides[key];
+    if (engine.status(key) === 'done') return { done: true };
+    if (!server.guide || serverByNum[server.guide] !== g) return { following: false };
+    const step = g.steps[server.step];
+    return step ? { id: server.step, step, sure: true } : { following: true };
+  }
+
+  function serverItems(list) {
+    const bank = engine.state.bank;
+    return (list || []).map((it) => ({
+      name: it.name, need: it.qty, ids: [it.id],
+      have: (have.inv[it.id] || 0) + (have.worn[it.id] ? 1 : 0),
+      bank: bank ? bank[it.id] || 0 : null,
+    }));
+  }
+
   // ---- inputs
 
   function onInput(d) {
@@ -77,6 +117,13 @@ module.exports = function questHelper(ctx) {
     if (d.dialogue) moved = moved.concat(engine.dialogue(d.dialogue));
     for (const m of d.messages || []) moved = moved.concat(engine.message(m));
     have.npcs = new Set(d.npcs || []);
+    if (d.server && (d.server.guide !== server.guide || d.server.step !== server.step)) {
+      const was = server.guide;
+      server = d.server;
+      // following a quest from its journal or ::questhelper: show it in the panel
+      const g = serverByNum[server.guide];
+      if (g && server.guide !== was && selected() !== g.key) select(g.key);
+    }
     if (moved.length) {
       markDirty();
       // Auto start: a guided quest that just moved on becomes the one we show.
@@ -187,7 +234,8 @@ module.exports = function questHelper(ctx) {
       return;
     }
     const key = selected();
-    current = key && account ? engine.current(key, have) : null;
+    const onServer = !!(key && serverGuides[key]);
+    current = key && account ? (onServer ? serverCurrent(key) : engine.current(key, have)) : null;
     const step = current && current.step ? current.step : null;
     const r = step ? routeFor(step) : null;
     const pts = remainingPts(r);
@@ -197,7 +245,9 @@ module.exports = function questHelper(ctx) {
       step: step ? { npc: step.npc, locAt: step.locAt, locSize: step.locSize, obj: step.obj, at: step.at, options: step.options, dig: step.dig } : null,
       route: ctx.config('showRoute') ? pts : null,
       showRoute: !!ctx.config('showRoute'),
-      hintArrow: !!ctx.config('hintArrow'),
+      // the server points the arrow for its own guides
+      hintArrow: !!ctx.config('hintArrow') && !onServer,
+      command: serverCmd,
       highlight: !!ctx.config('highlight'),
       markOptions: !!ctx.config('markOptions'),
       colour: ctx.config('colour'),
@@ -213,10 +263,42 @@ module.exports = function questHelper(ctx) {
     report(key);
   }
 
+  function serverView(key) {
+    const g = serverGuides[key];
+    const ids = Object.keys(g.steps).map(Number).sort((a, b) => a - b);
+    const at = current && current.id ? current.id : 0;
+    return {
+      key,
+      name: g.name,
+      difficulty: g.difficulty,
+      start: g.start,
+      status: engine.status(key),
+      sure: true,
+      server: true,
+      following: !!(current && (current.id || current.following)),
+      done: !!(current && current.done),
+      current: at || null,
+      text: current && current.step ? current.step.text : null,
+      stepItems: current && current.step ? serverItems(current.step.items) : [],
+      options: current && current.step ? current.step.options : [],
+      sections: g.sections.map((title, si) => ({
+        title,
+        steps: ids.filter((id) => g.steps[id].section === si).map((id) => ({ id, text: g.steps[id].text, current: id === at, done: at > 0 && id < at })),
+      })),
+      required: serverItems(g.required),
+      recommended: serverItems(g.recommended),
+      skills: g.skills,
+      rewards: g.rewards,
+      bankKnown: !!engine.state.bank,
+      noRoute: !!(current && current.step && current.step.at && route && route.tiles && !route.tiles.length),
+    };
+  }
+
   function report(key) {
     const quests = Object.entries(progress.quests).map(([k, q]) => ({ key: k, name: q.name, status: engine.status(k), guide: !!guides[k] }));
     let view = null;
-    if (key) {
+    if (key && serverGuides[key]) view = serverView(key);
+    else if (key) {
       const g = guides[key];
       const q = engine.quest(key);
       const order = [];
@@ -263,7 +345,11 @@ module.exports = function questHelper(ctx) {
     if (!c || typeof c !== 'object' || c.t === lastCommand) return;
     lastCommand = c.t;
     const key = selected();
-    if (!key) return;
+    if (c.action === 'follow' && key && serverGuides[key]) {
+      sendCommand(key);
+      return;
+    }
+    if (!key || serverGuides[key]) return;
     if (c.action === 'pin') engine.pin(key, c.step);
     else if (c.action === 'unpin') engine.pin(key, null);
     else if (c.action === 'reset') engine.setStage(key, 0);
@@ -299,6 +385,14 @@ module.exports = function questHelper(ctx) {
     },
     configChanged(key) {
       if (key === 'command') onCommand();
+      else if (key === 'selected') {
+        // picking a server guide follows it; going back to the list stops it
+        const k = selected();
+        if (k && serverGuides[k] && serverByNum[server.guide] !== serverGuides[k] && engine.status(k) !== 'done') sendCommand(k);
+        else if (!k && server.guide) sendCommand('off');
+        route = null;
+        update();
+      }
       else if (key !== 'progress') {
         route = null;
         update();

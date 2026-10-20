@@ -244,8 +244,68 @@ client.ctype = [0, 0, 0, 0];
 frame();
 input = posted.filter((m) => m.type === 'questhelper-input').pop();
 assert.deepStrictEqual([...input.data.messages], ['You operate the hopper. The grain slides down the chute.']);
+// EASCape: the server's Quest Helper varps are read, and a ::questhelper command is sent once
+client.vr = new Int32Array(2000);
+client.vr[750] = 1;
+client.vr[751] = 4;
+ll.fields.varps = 'vr';
+const sentCmds = [];
+ll.setApi({ pix: () => ({ pixels, width: 512, height: 334 }), loopCycle: () => 0, ifList: () => L, command: (t) => { sentCmds.push(t); return true; } });
+frame();
+input = posted.filter((m) => m.type === 'questhelper-input').pop();
+assert.deepStrictEqual({ ...input.data.server }, { guide: 1, step: 4 }, 'server step read');
+cmd({ type: 'plugin-config', id: 'questhelper', enabled: true, config: { ...config, command: { text: 'questhelper cook', t: 5 } } });
+cmd({ type: 'plugin-config', id: 'questhelper', enabled: true, config: { ...config, command: { text: 'questhelper cook', t: 5 } } });
+assert.deepStrictEqual(sentCmds, ['questhelper cook'], 'command sent once');
 // no step: arrow removed
 cmd({ type: 'plugin-config', id: 'questhelper', enabled: true, config: { ...config, step: null } });
 frame();
 assert.strictEqual(client.ht, 0, 'arrow cleared');
 console.log('quest helper overlay: ok');
+
+// ---- EASCape: server guides (exported from the server's dbrows by tools/quests/server.js)
+const serverGuides = require(path.join(dir, 'server-guides.json'));
+const sc = serverGuides.cook;
+assert.ok(sc && sc.guide === 1, 'cook server guide');
+assert.deepStrictEqual(sc.steps[1].npc, [278], 'the Cook by id');
+assert.deepStrictEqual(sc.steps[1].at, [3209, 3215, 0], 'coord to world');
+assert.ok(sc.steps[9].locAt && sc.steps[9].loc > 0, 'hopper controls');
+assert.deepStrictEqual(sc.required.map((r) => r.id), [1944, 1933, 1927]);
+for (const st of Object.values(sc.steps)) assert.ok(st.text && st.section < sc.sections.length, `cook step ${st.id}`);
+// game side: the server's step is shown, picking the quest sends ::questhelper, the arrow is the server's
+{
+  const qh = require(path.join(dir, 'game.js'));
+  const cfgv = { autoStart: true, showRoute: false, showMapRoute: false, hintArrow: true, highlight: true, markOptions: true, colour: '#00FFFF' };
+  const st = {};
+  let listener = null;
+  let reported = null;
+  const toGame = [];
+  global.window = global.window || { dispatchEvent() {} };
+  global.CustomEvent = global.CustomEvent || class { constructor(t, o) { this.type = t; this.detail = o && o.detail; } };
+  const gctx = {
+    config: (k) => (k in st ? st[k] : cfgv[k]), state: (k, d) => (k in st ? st[k] : d), setState: (k, v) => { st[k] = v; inst.configChanged(k); },
+    onRuntime: (fn) => { listener = fn; return () => {}; }, report: (r) => { reported = r; }, sendToGame: (m) => toGame.push(m),
+    invoke: async () => ({ tiles: [] }), log() {},
+  };
+  const inst = qh(gctx);
+  inst.start();
+  listener('player', { name: 'Tester', x: 3222, y: 3218, plane: 0 });
+  listener('questhelper-input', { list: { cook: 'yellow' }, npcs: [], server: { guide: 1, step: 2 } });
+  assert.strictEqual(reported.selected, 'cook', 'following on the server selects the quest');
+  assert.strictEqual(reported.view.text, sc.steps[2].text, "the server's step");
+  assert.ok(reported.view.server && reported.view.sections[0].steps.find((x) => x.id === 1).done);
+  let last = toGame.filter((m) => m.config).pop().config;
+  assert.strictEqual(last.hintArrow, false, 'the server draws the arrow');
+  assert.deepStrictEqual(last.step.npc, sc.steps[2].npc);
+  // back to the list: stop following
+  gctx.setState('selected', '');
+  last = toGame.filter((m) => m.config).pop().config;
+  assert.strictEqual(last.command.text, 'questhelper off');
+  listener('questhelper-input', { list: { cook: 'yellow' }, npcs: [], server: { guide: 0, step: 0 } });
+  gctx.setState('selected', 'cook');
+  last = toGame.filter((m) => m.config).pop().config;
+  assert.strictEqual(last.command.text, 'questhelper cook', 'picking it follows it');
+  assert.strictEqual(reported.view.following, false);
+  inst.stop();
+}
+console.log('quest helper server guides: ok');

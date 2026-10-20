@@ -1,0 +1,151 @@
+// EASCape's Quest Helper, server side. RuneLite's Quest Helper (BSD 2-Clause, Copyright (c)
+// 2020, Zoinkwiz) knows where you are in a quest by reading the game's varps; here the server
+// is the game, so each guide has a proc that looks at the quest's own varps, your items and
+// where you are, and gives the step. While you follow a quest:
+//   - each new step is said in the chat box ("Quest Helper: ...") and the game's yellow hint
+//     arrow points at its NPC or place;
+//   - the quest's journal shows the current step at the bottom;
+//   - the app's Quest Helper plugin (which reads questhelper_guide / questhelper_step) adds
+//     the highlights, the walking route and the dialogue options.
+// You follow a quest by opening its journal (when it has a guide), with the app's Quest
+// Helper panel, or with ::questhelper <quest>; ::questhelper off stops.
+
+// the step you're on in a guide; 0 when the quest is done (one case per guide)
+[proc,questhelper_current](int $guide)(int)
+switch_int ($guide) {
+    case ^qh_cook : return(~questhelper_cook);
+}
+return(0);
+
+[proc,questhelper_guide_row](int $guide)(dbrow)
+db_find(questhelper_guide:guide, $guide);
+return(db_findnext);
+
+[proc,questhelper_step_row](int $guide, int $step)(dbrow)
+db_find(questhelper_step:id, add(multiply($guide, 100), $step));
+return(db_findnext);
+
+[proc,questhelper_follow](int $guide)
+def_dbrow $row = ~questhelper_guide_row($guide);
+if ($row = null) {
+    return;
+}
+if (~questhelper_current($guide) = 0) {
+    mes("Quest Helper: you've already completed <db_getfield($row, questhelper_guide:name, 0)>.");
+    return;
+}
+if (%questhelper_guide ! $guide) {
+    %questhelper_guide = $guide;
+    %questhelper_step = 0;
+    mes("Quest Helper: following <db_getfield($row, questhelper_guide:name, 0)>.");
+}
+settimer(questhelper, 2);
+~questhelper_update;
+
+[proc,questhelper_stop]
+%questhelper_guide = 0;
+%questhelper_step = 0;
+cleartimer(questhelper);
+hint_stop;
+
+[timer,questhelper]
+~questhelper_update;
+
+[proc,questhelper_update]
+if (%questhelper_guide <= 0) {
+    cleartimer(questhelper);
+    return;
+}
+def_int $step = ~questhelper_current(%questhelper_guide);
+if ($step = 0) {
+    def_dbrow $guide = ~questhelper_guide_row(%questhelper_guide);
+    if ($guide ! null) {
+        mes("Quest Helper: you've completed <db_getfield($guide, questhelper_guide:name, 0)>.");
+    }
+    ~questhelper_stop;
+    return;
+}
+def_dbrow $row = ~questhelper_step_row(%questhelper_guide, $step);
+if ($row = null) {
+    return;
+}
+if ($step ! %questhelper_step) {
+    %questhelper_step = $step;
+    mes("@dbl@Quest Helper:@bla@ <db_getfield($row, questhelper_step:text, 0)>");
+    ~questhelper_hint($row);
+} else if (calc(map_clock % 10) = 0) {
+    // keep the arrow on the NPC as you move about (it may not have been in sight before)
+    ~questhelper_hint($row);
+}
+
+/** The game's hint arrow: on the nearest NPC the step wants, otherwise on its place. */
+[proc,questhelper_hint](dbrow $row)
+def_int $i = 0;
+def_int $n = db_getfieldcount($row, questhelper_step:npc);
+while ($i < $n) {
+    if (npc_find(coord, db_getfield($row, questhelper_step:npc, $i), 15, 0) = true) {
+        hint_npc;
+        return;
+    }
+    $i = add($i, 1);
+}
+if (db_getfieldcount($row, questhelper_step:coord) > 0) {
+    def_coord $at = db_getfield($row, questhelper_step:coord, 0);
+    if (coordy($at) = coordy(coord) & distance($at, coord) < 64) {
+        hint_coord(^hint_center, $at, 100);
+        return;
+    }
+}
+hint_stop;
+
+/** Called by the quest journal: following the quest whose journal you open, and its step
+ *  under the journal's own text. */
+[proc,questhelper_journal](string $quest_name, string $journal_text)(string)
+db_find(questhelper_guide:journal, $quest_name);
+def_dbrow $guide = db_findnext;
+if ($guide = null) {
+    return($journal_text);
+}
+def_int $id = db_getfield($guide, questhelper_guide:guide, 0);
+def_int $step = ~questhelper_current($id);
+if ($step = 0) {
+    return($journal_text);
+}
+if (%questhelper_guide ! $id) {
+    ~questhelper_follow($id);
+}
+def_dbrow $row = ~questhelper_step_row($id, $step);
+if ($row = null) {
+    return($journal_text);
+}
+return(append($journal_text, "||@dre@Quest Helper: @dbl@<db_getfield($row, questhelper_step:text, 0)>"));
+
+[proc,questhelper_login]
+if (%questhelper_guide > 0) {
+    %questhelper_step = 0; // say the step again
+    settimer(questhelper, 2);
+}
+
+// ::questhelper <quest> (its guide key, e.g. cook), ::questhelper off, ::questhelper list.
+// Works for every player (ClientCheatHandler); the app's panel uses it too.
+[proc,questhelper_command](string $arg)
+if (compare($arg, "off") = 0 | compare($arg, "") = 0) {
+    if (%questhelper_guide > 0) {
+        mes("Quest Helper: stopped.");
+    }
+    ~questhelper_stop;
+    return;
+}
+def_int $guide = 1;
+def_dbrow $row = ~questhelper_guide_row($guide);
+def_string $names = "";
+while ($row ! null) {
+    if (compare($arg, db_getfield($row, questhelper_guide:key, 0)) = 0) {
+        ~questhelper_follow($guide);
+        return;
+    }
+    $names = append($names, append(" ", db_getfield($row, questhelper_guide:key, 0)));
+    $guide = add($guide, 1);
+    $row = ~questhelper_guide_row($guide);
+}
+mes("Quest Helper guides:<$names>. Use ::questhelper off to stop.");

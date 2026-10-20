@@ -1,0 +1,28 @@
+// EASCape's Quest Helper (RuneLite's Quest Helper by Zoinkwiz, BSD 2-Clause, made server side).
+// Each quest's guide lives next to the quest: a questhelper_guide row, a questhelper_step row
+// per step, and a proc that says which step you're on (see scripts/questhelper.rs2).
+// The app's Quest Helper plugin reads the same rows (exported by app/tools/quests/server.py).
+[questhelper_guide]
+column=guide,int,INDEXED,REQUIRED
+column=key,string,REQUIRED
+column=name,string,REQUIRED
+column=journal,string,INDEXED,REQUIRED
+column=difficulty,string
+column=start,string
+column=required,namedobj,int,LIST
+column=recommended,namedobj,int,LIST
+column=skill,string,LIST
+column=reward,string,LIST
+column=section,string,LIST
+
+[questhelper_step]
+column=id,int,INDEXED,REQUIRED
+column=section,int
+column=text,string,REQUIRED
+column=npc,npc,LIST
+column=loc,loc
+column=obj,namedobj,LIST
+column=coord,coord
+column=option,string,LIST
+column=item,namedobj,int,LIST
+column=dig,boolean

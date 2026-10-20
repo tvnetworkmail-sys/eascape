@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { lostlite, lostliteConfigure, lostliteSetLoopCycle } from '#/client/LostLite.js';
+import { lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -5953,6 +5953,15 @@ export class Client extends GameShell {
         const ll = lostlite();
         if (ll) {
             lostliteSetLoopCycle(() => Client.loopCycle);
+            lostliteSetCommandSender((cmd: string): boolean => {
+                if (!this.ingame || !this.out || cmd.length > 80) {
+                    return false;
+                }
+                this.out.p1Enc(ClientProt.CLIENT_CHEAT);
+                this.out.p1(cmd.length + 1);
+                this.out.pjstr(cmd);
+                return true;
+            });
             lostliteConfigure();
         }
         return ll;
