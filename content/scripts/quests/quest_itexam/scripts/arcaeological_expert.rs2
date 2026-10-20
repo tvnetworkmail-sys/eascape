@@ -1,4 +1,8 @@
 [opnpc1,archaeological_expert]
+// EASCape: Desert Treasure's etchings and translation (quest_deserttreasure/dt_start.rs2)
+if (~dt_expert_talk = true) {
+    return;
+}
 def_int $progress = ~itexam_progress;
 
 if ($progress = ^itexam_complete) {
@@ -63,6 +67,10 @@ if (inv_total(inv, digexpertscroll) > 0) {
 
 [opnpcu,archaeological_expert]
 def_obj $item = last_useitem;
+if ($item = four_diamonds_etchings & %deserttreasure = ^dt_got_etchings) {
+    ~dt_expert_etchings;
+    return;
+}
 
 // Not all the mesanims in here are correct
 if ($item = digtalisman) {

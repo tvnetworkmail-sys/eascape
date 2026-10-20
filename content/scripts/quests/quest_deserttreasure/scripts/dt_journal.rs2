@@ -1,0 +1,79 @@
+// Desert Treasure's quest journal (EASCape's wording; the RuneScape Wiki's journal transcript
+// couldn't be quoted). Done steps are struck through, the current one in blue and red.
+[if_button,questlist:deserttreasure]
+def_string $t;
+if (%deserttreasure = ^dt_not_started) {
+    $t = "@dbl@I can start this quest by speaking to the @dre@Archaeologist@dbl@ in the|@dre@Bedabin Camp@dbl@ in the desert.||@dbl@To complete this quest I need:|";
+    $t = append($t, ~dt_journal_req(~itexam_progress, ^itexam_complete, "The Dig Site"));
+    $t = append($t, ~dt_journal_req(%desertrescue, ^desertrescue_complete, "The Tourist Trap"));
+    $t = append($t, ~dt_journal_req(%ikov, ^ikov_completed_armadyl, "Temple of Ikov"));
+    $t = append($t, ~dt_journal_req(%priestperil, ^priestperil_complete, "Priest in Peril"));
+    $t = append($t, ~dt_journal_req(%waterfall_quest, ^waterfall_complete, "Waterfall Quest"));
+    $t = append($t, ~dt_journal_req(%troll_quest, ^troll_complete, "Troll Stronghold"));
+    $t = append($t, ~dt_journal_req(stat_base(thieving), 53, "Level 53 Thieving"));
+    $t = append($t, ~dt_journal_req(stat_base(magic), 50, "Level 50 Magic"));
+    $t = append($t, ~dt_journal_req(stat_base(firemaking), 50, "Level 50 Firemaking"));
+    $t = append($t, ~dt_journal_req(stat_base(slayer), 10, "Level 10 Slayer"));
+    $t = append($t, "|@dbl@I must be able to defeat four very powerful warriors.");
+    ~quest_journal("Desert Treasure", $t);
+    return;
+}
+$t = "";
+if (%deserttreasure < ^dt_gave_etchings) {
+    $t = "@dbl@The @dre@Archaeologist@dbl@ in the Bedabin Camp gave me some @dre@etchings@dbl@ of|@dbl@an ancient tablet. I should take them to the|@dre@archaeological expert@dbl@ at the Exam Centre.|";
+} else {
+    $t = "@str@The Archaeologist gave me etchings of an ancient tablet for|@str@the archaeological expert at the Exam Centre.|";
+}
+if (%deserttreasure >= ^dt_gave_etchings & %deserttreasure < ^dt_got_translation) {
+    $t = append($t, "|@dbl@The @dre@expert@dbl@ is translating them. I should talk to him again.|");
+} else if (%deserttreasure = ^dt_got_translation) {
+    $t = append($t, "|@dbl@I have the @dre@translation@dbl@. I should take it back to the|@dre@Archaeologist@dbl@ in the Bedabin Camp.|");
+} else if (%deserttreasure > ^dt_got_translation) {
+    $t = append($t, "|@str@The expert translated them and I took the translation back.|");
+}
+if (%deserttreasure = ^dt_gave_translation) {
+    $t = append($t, "|@dbl@It speaks of four diamonds. I should talk to the@dre@|@dre@Archaeologist@dbl@ again.|");
+}
+if (%deserttreasure = ^dt_agreed_help) {
+    $t = append($t, "|@dbl@I agreed to find the diamonds. I should try the @dre@bar@dbl@ in the|@dre@Bandit Camp@dbl@ south of the Bedabin Camp, without any|@dbl@Saradomin or Zamorak items on.|");
+} else if (%deserttreasure = ^dt_bought_drink) {
+    $t = append($t, "|@dbl@I bought a drink. Now to ask the @dre@bartender@dbl@ about the|@dre@four diamonds@dbl@.|");
+} else if (%deserttreasure > ^dt_bought_drink) {
+    $t = append($t, "|@str@The bartender in the Bandit Camp told me to see Eblis.|");
+}
+if (%deserttreasure = ^dt_heard_diamonds) {
+    $t = append($t, "|@dbl@I should speak to @dre@Eblis@dbl@ in the building east of the|@dbl@Bandit Camp's shop.|");
+} else if (%deserttreasure = ^dt_eblis_items) {
+    def_string $left = ~dt_eblis_left;
+    $t = append($t, "|@dbl@Eblis needs, for his scrying glasses: @dre@<$left>@dbl@and|@dbl@then he'll find the diamonds.|");
+} else if (%deserttreasure = ^dt_eblis_mirrors) {
+    $t = append($t, "|@dbl@I gave @dre@Eblis@dbl@ everything. I should meet him on the hill|@dbl@south-east of the Bandit Camp.|");
+} else if (%deserttreasure > ^dt_eblis_mirrors) {
+    $t = append($t, "|@str@Eblis's mirrors showed me where the four diamonds were taken.|");
+}
+if (%deserttreasure >= ^dt_diamonds & %deserttreasure < ^dt_pyramid) {
+    $t = append($t, ~dt_journal_diamond(%fd_killed_firewarrior, 1, "Diamond of Smoke", "Fareed", "in a smoky well west of Pollnivneach"));
+    $t = append($t, ~dt_journal_diamond(%fd_shadowwarrior_quest, ^dt_shadow_done, "Diamond of Shadow", "Damis", "below the hills south of the Baxtorian Falls"));
+    $t = append($t, ~dt_journal_diamond(%fdvw_subquest, ^dt_blood_killed, "Diamond of Blood", "Dessous", "in Morytania, south-east of Canifis"));
+    $t = append($t, ~dt_journal_diamond(%fd_icewarrior_subquest, ^dt_ice_freed, "Diamond of Ice", "Kamil", "on the frozen paths north of Trollheim"));
+    $t = append($t, "|@dbl@With all four I must place them in the @dre@obelisks@dbl@ around the|@dre@pyramid@dbl@ south-east of the Bandit Camp.|");
+}
+if (%deserttreasure >= ^dt_pyramid & %deserttreasure < ^deserttreasure_complete) {
+    $t = append($t, "|@str@I placed all four diamonds in the obelisks.||@dbl@The pyramid is open. I should find whatever lies at its|@dre@heart@dbl@.");
+}
+if (%deserttreasure >= ^deserttreasure_complete) {
+    $t = append($t, "|@str@At the heart of the pyramid I freed Azzanadra, who taught|@str@me the Ancient Magicks. I can switch between them and my|@str@old spells at the altar there.||@red@QUEST COMPLETE!");
+}
+~quest_journal("Desert Treasure", $t);
+
+[proc,dt_journal_req](int $have, int $need, string $text)(string)
+if ($have >= $need) {
+    return("@str@<$text>|");
+}
+return("@dre@<$text>|");
+
+[proc,dt_journal_diamond](int $have, int $need, string $diamond, string $warrior, string $where)(string)
+if ($have >= $need) {
+    return("|@str@I have taken the <$diamond> from <$warrior>.");
+}
+return("|@dbl@The @dre@<$diamond>@dbl@: <$warrior>, <$where>.");

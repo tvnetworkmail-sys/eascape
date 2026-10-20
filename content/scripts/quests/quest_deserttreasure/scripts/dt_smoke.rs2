@@ -1,0 +1,218 @@
+// Desert Treasure: the Diamond of Smoke. The smoky well west of Pollnivneach (Void's teleports:
+// well 3310,2962 to 3206,9379, rope back to 3310,2961), the smoke (OSRS wiki: 20 damage every 12
+// seconds without a face mask), the four standing torches in the corners (light them all with a
+// tinderbox, Firemaking 50, before they burn out), the burnt chest's warm key, the gate in the east
+// and Fareed. Torch order and places from Quest Helper; how long they burn is our choice
+// (^dt_torch_time, the wiki says only that they go out if you're slow).
+
+[proc,dt_in_smoke_dungeon]()(boolean)
+return(inzone(0_50_146_0_0, 0_51_146_63_63, coord));
+
+[oploc1,sword_haunted_well]
+p_arrivedelay;
+mes("You climb down the well...");
+anim(human_reachforladder, 0);
+p_delay(0);
+p_teleport(0_50_146_6_35);
+settimer(dt_smoke, 20);
+if (~dt_face_covered = false) {
+    mes("@red@The air down here is thick with smoke. You should cover your face.");
+}
+
+[oploc1,sword_haunted_well_go_up]
+p_arrivedelay;
+anim(human_reachforladder, 0);
+p_delay(0);
+p_teleport(0_51_46_46_17);
+cleartimer(dt_smoke);
+
+[proc,dt_face_covered]()(boolean)
+if (inv_total(worn, slayer_facemask) > 0 | inv_total(worn, gasmask) > 0) {
+    return(true);
+}
+return(false);
+
+[timer,dt_smoke]
+if (~dt_in_smoke_dungeon = false) {
+    cleartimer(dt_smoke);
+    return;
+}
+if (~dt_face_covered = false) {
+    mes("You choke on the thick smoke.");
+    ~damage_self(20);
+}
+
+// the torches (multilocs on fd_torch_count1-4)
+[oplocu,4d_standing_torch1] ~dt_light_torch(1);
+[oplocu,4d_standing_torch2] ~dt_light_torch(2);
+[oplocu,4d_standing_torch3] ~dt_light_torch(3);
+[oplocu,4d_standing_torch4] ~dt_light_torch(4);
+
+[proc,dt_light_torch](int $torch)
+if (last_useitem ! tinderbox) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(firemaking) < 50) {
+    mes("You need a Firemaking level of 50 to light these torches.");
+    return;
+}
+def_int $lit = 0;
+switch_int ($torch) {
+    case 1 : $lit = %fd_torch_count1;
+    case 2 : $lit = %fd_torch_count2;
+    case 3 : $lit = %fd_torch_count3;
+    case 4 : $lit = %fd_torch_count4;
+}
+if ($lit = 1) {
+    mes("That torch is already lit.");
+    return;
+}
+anim(human_createfire, 0);
+p_delay(1);
+anim(null, 0);
+switch_int ($torch) {
+    case 1 : %fd_torch_count1 = 1;
+    case 2 : %fd_torch_count2 = 1;
+    case 3 : %fd_torch_count3 = 1;
+    case 4 : %fd_torch_count4 = 1;
+}
+mes("You light the torch.");
+if (~dt_torches_lit = 4) {
+    cleartimer(dt_torches);
+    mes("All four torches are burning. You hear a click from the middle of the cavern.");
+    return;
+}
+if (~dt_torches_lit = 1) {
+    settimer(dt_torches, ^dt_torch_time);
+}
+
+[proc,dt_torches_lit]()(int)
+return(calc(%fd_torch_count1 + %fd_torch_count2 + %fd_torch_count3 + %fd_torch_count4));
+
+[timer,dt_torches]
+cleartimer(dt_torches);
+if (~dt_torches_lit < 4) {
+    %fd_torch_count1 = 0;
+    %fd_torch_count2 = 0;
+    %fd_torch_count3 = 0;
+    %fd_torch_count4 = 0;
+    mes("The torches burn out. You'll have to be quicker.");
+}
+
+// the burnt chest in the middle
+[oploc1,fd_firedungeon_shutchest]
+if (~dt_torches_lit < 4) {
+    mes("The chest is locked tight.");
+    return;
+}
+anim(human_openchest, 0);
+p_delay(0);
+loc_change(fd_firedungeon_openchest, 10);
+%fd_firechest = 1;
+if (%fd_killed_firewarrior = 1 | ~obj_gettotal(fd_firekey) > 0) {
+    mes("The chest is empty.");
+    return;
+}
+inv_add(inv, fd_firekey, 1);
+~objbox(fd_firekey, "Inside the chest you find a warm key.", 250, 0, 0);
+
+// the gate to Fareed's room
+[oploc1,fd_fw_metalgateclosed_l] ~dt_fareed_gate;
+[oploc1,fd_fw_metalgateclosed_r] ~dt_fareed_gate;
+[oplocu,fd_fw_metalgateclosed_l] ~dt_fareed_gate_key;
+[oplocu,fd_fw_metalgateclosed_r] ~dt_fareed_gate_key;
+
+[proc,dt_fareed_gate_key]
+if (last_useitem ! fd_firekey) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%fd_firewargate = 0) {
+    inv_del(inv, fd_firekey, 1);
+    %fd_firewargate = 1;
+    mes("The warm key unlocks the gate.");
+}
+~dt_fareed_gate;
+
+[proc,dt_fareed_gate]
+if (%fd_firewargate = 0) {
+    mes("The gate is locked.");
+    return;
+}
+def_boolean $entering = false;
+if (coordx(coord) <= coordx(loc_coord)) {
+    $entering = true;
+}
+~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+if ($entering = false) {
+    return;
+}
+if (%fd_killed_firewarrior = 0) {
+    if (npc_find(0_51_146_51_31, firediamond_firewarrior, 12, 0) = false) {
+        npc_add(0_51_146_51_31, firediamond_firewarrior, 500);
+        npc_say("You will not take the diamond from me!");
+    }
+    %npc_aggressive_player = uid;
+    npc_setmode(opplayer2);
+    if (inv_total(worn, ice_gloves) = 0) {
+        mes("@red@The air shimmers with heat around Fareed. Without ice gloves you won't be able to hold a weapon against him.");
+    }
+    return;
+}
+// a lost diamond turns up again in the room
+if (~dt_have_diamond(fd_diamond_fire) = false & %fd_column_fire = 0) {
+    obj_add(0_51_146_51_31, fd_diamond_fire, 1, 200);
+    mes("You see something glinting on the floor.");
+}
+
+// true if you have that diamond (or it's placed)
+[proc,dt_have_diamond](namedobj $diamond)(boolean)
+if (~obj_gettotal($diamond) > 0) {
+    return(true);
+}
+return(false);
+
+// Fareed: water spells are the only magic that hurts him, and without ice gloves he knocks your
+// weapon into your pack (called from the player's melee and magic hits)
+[proc,dt_fareed_melee]
+if (npc_type ! firediamond_firewarrior) {
+    return;
+}
+if (inv_total(worn, ice_gloves) = 0 & inv_getobj(worn, ^wearpos_rhand) ! null) {
+    ~try_unequip(^wearpos_rhand);
+    mes("Fareed's heat burns your hands and you drop your weapon into your pack!");
+}
+
+[ai_queue3,firediamond_firewarrior]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(dt_fareed_killed, 0, 0);
+}
+
+[queue,dt_fareed_killed]
+if (%fd_killed_firewarrior = 1) {
+    return;
+}
+%fd_killed_firewarrior = 1;
+if (~dt_have_diamond(fd_diamond_fire) = false) {
+    obj_add(coord, fd_diamond_fire, 1, 200);
+}
+mes("Fareed collapses. The Diamond of Smoke falls from his armour.");
+
+// spell damage against the diamond warriors (player_magic.rs2): Fareed only takes water spells,
+// Kamil only fire spells (OSRS wiki)
+[proc,dt_spell_damage](int $spell, int $damage)(int)
+if (npc_type = firediamond_firewarrior) {
+    if ($spell = ^water_strike | $spell = ^water_bolt | $spell = ^water_blast | $spell = ^water_wave) {
+        return($damage);
+    }
+    return(0);
+}
+if (npc_type = icediamond_icewarrior) {
+    if ($spell = ^fire_strike | $spell = ^fire_bolt | $spell = ^fire_blast | $spell = ^fire_wave) {
+        return($damage);
+    }
+    return(0);
+}
+return($damage);

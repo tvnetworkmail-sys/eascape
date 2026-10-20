@@ -39,6 +39,8 @@ if ($hit = true) {
     }
     $damage = randominc(min($maxhit, npc_param(max_dealt)));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
+    // EASCape: Desert Treasure's Fareed knocks your weapon away without ice gloves
+    ~dt_fareed_melee;
     // EASCape: Tz-Kek burns you for 1 when you hit it in melee (OSRS wiki, TzHaar Fight Cave)
     if (npc_type = tzhaar_fightcave_swarm_2a | npc_type = tzhaar_fightpit_swarm_2a) {
         ~damage_self(1);
