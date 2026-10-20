@@ -20,6 +20,10 @@ from common import *
 from slayer_map import CATEGORY
 
 VOID, WRITE = sys.argv[1], '--write' in sys.argv
+# EASCape: monsters to import that aren't Slayer monsters (quest areas), from VOID_EXTRA (comma list)
+# plus the ones already imported that way (kept so re-runs give the same result)
+EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
+EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp'}
 OUT = os.path.join(CONTENT, 'scripts', 'eascape_void')
 
 vnpc = void_npcs(VOID)
@@ -315,7 +319,9 @@ for name, b in blocks.items():
     if name.startswith('macro_'):
         continue  # random event monsters have their own scripts
     f0 = dict(b['fields'])
-    if name in OVERRIDE:
+    if name in EXTRA_AS:
+        v = next(d for d in vnpc.values() if d['_name'] == EXTRA_AS[name])
+    elif name in OVERRIDE:
         o = OVERRIDE[name]
         names = o if isinstance(o, tuple) else (o,)
         v = {}
@@ -327,18 +333,19 @@ for name, b in blocks.items():
         continue
     cats = [unq(x) for x in re.findall(r'"[^"]+"', v.get('categories', ''))]
     sc = [CATEGORY[c] for c in cats if c in CATEGORY]
-    if not sc:
+    if not sc and name not in EXTRA:
         continue
     f = collections.OrderedDict()
     for k, val in b['fields']:
         f.setdefault(k, val)
-    sc = pick_category(sc, f.get('name') or '')
-    if not sc:
+    sc = pick_category(sc, f.get('name') or '') if sc else None
+    if not sc and name not in EXTRA:
         continue
     params = {val.split(',', 1)[0] for k, val in b['fields'] if k == 'param'}
     lines = []
-    cat_names[sc].add(f.get('name'))
-    if 'slayer_category' not in params:
+    if sc:
+        cat_names[sc].add(f.get('name'))
+    if sc and 'slayer_category' not in params:
         lines.append('param=slayer_category,^slayer_' + sc)
         report['category'] += 1
     vname = v['_name']
