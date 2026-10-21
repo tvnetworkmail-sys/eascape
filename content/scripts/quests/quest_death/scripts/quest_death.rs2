@@ -120,7 +120,13 @@ if(%death_equiproom < ^death_complete) {
 ~equip(last_slot);
 
 [opheld2,death_spikedboots]
-mes("Trying to walk in these would be difficult. I'll carry them for now."); // maybe changed with dt? not sure
+// EASCape: "equipable: Yes (only at the ice patch during Desert Treasure I)" (OSRS wiki, Spiked
+// boots), so they go on past the ice gate once the quest has begun; the icy slope needs them worn
+if (%deserttreasure > 0 & ~dt_in_ice_lands = true) {
+    ~equip(last_slot);
+    return;
+}
+mes("Trying to walk in these would be difficult. I'll carry them for now.");
 
 [zone,0_44_56_48_24]
 if(~death_get_map = ^death_got_map) {
