@@ -586,7 +586,8 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                     barrows: '0,55,51,45,25', // by Ahrim's mound (barrows.rs2, barrows_mound_coord)
                     bob: '0,50,50,32,3', // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
                     tzhaar: '0,38,80,6,48', // Mor Ul Rek, by the Fight Cave entrance (2006Scape's way out of the cave)
-                    fightpit: '0,37,80,31,57' // outside the Fight Pit's waiting room door (maps/m37_80.jm2)
+                    fightpit: '0,37,80,31,57', // outside the Fight Pit's waiting room door (maps/m37_80.jm2)
+                    warriorsguild: '0,44,55,59,26' // just inside the Warriors' Guild's front door (maps/m44_55.jm2)
                 };
                 const coord = (places[args[0].toLowerCase()] ?? args[0]).split(',');
                 if (coord.length < 3) {

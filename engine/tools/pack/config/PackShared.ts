@@ -637,7 +637,17 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 967458629);
+                // EASCape: locs may be added after the 14974 from 377 (the Warriors' Guild, 21 Oct
+                // 2026); the 377 ones (the first 735811 bytes) must still match
+                const original = 14974;
+                const count = (client.data[0] << 8) | client.data[1];
+                if (count <= original) {
+                    return Packet.checkcrc(client.data, 0, client.pos, 967458629);
+                }
+                const copy = Uint8Array.from(client.data.subarray(0, 735811));
+                copy[0] = original >> 8;
+                copy[1] = original & 0xff;
+                return Packet.checkcrc(copy, 0, copy.length, 967458629);
             }
         );
     }

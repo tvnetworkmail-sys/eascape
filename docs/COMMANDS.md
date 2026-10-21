@@ -25,6 +25,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |
 | `::tele fightpit` | Outside the Fight Pit's waiting room door |
+| `::tele warriorsguild` | Just inside the Warriors' Guild's front door |
 
 ## Moving around
 
