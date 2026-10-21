@@ -2,6 +2,9 @@
 // heals, poison, drains) and the 377 cache's spellbook interface (inter_267: levels and runes from its
 // buttons). Freeze lengths from the OSRS wiki (Void's 3/6/9/12 don't match its own bind's 8). Teleport
 // places from Void's teleport areas. Sounds for smoke and shadow are our choice (none in the 377 cache).
+// Ice graphics: Jagex's own names swap burst and blitz (the cache calls 363 ice_blitz_impact), so
+// these follow what the game shows: RuneLite's GraphicID (burst 363, blitz 367) and 2009scape's
+// IceSpells (burst: projectile 362; blitz: 366 on the caster, no projectile; barrage: projectile 368).
 
 [magic_spell_smoke_rush]
 table=magic_spell_table
@@ -138,7 +141,8 @@ data=runesrequired,deathrune,2,chaosrune,4,waterrune,4
 data=experience,400
 data=maxhit,22
 data=anim,zaros_vertical_casting
-data=spotanim_target,ice_burst_impact,0
+data=spotanim_proj,ice_blitz_travel,43,31,51,16,-5,64,10
+data=spotanim_target,ice_blitz_impact,0
 data=sound_cast,ice_magic_all
 data=sound_hit,ice_magic_all
 data=continue_by_autocast,true
@@ -209,8 +213,8 @@ data=runesrequired,deathrune,2,bloodrune,2,waterrune,3
 data=experience,460
 data=maxhit,26
 data=anim,zaros_casting
-data=spotanim_proj,ice_blitz_travel,43,31,51,16,-5,64,10
-data=spotanim_target,ice_blitz_impact,0
+data=spotanim_origin,ice_burst_travel
+data=spotanim_target,ice_burst_impact,0
 data=sound_cast,ice_magic_all
 data=sound_hit,ice_magic_all
 data=continue_by_autocast,true
@@ -279,6 +283,7 @@ data=runesrequired,deathrune,4,bloodrune,2,waterrune,6
 data=experience,520
 data=maxhit,30
 data=anim,zaros_vertical_casting
+data=spotanim_proj,ice_barrage_travel,43,31,51,16,-5,64,10
 data=spotanim_target,ice_barrage_impact,0
 data=sound_cast,ice_magic_all
 data=sound_hit,ice_magic_all

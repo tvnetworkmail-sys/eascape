@@ -85,6 +85,10 @@ return(true);
 [proc,pvp_freeze_allowed](dbrow $spell_data)(boolean)
 // check if player is already frozen
 if (db_getfield($spell_data, magic_spell_table:freeze_time, 0) > 0) {
+    // EASCape: the ice spells still hit a frozen player, they just don't freeze again
+    if (~ancient_is_ice(db_getfield($spell_data, magic_spell_table:spell, 0)) = true) {
+        return(true);
+    }
     if (.%frozen > map_clock) {
         mes("Your target is already held by a magical force.");
         return(false);
@@ -152,6 +156,9 @@ while ($i < db_getfieldcount($spell_data, magic_spell_table:stat_change)) {
 
 [proc,pvp_freeze_effect](dbrow $spell_data)
 def_int $freeze_time = db_getfield($spell_data, magic_spell_table:freeze_time, 0);
+if ($freeze_time > 0 & calc(.%frozen + 5) > map_clock) {
+    return; // EASCape: still frozen or immune (an ice spell on a frozen player)
+}
 if ($freeze_time > 0) {
     if (~.check_protect_prayer(^magic_style) = true) {
         $freeze_time = divide($freeze_time, 2); // 50% reduction https://oldschool.runescape.wiki/w/Update:RS2_bugfixes_-_part_4

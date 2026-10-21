@@ -135,6 +135,11 @@ if (db_getfield($spell_data, magic_spell_table:freeze_time, 0) > 0) {
         return(false);
     }
     
+    // EASCape: the ice spells still hit a frozen target, they just don't freeze it again (only
+    // the binding spells are refused; Void and 2009scape: content/skill/magic/book/ancient)
+    if (~ancient_is_ice(db_getfield($spell_data, magic_spell_table:spell, 0)) = true) {
+        return(true);
+    }
     if (%npc_stunned > map_clock) {
         mes("Your target is already held by a magical force.");
         return(false);
@@ -307,6 +312,10 @@ while ($i < db_getfieldcount($spell_data, magic_spell_table:stat_change)) {
 [proc,pvm_freeze_effect](dbrow $spell_data)
 // freeze npc if spell has freeze effect
 if (db_getfield($spell_data, magic_spell_table:freeze_time, 0) > 0) {
+    // still frozen, or in the 5 ticks of immunity after: no new freeze (EASCape, for the ice spells)
+    if (calc(%npc_stunned + 5) > map_clock) {
+        return;
+    }
     %npc_stunned = calc(map_clock + db_getfield($spell_data, magic_spell_table:freeze_time, 0) + 1);
     npc_walktrigger(8, 0);
 }

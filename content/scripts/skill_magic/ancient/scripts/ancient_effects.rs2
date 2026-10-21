@@ -29,6 +29,12 @@ if ($poison > 0 & random(5) = 0) {
     ~npc_poison_start($poison);
 }
 
+[proc,ancient_is_ice](int $spell)(boolean)
+switch_int ($spell) {
+    case ^ice_rush, ^ice_burst, ^ice_blitz, ^ice_barrage : return(true);
+}
+return(false);
+
 [proc,ancient_is_multi](int $spell)(boolean)
 switch_int ($spell) {
     case ^smoke_burst, ^shadow_burst, ^blood_burst, ^ice_burst, ^smoke_barrage, ^shadow_barrage, ^blood_barrage, ^ice_barrage : return(true);
