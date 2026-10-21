@@ -668,3 +668,68 @@ inv_add(inv, water_skin4, 2);
 inv_add(inv, lockpick, 3);
 inv_add(inv, cert_lockpick, 50);
 mes("Desert Treasure pack: everything the quest needs. Combat gear, food, potions and runes are up to you.");
+
+// ::spellbookswap swaps between the normal spells and the Ancient Magicks; ::spellbookswap ancient
+// or ::spellbookswap normal picks one. Works whether or not Desert Treasure is done (testing only)
+[debugproc,spellbookswap](string $book)
+if (p_finduid(uid) = false) {
+    return;
+}
+if (compare($book, "ancient") = 0 | compare($book, "ancients") = 0) {
+    %alternate_spells = 1;
+} else if (compare($book, "normal") = 0 | compare($book, "modern") = 0) {
+    %alternate_spells = 0;
+} else if (string_length($book) > 0) {
+    mes("Use ::spellbookswap, ::spellbookswap ancient or ::spellbookswap normal.");
+    return;
+} else if (%alternate_spells = 1) {
+    %alternate_spells = 0;
+} else {
+    %alternate_spells = 1;
+}
+if (%alternate_spells = 1) {
+    if_settab(inter_267, ^tab_magic);
+    mes("Spellbook: Ancient Magicks.");
+} else {
+    if_settab(magic, ^tab_magic);
+    mes("Spellbook: normal spells.");
+}
+~autocast_check_book;
+
+// ::allrunes gives 100,000 of each of the 13 runes in the 2006 game (testing only)
+[debugproc,allrunes]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $need = 0;
+if (inv_total(inv, airrune) = 0) $need = add($need, 1);
+if (inv_total(inv, waterrune) = 0) $need = add($need, 1);
+if (inv_total(inv, earthrune) = 0) $need = add($need, 1);
+if (inv_total(inv, firerune) = 0) $need = add($need, 1);
+if (inv_total(inv, mindrune) = 0) $need = add($need, 1);
+if (inv_total(inv, bodyrune) = 0) $need = add($need, 1);
+if (inv_total(inv, cosmicrune) = 0) $need = add($need, 1);
+if (inv_total(inv, chaosrune) = 0) $need = add($need, 1);
+if (inv_total(inv, naturerune) = 0) $need = add($need, 1);
+if (inv_total(inv, lawrune) = 0) $need = add($need, 1);
+if (inv_total(inv, deathrune) = 0) $need = add($need, 1);
+if (inv_total(inv, bloodrune) = 0) $need = add($need, 1);
+if (inv_total(inv, soulrune) = 0) $need = add($need, 1);
+if (inv_freespace(inv) < $need) {
+    mes("::allrunes needs <tostring($need)> free inventory spaces.");
+    return;
+}
+inv_add(inv, airrune, 100000);
+inv_add(inv, waterrune, 100000);
+inv_add(inv, earthrune, 100000);
+inv_add(inv, firerune, 100000);
+inv_add(inv, mindrune, 100000);
+inv_add(inv, bodyrune, 100000);
+inv_add(inv, cosmicrune, 100000);
+inv_add(inv, chaosrune, 100000);
+inv_add(inv, naturerune, 100000);
+inv_add(inv, lawrune, 100000);
+inv_add(inv, deathrune, 100000);
+inv_add(inv, bloodrune, 100000);
+inv_add(inv, soulrune, 100000);
+mes("You get 100,000 of every rune.");
