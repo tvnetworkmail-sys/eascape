@@ -317,6 +317,22 @@ if (%deserttreasure < ^deserttreasure_complete) {
 p_arrivedelay;
 p_teleport(0_50_145_33_33);
 
+// the portal by the altar, already on the 2006 map (dia_down, a portal once the quest is done:
+// "A portal next to altar lets the player exit the room directly, depositing them outside the
+// pyramid", OSRS wiki, Ancient Pyramid). Same model and animation as the essence mine's exit
+// portal. Where it puts you outside isn't recorded: by the south door is our choice
+[oploc1,dia_down] ~dt_exit_portal;
+[oploc1,dt_portal] ~dt_exit_portal;
+
+[proc,dt_exit_portal]
+if (%deserttreasure < ^deserttreasure_complete) {
+    return;
+}
+p_arrivedelay;
+sound_synth(teleport_all, 1, 0);
+p_delay(0);
+p_telejump(map_findsquare(0_50_45_33_7, 0, 1, ^map_findsquare_lineofwalk));
+
 // ---------------------------------------------------------------- Azzanadra
 
 [opnpc1,azzanadra]
