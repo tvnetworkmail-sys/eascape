@@ -260,10 +260,10 @@ if (coordy(loc_coord) = 0) {
         ~chatplayer("<p,neutral>I don't think I'll make much headway along that icy slope without some spiked boots...");
         return;
     }
-    p_teleport(map_findsquare(1_44_59_21_29, 0, 2, ^map_findsquare_lineofwalk));
+    p_teleport(1_44_59_21_27); // the first tile of the ledge path (21_29 was solid rock: you were stuck)
     return;
 }
-p_teleport(map_findsquare(0_44_59_21_27, 0, 2, ^map_findsquare_lineofwalk));
+p_teleport(0_44_59_21_29); // back on the snow beside the ledge (21_27 was solid rock)
 
 [oploc1,icegate_left_small] ~dt_ice_top_gate;
 [oploc1,icegate_right_small] ~dt_ice_top_gate;
@@ -275,7 +275,7 @@ p_teleport(map_findsquare(2_44_59_35_34, 0, 2, ^map_findsquare_lineofwalk));
 
 [oploc1,trollrescue_blankmodel2]
 p_arrivedelay;
-p_teleport(map_findsquare(1_44_59_35_33, 0, 2, ^map_findsquare_lineofwalk));
+p_teleport(1_44_59_36_33); // the path by the top gate (35_33 was solid rock)
 
 // the two blocks at the end of the path are multinpcs on the map (troll_block_1 / _2): an ice
 // block, then the freed troll father / mother
