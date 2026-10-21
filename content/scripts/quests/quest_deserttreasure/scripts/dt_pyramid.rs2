@@ -15,8 +15,7 @@
 //     never underground, upstairs or in the quest's boss areas, and never again once he's dead;
 //     he hits up to 115% of your own max hit with a poisoned dragon dagger, often with its
 //     special attack
-// How often the scarabs, mummies and traps come isn't recorded anywhere; the chances below are
-// our choice, as is how much Agility and Thieving help.
+// How often the scarabs, mummies and traps come: 2009scape's chances (no Jagex figures are known).
 
 // ---------------------------------------------------------------- the obelisks
 
@@ -64,7 +63,7 @@ if (%deserttreasure < ^dt_pyramid) {
     mes("This passage doesn't seem to lead anywhere...");
     return;
 }
-settimer(dt_pyramid, 4);
+settimer(dt_pyramid, 1);
 ~dt_pyramid_ladder(3_45_77_33_25);
 
 // the ladders between the floors: outside (the top) - level 1 - 2 - 3 - the temple (level 4).
@@ -83,7 +82,7 @@ p_arrivedelay;
 anim(human_reachforladder, 0);
 p_delay(0);
 p_teleport(map_findsquare($to, 1, 1, ^map_findsquare_lineofwalk));
-settimer(dt_pyramid, 4);
+settimer(dt_pyramid, 1);
 
 // levels 1-3 (the traps) and level 4 (the temple) of the pyramid
 [proc,dt_in_pyramid_floors]()(boolean)
@@ -98,40 +97,58 @@ return(inzone(0_49_144_50_53, 0_51_145_2_59, coord));
 [proc,dt_in_altar_room]()(boolean)
 return(inzone(0_50_145_27_30, 0_50_145_39_43, coord));
 
-// every 4 ticks inside: a trap (levels 1-3), scarabs from the floor, a mummy from a sarcophagus
+// every tick inside, one roll per square you moved since the last tick (2009scape's PyramidArea.kt
+// rolls on every step): on levels 1-3 a trap 1 in 128, and only if a roll of 0-99.5 is over the
+// average of your current Agility and Thieving (so at 99 in both, almost never); anywhere but the
+// altar room scarabs 1 in 80 and a mummy from a sarcophagus beside you 1 in 20
 [timer,dt_pyramid]
 def_boolean $floors = ~dt_in_pyramid_floors;
 if ($floors = false & ~dt_in_pyramid_temple = false) {
     cleartimer(dt_pyramid);
+    %dt_pyramid_last = null;
     return;
+}
+def_int $steps = 0;
+if (%dt_pyramid_last ! null) {
+    if (coordy(%dt_pyramid_last) = coordy(coord)) {
+        $steps = distance(%dt_pyramid_last, coord);
+    }
+}
+%dt_pyramid_last = coord;
+if ($steps > 2) {
+    $steps = 0; // a ladder or teleport, not a walk
 }
 if (%deserttreasure >= ^deserttreasure_complete & $floors = false) {
     return; // the back way to the altar after the quest is quiet
 }
-if ($floors = true & random(12) = 0) {
-    // Agility and Thieving each give a chance to step clear
-    if (stat_random(agility, 0, 128) = false & stat_random(thieving, 0, 128) = false) {
+def_int $avg = calc((stat(agility) + stat(thieving)) * 5); // the average, times 10
+while ($steps > 0) {
+    $steps = sub($steps, 1);
+    if ($floors = true & random(128) = 0 & random(995) >= $avg) {
         ~dt_pyramid_trap;
         return;
     }
-}
-if (~dt_in_altar_room = true) {
-    return;
-}
-if (random(16) = 0) {
-    ~dt_scarabs;
-    return;
-}
-if (random(4) = 0) {
-    ~dt_sarcophagus_near;
+    if (~dt_in_altar_room = false) {
+        if (random(80) = 0) {
+            ~dt_scarabs;
+            return;
+        }
+        if (random(20) = 0) {
+            ~dt_sarcophagus_near;
+        }
+    }
 }
 
 [proc,dt_pyramid_trap]
 p_stopaction;
+mes("You accidentally trigger a trap...");
 loc_add(coord, deserttreasure_pitfall_animated, 0, grounddecor, 3);
 p_delay(1);
-p_teleport(map_findsquare(0_50_45_33_0, 0, 3, ^map_findsquare_lineofwalk));
+// outside by the south door (2009scape: 3233,2887)
+p_teleport(map_findsquare(0_50_45_33_7, 0, 1, ^map_findsquare_lineofwalk));
+mes("...and tumble unharmed outside the pyramid.");
 cleartimer(dt_pyramid);
+%dt_pyramid_last = null;
 
 // scarabs boil up out of a crack beside you
 [proc,dt_scarabs]
