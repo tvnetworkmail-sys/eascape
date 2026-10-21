@@ -284,14 +284,38 @@ if (coordz(coord) >= coordz(loc_coord)) {
     p_teleport(map_findsquare(0_50_145_33_46, 0, 2, ^map_findsquare_lineofwalk));
 }
 
-// after the quest the pyramid's back door leads straight to the altar
-[oploc1,four_diamonds_door_mirror]
+// the doors on top of the pyramid, into the little room with the ladder down. The ground under
+// them is solid on the map, so you're walked through while they stand open
+[oploc1,four_diamonds_door_1] ~dt_pyramid_top_door;
+[oploc1,four_diamonds_door_mirror] ~dt_pyramid_top_door;
+
+[proc,dt_pyramid_top_door]
+p_arrivedelay;
+def_coord $door = loc_coord;
+def_coord $to = movecoord($door, 0, 0, -1);
+if (coordz(coord) < coordz($door)) {
+    $to = movecoord($door, 0, 0, 1);
+}
+~dt_open_top_door(0_50_45_32_19, four_diamonds_door_mirror, four_diamonds_dooropen_mirror);
+~dt_open_top_door(0_50_45_33_19, four_diamonds_door_1, four_diamonds_dooropen_1);
+p_delay(0);
+p_teleport($to);
+
+[proc,dt_open_top_door](coord $at, loc $shut, loc $open)
+if (loc_find($at, $shut) = true) {
+    loc_change($open, 3);
+}
+
+// after the quest the shortcut on the pyramid's south side leads straight to the altar ("players
+// can use the shortcut from the south side of the pyramid to directly access the altar", OSRS wiki,
+// Altar (Ancient Pyramid)); before, the room "can only be used after the quest" (Ancient Pyramid)
+[oploc1,desert_trasure_back_door_skew]
 if (%deserttreasure < ^deserttreasure_complete) {
     mes("This passage doesn't seem to lead anywhere...");
     return;
 }
 p_arrivedelay;
-p_teleport(map_findsquare(0_50_145_33_33, 0, 2, ^map_findsquare_lineofwalk));
+p_teleport(0_50_145_33_33);
 
 // ---------------------------------------------------------------- Azzanadra
 
