@@ -206,15 +206,18 @@ npc_setmode(opplayer2);
 if (~eascape_npc_attack_ready = false) {
     return;
 }
-// his freezing spell: very often from range, now and then up close
+// his freezing spell: very often from range, now and then up close. Not again until you've thawed
+// and had a few ticks to act ("you'll only have a few ticks (if any) to get off attacks before being
+// frozen again", OSRS wiki); without that gap he kept you frozen for good. 3 ticks is our choice.
 def_int $chance = 4;
 if (~dt_in_melee_range = false) $chance = 1;
-if (random($chance) = 0) {
+if (map_clock >= %dt_kamil_freeze_ready & random($chance) = 0) {
     npc_say("Sallamakar Ro!");
     npc_anim(human_caststrike, 0);
     if (~dt_npc_spell(5, 5, ice_barrage_travel, ice_barrage_impact, ^magic_style) = true) {
         // "unable to move or attack for several seconds" (8 ticks is our choice)
         queue(dt_frozen, 1, 8);
+        %dt_kamil_freeze_ready = calc(map_clock + 1 + 8 + 3);
     }
     return;
 }
