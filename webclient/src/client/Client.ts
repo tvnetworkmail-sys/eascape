@@ -10458,6 +10458,11 @@ export class Client extends GameShell {
                 }
 
                 image?.plotSprite(childX, childY);
+
+                // EASCape: the spell you've picked gets a white outline until you cast or cancel it
+                if (image && this.targetMode === 1 && this.targetComId === child.id) {
+                    image.plotOutline(childX, childY, 0xffffff);
+                }
             } else if (child.type === ComponentType.TYPE_MODEL) {
                 const tmpX: number = Pix3D.originX;
                 const tmpY: number = Pix3D.originY;

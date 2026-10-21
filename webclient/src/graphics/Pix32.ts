@@ -255,6 +255,31 @@ export default class Pix32 extends Pix2D {
         }
     }
 
+    // EASCape: a 1px outline around the image's opaque pixels, like the selected item in the
+    // inventory (ObjType.getSprite's outline), for a selected spell
+    plotOutline(x: number, y: number, rgb: number): void {
+        x = (x | 0) + this.xof;
+        y = (y | 0) + this.yof;
+        const w: number = this.wi;
+        const h: number = this.hi;
+        const opaque = (px: number, py: number): boolean => px >= 0 && py >= 0 && px < w && py < h && this.data[px + py * w] !== 0;
+        for (let py: number = -1; py <= h; py++) {
+            const dy: number = y + py;
+            if (dy < Pix2D.clipMinY || dy >= Pix2D.clipMaxY) {
+                continue;
+            }
+            for (let px: number = -1; px <= w; px++) {
+                const dx: number = x + px;
+                if (dx < Pix2D.clipMinX || dx >= Pix2D.clipMaxX || opaque(px, py)) {
+                    continue;
+                }
+                if (opaque(px - 1, py) || opaque(px + 1, py) || opaque(px, py - 1) || opaque(px, py + 1)) {
+                    Pix2D.pixels[dx + dy * Pix2D.width] = rgb;
+                }
+            }
+        }
+    }
+
     plotSprite(x: number, y: number): void {
         x |= 0;
         y |= 0;
