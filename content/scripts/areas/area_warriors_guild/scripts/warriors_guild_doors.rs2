@@ -1,0 +1,54 @@
+// EASCape: the Warriors' Guild's doors and stairs. The plain doors open and close like any door
+// (doors.rs2, category door_closed); the front door and the heavy doors walk you through and shut
+// behind you. Rules from the OSRS wiki:
+//   - the front door: a combined Attack and Strength of at least 130, or 99 in either; boosts don't
+//     count (Warriors' Guild); "You not pass. You too weedy." is Ghommal's line (Transcript:Ghommal)
+//   - the heavy doors on the first floor: Strength 50, boosts don't count; the northern door gives
+//     0-11 Strength XP (0 a quarter of the time, 1 another quarter, 2-11 the rest), the southern
+//     0 or 1 (1 about 57% of the time) (Heavy door, from its 100-push test)
+// Stair landings follow Void's burthorpe.teles.toml (1738, 38012 (our 1739), 15638).
+
+[oploc1,wg_door_15653]
+def_boolean $entering = ~check_axis(coord, loc_coord, loc_angle);
+if ($entering = true & ~wg_can_enter = false) {
+    // Ghommal isn't at the door yet (the guild's people come next); his line on its own
+    mes("Ghommal: You not pass. You too weedy.");
+    return;
+}
+~open_and_close_door(wg_door_15655, $entering, false);
+
+[proc,wg_can_enter]()(boolean)
+if (stat_base(attack) >= 99 | stat_base(strength) >= 99) {
+    return(true);
+}
+if (add(stat_base(attack), stat_base(strength)) >= 130) {
+    return(true);
+}
+return(false);
+
+[oploc1,wg_heavy_door_15658] ~wg_heavy_door(^left);
+[oploc1,wg_heavy_door_15660] ~wg_heavy_door(^right);
+
+[proc,wg_heavy_door](int $side)
+if (stat_base(strength) < 50) {
+    mes("You need a Strength level of 50 to open this door."); // our wording, none is recorded
+    return;
+}
+def_int $xp = 0;
+if ($side = ^left) {
+    switch_int (random(4)) {
+        case 0 : $xp = 0;
+        case 1 : $xp = 1;
+        case default : $xp = calc(2 + random(10));
+    }
+} else if (random(100) < 57) {
+    $xp = 1;
+}
+if ($xp > 0) {
+    stat_advance(strength, calc($xp * 10));
+}
+~open_and_close_double_door(~check_axis_locactive(coord), $side);
+
+// the top floor's way down (Void: 15638, a level down)
+[oploc1,wg_staircase_15638]
+p_telejump(1_44_55_24_19);
