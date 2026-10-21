@@ -384,14 +384,36 @@ inv_del(inv, $pot, 1);
 mes("You pour the blood from the pot onto the tomb.");
 loc_change(vampire_big_grave_withblood, 100);
 p_delay(1);
+// he leaps out next to you: spawned in the middle of the tomb he was stuck inside its walls
+def_coord $out = map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk);
 if ($pot = fd_silver_pot_blood_garlic_spiced_blessed) {
-    npc_add(movecoord(loc_coord, 2, 0, 1), blooddiamond_vampirewarrior, 500);
+    npc_add($out, blooddiamond_vampirewarrior, 500);
 } else {
-    npc_add(movecoord(loc_coord, 2, 0, 1), blooddiamond_vampirewarrior_unkillable, 500);
+    npc_add($out, blooddiamond_vampirewarrior_unkillable, 500);
 }
 spotanim_npc(vampire_coffin_jump, 0, 0);
+%dt_dessous_active = map_clock;
 %npc_aggressive_player = uid;
 npc_setmode(opplayer2);
+settimer(dt_dessous_idle, 5);
+
+// EASCape (our choice, the wiki records no idle limit): after 2 minutes without a fight he goes
+// back to his grave, so he isn't left standing there
+[timer,dt_dessous_idle]
+if (npc_find(0_55_53_50_10, blooddiamond_vampirewarrior, 20, 0) = false) {
+    if (npc_find(0_55_53_50_10, blooddiamond_vampirewarrior_unkillable, 20, 0) = false) {
+        cleartimer(dt_dessous_idle);
+        return;
+    }
+}
+if (sub(map_clock, %dt_dessous_active) < 200) {
+    return;
+}
+if (distance(coord, npc_coord) < 16) {
+    mes("Dessous returns to his grave.");
+}
+npc_del;
+cleartimer(dt_dessous_idle);
 
 [proc,dt_pot_has_blood](obj $pot)(boolean)
 switch_obj ($pot) {
@@ -430,6 +452,7 @@ if (~dt_in_melee_range = false) {
         return;
     }
 }
+%dt_dessous_active = map_clock; // he attacks: still fighting (for the 2 minute idle limit)
 // the bats, when your prayer is on melee, or he can't reach you
 if (~check_protect_prayer(^melee_style) = true | ~dt_in_melee_range = false) {
     npc_say("Hssssssssssss");
