@@ -277,7 +277,9 @@
     poll() {
       try {
         const now = performance.now();
-        const loggedIn = !!this.client && now - this.lastTick < LOGOUT_AFTER_MS;
+        // the client's own logged-in flag when it has one; otherwise no game tick for 3 seconds
+        const flag = this.fields.inGame && this.client ? this.client[this.fields.inGame] : undefined;
+        const loggedIn = !!this.client && (typeof flag === 'boolean' ? flag && now - this.lastTick < LOGOUT_AFTER_MS : now - this.lastTick < LOGOUT_AFTER_MS);
         if (loggedIn !== this.loggedIn) {
           this.loggedIn = loggedIn;
           this.lastStats = null;

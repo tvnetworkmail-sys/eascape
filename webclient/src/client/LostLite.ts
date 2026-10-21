@@ -49,6 +49,9 @@ const FIELDS = {
     menuArea: 'menuArea',
     // login screen (patchLogin)
     loginScreen: 'loginscreen',
+    // EASCape: whether you're logged in (the client's own flag; the runtime used to wait 3
+    // seconds without a game tick, so the orbs stayed up on the login screen)
+    inGame: 'ingame',
     loginUser: 'loginUser',
     loginPass: 'loginPass',
     // interfaces and items (patchBank)
