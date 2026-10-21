@@ -136,6 +136,11 @@ if (~dt_in_ice_lands = false) {
     return;
 }
 p_run(0); // "players cannot run after passing the Ice Gate" (OSRS wiki, Ice Path)
+// the chill only started when you crossed into a new map square, so landing just past the gate
+// (outside the chill) and walking on never started it; start it here once you're in it
+if (gettimer(chill) = -1 & ~inzone_coord_pair_table(chill_zones, coord) = true) {
+    settimer(chill, 10);
+}
 ~dt_kamil_check;
 // a slip on the ledge path every 6 seconds; how much it hurts isn't recorded (1-6 is our choice)
 if (~dt_on_ice_ledge = true & calc(map_clock % 10) < 2 & stat_random(agility, 128, 255) = false) {
