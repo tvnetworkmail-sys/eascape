@@ -1,0 +1,884 @@
+// EASCape: the Warriors' Guild's activities. Void (our first source) has only Ajjat's and Sloane's
+// chat for the guild, so the code follows 2009scape (handlers/wguild), with the OSRS wiki where it
+// gives exact numbers 2009scape doesn't (the shot put formula, the cyclopes' drops, the defenders).
+// Tokens earned at the activities go in the ledger (%wg_tokens) and are claimed from the staff;
+// the animated armour drops its tokens on the floor (wiki).
+
+// ================================================================ the animated armour
+// 2009scape AnimationRoom/AnimatedArmour: use a piece of a set on an animator; after 5 ticks the
+// pieces go, "The animator hums...", you step back and the armour comes alive and attacks you.
+// Drops (wiki and Void's warriors_guild.drops.toml): the tokens, the three pieces; bronze loses
+// each piece 1 time in 10, iron its legs, steel its helm (Void has 9/100 for the steel helm, the
+// wiki 9/10: the wiki's taken). It goes after 5 minutes (wiki) and Shanomi keeps the armour; the
+// same if you leave the room or log out (2009scape removes it when you leave).
+
+[oplocu,wg_magical_animator_15621]
+def_int $tier = ~wg_armour_tier(last_useitem);
+if ($tier = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%wg_armour > 0 & %wg_armour < 10) {
+    mes("You already have a set animated."); // 2009scape
+    return;
+}
+if (%wg_armour > 10) {
+    mes("Shanomi is still looking after your last set of armour."); // our wording
+    return;
+}
+def_namedobj $helm;
+def_namedobj $body;
+def_namedobj $legs;
+$helm, $body, $legs = ~wg_armour_pieces($tier);
+if (inv_total(inv, $helm) < 1 | inv_total(inv, $body) < 1 | inv_total(inv, $legs) < 1) {
+    ~mesbox("You need a suitable platebody, legs and full helm of the same type to activate the armour animator.");
+    return;
+}
+def_coord $animator = loc_coord;
+anim(human_pickuptable, 0);
+mes("You place your armour on the platform where it disappears...");
+p_delay(4);
+if (inv_total(inv, $helm) < 1 | inv_total(inv, $body) < 1 | inv_total(inv, $legs) < 1) {
+    return;
+}
+inv_del(inv, $helm, 1);
+inv_del(inv, $body, 1);
+inv_del(inv, $legs, 1);
+%wg_armour = $tier;
+mes("The animator hums, something appears to be working. You stand back...");
+p_delay(3);
+// 2009scape moves you a step back (north, away from the animator) facing it
+def_coord $back = movecoord($animator, 0, 0, 2);
+if (map_blocked($back) = false) {
+    p_walk($back);
+}
+p_delay(0);
+npc_add($animator, ~wg_armour_npc($tier), 500);
+npc_anim(wg_seq_4166, 0);
+npc_say("I'm ALIVE!");
+%npc_aggressive_player = uid;
+%npc_attacking_uid = uid;
+%wg_fled = 0;
+npc_setmode(opplayer2);
+%wg_armour_npc = npc_uid;
+hint_npc;
+settimer(wg_armour_watch, 1);
+
+[proc,wg_armour_tier](obj $obj)(int)
+switch_obj ($obj) {
+    case bronze_full_helm, bronze_platebody, bronze_platelegs : return(1);
+    case iron_full_helm, iron_platebody, iron_platelegs : return(2);
+    case steel_full_helm, steel_platebody, steel_platelegs : return(3);
+    case black_full_helm, black_platebody, black_platelegs : return(4);
+    case mithril_full_helm, mithril_platebody, mithril_platelegs : return(5);
+    case adamant_full_helm, adamant_platebody, adamant_platelegs : return(6);
+    case rune_full_helm, rune_platebody, rune_platelegs : return(7);
+}
+return(0);
+
+[proc,wg_armour_pieces](int $tier)(namedobj, namedobj, namedobj)
+switch_int ($tier) {
+    case 1 : return(bronze_full_helm, bronze_platebody, bronze_platelegs);
+    case 2 : return(iron_full_helm, iron_platebody, iron_platelegs);
+    case 3 : return(steel_full_helm, steel_platebody, steel_platelegs);
+    case 4 : return(black_full_helm, black_platebody, black_platelegs);
+    case 5 : return(mithril_full_helm, mithril_platebody, mithril_platelegs);
+    case 6 : return(adamant_full_helm, adamant_platebody, adamant_platelegs);
+}
+return(rune_full_helm, rune_platebody, rune_platelegs);
+
+[proc,wg_armour_npc](int $tier)(npc)
+switch_int ($tier) {
+    case 1 : return(wg_animated_bronze_armour);
+    case 2 : return(wg_animated_iron_armour);
+    case 3 : return(wg_animated_steel_armour);
+    case 4 : return(wg_animated_black_armour);
+    case 5 : return(wg_animated_mithril_armour);
+    case 6 : return(wg_animated_adamant_armour);
+}
+return(wg_animated_rune_armour);
+
+[proc,wg_armour_npc_tier](npc $npc)(int)
+switch_npc ($npc) {
+    case wg_animated_bronze_armour : return(1);
+    case wg_animated_iron_armour : return(2);
+    case wg_animated_steel_armour : return(3);
+    case wg_animated_black_armour : return(4);
+    case wg_animated_mithril_armour : return(5);
+    case wg_animated_adamant_armour : return(6);
+}
+return(7);
+
+// tokens dropped (wiki, 2009scape): 5, 10, 15, 20, 25, 30, 40
+[proc,wg_armour_tokens](int $tier)(int)
+if ($tier = 7) return(40);
+return(calc($tier * 5));
+
+// Shanomi's menu: is she keeping a set for you?
+[proc,wg_armour_held]()(int)
+if (%wg_armour > 10) return(1);
+return(0);
+
+[label,wg_shanomi_armour_back]
+~chatplayer("<p,shock>My armour disappeared!");
+~chatnpc("<p,neutral>Correct you are. Not killed it was. Collected your armour I did.");
+~chatplayer("<p,quiz>Excellent, may I have it so I can try the machine again?");
+if (inv_freespace(inv) < 3) {
+    ~chatnpc("<p,neutral>Space you will need in your pack.");
+    ~chatplayer("<p,neutral>Okay, I'll go make some room in my inventory and come back.");
+    return;
+}
+def_int $tier = calc(%wg_armour - 10);
+if ($tier < 1 | $tier > 7) {
+    %wg_armour = 0;
+    return;
+}
+def_namedobj $helm;
+def_namedobj $body;
+def_namedobj $legs;
+$helm, $body, $legs = ~wg_armour_pieces($tier);
+%wg_armour = 0;
+~chatnpc("<p,neutral>It is as you say.");
+inv_add(inv, $helm, 1);
+inv_add(inv, $body, 1);
+inv_add(inv, $legs, 1);
+~chatplayer("<p,happy>Thanks!");
+
+// your armour while it's alive: gone without being killed (its 5 minutes are up) or you've left
+// the room, and Shanomi has it
+[timer,wg_armour_watch]
+if (%wg_armour < 1 | %wg_armour > 7) {
+    hint_stop;
+    cleartimer(wg_armour_watch);
+    return;
+}
+if (npc_finduid(%wg_armour_npc) = true) {
+    if (~wg_in_animator_room(coord) = true) {
+        return;
+    }
+    npc_del;
+}
+%wg_armour = calc(%wg_armour + 10);
+hint_stop;
+cleartimer(wg_armour_watch);
+
+[proc,wg_in_animator_room](coord $coord)(boolean)
+return(inzone(0_44_55_33_14, 0_44_55_45_25, $coord));
+
+// only its owner may fight it (2009scape)
+[proc,wg_armour_attackable]()(boolean)
+if (%npc_aggressive_player ! uid) {
+    mes("This isn't your armour to attack.");
+    return(false);
+}
+return(true);
+
+// below a tenth of its hitpoints it may run for the corner, 2 times in 10 (2009scape)
+[ai_queue2,_wg_animated_armour]
+~npc_default_damage(last_int);
+if (npc_stat(hitpoints) = 0 | %wg_fled = 1) {
+    return;
+}
+if (npc_stat(hitpoints) < divide(npc_basestat(hitpoints), 10) & random(10) < 2) {
+    %wg_fled = 1;
+    npc_setmode(null);
+    npc_walk(0_44_55_33_14);
+}
+
+[ai_queue1,_wg_animated_armour]
+if (%wg_fled = 1) {
+    return;
+}
+gosub(npc_default_retaliate);
+
+[ai_opplayer2,_wg_animated_armour]
+if (%wg_fled = 1) {
+    npc_setmode(null);
+    return;
+}
+gosub(npc_default_attack);
+
+[ai_queue3,_wg_animated_armour]
+def_int $tier = ~wg_armour_npc_tier(npc_type);
+if (npc_findhero = ^true) {
+    %wg_armour = 0; // killed: the watch timer sees this before the armour is gone
+}
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+hint_stop;
+def_namedobj $helm;
+def_namedobj $body;
+def_namedobj $legs;
+$helm, $body, $legs = ~wg_armour_pieces($tier);
+def_boolean $lost = false;
+if (($tier = 1 & random(10) = 0) | ($tier = 3 & random(10) = 0)) {
+    $lost = true;
+} else {
+    obj_add(npc_coord, $helm, 1, ^lootdrop_duration);
+}
+obj_add(npc_coord, $body, 1, ^lootdrop_duration);
+if ((($tier = 1 | $tier = 2) & random(10) = 0)) {
+    $lost = true;
+} else {
+    obj_add(npc_coord, $legs, 1, ^lootdrop_duration);
+}
+obj_add(npc_coord, warrior_guild_token, ~wg_armour_tokens($tier), ^lootdrop_duration);
+if ($lost = true) {
+    mes("Your armour was destroyed in the fight."); // 2009scape
+}
+
+// ================================================================ the dummies
+// 2009scape DummyRoom: every 14 ticks one dummy (at random) comes up out of its hole for 10, then
+// goes down (4164). Hit it with the right attack style - the stab, slash or crush dummies by what
+// your weapon does, the accurate, aggressive, defensive and controlled ones by your stance - for
+// 15 Attack XP and 2 tokens; once a turn. The wrong style stuns you briefly. Ajjat runs it.
+
+[ai_timer,wg_ajjat]
+def_int $t = calc(map_clock % 14);
+if ($t = 0) {
+    %wg_dummy = calc(random(7) + 1);
+    ~wg_dummy_change(%wg_dummy, true);
+} else if ($t = 10) {
+    ~wg_dummy_change(%wg_dummy, false);
+}
+
+[proc,wg_dummy_change](int $dummy, boolean $up)
+switch_int ($dummy) {
+    case 1 : ~wg_dummy_up(0_44_55_41_29, wg_hole_15636, wg_dummy_15629, $up); // stab
+    case 2 : ~wg_dummy_up(0_44_55_42_34, wg_hole_15632, wg_dummy_15625, $up); // slash
+    case 3 : ~wg_dummy_up(0_44_55_43_29, wg_hole_15635, wg_dummy_15628, $up); // crush
+    case 4 : // controlled: two of them
+        ~wg_dummy_up(0_44_55_39_32, wg_hole_15634, wg_dummy_15627, $up);
+        ~wg_dummy_up(0_44_55_44_31, wg_hole_15634, wg_dummy_15627, $up);
+    case 5 : ~wg_dummy_up(0_44_55_39_30, wg_hole_15637, wg_dummy_15630, $up); // defensive
+    case 6 : ~wg_dummy_up(0_44_55_44_33, wg_hole_15633, wg_dummy_15626, $up); // aggressive
+    case 7 : ~wg_dummy_up(0_44_55_40_34, wg_hole_15631, wg_dummy_15624, $up); // accurate
+}
+
+[proc,wg_dummy_up](coord $coord, loc $hole, loc $dummy, boolean $up)
+if ($up = true) {
+    if (loc_find($coord, $hole) = true) {
+        loc_change($dummy, 11);
+    }
+    return;
+}
+if (loc_find($coord, $dummy) = true) {
+    loc_anim(wg_seq_4164);
+}
+
+[oploc1,wg_dummy_15629] ~wg_hit_dummy(1);
+[oploc1,wg_dummy_15625] ~wg_hit_dummy(2);
+[oploc1,wg_dummy_15628] ~wg_hit_dummy(3);
+[oploc1,wg_dummy_15627] ~wg_hit_dummy(4);
+[oploc1,wg_dummy_15630] ~wg_hit_dummy(5);
+[oploc1,wg_dummy_15626] ~wg_hit_dummy(6);
+[oploc1,wg_dummy_15624] ~wg_hit_dummy(7);
+
+[proc,wg_hit_dummy](int $dummy)
+def_int $turn = calc(map_clock / 14);
+if (%wg_dummy_hit = $turn) {
+    mes("You have already hit a dummy this turn.");
+    return;
+}
+~player_combat_stat;
+def_boolean $right = false;
+switch_int ($dummy) {
+    case 1 : if (%damagetype = ^stab_style) $right = true;
+    case 2 : if (%damagetype = ^slash_style) $right = true;
+    case 3 : if (%damagetype = ^crush_style) $right = true;
+    case 4 : if (%damagestyle = ^style_melee_controlled) $right = true;
+    case 5 : if (%damagestyle = ^style_melee_defensive) $right = true;
+    case 6 : if (%damagestyle = ^style_melee_aggressive) $right = true;
+    case 7 : if (%damagestyle = ^style_melee_accurate) $right = true;
+}
+anim(%com_attackanim, 0);
+if ($right = false) {
+    spotanim_pl(stunned, 96, 0);
+    mes("You whack the dummy with the wrong attack style.");
+    p_delay(4);
+    return;
+}
+mes("You whack the dummy successfully!");
+stat_advance(attack, 150);
+%wg_tokens = calc(%wg_tokens + 2);
+%wg_dummy_hit = $turn;
+
+// ================================================================ the catapult
+// 2009scape CatapultRoom: every 10 ticks Gamfred's catapult throws one of four things at the
+// target spot; it lands 7 ticks later. Stand on the target wearing the defensive shield (both hands
+// free) and block the right way for 10 Defence XP and a token; the wrong block hits you for 3.
+// 2006 chose the block on a panel (interface 411) we haven't converted: here (our choice) the
+// shield's own options in the Worn Equipment tab choose it - Block stab, blunt, slash or magic.
+// Blocking magic is ready when you put it on, like 2009scape.
+
+[ai_timer,wg_gamfred]
+if (calc(map_clock % 10) ! 0) {
+    return;
+}
+def_int $attack = calc(random(4) + 1);
+if (loc_find(1_44_55_24_32, wg_catapult_15616) = true) {
+    switch_int ($attack) {
+        case 1 : loc_change(wg_catapult_15617, 4);
+        case 2 : loc_change(wg_catapult_15619, 4);
+        case 3 : loc_change(wg_catapult_15620, 4);
+        case 4 : loc_change(wg_catapult_15618, 4);
+    }
+}
+def_spotanim $spot = wg_spot_682;
+switch_int ($attack) {
+    case 1 : $spot = wg_spot_679;
+    case 2 : $spot = wg_spot_680;
+    case 3 : $spot = wg_spot_681;
+}
+projanim_map(1_44_55_26_34, 1_44_55_26_25, $spot, 70, 32, 80, 220, 20, 11);
+huntall(1_44_55_26_25, 12, 0);
+while (huntnext = true) {
+    queue(wg_catapult_hit, 7, $attack);
+}
+
+[queue,wg_catapult_hit](int $attack)
+if (coord ! 1_44_55_26_25) {
+    return;
+}
+if (inv_getobj(worn, ^wearpos_lhand) ! defensive_shield) {
+    p_walk(1_44_55_27_25);
+    ~chatnpc_specific("Gamfred", wg_gamfred, "<p,angry>Watch out! You'll need to equip the shield as soon as you're on the target spot else you could get hit! Speak to me to get one, and make sure both your hands are free to equip it.");
+    return;
+}
+facesquare(1_44_55_26_34);
+def_string $name = ~wg_catapult_name($attack);
+if (%wg_block ! $attack) {
+    mes("You fail defending against the <$name>.");
+    anim(~wg_catapult_anim($attack, false), 0);
+    ~damage_self(3);
+    return;
+}
+mes("You successfully defend against the <$name>.");
+anim(~wg_catapult_anim($attack, true), 0);
+stat_advance(defence, 100);
+%wg_tokens = calc(%wg_tokens + 1);
+
+[proc,wg_catapult_name](int $attack)(string)
+switch_int ($attack) {
+    case 1 : return("spiky ball");
+    case 2 : return("flung anvil");
+    case 3 : return("slashing blades");
+}
+return("magic missile");
+
+[proc,wg_catapult_anim](int $attack, boolean $blocked)(seq)
+if ($blocked = true) {
+    switch_int ($attack) {
+        case 1 : return(wg_seq_4169);
+        case 2 : return(wg_seq_4168);
+        case 3 : return(wg_seq_4170);
+    }
+    return(wg_seq_4171);
+}
+switch_int ($attack) {
+    case 1 : return(wg_seq_4173);
+    case 2 : return(wg_seq_4172);
+    case 3 : return(wg_seq_4174);
+}
+return(wg_seq_4175);
+
+[opheld2,defensive_shield]
+if (coord ! 1_44_55_26_25) {
+    mes("You may not equip this shield outside the target area in the Warrior's Guild."); // 2009scape
+    return;
+}
+if (inv_getobj(worn, ^wearpos_rhand) ! null) {
+    ~mesbox("You will need to make sure your sword hand is free to equip this shield."); // 2009scape
+    return;
+}
+~equip(last_slot);
+if (inv_getobj(worn, ^wearpos_lhand) = defensive_shield) {
+    %wg_block = 4;
+    mes("Choose your block from the shield's options in your Worn Equipment tab."); // our wording
+    settimer(wg_shield_watch, 1);
+}
+
+// the block chosen from the Worn Equipment tab (eascape_worn_jewellery.rs2 sends the shield here)
+[proc,wg_shield_block](int $where)
+%wg_block = $where;
+switch_int ($where) {
+    case 1 : mes("You get ready to block stabbing attacks."); // our wording, all four
+    case 2 : mes("You get ready to block blunt attacks.");
+    case 3 : mes("You get ready to block slashing attacks.");
+    case 4 : mes("You get ready to block magic attacks.");
+}
+
+// off the target the shield comes off (2009scape)
+[timer,wg_shield_watch]
+if (inv_getobj(worn, ^wearpos_lhand) ! defensive_shield) {
+    cleartimer(wg_shield_watch);
+    return;
+}
+if (coord = 1_44_55_26_25) {
+    return;
+}
+~wg_remove_shield;
+cleartimer(wg_shield_watch);
+
+[proc,wg_remove_shield]
+if (inv_getobj(worn, ^wearpos_lhand) ! defensive_shield) {
+    return;
+}
+if (inv_freespace(inv) > 0) {
+    inv_moveitem(worn, inv, defensive_shield, 1);
+} else {
+    inv_del(worn, defensive_shield, 1); // Gamfred has plenty: speak to him for another
+}
+~update_all(defensive_shield);
+
+// ================================================================ the shot put
+// The OSRS wiki's Calculator:Shot put (X = Strength level + run energy % + style (standing 30,
+// step 20, spin 10) + 5 if your hands are dusted - the shot's weight): XP X*0.7, energy X*0.1%,
+// success X/250, the distance from its table, tokens 1 + yards (18lb) or 3 + yards (22lb); not
+// below 5% energy. Animations, messages and the hands-free rule from 2009scape ShotPutRoom.
+
+[oploc1,wg_shot_15664] ~wg_shot_put(18, 1_44_55_45_33, wg_ref, 18lb_shot);
+[oploc1,wg_shot_15665] ~wg_shot_put(22, 1_44_55_45_27, wg_ref_2, 22lb_shot);
+
+[proc,wg_shot_put](int $weight, coord $spot, npc $ref, namedobj $shot)
+if (inv_getobj(worn, ^wearpos_rhand) ! null | inv_getobj(worn, ^wearpos_lhand) ! null | inv_getobj(worn, ^wearpos_hands) ! null) {
+    ~mesbox("To throw the shot you need your hands free!");
+    return;
+}
+if (runenergy < 500) {
+    ~mesbox("You're too exhausted to throw the shot at this time. Take a break.");
+    return;
+}
+if (coord ! $spot) {
+    p_walk($spot);
+    p_delay(0);
+    if (coord ! $spot) {
+        p_delay(0);
+    }
+    if (coord ! $spot) {
+        return;
+    }
+}
+anim(human_pickuptable, 0);
+p_delay(1);
+facesquare(movecoord(coord, 3, 0, 0));
+def_int $style = ~p_choice3("Standing throw", 1, "Step and throw", 2, "Spin and throw", 3);
+def_int $bonus = 30;
+def_seq $seq = wg_seq_4181;
+def_string $message = "You throw the shot as hard as you can.";
+if ($style = 2) {
+    $bonus = 20;
+    $seq = wg_seq_4182;
+    $message = "You take a step and throw the shot as hard as you can.";
+} else if ($style = 3) {
+    $bonus = 10;
+    $seq = wg_seq_4183;
+    $message = "You spin around and release the shot.";
+}
+def_int $x = calc(stat_base(strength) + runenergy / 100 + $bonus - $weight);
+if (%wg_dusted = 1) {
+    $x = calc($x + 5);
+    %wg_dusted = 0;
+}
+mes("You take a deep breath and prepare yourself.");
+anim($seq, 0);
+if ($style = 2) {
+    p_delay(1);
+} else {
+    p_delay(4);
+}
+healenergy(calc(0 - $x * 10));
+mes($message);
+if (random(250) >= $x) {
+    mes("You fumble and drop the shot on your toe. Ow!");
+    ~damage_self(1);
+    return;
+}
+def_int $yards = ~wg_shot_distance($x);
+def_coord $land = movecoord(coord, $yards, 0, 0);
+def_int $cycles = 12;
+if ($style = 2) $cycles = 5;
+projanim_map(coord, $land, wg_spot_690, 40, 0, $cycles, calc(30 + $yards * 10), 20, 11);
+p_delay(calc(scale(3, 10, $yards) + 1));
+obj_add($land, $shot, 1, 20);
+stat_advance(strength, calc($x * 7));
+def_int $tokens = calc($yards + 1);
+if ($weight = 22) $tokens = calc($yards + 3);
+%wg_tokens = calc(%wg_tokens + $tokens);
+def_string $s = "s";
+if ($yards = 1) $s = "";
+~chatnpc_specific("Ref", $ref, "<p,neutral>Well done. You threw the shot <tostring($yards)> yard<$s>!");
+
+[proc,wg_shot_distance](int $x)(int)
+if ($x < 58) return(1);
+if ($x < 71) return(2);
+if ($x < 84) return(3);
+if ($x < 97) return(4);
+if ($x < 110) return(5);
+if ($x < 124) return(6);
+if ($x < 137) return(7);
+if ($x < 150) return(8);
+if ($x < 163) return(9);
+if ($x < 176) return(10);
+if ($x < 190) return(11);
+if ($x < 203) return(12);
+if ($x < 216) return(13);
+return(14);
+
+// the landed shot is the guild's (2009scape, the ref's words)
+[opobj3,18lb_shot]
+~chatnpc_specific("Ref", wg_ref, "<p,angry>Hey! You can't take that, it's guild property. Take one from the pile.");
+[opobj3,22lb_shot]
+~chatnpc_specific("Ref", wg_ref_2, "<p,angry>Hey! You can't take that, it's guild property. Take one from the pile.");
+
+// ground ashes: a pestle and mortar on ashes (wiki); dust your hands by the throwing spots
+// (2009scape DustHandListener)
+[proc,wg_grind_ashes]()(boolean)
+if (last_useitem ! pestle_and_mortar & inv_getobj(inv, last_useslot) ! pestle_and_mortar) {
+    return(false);
+}
+~grind_ingredient(ashes, ground_ashes, "You grind the ashes into a fine powder.", last_slot); // our wording
+return(true);
+
+[opheld1,ground_ashes]
+if (distance(coord, 1_44_55_45_33) > 1 & distance(coord, 1_44_55_45_27) > 1) {
+    mes("You may only dust your hands while in the shotput throwing areas.");
+    return;
+}
+inv_del(inv, ground_ashes, 1);
+mes("You dust your hands with the finely ground ash.");
+%wg_dusted = 1;
+
+// ================================================================ Jimmy's kegs
+// 2009scape BarrelRoom: head, hands and both hand slots empty and 5% energy to pick a keg up;
+// up to five on your head (worn as the barrels), walking slowly and no running. Every 5 ticks: 5%
+// energy, a token a keg, and the kegs fall if a roll of 100 beats your energy % less 5 a keg
+// ("Ouch!", 1 damage); they fall if you leave the room. No XP: the wiki says there is some, but
+// neither it nor 2009scape gives a number.
+
+[oploc1,wg_keg_15668]
+if (runenergy < 500) {
+    ~mesbox("You're too exhausted to continue. Take a break.");
+    return;
+}
+if (inv_getobj(worn, ^wearpos_rhand) ! null | inv_getobj(worn, ^wearpos_lhand) ! null | inv_getobj(worn, ^wearpos_hands) ! null) {
+    ~mesbox("To balance kegs you will need your head and hands free!");
+    return;
+}
+if (%wg_kegs = 0 & inv_getobj(worn, ^wearpos_hat) ! null) {
+    ~mesbox("To balance kegs you will need your head and hands free!");
+    return;
+}
+if (%wg_kegs >= 5) {
+    mes("You can't balance any more kegs."); // our wording (2009scape just keeps five)
+    return;
+}
+anim(wg_seq_4180, 0);
+mes("You pick up the keg and balance it on your head carefully.");
+p_delay(2);
+%wg_kegs = calc(%wg_kegs + 1);
+inv_setslot(worn, ^wearpos_hat, ~wg_keg_obj(%wg_kegs), 1);
+p_run(^player_run_off);
+~bas_set(wg_seq_4179, wg_seq_4178, wg_seq_4178, wg_seq_4178, wg_seq_4178, wg_seq_4178, wg_seq_4178);
+settimer(wg_kegs, 1);
+
+[proc,wg_keg_obj](int $kegs)(namedobj)
+switch_int ($kegs) {
+    case 1 : return(one_barrel);
+    case 2 : return(two_barrels);
+    case 3 : return(three_barrels);
+    case 4 : return(four_barrels);
+}
+return(five_barrels);
+
+[timer,wg_kegs]
+if (%wg_kegs = 0) {
+    cleartimer(wg_kegs);
+    return;
+}
+if (inzone(1_44_55_45_16, 1_44_55_60_23, coord) = false) {
+    ~wg_drop_kegs(false);
+    return;
+}
+if (calc(map_clock % 5) ! 0) {
+    return;
+}
+healenergy(-500);
+if (random(100) > calc(runenergy / 100 - 5 * %wg_kegs)) {
+    say("Ouch!");
+    mes("Some of the barrels hit you on their way to the floor.");
+    anim(wg_seq_4177, 0);
+    switch_int (%wg_kegs) {
+        case 1 : spotanim_pl(wg_spot_688, 0, 0);
+        case 2 : spotanim_pl(wg_spot_687, 0, 0);
+        case 3 : spotanim_pl(wg_spot_686, 0, 0);
+        case 4 : spotanim_pl(wg_spot_685, 0, 0);
+        case default : spotanim_pl(wg_spot_684, 0, 0);
+    }
+    ~damage_self(1);
+    ~wg_drop_kegs(true);
+    return;
+}
+%wg_tokens = calc(%wg_tokens + %wg_kegs);
+
+[proc,wg_drop_kegs](boolean $keep_anim)
+%wg_kegs = 0;
+def_obj $hat = inv_getobj(worn, ^wearpos_hat);
+switch_obj ($hat) {
+    case one_barrel, two_barrels, three_barrels, four_barrels, five_barrels : inv_delslot(worn, ^wearpos_hat);
+}
+cleartimer(wg_kegs);
+~update_bas;
+buildappearance(worn);
+
+// balancing kegs: hands off your equipment (2009scape) and no running
+[proc,wg_kegs_busy]()(boolean)
+if (%wg_kegs > 0) {
+    mes("You're too busy balancing barrels to do that!");
+    return(true);
+}
+return(false);
+
+// ================================================================ the cyclopes and defenders
+// 2009scape CyclopesRoom with the wiki: 100 tokens to go in, 10 taken as you enter and 10 every
+// minute ("10 of your tokens crumble away."); out of tokens Kamfreena tells you your time is up
+// and a minute later you're put out. Logging out inside puts you outside the door. Kamfreena
+// releases the cyclopes that drop the defender after the best one you have as you go in (bronze if
+// none), 1 kill in 50 (2 in 100 on the wiki's table).
+
+[oploc1,wg_door_15641] ~wg_cyclops_door(wg_door_15642);
+[oploc1,wg_door_15644] ~wg_cyclops_door(wg_door_15645);
+
+[proc,wg_cyclops_door](loc $open)
+if (coordy(loc_coord) ! 2) {
+    ~open_door(500); // the ground floor's are ordinary doors
+    return;
+}
+def_boolean $inside = ~check_axis(coord, loc_coord, loc_angle);
+if ($inside = true) {
+    ~open_and_close_door($open, true, false);
+    return;
+}
+if (inv_total(inv, warrior_guild_token) < 100) {
+    ~objbox(warrior_guild_token, "You don't have enough Warrior Guild Tokens to enter the cyclopes enclosure yet, collect at least 100 then come back.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+def_int $best = ~wg_best_defender;
+if ($best = 0 & %wg_defender > 0) {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,neutral>I remember you....");
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,neutral>You don't have the defender you earned last time.");
+    ~chatplayer("<p,shifty>Err... no, don't have it on me. I kind of... lost it.");
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,neutral>Sorry, but as you've lost any that you earned before I can only let you in to kill the cyclopes that drop the bronze defenders. Go on in when you're ready.");
+} else if ($best = 0) {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,neutral>Well, since you haven't shown me a defender to prove your prowess as a warrior,");
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,happy>I'll release some cyclopes which might drop bronze defenders for you to start off with, unless you show me another. Have fun in there.");
+} else if ($best = 7) {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,happy>Ahh I see that you have one of the defenders already! Well done.");
+    // 2009scape's line: the wiki's sends you to the basement (2015)
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,happy>I'll release some cyclopes which might drop the same rune defender for you as there isn't any higher! Have fun in there.");
+} else {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,happy>Ahh I see that you have one of the defenders already! Well done.");
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,happy>I'll release some cyclopes which might drop the next defender for you. Have fun in there.");
+}
+%wg_defender = $best;
+if (inv_total(inv, warrior_guild_token) < 100) {
+    return;
+}
+inv_del(inv, warrior_guild_token, 10);
+mes("10 tokens are taken as you enter the room.");
+%wg_cyclops_next = calc(map_clock + 100);
+%wg_cyclops_out = 0;
+settimer(wg_cyclops, 5);
+~open_and_close_door($open, false, false);
+
+// the best defender you're wearing or carrying, 0 none .. 7 rune
+[proc,wg_best_defender]()(int)
+def_int $best = 0;
+def_int $tier = 1;
+while ($tier <= 7) {
+    def_obj $d = ~wg_defender_obj($tier);
+    if (inv_total(inv, $d) > 0 | inv_getobj(worn, ^wearpos_lhand) = $d) {
+        $best = $tier;
+    }
+    $tier = calc($tier + 1);
+}
+return($best);
+
+[proc,wg_defender_obj](int $tier)(namedobj)
+switch_int ($tier) {
+    case 1 : return(bronze_defender);
+    case 2 : return(iron_defender);
+    case 3 : return(steel_defender);
+    case 4 : return(black_defender);
+    case 5 : return(mithril_defender);
+    case 6 : return(adamant_defender);
+}
+return(rune_defender);
+
+[proc,wg_in_cyclops_room](coord $coord)(boolean)
+if (inzone(2_44_55_22_14, 2_44_55_60_36, $coord) = false) {
+    return(false);
+}
+if (inzone(2_44_55_22_14, 2_44_55_30_22, $coord) = true) {
+    return(false); // Kamfreena's side of the door
+}
+return(true);
+
+[timer,wg_cyclops]
+if (~wg_in_cyclops_room(coord) = false) {
+    %wg_cyclops_out = 0;
+    cleartimer(wg_cyclops);
+    return;
+}
+if (%wg_cyclops_out > 0) {
+    if (map_clock >= %wg_cyclops_out) {
+        %wg_cyclops_out = 0;
+        cleartimer(wg_cyclops);
+        p_teleport(2_44_55_30_20);
+        queue(wg_cyclops_kamfreena, 0, 2);
+    }
+    return;
+}
+if (map_clock < %wg_cyclops_next) {
+    return;
+}
+if (inv_total(inv, warrior_guild_token) < 10) {
+    %wg_cyclops_out = calc(map_clock + 100);
+    queue(wg_cyclops_kamfreena, 0, 1);
+    return;
+}
+inv_del(inv, warrior_guild_token, 10);
+mes("10 of your tokens crumble away.");
+%wg_cyclops_next = calc(map_clock + 100);
+
+[queue,wg_cyclops_kamfreena](int $line)
+if ($line = 1) {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,neutral>Your time is up, please make your way to the exit.");
+} else {
+    ~chatnpc_specific("Kamfreena", wg_kamfreena, "<p,angry>Next time, please leave as soon as your time is up.");
+}
+
+// showing Kamfreena a defender (wiki transcript; the rune one without the 2015 basement)
+[opnpcu,wg_kamfreena]
+def_int $tier = 0;
+def_int $i = 1;
+while ($i <= 7) {
+    if (last_useitem = ~wg_defender_obj($i)) {
+        $tier = $i;
+    }
+    $i = calc($i + 1);
+}
+if ($tier = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_int ($tier) {
+    case 1 :
+        ~chatplayer("<p,happy>I have a Bronze defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Bronze eh? The next cyclopes are ready, toddle in when you're ready.");
+    case 2 :
+        ~chatplayer("<p,happy>I have a Iron defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Wow, iron eh? The next cyclopes are ready, toddle in when you're ready.");
+    case 3 :
+        ~chatplayer("<p,happy>I have a Steel defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Strong as steel eh? The next cyclopes are ready, toddle in when you're ready.");
+    case 4 :
+        ~chatplayer("<p,happy>I have a Black defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Black, hmmm, about half way to Rune then! Keep going! Cyclopes have been released. Enter when you're ready.");
+    case 5 :
+        ~chatplayer("<p,happy>I have a Mithril defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Mithril? Getting good at this aren't you! Okay, I've released those cyclopes that sometimes drop adamant defenders. Enter when you're ready.");
+    case 6 :
+        ~chatplayer("<p,happy>I have an Adamant defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>An adamant defender eh? Trying for the Rune defender I'm betting. Okay, I've released those cyclopes. Enter when you're ready.");
+    case 7 :
+        ~chatplayer("<p,happy>I have a Rune defender, please let me in to kill some more Cyclopes!");
+        ~chatnpc("<p,happy>Well done, you truly are a brilliant warrior! I've released the cyclopes. Enter when you're ready.");
+}
+%wg_defender = $tier;
+
+// the cyclopes' drops: the wiki's top-floor table (out of 100), with its defender slot dropping the
+// defender after the one Kamfreena saw; its hard clue, long and curved bone are left out (later
+// than June 2006 here, or not in our game)
+[ai_queue3,_wg_cyclops]
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+obj_add(npc_coord, big_bones, 1, ^lootdrop_duration);
+def_int $r = random(100);
+if ($r < 16) obj_add(npc_coord, black_knife, calc(4 + random(10)), ^lootdrop_duration);
+else if ($r < 18) obj_add(npc_coord, steel_chainbody, 1, ^lootdrop_duration);
+else if ($r < 20) obj_add(npc_coord, iron_2h_sword, 1, ^lootdrop_duration);
+else if ($r < 22) obj_add(npc_coord, iron_chainbody, 1, ^lootdrop_duration);
+else if ($r < 24) obj_add(npc_coord, steel_dagger, 1, ^lootdrop_duration);
+else if ($r < 26) obj_add(npc_coord, steel_mace, 1, ^lootdrop_duration);
+else if ($r < 28) obj_add(npc_coord, steel_sword, 1, ^lootdrop_duration);
+else if ($r < 30) obj_add(npc_coord, steel_battleaxe, 1, ^lootdrop_duration);
+else if ($r < 32) obj_add(npc_coord, steel_2h_sword, 1, ^lootdrop_duration);
+else if ($r < 34) obj_add(npc_coord, steel_longsword, 1, ^lootdrop_duration);
+else if ($r < 36) obj_add(npc_coord, steel_med_helm, 1, ^lootdrop_duration);
+else if ($r < 37) obj_add(npc_coord, black_2h_sword, 1, ^lootdrop_duration);
+else if ($r < 38) obj_add(npc_coord, mithril_dagger, 1, ^lootdrop_duration);
+else if ($r < 39) obj_add(npc_coord, mithril_longsword, 1, ^lootdrop_duration);
+else if ($r < 40) obj_add(npc_coord, adamant_mace, 1, ^lootdrop_duration);
+else if ($r < 41) obj_add(npc_coord, black_sword, 1, ^lootdrop_duration);
+else if ($r < 42) obj_add(npc_coord, black_longsword, 1, ^lootdrop_duration);
+else if ($r < 43) obj_add(npc_coord, black_dagger, 1, ^lootdrop_duration);
+else if ($r < 44) obj_add(npc_coord, adamant_2h_sword, 1, ^lootdrop_duration);
+else if ($r < 46) obj_add(npc_coord, ~wg_defender_obj(min(7, calc(%wg_defender + 1))), 1, ^lootdrop_duration);
+else if ($r < 49) obj_add(npc_coord, ~randomherb, ^lootdrop_duration);
+else if ($r < 80) obj_add(npc_coord, coins, calc(3 + random(100)), ^lootdrop_duration);
+else if ($r < 90) obj_add(npc_coord, coins, calc(5 + random(200)), ^lootdrop_duration);
+else if ($r < 92) obj_add(npc_coord, ~randomjewel, ^lootdrop_duration);
+
+// the defenders' requirements (wiki): bronze and iron none, steel 5, black 10, mithril 20,
+// adamant 30, rune 40 Attack and Defence
+[opheld2,steel_defender] @wg_defender_require(5, last_slot);
+[opheld2,black_defender] @wg_defender_require(10, last_slot);
+[opheld2,mithril_defender] @wg_defender_require(20, last_slot);
+[opheld2,adamant_defender] @wg_defender_require(30, last_slot);
+[opheld2,rune_defender] @wg_defender_require(40, last_slot);
+
+[label,wg_defender_require](int $level, int $slot)
+if (stat_base(attack) < $level | stat_base(defence) < $level) {
+    mes("You are not a high enough level to use this item.");
+    mes("You need to have an Attack level of <tostring($level)> and a Defence level of <tostring($level)>.");
+    return;
+}
+~equip($slot);
+
+// ================================================================ dying, logging in and out
+// killed by your own armour: it's lost (Shanomi: "If kill you the armour does, also lose armour you will.")
+[proc,wg_death]
+if (%wg_armour > 0 & %wg_armour < 10) {
+    if (npc_finduid(%wg_armour_npc) = true) {
+        npc_del;
+    }
+    %wg_armour = 0;
+    hint_stop;
+}
+
+[proc,wg_login]
+if (%wg_kegs > 0) {
+    ~wg_drop_kegs(false);
+}
+if (%wg_armour > 0 & %wg_armour < 10) {
+    %wg_armour = calc(%wg_armour + 10);
+}
+if (~wg_in_cyclops_room(coord) = true) {
+    p_teleport(2_44_55_30_20);
+}
+if (inv_getobj(worn, ^wearpos_lhand) = defensive_shield & coord ! 1_44_55_26_25) {
+    ~wg_remove_shield;
+}
+
+[proc,wg_logout]
+if (%wg_armour > 0 & %wg_armour < 10) {
+    if (npc_finduid(%wg_armour_npc) = true) {
+        npc_del;
+    }
+    %wg_armour = calc(%wg_armour + 10);
+}

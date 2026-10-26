@@ -118,6 +118,10 @@ return(false);
 
 // allows any npc with op2 defined to be attacked
 [proc,npc_is_attackable]()(boolean)
+// EASCape: the Warriors' Guild's animated armour fights only its owner
+if (npc_category = wg_animated_armour) {
+    return(~wg_armour_attackable);
+}
 // TODO 377: re-enable these!!
 // https://web.archive.org/web/20060828222012/http://www.trillionareguild.com/runescape/dragon.php at the very end of the guide
 // it says "You have no reason to do that.", so its prob this osrs message.

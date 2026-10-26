@@ -9,6 +9,9 @@ if (p_finduid(uid) = true) {
 
 [proc,equip](int $slot)
 if (p_finduid(uid) = true) {
+    if (~wg_kegs_busy = true) { // EASCape: Warriors' Guild kegs on your head
+        return;
+    }
     def_obj $obj = inv_getobj(inv, $slot);
     if (oc_wearpos($obj) = null) {
         mes("[DEBUG]: No wearpos set on <oc_debugname($obj)>");
@@ -76,6 +79,9 @@ if (p_finduid(uid) = true) {
 
 [proc,unequip](int $slot)
 if (p_finduid(uid) = true) {
+    if (~wg_kegs_busy = true) { // EASCape: Warriors' Guild kegs on your head
+        return;
+    }
     def_obj $obj = inv_getobj(worn, $slot);
     if (~duel_arena_flower_power_unequip_check($slot) = false) {
         return;

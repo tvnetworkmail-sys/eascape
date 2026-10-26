@@ -733,3 +733,34 @@ inv_add(inv, deathrune, 100000);
 inv_add(inv, bloodrune, 100000);
 inv_add(inv, soulrune, 100000);
 mes("You get 100,000 of every rune.");
+
+// ::warriorsguildpack - the Warriors' Guild's activities: a bronze and a rune set for the
+// animators, 200 tokens for the cyclopes, a pestle and mortar with ashes for the shot put, and
+// the iron defender to show Kamfreena. ::wgtokens <n> puts n tokens in the ledger to claim.
+[debugproc,warriorsguildpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 12) {
+    mes("::warriorsguildpack needs 12 free inventory spaces.");
+    return;
+}
+inv_add(inv, bronze_full_helm, 1);
+inv_add(inv, bronze_platebody, 1);
+inv_add(inv, bronze_platelegs, 1);
+inv_add(inv, rune_full_helm, 1);
+inv_add(inv, rune_platebody, 1);
+inv_add(inv, rune_platelegs, 1);
+inv_add(inv, warrior_guild_token, 200);
+inv_add(inv, pestle_and_mortar, 1);
+inv_add(inv, ashes, 1);
+inv_add(inv, ground_ashes, 1);
+inv_add(inv, iron_defender, 1);
+mes("Warriors' Guild pack: armour sets, 200 tokens, ashes and an iron defender.");
+
+[debugproc,wgtokens](int $count)
+if (p_finduid(uid) = false) {
+    return;
+}
+%wg_tokens = calc(%wg_tokens + $count);
+mes("<tostring($count)> tokens added to your Warriors' Guild ledger: claim them from the staff.");

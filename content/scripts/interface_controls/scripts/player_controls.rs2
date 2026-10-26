@@ -39,6 +39,10 @@ if (p_finduid(uid) = true) {
         p_run(^player_run_off);
         return;
     }
+    if (%wg_kegs > 0) { // EASCape: no running with the Warriors' Guild's kegs on your head
+        p_run(^player_run_off);
+        return;
+    }
     if (%tutorial = ^tutorial_open_player_controls) {
         %tutorial = ^tutorial_has_toggled_on_run;
         ~set_tutorial_progress;

@@ -1,0 +1,523 @@
+// EASCape: the Warriors' Guild's people. Dialogue from the OSRS wiki's transcripts (Ghommal,
+// Harrallak Menarous, Gamfred, Ajjat, Kamfreena, Shanomi, Sloane, Jimmy, Ref, Lidio, Lilly, Anton),
+// their 2006 parts only: no skillcapes (2008), Combat Achievements or While Guthix Sleeps lines.
+// Where the transcripts split one speech over two boxes, the game's own box splitting does it here.
+// Jade is a bank teller (category bank_teller in warriors_guild.npc).
+
+// ---------------------------------------------------------------- tokens
+// the staff pay out what the activities wrote in the ledger (%wg_tokens)
+[proc,wg_claim_tokens](string $paid, string $none, string $nospace)
+if (%wg_tokens <= 0) {
+    ~chatnpc("<p,neutral><$none>");
+    ~chatplayer("<p,neutral>Ok, I'll go see what I can find.");
+    return;
+}
+if (inv_freespace(inv) = 0 & inv_total(inv, warrior_guild_token) = 0) {
+    ~chatnpc("<p,neutral><$nospace>");
+    return;
+}
+def_int $amount = %wg_tokens;
+%wg_tokens = 0;
+inv_add(inv, warrior_guild_token, $amount);
+def_string $s = "s";
+if ($amount = 1) $s = "";
+~chatnpc("<p,happy><$paid> Here you go, you've earned <tostring($amount)> token<$s>!");
+~chatplayer("<p,happy>Thanks!");
+
+[proc,wg_claim_standard]
+~chatplayer("<p,quiz>May I claim my tokens please?");
+~wg_claim_tokens("Of course!", "I'm afraid you have not earned any tokens yet. Try some of the activities around the guild to earn some.", "You don't have space to carry them.");
+
+// "[man/lady]" and the like in the transcripts
+[proc,wg_gender](string $male, string $female)(string)
+if (gender() = 1) return($female);
+return($male);
+
+// ---------------------------------------------------------------- Ghommal (the door)
+[opnpc1,wg_ghommal]
+~chatnpc("<p,neutral>Can I help you?");
+if (~p_choice2("What are you doing out here?", 1, "Bye!", 2) = 2) {
+    return;
+}
+~chatplayer("<p,quiz>What are you doing out here?");
+~chatnpc("<p,neutral>This here is the Warrior's Guild, a place where the strong may train. I'm the one who decides if you are allowed in or not.");
+~chatplayer("<p,quiz>Am I qualified to enter?");
+if (~wg_can_enter = true) {
+    ~chatnpc("<p,happy>Yes you are. Welcome to the Warrior's Guild!");
+    ~chatplayer("<p,happy>Thank you!");
+    return;
+}
+~chatnpc("<p,neutral>You may not enter the Warrior's Guild as you are right now.");
+~chatplayer("<p,angry>What? But I'm a warrior!");
+~chatnpc("<p,neutral>While you may consider yourself a warrior, I do not.");
+~chatplayer("<p,shifty>Go on, let me in, you know you want to. I could... make it worth your while...");
+~chatnpc("<p,angry>Go away and train small one. I do not take bribes.");
+~chatplayer("<p,quiz>Why not?");
+~chatnpc("<p,neutral>The Warrior's Guild has a code of honour, a code that I respect. Move along.");
+
+// ---------------------------------------------------------------- Harrallak Menarous
+[opnpc1,wg_harrallak_menarous]
+~chatnpc("<p,happy>Welcome to my humble guild <displayname>.");
+@wg_harrallak_menu;
+
+[label,wg_harrallak_menu]
+switch_int (~p_choice3("Quite a place you've got here.", 1, "You any good with a sword?", 2, "Bye!", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>Quite a place you've got here.");
+        ~chatnpc("<p,happy>Indeed we do. Would you like to know more about it?");
+        @wg_harrallak_areas;
+    case 2 :
+        ~chatplayer("<p,quiz>You any good with a sword?");
+        ~chatnpc("<p,shock>Am I any good with....a sword... Have you any clue who I am?");
+        ~chatplayer("<p,neutral>Not really... no.");
+        ~chatnpc("<p,angry>Why I could best any person alive in a rapier duel!");
+        ~chatplayer("<p,happy>Try me then!");
+        ~chatnpc("<p,neutral>My dear <~wg_gender("sir", "lady")>, I couldn't possibly duel you, I might hurt you and then what would happen to my reputation! Besides, I have this wonderful guild to run. Why don't you take a look at the various activities we have. You might even collect enough tokens to be allowed in to kill the strange beasts from the east!");
+        @wg_harrallak_menu;
+    case 3 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,happy>Farewell <~wg_gender("brave warrior", "fair lady")>, I do hope you enjoy my guild.");
+}
+
+[label,wg_harrallak_areas]
+switch_int (~p_choice5("Tell me about the strength training area.", 1, "Tell me about the attack training area.", 2, "Tell me about the defence training area.", 3, "Tell me about the combat training area.", 4, "Tell me about tokens.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Tell me about the strength training area.");
+        ~chatnpc("<p,neutral>Ahh the mighty warrior Sloane guards the strength training area. This intriguing little area consists of two shotput lanes for different weights of shot. It's fairly simple, the Referee or Sloane can explain more. You may find yourself panting for breath though.");
+        ~chatplayer("<p,quiz>Oh? Why?");
+        ~chatnpc("<p,neutral>Well you see my dear <~wg_gender("boy", "lady")>, the games there really do sap your energy quite a bit. You can find it just up the stairs behind the bank.");
+    case 2 :
+        ~chatplayer("<p,quiz>Tell me about the attack training area.");
+        ~chatnpc("<p,neutral>Ahhh, dummies.");
+        ~chatplayer("<p,angry>I'm no dummy, I just want to know what is there!");
+        ~chatnpc("<p,shock>Oh no my dear <~wg_gender("man", "lady")>, I did not mean you at all! The training area has mechanical dummies which pop up out of holes in the floor. The noble dwarf Gamfred invented the mechanism and Ajjat can explain more about what to do there.");
+        ~chatplayer("<p,happy>Oh, ok, I'll have to try it out!");
+        ~chatnpc("<p,neutral>You can find it just down the corridor and on your right.");
+    case 3 :
+        ~chatplayer("<p,quiz>Tell me about the defence training area.");
+        ~chatnpc("<p,neutral>To polish your defensive skills to the very highest level we've employed a most inventive dwarf and a catapult.");
+        ~chatplayer("<p,shock>You're going to throw dwarves at me?");
+        ~chatnpc("<p,laugh>Oh my no! I think Gamfred would object to that most strongly.");
+        ~chatnpc("<p,neutral>He's an inventor you see and has built a marvellous contraption that can throw all sorts of things at you including magic missiles...");
+        ~chatplayer("<p,confused>Mmmm?");
+        ~chatnpc("<p,neutral>....spiked iron balls.....");
+        ~chatplayer("<p,confused>Err....");
+        ~chatnpc("<p,neutral>....spinning slashing blades....");
+        ~chatplayer("<p,scared>Ummm...");
+        ~chatnpc("<p,neutral>... and even anvils.");
+        ~chatplayer("<p,shock>ANVILS!?");
+        ~chatnpc("<p,happy>No need to be afraid, it's all under very controlled conditions! You can find it just up the stairs behind the bank.");
+    case 4 :
+        ~chatplayer("<p,quiz>Tell me about the combat training area.");
+        ~chatnpc("<p,happy>Ahh yes, our resident magician from foreign lands created a most amazing gadget which can turn your own armour against you! It's really quite intriguing.");
+        ~chatplayer("<p,scared>That sounds dangerous. What if I'm wearing it at the time?");
+        ~chatnpc("<p,neutral>So far that's not happened. You need to speak to Shanomi about the specifics of the process, but as I understand it, putting a suit of armour in one of these devices will make it come to life some how. The better the armour, the harder it is to 'kill'.");
+        ~chatplayer("<p,scared>Fighting my own armour, that sounds... weird. I could be killed by it...");
+        ~chatnpc("<p,neutral>Indeed we have had a few fatalities from warriors over stretching themselves and not knowing their limits. Start small and work up is my motto! That and go see Lidio for some food if you need it.");
+        ~chatplayer("<p,neutral>Ok, thanks for the warning.");
+    case 5 :
+        ~chatplayer("<p,quiz>Tell me about tokens.");
+        ~chatnpc("<p,neutral>Ahh, yes, our token system is designed to allow you an appropriate amount of time with my discovery in the very top floor of the guild. I won't spoil the surprise as to what that is. Go up and see for yourself.");
+        ~chatnpc("<p,neutral>Now, the amount of tokens you collect from the various activities around the guild will dictate how long Kamfreena will allow you in the enclosure on the very top floor. More tokens equals more time.");
+        ~chatplayer("<p,quiz>So what's up there?");
+        ~chatnpc("<p,laugh>If I told you it would spoil the surprise!");
+        ~chatplayer("<p,neutral>Ok ok... so how do I earn and claim these tokens?");
+        ~chatnpc("<p,neutral>You can earn them simply by using the training exercises around the guild, the staff will then enter this into a ledger as you play. You can claim them by simply asking any of the staff at the training areas, or myself.");
+        ~chatplayer("<p,happy>Sounds easy enough.");
+        @wg_harrallak_areas;
+}
+
+// ---------------------------------------------------------------- Gamfred (the catapult)
+[opnpc1,wg_gamfred]
+~chatnpc("<p,neutral>Ello there. I'm Gamfred, the engineer in this here guild. Have you seen my catapult?");
+switch_int (~p_choice5("That's not a catapult, it's a large crossbow.", 1, "Yes, beautiful piece of engineering.", 2, "No, where is it?", 3, "May I claim my tokens please?", 4, "Bye!", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>That's not a catapult, it's a large crossbow.");
+        ~chatnpc("<p,angry>WHAT!? I'll have you know that is the finest piece of dwarven engineering for miles around! How DARE you insult my work!");
+    case 2 :
+        ~chatplayer("<p,happy>Yes, beautiful piece of engineering.");
+        ~chatnpc("<p,happy>Nice to meet someone who appreciates fine work, have you tried it out yet?");
+        if (~p_choice2("Yes.", 1, "No, how do I do that?", 2) = 1) {
+            ~chatplayer("<p,happy>Yes.");
+            ~chatnpc("<p,quiz>What did you think?");
+            switch_int (~p_choice4("It was ok I guess.", 1, "It was fun!", 2, "I didn't like it.", 3, "May I have a shield please?", 4)) {
+                case 1 :
+                    ~chatplayer("<p,neutral>It was ok I guess.");
+                    ~chatnpc("<p,neutral>Well I guess not everyone will like it.");
+                case 2 :
+                    ~chatplayer("<p,happy>It was fun!");
+                    ~chatnpc("<p,happy>Glad ta hear it. Try it again sometime. We have more tests to run.");
+                case 3 :
+                    ~chatplayer("<p,sad>I didn't like it.");
+                    ~chatnpc("<p,neutral>Well I guess not everyone will like it. But give it another chance before you go.");
+                case 4 : @wg_gamfred_shield;
+            }
+            return;
+        }
+        ~chatplayer("<p,quiz>No, how do I do that?");
+        ~chatnpc("<p,neutral>Well ye take the big defence shield in both hands and watch the catapult. My assistant will fire different things at you and you need to defend against them.");
+        if (~p_choice2("May I have a shield please?", 1, "Sounds boring.", 2) = 1) {
+            @wg_gamfred_shield;
+        }
+        ~chatplayer("<p,bored>Sounds boring.");
+        ~chatnpc("<p,neutral>Your loss...");
+    case 3 :
+        ~chatplayer("<p,quiz>No, where is it?");
+        ~chatnpc("<p,angry>Are ye blind <~wg_gender("lad", "lass")>? Tis over there in the next room with me assistant working it!");
+    case 4 : ~wg_claim_standard;
+    case 5 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,happy>Come back soon! My catapult needs more test subjects.");
+}
+
+[opnpc3,wg_gamfred] ~wg_claim_standard;
+[opnpc4,wg_gamfred] @wg_gamfred_shield;
+
+[label,wg_gamfred_shield]
+~chatplayer("<p,quiz>May I have a shield please?");
+if (inv_total(inv, defensive_shield) > 0 | inv_total(worn, defensive_shield) > 0) {
+    ~chatnpc("<p,laugh>Silly muffin, you have one already!");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>I'd be happy ta give you a shield but you've no space for it.");
+    return;
+}
+~chatnpc("<p,happy>Of course!");
+inv_add(inv, defensive_shield, 1);
+~objbox(defensive_shield, "The dwarf hands you a large shield.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Ajjat (the dummies)
+[opnpc1,wg_ajjat]
+~chatnpc("<p,neutral>Greetings, fellow warrior. I am Ajjat, former black knight and now training officer here in the warrior guild.");
+@wg_ajjat_menu;
+
+[label,wg_ajjat_menu]
+switch_int (~p_choice4("Black Knight? Why are you here?", 1, "What's the Dummy Room all about?", 2, "May I claim my tokens please?", 3, "Bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Black Knight? Why are you here?");
+        ~chatnpc("<p,neutral>Indeed I was, however their... methods... did not match with my ideals.. so I left. Harrallak, recognising my talent as a warrior, took me in and offered me a job here.");
+        ~chatplayer("<p,neutral>Hmm... well if Harrallak trusts you, I guess I can.");
+        @wg_ajjat_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What's the Dummy Room all about?");
+        ~chatnpc("<p,neutral>Ahh yes, the dummies. Another ingenious invention of the noble Dwarf Gamfred. They're mechanical you see and pop up out of the floor. You have to hit them with the correct attack mode before they disappear again.");
+        ~chatplayer("<p,quiz>So how do I tell which one is which?");
+        ~chatnpc("<p,neutral>There are two different ways. One indication is their colour, the other is the pose and weapons they are holding, for instance, the one holding daggers you will need to hit with a piercing attack.");
+        ~chatnpc("<p,neutral>In the room you will find a poster on the wall which can help you recognise each different dummy.");
+        ~chatplayer("<p,happy>That sounds ingenious!");
+        ~chatnpc("<p,neutral>Indeed, you may find that you need several weapons to be successful 100% of the time, but keep trying. The weapons shop upstairs may help you there.");
+        @wg_ajjat_menu;
+    case 3 : ~wg_claim_standard;
+    case 4 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,neutral>Farewell warrior. Stay away from the dark side.");
+}
+
+[opnpc3,wg_ajjat] ~wg_claim_standard;
+
+// ---------------------------------------------------------------- Shanomi (the animators)
+[opnpc1,wg_shanomi]
+~chatnpc("<p,neutral>Greetings <displayname>. Welcome you are in the test of combat.");
+@wg_shanomi_menu;
+
+[label,wg_shanomi_menu]
+def_int $lost = ~wg_armour_held;
+if ($lost > 0) {
+    switch_int (~p_choice5("My armour disappeared!", 0, "What do I do here?", 1, "Where do the machines come from?", 2, "May I claim my tokens please?", 3, "Bye!", 4)) {
+        case 0 : @wg_shanomi_armour_back;
+        case 1 : @wg_shanomi_what;
+        case 2 : @wg_shanomi_machines;
+        case 3 : @wg_shanomi_claim;
+        case 4 : @wg_shanomi_bye;
+    }
+}
+switch_int (~p_choice4("What do I do here?", 1, "Where do the machines come from?", 2, "May I claim my tokens please?", 3, "Bye!", 4)) {
+    case 1 : @wg_shanomi_what;
+    case 2 : @wg_shanomi_machines;
+    case 3 : @wg_shanomi_claim;
+    case 4 : @wg_shanomi_bye;
+}
+
+[label,wg_shanomi_what]
+~chatplayer("<p,quiz>What do I do here?");
+~chatnpc("<p,neutral>A spare suit of plate armour need you will. Full helm, plate leggings and platebody yes? Placing it in the centre of the magical machines you will be doing. KA- POOF! The armour, it attacks most furiously as if alive! Kill it you must, yes.");
+~chatplayer("<p,confused>So I use a full set of plate armour on the centre plate of the machines and it will animate it? Then I have to kill my own armour... how bizarre!");
+~chatnpc("<p,neutral>Yes. It is as you are saying. For this earn tokens you will. Also gain experience in combat you will. Trained long and hard here have I.");
+~chatplayer("<p,quiz>You're not from around here are you...?");
+~chatnpc("<p,neutral>It is as you say.");
+~chatplayer("<p,quiz>So will I lose my armour?");
+~chatnpc("<p,neutral>Lose armour you will if damaged too much it becomes. Rare this is, but still possible. If kill you the armour does, also lose armour you will.");
+~chatplayer("<p,neutral>So, occasionally I might lose a bit because it's being bashed about and I'll obviously lose it if I die... that it?");
+~chatnpc("<p,neutral>It is as you say.");
+@wg_shanomi_menu;
+
+[label,wg_shanomi_machines]
+~chatplayer("<p,quiz>Where do the machines come from?");
+~chatnpc("<p,neutral>Make them I did, with magics.");
+~chatplayer("<p,shock>Magic, in the Warrior's Guild?");
+~chatnpc("<p,neutral>A skilled warrior also am I. Harrallak mistakes does not make. Potential in my invention he sees and opportunity grasps.");
+~chatplayer("<p,neutral>I see, so you made the magical machines and Harrallak saw how they could be used in the guild to train warrior's combat... interesting. Harrallak certainly is an intelligent guy.");
+~chatnpc("<p,neutral>It is as you say.");
+@wg_shanomi_menu;
+
+[label,wg_shanomi_claim]
+~chatplayer("<p,quiz>May I claim my tokens please?");
+if (%wg_tokens <= 0) {
+    ~chatnpc("<p,neutral>No tokens earned have you. In training activities participate you must.");
+    ~chatplayer("<p,neutral>Okay, I'll go see what I can find to do around here to earn some tokens.");
+    return;
+}
+if (inv_freespace(inv) = 0 & inv_total(inv, warrior_guild_token) = 0) {
+    ~chatnpc("<p,neutral>No space you have carry them for.");
+    ~chatplayer("<p,neutral>Right, I need space in my pack for them. I'll be back!");
+    return;
+}
+def_int $amount = %wg_tokens;
+%wg_tokens = 0;
+inv_add(inv, warrior_guild_token, $amount);
+def_string $s = "s";
+if ($amount = 1) $s = "";
+~chatnpc("<p,happy>Yes yes! Earned you have <tostring($amount)> token<$s>!");
+~chatplayer("<p,happy>Thanks!");
+
+[label,wg_shanomi_bye]
+~chatplayer("<p,neutral>Bye!");
+~chatnpc("<p,neutral>Health be with you travelling.");
+
+[opnpc3,wg_shanomi] @wg_shanomi_claim;
+
+// Shanomi's sayings, in order, one every 15 ticks
+[ai_timer,wg_shanomi]
+%wg_saying = calc((%wg_saying + 1) % 10);
+switch_int (%wg_saying) {
+    case 0 : npc_say("Think not dishonestly.");
+    case 1 : npc_say("The Way in training is.");
+    case 2 : npc_say("Acquainted with every art become.");
+    case 3 : npc_say("Ways of all professions know you.");
+    case 4 : npc_say("Gain and loss between you must distinguish.");
+    case 5 : npc_say("Judgment and understanding for everything develop you must.");
+    case 6 : npc_say("Those things which cannot be seen, perceive them.");
+    case 7 : npc_say("Trifles pay attention even to.");
+    case 8 : npc_say("Do nothing which is of no use.");
+    case 9 : npc_say("Way of the Warrior this is.");
+}
+
+// ---------------------------------------------------------------- Kamfreena (the cyclopes)
+[opnpc1,wg_kamfreena]
+~chatnpc("<p,happy>Why hello there! I'm Kamfreena. Like the look of my pets? I think they're eyeing you up.");
+~chatplayer("<p,bored>That was a really bad pun.");
+~chatnpc("<p,sad>Sorry... I don't get to see the rest of the guild much, stuck up here. The Cyclopes don't talk much you see.");
+~chatplayer("<p,quiz>Shouldn't that be cyclopses?");
+~chatnpc("<p,neutral>Nope! Cyclopes is the plural of cyclops. One cyclops, many cyclopes.");
+~chatplayer("<p,neutral>Oh, right, thanks.");
+@wg_kamfreena_menu;
+
+[label,wg_kamfreena_menu]
+switch_int (~p_choice4("Where are they from?", 1, "How did they get here?", 2, "Why are they here?", 3, "Bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Where are they from?");
+        ~chatnpc("<p,neutral>They're from the far east lands.");
+        @wg_kamfreena_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>How did they get here?");
+        ~chatnpc("<p,neutral>Ahh.. our guildmaster, Harrallak, went on an expedition there. He brought them back with him.");
+        @wg_kamfreena_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Why are they here?");
+        ~chatnpc("<p,neutral>For the warriors to train on of course! They also drop a rather nice blade.");
+        ~chatplayer("<p,quiz>Oh? What would that be?");
+        ~chatnpc("<p,neutral>Defenders.");
+        ~chatplayer("<p,confused>Err what are they?");
+        ~chatnpc("<p,neutral>It's a blade you can defend with using your shield hand, like I have.");
+        ~chatplayer("<p,shock>Wow!");
+        ~chatnpc("<p,neutral>For every 10 tokens you collect around the guild, you can spend one minute in with my pets. As you get defenders you can show them to me to earn even better ones... but remember if you lose them you'll have to start at bronze again. I'd advise keeping a spare in your bank.");
+        ~chatplayer("<p,happy>Okay!");
+        ~chatnpc("<p,neutral>Oh, by the way, you'll need to earn 100 tokens before I'll let you in!");
+        ~chatplayer("<p,neutral>Right, I'd better go play some games then!");
+        @wg_kamfreena_menu;
+    case 4 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,happy>See you back here soon I hope!");
+}
+
+// ---------------------------------------------------------------- Sloane (shot put)
+[opnpc1,wg_sloane]
+~chatnpc("<p,neutral>Ahhh, hello there, <displayname>.");
+@wg_sloane_menu;
+
+[label,wg_sloane_menu]
+switch_int (~p_choice4("What can I do here?", 1, "That's a big axe!", 2, "May I claim my tokens please?", 3, "Bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What can I do here?");
+        ~chatnpc("<p,neutral>Ahh, the shot put is a great test of strength and can be quite rewarding. Mind you do it properly though, you might want to dust your hands with some powdery substance first. It'll give better grip.");
+        ~chatplayer("<p,quiz>I'll remember that. What should I use?");
+        ~chatnpc("<p,neutral>I personally prefer ground ashes, it makes a nice fine powder and gives some really good grip.");
+        ~chatplayer("<p,quiz>Ok, what else?");
+        ~chatnpc("<p,neutral>Basically you'll need to go in there, make sure you've got nothing cluttering up your hands, pick up a shot and throw it.... depending upon your technique, you can get quite long throws.");
+        ~chatplayer("<p,quiz>What was your best?");
+        ~chatnpc("<p,laugh>Ahh that would be telling...");
+        @wg_sloane_menu;
+    case 2 :
+        ~chatplayer("<p,shock>That's a big axe!");
+        ~chatnpc("<p,happy>Yes indeed it is. Have to be mighty strong to wield it too.");
+        ~chatplayer("<p,neutral>But you don't look that strong!");
+        ~chatnpc("<p,neutral>Maybe, maybe not, but I still had to beat a Barbarian to get it. Mind you, usually they don't part with them. This was an unusual circumstance.");
+        ~chatplayer("<p,quiz>Oh?");
+        ~chatnpc("<p,neutral>I bet him he couldn't catch a squirrel whilst still holding his axe but that I could... and that if I won I'd get his axe.");
+        ~chatplayer("<p,quiz>What happened?");
+        ~chatnpc("<p,neutral>He went running after the squirrel... nearly caught it too... it shot up a tree and he tried to climb up it, only got a bit tangled up with his axe cause he couldn't hang on to it at the same time... he fell out of the tree and it was my turn....");
+        ~chatnpc("<p,happy>I simply went and chopped the tree down with this big old axe, still holding it. The squirrel was so petrified it simply jumped straight out of the tree onto me, I won the axe and let the poor creature go!");
+        ~chatplayer("<p,neutral>I sense a moral in there somewhere.");
+        ~chatnpc("<p,neutral>Aye indeed. Brawn isn't all you need to wield a big axe, brains are required too!");
+        @wg_sloane_menu;
+    case 3 : ~wg_claim_standard;
+    case 4 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,neutral>Be well, warrior <displayname>.");
+}
+
+[opnpc3,wg_sloane] ~wg_claim_standard;
+
+// ---------------------------------------------------------------- Jimmy (the kegs)
+[opnpc1,wg_jimmy]
+~chatnpc("<p,drunk>'Ello there.");
+@wg_jimmy_menu;
+
+[label,wg_jimmy_menu]
+switch_int (~p_choice4("Tell me about this room.", 1, "Tell me how to balance kegs.", 2, "May I claim my tokens please?", 3, "Bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Tell me about this room?");
+        ~chatnpc("<p,drunk>Well... s'like thish...");
+        ~chatnpc("<p,drunk>Thish here'sh a shtore room right?");
+        ~chatplayer("<p,quiz>A store room you mean?");
+        ~chatnpc("<p,drunk>That'sh what I shaid! *HIC* A shtore room.... Now technic'ly shpeaking, I should be outshide guarding it...");
+        ~chatplayer("<p,shifty>But you just nipped in to have a quick drink?");
+        ~chatnpc("<p,drunk>Yep... and to practish.");
+        ~chatplayer("<p,confused>Practish? I mean.. practise what?");
+        ~chatnpc("<p,drunk>Keg balancin. I'm the besht.");
+        @wg_jimmy_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Tell me how to balance kegs?");
+        ~chatnpc("<p,drunk>Yer very very shtrange. But.... you pick the keg up, and balance it on yer head, then you pick another keg up and put that on top. S'really very eashy.");
+        ~chatplayer("<p,confused>Eashy?");
+        ~chatnpc("<p,drunk>Yesh. Eashy.");
+        ~chatnpc("<p,drunk>But you couldn't ever balansh ash many ash meee!");
+        ~chatplayer("<p,happy>That sounds like a challenge, I'll show you!");
+        @wg_jimmy_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>May I claim my tokens please?");
+        if (%wg_tokens <= 0) {
+            ~chatnpc("<p,drunk>Wha'? You ain't earnt any mate!");
+            return;
+        }
+        ~chatnpc("<p,drunk>Well... err.. ish not offishal or anyfin... but I got the ledger of tokensh 'ere. I'll jus' err.. write it in!");
+        ~chatplayer("<p,quiz>Won't they know?");
+        ~chatnpc("<p,drunk>Nah... hic.... I'm a wizsh at copyin' signaturesh! Jus' ashk an offishal mem'er of shtaff like Shloane fer yer tokensh.");
+        ~mesbox("The rather drunk Jimmy scribbles the tokens you've earned from Keg Balancing in the Ledger so that you can claim them from an official member of training staff.");
+    case 4 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,drunk>Shure you wouldn't like an ickle drinkie fore yer go?");
+        ~chatplayer("<p,neutral>No thanks, got things to do, people to see, tokens to earn...");
+}
+
+// ---------------------------------------------------------------- the shot put referees
+[opnpc1,wg_ref] @wg_ref;
+[opnpc1,wg_ref_2] @wg_ref;
+[opnpc3,wg_ref] ~wg_claim_standard;
+[opnpc3,wg_ref_2] ~wg_claim_standard;
+
+[label,wg_ref]
+def_string $sir = ~wg_gender("Sir", "Madam");
+~chatnpc("<p,neutral>Greetings <$sir>.");
+switch_int (~p_choice4("Tell me about the Shot Put area.", 1, "May I claim my tokens please?", 2, "Do you have any tips for me?", 3, "Bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Tell me about the Shot Put area.");
+        ~chatnpc("<p,neutral>Of course <$sir>. There are two different weights of shot...");
+        ~chatplayer("<p,quiz>Shot?");
+        ~chatnpc("<p,neutral>Yes <$sir>. Shot. The iron spheres that are propelled by the chemical energy stored in your body.");
+        ~chatplayer("<p,confused>The... what?");
+        ~chatnpc("<p,neutral>Your strength <$sir>. The stronger you are, the further you can throw the shot, but there are other factors of course, like your technique.");
+        ~chatplayer("<p,quiz>What's that then?");
+        ~chatnpc("<p,neutral>The style of the shot <$sir>.");
+        ~chatplayer("<p,confused>Iron has style??");
+        ~mesbox("The Referee sighs, rolls his eyes and continues....");
+        ~chatnpc("<p,neutral><$sir>, the style in which you throw the shot, not the style of the iron.");
+        ~chatplayer("<p,happy>Oh! You mean the spinny round thing or the chuck it straight?");
+        ~chatnpc("<p,neutral>Crudely put <$sir>, but yes. Some are more difficult than others. Experiment and see which you prefer.");
+        ~chatplayer("<p,happy>Thanks for the help!");
+        ~chatnpc("<p,neutral>You are welcome <$sir>.");
+    case 2 : ~wg_claim_tokens("Of course!", "I'm afraid you have not earned any tokens yet. Try some of the activities around the guild to earn some.", "You don't have space to carry them.");
+    case 3 :
+        ~chatplayer("<p,quiz>Do you have any tips for me?");
+        ~chatnpc("<p,quiz>Tips <$sir>?");
+        ~chatplayer("<p,neutral>Yes, like how can I do better than everyone else.");
+        ~chatnpc("<p,neutral><$sir> may find that a fine powder applied to the hands may give one an advantage when putting the shot.");
+        ~chatplayer("<p,quiz>You mean if I grind something up and put dust on my hands I'll chuck the ball further?");
+        ~chatnpc("<p,neutral>Yes <$sir>.");
+        ~chatplayer("<p,happy>Thanks!");
+        ~chatnpc("<p,neutral>You are welcome <$sir>.");
+    case 4 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,neutral>Good luck <$sir>.");
+}
+
+// ---------------------------------------------------------------- the shopkeepers
+[opnpc1,wg_lidio]
+~chatnpc("<p,happy>Greetings warrior, how can I fill your stomach today?");
+~chatplayer("<p,happy>With food preferably.");
+~openshop_activenpc;
+[opnpc3,wg_lidio] ~openshop_activenpc;
+
+[opnpc1,wg_lilly]
+~chatnpc("<p,confused>Uh..... hi... didn't see you there. Can.... I help?");
+~chatplayer("<p,quiz>Umm... do you sell potions?");
+~chatnpc("<p,drunk>Erm... yes. When I'm not drinking them.");
+switch_int (~p_choice3("I'd like to see what you have for sale.", 1, "That's a pretty wall hanging.", 2, "Bye!", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I'd like to see what you have for sale.");
+        ~chatnpc("<p,neutral>Of course...");
+        ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,happy>That's a pretty wall hanging.");
+        ~chatnpc("<p,happy>Do you think so? I made it myself.");
+        ~chatplayer("<p,quiz>Really? Is that why there's all this cloth and dye around?");
+        ~chatnpc("<p,neutral>Yes, it's a hobby of mine when I'm.... relaxing.");
+    case 3 :
+        ~chatplayer("<p,neutral>Bye!");
+        ~chatnpc("<p,happy>Have fun and come back soon!");
+}
+[opnpc3,wg_lilly] ~openshop_activenpc;
+
+[opnpc1,wg_anton]
+~chatnpc("<p,neutral>Ahhh, hello there. How can I help?");
+~chatplayer("<p,neutral>Looks like you have a good selection of weapons around here...");
+~chatnpc("<p,happy>Indeed so, specially imported from the finest smiths around the lands, take a look at my wares.");
+~openshop_activenpc;
+[opnpc3,wg_anton] ~openshop_activenpc;
+
+// the shopkeepers' calls (Transcript: Lidio every 40 ticks, Lilly 30, Anton 35, a random one each time)
+[ai_timer,wg_lidio]
+switch_int (random(3)) {
+    case 0 : npc_say("Come try my lovely pizza or maybe some fish!");
+    case 1 : npc_say("Stew to fill the belly, on sale here!");
+    case 2 : npc_say("Potatoes are filling and healthy too!");
+}
+
+[ai_timer,wg_lilly]
+switch_int (random(6)) {
+    case 0 : npc_say("Pink bananas... mmmmmm.");
+    case 1 : npc_say("Demons are a Ghoul's best Friend.");
+    case 2 : npc_say("It's not an optical illusion, it just looks like one.");
+    case 3 : npc_say("Don't look back, they might be gaining on you.");
+    case 4 : npc_say("If you don't care where you are, then you ain't lost.");
+    case 5 : npc_say("Madness takes its toll. Please have exact change.");
+}
+
+[ai_timer,wg_anton]
+switch_int (random(4)) {
+    case 0 : npc_say("A fine selection of blades for you to peruse, come take a look!");
+    case 1 : npc_say("Armours and axes to suit your needs.");
+    case 2 : npc_say("Imported weapons from the finest smithys around the lands!");
+    case 3 : npc_say("Ow my toe! That armour is heavy.");
+}
