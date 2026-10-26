@@ -123,3 +123,7 @@ fe = OUT + '/_merge289/configs/from289.enum'
 have = rd(fe) if os.path.exists(fe) else ''
 if m and '[fishing_movement_miscellania_enum]' not in have:
     wr(fe, have.rstrip('\n') + '\n\n// from 289: skill_fishing/configs/fishing_movement.enum\n' + m.group(0).rstrip() + '\n')
+
+# 8. the market guard param (289 skill_thieving/configs/stalls/stalls.param) Miscellania's NPCs use
+wr(OUT + '/skill_thieving/configs/stalls/eascape_misc_stalls.param',
+   "// EASCape: from 289 (skill_thieving/configs/stalls/stalls.param): the guards a market stall's owner calls\n[market_guard]\ntype=int\n")
