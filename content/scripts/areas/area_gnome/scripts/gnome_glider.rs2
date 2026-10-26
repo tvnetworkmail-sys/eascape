@@ -19,9 +19,17 @@ if($start_pos ! ^ta_quir_priw & $dest ! ^ta_quir_priw) {
 }
 %pilot_journey = ~calc_glidervar($start_pos, $dest); 
 p_delay(3); // https://youtu.be/CrIK9wa_6j0?si=OWDWF_C0766jsjvH&t=12
+// EASCape (your call, 26 Oct 2026: "smoother"): once the glider has crossed the map, the
+// screen fades to black and back up at the landing, instead of cutting straight there
+if_close;
+~fade_out;
+p_delay(2); // as Monkey Madness's knock-out fades
 p_teleport(map_findsquare($dest, 0, 1, ^map_findsquare_lineofwalk));
 %pilot_journey = -1;
-if_close;
+p_delay(0);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
 
 [proc,calc_gliderstart]()(coord)
 if(inzone(movecoord(^ta_quir_priw, -8, 0, -8), movecoord(^ta_quir_priw, 8, 0, 8), coord) = true) {
