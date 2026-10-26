@@ -1,0 +1,47 @@
+// Quest Helper: which step of Demon Slayer you're on (the steps are demon_helper.dbrow).
+// Keys you've banked count as found, like Sir Prysin, the drain and Traiborn count them.
+[proc,questhelper_demon]()(int)
+if (%demonstart >= ^demon_complete) {
+    return(0);
+}
+if (%demonstart = ^demon_not_started) {
+    return(1);
+}
+if (%demonstart = ^demon_talked_aris) {
+    return(2);
+}
+if (%demonstart = ^demon_silverlight) {
+    if (inv_total(inv, silverlight) > 0 | inv_total(worn, silverlight) > 0) {
+        return(10);
+    }
+    return(11);
+}
+// the key hunt (2) and Traiborn's bones (3-28)
+def_boolean $key1 = false; // Traiborn's
+def_boolean $key2 = false; // Rovin's
+def_boolean $key3 = ~demon_has_prysin_key; // the drain's
+if (inv_total(inv, silverlight_key_1) > 0 | inv_total(bank, silverlight_key_1) > 0) {
+    $key1 = true;
+}
+if (inv_total(inv, silverlight_key_2) > 0 | inv_total(bank, silverlight_key_2) > 0) {
+    $key2 = true;
+}
+if ($key1 = true & $key2 = true & $key3 = true) {
+    return(9);
+}
+if ($key2 = false) {
+    return(7);
+}
+if ($key3 = false) {
+    if (%demon_key_washed = 1) {
+        return(6);
+    }
+    if (inv_total(inv, bucket_water) > 0) {
+        return(5);
+    }
+    if (inv_total(inv, bucket_empty) > 0) {
+        return(4);
+    }
+    return(3);
+}
+return(8);

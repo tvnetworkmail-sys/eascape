@@ -1,0 +1,134 @@
+// Quest Helper guide for Demon Slayer, written by hand: RuneLite's guide follows OSRS's reworked
+// varbits, so ours follows our own %demonstart stages (0, 1, 2, 3-28 = bones given, 29, 30).
+// Places and dialogue options are from our maps and scripts (gypsy.rs2, sir_prysin.rs2,
+// captain_rovin.rs2, traiborn.rs2, demon_slayer.rs2, delrith.rs2).
+[questhelper_guide_demon]
+table=questhelper_guide
+data=guide,^qh_demon
+data=key,demon
+data=name,Demon Slayer
+data=journal,Demon Slayer
+data=difficulty,Novice
+data=start,Talk to the Gypsy in her tent in Varrock's main square.
+data=required,coins,1
+data=required,bones,25
+data=recommended,bucket_empty,1
+data=reward,3 Quest Points
+data=reward,Silverlight
+data=section,Starting off
+data=section,Sir Prysin's key
+data=section,Captain Rovin's key
+data=section,Wizard Traiborn's key
+data=section,Silverlight and Delrith
+
+[questhelper_step_demon_1]
+table=questhelper_step
+data=id,100001
+data=section,0
+data=text,Talk to the Gypsy in her tent in Varrock Square. It costs 1 coin.
+data=npc,aris
+data=coord,0_50_53_3_32
+data=option,"Yes, please."
+data=option,"Ok, here you go."
+data=option,"Okay, where is he? I'll kill him for you!"
+data=item,coins,1
+
+[questhelper_step_demon_2]
+table=questhelper_step
+data=id,100002
+data=section,0
+data=text,Talk to Sir Prysin in the south-west of Varrock Palace.
+data=npc,sir_prysin
+data=coord,0_50_54_4_17
+data=option,Gypsy Aris said I should come and talk to you.
+data=option,I need to find Silverlight.
+data=option,He's back and unfortunately I've got to deal with him.
+data=option,So give me the keys!
+data=option,Can you give me your key?
+
+[questhelper_step_demon_3]
+table=questhelper_step
+data=id,100003
+data=section,1
+data=text,Pick up a bucket upstairs in the north-east of Varrock Palace.
+data=obj,bucket_empty
+data=coord,1_50_54_21_41
+
+[questhelper_step_demon_4]
+table=questhelper_step
+data=id,100004
+data=section,1
+data=text,Fill the bucket at the sink in the palace kitchen.
+data=loc,sink2
+data=coord,0_50_54_24_38
+data=item,bucket_empty,1
+
+[questhelper_step_demon_5]
+table=questhelper_step
+data=id,100005
+data=section,1
+data=text,Pour the bucket of water down the drain outside the palace kitchen.
+data=loc,questdrain
+data=coord,0_50_54_25_39
+data=item,bucket_water,1
+
+[questhelper_step_demon_6]
+table=questhelper_step
+data=id,100006
+data=section,1
+data=text,"Go down the manhole south-east of the palace and pick up the key in the sewer (north of the ladder). If it's gone, pour some water down the drain again."
+data=loc,manholeclosed
+data=obj,silverlight_key_3
+data=coord,0_50_54_37_2
+
+[questhelper_step_demon_7]
+table=questhelper_step
+data=id,100007
+data=section,2
+data=text,Climb to the top floor of the palace's north-west tower and talk to Captain Rovin.
+data=npc,captain_rovin
+data=coord,2_50_54_4_40
+data=option,"Yes I know, but this is important."
+data=option,There's a demon who wants to invade this city.
+data=option,Climb up.
+
+[questhelper_step_demon_8]
+table=questhelper_step
+data=id,100008
+data=section,3
+data=text,"Talk to Wizard Traiborn on the first floor of the Wizards' Tower, south of Draynor, and bring him 25 bones (you can bring them a few at a time)."
+data=npc,traiborn
+data=coord,1_48_49_40_26
+data=option,I need to get a key given to you by Sir Prysin.
+data=option,"Well, have you got any keys knocking around?"
+data=option,I'll get the bones for you.
+data=item,bones,25
+
+[questhelper_step_demon_9]
+table=questhelper_step
+data=id,100009
+data=section,4
+data=text,Bring all three keys to Sir Prysin (take any you've banked out of the bank first).
+data=npc,sir_prysin
+data=coord,0_50_54_4_17
+data=item,silverlight_key_1,1
+data=item,silverlight_key_2,1
+data=item,silverlight_key_3,1
+
+[questhelper_step_demon_10]
+table=questhelper_step
+data=id,100010
+data=section,4
+data=text,"Wield Silverlight and attack Delrith at the stone circle south of Varrock. When he's weakened, say: Carlem Aber Camerinthum Purchai Gabindo."
+data=npc,delrith
+data=coord,0_50_52_29_42
+data=option,Carlem Aber Camerinthum Purchai Gabindo
+data=item,silverlight,1
+
+[questhelper_step_demon_11]
+table=questhelper_step
+data=id,100011
+data=section,4
+data=text,You've lost Silverlight: talk to Sir Prysin to get it back.
+data=npc,sir_prysin
+data=coord,0_50_54_4_17

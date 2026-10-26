@@ -41,7 +41,7 @@ DIRS = {'fortress': 'blackknightfortress', 'demon': 'demonslayer', 'doric': 'dor
     'golem': 'thegolem', 'grandtree': 'thegrandtree', 'tree': 'treegnomevillage', 'totem': 'tribaltotem', 'troll_love': 'trollromance',
     'upass': 'undergroundpass', 'itwatchtower': 'watchtower', 'ball': 'witchshouse', 'mm': 'monkeymadnessi', 'misc': 'throneofmiscellania',
     'hauntedmine': 'hauntedmine', 'routequest': 'insearchofthemyreque', 'dragon': 'dragonslayer'}
-DONE = {'cook', 'priestperil', 'waterfall', 'troll', 'ikov', 'itexam', 'desertrescue', 'deserttreasure'}
+DONE = {'cook', 'priestperil', 'waterfall', 'troll', 'ikov', 'itexam', 'desertrescue', 'deserttreasure', 'demon', 'gobdip'}
 sys.path.insert(0, os.path.dirname(__file__))
 WIKI = {}
 exec(re.search(r"WIKI = \{.*?\}\n", Q.rd(os.path.join(os.path.dirname(__file__), 'make_packs.py')), re.S).group(0))

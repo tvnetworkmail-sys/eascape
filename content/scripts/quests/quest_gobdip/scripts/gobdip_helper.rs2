@@ -1,0 +1,41 @@
+// Quest Helper: which step of Goblin Diplomacy you're on (the steps are gobdip_helper.dbrow).
+[proc,questhelper_gobdip]()(int)
+if (%goblinquest >= ^gobdip_complete) {
+    return(0);
+}
+if (%goblinquest = ^gobdip_not_started) {
+    return(1);
+}
+if (%goblinquest = ^gobdip_started) {
+    return(2);
+}
+def_int $mail = inv_total(inv, goblin_armour);
+if (%goblinquest = ^gobdip_will_bring_armour) {
+    if (inv_total(inv, goblin_armour_orange) > 0) {
+        return(6);
+    }
+    if ($mail = 0) {
+        return(3);
+    }
+    if (inv_total(inv, orangedye) > 0) {
+        return(5);
+    }
+    return(4);
+}
+if (%goblinquest = ^gobdip_gave_orange) {
+    if (inv_total(inv, goblin_armour_darkblue) > 0) {
+        return(9);
+    }
+    if ($mail = 0) {
+        return(3);
+    }
+    if (inv_total(inv, bluedye) > 0) {
+        return(8);
+    }
+    return(7);
+}
+// gave blue (4) or gave brown (5, the reward is a tick away)
+if ($mail = 0) {
+    return(3);
+}
+return(10);
