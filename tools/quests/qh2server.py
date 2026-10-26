@@ -706,7 +706,7 @@ def write(key, num, dirname, stagevar, journal, title, outdir, rewards=None):
     rows = [f"// Quest Helper guide for {title}: converted from RuneLite's Quest Helper ({dirname}, by Zoinkwiz",
             '// and contributors, BSD 2-Clause) by tools/quests/qh2server.py.',
             f'[questhelper_guide_{key}]', 'table=questhelper_guide', f'data=guide,^qh_{key}', f'data=key,{key}',
-            f'data=name,{q(title)}', f'data=journal,{q(journal)}']
+            f'data=name,{q(re.sub(r' I$', '', title))}', f'data=journal,{q(journal)}']  # no OSRS "I" in 2006 names
     for r in rewards or []: rows.append(f'data=reward,{q(r)}')
     for sname, _ in sections: rows.append(f'data=section,{q(sname)}')
     for v, sec in order:

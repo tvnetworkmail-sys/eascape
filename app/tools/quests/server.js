@@ -151,3 +151,25 @@ const byKey = {};
 for (const g of Object.values(guides)) byKey[g.key] = g;
 fs.writeFileSync(out, `${JSON.stringify(byKey)}\n`);
 console.log(`${Object.keys(byKey).length} guide(s), ${steps.length} steps -> ${path.relative(process.cwd(), out)}`);
+
+// Quests that only have a server guide (Lost City 289's, The Golem...) need a place in the
+// panel's quest list too: progress.json lists the quests with their quest list line (com), and
+// the list colour gives their status. Add any guide's quest that isn't there yet.
+const progressFile = path.join(__dirname, '..', '..', 'src', 'plugins', 'questhelper', 'progress.json');
+const progress = JSON.parse(fs.readFileSync(progressFile, 'utf8'));
+const ifaces = pack('interface');
+const added = [];
+for (const g of Object.values(byKey)) {
+  if (progress.quests[g.key]) continue;
+  const com = ifaces[`questlist:${g.key}`];
+  if (com === undefined) throw new Error(`${g.key}: no questlist:${g.key} in interface.pack`);
+  progress.quests[g.key] = { com, complete: null, dialogue: {}, journal: [], name: g.name, varp: null };
+  added.push(g.key);
+}
+if (added.length) {
+  const sorted = (v) => (Array.isArray(v) ? v.map(sorted) : v && typeof v === 'object'
+    ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sorted(v[k])])) : v);
+  const ascii = (s) => s.replace(/[\u007f-￿]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
+  fs.writeFileSync(progressFile, ascii(JSON.stringify(sorted(progress), null, 1)));
+  console.log(`added to the quest list: ${added.join(', ')}`);
+}
