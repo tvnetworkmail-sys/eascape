@@ -1,10 +1,10 @@
-import { packAll } from '#tools/pack/PackAll.js';
+import { packAllChecked } from '#tools/pack/PackCheck.js';
 import { printError } from '#/util/Logger.js';
 
 try {
     const modelFlags: number[] = [];
     console.time('pack');
-    await packAll(modelFlags);
+    await packAllChecked(modelFlags);
     console.timeEnd('pack');
 } catch (err) {
     if (err instanceof Error) {

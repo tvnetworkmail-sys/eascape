@@ -211,6 +211,14 @@ export default class FileStream {
             sector = nextSector;
         }
 
+        // EASCape: the read above kept the old data in memory; without this, later reads in the
+        // same pack (the versionlist's checksums) saw the old file while the disk had the new one,
+        // so the client rejected every changed map or model as corrupt (21 Oct 2026)
+        if (this.discardPacked) {
+            delete this.packed[archive][file];
+        } else {
+            this.packed[archive][file] = data;
+        }
         return true;
     }
 

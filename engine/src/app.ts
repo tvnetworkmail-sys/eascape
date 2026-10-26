@@ -3,7 +3,7 @@ import { Worker } from 'worker_threads';
 
 import { collectDefaultMetrics, register } from 'prom-client';
 
-import { packAll } from '#tools/pack/PackAll.js';
+import { packAllChecked } from '#tools/pack/PackCheck.js';
 import World from '#/engine/World.js';
 import TcpServer from '#/server/tcp/TcpServer.js';
 import Environment from '#/util/Environment.js';
@@ -20,7 +20,7 @@ import OnDemand from '#/engine/OnDemand.js';
     try {
         // todo: different logic so the main thread doesn't have to load pack files
         const modelFlags: number[] = [];
-        await packAll(modelFlags);
+        await packAllChecked(modelFlags); // EASCape: checks the versionlist matches the files (PackCheck.ts)
     } catch (err) {
         if (err instanceof Error) {
             printError(err);
