@@ -64,7 +64,8 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
         }
 
         // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
-        if (!Environment.NODE_PRODUCTION && EASCAPE_TEST_COMMANDS.includes(cmd)) {
+        // and every quest's ::<quest>pack (cheat_questpacks.rs2) and ::questpacks, the list of them
+        if (!Environment.NODE_PRODUCTION && (EASCAPE_TEST_COMMANDS.includes(cmd) || (/^[a-z0-9_]+packs?$/.test(cmd) && ScriptProvider.getByName(`[debugproc,${cmd}]`)))) {
             cmd = Environment.NODE_DEBUGPROC_CHAR + cmd;
         }
 

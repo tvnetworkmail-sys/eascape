@@ -254,6 +254,38 @@ if (%golem_a = ^golem_complete) {
 if (%deserttreasure >= ^deserttreasure_complete) {
     $questpoints = add($questpoints, ^deserttreasure_questpoints);
 }
+// EASCape: the quests from the 274 and 289 merges, left out of the count (and the journal
+// colours below) until now
+if (%eadgar_quest >= ^eadgar_complete) {
+    $questpoints = add($questpoints, ^eadgar_questpoints);
+}
+if (%hauntedmine >= ^hauntedmine_complete) {
+    $questpoints = add($questpoints, ^hauntedmine_questpoints);
+}
+if (%horrorquest >= ^horror_complete) {
+    $questpoints = add($questpoints, ^horror_questpoints);
+}
+if (%misc_quest >= ^misc_complete) {
+    $questpoints = add($questpoints, ^misc_questpoints);
+}
+if (%mm_main >= ^mm_complete) {
+    $questpoints = add($questpoints, ^mm_questpoints);
+}
+if (%morttonquest >= ^mortton_quest_complete) {
+    $questpoints = add($questpoints, ^mortton_questpoints);
+}
+if (%regicide_quest >= ^regicide_complete) {
+    $questpoints = add($questpoints, ^regicide_questpoints);
+}
+if (%routequest >= ^routequest_complete) {
+    $questpoints = add($questpoints, ^routequest_questpoints);
+}
+if (%tbwt_main >= ^tbwt_complete) {
+    $questpoints = add($questpoints, ^tbwt_questpoints);
+}
+if (%viking >= ^viking_complete) {
+    $questpoints = add($questpoints, ^viking_questpoints);
+}
 return ($questpoints);
 
 [proc,update_questlist]
@@ -327,6 +359,16 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:troll_love, %troll_love, ^troll_love_complete);
 ~send_quest_progress_colour(questlist:golem, %golem_a, ^golem_complete);
 ~send_quest_progress_colour(questlist:deserttreasure, %deserttreasure, ^deserttreasure_complete);
+~send_quest_progress_colour(questlist:eadgar, %eadgar_quest, ^eadgar_complete);
+~send_quest_progress_colour(questlist:hauntedmine, %hauntedmine, ^hauntedmine_complete);
+~send_quest_progress_colour(questlist:horror, %horrorquest, ^horror_complete);
+~send_quest_progress_colour(questlist:misc, %misc_quest, ^misc_complete);
+~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
+~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);
+~send_quest_progress_colour(questlist:regicide, %regicide_quest, ^regicide_complete);
+~send_quest_progress_colour(questlist:routequest, %routequest, ^routequest_complete);
+~send_quest_progress_colour(questlist:tbwt, %tbwt_main, ^tbwt_complete);
+~send_quest_progress_colour(questlist:viking, %viking, ^viking_complete);
 ~send_quest_progress_colour(questlist:troll, %troll_quest, ^troll_complete);
 if_settab(questlist, ^tab_quest_journal);
 
