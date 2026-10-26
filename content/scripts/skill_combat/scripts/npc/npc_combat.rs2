@@ -204,6 +204,11 @@ if (npc_type = count_draynor) {
     }
 }
 
+if ((npc_type = hauntedmine_boss_ghost | npc_type = hauntedmine_boss_ghost_faded) & %npc_attacking_uid ! uid) {
+    mes("Someone else is fighting that.");
+    return(false);
+}
+
 if (npc_hasop(2) = true) {
     return (true);
 }
@@ -310,6 +315,11 @@ if (npc_type = count_draynor) {
         return(false);
     }
 }
+if ((npc_type = hauntedmine_boss_ghost | npc_type = hauntedmine_boss_ghost_faded) & %npc_attacking_uid ! uid) {
+    mes("Someone else is fighting that.");
+    return(false);
+}
+
 if (npc_hasop(2) = true) {
     return (true);
 }

@@ -41,6 +41,10 @@ if(oc_param(obj_type, telegrab_disabled) = true) {
     mes("You can't cast this spell on that object.");
     return;
 }
+if(obj_type = zqcorpse) { // from Lost City 289: Shilo Village
+    mes("The arcane aura in this area stops the spell from working.");
+    return;
+}
 if(obj_coord = ^legends_opal_coord | obj_coord = ^legends_jade_coord | obj_coord = ^legends_topaz_coord | obj_coord = ^legends_sapphire_coord |
     obj_coord = ^legends_diamond_coord | obj_coord = ^legends_ruby_coord | obj_coord = ^legends_emerald_coord) {
     mes("The spell fizzles and dies for some unknown reason.");

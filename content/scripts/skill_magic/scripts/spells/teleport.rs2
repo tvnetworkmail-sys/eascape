@@ -85,6 +85,13 @@ if (inv_getobj(worn, ^wearpos_rhand) = trollromance_toboggon_waxed) { // Troll R
         mes("You drop the sled.");
     }
 }
+// from Lost City 289: Monkey Madness, Haunted Mine
+if(inv_total(inv, mm_monkey_in_backpack) > 0) {
+    // this does delete all if you have multiple (confirmed on OSRS)
+    inv_del(inv, mm_monkey_in_backpack, ^max_32bit_int);
+    mes("The monkey in your backpack disappears in a puff of smoke!");
+}
+~hauntedmine_fungus_crumble;
 
 [proc,pre_tele_checks](coord $coord)(boolean)
 if(inv_total(inv, thanainabarrel) > 0) {

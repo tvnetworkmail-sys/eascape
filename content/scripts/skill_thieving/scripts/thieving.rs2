@@ -112,6 +112,11 @@ stat_advance(thieving, $experience);
 // Temp note: dur does not need updated
 if(loc_type = viking_fur_market | loc_type = viking_fish_market | loc_type = misc_fish_market | loc_type = misc_veg_market | loc_type = etc_fish_market | loc_type = etc_veg_market) loc_change(viking_market, $respawn_ticks);
 else loc_change(market, $respawn_ticks);
+// from Lost City 289 (Throne of Miscellania): stealing from the kingdom's stalls costs approval
+if (inzone(^miscellania_lower_bound, ^miscellania_upper_bound, coord) = true) {
+    ~manage_misc_daily_update;
+    if (%misc_approval > 4) { %misc_approval = sub(%misc_approval, 4); } else { %misc_approval = 0; }
+}
 
 [label,activate_trapped_chest]
 p_arrivedelay;

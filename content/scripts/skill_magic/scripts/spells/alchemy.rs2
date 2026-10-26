@@ -87,6 +87,9 @@ switch_obj($item) {
             mes("You do not have enough Fire Runes to cast this spell.");
             return(false);
         }
+    case seasluginv :
+        mes("Ugly parasites have feelings too!");
+        return(false);
     case thanainabarrel :
         mes("You can't do that to the poor girl!");
         return(false);
@@ -107,6 +110,10 @@ switch_obj($item) {
         }
         if (oc_param($item, no_alchemy) = ^true) {
             mes("You cannot use alchemy on that item.");
+            return(false);
+        }
+        if(oc_category($item) = mm_greegree) {
+            mes("The magic of the monkeys defies alchemy.");
             return(false);
         }
 }

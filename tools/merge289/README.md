@@ -25,3 +25,20 @@ Steps:
    Edmond, Vanstrom Klause, the Tai Bwo Wannai trio...).
 
 `merge-report.json` lists what the merge did.
+
+## Follow-up (26 Oct 2026): 289's hooks in the shared scripts
+
+The merge took only the quest folders, so the lines 289 added to shared scripts for its
+quests were missing. Ported by hand from a three-way diff (663a3da -> 289 against ours),
+quest hooks only; 289's other changes to those files (castle wars, holiday events, the
+Brimhaven dungeon, combat tweaks) were left out:
+- Monkey Madness: greegree on/off (equip.rs2, appearance.rs2), no attacking, fishing or
+  alchemy as a monkey, greegree off when you're hit (auto_retaliate.rs2), the zoo keeper,
+  stringing the monkeyspeak amulet, Ape Atoll food, the monkey in your backpack on
+  teleport, mm_login, the sigil's timer
+- Throne of Miscellania: the kingdom's fishing, mining, woodcutting (Leif), wheat and
+  stalls, the emotes, Ghrim's book's pages, the castle and Etceteria stairs
+- Haunted Mine: the fungus on death and teleport, the boss only fighting its player
+- Troll Romance: the sled on death and unequip
+- Horror from the Deep and Mort'ton: the diaries' and serum book's pages
+- Shilo Village: no telegrab on the corpse

@@ -28,6 +28,7 @@ if (~in_castlewars_waitingroom(coord) = true) {
 ~player_death;
 ~wg_death; // EASCape: the Warriors' Guild's animated armour
 midi_jingle(death2);
+~hauntedmine_fungus_crumble; // from Lost City 289: Haunted Mine (comes before "Oh dear, you are dead!")
 // https://storage.googleapis.com/tannerdino/images/6543.jpg
 // https://youtu.be/gWmwSYxzUfo
 mes("Oh dear you are dead!");
@@ -206,6 +207,7 @@ if($is_worn = true) {
 } else {
     inv_moveitem(inv,deathkeep,$priciest_item,1);
 }
+if($priciest_item = trollromance_toboggon_waxed) %wearing_sled = ^false; // from Lost City 289: Troll Romance
 
 [proc,player_end_poison]
 %poison = 0;
