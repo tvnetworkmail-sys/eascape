@@ -105,7 +105,7 @@ mes("You are now on wave @red@<tostring($wave)>@bla@.");
 if ($wave >= ^fightcave_wave_jad) {
     %fightcave_left = 1;
     %fightcave_healers = 0;
-    ~fightcave_spawn(tzhaar_fightcave_swarm_boss, ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, multiply(add(multiply(^fightcave_wave_jad, 16), max(1, min(%fightcave_rotation, 15))), 8))));
+    ~fightcave_spawn(tzhaar_fightcave_swarm_boss, ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, multiply(add(multiply(^fightcave_wave_jad, 16), max(1, min(%fightcave_rotation, 15))), 8)), nc_size(tzhaar_fightcave_swarm_boss)));
     ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>Look out, here comes TzTok-Jad!");
     return;
 }
@@ -114,7 +114,7 @@ def_int $rotation = max(1, min(%fightcave_rotation, 15));
 def_int $n = 0;
 def_int $value = enum(int, int, fightcave_wave_npcs, add(multiply($wave, 8), $n));
 while ($value > 0) {
-    ~fightcave_spawn(~fightcave_monster($value), ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, add(multiply(add(multiply($wave, 16), $rotation), 8), $n))));
+    ~fightcave_spawn(~fightcave_monster($value), ~fightcave_spawn_tile(enum(int, int, fightcave_wave_dirs, add(multiply(add(multiply($wave, 16), $rotation), 8), $n)), nc_size(~fightcave_monster($value))));
     $n = add($n, 1);
     $value = enum(int, int, fightcave_wave_npcs, add(multiply($wave, 8), $n));
 }
@@ -129,8 +129,10 @@ switch_int ($value) {
     case default : return(tzhaar_fightcave_swarm_1a);
 }
 
-// a random square in one of Void's five spawn areas (tzhaar_fight_cave.areas.toml)
-[proc,fightcave_spawn_tile](int $area)(coord)
+// a random square in one of Void's five spawn areas (tzhaar_fight_cave.areas.toml), with room
+// for the whole monster: every square it covers is in the cave and walkable (not lava or rock);
+// a big one picked by its south-west square alone could stand half in the lava
+[proc,fightcave_spawn_tile](int $area, int $npcsize)(coord)
 def_coord $sw;
 def_int $size = 7;
 switch_int ($area) {
@@ -140,11 +142,40 @@ switch_int ($area) {
     case 5 : $sw = 0_37_79_48_24; // south-east
     case default : $sw = 0_37_79_29_29; // centre
 }
-def_coord $tile = movecoord($sw, random($size), 0, random($size));
+def_coord $tile;
+def_int $try = 0;
+def_int $spread;
+while ($try < 40) {
+    // the first tries stay in the area, later ones look a little wider
+    $spread = add($size, divide($try, 10));
+    $tile = movecoord($sw, sub(random($spread), divide($try, 20)), 0, sub(random($spread), divide($try, 20)));
+    if (~fightcave_room_for($tile, $npcsize) = true) {
+        return($tile);
+    }
+    $try = add($try, 1);
+}
+$tile = movecoord($sw, random($size), 0, random($size));
 if (map_blocked($tile) = true) {
     $tile = map_findsquare($tile, 0, 3, ^map_findsquare_lineofwalk);
 }
 return($tile);
+
+[proc,fightcave_room_for](coord $sw, int $npcsize)(boolean)
+def_int $x = 0;
+def_int $z;
+def_coord $c;
+while ($x < $npcsize) {
+    $z = 0;
+    while ($z < $npcsize) {
+        $c = movecoord($sw, $x, 0, $z);
+        if (~in_fightcave($c) = false | map_blocked($c) = true) {
+            return(false);
+        }
+        $z = add($z, 1);
+    }
+    $x = add($x, 1);
+}
+return(true);
 
 // a monster that goes for the active player and nobody else
 [proc,fightcave_spawn](npc $type, coord $coord)

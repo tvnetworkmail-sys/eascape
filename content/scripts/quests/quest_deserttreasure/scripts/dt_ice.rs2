@@ -322,6 +322,9 @@ while ($hp > 0) {
     $hp = sub($hp, $damage);
     p_delay(3);
 }
+~dt_ice_block_free($block);
+
+[proc,dt_ice_block_free](int $block)
 if ($block = 1) {
     %fd_icewarrior_dadfree = 1;
 } else {
@@ -362,3 +365,42 @@ if (~obj_gettotal(fd_icediamond) = 0) {
 ~chatplayer("<p,neutral>Don't worry about it, just as long as I don't have to go back into that blizzard.");
 // the Stranger: "5-10 mins after the troll child ... " (Mod Ash)
 ~dt_stranger_after(500, 1000);
+
+// EASCape: a combat spell at a block (your call, 26 Oct 2026: "they can be smashed or attacked").
+// The spell is cast as usual (runes, XP, projectile) and its hit, up to the spell's max, comes
+// off the block's 10 hitpoints (OSRS wiki, Ice block); always a hit, since the block doesn't
+// dodge (our choice). The damage done so far is kept until you log out.
+[proc,dt_ice_block_spell](dbrow $spell_data)
+def_int $block = 1;
+if (npc_type = troll_block_2) {
+    $block = 2;
+}
+if_close;
+p_stopaction;
+if (%fd_icewarrior_subquest < ^dt_ice_kamil) {
+    mes("You can't attack that.");
+    return;
+}
+if (($block = 1 & %fd_icewarrior_dadfree = 1) | ($block = 2 & %fd_icewarrior_mumfree = 1)) {
+    return;
+}
+if (map_clock < %action_delay) {
+    return;
+}
+if (~check_spell_requirements($spell_data) = false) {
+    return;
+}
+def_int $duration = ~pvm_spell_cast($spell_data);
+def_int $damage = randominc(~magic_spell_maxhit($spell_data));
+p_delay(max(0, sub(divide($duration, 30), 1)));
+if ($block = 1) {
+    %dt_iceblock_damage1 = add(%dt_iceblock_damage1, $damage);
+    if (%dt_iceblock_damage1 >= 10) {
+        ~dt_ice_block_free(1);
+    }
+} else {
+    %dt_iceblock_damage2 = add(%dt_iceblock_damage2, $damage);
+    if (%dt_iceblock_damage2 >= 10) {
+        ~dt_ice_block_free(2);
+    }
+}

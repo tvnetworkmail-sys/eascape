@@ -104,7 +104,8 @@ if (map_multiway(npc_coord) = false & nc_param(npc_type, npc_forcemulti) = ^fals
         mes("I'm already under attack!");
         return(false);
     }
-    if (add(%lastcombat, 8) > map_clock & (%aggressive_npc ! npc_uid & %aggressive_npc ! null)) {
+    // EASCape: a Barrows brother can always be fought, whoever else is on you
+    if (add(%lastcombat, 8) > map_clock & (%aggressive_npc ! npc_uid & %aggressive_npc ! null) & nc_param(npc_type, eascape_combat_priority) = ^false) {
         mes("I'm already under attack!");
         return(false);
     }
@@ -129,7 +130,8 @@ if (map_multiway(npc_coord) = false & nc_param(npc_type, npc_forcemulti) = ^fals
         mes("I'm already under attack");
         return(false);
     }
-    if (add(%lastcombat, 8) > map_clock & (%aggressive_npc ! npc_uid & %aggressive_npc ! null)) {
+    // EASCape: a Barrows brother can always be fought, whoever else is on you
+    if (add(%lastcombat, 8) > map_clock & (%aggressive_npc ! npc_uid & %aggressive_npc ! null) & nc_param(npc_type, eascape_combat_priority) = ^false) {
         mes("I'm already under attack");
         return(false);
     }
