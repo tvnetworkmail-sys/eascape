@@ -70,6 +70,9 @@ for name, b in blocks.items():
         continue
     if re.search(r'^huntmode=', b['body'], re.M):
         continue
+    # Lost City's quest NPCs whose fights are scripted (no huntmode on purpose): left alone
+    if re.search(r'no aggression, as Lost City', b['body']):
+        continue
     # scripted fights that pick their own target (the Fight Cave and Pit, the Barrows brothers)
     if name.startswith(('tzhaar_fightcave', 'tzhaar_fightpit')) or name in ('barrows_ahrim', 'barrows_dharok', 'barrows_guthan', 'barrows_karil', 'barrows_torag', 'barrows_verac'):
         continue
