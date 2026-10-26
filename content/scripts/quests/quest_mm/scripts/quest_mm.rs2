@@ -1113,6 +1113,11 @@ return (false);
 [label,open_mm_largedoor]
 if(~mm_wearing_greegree = false) {
     mes("The gate is too heavy to move!");
+    // EASCape: a human at the gate from the ravine side doesn't get to stand there (the archers
+    // knock you out at the entrance, OSRS wiki)
+    if (%mm_player_is_unconscious = ^false & coordz(coord) < coordz(loc_coord) & ~mm_at_ravine_gate(coord) = true) {
+        strongqueue(aa_archer_knockout, 1, 0);
+    }
     return;
 }
 

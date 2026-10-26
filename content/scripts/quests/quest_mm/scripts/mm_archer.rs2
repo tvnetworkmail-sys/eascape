@@ -48,7 +48,10 @@ spotanim_npc(npc_param(proj_launch), npc_param(proj_height), 0);
 def_int $duration = 64;
 $duration = ~player_projectile(npc_coord, coord, uid, npc_param(proj_travel), 15, 36, 41, 15, 5, 11, 5);
 
-if(npc_type = mm_ravine_archer & %mm_player_is_unconscious = ^false & random(20) = 0) { // testing with 1 archer aggroed, it seems like about 1 in every 20 attacks, and its only when the arrow lands
+// EASCape: and always once you're at the gate (OSRS wiki, Monkey Madness I: "Once you get close
+// enough to the entrance, you will be knocked out and placed in a prison"); the last stretch
+// before the gate is our choice of "close enough"
+if(npc_type = mm_ravine_archer & %mm_player_is_unconscious = ^false & (random(20) = 0 | ~mm_at_ravine_gate(coord) = true)) { // testing with 1 archer aggroed, it seems like about 1 in every 20 attacks, and its only when the arrow lands
     strongqueue(aa_archer_knockout, 0, calc($duration / 30));
 }
 
@@ -95,3 +98,8 @@ if(random(10) = 0) { // seems random originally? only have one video of it: yout
     ~objbox(iron_arrow_p, "You have been hit by poisoned arrows and knocked out!", 250, 0, 0);
 }
 if_openoverlay(null);
+
+// EASCape: the last tiles of the ravine, in front of the bamboo gate (maps/m42_43.jm2, the gate
+// at 31-34, 14)
+[proc,mm_at_ravine_gate](coord $coord)(boolean)
+return(inzone(0_42_43_28_10, 0_42_43_37_13, $coord));
