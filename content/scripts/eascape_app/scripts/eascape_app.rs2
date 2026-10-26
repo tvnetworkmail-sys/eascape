@@ -4,14 +4,18 @@
 // What they do:
 //   - your attack style is kept from one login to the next (2006 reset it; Lost City's
 //     player_attackstyles.rs2 cites a video)
-//   - the spell you autocast is set again when you go back to a staff (2006 dropped it whenever
-//     you changed to another kind of weapon)
+//   - the spell you autocast is set again when you go back to a staff or log back in (2006
+//     dropped it whenever you changed to another kind of weapon, and on logout)
 [proc,eascape_app_extras_set](int $on)
 if ($on = 1 & %eascape_app_extras = 0) {
     %eascape_app_extras = 1;
     if (%eascape_saved_com_mode > 0) {
         %com_mode = sub(%eascape_saved_com_mode, 1);
         ~player_combat_stat;
+    }
+    // and the spell you were autocasting when you logged out, if you still hold a staff for it
+    if (%autocast_spell <= 0) {
+        ~eascape_autocast_restore(inv_getobj(worn, ^wearpos_rhand));
     }
     return;
 }
@@ -23,6 +27,9 @@ if ($on = 0) {
 [proc,eascape_app_logout]
 if (%eascape_app_extras = 1) {
     %eascape_saved_com_mode = add(%com_mode, 1);
+    if (%autocast_spell > 0) {
+        %eascape_last_autocast = %autocast_spell;
+    }
 }
 
 // your weapon changed kind and autocast is about to be cleared: remember the spell

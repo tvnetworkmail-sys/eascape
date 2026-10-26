@@ -162,7 +162,8 @@ mes("You don't find anything.");
 if (~barrows_killed($index) = true | ~barrows_brother_out($index) = true) {
     return;
 }
-~barrows_spawn_brother($index, map_findsquare(loc_coord, 1, 2, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
+// next to you, not next to the sarcophagus's corner (that could put him inside or behind it)
+~barrows_spawn_brother($index, map_findsquare(coord, 1, 3, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
 
 // the corner room whose ladder is showing (2009scape TunnelEntranceDialogue)
 [proc,barrows_tunnel_entry]()(coord)
