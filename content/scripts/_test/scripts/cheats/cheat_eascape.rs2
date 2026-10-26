@@ -764,3 +764,73 @@ if (p_finduid(uid) = false) {
 }
 %wg_tokens = calc(%wg_tokens + $count);
 mes("<tostring($count)> tokens added to your Warriors' Guild ledger: claim them from the staff.");
+
+// ::farmingpack - Farming's tools and some of every seed patch's seeds and treatments.
+// ::farmgrow grows every planted patch to harvest now (no disease); ::farmtick <n> runs n
+// 5-minute growth ticks now (16 is 80 minutes: herbs from seed to grown, with disease chances).
+[debugproc,farmingpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 22) {
+    mes("::farmingpack needs 22 free inventory spaces.");
+    return;
+}
+inv_add(inv, rake, 1);
+inv_add(inv, dibber, 1);
+inv_add(inv, spade, 1);
+inv_add(inv, watering_can_8, 1);
+inv_add(inv, cert_bucket_compost, 10);
+inv_add(inv, cert_bucket_supercompost, 10);
+inv_add(inv, plant_cure, 3);
+inv_add(inv, potato_seed, 30);
+inv_add(inv, sweetcorn_seed, 30);
+inv_add(inv, watermelon_seed, 30);
+inv_add(inv, marigold_seed, 10);
+inv_add(inv, nasturtium_seed, 10);
+inv_add(inv, limpwurt_seed, 10);
+inv_add(inv, guam_seed, 10);
+inv_add(inv, ranarr_seed, 10);
+inv_add(inv, torstol_seed, 10);
+inv_add(inv, barley_seed, 20);
+inv_add(inv, hammerstone_hop_seed, 20);
+inv_add(inv, wildblood_hop_seed, 20);
+inv_add(inv, jute_seed, 20);
+inv_add(inv, scarecrow_complete, 1);
+mes("Farming pack: tools, seeds, compost (noted: unnote at a bank) and plant cures.");
+
+[debugproc,farmgrow]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $patch = 1;
+def_int $grown = 0;
+while ($patch <= ~farming_patch_count) {
+    def_int $key = ~farming_state($patch);
+    if ($key >= 1000 & calc($key / 1000) ! ^farming_crop_herb_dead & calc(($key / 100) % 10) < 4) {
+        def_int $crop = calc($key / 1000);
+        def_int $stage = calc($key % 100);
+        while (~farming_harvestable($patch, ~farming_state($patch)) = false & $stage < 20) {
+            if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
+                def_boolean $ok = ~farming_set_state($patch, $crop, 5, 1);
+            }
+            $stage = calc($stage + 1);
+        }
+        $grown = calc($grown + 1);
+    }
+    $patch = calc($patch + 1);
+}
+mes("<tostring($grown)> patches grown.");
+
+[debugproc,farmtick](int $count)
+if (p_finduid(uid) = false) {
+    return;
+}
+if ($count < 1) $count = 1;
+if ($count > 128) $count = 128;
+def_int $i = 1;
+while ($i <= $count) {
+    ~farming_grow(calc($i * 5));
+    $i = calc($i + 1);
+}
+mes("<tostring($count)> growth ticks run.");

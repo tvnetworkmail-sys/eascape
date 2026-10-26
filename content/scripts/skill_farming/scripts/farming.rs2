@@ -1,0 +1,524 @@
+// EASCape: Farming, step 1: allotments, flower, herb and hops patches. Ported from Void
+// (content/skill/farming: Farming, FarmingPatchTreat, FarmingPatchPlant, FarmingPatchPick,
+// FarmingPatchCure, FarmingPatchClear, FarmingPatchInspect). Growth in real time, offline too:
+// a growth tick every 5 minutes of the clock (shifted by your own 0-29 minute offset, which stays
+// with you), flowers every tick, allotments and hops every 2nd, herbs every 4th - 5, 10 and 20
+// minute stages, which with the stage counts give the wiki's times (Seeds: potato 4x10 minutes,
+// watermelon 8x10, marigold 4x5, guam 4x20, wildblood 8x10 ...). Weeds grow back on an empty
+// patch on the same ticks. Patch states are the cache's own varbit values, read through
+// farming_states.enum (crop * 1000 + kind * 100 + stage; kinds: 0 weeds, 1 growing, 2 watered,
+// 3 diseased, 4 dead, 5 harvestable).
+
+// ================================================================ state helpers
+[proc,farming_decode](int $type, int $value)(int)
+switch_int ($type) {
+    case 1 : return(enum(int, int, farming_allotment_decode, $value));
+    case 2 : return(enum(int, int, farming_flower_decode, $value));
+    case 3 : return(enum(int, int, farming_herb_decode, $value));
+}
+return(enum(int, int, farming_hops_decode, $value));
+
+[proc,farming_encode](int $type, int $key)(int)
+switch_int ($type) {
+    case 1 : return(enum(int, int, farming_allotment_encode, $key));
+    case 2 : return(enum(int, int, farming_flower_encode, $key));
+    case 3 : return(enum(int, int, farming_herb_encode, $key));
+}
+return(enum(int, int, farming_hops_encode, $key));
+
+[proc,farming_key](int $crop, int $kind, int $stage)(int)
+return(calc($crop * 1000 + $kind * 100 + $stage));
+
+// the patch's state, -1 when its value isn't one we know
+[proc,farming_state](int $patch)(int)
+return(~farming_decode(~farming_patch_type($patch), ~farming_patch_get($patch)));
+
+// set the patch to (crop, kind, stage); false (and nothing changes) when that isn't a state
+[proc,farming_set_state](int $patch, int $crop, int $kind, int $stage)(boolean)
+def_int $value = ~farming_encode(~farming_patch_type($patch), ~farming_key($crop, $kind, $stage));
+if ($value = -1) {
+    return(false);
+}
+~farming_patch_set($patch, $value);
+return(true);
+
+[proc,farming_empty](int $patch)
+def_boolean $ok = ~farming_set_state($patch, 0, 0, 0);
+~farming_set_compost($patch, 0);
+
+// a crop at its last stage with no harvests after (flowers) or one on a harvest stage
+[proc,farming_harvestable](int $patch, int $key)(boolean)
+if ($key < 1000) {
+    return(false);
+}
+def_int $crop = calc($key / 1000);
+def_int $kind = calc(($key / 100) % 10);
+def_int $stage = calc($key % 100);
+if ($kind = 5) {
+    return(true);
+}
+if ($kind ! 1 | $stage = 0) {
+    return(false);
+}
+def_int $type = ~farming_patch_type($patch);
+if (~farming_encode($type, ~farming_key($crop, 1, calc($stage + 1))) ! -1) {
+    return(false);
+}
+if (~farming_encode($type, ~farming_key($crop, 5, 1)) ! -1) {
+    return(false);
+}
+return(true);
+
+[proc,farming_crop_row](int $crop)(dbrow)
+db_find(farming_crop:index, $crop);
+return(db_findnext);
+
+[proc,farming_patch_name](int $patch)(string)
+switch_int (~farming_patch_type($patch)) {
+    case 1 : return("allotment");
+    case 2 : return("flower patch");
+    case 3 : return("herb patch");
+}
+return("hops patch");
+
+// compost: 1 compost, 2 supercompost (two bits a patch over two varps)
+[proc,farming_compost](int $patch)(int)
+if ($patch <= 15) {
+    return(getbit_range(%farming_compost_a, calc(($patch - 1) * 2), calc(($patch - 1) * 2 + 1)));
+}
+return(getbit_range(%farming_compost_b, calc(($patch - 16) * 2), calc(($patch - 16) * 2 + 1)));
+
+[proc,farming_set_compost](int $patch, int $compost)
+if ($patch <= 15) {
+    %farming_compost_a = setbit_range_toint(%farming_compost_a, $compost, calc(($patch - 1) * 2), calc(($patch - 1) * 2 + 1));
+    return;
+}
+%farming_compost_b = setbit_range_toint(%farming_compost_b, $compost, calc(($patch - 16) * 2), calc(($patch - 16) * 2 + 1));
+
+// ================================================================ growing
+[proc,farming_login]
+if (%farming_offset = 0) {
+    %farming_offset = calc(random(30) + 1); // stored + 1: 0 means not chosen yet
+}
+~farming_catch_up;
+settimer(farming_tick, 100);
+
+[timer,farming_tick]
+~farming_catch_up;
+
+// every growth tick since we last looked: 640 minutes' worth at most (our crops, weeds and
+// diseases have all run their course by then; more would be too much for one script)
+[proc,farming_catch_up]
+def_int $now = date_minutes;
+def_int $from = calc(%farming_last + 1);
+if (%farming_last = 0 | calc($now - $from) > 640) {
+    $from = calc($now - 640);
+}
+if (%farming_last = 0) {
+    %farming_last = $now;
+    return;
+}
+def_int $offset = calc(%farming_offset - 1);
+def_int $m = $from;
+// the first minute on a 5-minute tick
+while (calc(($m - $offset) % 5) ! 0) {
+    $m = calc($m + 1);
+}
+while ($m <= $now) {
+    ~farming_grow(calc($m - $offset));
+    $m = calc($m + 5);
+}
+%farming_last = $now;
+
+[proc,farming_grow](int $minute)
+def_int $patch = 1;
+def_int $count = ~farming_patch_count;
+while ($patch <= $count) {
+    def_int $mult = 1;
+    switch_int (~farming_patch_type($patch)) {
+        case 1, 4 : $mult = 2;
+        case 3 : $mult = 4;
+    }
+    if (calc($minute % (5 * $mult)) = 0) {
+        ~farming_grow_patch($patch);
+    }
+    $patch = calc($patch + 1);
+}
+
+[proc,farming_grow_patch](int $patch)
+def_int $key = ~farming_state($patch);
+if ($key = -1) {
+    return;
+}
+def_int $crop = calc($key / 1000);
+def_int $kind = calc(($key / 100) % 10);
+def_int $stage = calc($key % 100);
+def_boolean $ok = false;
+if ($crop = 0) {
+    // weeds come back on an empty patch (Void: they stop at fully overgrown)
+    if ($stage < 3) {
+        $ok = ~farming_set_state($patch, 0, 0, calc($stage + 1));
+    }
+    return;
+}
+if ($crop = ^farming_crop_herb_dead | $kind = 4 | $kind = 5) {
+    return;
+}
+if ($kind = 3) {
+    // diseased: dead at the next tick
+    if (~farming_set_state($patch, $crop, 4, $stage) = false) {
+        $ok = ~farming_set_state($patch, ^farming_crop_herb_dead, 4, $stage);
+    }
+    return;
+}
+if (~farming_harvestable($patch, $key) = true) {
+    return; // grown crops don't get diseased (wiki)
+}
+if (~farming_disease($patch, $crop, $kind, $stage) = true) {
+    if (~farming_set_state($patch, $crop, 3, $stage) = true) {
+        return;
+    }
+}
+if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
+    $ok = ~farming_set_state($patch, $crop, 5, 1);
+}
+
+// Void's chance: a roll of 128 at or under the crop's chance, halved with compost and a fifth
+// with supercompost; never when just planted or watered, and the flowers that guard an allotment
+// (marigolds: potatoes, onions, tomatoes; rosemary: cabbages; nasturtiums: watermelons; a
+// scarecrow: sweetcorn) keep it off
+[proc,farming_disease](int $patch, int $crop, int $kind, int $stage)(boolean)
+if ($stage = 0 | $kind = 2) {
+    return(false);
+}
+if (~farming_patch_type($patch) = 1) {
+    def_int $flower = calc(~farming_state(calc(9 + ($patch - 1) / 2)) / 1000);
+    if ($flower > 0) {
+        if ($crop = ^farming_crop_sweetcorn & $flower = ^farming_crop_scarecrow) return(false);
+        if (($crop = ^farming_crop_potato | $crop = ^farming_crop_onion | $crop = ^farming_crop_tomato) & $flower = ^farming_crop_marigold) return(false);
+        if ($crop = ^farming_crop_cabbage & $flower = ^farming_crop_rosemary) return(false);
+        if ($crop = ^farming_crop_watermelon & $flower = ^farming_crop_nasturtium) return(false);
+    }
+}
+def_dbrow $row = ~farming_crop_row($crop);
+if ($row = null) {
+    return(false);
+}
+def_int $chance = db_getfield($row, farming_crop:disease, 0);
+if ($chance = 0) {
+    return(false);
+}
+switch_int (~farming_compost($patch)) {
+    case 1 : $chance = calc($chance / 2);
+    case 2 : $chance = calc($chance / 5);
+}
+if (random(128) <= $chance) {
+    return(true);
+}
+return(false);
+
+// ================================================================ using things on a patch
+[proc,farming_use](int $patch)
+switch_obj (last_useitem) {
+    case rake : ~farming_rake($patch); return;
+    case bucket_compost : ~farming_treat($patch, 1); return;
+    case bucket_supercompost : ~farming_treat($patch, 2); return;
+    case plant_cure : ~farming_cure($patch); return;
+    case spade : ~farming_spade($patch); return;
+    case watering_can_1, watering_can_2, watering_can_3, watering_can_4, watering_can_5, watering_can_6, watering_can_7, watering_can_8 :
+        ~farming_water($patch);
+        return;
+    case watering_can_0 :
+        mes("You need to fill the watering can first."); // our wording
+        return;
+}
+db_find(farming_crop:seed, last_useitem);
+def_dbrow $row = db_findnext;
+if ($row = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~farming_plant($patch, $row);
+
+[proc,farming_rake](int $patch)
+if (inv_total(inv, rake) = 0) {
+    mes("You need a rake to weed a farming patch.");
+    return;
+}
+def_int $key = ~farming_state($patch);
+if ($key < 1 | $key > 3) {
+    mes("This <~farming_patch_name($patch)> doesn't need weeding right now.");
+    return;
+}
+while ($key >= 1 & $key <= 3) {
+    anim(farming_raking, 0);
+    p_delay(2);
+    if (stat_random(farming, 180, 255) = true) {
+        def_boolean $ok = ~farming_set_state($patch, 0, 0, calc($key - 1));
+        if (inv_freespace(inv) > 0 | inv_total(inv, weeds) > 0) {
+            inv_add(inv, weeds, 1);
+        } else {
+            obj_add(coord, weeds, 1, ^lootdrop_duration);
+        }
+        stat_advance(farming, 80);
+    }
+    $key = ~farming_state($patch);
+}
+anim(null, 0);
+
+[proc,farming_plant](int $patch, dbrow $row)
+def_obj $seed = db_getfield($row, farming_crop:seed, 0);
+def_int $amount = db_getfield($row, farming_crop:seeds, 0);
+def_string $seeds = lowercase(oc_name($seed));
+if ($amount > 1) $seeds = "<$seeds>s";
+def_string $patchname = ~farming_patch_name($patch);
+if (db_getfield($row, farming_crop:patchtype, 0) ! ~farming_patch_type($patch)) {
+    if (~farming_patch_type($patch) = 1) {
+        ~mesbox("You can only plant <$seeds> in an <$patchname>.");
+    } else {
+        ~mesbox("You can only plant <$seeds> in a <$patchname>.");
+    }
+    return;
+}
+if (~farming_state($patch) ! 0) {
+    ~mesbox("You can only plant <$seeds> in an empty patch.");
+    return;
+}
+if (inv_total(inv, dibber) = 0) {
+    mes("You need a seed dibber to plant the seed in the dirt.");
+    return;
+}
+def_int $level = db_getfield($row, farming_crop:level, 0);
+if (stat_base(farming) < $level) {
+    ~mesbox("You need to be a level <tostring($level)> to plant that.");
+    return;
+}
+if (inv_total(inv, $seed) < $amount) {
+    mes("You need <tostring($amount)> <$seeds> to grow those.");
+    return;
+}
+inv_del(inv, $seed, $amount);
+anim(farming_seed_dibbing, 0);
+p_delay(2);
+if ($amount = 1) {
+    mes("You plant a <lowercase(oc_name($seed))> in the <$patchname>.");
+} else {
+    mes("You plant <tostring($amount)> <$seeds> in the <$patchname>.");
+}
+def_boolean $ok = ~farming_set_state($patch, db_getfield($row, farming_crop:index, 0), 1, 0);
+stat_advance(farming, db_getfield($row, farming_crop:plantxp, 0));
+
+[proc,farming_water](int $patch)
+def_int $type = ~farming_patch_type($patch);
+def_int $key = ~farming_state($patch);
+if ($type = 3 | $key < 1000 | calc(($key / 100) % 10) ! 1 | ~farming_harvestable($patch, $key) = true) {
+    mes("This patch doesn't need watering.");
+    return;
+}
+def_int $crop = calc($key / 1000);
+def_int $stage = calc($key % 100);
+if (~farming_encode($type, ~farming_key($crop, 2, $stage)) = -1) {
+    mes("This patch doesn't need watering.");
+    return;
+}
+def_obj $can = last_useitem;
+anim(farming_watering, 0);
+p_delay(2);
+if (inv_total(inv, $can) = 0) {
+    return;
+}
+inv_del(inv, $can, 1);
+inv_add(inv, ~farming_can_less($can), 1);
+def_boolean $ok = ~farming_set_state($patch, $crop, 2, $stage);
+
+[proc,farming_can_less](obj $can)(namedobj)
+switch_obj ($can) {
+    case watering_can_8 : return(watering_can_7);
+    case watering_can_7 : return(watering_can_6);
+    case watering_can_6 : return(watering_can_5);
+    case watering_can_5 : return(watering_can_4);
+    case watering_can_4 : return(watering_can_3);
+    case watering_can_3 : return(watering_can_2);
+    case watering_can_2 : return(watering_can_1);
+}
+return(watering_can_0);
+
+// compost (18 XP) or supercompost (26 XP: the wiki; Void has 36)
+[proc,farming_treat](int $patch, int $compost)
+def_int $key = ~farming_state($patch);
+if (~farming_harvestable($patch, $key) = true) {
+    mes("Composting it isn't going to make it get any bigger.");
+    return;
+}
+def_namedobj $bucket = bucket_compost;
+def_string $name = "compost";
+def_int $xp = 180;
+if ($compost = 2) {
+    $bucket = bucket_supercompost;
+    $name = "supercompost";
+    $xp = 260;
+}
+if (~farming_compost($patch) > 0) {
+    mes("This <~farming_patch_name($patch)> has already been treated with <$name>.");
+    return;
+}
+anim(farming_pour_water, 0);
+p_delay(1);
+if (inv_total(inv, $bucket) = 0) {
+    return;
+}
+inv_del(inv, $bucket, 1);
+inv_add(inv, bucket_empty, 1);
+~farming_set_compost($patch, $compost);
+mes("You treat the <~farming_patch_name($patch)> with <$name>.");
+stat_advance(farming, $xp);
+
+[proc,farming_cure](int $patch)
+def_int $key = ~farming_state($patch);
+if ($key < 1000 | calc(($key / 100) % 10) ! 3) {
+    mes("This patch doesn't need curing.");
+    return;
+}
+mes("You treat the <~farming_patch_name($patch)> with the plant cure.");
+anim(farming_plant_cure, 0);
+p_delay(1);
+if (inv_total(inv, plant_cure) = 0) {
+    return;
+}
+inv_del(inv, plant_cure, 1);
+inv_add(inv, vial_empty, 1);
+mes("It is restored to health.");
+def_boolean $ok = ~farming_set_state($patch, calc($key / 1000), 1, calc($key % 100));
+
+// the spade: harvest a grown crop, dig out a dead one
+[proc,farming_spade](int $patch)
+def_int $key = ~farming_state($patch);
+if (~farming_harvestable($patch, $key) = true) {
+    ~farming_harvest($patch);
+    return;
+}
+if ($key >= 1000 & (calc(($key / 100) % 10) = 4 | calc($key / 1000) = ^farming_crop_herb_dead)) {
+    ~farming_clear($patch);
+    return;
+}
+~displaymessage(^dm_default);
+
+// Void: tries until it works, the chance up to certain at Farming 60
+[proc,farming_clear](int $patch)
+if (inv_total(inv, spade) = 0) {
+    mes("You need a spade to clear a farming patch.");
+    return;
+}
+mes("You start digging the farming patch...");
+def_int $tries = 0;
+while ($tries < 100) {
+    $tries = calc($tries + 1);
+    anim(human_dig, 0);
+    p_delay(1);
+    if (stat_random(farming, 1, 418) = true) {
+        mes("You have successfully cleared this patch for new crops.");
+        ~farming_empty($patch);
+        anim(null, 0);
+        return;
+    }
+}
+
+// ================================================================ the patch's options
+[proc,farming_op1](int $patch)
+def_int $key = ~farming_state($patch);
+if (~farming_harvestable($patch, $key) = true) {
+    ~farming_harvest($patch);
+    return;
+}
+~displaymessage(^dm_default);
+
+// Void FarmingPatchPick: a harvest a turn until it's empty or your pack is full; each harvest
+// may keep the crop going (its chance from 1 to 99 Farming), else compost spends itself (super
+// to normal, normal to none), else a harvest stage goes
+[proc,farming_harvest](int $patch)
+def_int $key = ~farming_state($patch);
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+if ($row = null) {
+    return;
+}
+if (db_getfieldcount($row, farming_crop:produce) = 0) {
+    return; // a scarecrow: nothing to take
+}
+if (inv_total(inv, spade) = 0) {
+    mes("You need a spade to harvest your crops.");
+    return;
+}
+def_namedobj $produce = db_getfield($row, farming_crop:produce, 0);
+def_int $low;
+def_int $high;
+$low, $high = db_getfield($row, farming_crop:chance, 0);
+mes("You begin to harvest the <~farming_patch_name($patch)>.");
+while (~farming_harvestable($patch, ~farming_state($patch)) = true) {
+    if (inv_freespace(inv) = 0 & (oc_stackable($produce) = false | inv_total(inv, $produce) = 0)) {
+        mes("You have run out of inventory space.");
+        anim(null, 0);
+        return;
+    }
+    anim(human_dig, 0);
+    p_delay(1);
+    inv_add(inv, $produce, 1);
+    stat_advance(farming, db_getfield($row, farming_crop:harvestxp, 0));
+    if ($high = 0 | stat_random(farming, $low, $high) = false) {
+        $key = ~farming_state($patch);
+        def_int $compost = ~farming_compost($patch);
+        if ($compost = 2) {
+            ~farming_set_compost($patch, 1);
+        } else if ($compost = 1) {
+            ~farming_set_compost($patch, 0);
+        } else if (calc(($key / 100) % 10) ! 5 | ~farming_set_state($patch, calc($key / 1000), 5, calc($key % 100 + 1)) = false) {
+            mes("The <~farming_patch_name($patch)> is now empty.");
+            ~farming_empty($patch);
+            anim(null, 0);
+            return;
+        }
+    }
+}
+anim(null, 0);
+
+[proc,farming_inspect](int $patch)
+def_string $name = ~farming_patch_name($patch);
+def_string $text = "This is a <$name>.";
+if (~farming_patch_type($patch) = 1) $text = "This is an <$name>.";
+switch_int (~farming_compost($patch)) {
+    case 1 : $text = "<$text> The soil has been treated with compost.";
+    case 2 : $text = "<$text> The soil has been treated with supercompost.";
+    case default : $text = "<$text> The soil has not been treated.";
+}
+def_int $key = ~farming_state($patch);
+if ($key = 0) {
+    mes("<$text> The patch is empty.");
+    return;
+}
+if ($key >= 0 & $key < 1000) {
+    mes("<$text> The patch needs weeding.");
+    return;
+}
+def_int $kind = calc(($key / 100) % 10);
+if ($kind = 4 | calc($key / 1000) = ^farming_crop_herb_dead) {
+    mes("<$text> The patch has become infected by disease and has died.");
+    return;
+}
+if ($kind = 3) {
+    mes("<$text> The patch has become infected by disease.");
+    return;
+}
+if (~farming_harvestable($patch, $key) = true) {
+    mes("<$text> The patch is fully grown.");
+    return;
+}
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+def_string $crop = "something";
+def_int $stages = 1;
+if ($row ! null) {
+    $crop = db_getfield($row, farming_crop:name, 0);
+    $stages = calc(db_getfield($row, farming_crop:stages, 0) + 1);
+}
+mes("<$text> The patch has <$crop> growing in it and is at state <tostring(calc($key % 100 + 1))>/<tostring($stages)>.");
+
+[proc,farming_guide]
+mes("The Farming guide isn't in the game yet."); // our wording: the skill guide has no Farming page
