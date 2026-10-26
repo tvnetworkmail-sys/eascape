@@ -110,12 +110,14 @@
   ll.registerPlugin('dialoguekeys', {
     configure(config) {
       cfg = config || {};
+      ll.dialogueFeedback = cfg.highlightChoice !== false;
       if (!cfg.showNumbers || !cfg.numberOptions) removeNumbers();
     },
     frame,
     key,
     stop() {
       removeNumbers();
+      ll.dialogueFeedback = false;
       cfg = {};
     },
   });

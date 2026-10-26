@@ -1869,6 +1869,9 @@
 
     hideRoofs: false,
 
+    // Dialogue Keys: keep a chosen dialogue option lit until the server answers (the client reads it)
+    dialogueFeedback: false,
+
     // ---- status orbs: the game's own buttons, pressed the way a click on them would
     // (revision 274 interface ids from Lost City's content: controls tab Walk 151 / Run 152,
     // and the special attack bar of each weapon's combat tab).

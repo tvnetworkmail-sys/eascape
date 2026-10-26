@@ -475,6 +475,7 @@ export class Client extends GameShell {
     private mainOverlayId: number = -1;
     private lastOverComId: number = 0;
     private overChatComId: number = 0;
+    private chosenChatComId: number = -1; // LostLite: the dialogue option just chosen (lit until the server answers)
     private overMainComId: number = 0;
     private overSideComId: number = 0;
     private activeIcon: number = 3;
@@ -1896,6 +1897,7 @@ export class Client extends GameShell {
                 this.sideModalId = -1;
                 this.mainOverlayId = -1;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
                 this.activeIcon = 3;
                 this.dialogInputOpen = false;
                 this.isMenuOpen = false;
@@ -6040,6 +6042,7 @@ export class Client extends GameShell {
                 this.redrawChat = true;
                 this.mainModalId = -1;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
 
                 this.ptype = -1;
                 return true;
@@ -6065,6 +6068,7 @@ export class Client extends GameShell {
                 this.redrawSide = true;
                 this.redrawIcons = true;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
 
                 this.ptype = -1;
                 return true;
@@ -6090,6 +6094,7 @@ export class Client extends GameShell {
 
                 this.mainModalId = -1;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
 
                 this.ptype = -1;
                 return true;
@@ -6133,6 +6138,7 @@ export class Client extends GameShell {
 
                 this.mainModalId = comId;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
 
                 this.ptype = -1;
                 return true;
@@ -6158,6 +6164,7 @@ export class Client extends GameShell {
                 this.redrawIcons = true;
                 this.mainModalId = -1;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
 
                 this.ptype = -1;
                 return true;
@@ -6196,6 +6203,7 @@ export class Client extends GameShell {
                 this.fullscreenOverlayId = overlayId;
                 this.dialogInputOpen = false;
                 this.resumedPauseButton = false;
+                this.chosenChatComId = -1; // LostLite: dialogue option feedback
                 this.redrawSide = true;
                 this.redrawChat = true;
 
@@ -9367,6 +9375,12 @@ export class Client extends GameShell {
                 this.out.p1Enc(ClientProt.IF_BUTTON);
                 this.out.p2(c);
             }
+
+            // LostLite: the app's Dialogue Keys plugin keeps a chosen option lit, by click or key
+            if (this.chatModalId !== -1 && lostlite()?.dialogueFeedback) {
+                this.chosenChatComId = c;
+                this.redrawChat = true;
+            }
         }
 
         if (action === MiniMenuAction.TOGGLE_BUTTON) {
@@ -10361,6 +10375,10 @@ export class Client extends GameShell {
                     }
                 }
 
+                if (child.id === this.chosenChatComId && this.chatModalId !== -1 && lostlite()?.dialogueFeedback) {
+                    colour = child.colourOver !== 0 ? child.colourOver : 0x00c000; // LostLite: lit like a hovered option
+                }
+
                 if (child.buttonType === ButtonType.BUTTON_CONTINUE && this.resumedPauseButton) {
                     text = 'Please wait...';
                     colour = child.colour;
@@ -11257,6 +11275,7 @@ export class Client extends GameShell {
             this.sideModalId = -1;
             this.redrawSide = true;
             this.resumedPauseButton = false;
+            this.chosenChatComId = -1; // LostLite: dialogue option feedback
             this.redrawIcons = true;
         }
 
@@ -11264,6 +11283,7 @@ export class Client extends GameShell {
             this.chatModalId = -1;
             this.redrawChat = true;
             this.resumedPauseButton = false;
+            this.chosenChatComId = -1; // LostLite: dialogue option feedback
         }
 
         this.mainModalId = -1;
