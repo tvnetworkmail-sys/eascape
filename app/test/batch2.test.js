@@ -465,12 +465,34 @@ console.log('chat notifications: ok');
   fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0 } }));
   const r = reps[reps.length - 1];
   const pot = r.patches[0];
-  assert.strictEqual(pot.crop, 'potato');
-  assert.strictEqual(pot.status, 'growing');
-  // potatoes: 4 growth ticks of 10 minutes (wiki: 40 minutes)
-  assert.strictEqual(pot.total, 40 * 60000);
-  assert.strictEqual(r.patches[1].status, 'weeds');
-  assert.ok(store.saves && store.saves.tester, 'saved per account');
+  assert.strictEqual(pot.title, 'Falador (North West)');
+  assert.strictEqual(pot.prediction.produce, 'Potato');
+  assert.strictEqual(pot.prediction.cropState, 'GROWING');
+  assert.strictEqual(pot.prediction.item, D.crops[1].item);
+  // RuneLite's stages for potatoes: 4 growing + harvestable = 5; done 4 growth ticks of 10 minutes on (wiki: 40 minutes)
+  assert.strictEqual(pot.prediction.stages, 5);
+  const left = pot.prediction.doneEstimate - Date.now();
+  assert.ok(left > 39 * 60000 && left <= 40 * 60000, `40 minutes, got ${left}`);
+  assert.strictEqual(r.patches[1].prediction.produce, 'Weeds');
+  assert.strictEqual(r.timeFormatMode, 'ABSOLUTE_24H');
+  // the page is asked for the tab, crop and weeds icons; an icon it posts back is kept
+  const sent = [];
+  const fp2 = farming({ sendToGame: (m) => sent.push(m), config: () => undefined, state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
+  fp2.start();
+  assert.ok(sent[0].config.wantIcons.includes(D.weeds) && sent[0].config.wantIcons.includes(D.types[3].icon));
+  fl[fl.length - 1]('farming-icon', { id: D.weeds, url: 'data:x' });
+  assert.strictEqual(reps[reps.length - 1].icons[D.weeds], 'data:x');
+  fp2.stop();
+  // the bell: per patch, saved with the account
+  let cmd = null;
+  const fp3 = farming({ sendToGame: () => {}, config: (k) => (k === 'command' ? cmd : undefined), state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
+  fp3.start();
+  fl[fl.length - 1]('player', { name: 'Tester' });
+  cmd = { action: 'notify', index: 3, on: true };
+  fp3.configChanged('command');
+  assert.strictEqual(reps[reps.length - 1].patches[2].notify, true);
+  assert.strictEqual(store.saves.tester.notify[3], true);
+  fp3.stop();
   fp.stop();
   console.log('farming tracker: ok');
 }
