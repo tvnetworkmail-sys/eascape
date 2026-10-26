@@ -196,7 +196,7 @@ def make_obj(oid):
     for key in ('manwear2', 'womanwear2', 'manwear3', 'womanwear3', 'manhead', 'womanhead', 'manhead2', 'womanhead2'):
         if key in o: lines.append(f'{key}={model(o[key], "obj")}')
     lines += recol_lines(o['recol'])
-    for slot, cnt, cid in o.get('countobj', []):
+    for slot, cid, cnt in o.get('countobj', []):  # (slot, obj, count) as defs451 decodes it
         lines.append(f'count{slot}={obj_ref(cid)},{cnt}')
     if o['retex'] or o['unknown']: raise SystemExit(f'obj {oid} unhandled {o}')
     obj_out.append('\n'.join(lines))
