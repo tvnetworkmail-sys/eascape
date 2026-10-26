@@ -1,0 +1,270 @@
+// EASCape: Quest Helper for The Golem, converted from RuneLite's Quest Helper (thegolem, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   eq not carried over
+//   ge not carried over
+
+[proc,questhelper_golem]()(int)
+def_int $v = %golem_a;
+if ($v > 7) {
+    return(0); // done
+}
+if ($v >= 7) {
+    if (~qh_golem_c3 = true) {
+        return(34);
+    }
+    if (~qh_golem_c5 = true) {
+        return(33);
+    }
+    if (~qh_golem_c7 = true) {
+        return(32);
+    }
+    if (~qh_golem_c10 = true) {
+        return(31);
+    }
+    if (~qh_golem_c11 = true) {
+        return(30);
+    }
+    if (~qh_golem_c13 = true) {
+        return(29);
+    }
+    if (~qh_golem_c15 = true) {
+        return(27);
+    }
+    if (~qh_golem_c16 = true) {
+        return(9);
+    }
+    if (~qh_golem_c4 = true) {
+        return(28);
+    }
+    if (~qh_golem_c17 = true) {
+        return(25);
+    }
+    return(18);
+}
+if ($v >= 6) {
+    if (~qh_golem_c15 = true) {
+        return(27);
+    }
+    if (~qh_golem_c14 = true) {
+        return(9);
+    }
+    if (~qh_golem_c17 = true) {
+        return(25);
+    }
+    return(26);
+}
+if ($v >= 5) {
+    if (~qh_golem_c15 = true) {
+        return(24);
+    }
+    if (~qh_golem_c14 = true) {
+        return(9);
+    }
+    return(18);
+}
+if ($v >= 4) {
+    if (~qh_golem_c21 = true) {
+        return(20);
+    }
+    if (~qh_golem_c22 = true) {
+        return(21);
+    }
+    if (~qh_golem_c23 = true) {
+        return(22);
+    }
+    if (~qh_golem_c14 = true) {
+        return(23);
+    }
+    return(17);
+}
+if ($v >= 3) {
+    if (~qh_golem_c27 = true) {
+        return(19);
+    }
+    if (~qh_golem_c26 = true) {
+        return(17);
+    }
+    if (~qh_golem_c30 = true) {
+        return(16);
+    }
+    if (~qh_golem_c28 = true) {
+        return(15);
+    }
+    return(14);
+}
+if ($v >= 2) {
+    if (~qh_golem_c33 = true) {
+        return(12);
+    }
+    if (~qh_golem_c15 = true) {
+        return(10);
+    }
+    if (~qh_golem_c14 = true) {
+        return(9);
+    }
+    if (~qh_golem_c34 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_golem_c1]()(boolean)
+if (%golem_head_open = 1) return(true);
+return(false);
+
+[proc,qh_golem_c2]()(boolean)
+if (calc(inv_total(inv, golem_program) + inv_total(worn, golem_program)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c3]()(boolean)
+if (~qh_golem_c1 = false) return(false);
+if (~qh_golem_c2 = false) return(false);
+return(true);
+
+[proc,qh_golem_c4]()(boolean)
+if (calc(inv_total(inv, golem_golemkey) + inv_total(worn, golem_golemkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c5]()(boolean)
+if (~qh_golem_c4 = false) return(false);
+if (~qh_golem_c2 = false) return(false);
+return(true);
+
+[proc,qh_golem_c6]()(boolean)
+if (calc(inv_total(inv, golem_pen) + inv_total(worn, golem_pen)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c7]()(boolean)
+if (~qh_golem_c4 = false) return(false);
+if (~qh_golem_c6 = false) return(false);
+return(true);
+
+[proc,qh_golem_c8]()(boolean)
+if (calc(inv_total(inv, golem_phoenixfeather) + inv_total(worn, golem_phoenixfeather)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c9]()(boolean)
+if (calc(inv_total(inv, golem_ink) + inv_total(worn, golem_ink)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c10]()(boolean)
+if (~qh_golem_c4 = false) return(false);
+if (~qh_golem_c8 = false) return(false);
+if (~qh_golem_c9 = false) return(false);
+return(true);
+
+[proc,qh_golem_c11]()(boolean)
+if (~qh_golem_c4 = false) return(false);
+if (~qh_golem_c9 = false) return(false);
+return(true);
+
+[proc,qh_golem_c12]()(boolean)
+if (calc(inv_total(inv, golem_mushroom) + inv_total(worn, golem_mushroom)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c13]()(boolean)
+if (~qh_golem_c4 = false) return(false);
+if (~qh_golem_c12 = false) return(false);
+return(true);
+
+[proc,qh_golem_c14]()(boolean)
+if (inzone(0_42_76_18_17, 0_42_76_50_54, coord) = true) return(true);
+return(false);
+
+[proc,qh_golem_c15]()(boolean)
+if (~qh_golem_c14 = false) return(false);
+if (~qh_golem_c4 = false) return(false);
+return(true);
+
+[proc,qh_golem_c16]()(boolean)
+if (~qh_golem_c14 = false) return(false);
+return(true);
+
+[proc,qh_golem_c17]()(boolean)
+if (inzone(2_42_76_21_15, 2_42_76_43_55, coord) = true) return(true);
+return(false);
+
+[proc,qh_golem_c18]()(boolean)
+if (%golem_statuettestatusd = 2) return(true);
+return(false);
+
+[proc,qh_golem_c19]()(boolean)
+if (%golem_statuettestatusc = 0) return(true);
+return(false);
+
+[proc,qh_golem_c20]()(boolean)
+if (%golem_statuettestatusb = 1) return(true);
+return(false);
+
+[proc,qh_golem_c21]()(boolean)
+if (~qh_golem_c18 = false) return(false);
+if (~qh_golem_c19 = false) return(false);
+if (~qh_golem_c20 = false) return(false);
+if (~qh_golem_c14 = false) return(false);
+return(true);
+
+[proc,qh_golem_c22]()(boolean)
+if (~qh_golem_c18 = false) return(false);
+if (~qh_golem_c19 = false) return(false);
+if (~qh_golem_c14 = false) return(false);
+return(true);
+
+[proc,qh_golem_c23]()(boolean)
+if (~qh_golem_c18 = false) return(false);
+if (~qh_golem_c14 = false) return(false);
+return(true);
+
+[proc,qh_golem_c24]()(boolean)
+if (%golem_retrieved_statuette = 1) return(true);
+return(false);
+
+[proc,qh_golem_c25]()(boolean)
+if (calc(inv_total(inv, golem_statuette) + inv_total(worn, golem_statuette)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c26]()(boolean)
+if (~qh_golem_c24 = true) return(true);
+if (~qh_golem_c25 = true) return(true);
+return(false);
+
+[proc,qh_golem_c27]()(boolean)
+if (~qh_golem_c26 = false) return(false);
+if (~qh_golem_c14 = false) return(false);
+return(true);
+
+[proc,qh_golem_c28]()(boolean)
+if (calc(inv_total(inv, golem_statuettekey) + inv_total(worn, golem_statuettekey)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c29]()(boolean)
+if (inzone(1_50_53_49_48, 1_51_54_5_1, coord) = true) return(true);
+return(false);
+
+[proc,qh_golem_c30]()(boolean)
+if (~qh_golem_c28 = false) return(false);
+if (~qh_golem_c29 = false) return(false);
+return(true);
+
+[proc,qh_golem_c31]()(boolean)
+if (%golem_seen_underground = 1) return(true);
+return(false);
+
+[proc,qh_golem_c32]()(boolean)
+if (calc(inv_total(inv, golem_notes) + inv_total(worn, golem_notes)) >= 1) return(true);
+return(false);
+
+[proc,qh_golem_c33]()(boolean)
+if (~qh_golem_c32 = false) return(false);
+if (~qh_golem_c31 = false) return(false);
+return(true);
+
+[proc,qh_golem_c34]()(boolean)
+if (calc(inv_total(inv, golem_letter) + inv_total(worn, golem_letter)) >= 1) return(true);
+return(false);

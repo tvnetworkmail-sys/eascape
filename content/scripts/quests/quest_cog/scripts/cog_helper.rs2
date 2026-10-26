@@ -1,0 +1,98 @@
+// EASCape: Quest Helper for Clock Tower, converted from RuneLite's Quest Helper (clocktower, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ChatMessageRequirement not carried over
+//   VarplayerRequirement ('call', ('field', ('name', 'QuestVarPlayer'), 'QUEST_CLOCK_TOWER'), 'getId', []) not in our game
+//   WidgetTextRequirement not carried over
+//   field not carried over
+
+[proc,questhelper_cog]()(int)
+def_int $v = %cogquest;
+if ($v > 7) {
+    return(0); // done
+}
+if ($v >= 7) {
+    if (~qh_cog_c3 = true) {
+        return(5);
+    }
+    if (~qh_cog_c4 = true) {
+        return(8);
+    }
+    if (~qh_cog_c5 = true) {
+        return(3);
+    }
+    if (~qh_cog_c6 = true) {
+        return(4);
+    }
+    return(-1); // ('new', 'DetailedQuestStep', [('name', 'this'), ('str', '')])
+}
+if ($v >= 6) {
+    if (~qh_cog_c3 = true) {
+        return(5);
+    }
+    if (~qh_cog_c4 = true) {
+        return(8);
+    }
+    if (~qh_cog_c5 = true) {
+        return(3);
+    }
+    if (~qh_cog_c6 = true) {
+        return(4);
+    }
+    return(-1); // ('new', 'DetailedQuestStep', [('name', 'this'), ('str', '')])
+}
+if ($v >= 5) {
+    if (~qh_cog_c3 = true) {
+        return(5);
+    }
+    if (~qh_cog_c4 = true) {
+        return(8);
+    }
+    if (~qh_cog_c5 = true) {
+        return(3);
+    }
+    if (~qh_cog_c6 = true) {
+        return(4);
+    }
+    return(-1); // ('new', 'DetailedQuestStep', [('name', 'this'), ('str', '')])
+}
+if ($v >= 4) {
+    return(2);
+}
+if ($v >= 3) {
+    return(2);
+}
+if ($v >= 2) {
+    return(2);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_cog_c1]()(boolean)
+if (inzone(0_40_150_54_25, 0_40_150_62_62, coord) = true | inzone(0_40_150_51_47, 0_40_150_53_61, coord) = true | inzone(0_40_150_36_0, 0_40_150_53_31, coord) = true | inzone(0_40_150_20_0, 0_149_150_59_3, coord) = true | inzone(0_40_150_20_0, 0_40_150_20_28, coord) = true | inzone(0_40_150_16_29, 0_40_150_20_31, coord) = true) return(true);
+return(false);
+
+[proc,qh_cog_c2]()(boolean)
+if (inzone(0_40_150_11_30, 0_40_150_15_33, coord) = true) return(true);
+return(false);
+
+[proc,qh_cog_c3]()(boolean)
+if (~qh_cog_c1 = true) return(true);
+if (~qh_cog_c2 = true) return(true);
+return(false);
+
+[proc,qh_cog_c4]()(boolean)
+if (inzone(0_31_149_16_37, 0_46_151_56_36, coord) = true) return(true);
+return(false);
+
+[proc,qh_cog_c5]()(boolean)
+if (inzone(2_40_50_3_39, 2_40_50_13_45, coord) = true) return(true);
+return(false);
+
+[proc,qh_cog_c6]()(boolean)
+if (inzone(1_40_50_3_39, 1_40_50_13_45, coord) = true) return(true);
+return(false);

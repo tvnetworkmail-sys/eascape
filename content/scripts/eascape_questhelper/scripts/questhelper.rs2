@@ -21,6 +21,66 @@ switch_int ($guide) {
     case ^qh_itexam : return(~questhelper_itexam);
     case ^qh_desertrescue : return(~questhelper_desertrescue);
     case ^qh_deserttreasure : return(~questhelper_deserttreasure);
+    case ^qh_arena : return(~questhelper_arena); // converted
+    case ^qh_arthur : return(~questhelper_arthur); // converted
+    case ^qh_ball : return(~questhelper_ball); // converted
+    case ^qh_biohazard : return(~questhelper_biohazard); // converted
+    case ^qh_blackarmgang : return(~questhelper_blackarmgang); // converted
+    case ^qh_chompybird : return(~questhelper_chompybird); // converted
+    case ^qh_cog : return(~questhelper_cog); // converted
+    case ^qh_crest : return(~questhelper_crest); // converted
+    case ^qh_death : return(~questhelper_death); // converted
+    case ^qh_doric : return(~questhelper_doric); // converted
+    case ^qh_dragon : return(~questhelper_dragon); // converted
+    case ^qh_druid : return(~questhelper_druid); // converted
+    case ^qh_druidspirit : return(~questhelper_druidspirit); // converted
+    case ^qh_drunkmonk : return(~questhelper_drunkmonk); // converted
+    case ^qh_eadgar : return(~questhelper_eadgar); // converted
+    case ^qh_elemental_workshop : return(~questhelper_elemental_workshop); // converted
+    case ^qh_elena : return(~questhelper_elena); // converted
+    case ^qh_fishingcompo : return(~questhelper_fishingcompo); // converted
+    case ^qh_fluffs : return(~questhelper_fluffs); // converted
+    case ^qh_fortress : return(~questhelper_fortress); // converted
+    case ^qh_golem : return(~questhelper_golem); // converted
+    case ^qh_grail : return(~questhelper_grail); // converted
+    case ^qh_grandtree : return(~questhelper_grandtree); // converted
+    case ^qh_haunted : return(~questhelper_haunted); // converted
+    case ^qh_hauntedmine : return(~questhelper_hauntedmine); // converted
+    case ^qh_hazeelcult : return(~questhelper_hazeelcult); // converted
+    case ^qh_hero : return(~questhelper_hero); // converted
+    case ^qh_hetty : return(~questhelper_hetty); // converted
+    case ^qh_horror : return(~questhelper_horror); // converted
+    case ^qh_hunt : return(~questhelper_hunt); // converted
+    case ^qh_imp : return(~questhelper_imp); // converted
+    case ^qh_itgronigen : return(~questhelper_itgronigen); // converted
+    case ^qh_itwatchtower : return(~questhelper_itwatchtower); // converted
+    case ^qh_junglepotion : return(~questhelper_junglepotion); // converted
+    case ^qh_legends : return(~questhelper_legends); // converted
+    case ^qh_mcannon : return(~questhelper_mcannon); // converted
+    case ^qh_misc : return(~questhelper_misc); // converted
+    case ^qh_mm : return(~questhelper_mm); // converted
+    case ^qh_mortton : return(~questhelper_mortton); // converted
+    case ^qh_murder : return(~questhelper_murder); // converted
+    case ^qh_priest : return(~questhelper_priest); // converted
+    case ^qh_prince : return(~questhelper_prince); // converted
+    case ^qh_regicide : return(~questhelper_regicide); // converted
+    case ^qh_romeojuliet : return(~questhelper_romeojuliet); // converted
+    case ^qh_routequest : return(~questhelper_routequest); // converted
+    case ^qh_runemysteries : return(~questhelper_runemysteries); // converted
+    case ^qh_scorpcatcher : return(~questhelper_scorpcatcher); // converted
+    case ^qh_seaslug : return(~questhelper_seaslug); // converted
+    case ^qh_sheep : return(~questhelper_sheep); // converted
+    case ^qh_sheepherder : return(~questhelper_sheepherder); // converted
+    case ^qh_squire : return(~questhelper_squire); // converted
+    case ^qh_tbwt : return(~questhelper_tbwt); // converted
+    case ^qh_totem : return(~questhelper_totem); // converted
+    case ^qh_tree : return(~questhelper_tree); // converted
+    case ^qh_troll_love : return(~questhelper_troll_love); // converted
+    case ^qh_upass : return(~questhelper_upass); // converted
+    case ^qh_vampire : return(~questhelper_vampire); // converted
+    case ^qh_viking : return(~questhelper_viking); // converted
+    case ^qh_zanaris : return(~questhelper_zanaris); // converted
+    case ^qh_zombiequeen : return(~questhelper_zombiequeen); // converted
 }
 return(0);
 
@@ -29,7 +89,7 @@ db_find(questhelper_guide:guide, $guide);
 return(db_findnext);
 
 [proc,questhelper_step_row](int $guide, int $step)(dbrow)
-db_find(questhelper_step:id, add(multiply($guide, 100), $step));
+db_find(questhelper_step:id, add(multiply($guide, 1000), $step)); // step ids: guide * 1000 + step
 return(db_findnext);
 
 [proc,questhelper_follow](int $guide)

@@ -1,0 +1,168 @@
+// EASCape: Quest Helper for Fight Arena, converted from RuneLite's Quest Helper (fightarena, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC LADY_SERVIL_VIS not matched
+//   NPC SAMMY_SERVIL_VIS_NOOP not matched
+//   NPC SHADOW_MAJ_KHAZARD not matched
+
+[proc,questhelper_arena]()(int)
+def_int $v = %arenaquest;
+if ($v > 14) {
+    return(0); // done
+}
+if ($v >= 14) {
+    if (~qh_arena_c1 = true) {
+        return(16);
+    }
+    return(17);
+}
+if ($v >= 13) {
+    if (~qh_arena_c1 = true) {
+        return(16);
+    }
+    return(17);
+}
+if ($v >= 12) {
+    if (~qh_arena_c1 = true) {
+        return(16);
+    }
+    return(17);
+}
+if ($v >= 11) {
+    if (~qh_arena_c1 = true) {
+        return(16);
+    }
+    return(17);
+}
+if ($v >= 10) {
+    if (~qh_arena_c3 = true) {
+        return(14);
+    }
+    return(15);
+}
+if ($v >= 9) {
+    if (~qh_arena_c4 = true) {
+        return(10);
+    }
+    if (~qh_arena_c6 = true) {
+        return(12);
+    }
+    return(13);
+}
+if ($v >= 8) {
+    return(11);
+}
+if ($v >= 7) {
+    return(11);
+}
+if ($v >= 6) {
+    if (~qh_arena_c8 = true) {
+        return(8);
+    }
+    return(9);
+}
+if ($v >= 5) {
+    if (~qh_arena_c13 = true) {
+        return(7);
+    }
+    if (~qh_arena_c11 = true) {
+        return(6);
+    }
+    return(2);
+}
+if ($v >= 4) {
+    if (~qh_arena_c13 = true) {
+        return(7);
+    }
+    if (~qh_arena_c11 = true) {
+        return(6);
+    }
+    return(2);
+}
+if ($v >= 3) {
+    if (~qh_arena_c15 = true) {
+        return(5);
+    }
+    if (~qh_arena_c11 = true) {
+        return(4);
+    }
+    return(2);
+}
+if ($v >= 2) {
+    if (~qh_arena_c11 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_arena_c1]()(boolean)
+if (inzone(0_40_49_23_16, 0_40_49_46_34, coord) = true) return(true);
+return(false);
+
+[proc,qh_arena_c2]()(boolean)
+if (npc_find(coord, arena_bouncer, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_arena_c3]()(boolean)
+if (~qh_arena_c1 = false) return(false);
+if (~qh_arena_c2 = false) return(false);
+return(true);
+
+[proc,qh_arena_c4]()(boolean)
+if (inzone(0_40_49_37_6, 0_40_49_41_8, coord) = true) return(true);
+return(false);
+
+[proc,qh_arena_c5]()(boolean)
+if (npc_find(coord, arena_scorpion, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_arena_c6]()(boolean)
+if (~qh_arena_c1 = false) return(false);
+if (~qh_arena_c5 = false) return(false);
+return(true);
+
+[proc,qh_arena_c7]()(boolean)
+if (npc_find(coord, arena_ogre, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_arena_c8]()(boolean)
+if (~qh_arena_c1 = false) return(false);
+if (~qh_arena_c7 = false) return(false);
+return(true);
+
+[proc,qh_arena_c9]()(boolean)
+if (calc(inv_total(inv, khazard_helmet) + inv_total(worn, khazard_helmet)) >= 1) return(true);
+return(false);
+
+[proc,qh_arena_c10]()(boolean)
+if (calc(inv_total(inv, khazard_platemail) + inv_total(worn, khazard_platemail)) >= 1) return(true);
+return(false);
+
+[proc,qh_arena_c11]()(boolean)
+if (~qh_arena_c9 = false) return(false);
+if (~qh_arena_c10 = false) return(false);
+return(true);
+
+[proc,qh_arena_c12]()(boolean)
+if (calc(inv_total(inv, khazard_cellkeys) + inv_total(worn, khazard_cellkeys)) >= 1) return(true);
+return(false);
+
+[proc,qh_arena_c13]()(boolean)
+if (~qh_arena_c11 = false) return(false);
+if (~qh_arena_c12 = false) return(false);
+return(true);
+
+[proc,qh_arena_c14]()(boolean)
+if (calc(inv_total(inv, khali_brew) + inv_total(worn, khali_brew)) >= 1) return(true);
+return(false);
+
+[proc,qh_arena_c15]()(boolean)
+if (~qh_arena_c11 = false) return(false);
+if (~qh_arena_c14 = false) return(false);
+return(true);

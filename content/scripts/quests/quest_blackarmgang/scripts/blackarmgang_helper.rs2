@@ -1,0 +1,188 @@
+// EASCape: Quest Helper for Shield of Arrav, converted from RuneLite's Quest Helper (shieldofarrav, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ItemOnTileRequirement not carried over
+//   NPC JONNY_THE_BEARD_2OP not matched
+//   NPC WEAPONSMASTER_VIS not matched
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'SHIELDOFARRAV') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'SOA_CHARLIE_MET') not in our game
+//   item ('field', ('name', 'ItemID'), 'ARRAVCERTIFICATE_LFT') not in our game
+//   item ('field', ('name', 'ItemID'), 'ARRAVCERTIFICATE_RHT') not in our game
+
+[proc,questhelper_blackarmgang]()(int)
+def_int $v = %phoenixgang;
+if ($v > 9) {
+    return(0); // done
+}
+if ($v >= 9) {
+    if (~qh_blackarmgang_c1 = true) {
+        return(20);
+    }
+    if (~qh_blackarmgang_c4 = true) {
+        return(16);
+    }
+    if (~qh_blackarmgang_c2 = true) {
+        return(15);
+    }
+    if (~qh_blackarmgang_c3 = true) {
+        return(13);
+    }
+    if (~qh_blackarmgang_c1 = true) {
+        return(20);
+    }
+    if (~qh_blackarmgang_c6 = true) {
+        return(17);
+    }
+    if (~qh_blackarmgang_c2 = true) {
+        return(15);
+    }
+    if (~qh_blackarmgang_c5 = true) {
+        return(29);
+    }
+    return(27);
+}
+if ($v >= 8) {
+    if (~qh_blackarmgang_c9 = true) {
+        return(28);
+    }
+    if (~qh_blackarmgang_c10 = true) {
+        return(27);
+    }
+    if (~qh_blackarmgang_c8 = true) {
+        return(24);
+    }
+    return(25);
+}
+if ($v >= 4) {
+    if (~qh_blackarmgang_c8 = true) {
+        return(23);
+    }
+    return(22);
+}
+if ($v >= 3) {
+    return(21);
+}
+if ($v >= 3) {
+    if (~qh_blackarmgang_c1 = true) {
+        return(20);
+    }
+    if (~qh_blackarmgang_c4 = true) {
+        return(16);
+    }
+    if (~qh_blackarmgang_c2 = true) {
+        return(15);
+    }
+    if (~qh_blackarmgang_c3 = true) {
+        return(13);
+    }
+    if (~qh_blackarmgang_c1 = true) {
+        return(20);
+    }
+    if (~qh_blackarmgang_c6 = true) {
+        return(17);
+    }
+    if (~qh_blackarmgang_c2 = true) {
+        return(15);
+    }
+    if (~qh_blackarmgang_c5 = true) {
+        return(29);
+    }
+    return(27);
+}
+if ($v >= 2) {
+    return(3);
+}
+if ($v >= 2) {
+    if (~qh_blackarmgang_c13 = true) {
+        return(11);
+    }
+    if (~qh_blackarmgang_c11 = true) {
+        return(10);
+    }
+    if (~qh_blackarmgang_c12 = true) {
+        return(9);
+    }
+    if (~qh_blackarmgang_c14 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 1) {
+    return(4);
+}
+if ($v >= 0) {
+    return(1);
+}
+if ($v >= 0) {
+    if (~qh_blackarmgang_c15 = true) {
+        return(3);
+    }
+    return(1);
+}
+return(1);
+
+[proc,qh_blackarmgang_c1]()(boolean)
+if (calc(inv_total(inv, arravcertificate) + inv_total(worn, arravcertificate)) >= 1) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c2]()(boolean)
+if (calc(inv_total(inv, arravshield1) + inv_total(worn, arravshield1)) >= 1) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c3]()(boolean)
+if (inzone(1_49_52_46_54, 1_50_53_1_6, coord) = true) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c4]()(boolean)
+if (~qh_blackarmgang_c2 = false) return(false);
+if (~qh_blackarmgang_c3 = false) return(false);
+return(true);
+
+[proc,qh_blackarmgang_c5]()(boolean)
+if (inzone(0_50_152_32_33, 0_50_152_54_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c6]()(boolean)
+if (~qh_blackarmgang_c5 = false) return(false);
+if (~qh_blackarmgang_c2 = false) return(false);
+return(true);
+
+[proc,qh_blackarmgang_c7]()(boolean)
+if (calc(inv_total(inv, intelligence_report) + inv_total(worn, intelligence_report)) >= 1) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c8]()(boolean)
+if (inzone(0_50_152_39_52, 0_50_152_49_58, coord) = true) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c9]()(boolean)
+if (~qh_blackarmgang_c7 = false) return(false);
+if (~qh_blackarmgang_c8 = false) return(false);
+return(true);
+
+[proc,qh_blackarmgang_c10]()(boolean)
+if (calc(inv_total(inv, intelligence_report) + inv_total(worn, intelligence_report)) >= 1) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c11]()(boolean)
+if (calc(inv_total(inv, phoenix_crossbow) + inv_total(worn, phoenix_crossbow)) >= 2) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c12]()(boolean)
+if (inzone(1_50_52_42_52, 1_50_52_52_58, coord) = true) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c13]()(boolean)
+if (~qh_blackarmgang_c11 = false) return(false);
+if (~qh_blackarmgang_c12 = false) return(false);
+return(true);
+
+[proc,qh_blackarmgang_c14]()(boolean)
+if (calc(inv_total(inv, phoenixkey2) + inv_total(worn, phoenixkey2)) >= 1) return(true);
+return(false);
+
+[proc,qh_blackarmgang_c15]()(boolean)
+if (%phoenixgang >= 2) return(true);
+return(false);

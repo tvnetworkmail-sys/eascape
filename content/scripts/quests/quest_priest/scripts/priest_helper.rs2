@@ -1,0 +1,42 @@
+// EASCape: Quest Helper for The Restless Ghost, converted from RuneLite's Quest Helper (therestlessghost, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'RESTLESS_GHOST_ALTAR_VAR') not in our game
+
+[proc,questhelper_priest]()(int)
+def_int $v = %prieststart;
+if ($v > 4) {
+    return(0); // done
+}
+if ($v >= 4) {
+    if (~qh_priest_c1 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 3) {
+    if (~qh_priest_c1 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 2) {
+    if (~qh_priest_c2 = true) {
+        return(5);
+    }
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_priest_c1]()(boolean)
+if (inzone(0_48_149_22_17, 0_48_149_53_46, coord) = true) return(true);
+return(false);
+
+[proc,qh_priest_c2]()(boolean)
+if (npc_find(coord, ghostx, 15, 0) = true) return(true);
+return(false);

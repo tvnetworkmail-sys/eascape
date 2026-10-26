@@ -1,0 +1,141 @@
+// EASCape: Quest Helper for Fishing Contest, converted from RuneLite's Quest Helper (fishingcontest, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC _0_41_53_SINISTERFISHSPOT not matched
+//   item ('field', ('name', 'ItemCollections'), 'COMBAT_BRACELETS') not in our game
+
+[proc,questhelper_fishingcompo]()(int)
+def_int $v = %fishingcompo;
+if ($v > 4) {
+    return(0); // done
+}
+if ($v >= 4) {
+    return(13);
+}
+if ($v >= 3) {
+    if (~qh_fishingcompo_c1 = true) {
+        return(11);
+    }
+    return(12);
+}
+if ($v >= 2) {
+    return(10);
+}
+if ($v >= 1) {
+    if (~qh_fishingcompo_c12 = true) {
+        return(2);
+    }
+    if (~qh_fishingcompo_c6 = true) {
+        return(3);
+    }
+    if (~qh_fishingcompo_c13 = true) {
+        if (~qh_fishingcompo_c19 = true) {
+            return(4);
+        }
+        if (~qh_fishingcompo_c17 = true) {
+            return(5);
+        }
+        return(5);
+    }
+    if (~qh_fishingcompo_c9 = true) {
+        return(6);
+    }
+    if (~qh_fishingcompo_c21 = true) {
+        return(9);
+    }
+    return(6);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_fishingcompo_c1]()(boolean)
+if (calc(inv_total(inv, raw_giant_carp) + inv_total(worn, raw_giant_carp)) >= 1) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c2]()(boolean)
+if (%fishingcompo_stranger = 1) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c3]()(boolean)
+if (~qh_fishingcompo_c2 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c4]()(boolean)
+if (calc(inv_total(inv, garlic) + inv_total(worn, garlic)) >= 1) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c5]()(boolean)
+if (~qh_fishingcompo_c4 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c6]()(boolean)
+if (~qh_fishingcompo_c3 = false) return(false);
+if (~qh_fishingcompo_c5 = false) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c7]()(boolean)
+if (~qh_fishingcompo_c6 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c8]()(boolean)
+if (calc(inv_total(inv, red_vine_worm) + inv_total(worn, red_vine_worm)) >= 1) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c9]()(boolean)
+if (calc(inv_total(inv, fishing_rod) + inv_total(worn, fishing_rod)) >= 1) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c10]()(boolean)
+if (~qh_fishingcompo_c7 = false) return(false);
+if (~qh_fishingcompo_c8 = false) return(false);
+if (~qh_fishingcompo_c9 = false) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c11]()(boolean)
+if (inzone(0_41_53_7_42, 0_41_53_18_53, coord) = true | inzone(0_41_53_14_54, 0_41_53_17_54, coord) = true) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c12]()(boolean)
+if (~qh_fishingcompo_c10 = false) return(false);
+if (~qh_fishingcompo_c11 = false) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c13]()(boolean)
+if (~qh_fishingcompo_c8 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c14]()(boolean)
+if (inzone(0_41_54_2_35, 0_41_54_10_44, coord) = true) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c15]()(boolean)
+if (~qh_fishingcompo_c14 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c16]()(boolean)
+if (inzone(0_41_54_38_44, 0_41_54_38_44, coord) = true) return(true);
+return(false);
+
+[proc,qh_fishingcompo_c17]()(boolean)
+if (~qh_fishingcompo_c16 = false) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c18]()(boolean)
+if (~qh_fishingcompo_c17 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c19]()(boolean)
+if (~qh_fishingcompo_c13 = false) return(false);
+if (~qh_fishingcompo_c15 = false) return(false);
+if (~qh_fishingcompo_c18 = false) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c20]()(boolean)
+if (~qh_fishingcompo_c9 = true) return(false);
+return(true);
+
+[proc,qh_fishingcompo_c21]()(boolean)
+if (~qh_fishingcompo_c20 = false) return(false);
+if (~qh_fishingcompo_c8 = false) return(false);
+return(true);

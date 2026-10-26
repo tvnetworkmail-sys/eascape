@@ -1,0 +1,135 @@
+// EASCape: Quest Helper for Troll Romance, converted from RuneLite's Quest Helper (trollromance, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_troll_love]()(int)
+def_int $v = %troll_love;
+if ($v > 40) {
+    return(0); // done
+}
+if ($v >= 40) {
+    if (~qh_troll_love_c1 = true) {
+        return(25);
+    }
+    if (~qh_troll_love_c2 = true) {
+        return(27);
+    }
+    if (~qh_troll_love_c3 = true) {
+        return(26);
+    }
+    return(28);
+}
+if ($v >= 35) {
+    if (~qh_troll_love_c4 = true) {
+        return(24);
+    }
+    if (~qh_troll_love_c1 = true) {
+        return(20);
+    }
+    if (~qh_troll_love_c2 = true) {
+        return(22);
+    }
+    if (~qh_troll_love_c3 = true) {
+        return(23);
+    }
+    return(21);
+}
+if ($v >= 30) {
+    if (~qh_troll_love_c1 = true) {
+        return(16);
+    }
+    if (~qh_troll_love_c2 = true) {
+        return(19);
+    }
+    if (~qh_troll_love_c3 = true) {
+        return(18);
+    }
+    return(17);
+}
+if ($v >= 25) {
+    if (~qh_troll_love_c5 = true) {
+        return(15);
+    }
+    if (~qh_troll_love_c8 = true) {
+        return(14);
+    }
+    if (~qh_troll_love_c6 = true) {
+        return(13);
+    }
+    if (~qh_troll_love_c9 = true) {
+        return(12);
+    }
+    return(11);
+}
+if ($v >= 22) {
+    if (~qh_troll_love_c10 = true) {
+        return(10);
+    }
+    return(9);
+}
+if ($v >= 20) {
+    return(8);
+}
+if ($v >= 15) {
+    return(7);
+}
+if ($v >= 10) {
+    return(6);
+}
+if ($v >= 5) {
+    return(5);
+}
+if ($v >= 0) {
+    if (~qh_troll_love_c1 = true) {
+        return(1);
+    }
+    if (~qh_troll_love_c2 = true) {
+        return(4);
+    }
+    if (~qh_troll_love_c3 = true) {
+        return(3);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_troll_love_c1]()(boolean)
+if (inzone(1_44_157_4_0, 1_44_157_46_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c2]()(boolean)
+if (inzone(0_44_157_6_1, 0_44_157_43_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c3]()(boolean)
+if (inzone(2_44_157_4_0, 2_44_157_46_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c4]()(boolean)
+if (npc_find(coord, trollromance_arrg_attackable, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c5]()(boolean)
+if (inzone(0_43_58_19_59, 0_44_59_1_24, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c6]()(boolean)
+if (inzone(0_43_59_1_25, 0_44_60_0_37, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c7]()(boolean)
+if (calc(inv_total(inv, trollromance_toboggon_waxed) + inv_total(worn, trollromance_toboggon_waxed)) >= 1) return(true);
+return(false);
+
+[proc,qh_troll_love_c8]()(boolean)
+if (~qh_troll_love_c6 = false) return(false);
+if (~qh_troll_love_c7 = false) return(false);
+return(true);
+
+[proc,qh_troll_love_c9]()(boolean)
+if (inzone(0_43_159_12_8, 0_43_159_56_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_troll_love_c10]()(boolean)
+if (calc(inv_total(inv, trollromance_wax) + inv_total(worn, trollromance_wax)) >= 1) return(true);
+return(false);

@@ -1,0 +1,262 @@
+// EASCape: Quest Helper for Horror from the Deep, converted from RuneLite's Quest Helper (horrorfromthedeep, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NpcHintArrowRequirement not carried over
+
+[proc,questhelper_horror]()(int)
+def_int $v = %horrorquest;
+if ($v > 5) {
+    return(0); // done
+}
+if ($v >= 5) {
+    if (~qh_horror_c1 = true) {
+        return(20);
+    }
+    if (~qh_horror_c2 = true) {
+        return(19);
+    }
+    if (~qh_horror_c3 = true) {
+        return(11);
+    }
+    return(6);
+}
+if ($v >= 4) {
+    if (~qh_horror_c4 = true) {
+        return(20);
+    }
+    if (~qh_horror_c6 = true) {
+        return(19);
+    }
+    if (~qh_horror_c9 = true) {
+        return(13);
+    }
+    if (~qh_horror_c12 = true) {
+        return(14);
+    }
+    if (~qh_horror_c15 = true) {
+        return(15);
+    }
+    if (~qh_horror_c18 = true) {
+        return(16);
+    }
+    if (~qh_horror_c21 = true) {
+        return(17);
+    }
+    if (~qh_horror_c24 = true) {
+        return(18);
+    }
+    if (~qh_horror_c3 = true) {
+        return(11);
+    }
+    if (~qh_horror_c25 = true) {
+        return(24);
+    }
+    if (~qh_horror_c26 = true) {
+        return(12);
+    }
+    return(6);
+}
+if ($v >= 3) {
+    if (~qh_horror_c29 = true) {
+        return(10);
+    }
+    if (~qh_horror_c30 = true) {
+        return(9);
+    }
+    if (~qh_horror_c26 = true) {
+        return(8);
+    }
+    if (~qh_horror_c25 = true) {
+        return(23);
+    }
+    if (~qh_horror_c3 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 2) {
+    if (~qh_horror_c29 = true) {
+        return(10);
+    }
+    if (~qh_horror_c30 = true) {
+        return(9);
+    }
+    if (~qh_horror_c26 = true) {
+        return(8);
+    }
+    if (~qh_horror_c25 = true) {
+        return(23);
+    }
+    if (~qh_horror_c3 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 1) {
+    if (~qh_horror_c34 = true) {
+        return(5);
+    }
+    if (~qh_horror_c35 = true) {
+        return(4);
+    }
+    if (~qh_horror_c31 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_horror_c1]()(boolean)
+if (inzone(0_39_72_10_19, 0_39_72_43_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_horror_c2]()(boolean)
+if (inzone(0_39_72_10_2, 0_39_72_26_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_horror_c3]()(boolean)
+if (inzone(0_38_71_8_52, 0_38_71_17_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_horror_c4]()(boolean)
+if (~qh_horror_c1 = false) return(false);
+return(true);
+
+[proc,qh_horror_c5]()(boolean)
+if (%horrordoor = 1) return(true);
+return(false);
+
+[proc,qh_horror_c6]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c5 = false) return(false);
+return(true);
+
+[proc,qh_horror_c7]()(boolean)
+if (%horrorair = 1) return(true);
+return(false);
+
+[proc,qh_horror_c8]()(boolean)
+if (~qh_horror_c7 = true) return(false);
+return(true);
+
+[proc,qh_horror_c9]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c8 = false) return(false);
+return(true);
+
+[proc,qh_horror_c10]()(boolean)
+if (%horrorwater = 1) return(true);
+return(false);
+
+[proc,qh_horror_c11]()(boolean)
+if (~qh_horror_c10 = true) return(false);
+return(true);
+
+[proc,qh_horror_c12]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c11 = false) return(false);
+return(true);
+
+[proc,qh_horror_c13]()(boolean)
+if (%horrorearth = 1) return(true);
+return(false);
+
+[proc,qh_horror_c14]()(boolean)
+if (~qh_horror_c13 = true) return(false);
+return(true);
+
+[proc,qh_horror_c15]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c14 = false) return(false);
+return(true);
+
+[proc,qh_horror_c16]()(boolean)
+if (%horrorfire = 1) return(true);
+return(false);
+
+[proc,qh_horror_c17]()(boolean)
+if (~qh_horror_c16 = true) return(false);
+return(true);
+
+[proc,qh_horror_c18]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c17 = false) return(false);
+return(true);
+
+[proc,qh_horror_c19]()(boolean)
+if (%horrorarrow = 1) return(true);
+return(false);
+
+[proc,qh_horror_c20]()(boolean)
+if (~qh_horror_c19 = true) return(false);
+return(true);
+
+[proc,qh_horror_c21]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c20 = false) return(false);
+return(true);
+
+[proc,qh_horror_c22]()(boolean)
+if (%horrorsword = 1) return(true);
+return(false);
+
+[proc,qh_horror_c23]()(boolean)
+if (~qh_horror_c22 = true) return(false);
+return(true);
+
+[proc,qh_horror_c24]()(boolean)
+if (~qh_horror_c2 = false) return(false);
+if (~qh_horror_c23 = false) return(false);
+return(true);
+
+[proc,qh_horror_c25]()(boolean)
+if (inzone(1_38_71_8_52, 1_38_71_17_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_horror_c26]()(boolean)
+if (inzone(2_38_71_8_52, 2_38_71_17_61, coord) = true | inzone(2_39_56_8_52, 2_39_56_17_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_horror_c27]()(boolean)
+if (%horrortar = 1) return(true);
+return(false);
+
+[proc,qh_horror_c28]()(boolean)
+if (%horrorlight = 1) return(true);
+return(false);
+
+[proc,qh_horror_c29]()(boolean)
+if (~qh_horror_c26 = false) return(false);
+if (~qh_horror_c27 = false) return(false);
+if (~qh_horror_c28 = false) return(false);
+return(true);
+
+[proc,qh_horror_c30]()(boolean)
+if (~qh_horror_c26 = false) return(false);
+if (~qh_horror_c27 = false) return(false);
+return(true);
+
+[proc,qh_horror_c31]()(boolean)
+if (%horrorbridgeleft = 1) return(true);
+return(false);
+
+[proc,qh_horror_c32]()(boolean)
+if (%horrorbridgeright = 1) return(true);
+return(false);
+
+[proc,qh_horror_c33]()(boolean)
+if (%horroragilitykey = 1) return(true);
+return(false);
+
+[proc,qh_horror_c34]()(boolean)
+if (~qh_horror_c31 = false) return(false);
+if (~qh_horror_c32 = false) return(false);
+if (~qh_horror_c33 = false) return(false);
+return(true);
+
+[proc,qh_horror_c35]()(boolean)
+if (~qh_horror_c31 = false) return(false);
+if (~qh_horror_c32 = false) return(false);
+return(true);

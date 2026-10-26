@@ -1,0 +1,110 @@
+// EASCape: Quest Helper for Druidic Ritual, converted from RuneLite's Quest Helper (druidicritual, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_druid]()(int)
+def_int $v = %druidquest;
+if ($v > 3) {
+    return(0); // done
+}
+if ($v >= 3) {
+    return(14);
+}
+if ($v >= 2) {
+    if (~qh_druid_c6 = true) {
+        return(12);
+    }
+    if (~qh_druid_c7 = true) {
+        return(13);
+    }
+    if (~qh_druid_c9 = true) {
+        return(9);
+    }
+    if (~qh_druid_c10 = true) {
+        return(10);
+    }
+    if (~qh_druid_c11 = true) {
+        return(11);
+    }
+    if (~qh_druid_c8 = true) {
+        return(8);
+    }
+    if (~qh_druid_c12 = true) {
+        return(6);
+    }
+    if (~qh_druid_c1 = true) {
+        return(5);
+    }
+    return(4);
+}
+if ($v >= 1) {
+    if (~qh_druid_c1 = true) {
+        return(2);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_druid_c1]()(boolean)
+if (inzone(1_45_53_13_31, 1_45_53_23_41, coord) = true) return(true);
+return(false);
+
+[proc,qh_druid_c2]()(boolean)
+if (calc(inv_total(inv, enchanted_rat_meat) + inv_total(worn, enchanted_rat_meat)) >= 1) return(true);
+return(false);
+
+[proc,qh_druid_c3]()(boolean)
+if (calc(inv_total(inv, enchanted_bear_meat) + inv_total(worn, enchanted_bear_meat)) >= 1) return(true);
+return(false);
+
+[proc,qh_druid_c4]()(boolean)
+if (calc(inv_total(inv, enchanted_beef) + inv_total(worn, enchanted_beef)) >= 1) return(true);
+return(false);
+
+[proc,qh_druid_c5]()(boolean)
+if (calc(inv_total(inv, enchanted_chicken) + inv_total(worn, enchanted_chicken)) >= 1) return(true);
+return(false);
+
+[proc,qh_druid_c6]()(boolean)
+if (~qh_druid_c1 = false) return(false);
+if (~qh_druid_c2 = false) return(false);
+if (~qh_druid_c3 = false) return(false);
+if (~qh_druid_c4 = false) return(false);
+if (~qh_druid_c5 = false) return(false);
+return(true);
+
+[proc,qh_druid_c7]()(boolean)
+if (~qh_druid_c2 = false) return(false);
+if (~qh_druid_c3 = false) return(false);
+if (~qh_druid_c4 = false) return(false);
+if (~qh_druid_c5 = false) return(false);
+return(true);
+
+[proc,qh_druid_c8]()(boolean)
+if (inzone(0_45_153_9_33, 0_45_153_18_47, coord) = true) return(true);
+return(false);
+
+[proc,qh_druid_c9]()(boolean)
+if (~qh_druid_c8 = false) return(false);
+if (~qh_druid_c2 = false) return(false);
+if (~qh_druid_c3 = false) return(false);
+if (~qh_druid_c4 = false) return(false);
+return(true);
+
+[proc,qh_druid_c10]()(boolean)
+if (~qh_druid_c8 = false) return(false);
+if (~qh_druid_c2 = false) return(false);
+if (~qh_druid_c3 = false) return(false);
+return(true);
+
+[proc,qh_druid_c11]()(boolean)
+if (~qh_druid_c8 = false) return(false);
+if (~qh_druid_c2 = false) return(false);
+return(true);
+
+[proc,qh_druid_c12]()(boolean)
+if (inzone(0_44_151_0_4, 0_46_153_29_63, coord) = true) return(true);
+return(false);

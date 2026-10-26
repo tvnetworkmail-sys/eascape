@@ -1,0 +1,53 @@
+// EASCape: Quest Helper for Jungle Potion, converted from RuneLite's Quest Helper (junglepotion, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_junglepotion]()(int)
+def_int $v = %junglepotion;
+if ($v > 11) {
+    return(0); // done
+}
+if ($v >= 11) {
+    return(8);
+}
+if ($v >= 10) {
+    return(-1); // ('name', 'cleanAndReturnRoguesPurse')
+}
+if ($v >= 9) {
+    if (~qh_junglepotion_c1 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 8) {
+    return(-1); // ('name', 'cleanAndReturnVolenciaMoss')
+}
+if ($v >= 7) {
+    return(5);
+}
+if ($v >= 6) {
+    return(-1); // ('name', 'cleanAndReturnSitoFoil')
+}
+if ($v >= 5) {
+    return(4);
+}
+if ($v >= 4) {
+    return(-1); // ('name', 'cleanAndReturnArdrigal')
+}
+if ($v >= 3) {
+    return(3);
+}
+if ($v >= 2) {
+    return(-1); // ('name', 'cleanAndReturnSnakeWeed')
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_junglepotion_c1]()(boolean)
+if (inzone(0_44_147_8_54, 0_45_148_3_61, coord) = true) return(true);
+return(false);

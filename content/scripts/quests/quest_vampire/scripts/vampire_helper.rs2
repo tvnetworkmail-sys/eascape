@@ -1,0 +1,72 @@
+// EASCape: Quest Helper for Vampire Slayer, converted from RuneLite's Quest Helper (vampyreslayer, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   DialogRequirement not carried over
+
+[proc,questhelper_vampire]()(int)
+def_int $v = %vampire;
+if ($v > 2) {
+    return(0); // done
+}
+if ($v >= 2) {
+    if (~qh_vampire_c1 = true) {
+        return(10);
+    }
+    if (~qh_vampire_c2 = true) {
+        return(9);
+    }
+    if (~qh_vampire_c3 = true) {
+        return(8);
+    }
+    if (~qh_vampire_c4 = true) {
+        return(7);
+    }
+    if (~qh_vampire_c6 = true) {
+        return(5);
+    }
+    return(6);
+}
+if ($v >= 1) {
+    if (~qh_vampire_c7 = true) {
+        return(4);
+    }
+    if (~qh_vampire_c8 = true) {
+        return(2);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_vampire_c1]()(boolean)
+if (npc_find(coord, count_draynor, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_vampire_c2]()(boolean)
+if (inzone(0_48_152_2_39, 0_48_152_9_51, coord) = true) return(true);
+return(false);
+
+[proc,qh_vampire_c3]()(boolean)
+if (inzone(0_48_52_25_26, 0_48_52_47_45, coord) = true) return(true);
+return(false);
+
+[proc,qh_vampire_c4]()(boolean)
+if (calc(inv_total(inv, stake) + inv_total(worn, stake)) >= 1) return(true);
+return(false);
+
+[proc,qh_vampire_c5]()(boolean)
+if (calc(inv_total(inv, beer) + inv_total(worn, beer)) >= 1) return(true);
+return(false);
+
+[proc,qh_vampire_c6]()(boolean)
+if (~qh_vampire_c5 = true) return(false);
+return(true);
+
+[proc,qh_vampire_c7]()(boolean)
+if (calc(inv_total(inv, garlic) + inv_total(worn, garlic)) >= 1) return(true);
+return(false);
+
+[proc,qh_vampire_c8]()(boolean)
+if (inzone(1_48_51_24_2, 1_48_51_30_6, coord) = true) return(true);
+return(false);

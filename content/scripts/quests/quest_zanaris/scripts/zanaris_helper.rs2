@@ -1,0 +1,162 @@
+// EASCape: Quest Helper for Lost City, converted from RuneLite's Quest Helper (lostcity, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ItemOnTileRequirement not carried over
+
+[proc,questhelper_zanaris]()(int)
+def_int $v = %zanaris;
+if ($v > 5) {
+    return(0); // done
+}
+if ($v >= 5) {
+    if (~qh_zanaris_c3 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c4 = true) {
+        return(14);
+    }
+    if (~qh_zanaris_c6 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c7 = true) {
+        return(13);
+    }
+    if (~qh_zanaris_c9 = true) {
+        return(11);
+    }
+    if (~qh_zanaris_c1 = true) {
+        return(7);
+    }
+    if (~qh_zanaris_c10 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 4) {
+    if (~qh_zanaris_c3 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c4 = true) {
+        return(14);
+    }
+    if (~qh_zanaris_c6 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c7 = true) {
+        return(13);
+    }
+    if (~qh_zanaris_c9 = true) {
+        return(11);
+    }
+    if (~qh_zanaris_c1 = true) {
+        return(7);
+    }
+    if (~qh_zanaris_c10 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 3) {
+    if (~qh_zanaris_c3 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c4 = true) {
+        return(14);
+    }
+    if (~qh_zanaris_c6 = true) {
+        return(12);
+    }
+    if (~qh_zanaris_c7 = true) {
+        return(13);
+    }
+    if (~qh_zanaris_c9 = true) {
+        return(11);
+    }
+    if (~qh_zanaris_c1 = true) {
+        return(7);
+    }
+    if (~qh_zanaris_c10 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 2) {
+    if (~qh_zanaris_c12 = true) {
+        return(10);
+    }
+    if (~qh_zanaris_c9 = true) {
+        return(9);
+    }
+    if (~qh_zanaris_c1 = true) {
+        return(7);
+    }
+    if (~qh_zanaris_c10 = true) {
+        return(6);
+    }
+    return(4);
+}
+if ($v >= 1) {
+    if (~qh_zanaris_c13 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_zanaris_c1]()(boolean)
+if (inzone(0_44_151_1_58, 0_44_152_63_56, coord) = true) return(true);
+return(false);
+
+[proc,qh_zanaris_c2]()(boolean)
+if (calc(inv_total(inv, dramen_staff) + inv_total(worn, dramen_staff)) >= 1) return(true);
+return(false);
+
+[proc,qh_zanaris_c3]()(boolean)
+if (~qh_zanaris_c1 = false) return(false);
+if (~qh_zanaris_c2 = false) return(false);
+return(true);
+
+[proc,qh_zanaris_c4]()(boolean)
+if (calc(inv_total(inv, dramen_staff) + inv_total(worn, dramen_staff)) >= 1) return(true);
+return(false);
+
+[proc,qh_zanaris_c5]()(boolean)
+if (calc(inv_total(inv, dramen_branch) + inv_total(worn, dramen_branch)) >= 1) return(true);
+return(false);
+
+[proc,qh_zanaris_c6]()(boolean)
+if (~qh_zanaris_c1 = false) return(false);
+if (~qh_zanaris_c5 = false) return(false);
+return(true);
+
+[proc,qh_zanaris_c7]()(boolean)
+if (calc(inv_total(inv, dramen_branch) + inv_total(worn, dramen_branch)) >= 1) return(true);
+return(false);
+
+[proc,qh_zanaris_c8]()(boolean)
+if (calc(inv_total(inv, bronze_axe) + inv_total(worn, bronze_axe)) >= 1) return(true);
+return(false);
+
+[proc,qh_zanaris_c9]()(boolean)
+if (~qh_zanaris_c1 = false) return(false);
+if (~qh_zanaris_c8 = false) return(false);
+return(true);
+
+[proc,qh_zanaris_c10]()(boolean)
+if (inzone(0_43_51_46_63, 1_44_53_62_2, coord) = true) return(true);
+return(false);
+
+[proc,qh_zanaris_c11]()(boolean)
+if (npc_find(coord, tree_spirit, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_zanaris_c12]()(boolean)
+if (~qh_zanaris_c1 = false) return(false);
+if (~qh_zanaris_c11 = false) return(false);
+return(true);
+
+[proc,qh_zanaris_c13]()(boolean)
+if (npc_find(coord, zanarisleprechaun, 15, 0) = true) return(true);
+return(false);

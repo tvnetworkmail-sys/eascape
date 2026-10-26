@@ -1,0 +1,73 @@
+// EASCape: Quest Helper for The Knight's Sword, converted from RuneLite's Quest Helper (theknightssword, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_squire]()(int)
+def_int $v = %squire;
+if ($v > 6) {
+    return(0); // done
+}
+if ($v >= 6) {
+    if (~qh_squire_c1 = true) {
+        return(13);
+    }
+    if (~qh_squire_c2 = true) {
+        return(12);
+    }
+    if (~qh_squire_c3 = true) {
+        return(11);
+    }
+    return(10);
+}
+if ($v >= 5) {
+    if (~qh_squire_c4 = true) {
+        return(9);
+    }
+    if (~qh_squire_c5 = true) {
+        return(8);
+    }
+    if (~qh_squire_c6 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 4) {
+    return(5);
+}
+if ($v >= 3) {
+    return(4);
+}
+if ($v >= 2) {
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_squire_c1]()(boolean)
+if (calc(inv_total(inv, faladian_sword) + inv_total(worn, faladian_sword)) >= 1) return(true);
+return(false);
+
+[proc,qh_squire_c2]()(boolean)
+if (calc(inv_total(inv, blurite_ore) + inv_total(worn, blurite_ore)) >= 1) return(true);
+return(false);
+
+[proc,qh_squire_c3]()(boolean)
+if (inzone(0_46_149_35_2, 0_47_150_61_2, coord) = true) return(true);
+return(false);
+
+[proc,qh_squire_c4]()(boolean)
+if (calc(inv_total(inv, knights_portrait) + inv_total(worn, knights_portrait)) >= 1) return(true);
+return(false);
+
+[proc,qh_squire_c5]()(boolean)
+if (inzone(2_46_52_36_3, 2_46_52_42_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_squire_c6]()(boolean)
+if (inzone(1_46_52_10_0, 1_46_52_53_25, coord) = true) return(true);
+return(false);

@@ -1,0 +1,181 @@
+// EASCape: Quest Helper for Prince Ali Rescue, converted from RuneLite's Quest Helper (princealirescue, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC AGGIE_1OP not matched
+//   NPC JOE_VIS not matched
+//   NPC LADY_KELI_VIS not matched
+//   NPC PRINCE_ALI_VIS_BLACKEYE not matched
+//   RuneliteRequirement not carried over
+
+[proc,questhelper_prince]()(int)
+def_int $v = %princequest;
+if ($v > 100) {
+    return(0); // done
+}
+if ($v >= 100) {
+    return(14);
+}
+if ($v >= 50) {
+    if (~qh_prince_c6 = true) {
+        return(13);
+    }
+    if (~qh_prince_c4 = true) {
+        return(12);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 40) {
+    if (~qh_prince_c4 = true) {
+        return(11);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 33) {
+    if (~qh_prince_c4 = true) {
+        return(10);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 32) {
+    if (~qh_prince_c4 = true) {
+        return(10);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 31) {
+    if (~qh_prince_c4 = true) {
+        return(10);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 30) {
+    if (~qh_prince_c4 = true) {
+        return(10);
+    }
+    if (~qh_prince_c7 = true) {
+        return(9);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 20) {
+    if (~qh_prince_c11 = true) {
+        return(7);
+    }
+    if (~qh_prince_c7 = true) {
+        return(6);
+    }
+    if (~qh_prince_c1 = true) {
+        return(5);
+    }
+    if (~qh_prince_c8 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 10) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_prince_c1]()(boolean)
+if (calc(inv_total(inv, blondwig) + inv_total(worn, blondwig)) >= 1) return(true);
+return(false);
+
+[proc,qh_prince_c2]()(boolean)
+if (calc(inv_total(inv, skinpaste) + inv_total(worn, skinpaste)) >= 1) return(true);
+return(false);
+
+[proc,qh_prince_c3]()(boolean)
+if (calc(inv_total(inv, princeskey) + inv_total(worn, princeskey)) >= 1) return(true);
+return(false);
+
+[proc,qh_prince_c4]()(boolean)
+if (~qh_prince_c1 = false) return(false);
+if (~qh_prince_c2 = false) return(false);
+if (~qh_prince_c3 = false) return(false);
+return(true);
+
+[proc,qh_prince_c5]()(boolean)
+if (inzone(0_48_50_49_40, 0_48_50_53_43, coord) = true) return(true);
+return(false);
+
+[proc,qh_prince_c6]()(boolean)
+if (~qh_prince_c4 = false) return(false);
+if (~qh_prince_c5 = false) return(false);
+return(true);
+
+[proc,qh_prince_c7]()(boolean)
+if (~qh_prince_c1 = false) return(false);
+if (~qh_prince_c2 = false) return(false);
+return(true);
+
+[proc,qh_prince_c8]()(boolean)
+if (calc(inv_total(inv, plainwig) + inv_total(worn, plainwig)) >= 1) return(true);
+return(false);
+
+[proc,qh_prince_c9]()(boolean)
+if (calc(inv_total(inv, keyprint) + inv_total(worn, keyprint)) >= 1) return(true);
+return(false);
+
+[proc,qh_prince_c10]()(boolean)
+if (~qh_prince_c9 = true) return(true);
+return(false);
+
+[proc,qh_prince_c11]()(boolean)
+if (~qh_prince_c1 = false) return(false);
+if (~qh_prince_c2 = false) return(false);
+if (~qh_prince_c10 = false) return(false);
+return(true);

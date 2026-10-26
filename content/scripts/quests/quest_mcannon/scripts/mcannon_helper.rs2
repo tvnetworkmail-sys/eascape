@@ -1,0 +1,143 @@
+// EASCape: Quest Helper for Dwarf Cannon, converted from RuneLite's Quest Helper (dwarfcannon, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING1_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING2_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING3_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING4_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING5_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING6_FIXED') not in our game
+
+[proc,questhelper_mcannon]()(int)
+def_int $v = %mcannon;
+if ($v > 10) {
+    return(0); // done
+}
+if ($v >= 10) {
+    if (~qh_mcannon_c3 = true) {
+        return(22);
+    }
+    return(21);
+}
+if ($v >= 9) {
+    if (~qh_mcannon_c3 = true) {
+        return(22);
+    }
+    return(21);
+}
+if ($v >= 8) {
+    return(20);
+}
+if ($v >= 7) {
+    return(-1); // ('name', 'pwFixMulticannon')
+}
+if ($v >= 6) {
+    if (~qh_mcannon_c4 = true) {
+        return(19);
+    }
+    return(18);
+}
+if ($v >= 5) {
+    if (~qh_mcannon_c4 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 4) {
+    if (~qh_mcannon_c4 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 3) {
+    if (~qh_mcannon_c7 = true) {
+        return(15);
+    }
+    if (~qh_mcannon_c9 = true) {
+        return(14);
+    }
+    if (~qh_mcannon_c5 = true) {
+        return(13);
+    }
+    if (~qh_mcannon_c8 = true) {
+        return(12);
+    }
+    if (~qh_mcannon_c6 = true) {
+        return(11);
+    }
+    return(10);
+}
+if ($v >= 2) {
+    if (~qh_mcannon_c7 = true) {
+        return(15);
+    }
+    if (~qh_mcannon_c9 = true) {
+        return(14);
+    }
+    if (~qh_mcannon_c5 = true) {
+        return(13);
+    }
+    if (~qh_mcannon_c8 = true) {
+        return(12);
+    }
+    if (~qh_mcannon_c6 = true) {
+        return(11);
+    }
+    return(10);
+}
+if ($v >= 1) {
+    if (~qh_mcannon_c11 = true) {
+        return(2);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_mcannon_c1]()(boolean)
+if (calc(inv_total(inv, nulodions_notes) + inv_total(worn, nulodions_notes)) >= 1) return(true);
+return(false);
+
+[proc,qh_mcannon_c2]()(boolean)
+if (calc(inv_total(inv, ammo_mould) + inv_total(worn, ammo_mould)) >= 1) return(true);
+return(false);
+
+[proc,qh_mcannon_c3]()(boolean)
+if (~qh_mcannon_c1 = false) return(false);
+if (~qh_mcannon_c2 = false) return(false);
+return(true);
+
+[proc,qh_mcannon_c4]()(boolean)
+if (inzone(0_39_152_61_62, 0_41_154_0_3, coord) = true) return(true);
+return(false);
+
+[proc,qh_mcannon_c5]()(boolean)
+if (calc(inv_total(inv, mcannonremains) + inv_total(worn, mcannonremains)) >= 1) return(true);
+return(false);
+
+[proc,qh_mcannon_c6]()(boolean)
+if (inzone(1_40_53_8_47, 1_40_53_12_53, coord) = true) return(true);
+return(false);
+
+[proc,qh_mcannon_c7]()(boolean)
+if (~qh_mcannon_c5 = false) return(false);
+if (~qh_mcannon_c6 = false) return(false);
+return(true);
+
+[proc,qh_mcannon_c8]()(boolean)
+if (inzone(2_40_53_6_49, 2_40_53_12_53, coord) = true) return(true);
+return(false);
+
+[proc,qh_mcannon_c9]()(boolean)
+if (~qh_mcannon_c5 = false) return(false);
+if (~qh_mcannon_c8 = false) return(false);
+return(true);
+
+[proc,qh_mcannon_c10]()(boolean)
+if (calc(inv_total(inv, mcannonrailing1_obj) + inv_total(worn, mcannonrailing1_obj)) >= 1) return(true);
+return(false);
+
+[proc,qh_mcannon_c11]()(boolean)
+if (~qh_mcannon_c10 = true) return(false);
+return(true);

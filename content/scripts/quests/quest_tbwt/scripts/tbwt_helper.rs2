@@ -1,0 +1,51 @@
+// EASCape: Quest Helper for Tai Bwo Wannai Trio, converted from RuneLite's Quest Helper (taibwowannaitrio, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC ZEMBO not matched
+//   NPC _0_43_47_KARAMBWANJI not matched
+//   VarplayerRequirement ('call', ('field', ('name', 'QuestVarPlayer'), 'QUEST_TAI_BWO_WANNAI_TRIO'), 'getId', []) not in our game
+//   WidgetTextRequirement not carried over
+//   field not carried over
+
+[proc,questhelper_tbwt]()(int)
+def_int $v = %tbwt_main;
+if ($v > 5) {
+    return(0); // done
+}
+if ($v >= 5) {
+    if (~qh_tbwt_c1 = true) {
+        return(40);
+    }
+    return(39);
+}
+if ($v >= 4) {
+    if (~qh_tbwt_c1 = true) {
+        return(40);
+    }
+    return(39);
+}
+if ($v >= 3) {
+    return(41);
+}
+if ($v >= 2) {
+    if (~qh_tbwt_c1 = true) {
+        return(1);
+    }
+    return(2);
+}
+if ($v >= 1) {
+    if (~qh_tbwt_c1 = true) {
+        return(1);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    if (~qh_tbwt_c1 = true) {
+        return(1);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_tbwt_c1]()(boolean)
+if (inzone(1_43_48_26_12, 1_43_48_34_18, coord) = true) return(true);
+return(false);

@@ -1,0 +1,276 @@
+// EASCape: Quest Helper for Witch's House, converted from RuneLite's Quest Helper (witchshouse, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_ball]()(int)
+def_int $v = %ballquest;
+if ($v > 6) {
+    return(0); // done
+}
+if ($v >= 6) {
+    if (~qh_ball_c1 = true) {
+        return(18);
+    }
+    if (~qh_ball_c2 = true) {
+        return(17);
+    }
+    if (~qh_ball_c3 = true) {
+        return(14);
+    }
+    if (~qh_ball_c4 = true) {
+        return(3);
+    }
+    if (~qh_ball_c5 = true) {
+        return(9);
+    }
+    if (~qh_ball_c6 = true) {
+        return(4);
+    }
+    return(2);
+}
+if ($v >= 5) {
+    if (~qh_ball_c8 = true) {
+        return(11);
+    }
+    if (~qh_ball_c14 = true) {
+        return(15);
+    }
+    if (~qh_ball_c2 = true) {
+        return(16);
+    }
+    if (~qh_ball_c17 = true) {
+        return(13);
+    }
+    if (~qh_ball_c18 = true) {
+        return(12);
+    }
+    if (~qh_ball_c19 = true) {
+        return(9);
+    }
+    if (~qh_ball_c22 = true) {
+        return(10);
+    }
+    if (~qh_ball_c23 = true) {
+        return(9);
+    }
+    if (~qh_ball_c24 = true) {
+        return(7);
+    }
+    if (~qh_ball_c25 = true) {
+        return(6);
+    }
+    if (~qh_ball_c20 = true) {
+        return(5);
+    }
+    if (~qh_ball_c6 = true) {
+        return(4);
+    }
+    if (~qh_ball_c4 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 3) {
+    if (~qh_ball_c8 = true) {
+        return(11);
+    }
+    if (~qh_ball_c14 = true) {
+        return(15);
+    }
+    if (~qh_ball_c2 = true) {
+        return(16);
+    }
+    if (~qh_ball_c17 = true) {
+        return(13);
+    }
+    if (~qh_ball_c18 = true) {
+        return(12);
+    }
+    if (~qh_ball_c19 = true) {
+        return(9);
+    }
+    if (~qh_ball_c22 = true) {
+        return(10);
+    }
+    if (~qh_ball_c23 = true) {
+        return(9);
+    }
+    if (~qh_ball_c24 = true) {
+        return(7);
+    }
+    if (~qh_ball_c25 = true) {
+        return(6);
+    }
+    if (~qh_ball_c20 = true) {
+        return(5);
+    }
+    if (~qh_ball_c6 = true) {
+        return(4);
+    }
+    if (~qh_ball_c4 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 2) {
+    if (~qh_ball_c22 = true) {
+        return(10);
+    }
+    if (~qh_ball_c23 = true) {
+        return(9);
+    }
+    if (~qh_ball_c24 = true) {
+        return(7);
+    }
+    if (~qh_ball_c25 = true) {
+        return(6);
+    }
+    if (~qh_ball_c20 = true) {
+        return(5);
+    }
+    if (~qh_ball_c6 = true) {
+        return(4);
+    }
+    if (~qh_ball_c4 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 1) {
+    if (~qh_ball_c22 = true) {
+        return(10);
+    }
+    if (~qh_ball_c23 = true) {
+        return(9);
+    }
+    if (~qh_ball_c24 = true) {
+        return(7);
+    }
+    if (~qh_ball_c25 = true) {
+        return(6);
+    }
+    if (~qh_ball_c20 = true) {
+        return(5);
+    }
+    if (~qh_ball_c6 = true) {
+        return(4);
+    }
+    if (~qh_ball_c4 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_ball_c1]()(boolean)
+if (calc(inv_total(inv, ball) + inv_total(worn, ball)) >= 1) return(true);
+return(false);
+
+[proc,qh_ball_c2]()(boolean)
+if (inzone(0_45_54_54_3, 0_45_54_57_11, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c3]()(boolean)
+if (inzone(0_45_54_21_10, 0_45_54_27_20, coord) = true | inzone(0_45_54_20_3, 0_45_54_53_9, coord) = true | inzone(0_45_54_28_10, 0_45_54_53_11, coord) = true | inzone(0_45_54_28_11, 0_45_54_32_19, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c4]()(boolean)
+if (calc(inv_total(inv, witches_doorkey) + inv_total(worn, witches_doorkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_ball_c5]()(boolean)
+if (inzone(0_45_154_23_14, 0_45_154_29_22, coord) = true | inzone(0_45_154_17_14, 0_45_154_22_22, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c6]()(boolean)
+if (inzone(1_45_54_20_10, 1_45_54_27_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c7]()(boolean)
+if (%ballquest >= 5) return(true);
+return(false);
+
+[proc,qh_ball_c8]()(boolean)
+if (~qh_ball_c7 = true) return(false);
+return(true);
+
+[proc,qh_ball_c9]()(boolean)
+if (npc_find(coord, shapeshifterglob, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_ball_c10]()(boolean)
+if (npc_find(coord, shapeshifterspider, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_ball_c11]()(boolean)
+if (npc_find(coord, shapeshifterbear, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_ball_c12]()(boolean)
+if (npc_find(coord, shapeshifterwolf, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_ball_c13]()(boolean)
+if (~qh_ball_c9 = true) return(true);
+if (~qh_ball_c10 = true) return(true);
+if (~qh_ball_c11 = true) return(true);
+if (~qh_ball_c12 = true) return(true);
+return(false);
+
+[proc,qh_ball_c14]()(boolean)
+if (~qh_ball_c2 = false) return(false);
+if (~qh_ball_c13 = false) return(false);
+return(true);
+
+[proc,qh_ball_c15]()(boolean)
+if (%ballquest >= 3) return(true);
+return(false);
+
+[proc,qh_ball_c16]()(boolean)
+if (calc(inv_total(inv, witches_shedkey) + inv_total(worn, witches_shedkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_ball_c17]()(boolean)
+if (~qh_ball_c15 = false) return(false);
+if (~qh_ball_c3 = false) return(false);
+if (~qh_ball_c16 = false) return(false);
+return(true);
+
+[proc,qh_ball_c18]()(boolean)
+if (~qh_ball_c15 = false) return(false);
+if (~qh_ball_c3 = false) return(false);
+return(true);
+
+[proc,qh_ball_c19]()(boolean)
+if (~qh_ball_c15 = false) return(false);
+if (~qh_ball_c5 = false) return(false);
+return(true);
+
+[proc,qh_ball_c20]()(boolean)
+if (inzone(0_45_54_21_10, 0_45_54_27_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c21]()(boolean)
+if (calc(inv_total(inv, magnet) + inv_total(worn, magnet)) >= 1) return(true);
+return(false);
+
+[proc,qh_ball_c22]()(boolean)
+if (~qh_ball_c20 = false) return(false);
+if (~qh_ball_c21 = false) return(false);
+return(true);
+
+[proc,qh_ball_c23]()(boolean)
+if (~qh_ball_c5 = false) return(false);
+if (~qh_ball_c21 = false) return(false);
+return(true);
+
+[proc,qh_ball_c24]()(boolean)
+if (inzone(0_45_154_17_14, 0_45_154_22_22, coord) = true) return(true);
+return(false);
+
+[proc,qh_ball_c25]()(boolean)
+if (inzone(0_45_154_23_14, 0_45_154_29_22, coord) = true) return(true);
+return(false);

@@ -1,0 +1,226 @@
+// EASCape: Quest Helper for Sea Slug, converted from RuneLite's Quest Helper (seaslug, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC HOLGARTLANDNOTRAVEL not matched
+//   NPC HOLGARTLANDTRAVEL not matched
+//   NPC KENNITH_PLATFORM not matched
+
+[proc,questhelper_seaslug]()(int)
+def_int $v = %seaslugquest;
+if ($v > 11) {
+    return(0); // done
+}
+if ($v >= 11) {
+    if (~qh_seaslug_c1 = true) {
+        return(24);
+    }
+    if (~qh_seaslug_c2 = true) {
+        return(23);
+    }
+    return(25);
+}
+if ($v >= 10) {
+    if (~qh_seaslug_c2 = true) {
+        return(22);
+    }
+    if (~qh_seaslug_c3 = true) {
+        return(18);
+    }
+    if (~qh_seaslug_c6 = true) {
+        return(17);
+    }
+    if (~qh_seaslug_c9 = true) {
+        return(16);
+    }
+    if (~qh_seaslug_c10 = true) {
+        return(15);
+    }
+    if (~qh_seaslug_c4 = true) {
+        return(14);
+    }
+    if (~qh_seaslug_c11 = true) {
+        return(13);
+    }
+    return(12);
+}
+if ($v >= 9) {
+    if (~qh_seaslug_c2 = true) {
+        return(21);
+    }
+    if (~qh_seaslug_c3 = true) {
+        return(18);
+    }
+    if (~qh_seaslug_c6 = true) {
+        return(17);
+    }
+    if (~qh_seaslug_c9 = true) {
+        return(16);
+    }
+    if (~qh_seaslug_c10 = true) {
+        return(15);
+    }
+    if (~qh_seaslug_c4 = true) {
+        return(14);
+    }
+    if (~qh_seaslug_c11 = true) {
+        return(13);
+    }
+    return(12);
+}
+if ($v >= 8) {
+    if (~qh_seaslug_c2 = true) {
+        return(20);
+    }
+    if (~qh_seaslug_c3 = true) {
+        return(18);
+    }
+    if (~qh_seaslug_c6 = true) {
+        return(17);
+    }
+    if (~qh_seaslug_c9 = true) {
+        return(16);
+    }
+    if (~qh_seaslug_c10 = true) {
+        return(15);
+    }
+    if (~qh_seaslug_c4 = true) {
+        return(14);
+    }
+    if (~qh_seaslug_c11 = true) {
+        return(13);
+    }
+    return(12);
+}
+if ($v >= 7) {
+    if (~qh_seaslug_c2 = true) {
+        return(19);
+    }
+    if (~qh_seaslug_c3 = true) {
+        return(18);
+    }
+    if (~qh_seaslug_c6 = true) {
+        return(17);
+    }
+    if (~qh_seaslug_c9 = true) {
+        return(16);
+    }
+    if (~qh_seaslug_c10 = true) {
+        return(15);
+    }
+    if (~qh_seaslug_c4 = true) {
+        return(14);
+    }
+    if (~qh_seaslug_c11 = true) {
+        return(13);
+    }
+    return(12);
+}
+if ($v >= 6) {
+    if (~qh_seaslug_c12 = true) {
+        return(11);
+    }
+    if (~qh_seaslug_c3 = true) {
+        return(18);
+    }
+    if (~qh_seaslug_c6 = true) {
+        return(17);
+    }
+    if (~qh_seaslug_c9 = true) {
+        return(16);
+    }
+    if (~qh_seaslug_c10 = true) {
+        return(15);
+    }
+    if (~qh_seaslug_c4 = true) {
+        return(14);
+    }
+    if (~qh_seaslug_c11 = true) {
+        return(13);
+    }
+    return(12);
+}
+if ($v >= 5) {
+    if (~qh_seaslug_c12 = true) {
+        return(10);
+    }
+    return(9);
+}
+if ($v >= 4) {
+    if (~qh_seaslug_c1 = true) {
+        return(8);
+    }
+    if (~qh_seaslug_c2 = true) {
+        return(7);
+    }
+    return(4);
+}
+if ($v >= 3) {
+    if (~qh_seaslug_c2 = true) {
+        return(6);
+    }
+    if (~qh_seaslug_c1 = true) {
+        return(5);
+    }
+    return(4);
+}
+if ($v >= 2) {
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_seaslug_c1]()(boolean)
+if (inzone(0_43_51_8_7, 0_43_51_43_29, coord) = true) return(true);
+return(false);
+
+[proc,qh_seaslug_c2]()(boolean)
+if (inzone(1_43_51_8_7, 1_43_51_43_29, coord) = true) return(true);
+return(false);
+
+[proc,qh_seaslug_c3]()(boolean)
+if (calc(inv_total(inv, torch_lit) + inv_total(worn, torch_lit)) >= 1) return(true);
+return(false);
+
+[proc,qh_seaslug_c4]()(boolean)
+if (calc(inv_total(inv, torch_unlit) + inv_total(worn, torch_unlit)) >= 1) return(true);
+return(false);
+
+[proc,qh_seaslug_c5]()(boolean)
+if (calc(inv_total(inv, dry_sticks) + inv_total(worn, dry_sticks)) >= 1) return(true);
+return(false);
+
+[proc,qh_seaslug_c6]()(boolean)
+if (~qh_seaslug_c4 = false) return(false);
+if (~qh_seaslug_c5 = false) return(false);
+return(true);
+
+[proc,qh_seaslug_c7]()(boolean)
+if (calc(inv_total(inv, broken_glass) + inv_total(worn, broken_glass)) >= 1) return(true);
+return(false);
+
+[proc,qh_seaslug_c8]()(boolean)
+if (calc(inv_total(inv, damp_sticks) + inv_total(worn, damp_sticks)) >= 1) return(true);
+return(false);
+
+[proc,qh_seaslug_c9]()(boolean)
+if (~qh_seaslug_c4 = false) return(false);
+if (~qh_seaslug_c7 = false) return(false);
+if (~qh_seaslug_c8 = false) return(false);
+return(true);
+
+[proc,qh_seaslug_c10]()(boolean)
+if (~qh_seaslug_c4 = false) return(false);
+if (~qh_seaslug_c7 = false) return(false);
+return(true);
+
+[proc,qh_seaslug_c11]()(boolean)
+if (inzone(1_43_51_8_7, 1_43_51_43_29, coord) = true | inzone(0_43_51_8_7, 0_43_51_43_29, coord) = true) return(true);
+return(false);
+
+[proc,qh_seaslug_c12]()(boolean)
+if (inzone(0_43_51_35_48, 0_43_51_50_63, coord) = true) return(true);
+return(false);

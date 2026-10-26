@@ -1,0 +1,197 @@
+// EASCape: Quest Helper for Shades of Mort'ton, converted from RuneLite's Quest Helper (shadesofmortton, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_mortton]()(int)
+def_int $v = %morttonquest;
+if ($v > 80) {
+    return(0); // done
+}
+if ($v >= 80) {
+    if (~qh_mortton_c3 = true) {
+        return(25);
+    }
+    if (~qh_mortton_c1 = true) {
+        return(24);
+    }
+    return(23);
+}
+if ($v >= 75) {
+    return(22);
+}
+if ($v >= 70) {
+    return(22);
+}
+if ($v >= 65) {
+    if (~qh_mortton_c6 = true) {
+        return(21);
+    }
+    if (~qh_mortton_c9 = true) {
+        return(20);
+    }
+    if (~qh_mortton_c10 = true) {
+        return(19);
+    }
+    if (~qh_mortton_c7 = true) {
+        return(18);
+    }
+    if (~qh_mortton_c11 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 60) {
+    if (~qh_mortton_c9 = true) {
+        return(20);
+    }
+    if (~qh_mortton_c10 = true) {
+        return(19);
+    }
+    if (~qh_mortton_c7 = true) {
+        return(18);
+    }
+    if (~qh_mortton_c11 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 55) {
+    if (~qh_mortton_c9 = true) {
+        return(20);
+    }
+    if (~qh_mortton_c10 = true) {
+        return(19);
+    }
+    if (~qh_mortton_c7 = true) {
+        return(18);
+    }
+    if (~qh_mortton_c11 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 50) {
+    if (~qh_mortton_c9 = true) {
+        return(20);
+    }
+    if (~qh_mortton_c10 = true) {
+        return(19);
+    }
+    if (~qh_mortton_c7 = true) {
+        return(18);
+    }
+    if (~qh_mortton_c11 = true) {
+        return(17);
+    }
+    return(16);
+}
+if ($v >= 47) {
+    if (~qh_mortton_c12 = true) {
+        return(15);
+    }
+    return(13);
+}
+if ($v >= 45) {
+    if (~qh_mortton_c12 = true) {
+        return(14);
+    }
+    return(13);
+}
+if ($v >= 40) {
+    if (~qh_mortton_c13 = true) {
+        return(12);
+    }
+    return(11);
+}
+if ($v >= 35) {
+    return(7);
+}
+if ($v >= 30) {
+    return(8);
+}
+if ($v >= 25) {
+    return(9);
+}
+if ($v >= 20) {
+    return(10);
+}
+if ($v >= 15) {
+    return(6);
+}
+if ($v >= 10) {
+    if (~qh_mortton_c13 = true) {
+        return(5);
+    }
+    return(4);
+}
+if ($v >= 5) {
+    return(3);
+}
+if ($v >= 0) {
+    if (~qh_mortton_c14 = true) {
+        return(2);
+    }
+    return(1);
+}
+return(1);
+
+[proc,qh_mortton_c1]()(boolean)
+if (testbit(%morttonmulti, 6) = ^true) return(true);
+return(false);
+
+[proc,qh_mortton_c2]()(boolean)
+if (testbit(%morttonmulti, 5) = ^true) return(true);
+return(false);
+
+[proc,qh_mortton_c3]()(boolean)
+if (~qh_mortton_c1 = false) return(false);
+if (~qh_mortton_c2 = false) return(false);
+return(true);
+
+[proc,qh_mortton_c4]()(boolean)
+if (calc(inv_total(inv, mort_serum_perm1) + inv_total(worn, mort_serum_perm1)) >= 1) return(true);
+return(false);
+
+[proc,qh_mortton_c5]()(boolean)
+if (calc(inv_total(inv, sacred_oil1) + inv_total(worn, sacred_oil1)) >= 1) return(true);
+return(false);
+
+[proc,qh_mortton_c6]()(boolean)
+if (~qh_mortton_c4 = false) return(false);
+if (~qh_mortton_c5 = false) return(false);
+return(true);
+
+[proc,qh_mortton_c7]()(boolean)
+if (loc_find(0_54_51_50_52, templefire_altar) = true) return(true);
+return(false);
+
+[proc,qh_mortton_c8]()(boolean)
+if (%temple_sanctity_p >= 20) return(true);
+return(false);
+
+[proc,qh_mortton_c9]()(boolean)
+if (~qh_mortton_c7 = false) return(false);
+if (~qh_mortton_c8 = false) return(false);
+if (~qh_mortton_c5 = false) return(false);
+return(true);
+
+[proc,qh_mortton_c10]()(boolean)
+if (~qh_mortton_c7 = false) return(false);
+if (~qh_mortton_c8 = false) return(false);
+return(true);
+
+[proc,qh_mortton_c11]()(boolean)
+if (%temple_repaired_p = 100) return(true);
+return(false);
+
+[proc,qh_mortton_c12]()(boolean)
+if (testbit(%morttonmulti, 1) = ^true) return(true);
+return(false);
+
+[proc,qh_mortton_c13]()(boolean)
+if (testbit(%morttonmulti, 3) = ^true) return(true);
+return(false);
+
+[proc,qh_mortton_c14]()(boolean)
+if (calc(inv_total(inv, serum_book) + inv_total(worn, serum_book)) >= 1) return(true);
+return(false);

@@ -1,0 +1,28 @@
+// EASCape: Quest Helper for Murder Mystery, converted from RuneLite's Quest Helper (murdermystery, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   RuneliteRequirement not carried over
+
+[proc,questhelper_murder]()(int)
+def_int $v = %murderquest;
+if ($v > 1) {
+    return(0); // done
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_murder_c1]()(boolean)
+if (calc(inv_total(inv, murderpot2) + inv_total(worn, murderpot2)) >= 1) return(true);
+return(false);
+
+[proc,qh_murder_c2]()(boolean)
+if (~qh_murder_c1 = true) return(false);
+return(true);
+
+[proc,qh_murder_c3]()(boolean)
+if (~qh_murder_c2 = true) return(true);
+return(false);

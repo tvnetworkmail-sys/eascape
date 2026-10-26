@@ -1,0 +1,172 @@
+// EASCape: Quest Helper for Merlin's Crystal, converted from RuneLite's Quest Helper (merlinscrystal, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   DialogRequirement not carried over
+//   field not carried over
+//   messageBox not carried over
+
+[proc,questhelper_arthur]()(int)
+def_int $v = %arthur;
+if ($v > 6) {
+    return(0); // done
+}
+if ($v >= 6) {
+    if (~qh_arthur_c1 = true) {
+        return(32);
+    }
+    if (~qh_arthur_c2 = true) {
+        return(33);
+    }
+    return(31);
+}
+if ($v >= 5) {
+    if (~qh_arthur_c2 = true) {
+        return(30);
+    }
+    if (~qh_arthur_c1 = true) {
+        return(29);
+    }
+    return(28);
+}
+if ($v >= 4) {
+    if (~qh_arthur_c4 = true) {
+        if (~qh_arthur_c5 = true) {
+            return(11);
+        }
+        if (~qh_arthur_c6 = true) {
+            return(12);
+        }
+        return(13);
+    }
+    if (~qh_arthur_c9 = true) {
+        return(22);
+    }
+    if (~qh_arthur_c7 = true) {
+        if (~qh_arthur_c10 = true) {
+            return(21);
+        }
+        return(19);
+    }
+    if (~qh_arthur_c11 = true) {
+        return(14);
+    }
+    if (~qh_arthur_c12 = true) {
+        return(18);
+    }
+    if (~qh_arthur_c15 = true) {
+        return(17);
+    }
+    if (~qh_arthur_c13 = true) {
+        return(16);
+    }
+    return(15);
+}
+if ($v >= 3) {
+    if (~qh_arthur_c17 = true) {
+        return(10);
+    }
+    if (~qh_arthur_c5 = true) {
+        return(9);
+    }
+    if (~qh_arthur_c6 = true) {
+        return(8);
+    }
+    if (~qh_arthur_c18 = true) {
+        return(7);
+    }
+    if (~qh_arthur_c19 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 2) {
+    if (~qh_arthur_c19 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_arthur_c1]()(boolean)
+if (inzone(1_43_54_13_34, 1_43_54_18_39, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c2]()(boolean)
+if (inzone(2_43_54_13_34, 2_43_54_18_38, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c3]()(boolean)
+if (calc(inv_total(inv, bat_bones) + inv_total(worn, bat_bones)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c4]()(boolean)
+if (~qh_arthur_c3 = true) return(false);
+return(true);
+
+[proc,qh_arthur_c5]()(boolean)
+if (inzone(2_43_53_12_3, 2_43_53_29_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c6]()(boolean)
+if (inzone(1_43_53_12_3, 1_43_53_29_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c7]()(boolean)
+if (calc(inv_total(inv, unlit_black_candle) + inv_total(worn, unlit_black_candle) + inv_total(inv, lit_black_candle) + inv_total(worn, lit_black_candle)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c8]()(boolean)
+if (calc(inv_total(inv, excalibur) + inv_total(worn, excalibur)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c9]()(boolean)
+if (~qh_arthur_c7 = false) return(false);
+if (~qh_arthur_c8 = false) return(false);
+return(true);
+
+[proc,qh_arthur_c10]()(boolean)
+if (npc_find(coord, lake_beggar, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c11]()(boolean)
+if (inzone(1_43_53_12_3, 1_43_53_29_18, coord) = true | inzone(0_43_53_12_3, 0_43_53_29_18, coord) = true | inzone(2_43_53_12_3, 2_43_53_29_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c12]()(boolean)
+if (calc(inv_total(inv, bucket_wax) + inv_total(worn, bucket_wax)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c13]()(boolean)
+if (calc(inv_total(inv, insect_repellent) + inv_total(worn, insect_repellent)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c14]()(boolean)
+if (calc(inv_total(inv, bucket_empty) + inv_total(worn, bucket_empty)) >= 1) return(true);
+return(false);
+
+[proc,qh_arthur_c15]()(boolean)
+if (~qh_arthur_c13 = false) return(false);
+if (~qh_arthur_c14 = false) return(false);
+return(true);
+
+[proc,qh_arthur_c16]()(boolean)
+if (npc_find(coord, morgan_le_faye, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c17]()(boolean)
+if (~qh_arthur_c5 = false) return(false);
+if (~qh_arthur_c16 = false) return(false);
+return(true);
+
+[proc,qh_arthur_c18]()(boolean)
+if (inzone(0_43_53_12_3, 0_43_53_29_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_arthur_c19]()(boolean)
+if (inzone(1_42_54_56_27, 1_43_54_17_61, coord) = true) return(true);
+return(false);

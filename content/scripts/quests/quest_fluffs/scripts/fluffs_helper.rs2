@@ -1,0 +1,79 @@
+// EASCape: Quest Helper for Gertrude's Cat, converted from RuneLite's Quest Helper (gertrudescat, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC GERTRUDE_QUEST not matched
+
+[proc,questhelper_fluffs]()(int)
+def_int $v = %fluffs;
+if ($v > 5) {
+    return(0); // done
+}
+if ($v >= 5) {
+    return(13);
+}
+if ($v >= 4) {
+    if (~qh_fluffs_c3 = true) {
+        return(11);
+    }
+    if (~qh_fluffs_c1 = true) {
+        return(12);
+    }
+    if (~qh_fluffs_c2 = true) {
+        return(10);
+    }
+    return(9);
+}
+if ($v >= 3) {
+    if (~qh_fluffs_c2 = true) {
+        return(7);
+    }
+    return(8);
+}
+if ($v >= 2) {
+    if (~qh_fluffs_c2 = true) {
+        return(5);
+    }
+    return(6);
+}
+if ($v >= 1) {
+    if (~qh_fluffs_c6 = true) {
+        return(3);
+    }
+    if (~qh_fluffs_c7 = true) {
+        return(4);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_fluffs_c1]()(boolean)
+if (calc(inv_total(inv, gertrudekittens) + inv_total(worn, gertrudekittens)) >= 1) return(true);
+return(false);
+
+[proc,qh_fluffs_c2]()(boolean)
+if (inzone(1_51_54_42_51, 12_51_54_48_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_fluffs_c3]()(boolean)
+if (~qh_fluffs_c1 = false) return(false);
+if (~qh_fluffs_c2 = false) return(false);
+return(true);
+
+[proc,qh_fluffs_c4]()(boolean)
+if (calc(inv_total(inv, raw_sardine) + inv_total(worn, raw_sardine)) >= 1) return(true);
+return(false);
+
+[proc,qh_fluffs_c5]()(boolean)
+if (calc(inv_total(inv, doogleleaves) + inv_total(worn, doogleleaves)) >= 1) return(true);
+return(false);
+
+[proc,qh_fluffs_c6]()(boolean)
+if (~qh_fluffs_c4 = false) return(false);
+if (~qh_fluffs_c5 = false) return(false);
+return(true);
+
+[proc,qh_fluffs_c7]()(boolean)
+if (calc(inv_total(inv, seasoned_sardine) + inv_total(worn, seasoned_sardine)) >= 1) return(true);
+return(false);

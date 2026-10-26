@@ -1,0 +1,98 @@
+// EASCape: Quest Helper for Observatory Quest, converted from RuneLite's Quest Helper (observatoryquest, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC QIP_OBS_GOBLIN_GUARD not matched
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'OBSERVATORY_GATELOCK') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'OBSERVATORY_MOULD_PRES') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'OBSERVATORY_SCOPELOOKED') not in our game
+
+[proc,questhelper_itgronigen]()(int)
+def_int $v = %itgronigen;
+if ($v > 6) {
+    return(0); // done
+}
+if ($v >= 6) {
+    if (~qh_itgronigen_c5 = true) {
+        return(15);
+    }
+    if (~qh_itgronigen_c1 = true) {
+        return(17);
+    }
+    if (~qh_itgronigen_c3 = true) {
+        return(16);
+    }
+    if (~qh_itgronigen_c6 = true) {
+        return(14);
+    }
+    return(13);
+}
+if ($v >= 5) {
+    if (~qh_itgronigen_c7 = true) {
+        return(12);
+    }
+    return(5);
+}
+if ($v >= 4) {
+    if (~qh_itgronigen_c10 = true) {
+        return(8);
+    }
+    if (~qh_itgronigen_c6 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 3) {
+    return(4);
+}
+if ($v >= 2) {
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_itgronigen_c1]()(boolean)
+if (inzone(1_38_49_1_18, 1_38_49_16_33, coord) = true) return(true);
+return(false);
+
+[proc,qh_itgronigen_c2]()(boolean)
+if (%cutscene_status = 1) return(true);
+return(false);
+
+[proc,qh_itgronigen_c3]()(boolean)
+if (inzone(0_38_49_1_18, 0_38_49_16_33, coord) = true) return(true);
+return(false);
+
+[proc,qh_itgronigen_c4]()(boolean)
+if (~qh_itgronigen_c3 = true) return(true);
+if (~qh_itgronigen_c1 = true) return(true);
+return(false);
+
+[proc,qh_itgronigen_c5]()(boolean)
+if (~qh_itgronigen_c2 = false) return(false);
+if (~qh_itgronigen_c4 = false) return(false);
+return(true);
+
+[proc,qh_itgronigen_c6]()(boolean)
+if (inzone(0_35_145_55_60, 0_37_147_2_2, coord) = true) return(true);
+return(false);
+
+[proc,qh_itgronigen_c7]()(boolean)
+if (calc(inv_total(inv, lens) + inv_total(worn, lens)) >= 1) return(true);
+return(false);
+
+[proc,qh_itgronigen_c8]()(boolean)
+if (calc(inv_total(inv, keep_key) + inv_total(worn, keep_key)) >= 1) return(true);
+return(false);
+
+[proc,qh_itgronigen_c9]()(boolean)
+if (~qh_itgronigen_c8 = true) return(true);
+return(false);
+
+[proc,qh_itgronigen_c10]()(boolean)
+if (~qh_itgronigen_c6 = false) return(false);
+if (~qh_itgronigen_c9 = false) return(false);
+return(true);

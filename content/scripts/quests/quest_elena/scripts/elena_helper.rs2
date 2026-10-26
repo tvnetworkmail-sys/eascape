@@ -1,0 +1,287 @@
+// EASCape: Quest Helper for Plague City, converted from RuneLite's Quest Helper (plaguecity, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC JETHICK_VIS not matched
+
+[proc,questhelper_elena]()(int)
+def_int $v = %elenaquest;
+if ($v > 28) {
+    return(0); // done
+}
+if ($v >= 28) {
+    if (~qh_elena_c1 = true) {
+        return(34);
+    }
+    if (~qh_elena_c2 = true) {
+        return(35);
+    }
+    if (~qh_elena_c3 = true) {
+        return(37);
+    }
+    return(33);
+}
+if ($v >= 27) {
+    if (~qh_elena_c5 = true) {
+        return(32);
+    }
+    if (~qh_elena_c7 = true) {
+        return(31);
+    }
+    if (~qh_elena_c6 = true) {
+        return(29);
+    }
+    if (~qh_elena_c1 = true) {
+        return(30);
+    }
+    if (~qh_elena_c9 = true) {
+        return(28);
+    }
+    if (~qh_elena_c2 = true) {
+        return(27);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 26) {
+    if (~qh_elena_c11 = true) {
+        return(26);
+    }
+    if (~qh_elena_c12 = true) {
+        return(15);
+    }
+    if (~qh_elena_c10 = true) {
+        return(11);
+    }
+    if (~qh_elena_c13 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 25) {
+    if (~qh_elena_c2 = true) {
+        return(23);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 24) {
+    if (~qh_elena_c2 = true) {
+        return(22);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 23) {
+    if (~qh_elena_c2 = true) {
+        return(21);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 22) {
+    if (~qh_elena_c14 = true) {
+        return(20);
+    }
+    if (~qh_elena_c2 = true) {
+        return(19);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 21) {
+    if (~qh_elena_c2 = true) {
+        return(18);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 20) {
+    if (~qh_elena_c16 = true) {
+        return(17);
+    }
+    if (~qh_elena_c2 = true) {
+        return(16);
+    }
+    if (~qh_elena_c3 = true) {
+        return(15);
+    }
+    return(11);
+}
+if ($v >= 10) {
+    if (~qh_elena_c18 = true) {
+        return(16);
+    }
+    if (~qh_elena_c19 = true) {
+        return(15);
+    }
+    if (~qh_elena_c3 = true) {
+        return(4);
+    }
+    if (~qh_elena_c17 = true) {
+        return(11);
+    }
+    return(3);
+}
+if ($v >= 9) {
+    if (~qh_elena_c19 = true) {
+        return(14);
+    }
+    if (~qh_elena_c3 = true) {
+        return(4);
+    }
+    if (~qh_elena_c17 = true) {
+        return(11);
+    }
+    return(3);
+}
+if ($v >= 8) {
+    if (~qh_elena_c21 = true) {
+        return(13);
+    }
+    if (~qh_elena_c19 = true) {
+        return(12);
+    }
+    if (~qh_elena_c3 = true) {
+        return(4);
+    }
+    if (~qh_elena_c17 = true) {
+        return(11);
+    }
+    return(3);
+}
+if ($v >= 7) {
+    if (~qh_elena_c17 = true) {
+        return(10);
+    }
+    return(3);
+}
+if ($v >= 6) {
+    return(9);
+}
+if ($v >= 5) {
+    return(8);
+}
+if ($v >= 4) {
+    return(7);
+}
+if ($v >= 3) {
+    return(6);
+}
+if ($v >= 2) {
+    if (~qh_elena_c17 = true) {
+        return(5);
+    }
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_elena_c1]()(boolean)
+if (inzone(0_39_151_39_6, 0_39_151_46_9, coord) = true) return(true);
+return(false);
+
+[proc,qh_elena_c2]()(boolean)
+if (inzone(0_38_51_28_15, 2_39_52_60_6, coord) = true | inzone(0_38_51_2_41, 2_38_51_32_59, coord) = true | inzone(0_39_51_14_1, 2_39_51_60_16, coord) = true) return(true);
+return(false);
+
+[proc,qh_elena_c3]()(boolean)
+if (inzone(0_39_152_10_9, 0_39_152_36_53, coord) = true) return(true);
+return(false);
+
+[proc,qh_elena_c4]()(boolean)
+if (calc(inv_total(inv, elenakey) + inv_total(worn, elenakey)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c5]()(boolean)
+if (~qh_elena_c1 = false) return(false);
+if (~qh_elena_c4 = false) return(false);
+return(true);
+
+[proc,qh_elena_c6]()(boolean)
+if (inzone(0_39_51_36_4, 0_39_51_45_7, coord) = true | inzone(0_39_51_39_8, 0_39_51_45_8, coord) = true) return(true);
+return(false);
+
+[proc,qh_elena_c7]()(boolean)
+if (~qh_elena_c6 = false) return(false);
+if (~qh_elena_c4 = false) return(false);
+return(true);
+
+[proc,qh_elena_c8]()(boolean)
+if (calc(inv_total(inv, warrant) + inv_total(worn, warrant)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c9]()(boolean)
+if (~qh_elena_c8 = false) return(false);
+if (~qh_elena_c2 = false) return(false);
+return(true);
+
+[proc,qh_elena_c10]()(boolean)
+if (calc(inv_total(inv, hangover_cure) + inv_total(worn, hangover_cure)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c11]()(boolean)
+if (~qh_elena_c2 = false) return(false);
+if (~qh_elena_c10 = false) return(false);
+return(true);
+
+[proc,qh_elena_c12]()(boolean)
+if (~qh_elena_c10 = false) return(false);
+if (~qh_elena_c3 = false) return(false);
+return(true);
+
+[proc,qh_elena_c13]()(boolean)
+if (calc(inv_total(inv, chocolaty_milk) + inv_total(worn, chocolaty_milk)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c14]()(boolean)
+if (inzone(1_39_52_31_1, 1_39_52_37_5, coord) = true) return(true);
+return(false);
+
+[proc,qh_elena_c15]()(boolean)
+if (calc(inv_total(inv, turnip_book) + inv_total(worn, turnip_book)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c16]()(boolean)
+if (~qh_elena_c2 = false) return(false);
+if (~qh_elena_c15 = false) return(false);
+return(true);
+
+[proc,qh_elena_c17]()(boolean)
+if (calc(inv_total(inv, elena_picture) + inv_total(worn, elena_picture)) >= 1) return(true);
+return(false);
+
+[proc,qh_elena_c18]()(boolean)
+if (~qh_elena_c2 = false) return(false);
+if (~qh_elena_c17 = false) return(false);
+return(true);
+
+[proc,qh_elena_c19]()(boolean)
+if (~qh_elena_c3 = false) return(false);
+if (~qh_elena_c17 = false) return(false);
+return(true);
+
+[proc,qh_elena_c20]()(boolean)
+if (%plaguecity_checked_grill = 1) return(true);
+return(false);
+
+[proc,qh_elena_c21]()(boolean)
+if (~qh_elena_c20 = false) return(false);
+if (~qh_elena_c3 = false) return(false);
+if (~qh_elena_c17 = false) return(false);
+return(true);

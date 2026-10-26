@@ -1,0 +1,59 @@
+// EASCape: Quest Helper for Romeo & Juliet, converted from RuneLite's Quest Helper (romeoandjuliet, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_romeojuliet]()(int)
+def_int $v = %rjquest;
+if ($v > 60) {
+    return(0); // done
+}
+if ($v >= 60) {
+    return(10);
+}
+if ($v >= 50) {
+    if (~qh_romeojuliet_c3 = true) {
+        return(8);
+    }
+    if (~qh_romeojuliet_c1 = true) {
+        return(9);
+    }
+    return(7);
+}
+if ($v >= 40) {
+    return(7);
+}
+if ($v >= 30) {
+    return(6);
+}
+if ($v >= 20) {
+    if (~qh_romeojuliet_c2 = true) {
+        return(5);
+    }
+    if (~qh_romeojuliet_c2 = true) {
+        return(11);
+    }
+    return(4);
+}
+if ($v >= 10) {
+    if (~qh_romeojuliet_c2 = true) {
+        return(2);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_romeojuliet_c1]()(boolean)
+if (calc(inv_total(inv, cadava) + inv_total(worn, cadava)) >= 1) return(true);
+return(false);
+
+[proc,qh_romeojuliet_c2]()(boolean)
+if (inzone(1_49_53_11_33, 1_49_53_30_51, coord) = true) return(true);
+return(false);
+
+[proc,qh_romeojuliet_c3]()(boolean)
+if (~qh_romeojuliet_c1 = false) return(false);
+if (~qh_romeojuliet_c2 = false) return(false);
+return(true);

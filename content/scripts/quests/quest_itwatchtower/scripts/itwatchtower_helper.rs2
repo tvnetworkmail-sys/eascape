@@ -1,0 +1,296 @@
+// EASCape: Quest Helper for Watchtower, converted from RuneLite's Quest Helper (watchtower, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ChatMessageRequirement not carried over
+//   DialogRequirement not carried over
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_01_NORMAL not matched
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_02_NORMAL not matched
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_03_NORMAL not matched
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_04_NORMAL not matched
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_05_NORMAL not matched
+//   NPC QIP_WATCHTOWER_OGRE_SHAMAN_06_NORMAL not matched
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_GATE_CHAT_3') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_NIGHTSHADE_USED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_PILLAR_1') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_PILLAR_2') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_PILLAR_3') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_PILLAR_4') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_PUZZLE_CHAT') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_ROCK_MINED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_1') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_2') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_3') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_4') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_5') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'WATCHTOWER_SHAMAN_6') not in our game
+//   WidgetTextRequirement not carried over
+//   field not carried over
+
+[proc,questhelper_itwatchtower]()(int)
+def_int $v = %itwatchtower;
+if ($v > 12) {
+    return(0); // done
+}
+if ($v >= 12) {
+    if (~qh_itwatchtower_c1 = true) {
+        return(74);
+    }
+    if (~qh_itwatchtower_c2 = true) {
+        return(73);
+    }
+    return(72);
+}
+if ($v >= 11) {
+    if (~qh_itwatchtower_c1 = true) {
+        return(74);
+    }
+    if (~qh_itwatchtower_c2 = true) {
+        return(73);
+    }
+    return(72);
+}
+if ($v >= 10) {
+    if (~qh_itwatchtower_c3 = true) {
+        return(63);
+    }
+    return(62);
+}
+if ($v >= 9) {
+    if (~qh_itwatchtower_c5 = true) {
+        return(59);
+    }
+    if (~qh_itwatchtower_c6 = true) {
+        return(61);
+    }
+    if (~qh_itwatchtower_c4 = true) {
+        return(60);
+    }
+    if (~qh_itwatchtower_c9 = true) {
+        return(58);
+    }
+    if (~qh_itwatchtower_c7 = true) {
+        return(57);
+    }
+    return(56);
+}
+if ($v >= 8) {
+    if (~qh_itwatchtower_c12 = true) {
+        return(51);
+    }
+    if (~qh_itwatchtower_c10 = true) {
+        return(49);
+    }
+    return(50);
+}
+if ($v >= 7) {
+    if (~qh_itwatchtower_c12 = true) {
+        return(51);
+    }
+    if (~qh_itwatchtower_c10 = true) {
+        return(49);
+    }
+    return(50);
+}
+if ($v >= 6) {
+    if (~qh_itwatchtower_c18 = true) {
+        return(33);
+    }
+    return(32);
+}
+if ($v >= 5) {
+    if (~qh_itwatchtower_c19 = true) {
+        return(30);
+    }
+    if (~qh_itwatchtower_c21 = true) {
+        return(27);
+    }
+    return(26);
+}
+if ($v >= 4) {
+    if (~qh_itwatchtower_c19 = true) {
+        return(30);
+    }
+    if (~qh_itwatchtower_c21 = true) {
+        return(27);
+    }
+    return(26);
+}
+if ($v >= 3) {
+    return(25);
+}
+if ($v >= 2) {
+    return(79);
+}
+if ($v >= 1) {
+    if (~qh_itwatchtower_c34 = true) {
+        return(7);
+    }
+    if (~qh_itwatchtower_c35 = true) {
+        return(9);
+    }
+    if (~qh_itwatchtower_c33 = true) {
+        return(8);
+    }
+    if (~qh_itwatchtower_c1 = true) {
+        return(5);
+    }
+    if (~qh_itwatchtower_c2 = true) {
+        return(6);
+    }
+    return(4);
+}
+if ($v >= 0) {
+    if (~qh_itwatchtower_c1 = true) {
+        return(1);
+    }
+    if (~qh_itwatchtower_c2 = true) {
+        return(3);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_itwatchtower_c1]()(boolean)
+if (inzone(2_39_48_47_39, 2_39_48_54_46, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c2]()(boolean)
+if (inzone(1_39_48_47_39, 1_39_48_54_46, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c3]()(boolean)
+if (inzone(0_40_147_3_0, 0_40_147_61_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c4]()(boolean)
+if (calc(inv_total(inv, ogre_potion) + inv_total(worn, ogre_potion)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c5]()(boolean)
+if (~qh_itwatchtower_c4 = false) return(false);
+if (~qh_itwatchtower_c1 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c6]()(boolean)
+if (~qh_itwatchtower_c4 = false) return(false);
+if (~qh_itwatchtower_c2 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c7]()(boolean)
+if (calc(inv_total(inv, guamjangervial) + inv_total(worn, guamjangervial)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c8]()(boolean)
+if (calc(inv_total(inv, ground_bat_bones) + inv_total(worn, ground_bat_bones)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c9]()(boolean)
+if (~qh_itwatchtower_c7 = false) return(false);
+if (~qh_itwatchtower_c8 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c10]()(boolean)
+if (inzone(0_39_147_26_2, 0_39_147_34_7, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c11]()(boolean)
+if (calc(inv_total(inv, nightshade) + inv_total(worn, nightshade)) >= 2) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c12]()(boolean)
+if (~qh_itwatchtower_c10 = false) return(false);
+if (~qh_itwatchtower_c11 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c13]()(boolean)
+if (inzone(0_39_47_50_3, 0_39_47_57_19, coord) = true | inzone(0_39_47_33_3, 0_39_47_49_7, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c14]()(boolean)
+if (inzone(0_39_147_2_2, 0_39_147_9_12, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c15]()(boolean)
+if (inzone(0_39_147_32_53, 0_39_147_39_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c16]()(boolean)
+if (inzone(0_39_147_16_38, 0_39_147_26_47, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c17]()(boolean)
+if (inzone(0_39_147_2_37, 0_39_147_13_45, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c18]()(boolean)
+if (inzone(0_39_147_2_16, 0_39_147_14_33, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c19]()(boolean)
+if (inzone(0_39_47_30_19, 0_39_47_49_28, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c20]()(boolean)
+if (inzone(0_39_46_11_60, 0_39_47_36_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c21]()(boolean)
+if (calc(inv_total(inv, rockcake) + inv_total(worn, rockcake)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c22]()(boolean)
+if (calc(inv_total(inv, relicpart1) + inv_total(worn, relicpart1)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c23]()(boolean)
+if (calc(inv_total(inv, relicpart2) + inv_total(worn, relicpart2)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c24]()(boolean)
+if (calc(inv_total(inv, relicpart3) + inv_total(worn, relicpart3)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c25]()(boolean)
+if (calc(inv_total(inv, ogretooth) + inv_total(worn, ogretooth)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c26]()(boolean)
+if (~qh_itwatchtower_c25 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c27]()(boolean)
+if (inzone(0_39_48_8_6, 0_39_48_24_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c28]()(boolean)
+if (calc(inv_total(inv, stolen_gold) + inv_total(worn, stolen_gold)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c29]()(boolean)
+if (~qh_itwatchtower_c28 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c30]()(boolean)
+if (calc(inv_total(inv, toban_key) + inv_total(worn, toban_key)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c31]()(boolean)
+if (~qh_itwatchtower_c30 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c32]()(boolean)
+if (inzone(0_40_47_9_13, 0_40_47_22_30, coord) = true) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c33]()(boolean)
+if (calc(inv_total(inv, fingernails) + inv_total(worn, fingernails)) >= 1) return(true);
+return(false);
+
+[proc,qh_itwatchtower_c34]()(boolean)
+if (~qh_itwatchtower_c33 = false) return(false);
+if (~qh_itwatchtower_c1 = false) return(false);
+return(true);
+
+[proc,qh_itwatchtower_c35]()(boolean)
+if (~qh_itwatchtower_c33 = false) return(false);
+if (~qh_itwatchtower_c2 = false) return(false);
+return(true);

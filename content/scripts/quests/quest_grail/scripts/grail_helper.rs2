@@ -1,0 +1,321 @@
+// EASCape: Quest Helper for Holy Grail, converted from RuneLite's Quest Helper (holygrail, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   DialogRequirement not carried over
+//   ItemOnTileRequirement not carried over
+
+[proc,questhelper_grail]()(int)
+def_int $v = %grail;
+if ($v > 9) {
+    return(0); // done
+}
+if ($v >= 9) {
+    if (~qh_grail_c1 = true) {
+        return(32);
+    }
+    if (~qh_grail_c2 = true) {
+        return(31);
+    }
+    if (~qh_grail_c3 = true) {
+        return(30);
+    }
+    if (~qh_grail_c7 = true) {
+        return(29);
+    }
+    if (~qh_grail_c8 = true) {
+        return(28);
+    }
+    if (~qh_grail_c9 = true) {
+        return(27);
+    }
+    return(26);
+}
+if ($v >= 8) {
+    if (~qh_grail_c10 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 7) {
+    if (~qh_grail_c11 = true) {
+        return(23);
+    }
+    if (~qh_grail_c12 = true) {
+        return(22);
+    }
+    if (~qh_grail_c15 = true) {
+        return(21);
+    }
+    if (~qh_grail_c17 = true) {
+        return(20);
+    }
+    if (~qh_grail_c16 = true) {
+        return(18);
+    }
+    if (~qh_grail_c20 = true) {
+        return(17);
+    }
+    if (~qh_grail_c22 = true) {
+        return(16);
+    }
+    if (~qh_grail_c23 = true) {
+        return(14);
+    }
+    if (~qh_grail_c21 = true) {
+        return(15);
+    }
+    if (~qh_grail_c26 = true) {
+        return(13);
+    }
+    if (~qh_grail_c28 = true) {
+        return(12);
+    }
+    if (~qh_grail_c30 = true) {
+        return(11);
+    }
+    if (~qh_grail_c32 = true) {
+        return(10);
+    }
+    if (~qh_grail_c34 = true) {
+        return(9);
+    }
+    if (~qh_grail_c25 = true) {
+        return(8);
+    }
+    return(7);
+}
+if ($v >= 4) {
+    if (~qh_grail_c11 = true) {
+        return(23);
+    }
+    if (~qh_grail_c12 = true) {
+        return(22);
+    }
+    if (~qh_grail_c15 = true) {
+        return(21);
+    }
+    if (~qh_grail_c17 = true) {
+        return(20);
+    }
+    if (~qh_grail_c16 = true) {
+        return(18);
+    }
+    if (~qh_grail_c20 = true) {
+        return(17);
+    }
+    if (~qh_grail_c22 = true) {
+        return(16);
+    }
+    if (~qh_grail_c23 = true) {
+        return(14);
+    }
+    if (~qh_grail_c21 = true) {
+        return(15);
+    }
+    if (~qh_grail_c26 = true) {
+        return(13);
+    }
+    if (~qh_grail_c28 = true) {
+        return(12);
+    }
+    if (~qh_grail_c30 = true) {
+        return(11);
+    }
+    if (~qh_grail_c32 = true) {
+        return(10);
+    }
+    if (~qh_grail_c34 = true) {
+        return(9);
+    }
+    if (~qh_grail_c25 = true) {
+        return(8);
+    }
+    return(7);
+}
+if ($v >= 3) {
+    if (~qh_grail_c35 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 2) {
+    if (~qh_grail_c38 = true) {
+        return(2);
+    }
+    if (~qh_grail_c39 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_grail_c1]()(boolean)
+if (calc(inv_total(inv, holy_grail) + inv_total(worn, holy_grail)) >= 1) return(true);
+return(false);
+
+[proc,qh_grail_c2]()(boolean)
+if (inzone(2_41_73_23_10, 2_41_73_27_14, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c3]()(boolean)
+if (inzone(1_41_73_22_9, 1_41_73_28_15, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c4]()(boolean)
+if (inzone(0_41_73_4_3, 0_41_73_28_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c5]()(boolean)
+if (loc_find(0_41_73_10_21, loc_1524) = true) return(true);
+return(false);
+
+[proc,qh_grail_c6]()(boolean)
+if (~qh_grail_c5 = true) return(false);
+return(true);
+
+[proc,qh_grail_c7]()(boolean)
+if (~qh_grail_c4 = true) return(true);
+if (~qh_grail_c6 = true) return(true);
+return(false);
+
+[proc,qh_grail_c8]()(boolean)
+if (inzone(0_41_73_1_0, 0_41_73_59_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c9]()(boolean)
+if (inzone(0_42_50_52_34, 0_42_50_55_37, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c10]()(boolean)
+if (calc(inv_total(inv, magic_golden_feather) + inv_total(worn, magic_golden_feather)) >= 1) return(true);
+return(false);
+
+[proc,qh_grail_c11]()(boolean)
+if (inzone(1_43_73_4_3, 1_43_73_19_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c12]()(boolean)
+if (inzone(0_43_73_4_3, 0_43_73_28_20, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c13]()(boolean)
+if (calc(inv_total(inv, grail_bell) + inv_total(worn, grail_bell)) >= 1) return(true);
+return(false);
+
+[proc,qh_grail_c14]()(boolean)
+if (inzone(0_43_73_9_22, 0_43_73_10_22, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c15]()(boolean)
+if (~qh_grail_c13 = false) return(false);
+if (~qh_grail_c14 = false) return(false);
+return(true);
+
+[proc,qh_grail_c16]()(boolean)
+if (inzone(0_43_72_0_63, 0_43_73_39_62, coord) = true | inzone(0_43_73_39_16, 0_43_73_56_35, coord) = true | inzone(0_43_73_29_35, 0_43_73_46_38, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c17]()(boolean)
+if (~qh_grail_c13 = false) return(false);
+if (~qh_grail_c16 = false) return(false);
+return(true);
+
+[proc,qh_grail_c18]()(boolean)
+if (calc(inv_total(inv, excalibur) + inv_total(worn, excalibur)) >= 1) return(true);
+return(false);
+
+[proc,qh_grail_c19]()(boolean)
+if (npc_find(coord, black_knight_titan, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_grail_c20]()(boolean)
+if (~qh_grail_c18 = false) return(false);
+if (~qh_grail_c19 = false) return(false);
+return(true);
+
+[proc,qh_grail_c21]()(boolean)
+if (calc(inv_total(inv, magic_whistle) + inv_total(worn, magic_whistle)) >= 2) return(true);
+return(false);
+
+[proc,qh_grail_c22]()(boolean)
+if (~qh_grail_c21 = false) return(false);
+if (~qh_grail_c9 = false) return(false);
+if (~qh_grail_c18 = false) return(false);
+return(true);
+
+[proc,qh_grail_c23]()(boolean)
+if (~qh_grail_c21 = false) return(false);
+if (~qh_grail_c18 = false) return(false);
+return(true);
+
+[proc,qh_grail_c24]()(boolean)
+if (inzone(2_48_52_32_29, 2_48_52_40_33, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c25]()(boolean)
+if (calc(inv_total(inv, holy_table_napkin) + inv_total(worn, holy_table_napkin)) >= 1) return(true);
+return(false);
+
+[proc,qh_grail_c26]()(boolean)
+if (~qh_grail_c24 = false) return(false);
+if (~qh_grail_c25 = false) return(false);
+return(true);
+
+[proc,qh_grail_c27]()(boolean)
+if (inzone(2_48_52_32_34, 2_48_52_40_42, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c28]()(boolean)
+if (~qh_grail_c25 = false) return(false);
+if (~qh_grail_c27 = false) return(false);
+return(true);
+
+[proc,qh_grail_c29]()(boolean)
+if (inzone(1_48_52_26_26, 1_48_52_46_45, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c30]()(boolean)
+if (~qh_grail_c25 = false) return(false);
+if (~qh_grail_c29 = false) return(false);
+return(true);
+
+[proc,qh_grail_c31]()(boolean)
+if (inzone(0_48_52_25_26, 0_48_52_47_45, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c32]()(boolean)
+if (~qh_grail_c25 = false) return(false);
+if (~qh_grail_c31 = false) return(false);
+return(true);
+
+[proc,qh_grail_c33]()(boolean)
+if (inzone(0_48_52_28_19, 0_48_52_44_25, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c34]()(boolean)
+if (~qh_grail_c25 = false) return(false);
+if (~qh_grail_c33 = false) return(false);
+return(true);
+
+[proc,qh_grail_c35]()(boolean)
+if (inzone(0_44_52_7_0, 2_44_52_25_4, coord) = true | inzone(0_43_52_48_1, 2_44_53_55_1, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c36]()(boolean)
+if (inzone(1_43_54_13_40, 1_43_54_16_49, coord) = true) return(true);
+return(false);
+
+[proc,qh_grail_c37]()(boolean)
+if (npc_find(coord, merlin2, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_grail_c38]()(boolean)
+if (~qh_grail_c36 = false) return(false);
+if (~qh_grail_c37 = false) return(false);
+return(true);
+
+[proc,qh_grail_c39]()(boolean)
+if (inzone(1_43_54_5_50, 1_43_54_16_61, coord) = true | inzone(1_42_54_60_40, 1_43_54_12_61, coord) = true) return(true);
+return(false);

@@ -1,0 +1,81 @@
+// EASCape: Quest Helper for Imp Catcher, converted from RuneLite's Quest Helper (impcatcher, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC WIZARD_MIZGOG_QUEST not matched
+
+[proc,questhelper_imp]()(int)
+def_int $v = %imp;
+if ($v > 1) {
+    return(0); // done
+}
+if ($v >= 1) {
+    if (~qh_imp_c6 = true) {
+        return(4);
+    }
+    if (~qh_imp_c8 = true) {
+        return(3);
+    }
+    if (~qh_imp_c9 = true) {
+        return(2);
+    }
+    return(1);
+}
+if ($v >= 0) {
+    if (~qh_imp_c6 = true) {
+        return(4);
+    }
+    if (~qh_imp_c8 = true) {
+        return(3);
+    }
+    if (~qh_imp_c9 = true) {
+        return(2);
+    }
+    return(1);
+}
+return(1);
+
+[proc,qh_imp_c1]()(boolean)
+if (calc(inv_total(inv, black_bead) + inv_total(worn, black_bead)) >= 1) return(true);
+return(false);
+
+[proc,qh_imp_c2]()(boolean)
+if (calc(inv_total(inv, white_bead) + inv_total(worn, white_bead)) >= 1) return(true);
+return(false);
+
+[proc,qh_imp_c3]()(boolean)
+if (calc(inv_total(inv, red_bead) + inv_total(worn, red_bead)) >= 1) return(true);
+return(false);
+
+[proc,qh_imp_c4]()(boolean)
+if (calc(inv_total(inv, yellow_bead) + inv_total(worn, yellow_bead)) >= 1) return(true);
+return(false);
+
+[proc,qh_imp_c5]()(boolean)
+if (inzone(2_48_49_17_10, 2_48_49_54_40, coord) = true) return(true);
+return(false);
+
+[proc,qh_imp_c6]()(boolean)
+if (~qh_imp_c1 = false) return(false);
+if (~qh_imp_c2 = false) return(false);
+if (~qh_imp_c3 = false) return(false);
+if (~qh_imp_c4 = false) return(false);
+if (~qh_imp_c5 = false) return(false);
+return(true);
+
+[proc,qh_imp_c7]()(boolean)
+if (inzone(1_48_49_17_10, 1_48_49_54_40, coord) = true) return(true);
+return(false);
+
+[proc,qh_imp_c8]()(boolean)
+if (~qh_imp_c1 = false) return(false);
+if (~qh_imp_c2 = false) return(false);
+if (~qh_imp_c3 = false) return(false);
+if (~qh_imp_c4 = false) return(false);
+if (~qh_imp_c7 = false) return(false);
+return(true);
+
+[proc,qh_imp_c9]()(boolean)
+if (~qh_imp_c1 = false) return(false);
+if (~qh_imp_c2 = false) return(false);
+if (~qh_imp_c3 = false) return(false);
+if (~qh_imp_c4 = false) return(false);
+return(true);

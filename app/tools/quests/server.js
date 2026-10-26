@@ -126,7 +126,7 @@ for (const [name, kv] of Object.entries(rows)) {
     };
   } else if (table === 'questhelper_step') {
     const sid = Number(one('id'));
-    const st = { id: sid % 100, section: Number(one('section') || 0), text: one('text') };
+    const st = { id: sid % 1000, section: Number(one('section') || 0), text: one('text') };
     if (data.npc) st.npc = all('npc').map((n) => id('npc', n));
     if (data.obj) st.obj = all('obj').map((n) => id('obj', n));
     if (data.coord) st.at = coord(one('coord'));
@@ -140,7 +140,7 @@ for (const [name, kv] of Object.entries(rows)) {
     st.options = all('option');
     st.items = items('item');
     if (one('dig') === 'yes' || one('dig') === 'true') st.dig = true;
-    steps.push([Math.floor(sid / 100), st, name]);
+    steps.push([Math.floor(sid / 1000), st, name]);
   }
 }
 for (const [g, st, name] of steps) {

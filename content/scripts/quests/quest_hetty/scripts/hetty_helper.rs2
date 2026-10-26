@@ -1,0 +1,26 @@
+// EASCape: Quest Helper for Witch's Potion, converted from RuneLite's Quest Helper (witchspotion, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_hetty]()(int)
+def_int $v = %hetty;
+if ($v > 2) {
+    return(0); // done
+}
+if ($v >= 2) {
+    return(4);
+}
+if ($v >= 1) {
+    if (~qh_hetty_c1 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_hetty_c1]()(boolean)
+if (calc(inv_total(inv, rats_tail) + inv_total(worn, rats_tail)) >= 1) return(true);
+return(false);

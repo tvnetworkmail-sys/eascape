@@ -1,0 +1,122 @@
+// EASCape: Quest Helper for Tree Gnome Village, converted from RuneLite's Quest Helper (treegnomevillage, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ItemOnTileRequirement not carried over
+//   NPC ELKOY_2OPS not matched
+//   NPC KHAZARD_WARLORD_CHAT not matched
+//   NPC KHAZARD_WARLORD_COMBAT not matched
+//   NpcHintArrowRequirement not carried over
+
+[proc,questhelper_tree]()(int)
+def_int $v = %treequest;
+if ($v > 8) {
+    return(0); // done
+}
+if ($v >= 8) {
+    if (~qh_tree_c3 = true) {
+        return(21);
+    }
+    if (~qh_tree_c1 = true) {
+        return(22);
+    }
+    return(23);
+}
+if ($v >= 7) {
+    return(18);
+}
+if ($v >= 6) {
+    if (~qh_tree_c1 = true) {
+        return(16);
+    }
+    return(17);
+}
+if ($v >= 5) {
+    if (~qh_tree_c4 = true) {
+        return(14);
+    }
+    return(15);
+}
+if ($v >= 4) {
+    if (~qh_tree_c5 = true) {
+        return(6);
+    }
+    if (~qh_tree_c6 = true) {
+        return(7);
+    }
+    if (~qh_tree_c7 = true) {
+        return(8);
+    }
+    if (~qh_tree_c8 = true) {
+        return(9);
+    }
+    if (~qh_tree_c9 = true) {
+        return(10);
+    }
+    if (~qh_tree_c10 = true) {
+        return(11);
+    }
+    if (~qh_tree_c11 = true) {
+        return(12);
+    }
+    return(13);
+}
+if ($v >= 3) {
+    return(5);
+}
+if ($v >= 2) {
+    return(4);
+}
+if ($v >= 1) {
+    return(3);
+}
+if ($v >= 0) {
+    if (~qh_tree_c1 = true) {
+        return(1);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_tree_c1]()(boolean)
+if (inzone(0_39_49_18_22, 0_39_49_46_39, coord) = true) return(true);
+return(false);
+
+[proc,qh_tree_c2]()(boolean)
+if (%bolren_got_orbs >= 1) return(true);
+return(false);
+
+[proc,qh_tree_c3]()(boolean)
+if (~qh_tree_c1 = false) return(false);
+if (~qh_tree_c2 = false) return(false);
+return(true);
+
+[proc,qh_tree_c4]()(boolean)
+if (inzone(1_39_50_4_51, 1_39_50_10_59, coord) = true) return(true);
+return(false);
+
+[proc,qh_tree_c5]()(boolean)
+if (%gnometracker_h = 0) return(true);
+return(false);
+
+[proc,qh_tree_c6]()(boolean)
+if (%gnometracker_y = 0) return(true);
+return(false);
+
+[proc,qh_tree_c7]()(boolean)
+if (%gnometracker_x = 0) return(true);
+return(false);
+
+[proc,qh_tree_c8]()(boolean)
+if (%ballista = 0) return(true);
+return(false);
+
+[proc,qh_tree_c9]()(boolean)
+if (%ballista = 1) return(true);
+return(false);
+
+[proc,qh_tree_c10]()(boolean)
+if (%ballista = 2) return(true);
+return(false);
+
+[proc,qh_tree_c11]()(boolean)
+if (%ballista = 3) return(true);
+return(false);

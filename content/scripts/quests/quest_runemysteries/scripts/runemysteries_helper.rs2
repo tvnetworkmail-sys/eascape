@@ -1,0 +1,64 @@
+// EASCape: Quest Helper for Rune Mysteries, converted from RuneLite's Quest Helper (runemysteries, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC AUBURY_2OP not matched
+//   NPC HEAD_WIZARD_1OP not matched
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'RUNEMYSTERIES_NOTES') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'RUNEMYSTERIES_NOTES_GIVEN') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'RUNEMYSTERIES_PACKAGE') not in our game
+
+[proc,questhelper_runemysteries]()(int)
+def_int $v = %runemysteries;
+if ($v > 5) {
+    return(0); // done
+}
+if ($v >= 5) {
+    if (~qh_runemysteries_c1 = true) {
+        return(10);
+    }
+    return(11);
+}
+if ($v >= 4) {
+    return(9);
+}
+if ($v >= 3) {
+    return(8);
+}
+if ($v >= 2) {
+    if (~qh_runemysteries_c1 = true) {
+        return(6);
+    }
+    return(7);
+}
+if ($v >= 1) {
+    if (~qh_runemysteries_c4 = true) {
+        return(5);
+    }
+    if (~qh_runemysteries_c1 = true) {
+        return(3);
+    }
+    return(4);
+}
+if ($v >= 0) {
+    if (~qh_runemysteries_c3 = true) {
+        return(1);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_runemysteries_c1]()(boolean)
+if (inzone(0_48_149_22_17, 0_48_149_53_46, coord) = true) return(true);
+return(false);
+
+[proc,qh_runemysteries_c2]()(boolean)
+if (calc(inv_total(inv, air_talisman) + inv_total(worn, air_talisman)) >= 1) return(true);
+return(false);
+
+[proc,qh_runemysteries_c3]()(boolean)
+if (inzone(1_50_50_3_6, 1_50_50_18_31, coord) = true) return(true);
+return(false);
+
+[proc,qh_runemysteries_c4]()(boolean)
+if (~qh_runemysteries_c2 = false) return(false);
+if (~qh_runemysteries_c3 = false) return(false);
+return(true);

@@ -1,0 +1,56 @@
+// EASCape: Quest Helper for Monk's Friend, converted from RuneLite's Quest Helper (monksfriend, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_drunkmonk]()(int)
+def_int $v = %drunkmonkquest;
+if ($v > 70) {
+    return(0); // done
+}
+if ($v >= 70) {
+    return(11);
+}
+if ($v >= 60) {
+    return(10);
+}
+if ($v >= 50) {
+    return(9);
+}
+if ($v >= 40) {
+    return(8);
+}
+if ($v >= 30) {
+    return(7);
+}
+if ($v >= 20) {
+    return(6);
+}
+if ($v >= 10) {
+    if (~qh_drunkmonk_c3 = true) {
+        return(4);
+    }
+    if (~qh_drunkmonk_c2 = true) {
+        return(5);
+    }
+    if (~qh_drunkmonk_c1 = true) {
+        return(3);
+    }
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_drunkmonk_c1]()(boolean)
+if (inzone(0_39_149_63_61, 0_40_150_22_23, coord) = true) return(true);
+return(false);
+
+[proc,qh_drunkmonk_c2]()(boolean)
+if (calc(inv_total(inv, childs_blanket) + inv_total(worn, childs_blanket)) >= 1) return(true);
+return(false);
+
+[proc,qh_drunkmonk_c3]()(boolean)
+if (~qh_drunkmonk_c1 = false) return(false);
+if (~qh_drunkmonk_c2 = false) return(false);
+return(true);

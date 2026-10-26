@@ -1,0 +1,224 @@
+// EASCape: Quest Helper for Black Knights' Fortress, converted from RuneLite's Quest Helper (blackknightfortress, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   (none)
+
+[proc,questhelper_fortress]()(int)
+def_int $v = %spy;
+if ($v > 3) {
+    return(0); // done
+}
+if ($v >= 3) {
+    if (~qh_fortress_c1 = true) {
+        return(31);
+    }
+    if (~qh_fortress_c2 = true) {
+        return(33);
+    }
+    return(32);
+}
+if ($v >= 2) {
+    if (~qh_fortress_c3 = true) {
+        return(27);
+    }
+    if (~qh_fortress_c6 = true) {
+        return(26);
+    }
+    if (~qh_fortress_c9 = true) {
+        return(30);
+    }
+    if (~qh_fortress_c10 = true) {
+        return(29);
+    }
+    if (~qh_fortress_c11 = true) {
+        return(28);
+    }
+    if (~qh_fortress_c12 = true) {
+        return(25);
+    }
+    if (~qh_fortress_c12 = true) {
+        return(25);
+    }
+    if (~qh_fortress_c13 = true) {
+        return(24);
+    }
+    if (~qh_fortress_c14 = true) {
+        return(23);
+    }
+    if (~qh_fortress_c15 = true) {
+        return(22);
+    }
+    if (~qh_fortress_c16 = true) {
+        return(21);
+    }
+    if (~qh_fortress_c17 = true) {
+        return(20);
+    }
+    if (~qh_fortress_c18 = true) {
+        return(11);
+    }
+    if (~qh_fortress_c19 = true) {
+        return(9);
+    }
+    if (~qh_fortress_c20 = true) {
+        return(10);
+    }
+    if (~qh_fortress_c21 = true) {
+        return(8);
+    }
+    return(4);
+}
+if ($v >= 1) {
+    if (~qh_fortress_c1 = true) {
+        return(5);
+    }
+    if (~qh_fortress_c2 = true) {
+        return(6);
+    }
+    if (~qh_fortress_c17 = true) {
+        return(19);
+    }
+    if (~qh_fortress_c16 = true) {
+        return(18);
+    }
+    if (~qh_fortress_c15 = true) {
+        return(17);
+    }
+    if (~qh_fortress_c14 = true) {
+        return(16);
+    }
+    if (~qh_fortress_c13 = true) {
+        return(15);
+    }
+    if (~qh_fortress_c12 = true) {
+        return(14);
+    }
+    if (~qh_fortress_c3 = true) {
+        return(13);
+    }
+    if (~qh_fortress_c22 = true) {
+        return(12);
+    }
+    if (~qh_fortress_c18 = true) {
+        return(11);
+    }
+    if (~qh_fortress_c19 = true) {
+        return(9);
+    }
+    if (~qh_fortress_c20 = true) {
+        return(10);
+    }
+    if (~qh_fortress_c21 = true) {
+        return(8);
+    }
+    if (~qh_fortress_c23 = true) {
+        return(7);
+    }
+    return(4);
+}
+if ($v >= 0) {
+    if (~qh_fortress_c1 = true) {
+        return(1);
+    }
+    if (~qh_fortress_c2 = true) {
+        return(3);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_fortress_c1]()(boolean)
+if (inzone(2_46_51_10_63, 2_46_52_54_25, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c2]()(boolean)
+if (inzone(1_46_51_10_63, 1_46_52_54_25, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c3]()(boolean)
+if (inzone(0_47_54_7_61, 0_47_54_8_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c4]()(boolean)
+if (inzone(0_47_54_0_57, 0_47_54_4_62, coord) = true | inzone(0_47_54_4_58, 0_47_54_6_60, coord) = true | inzone(0_47_54_7_59, 0_47_54_11_60, coord) = true | inzone(0_47_54_11_57, 0_47_54_11_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c5]()(boolean)
+if (inzone(0_47_54_12_57, 0_47_54_22_62, coord) = true | inzone(0_47_54_13_55, 0_47_54_22_56, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c6]()(boolean)
+if (~qh_fortress_c3 = true) return(true);
+if (~qh_fortress_c4 = true) return(true);
+if (~qh_fortress_c5 = true) return(true);
+return(false);
+
+[proc,qh_fortress_c7]()(boolean)
+if (inzone(0_47_54_9_41, 0_47_54_9_41, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c8]()(boolean)
+if (%cutscene_status = 1) return(true);
+return(false);
+
+[proc,qh_fortress_c9]()(boolean)
+if (~qh_fortress_c7 = false) return(false);
+if (~qh_fortress_c8 = false) return(false);
+return(true);
+
+[proc,qh_fortress_c10]()(boolean)
+if (inzone(1_47_54_18_48, 1_47_54_24_53, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c11]()(boolean)
+if (inzone(1_47_54_14_61, 1_47_54_22_62, coord) = true | inzone(1_47_54_22_54, 1_47_54_22_60, coord) = true | inzone(1_47_54_21_60, 1_47_54_21_60, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c12]()(boolean)
+if (inzone(1_47_54_7_61, 1_47_54_8_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c13]()(boolean)
+if (inzone(2_46_54_63_57, 2_47_54_10_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c14]()(boolean)
+if (inzone(1_47_54_7_58, 1_47_54_16_60, coord) = true | inzone(1_47_54_11_61, 1_47_54_13_62, coord) = true | inzone(1_47_54_14_57, 1_47_54_16_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c15]()(boolean)
+if (inzone(2_47_54_13_48, 2_47_54_23_60, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c16]()(boolean)
+if (inzone(1_47_54_13_50, 1_47_54_17_56, coord) = true | inzone(1_47_54_13_57, 1_47_54_13_57, coord) = true | inzone(1_47_54_18_54, 1_47_54_21_59, coord) = true | inzone(1_47_54_17_57, 1_47_54_17_60, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c17]()(boolean)
+if (inzone(0_47_54_13_54, 0_47_54_18_54, coord) = true | inzone(0_47_54_17_50, 0_47_54_18_53, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c18]()(boolean)
+if (inzone(1_46_54_63_57, 1_47_54_6_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c19]()(boolean)
+if (inzone(0_29_66_6_5, 0_29_66_17_40, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c20]()(boolean)
+if (inzone(3_47_54_1_58, 3_47_54_4_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c21]()(boolean)
+if (inzone(3_47_54_19_49, 3_47_54_23_52, coord) = true) return(true);
+return(false);
+
+[proc,qh_fortress_c22]()(boolean)
+if (~qh_fortress_c4 = true) return(true);
+if (~qh_fortress_c5 = true) return(true);
+return(false);
+
+[proc,qh_fortress_c23]()(boolean)
+if (~qh_fortress_c10 = true) return(true);
+if (~qh_fortress_c11 = true) return(true);
+return(false);

@@ -1,0 +1,287 @@
+// EASCape: Quest Helper for The Grand Tree, converted from RuneLite's Quest Helper (thegrandtree, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC GRANDTREE_GLOUGH_VISIBLE not matched
+//   NPC GRANDTREE_NARNODE_1OP not matched
+//   NPC GT_ANITA not matched
+//   NPC PILOT_GRAND_TREE_BASE not matched
+//   NpcInteractingRequirement not carried over
+
+[proc,questhelper_grandtree]()(int)
+def_int $v = %grandtree;
+if ($v > 150) {
+    return(0); // done
+}
+if ($v >= 150) {
+    if (~qh_grandtree_c1 = true) {
+        return(42);
+    }
+    if (~qh_grandtree_c2 = true) {
+        return(41);
+    }
+    if (~qh_grandtree_c3 = true) {
+        return(40);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(32);
+    }
+    return(31);
+}
+if ($v >= 140) {
+    if (~qh_grandtree_c2 = true) {
+        return(39);
+    }
+    if (~qh_grandtree_c3 = true) {
+        return(40);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(32);
+    }
+    return(31);
+}
+if ($v >= 130) {
+    if (~qh_grandtree_c3 = true) {
+        return(37);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(32);
+    }
+    return(31);
+}
+if ($v >= 120) {
+    if (~qh_grandtree_c6 = true) {
+        return(33);
+    }
+    if (~qh_grandtree_c8 = true) {
+        return(34);
+    }
+    if (~qh_grandtree_c10 = true) {
+        return(35);
+    }
+    if (~qh_grandtree_c12 = true) {
+        return(36);
+    }
+    if (~qh_grandtree_c3 = true) {
+        return(30);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(32);
+    }
+    return(31);
+}
+if ($v >= 110) {
+    return(29);
+}
+if ($v >= 100) {
+    if (~qh_grandtree_c14 = true) {
+        return(27);
+    }
+    if (~qh_grandtree_c13 = true) {
+        return(28);
+    }
+    if (~qh_grandtree_c15 = true) {
+        return(25);
+    }
+    if (~qh_grandtree_c16 = true) {
+        if (~qh_grandtree_c17 = true) {
+            return(13);
+        }
+        if (~qh_grandtree_c18 = true) {
+            return(14);
+        }
+        if (~qh_grandtree_c19 = true) {
+            return(15);
+        }
+        return(16);
+    }
+    return(26);
+}
+if ($v >= 90) {
+    if (~qh_grandtree_c17 = true) {
+        return(9);
+    }
+    if (~qh_grandtree_c18 = true) {
+        return(10);
+    }
+    if (~qh_grandtree_c19 = true) {
+        return(11);
+    }
+    return(12);
+}
+if ($v >= 80) {
+    if (~qh_grandtree_c17 = true) {
+        return(22);
+    }
+    if (~qh_grandtree_c20 = true) {
+        return(24);
+    }
+    return(23);
+}
+if ($v >= 70) {
+    if (~qh_grandtree_c21 = true) {
+        return(20);
+    }
+    if (~qh_grandtree_c16 = true) {
+        if (~qh_grandtree_c17 = true) {
+            return(13);
+        }
+        if (~qh_grandtree_c18 = true) {
+            return(14);
+        }
+        if (~qh_grandtree_c19 = true) {
+            return(15);
+        }
+        return(16);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(19);
+    }
+    return(18);
+}
+if ($v >= 60) {
+    if (~qh_grandtree_c16 = true) {
+        if (~qh_grandtree_c17 = true) {
+            return(13);
+        }
+        if (~qh_grandtree_c18 = true) {
+            return(14);
+        }
+        if (~qh_grandtree_c19 = true) {
+            return(15);
+        }
+        return(16);
+    }
+    if (~qh_grandtree_c4 = true) {
+        return(17);
+    }
+    return(18);
+}
+if ($v >= 50) {
+    if (~qh_grandtree_c17 = true) {
+        return(9);
+    }
+    if (~qh_grandtree_c18 = true) {
+        return(10);
+    }
+    if (~qh_grandtree_c19 = true) {
+        return(11);
+    }
+    return(12);
+}
+if ($v >= 40) {
+    return(8);
+}
+if ($v >= 30) {
+    if (~qh_grandtree_c4 = true) {
+        return(7);
+    }
+    return(6);
+}
+if ($v >= 20) {
+    return(5);
+}
+if ($v >= 10) {
+    if (~qh_grandtree_c22 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    if (~qh_grandtree_c2 = true) {
+        return(2);
+    }
+    return(1);
+}
+return(1);
+
+[proc,qh_grandtree_c1]()(boolean)
+if (calc(inv_total(inv, grandtree_daconiarock) + inv_total(worn, grandtree_daconiarock)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c2]()(boolean)
+if (inzone(0_37_154_63_0, 0_39_155_4_0, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c3]()(boolean)
+if (inzone(2_38_54_50_3, 2_38_54_59_13, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c4]()(boolean)
+if (inzone(1_38_54_42_5, 1_38_54_56_10, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c5]()(boolean)
+if (calc(inv_total(inv, grandtree_twigt) + inv_total(worn, grandtree_twigt)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c6]()(boolean)
+if (~qh_grandtree_c3 = false) return(false);
+if (~qh_grandtree_c5 = false) return(false);
+return(true);
+
+[proc,qh_grandtree_c7]()(boolean)
+if (calc(inv_total(inv, grandtree_twigu) + inv_total(worn, grandtree_twigu)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c8]()(boolean)
+if (~qh_grandtree_c3 = false) return(false);
+if (~qh_grandtree_c7 = false) return(false);
+return(true);
+
+[proc,qh_grandtree_c9]()(boolean)
+if (calc(inv_total(inv, grandtree_twigz) + inv_total(worn, grandtree_twigz)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c10]()(boolean)
+if (~qh_grandtree_c3 = false) return(false);
+if (~qh_grandtree_c9 = false) return(false);
+return(true);
+
+[proc,qh_grandtree_c11]()(boolean)
+if (calc(inv_total(inv, grandtree_twigo) + inv_total(worn, grandtree_twigo)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c12]()(boolean)
+if (~qh_grandtree_c3 = false) return(false);
+if (~qh_grandtree_c11 = false) return(false);
+return(true);
+
+[proc,qh_grandtree_c13]()(boolean)
+if (calc(inv_total(inv, grandtree_gloughskey) + inv_total(worn, grandtree_gloughskey)) >= 1) return(true);
+return(false);
+
+[proc,qh_grandtree_c14]()(boolean)
+if (~qh_grandtree_c13 = false) return(false);
+if (~qh_grandtree_c4 = false) return(false);
+return(true);
+
+[proc,qh_grandtree_c15]()(boolean)
+if (inzone(1_37_54_18_56, 1_37_54_24_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c16]()(boolean)
+if (inzone(1_38_54_5_18, 1_38_54_61_55, coord) = true | inzone(2_38_54_5_18, 2_38_54_61_55, coord) = true | inzone(3_38_54_6_22, 3_38_54_61_55, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c17]()(boolean)
+if (inzone(3_38_54_6_22, 3_38_54_61_55, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c18]()(boolean)
+if (inzone(2_38_54_5_18, 2_38_54_61_55, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c19]()(boolean)
+if (inzone(1_38_54_5_18, 1_38_54_61_55, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c20]()(boolean)
+if (inzone(0_46_47_1_7, 0_46_47_63_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c21]()(boolean)
+if (inzone(3_38_54_32_40, 3_38_54_32_40, coord) = true) return(true);
+return(false);
+
+[proc,qh_grandtree_c22]()(boolean)
+if (inzone(1_41_48_50_13, 1_41_48_56_17, coord) = true) return(true);
+return(false);

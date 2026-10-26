@@ -1,0 +1,665 @@
+// EASCape: Quest Helper for Dragon Slayer I, converted from RuneLite's Quest Helper (dragonslayer, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   NPC DRAGONSLAYER_GHOST_1_KEY not matched
+//   NPC DRAGONSLAYER_GIANTRAT_1_KEY not matched
+//   NPC DRAGONSLAYER_SKELETON_1_KEY not matched
+//   NPC DRAGONSLAYER_ZOMBIE_1_KEY not matched
+//   NPC ELVARG_ALIVE not matched
+//   NPC NED_1OP not matched
+//   item ('field', ('name', 'ItemCollections'), 'ANTIFIRE_SHIELDS') not in our game
+
+[proc,questhelper_dragon]()(int)
+def_int $v = %dragonquest;
+if ($v > 9) {
+    return(0); // done
+}
+if ($v >= 9) {
+    return(57);
+}
+if ($v >= 8) {
+    if (~qh_dragon_c1 = true) {
+        return(56);
+    }
+    if (~qh_dragon_c4 = true) {
+        return(53);
+    }
+    if (~qh_dragon_c6 = true) {
+        return(52);
+    }
+    if (~qh_dragon_c2 = true) {
+        return(51);
+    }
+    if (~qh_dragon_c7 = true) {
+        return(50);
+    }
+    if (~qh_dragon_c3 = true) {
+        return(54);
+    }
+    return(55);
+}
+if ($v >= 7) {
+    if (~qh_dragon_c8 = true) {
+        return(49);
+    }
+    return(48);
+}
+if ($v >= 6) {
+    if (~qh_dragon_c23 = true) {
+        if (~qh_dragon_c24 = true) {
+            return(36);
+        }
+        return(37);
+    }
+    if (~qh_dragon_c27 = true) {
+        if (~qh_dragon_c28 = true) {
+            return(35);
+        }
+        if (~qh_dragon_c31 = true) {
+            return(34);
+        }
+        if (~qh_dragon_c29 = true) {
+            return(33);
+        }
+        if (~qh_dragon_c34 = true) {
+            return(32);
+        }
+        if (~qh_dragon_c32 = true) {
+            return(31);
+        }
+        if (~qh_dragon_c37 = true) {
+            return(30);
+        }
+        if (~qh_dragon_c35 = true) {
+            return(29);
+        }
+        if (~qh_dragon_c38 = true) {
+            return(28);
+        }
+        if (~qh_dragon_c39 = true) {
+            return(27);
+        }
+        if (~qh_dragon_c40 = true) {
+            return(26);
+        }
+        if (~qh_dragon_c43 = true) {
+            return(25);
+        }
+        if (~qh_dragon_c41 = true) {
+            return(24);
+        }
+        if (~qh_dragon_c44 = true) {
+            return(23);
+        }
+        if (~qh_dragon_c47 = true) {
+            return(22);
+        }
+        if (~qh_dragon_c45 = true) {
+            return(21);
+        }
+        if (~qh_dragon_c48 = true) {
+            return(20);
+        }
+        if (~qh_dragon_c51 = true) {
+            return(19);
+        }
+        if (~qh_dragon_c49 = true) {
+            return(18);
+        }
+        return(17);
+    }
+    if (~qh_dragon_c52 = true) {
+        return(16);
+    }
+    if (~qh_dragon_c21 = true) {
+        if (~qh_dragon_c59 = true) {
+            return(14);
+        }
+        if (~qh_dragon_c60 = true) {
+            return(13);
+        }
+        if (~qh_dragon_c61 = true) {
+            return(12);
+        }
+        if (~qh_dragon_c62 = true) {
+            return(11);
+        }
+        if (~qh_dragon_c64 = true) {
+            return(10);
+        }
+        if (~qh_dragon_c63 = true) {
+            return(9);
+        }
+        return(8);
+    }
+    if (~qh_dragon_c65 = true) {
+        return(6);
+    }
+    if (~qh_dragon_c66 = true) {
+        return(7);
+    }
+    if (~qh_dragon_c67 = true) {
+        return(5);
+    }
+    if (~qh_dragon_c16 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 3) {
+    if (~qh_dragon_c23 = true) {
+        if (~qh_dragon_c24 = true) {
+            return(36);
+        }
+        return(37);
+    }
+    if (~qh_dragon_c27 = true) {
+        if (~qh_dragon_c28 = true) {
+            return(35);
+        }
+        if (~qh_dragon_c31 = true) {
+            return(34);
+        }
+        if (~qh_dragon_c29 = true) {
+            return(33);
+        }
+        if (~qh_dragon_c34 = true) {
+            return(32);
+        }
+        if (~qh_dragon_c32 = true) {
+            return(31);
+        }
+        if (~qh_dragon_c37 = true) {
+            return(30);
+        }
+        if (~qh_dragon_c35 = true) {
+            return(29);
+        }
+        if (~qh_dragon_c38 = true) {
+            return(28);
+        }
+        if (~qh_dragon_c39 = true) {
+            return(27);
+        }
+        if (~qh_dragon_c40 = true) {
+            return(26);
+        }
+        if (~qh_dragon_c43 = true) {
+            return(25);
+        }
+        if (~qh_dragon_c41 = true) {
+            return(24);
+        }
+        if (~qh_dragon_c44 = true) {
+            return(23);
+        }
+        if (~qh_dragon_c47 = true) {
+            return(22);
+        }
+        if (~qh_dragon_c45 = true) {
+            return(21);
+        }
+        if (~qh_dragon_c48 = true) {
+            return(20);
+        }
+        if (~qh_dragon_c51 = true) {
+            return(19);
+        }
+        if (~qh_dragon_c49 = true) {
+            return(18);
+        }
+        return(17);
+    }
+    if (~qh_dragon_c52 = true) {
+        return(16);
+    }
+    if (~qh_dragon_c21 = true) {
+        if (~qh_dragon_c59 = true) {
+            return(14);
+        }
+        if (~qh_dragon_c60 = true) {
+            return(13);
+        }
+        if (~qh_dragon_c61 = true) {
+            return(12);
+        }
+        if (~qh_dragon_c62 = true) {
+            return(11);
+        }
+        if (~qh_dragon_c64 = true) {
+            return(10);
+        }
+        if (~qh_dragon_c63 = true) {
+            return(9);
+        }
+        return(8);
+    }
+    if (~qh_dragon_c65 = true) {
+        return(6);
+    }
+    if (~qh_dragon_c66 = true) {
+        return(7);
+    }
+    if (~qh_dragon_c67 = true) {
+        return(5);
+    }
+    if (~qh_dragon_c16 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 2) {
+    if (~qh_dragon_c23 = true) {
+        if (~qh_dragon_c24 = true) {
+            return(36);
+        }
+        return(37);
+    }
+    if (~qh_dragon_c27 = true) {
+        if (~qh_dragon_c28 = true) {
+            return(35);
+        }
+        if (~qh_dragon_c31 = true) {
+            return(34);
+        }
+        if (~qh_dragon_c29 = true) {
+            return(33);
+        }
+        if (~qh_dragon_c34 = true) {
+            return(32);
+        }
+        if (~qh_dragon_c32 = true) {
+            return(31);
+        }
+        if (~qh_dragon_c37 = true) {
+            return(30);
+        }
+        if (~qh_dragon_c35 = true) {
+            return(29);
+        }
+        if (~qh_dragon_c38 = true) {
+            return(28);
+        }
+        if (~qh_dragon_c39 = true) {
+            return(27);
+        }
+        if (~qh_dragon_c40 = true) {
+            return(26);
+        }
+        if (~qh_dragon_c43 = true) {
+            return(25);
+        }
+        if (~qh_dragon_c41 = true) {
+            return(24);
+        }
+        if (~qh_dragon_c44 = true) {
+            return(23);
+        }
+        if (~qh_dragon_c47 = true) {
+            return(22);
+        }
+        if (~qh_dragon_c45 = true) {
+            return(21);
+        }
+        if (~qh_dragon_c48 = true) {
+            return(20);
+        }
+        if (~qh_dragon_c51 = true) {
+            return(19);
+        }
+        if (~qh_dragon_c49 = true) {
+            return(18);
+        }
+        return(17);
+    }
+    if (~qh_dragon_c52 = true) {
+        return(16);
+    }
+    if (~qh_dragon_c21 = true) {
+        if (~qh_dragon_c59 = true) {
+            return(14);
+        }
+        if (~qh_dragon_c60 = true) {
+            return(13);
+        }
+        if (~qh_dragon_c61 = true) {
+            return(12);
+        }
+        if (~qh_dragon_c62 = true) {
+            return(11);
+        }
+        if (~qh_dragon_c64 = true) {
+            return(10);
+        }
+        if (~qh_dragon_c63 = true) {
+            return(9);
+        }
+        return(8);
+    }
+    if (~qh_dragon_c65 = true) {
+        return(6);
+    }
+    if (~qh_dragon_c66 = true) {
+        return(7);
+    }
+    if (~qh_dragon_c67 = true) {
+        return(5);
+    }
+    if (~qh_dragon_c16 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 1) {
+    return(2);
+}
+if ($v >= 0) {
+    return(1);
+}
+return(1);
+
+[proc,qh_dragon_c1]()(boolean)
+if (inzone(0_44_150_30_25, 0_44_150_51_51, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c2]()(boolean)
+if (inzone(0_44_150_5_0, 0_44_150_56_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c3]()(boolean)
+if (testbit(%dragonquestvar, 6) = ^true) return(true);
+return(false);
+
+[proc,qh_dragon_c4]()(boolean)
+if (~qh_dragon_c2 = false) return(false);
+if (~qh_dragon_c3 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c5]()(boolean)
+if (inzone(0_44_149_11_11, 0_44_149_51_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c6]()(boolean)
+if (~qh_dragon_c5 = false) return(false);
+if (~qh_dragon_c3 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c7]()(boolean)
+if (inzone(0_43_50_58_28, 0_44_51_51_48, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c8]()(boolean)
+if (inzone(1_47_50_33_7, 2_47_50_42_9, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c9]()(boolean)
+if (calc(inv_total(inv, dragonmap) + inv_total(worn, dragonmap)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c10]()(boolean)
+if (calc(inv_total(inv, mappart3) + inv_total(worn, mappart3)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c11]()(boolean)
+if (~qh_dragon_c9 = true) return(true);
+if (~qh_dragon_c10 = true) return(true);
+return(false);
+
+[proc,qh_dragon_c12]()(boolean)
+if (calc(inv_total(inv, mappart2) + inv_total(worn, mappart2)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c13]()(boolean)
+if (~qh_dragon_c9 = true) return(true);
+if (~qh_dragon_c12 = true) return(true);
+return(false);
+
+[proc,qh_dragon_c14]()(boolean)
+if (calc(inv_total(inv, mappart1) + inv_total(worn, mappart1)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c15]()(boolean)
+if (~qh_dragon_c9 = true) return(true);
+if (~qh_dragon_c14 = true) return(true);
+return(false);
+
+[proc,qh_dragon_c16]()(boolean)
+if (testbit(%dragonquestvar, 14) = ^false) return(true);
+return(false);
+
+[proc,qh_dragon_c17]()(boolean)
+if (testbit(%dragonquestvar, 15) = ^false) return(true);
+return(false);
+
+[proc,qh_dragon_c18]()(boolean)
+if (testbit(%dragonquestvar, 11) = ^false) return(true);
+return(false);
+
+[proc,qh_dragon_c19]()(boolean)
+if (testbit(%dragonquestvar, 12) = ^false) return(true);
+return(false);
+
+[proc,qh_dragon_c20]()(boolean)
+if (testbit(%dragonquestvar, 13) = ^false) return(true);
+return(false);
+
+[proc,qh_dragon_c21]()(boolean)
+if (~qh_dragon_c16 = false) return(false);
+if (~qh_dragon_c17 = false) return(false);
+if (~qh_dragon_c18 = false) return(false);
+if (~qh_dragon_c19 = false) return(false);
+if (~qh_dragon_c20 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c22]()(boolean)
+if (%dragonslayer_ship_fullyfixed = 1) return(true);
+return(false);
+
+[proc,qh_dragon_c23]()(boolean)
+if (~qh_dragon_c11 = false) return(false);
+if (~qh_dragon_c13 = false) return(false);
+if (~qh_dragon_c15 = false) return(false);
+if (~qh_dragon_c21 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c24]()(boolean)
+if (inzone(1_50_50_3_6, 1_50_50_17_31, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c25]()(boolean)
+if (inzone(0_45_50_42_37, 0_45_150_62_58, coord) = true | inzone(0_0_0_1_2, 0_45_150_40_39, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c26]()(boolean)
+if (~qh_dragon_c11 = false) return(false);
+if (~qh_dragon_c13 = false) return(false);
+if (~qh_dragon_c21 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c27]()(boolean)
+if (~qh_dragon_c25 = true) return(true);
+if (~qh_dragon_c26 = true) return(true);
+return(false);
+
+[proc,qh_dragon_c28]()(boolean)
+if (inzone(0_45_150_44_56, 0_45_150_62_56, coord) = true | inzone(0_45_150_46_57, 0_45_150_62_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c29]()(boolean)
+if (inzone(0_45_150_44_52, 0_45_150_53_55, coord) = true | inzone(0_45_150_53_47, 0_45_150_54_58, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c30]()(boolean)
+if (calc(inv_total(inv, greenkey) + inv_total(worn, greenkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c31]()(boolean)
+if (~qh_dragon_c29 = false) return(false);
+if (~qh_dragon_c30 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c32]()(boolean)
+if (inzone(0_45_150_47_43, 0_45_150_50_51, coord) = true | inzone(0_45_150_51_46, 0_45_150_51_51, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c33]()(boolean)
+if (calc(inv_total(inv, magentakey) + inv_total(worn, magentakey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c34]()(boolean)
+if (~qh_dragon_c32 = false) return(false);
+if (~qh_dragon_c33 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c35]()(boolean)
+if (inzone(0_45_150_51_39, 0_45_150_53_44, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c36]()(boolean)
+if (calc(inv_total(inv, bluekey) + inv_total(worn, bluekey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c37]()(boolean)
+if (~qh_dragon_c35 = false) return(false);
+if (~qh_dragon_c36 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c38]()(boolean)
+if (inzone(0_45_50_57_37, 0_45_50_60_45, coord) = true | inzone(0_45_50_52_40, 0_45_50_56_42, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c39]()(boolean)
+if (inzone(1_45_50_57_37, 1_45_50_60_41, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c40]()(boolean)
+if (inzone(2_45_50_42_39, 2_45_50_45_49, coord) = true | inzone(2_45_50_46_37, 2_45_50_60_41, coord) = true | inzone(2_45_50_56_42, 2_45_50_60_43, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c41]()(boolean)
+if (inzone(2_45_50_42_50, 2_45_50_52_52, coord) = true | inzone(2_45_50_41_53, 2_45_50_55_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c42]()(boolean)
+if (calc(inv_total(inv, yellowkey) + inv_total(worn, yellowkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c43]()(boolean)
+if (~qh_dragon_c41 = false) return(false);
+if (~qh_dragon_c42 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c44]()(boolean)
+if (inzone(1_45_50_51_52, 1_45_50_56_54, coord) = true | inzone(1_45_50_53_55, 1_45_50_56_56, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c45]()(boolean)
+if (inzone(1_45_50_46_47, 1_45_50_50_57, coord) = true | inzone(1_45_50_41_50, 1_45_50_45_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c46]()(boolean)
+if (calc(inv_total(inv, orangekey) + inv_total(worn, orangekey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c47]()(boolean)
+if (~qh_dragon_c45 = false) return(false);
+if (~qh_dragon_c46 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c48]()(boolean)
+if (inzone(0_45_50_42_51, 0_45_50_45_55, coord) = true | inzone(0_45_50_43_55, 0_45_50_49_57, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c49]()(boolean)
+if (inzone(0_45_50_46_43, 0_45_50_57_54, coord) = true | inzone(0_45_50_50_55, 0_45_50_57_57, coord) = true | inzone(0_45_50_58_46, 0_45_50_60_50, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c50]()(boolean)
+if (calc(inv_total(inv, redkey) + inv_total(worn, redkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_dragon_c51]()(boolean)
+if (~qh_dragon_c49 = false) return(false);
+if (~qh_dragon_c50 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c52]()(boolean)
+if (~qh_dragon_c11 = false) return(false);
+if (~qh_dragon_c21 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c53]()(boolean)
+if (testbit(%dragonquestvar, 17) = ^true) return(true);
+return(false);
+
+[proc,qh_dragon_c54]()(boolean)
+if (testbit(%dragonquestvar, 18) = ^true) return(true);
+return(false);
+
+[proc,qh_dragon_c55]()(boolean)
+if (testbit(%dragonquestvar, 19) = ^true) return(true);
+return(false);
+
+[proc,qh_dragon_c56]()(boolean)
+if (testbit(%dragonquestvar, 20) = ^true) return(true);
+return(false);
+
+[proc,qh_dragon_c57]()(boolean)
+if (~qh_dragon_c53 = false) return(false);
+if (~qh_dragon_c54 = false) return(false);
+if (~qh_dragon_c55 = false) return(false);
+if (~qh_dragon_c56 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c58]()(boolean)
+if (inzone(0_46_151_16_32, 0_47_153_54_62, coord) = true) return(true);
+return(false);
+
+[proc,qh_dragon_c59]()(boolean)
+if (~qh_dragon_c57 = false) return(false);
+if (~qh_dragon_c58 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c60]()(boolean)
+if (~qh_dragon_c58 = false) return(false);
+if (~qh_dragon_c53 = false) return(false);
+if (~qh_dragon_c55 = false) return(false);
+if (~qh_dragon_c54 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c61]()(boolean)
+if (~qh_dragon_c58 = false) return(false);
+if (~qh_dragon_c53 = false) return(false);
+if (~qh_dragon_c55 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c62]()(boolean)
+if (~qh_dragon_c58 = false) return(false);
+if (~qh_dragon_c53 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c63]()(boolean)
+if (%dragonslayer_secret_told = 1) return(true);
+return(false);
+
+[proc,qh_dragon_c64]()(boolean)
+if (~qh_dragon_c63 = false) return(false);
+if (~qh_dragon_c58 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c65]()(boolean)
+if (~qh_dragon_c16 = false) return(false);
+if (~qh_dragon_c17 = false) return(false);
+if (~qh_dragon_c18 = false) return(false);
+if (~qh_dragon_c19 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c66]()(boolean)
+if (~qh_dragon_c16 = false) return(false);
+if (~qh_dragon_c17 = false) return(false);
+if (~qh_dragon_c18 = false) return(false);
+return(true);
+
+[proc,qh_dragon_c67]()(boolean)
+if (~qh_dragon_c16 = false) return(false);
+if (~qh_dragon_c17 = false) return(false);
+return(true);

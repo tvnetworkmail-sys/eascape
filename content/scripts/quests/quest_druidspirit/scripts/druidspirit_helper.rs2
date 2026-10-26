@@ -1,0 +1,266 @@
+// EASCape: Quest Helper for Nature Spirit, converted from RuneLite's Quest Helper (naturespirit, BSD 2-Clause)
+// by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   ChatMessageRequirement not carried over
+//   ItemOnTileRequirement not carried over
+//   NPC PRIESTPERILTRAPPEDMONK_VIS not matched
+//   WidgetTextRequirement not carried over
+//   field not carried over
+
+[proc,questhelper_druidspirit]()(int)
+def_int $v = %druidspirit;
+if ($v > 105) {
+    return(0); // done
+}
+if ($v >= 105) {
+    if (~qh_druidspirit_c3 = true) {
+        return(28);
+    }
+    if (~qh_druidspirit_c1 = true) {
+        return(29);
+    }
+    return(27);
+}
+if ($v >= 100) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 95) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 90) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 85) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 80) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 75) {
+    if (~qh_druidspirit_c4 = true) {
+        return(26);
+    }
+    if (~qh_druidspirit_c5 = true) {
+        return(25);
+    }
+    return(24);
+}
+if ($v >= 70) {
+    if (~qh_druidspirit_c3 = true) {
+        return(23);
+    }
+    if (~qh_druidspirit_c1 = true) {
+        return(21);
+    }
+    return(20);
+}
+if ($v >= 65) {
+    if (~qh_druidspirit_c3 = true) {
+        return(23);
+    }
+    if (~qh_druidspirit_c1 = true) {
+        return(21);
+    }
+    return(20);
+}
+if ($v >= 60) {
+    if (~qh_druidspirit_c7 = true) {
+        return(22);
+    }
+    if (~qh_druidspirit_c1 = true) {
+        return(21);
+    }
+    return(20);
+}
+if ($v >= 55) {
+    if (~qh_druidspirit_c9 = true) {
+        return(15);
+    }
+    return(14);
+}
+if ($v >= 50) {
+    if (~qh_druidspirit_c9 = true) {
+        return(15);
+    }
+    return(14);
+}
+if ($v >= 45) {
+    if (~qh_druidspirit_c9 = true) {
+        return(15);
+    }
+    return(14);
+}
+if ($v >= 40) {
+    if (~qh_druidspirit_c9 = true) {
+        return(15);
+    }
+    return(14);
+}
+if ($v >= 35) {
+    if (~qh_druidspirit_c10 = true) {
+        return(12);
+    }
+    return(13);
+}
+if ($v >= 30) {
+    if (~qh_druidspirit_c6 = true) {
+        return(11);
+    }
+    return(5);
+}
+if ($v >= 25) {
+    if (~qh_druidspirit_c12 = true) {
+        return(11);
+    }
+    if (~qh_druidspirit_c11 = true) {
+        return(5);
+    }
+    return(10);
+}
+if ($v >= 20) {
+    if (~qh_druidspirit_c14 = true) {
+        return(9);
+    }
+    if (~qh_druidspirit_c13 = true) {
+        return(5);
+    }
+    return(7);
+}
+if ($v >= 15) {
+    if (~qh_druidspirit_c6 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 10) {
+    if (~qh_druidspirit_c6 = true) {
+        return(6);
+    }
+    return(5);
+}
+if ($v >= 5) {
+    if (~qh_druidspirit_c10 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 4) {
+    if (~qh_druidspirit_c10 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 3) {
+    if (~qh_druidspirit_c10 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 2) {
+    if (~qh_druidspirit_c10 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 1) {
+    if (~qh_druidspirit_c10 = true) {
+        return(4);
+    }
+    return(3);
+}
+if ($v >= 0) {
+    if (~qh_druidspirit_c10 = true) {
+        return(1);
+    }
+    return(2);
+}
+return(1);
+
+[proc,qh_druidspirit_c1]()(boolean)
+if (inzone(0_53_152_43_5, 0_53_152_56_18, coord) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c2]()(boolean)
+if (npc_find(coord, filliman_tarlock_ns, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c3]()(boolean)
+if (~qh_druidspirit_c1 = false) return(false);
+if (~qh_druidspirit_c2 = false) return(false);
+return(true);
+
+[proc,qh_druidspirit_c4]()(boolean)
+if (npc_find(coord, ghast_vis, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c5]()(boolean)
+if (calc(inv_total(inv, druid_pouch) + inv_total(worn, druid_pouch)) >= 1) return(true);
+return(false);
+
+[proc,qh_druidspirit_c6]()(boolean)
+if (npc_find(coord, filliman_tarlock_spirit, 15, 0) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c7]()(boolean)
+if (~qh_druidspirit_c1 = false) return(false);
+if (~qh_druidspirit_c6 = false) return(false);
+return(true);
+
+[proc,qh_druidspirit_c8]()(boolean)
+if (inzone(0_53_52_48_7, 0_53_52_48_7, coord) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c9]()(boolean)
+if (calc(inv_total(inv, mortmyremushroom) + inv_total(worn, mortmyremushroom)) >= 1) return(true);
+return(false);
+
+[proc,qh_druidspirit_c10]()(boolean)
+if (inzone(0_53_154_10_24, 0_53_154_51_51, coord) = true) return(true);
+return(false);
+
+[proc,qh_druidspirit_c11]()(boolean)
+if (calc(inv_total(inv, filliman_journal) + inv_total(worn, filliman_journal)) >= 1) return(true);
+return(false);
+
+[proc,qh_druidspirit_c12]()(boolean)
+if (~qh_druidspirit_c11 = false) return(false);
+if (~qh_druidspirit_c6 = false) return(false);
+return(true);
+
+[proc,qh_druidspirit_c13]()(boolean)
+if (calc(inv_total(inv, mirror) + inv_total(worn, mirror)) >= 1) return(true);
+return(false);
+
+[proc,qh_druidspirit_c14]()(boolean)
+if (~qh_druidspirit_c13 = false) return(false);
+if (~qh_druidspirit_c6 = false) return(false);
+return(true);
