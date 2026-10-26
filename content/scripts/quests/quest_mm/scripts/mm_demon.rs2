@@ -194,6 +194,8 @@ if(inzone(0_42_143_0_0, 2_42_143_63_63, npc_coord) = false) {
 
 [ai_timer,mm_zooknock_final_battle]  ~gnome_finalbattle_aphunt;
 [ai_apnpc2,mm_zooknock_final_battle]
+if (%npc_action_delay > map_clock) return;
+%npc_action_delay = add(map_clock, 5);
 npc_anim(m_mage_attack, 0);
 def_int $duration = 64;
 def_spotanim $spell = fireblast_travel;
@@ -203,7 +205,6 @@ if(random(2) = 0) {
     $spell_impact = waterblast_impact;
 }
 $duration = ~npc_to_npc_projectile(.npc_uid, $spell, 25, 50, 25, 16, 21, 64, 5);
-npc_setmode(null);
 .spotanim_npc($spell_impact, 200, $duration);
 .npc_queue(4, random(2), calc($duration / 30));
 .npc_anim(demon_block, calc($duration / 30));
@@ -218,7 +219,7 @@ if(inzone(1_42_143_0_0, 1_42_143_63_63, coord) = false) {
     npc_del;
     return;
 }
-npc_huntall(npc_coord, 5, 0);
+npc_huntall(npc_coord, 20, 0); // EASCape: the whole arena (Lost City: 5 tiles, so they lost him)
 while(.npc_findnext = true) {
     if(.npc_type = mm_demon & .%npc_aggressive_player = %npc_aggressive_player) {
         npc_setmode(opnpc2);
@@ -234,17 +235,21 @@ if(inzone(1_42_143_0_0, 1_42_143_63_63, coord) = false) {
     npc_del;
     return;
 }
-npc_huntall(npc_coord, 5, 0);
+npc_huntall(npc_coord, 20, 0); // EASCape: the whole arena
 while(.npc_findnext = true) {
     if(.npc_type = mm_demon & .%npc_aggressive_player = %npc_aggressive_player) {
         npc_setmode(apnpc2);
     }
 }
 
+// EASCape (your call, 26 Oct 2026: "they shouldn't ever stop hitting him"): the gnomes stay on
+// the demon, a hit every 4 ticks, instead of dropping him after each hit until their 9-tick
+// timer finds him again (and only if he was within 5 tiles)
 [proc,gnome_finalbattle_melee]
+if (%npc_action_delay > map_clock) return;
+%npc_action_delay = add(map_clock, 4);
 if(npc_type = mm_karam_final_battle) npc_anim(m_assassin_attack, 0);
 else npc_anim(midget_attacksword, 0);
-npc_setmode(null);
 .npc_queue(4, random(2), 0); // always 1 damage on osrs, not originally: https://youtu.be/9bwZbgPNaOc?si=gmpIpGkKsQdVfXhJ&t=158
 .npc_anim(demon_block, 20);
 ~.sound_area(black_demon_hit, 20, .npc_coord, 15);
@@ -260,10 +265,11 @@ npc_setmode(null);
 // ~.sound_area(black_demon_hit, 20, .npc_coord, 15);
 
 [proc,gnome_finalbattle_vial]
+if (%npc_action_delay > map_clock) return;
+%npc_action_delay = add(map_clock, 5);
 npc_anim(m_mage_attack, 0);
 def_int $duration = 64;
 $duration = ~npc_to_npc_projectile(.npc_uid, vial_travel, 25, 50, 25, 16, 21, 64, 5);
-npc_setmode(null);
 .spotanim_npc(explodingvial, 200, calc($duration / 30));
 .npc_queue(4, random(2), calc($duration / 30));
 .npc_anim(demon_block, calc($duration / 30));
