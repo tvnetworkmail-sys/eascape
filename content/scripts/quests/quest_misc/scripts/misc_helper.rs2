@@ -3,7 +3,6 @@
 //   NPC MISC_ADVISOR_GHRIM_1OP not matched
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MISC_ACCEPTEDTORULE') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MISC_PARTNER_MULTIVAR') not in our game
-//   item ('field', ('name', 'ItemCollections'), 'FLOWERS') not in our game
 
 [proc,questhelper_misc]()(int)
 def_int $v = %misc_quest;
@@ -266,6 +265,9 @@ if ($v >= 0) {
     if (~qh_misc_c1 = true) {
         return(3);
     }
+    if (~qh_misc_c26 = true) {
+        return(4);
+    }
     if (~qh_misc_c24 = true) {
         return(2);
     }
@@ -388,3 +390,12 @@ return(true);
 [proc,qh_misc_c24]()(boolean)
 if (inzone(0_38_59_59_59, 3_41_61_3_0, coord) = true) return(true);
 return(false);
+
+[proc,qh_misc_c25]()(boolean)
+if (calc(inv_total(inv, flowers_waterfall_quest_red) + inv_total(worn, flowers_waterfall_quest_red) + inv_total(inv, flowers_waterfall_quest_yellow) + inv_total(worn, flowers_waterfall_quest_yellow) + inv_total(inv, flowers_waterfall_quest_purple) + inv_total(worn, flowers_waterfall_quest_purple) + inv_total(inv, flowers_waterfall_quest_orange) + inv_total(worn, flowers_waterfall_quest_orange) + inv_total(inv, flowers_waterfall_quest_mixed) + inv_total(worn, flowers_waterfall_quest_mixed) + inv_total(inv, flowers_waterfall_quest) + inv_total(worn, flowers_waterfall_quest) + inv_total(inv, flowers_waterfall_quest_black) + inv_total(worn, flowers_waterfall_quest_black) + inv_total(inv, flowers_waterfall_quest_white) + inv_total(worn, flowers_waterfall_quest_white)) >= 1) return(true);
+return(false);
+
+[proc,qh_misc_c26]()(boolean)
+if (~qh_misc_c24 = false) return(false);
+if (~qh_misc_c25 = false) return(false);
+return(true);

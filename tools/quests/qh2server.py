@@ -50,8 +50,8 @@ def resolve(kind, name):
 
 # item collections (Quest Helper's ItemCollections: "any axe" and the like)
 COLL = {}
-for m in re.finditer(r'^\s*(\w+)\("([^"]*)",\s*ImmutableList\.of\((.*?)\)\)', rd(f'{QH}/collections/ItemCollections.java'), re.M | re.S):
-    COLL[m.group(1)] = re.findall(r'ItemID\.(\w+)', m.group(3))
+for m in re.finditer(r'^\s*(\w+)\((?:"[^"]*",\s*)?ImmutableList\.of\((.*?)\)\)', rd(f'{QH}/collections/ItemCollections.java'), re.M | re.S):
+    COLL[m.group(1)] = re.findall(r'ItemID\.(\w+)', m.group(2))  # some have a name first, some don't
 
 # ---------------------------------------------------------------- a little Java expression parser
 TOK = re.compile(r'\s*(?:(//[^\n]*|/\*.*?\*/)|("(?:[^"\\]|\\.)*")|(\d+(?:\.\d+)?[fFL]?)|([A-Za-z_][\w]*)|(->|::|&&|\|\||==|!=|<=|>=|[(){}\[\],.;=!<>+\-*/:?&|]))', re.S)
@@ -699,6 +699,69 @@ def q(v):
     v = re.sub(r'\s*\n\s*', ' ', str(v)).replace('"', "'").strip()
     return f'"{v}"' if re.search(r'[,"]', v) else v
 
+def method_exprs(raw, method):
+    """the expressions a Quest Helper list method returns (return Arrays.asList(a, b) /
+    List.of / singletonList, or reqs.add(a) ... return reqs)"""
+    m = re.search(r'\b' + method + r'\s*\(\s*\)\s*\{', raw)
+    if not m: return []
+    i, depth = m.end(), 1
+    while i < len(raw) and depth:
+        depth += {'{': 1, '}': -1}.get(raw[i], 0); i += 1
+    out = []
+    for frag, end in statements(raw[m.end():i - 1]):
+        if end != ';': continue
+        st = frag.strip()
+        try:
+            if st.startswith('return'):
+                e = P(tokens(st[6:].strip())).expr()
+                if e[0] == 'new' and e[2] and e[2][0][0] == 'call': e = e[2][0]  # new ArrayList<>(Arrays.asList(...))
+                if e[0] == 'call' and e[2] in ('asList', 'of', 'singletonList', 'toArrayList'): out += e[3]
+            else:
+                e = P(tokens(st)).expr()
+                if e[0] == 'call' and e[2] == 'add' and e[3]: out.append(e[3][0])
+                elif e[0] == 'call' and e[2] == 'addAll' and e[3] and e[3][0][0] == 'call': out += e[3][0][3]
+        except Exception:
+            pass
+    return out
+
+def req_items(qq, method):
+    """[(our obj, count)] for the item requirements a list method gives"""
+    got = []
+    for e in method_exprs(qq.raw, method):
+        qty = None
+        while e[0] == 'call' and e[1] is not None:  # x.quantity(n).highlighted()...
+            if e[2] == 'quantity' and e[3]: qty = qq.num(e[3][0])
+            e = e[1]
+        if e[0] != 'name': continue
+        v = qq.val(e)
+        while v and v[0] == 'call' and v[1] is not None:
+            if v[2] == 'quantity' and v[3] and qty is None: qty = qq.num(v[3][0])
+            v = qq.val(v[1])
+        if v and v[0] == 'new' and v[1] == 'KeyringRequirement' and len(v[2]) >= 2 and v[2][1][0] == 'field':
+            r = resolve('ItemID', v[2][1][2])  # KeyringCollection.DUSTY_KEY: the key itself
+            if r: got.append((r, 1))
+            continue
+        if not v or v[0] != 'new' or v[1] != 'ItemRequirement': continue
+        ia = [y for y in v[2] if not (y[0] == 'name' and y[1] in ('true', 'false'))]
+        if len(ia) < 2: continue
+        objs = qq.ids(ia[1], 'ItemID')
+        if not objs: continue
+        if qty is None: qty = qq.num(ia[2]) if len(ia) > 2 and qq.num(ia[2]) is not None else 1
+        got.append((objs[0], max(1, qty)))
+    seen, out = set(), []
+    for o, c in got:
+        if o not in seen: seen.add(o); out.append((o, c))
+    return out
+
+def req_skills(qq):
+    out = []
+    for e in method_exprs(qq.raw, 'getGeneralRequirements'):
+        if e[0] == 'name': e = qq.val(e)
+        if e and e[0] == 'new' and e[1] == 'SkillRequirement' and len(e[2]) >= 2 and e[2][0][0] == 'field':
+            lvl = qq.num(e[2][1])
+            if lvl: out.append(f'{lvl} {e[2][0][2].title()}')
+    return out
+
 def write(key, num, dirname, stagevar, journal, title, outdir, rewards=None):
     qq = Quest(key, num, dirname)
     qq.raw = re.sub(r'//[^\n]*', '', rd_all(dirname))
@@ -707,6 +770,9 @@ def write(key, num, dirname, stagevar, journal, title, outdir, rewards=None):
             '// and contributors, BSD 2-Clause) by tools/quests/qh2server.py.',
             f'[questhelper_guide_{key}]', 'table=questhelper_guide', f'data=guide,^qh_{key}', f'data=key,{key}',
             f'data=name,{q(re.sub(r' I$', '', title))}', f'data=journal,{q(journal)}']  # no OSRS "I" in 2006 names
+    for o, c in req_items(qq, 'getItemRequirements')[:20]: rows.append(f'data=required,{o},{c}')
+    for o, c in req_items(qq, 'getItemRecommended')[:20]: rows.append(f'data=recommended,{o},{c}')
+    for sk in req_skills(qq): rows.append(f'data=skill,{q(sk)}')
     for r in rewards or []: rows.append(f'data=reward,{q(r)}')
     for sname, _ in sections: rows.append(f'data=section,{q(sname)}')
     for v, sec in order:

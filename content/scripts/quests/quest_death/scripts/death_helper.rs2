@@ -6,7 +6,6 @@
 //   WidgetTextRequirement not carried over
 //   condition givenCertificate unknown
 //   field not carried over
-//   item ('field', ('name', 'ItemCollections'), 'CLIMBING_BOOTS') not in our game
 
 [proc,questhelper_death]()(int)
 def_int $v = %death_equiproom;
@@ -17,13 +16,13 @@ if ($v >= 70) {
     if (~qh_death_c3 = true) {
         return(31);
     }
-    if (~qh_death_c7 = true) {
+    if (~qh_death_c8 = true) {
         return(24);
     }
     return(23);
 }
 if ($v >= 60) {
-    if (~qh_death_c8 = true) {
+    if (~qh_death_c9 = true) {
         return(17);
     }
     return(16);
@@ -35,34 +34,34 @@ if ($v >= 50) {
     return(13);
 }
 if ($v >= 40) {
-    if (~qh_death_c11 = true) {
+    if (~qh_death_c12 = true) {
         return(10);
     }
-    if (~qh_death_c13 = true) {
+    if (~qh_death_c14 = true) {
         return(12);
     }
-    if (~qh_death_c9 = true) {
+    if (~qh_death_c10 = true) {
         return(11);
     }
     return(9);
 }
 if ($v >= 30) {
-    if (~qh_death_c14 = true) {
+    if (~qh_death_c15 = true) {
         return(7);
     }
     return(8);
 }
 if ($v >= 20) {
-    if (~qh_death_c10 = true) {
+    if (~qh_death_c11 = true) {
         return(4);
     }
-    if (~qh_death_c12 = true) {
+    if (~qh_death_c13 = true) {
         return(6);
     }
     return(5);
 }
 if ($v >= 10) {
-    if (~qh_death_c14 = true) {
+    if (~qh_death_c15 = true) {
         return(2);
     }
     return(3);
@@ -89,43 +88,47 @@ if (calc(inv_total(inv, death_spikedboots) + inv_total(worn, death_spikedboots))
 return(false);
 
 [proc,qh_death_c5]()(boolean)
-if (calc(inv_total(inv, death_entrancecert) + inv_total(worn, death_entrancecert)) >= 1) return(true);
+if (calc(inv_total(inv, death_climbingboots) + inv_total(worn, death_climbingboots)) >= 1) return(true);
 return(false);
 
 [proc,qh_death_c6]()(boolean)
-if (~qh_death_c5 = true) return(true);
+if (calc(inv_total(inv, death_entrancecert) + inv_total(worn, death_entrancecert)) >= 1) return(true);
 return(false);
 
 [proc,qh_death_c7]()(boolean)
-if (inzone(0_35_74_26_16, 0_35_74_33_26, coord) = true) return(true);
+if (~qh_death_c6 = true) return(true);
 return(false);
 
 [proc,qh_death_c8]()(boolean)
-if (inzone(0_45_55_13_38, 0_45_55_24_49, coord) = true) return(true);
+if (inzone(0_35_74_26_16, 0_35_74_33_26, coord) = true) return(true);
 return(false);
 
 [proc,qh_death_c9]()(boolean)
-if (calc(inv_total(inv, asgarnian_ale) + inv_total(worn, asgarnian_ale)) >= 1) return(true);
+if (inzone(0_45_55_13_38, 0_45_55_24_49, coord) = true) return(true);
 return(false);
 
 [proc,qh_death_c10]()(boolean)
-if (inzone(1_45_55_25_16, 1_45_55_26_22, coord) = true | inzone(1_45_55_27_22, 1_45_55_27_22, coord) = true) return(true);
+if (calc(inv_total(inv, asgarnian_ale) + inv_total(worn, asgarnian_ale)) >= 1) return(true);
 return(false);
 
 [proc,qh_death_c11]()(boolean)
-if (~qh_death_c9 = false) return(false);
-if (~qh_death_c10 = false) return(false);
-return(true);
+if (inzone(1_45_55_25_16, 1_45_55_26_22, coord) = true | inzone(1_45_55_27_22, 1_45_55_27_22, coord) = true) return(true);
+return(false);
 
 [proc,qh_death_c12]()(boolean)
+if (~qh_death_c10 = false) return(false);
+if (~qh_death_c11 = false) return(false);
+return(true);
+
+[proc,qh_death_c13]()(boolean)
 if (inzone(1_45_55_25_16, 1_45_55_35_24, coord) = true) return(true);
 return(false);
 
-[proc,qh_death_c13]()(boolean)
-if (~qh_death_c9 = false) return(false);
-if (~qh_death_c12 = false) return(false);
+[proc,qh_death_c14]()(boolean)
+if (~qh_death_c10 = false) return(false);
+if (~qh_death_c13 = false) return(false);
 return(true);
 
-[proc,qh_death_c14]()(boolean)
+[proc,qh_death_c15]()(boolean)
 if (inzone(1_45_55_11_36, 1_45_55_26_51, coord) = true) return(true);
 return(false);
