@@ -648,12 +648,13 @@ return(false);
 // releases the cyclopes that drop the defender after the best one you have as you go in (bronze if
 // none), 1 kill in 50 (2 in 100 on the wiki's table).
 
-[oploc1,wg_door_15641] ~wg_cyclops_door(wg_door_15642);
-[oploc1,wg_door_15644] ~wg_cyclops_door(wg_door_15645);
+[oploc1,wg_door_15641] ~wg_cyclops_door(wg_door_15642, ^left);
+[oploc1,wg_door_15644] ~wg_cyclops_door(wg_door_15645, ^right);
 
-[proc,wg_cyclops_door](loc $open)
+[proc,wg_cyclops_door](loc $open, int $side)
 if (coordy(loc_coord) ! 2) {
-    ~open_door(500); // the ground floor's are ordinary doors
+    // the ground floor's pair: a double door that walks you through and shuts behind you
+    ~open_and_close_double_door(~check_axis_locactive(coord), $side);
     return;
 }
 def_boolean $inside = ~check_axis(coord, loc_coord, loc_angle);
