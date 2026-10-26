@@ -459,7 +459,7 @@ console.log('chat notifications: ok');
   const reps = [];
   const fl = [];
   const store = {};
-  const fp = farming({ config: () => false, state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
+  const fp = farming({ sendToGame: () => {}, config: () => false, state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
   fp.start();
   fl.forEach((fn) => fn('player', { name: 'Tester' }));
   fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0 } }));

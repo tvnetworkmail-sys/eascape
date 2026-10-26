@@ -113,6 +113,8 @@ module.exports = function farming(ctx) {
 
   return {
     start() {
+      // switch the page side on (it reads the patch varps)
+      ctx.sendToGame({ type: 'plugin-config', id: 'farming', enabled: true, config: {} });
       off = ctx.onRuntime((type, data) => {
         if (type === 'player' && data && data.name) load(data.name);
         else if (type === 'farming-varps' && data && data.varps) onVarps(data.varps);
@@ -126,9 +128,13 @@ module.exports = function farming(ctx) {
       if (off) off();
       if (timer) clearInterval(timer);
       ctx.report(null);
+      ctx.sendToGame({ type: 'plugin-config', id: 'farming', enabled: false });
     },
     configChanged: () => report(),
-    gameReady: () => report(),
+    gameReady: () => {
+      ctx.sendToGame({ type: 'plugin-config', id: 'farming', enabled: true, config: {} });
+      report();
+    },
   };
 };
 

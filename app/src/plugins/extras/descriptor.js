@@ -7,6 +7,7 @@ module.exports = {
   description: 'Keeps your attack style between logins and sets your autocast spell again when you go back to a staff',
   tags: ['extras', 'attack', 'style', 'autocast', 'spell', 'staff', 'remember', 'qol'],
   enabledByDefault: true,
+  game: './extras/game.js',
   page: './extras/page.js',
   config: { group: 'extras', sections: [], items: [] },
 };
