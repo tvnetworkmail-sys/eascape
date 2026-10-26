@@ -12,6 +12,8 @@ export default abstract class ClientSocket {
     totalBytesWritten = 0;
 
     state = 0;
+    // EASCape: connected from the EASCape app (its user agent says so; see web.ts)
+    isApp = false;
     player: NetworkPlayer | null = null;
     encryptor: Isaac | null = null;
     decryptor: Isaac | null = null;

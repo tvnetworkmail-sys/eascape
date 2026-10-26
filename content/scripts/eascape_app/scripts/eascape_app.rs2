@@ -1,0 +1,46 @@
+// EASCape: the app's extras. The app connects with "EASCapeApp/" in its user agent; only such a
+// connection may send ::appextras on|off (engine: ClientCheatHandler), which the app's "EASCape
+// Extras" plugin does after you log in and whenever you switch it. The web game never gets them.
+// What they do:
+//   - your attack style is kept from one login to the next (2006 reset it; Lost City's
+//     player_attackstyles.rs2 cites a video)
+//   - the spell you autocast is set again when you go back to a staff (2006 dropped it whenever
+//     you changed to another kind of weapon)
+[proc,eascape_app_extras_set](int $on)
+if ($on = 1 & %eascape_app_extras = 0) {
+    %eascape_app_extras = 1;
+    if (%eascape_saved_com_mode > 0) {
+        %com_mode = sub(%eascape_saved_com_mode, 1);
+        ~player_combat_stat;
+    }
+    return;
+}
+if ($on = 0) {
+    %eascape_app_extras = 0;
+}
+
+// logout: keep the style for next time (stored +1, so 0 means "nothing saved")
+[proc,eascape_app_logout]
+if (%eascape_app_extras = 1) {
+    %eascape_saved_com_mode = add(%com_mode, 1);
+}
+
+// your weapon changed kind and autocast is about to be cleared: remember the spell
+[proc,eascape_autocast_remember](obj $previous)
+if (%eascape_app_extras = 1 & $previous ! null & oc_category($previous) = weapon_staff & %autocast_spell > 0) {
+    %eascape_last_autocast = %autocast_spell;
+}
+
+// a staff again: the remembered spell, if this staff and spellbook can autocast it
+[proc,eascape_autocast_restore](obj $obj)
+if (%eascape_app_extras = 0 | $obj = null | oc_category($obj) ! weapon_staff | %eascape_last_autocast <= 0) {
+    return;
+}
+def_int $spell = %eascape_last_autocast;
+def_boolean $ancient = false;
+if ($spell >= ^smoke_rush & $spell <= ^ice_barrage) $ancient = true;
+if ($ancient = true & ($obj ! staff_of_zaros | %alternate_spells ! 1)) return;
+if ($ancient = false & %alternate_spells ! 0) return;
+%autocast_spell = $spell;
+%autocast_set = 1;
+if_settext(combat_staff_2:auto_spell, db_getfield(~get_spell_data($spell), magic_spell_table:name, 0));

@@ -112,7 +112,9 @@ def_obj $obj = inv_getobj(worn, ^wearpos_rhand);
 if ($previous = null | $obj = null | oc_category($previous) ! oc_category($obj)) {
     // todo somehow confirm this
     // osrs keeps track of selected per category
+    ~eascape_autocast_remember($previous); // EASCape: app extras (eascape_app.rs2)
     ~player_autocast_reset;
+    ~eascape_autocast_restore($obj);
 }
 if (~inzone_coord_pair_table(gnomeball_zones, coord) = true) {
     if_settab(gnomeball, 0);

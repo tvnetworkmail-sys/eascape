@@ -20,6 +20,7 @@ module.exports = [
   require('./cluescroll/descriptor'),
   require('./dialoguekeys/descriptor'),
   require('./questhelper/descriptor'),
+  require('./extras/descriptor'),
   require('./idlenotifier/descriptor'),
   require('./xpdrops/descriptor'),
   require('./xptracker/descriptor'),

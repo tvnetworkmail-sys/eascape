@@ -185,6 +185,8 @@ async function confirmLeaveGame(message) {
 
 function createWindow() {
   const gameSession = session.fromPartition('persist:eascape-game');
+  // EASCape: the server gives the app's extras only to a connection that says it's the app
+  gameSession.setUserAgent(`${gameSession.getUserAgent()} EASCapeApp/${app.getVersion()}`);
   clientLoader.install(gameSession, (status) => {
     state.client = status;
     if (status.type === 'client-patched') {

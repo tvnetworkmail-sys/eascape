@@ -71,6 +71,9 @@ fastify.route({
             },
             req.socket.remoteAddress ?? 'unknown'
         );
+        // EASCape: the app adds EASCapeApp/<version> to its user agent; only it can switch on the
+        // app's extras (::appextras)
+        client.isApp = /EASCapeApp\//.test(String(req.headers['user-agent'] ?? ''));
 
         socket.on('message', (message: Buffer<ArrayBufferLike>) => {
             try {
