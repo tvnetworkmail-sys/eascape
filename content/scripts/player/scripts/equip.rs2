@@ -119,6 +119,9 @@ if (p_finduid(uid) = true) {
 // handling unequipping effects
 [proc,on_unequip](obj $obj)
 ~dt_ring_check; // EASCape: Desert Treasure's ring of visibility
+if ($obj = null) {
+    return; // nothing was taken off (equipping into an empty slot)
+}
 // from Lost City 289: Monkey Madness's greegrees and sigil, Troll Romance's sled
 if(oc_category($obj) = mm_greegree) {
     p_transmogrify(null);
