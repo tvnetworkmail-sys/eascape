@@ -45,7 +45,8 @@ export async function packClientTitle(cache: FileStream) {
     }
 
     const packed = fs.readFileSync('data/pack/client/title');
-    if (Environment.BUILD_VERIFY && !Packet.checkcrc(packed, 0, packed.length, -1794511643)) {
+    // EASCape: our own login logo (content/title/logo.png, the 2006RS logo) changes the archive
+    if (Environment.BUILD_VERIFY && !Packet.checkcrc(packed, 0, packed.length, -1403160720)) {
         throw new Error('title checksum mismatch!\nYou can disable this safety check by setting BUILD_VERIFY=false');
     }
 
