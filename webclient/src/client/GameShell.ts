@@ -93,6 +93,13 @@ export default abstract class GameShell {
 
         canvas.onkeydown = this.onkeydown.bind(this);
         canvas.onkeyup = this.onkeyup.bind(this);
+        // EASCape: typing works without clicking the game first. Keys pressed while the page
+        // (not the canvas) has focus are handed to the game, which then takes the focus;
+        // text fields on the page keep their own keys.
+        window.addEventListener('keydown', this.pageKeyDown, true);
+        window.addEventListener('keyup', this.pageKeyUp, true);
+        window.addEventListener('focus', this.pageFocus);
+        canvas.focus();
 
         canvas.onmousedown = this.onmousedown.bind(this);
         canvas.onpointerdown = this.onpointerdown.bind(this);
@@ -237,6 +244,9 @@ export default abstract class GameShell {
         canvas.onblur = null;
         canvas.onkeydown = null;
         canvas.onkeyup = null;
+        window.removeEventListener('keydown', this.pageKeyDown, true);
+        window.removeEventListener('keyup', this.pageKeyUp, true);
+        window.removeEventListener('focus', this.pageFocus);
         canvas.onmousedown = null;
         canvas.onpointerdown = null;
         canvas.onmouseup = null;
@@ -422,6 +432,36 @@ export default abstract class GameShell {
 
     protected windowMouseMove(e: MouseEvent) {
     }
+
+    // EASCape: keys that reach the page instead of the canvas (see run())
+    private static typedIntoField(target: EventTarget | null): boolean {
+        if (!(target instanceof HTMLElement)) {
+            return false;
+        }
+        const tag: string = target.tagName;
+        return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    }
+
+    private pageKeyDown = (e: KeyboardEvent): void => {
+        if (e.target === canvas || GameShell.typedIntoField(e.target)) {
+            return;
+        }
+        canvas.focus();
+        this.onkeydown(e);
+    };
+
+    private pageKeyUp = (e: KeyboardEvent): void => {
+        if (e.target === canvas || GameShell.typedIntoField(e.target)) {
+            return;
+        }
+        this.onkeyup(e);
+    };
+
+    private pageFocus = (): void => {
+        if (!GameShell.typedIntoField(document.activeElement)) {
+            canvas.focus();
+        }
+    };
 
     private onkeydown(e: KeyboardEvent) {
         this.idleTimer = performance.now();

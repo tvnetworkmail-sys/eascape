@@ -298,6 +298,8 @@ function createWindow() {
   chromeView.webContents.on('will-navigate', (e) => e.preventDefault());
 
   const gwc = gameView.webContents;
+  // EASCape: the game has the keyboard from the start, so you can type without clicking it
+  gwc.on('did-finish-load', () => gwc.focus());
   gwc.on('did-navigate', (_e, url) => log.info(`Game page: ${url}`));
   gwc.on('did-fail-load', (_e, code, desc, url, isMain) => {
     log.error(`Failed to load ${url}: ${desc} (${code})`);
@@ -542,6 +544,19 @@ ipcMain.on('window', (e, action) => {
   else if (action === 'minimize') win.minimize();
   else if (action === 'maximize') win.isMaximized() ? win.unmaximize() : win.maximize();
   else if (action === 'close') win.close();
+});
+
+// EASCape: a key pressed while the sidebar has the focus: the game gets the focus and the key
+ipcMain.on('type-to-game', (e, key, shift) => {
+  if (!gameView) return;
+  const wc = gameView.webContents;
+  wc.focus();
+  const modifiers = shift ? ['shift'] : [];
+  wc.sendInputEvent({ type: 'keyDown', keyCode: key, modifiers });
+  if (key.length === 1 || key === 'Space' || key === 'Enter') {
+    wc.sendInputEvent({ type: 'char', keyCode: key === 'Space' ? ' ' : key === 'Enter' ? '\r' : key, modifiers });
+  }
+  wc.sendInputEvent({ type: 'keyUp', keyCode: key, modifiers });
 });
 
 ipcMain.on('set-panel', (e, id) => {
