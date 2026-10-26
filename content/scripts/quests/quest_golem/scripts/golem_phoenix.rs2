@@ -7,9 +7,10 @@ if(inv_total(inv, golem_phoenixfeather) = 0 & inv_total(inv, golem_pen) = 0) {
     mes("You attempt to grab the phoenix's tail-feather.");
     p_delay(0);
 
-    // success rates unknown, took warrior's chance as a base.
-    // TODO: revisit & move to skill_thieving when its implemented.
-    if(stat_random(thieving, 100, 240) = false) {
+    // EASCape: no source gives the rate (the OSRS wiki only says you can fail; Void uses the
+    // warrior's 100-240, about half the time at level 25; 2009scape never fails). Our choice,
+    // asked for: a low-level grab that almost never fails, 240-255 (about 95% at level 25).
+    if(stat_random(thieving, 240, 255) = false) {
         npc_say("Squawk!");
         mes("You fail to grab the feather.");
         npc_setmode(playerface);
