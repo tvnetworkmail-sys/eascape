@@ -101,10 +101,14 @@ if (%farming_offset = 0) {
     %farming_offset = calc(random(30) + 1); // stored + 1: 0 means not chosen yet
 }
 ~farming_catch_up;
-settimer(farming_tick, 100);
+// EASCape: looked at every 5 ticks (3 seconds; it was every 100), so a tick's growth shows within
+// seconds of its minute and the app's Time Tracking times are right to the minute (our choice)
+settimer(farming_tick, 5);
 
 [timer,farming_tick]
-~farming_catch_up;
+if (date_minutes ! %farming_last) {
+    ~farming_catch_up;
+}
 
 // every growth tick since we last looked: 640 minutes' worth at most (our crops, weeds and
 // diseases have all run their course by then; more would be too much for one script)
@@ -116,6 +120,7 @@ if (%farming_last = 0 | calc($now - $from) > 640) {
 }
 if (%farming_last = 0) {
     %farming_last = $now;
+    if (%eascape_farming_offset > 0) %eascape_farming_clock = $now;
     return;
 }
 def_int $offset = calc(%farming_offset - 1);
@@ -129,6 +134,8 @@ while ($m <= $now) {
     $m = calc($m + 5);
 }
 %farming_last = $now;
+// the app's Time Tracking, while it has asked (eascape_app.rs2)
+if (%eascape_farming_offset > 0) %eascape_farming_clock = $now;
 
 [proc,farming_grow](int $minute)
 def_int $patch = 1;

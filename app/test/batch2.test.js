@@ -462,7 +462,11 @@ console.log('chat notifications: ok');
   const fp = farming({ sendToGame: () => {}, config: () => false, state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
   fp.start();
   fl.forEach((fn) => fn('player', { name: 'Tester' }));
+  // nothing is taken until the server has sent its growth clock (::appfarming)
   fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0 } }));
+  assert.strictEqual(reps[reps.length - 1].patches[0].prediction, null);
+  const nowMin = Math.floor(Date.now() / 60000);
+  fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0, [D.appVarps.offset]: 8, [D.appVarps.clock]: nowMin } }));
   const r = reps[reps.length - 1];
   const pot = r.patches[0];
   assert.strictEqual(pot.title, 'Falador (North West)');
@@ -471,8 +475,40 @@ console.log('chat notifications: ok');
   assert.strictEqual(pot.prediction.item, D.crops[1].item);
   // RuneLite's stages for potatoes: 4 growing + harvestable = 5; done 4 growth ticks of 10 minutes on (wiki: 40 minutes)
   assert.strictEqual(pot.prediction.stages, 5);
-  const left = pot.prediction.doneEstimate - Date.now();
-  assert.ok(left > 39 * 60000 && left <= 40 * 60000, `40 minutes, got ${left}`);
+  // offset 7: allotments grow at every minute m with (m - 7) a multiple of 10 (farming.rs2)
+  const doneMin = pot.prediction.doneEstimate / 60000;
+  assert.strictEqual(((doneMin - 7) % 10 + 10) % 10, 0, 'on an allotment growth tick');
+  assert.ok(doneMin > nowMin + 30 && doneMin <= nowMin + 40, `the 4th tick after now, got ${doneMin - nowMin}`);
+  // the same as the server: farming_catch_up / farming_grow / farming_grow_patch, run minute by
+  // minute against predict() for every patch type, offset and starting stage
+  for (const p of [D.patches[0], D.patches[8], D.patches[12], D.patches[16]]) {
+    const crop = Object.values(D.crops).find((c) => c.type === p.type && c.name !== 'scarecrow');
+    const cropId = Number(Object.keys(D.crops).find((k) => D.crops[k] === crop));
+    const last = farming.lastStage(p.type, cropId);
+    const mult = D.types[p.type].ticks;
+    for (let offset = 0; offset < 30; offset += 7) {
+      for (let st = 0; st <= last; st++) {
+        const L = 29000000 + offset * 3 + st;
+        let stage = st;
+        let grownAt = null;
+        for (let m = L + 1; m < L + 400 && grownAt === null; m++) {
+          if (((m - offset) % 5) !== 0 || ((m - offset) % (5 * mult)) !== 0) continue;
+          if (stage < last) stage++; else grownAt = m;
+        }
+        const pr = farming.predict(p, { state: { crop: cropId, kind: 1, stage: st } }, { offset, clock: L, skew: 0 }, L * 60000);
+        assert.strictEqual(pr.doneEstimate, grownAt * 60000, `${crop.name} offset ${offset} stage ${st}`);
+        const later = farming.predict(p, { state: { crop: cropId, kind: 1, stage: st } }, { offset, clock: L, skew: 0 }, grownAt * 60000);
+        assert.strictEqual(later.cropState, 'HARVESTABLE');
+        const before = farming.predict(p, { state: { crop: cropId, kind: 1, stage: st } }, { offset, clock: L, skew: 0 }, grownAt * 60000 - 1);
+        assert.strictEqual(before.cropState, 'GROWING');
+      }
+    }
+  }
+  // a diseased crop dies at the next tick; a server clock 3 minutes ahead moves the times back 3
+  const dz = farming.predict(D.patches[0], { state: { crop: 1, kind: 3, stage: 2 } }, { offset: 0, clock: 29000001, skew: 0 }, 29000010 * 60000);
+  assert.strictEqual(dz.cropState, 'DEAD');
+  const sk = farming.predict(D.patches[0], { state: { crop: 1, kind: 1, stage: 0 } }, { offset: 0, clock: 29000000, skew: 180000 }, 29000000 * 60000 - 180000);
+  assert.strictEqual(sk.doneEstimate, 29000040 * 60000 - 180000);
   assert.strictEqual(r.patches[1].prediction.produce, 'Weeds');
   assert.strictEqual(r.timeFormatMode, 'ABSOLUTE_24H');
   // the page is asked for the tab, crop and weeds icons; an icon it posts back is kept

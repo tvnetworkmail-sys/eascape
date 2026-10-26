@@ -1,16 +1,21 @@
-// Time Tracking (farming), page side: every couple of seconds while you're logged in, the
-// farming patches' varps as the client has them (the server sends them whenever a patch
-// changes), and the item icons the panel asks for (the game's own sprites).
+// Time Tracking (farming), page side: after each login it asks the server for your farming
+// growth clock (::appfarming on; only the app may), then every couple of seconds reports the
+// patch varps and the clock varps as the client has them (the server sends them whenever they
+// change), and the item icons the panel asks for (the game's own sprites).
 (function () {
   'use strict';
   const ll = window.__lostlite;
   if (!ll || !ll.registerPlugin) return;
-  const VARPS = [504, 505, 506, 508, 515]; // see patches.json
   let on = false;
+  let varpIds = [];
   let last = '';
   let lastAt = 0;
   let want = [];
+  let askedFor = null;
+  let since = 0;
   const sent = new Set();
+
+  const command = (text) => !!(ll.api && ll.api.command && ll.api.command(text));
 
   function icons() {
     for (const id of want) {
@@ -23,7 +28,18 @@
   }
 
   function frame() {
-    if (!on || !ll.loggedIn || !ll.client || !ll.fields || !ll.fields.varps) return;
+    if (!on) return;
+    if (!ll.loggedIn) {
+      askedFor = null;
+      since = 0;
+      return;
+    }
+    // a moment after login, ask for the growth clock (as the extras plugin does)
+    if (!askedFor) {
+      if (!since) since = Date.now();
+      if (Date.now() - since >= 1500 && command('appfarming on')) askedFor = since;
+    }
+    if (!ll.client || !ll.fields || !ll.fields.varps) return;
     const now = Date.now();
     if (now - lastAt < 2000) return;
     lastAt = now;
@@ -31,7 +47,7 @@
     const v = ll.client[ll.fields.varps];
     if (!v) return;
     const varps = {};
-    for (const id of VARPS) varps[id] = v[id] | 0;
+    for (const id of varpIds) varps[id] = v[id] | 0;
     const key = JSON.stringify(varps);
     if (key === last) return;
     last = key;
@@ -42,9 +58,17 @@
     configure(config) {
       on = true;
       want = (config && config.wantIcons) || [];
+      varpIds = (config && config.varps) || [];
+      last = '';
       for (const id of [...sent]) if (!want.includes(id)) sent.delete(id);
     },
     frame,
-    stop() { on = false; last = ''; },
+    stop() {
+      if (on && ll.loggedIn) command('appfarming off');
+      on = false;
+      last = '';
+      askedFor = null;
+      since = 0;
+    },
   });
 })();

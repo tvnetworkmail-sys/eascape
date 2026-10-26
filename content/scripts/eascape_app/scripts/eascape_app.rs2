@@ -51,3 +51,14 @@ if ($ancient = false & %alternate_spells ! 0) return;
 %autocast_spell = $spell;
 %autocast_set = 1;
 if_settext(combat_staff_2:auto_spell, db_getfield(~get_spell_data($spell), magic_spell_table:name, 0));
+
+// ::appfarming on|off, from the app's Time Tracking plugin (only the app may: ClientCheatHandler):
+// tell it your growth offset and the patches' clock, so its "Done at" times are the server's own
+[proc,eascape_app_farming_set](int $on)
+if ($on = 1) {
+    %eascape_farming_offset = %farming_offset;
+    %eascape_farming_clock = %farming_last;
+    return;
+}
+%eascape_farming_offset = 0;
+%eascape_farming_clock = 0;

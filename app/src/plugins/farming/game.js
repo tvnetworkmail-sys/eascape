@@ -2,9 +2,13 @@
 // Time Tracking (farming), app side: RuneLite's FarmingTracker for our patches. It decodes the
 // patch varps the page reports (patches.json), keeps each account's patches (saved, so the
 // panel knows them while you're logged out) and predicts them (PatchPrediction: the produce,
-// crop state, stage of stages and when it's done). Growth comes on the server's 5-minute ticks
-// (flowers every tick, allotments and hops every 2nd, herbs every 4th), shifted by an offset the
-// client isn't told, so "done" times count from when the tracker saw the patch change.
+// crop state, stage of stages and when it's done). The server tells the app (::appfarming,
+// eascape_app.rs2) your growth offset and the clock minute your patches last grew up to, so the
+// growth ticks here are the server's own (farming.rs2): a tick at every clock minute m where
+// (m - offset) is a multiple of 5 x the type's interval (flowers 1, allotments and hops 2, herbs
+// 4); a growing crop goes up a stage a tick and is grown the tick after its last stage, a
+// diseased one dies at the next tick, weeds come back a stage a tick. Only disease, a random
+// roll at each tick, can't be told in advance (RuneLite can't either).
 const DATA = require('./patches.json');
 
 function decodePatch(p, varps) {
@@ -29,25 +33,43 @@ function lastStage(type, crop) {
 
 const title = (n) => String(n).replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
 
-/** RuneLite's PatchPrediction: { produce, item, cropState, stage, stages, doneEstimate (ms) } or null */
-function predict(p, s) {
-  if (!s || !s.state || s.state.unknown) return null;
+/** The growth ticks of a patch type after clock minute `from`: the first one, and the period. */
+function ticks(type, offset, from) {
+  const period = DATA.types[type].ticks * DATA.tickMinutes;
+  const mod = (n) => ((n % period) + period) % period;
+  return { first: from + 1 + mod(offset - (from + 1)), period };
+}
+
+/**
+ * RuneLite's PatchPrediction: { produce, item, cropState, stage, stages, doneEstimate (ms) } or
+ * null when unknown. `s` is the patch as last seen; `t` is { offset, clock, skew }: the growth
+ * offset, the server minute that state is as of, and the server's clock less the computer's (ms).
+ */
+function predict(p, s, t, now = Date.now()) {
+  if (!s || !s.state || s.state.unknown || !t || !t.clock) return null;
   const { crop, kind, stage } = s.state;
-  const interval = DATA.types[p.type].ticks * DATA.tickMinutes * 60000;
-  const since = s.changed || Date.now();
+  const { first, period } = ticks(p.type, t.offset, t.clock);
+  const serverNow = Math.floor((now + (t.skew || 0)) / 60000);
+  const passed = serverNow >= first ? Math.floor((serverNow - first) / period) + 1 : 0;
+  const at = (n) => (first + (n - 1) * period) * 60000 - (t.skew || 0); // the n-th tick from here, computer time
+  const seen = t.clock * 60000 - (t.skew || 0);
   if (crop === 0) {
     // weeds (RuneLite's Produce.WEEDS, always GROWING): stage 0 raked clear, up to 3 fully
-    // overgrown; they grow back a stage a tick, so "done" is when they're back to full
-    return { produce: 'Weeds', weeds: true, ignore: true, item: DATA.weeds, cropState: 'GROWING', stage, stages: 4, doneEstimate: since + (3 - stage) * interval };
+    // overgrown; done when they're back to full
+    const need = 3 - stage;
+    return { produce: 'Weeds', weeds: true, ignore: true, item: DATA.weeds, cropState: 'GROWING', stage: Math.min(3, stage + passed), stages: 4, doneEstimate: need > 0 ? at(need) : seen };
   }
-  const c = DATA.crops[crop] || {};
+  // 99 is the dead herb every herb turns into when it dies (farming.constant ^farming_crop_herb_dead)
+  const c = DATA.crops[crop] || (crop === 99 ? { name: 'herbs', item: DATA.types[p.type].icon } : {});
   const last = lastStage(p.type, crop);
   const out = { produce: title(c.name || `crop ${crop}`), item: c.item || null, stage: Math.min(stage, last + 1), stages: last + 2 };
   if (c.name === 'scarecrow') out.ignore = true; // RuneLite's Produce.SCARECROW: left out of the overview like weeds
-  if (kind === 5) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: since });
-  if (kind === 4) return Object.assign(out, { cropState: 'DEAD', doneEstimate: since });
-  if (kind === 3) return Object.assign(out, { cropState: 'DISEASED', doneEstimate: since });
-  return Object.assign(out, { cropState: 'GROWING', watered: kind === 2, doneEstimate: since + (last - stage + 1) * interval });
+  if (kind === 5) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: seen });
+  if (kind === 4) return Object.assign(out, { cropState: 'DEAD', doneEstimate: seen });
+  if (kind === 3) return passed > 0 ? Object.assign(out, { cropState: 'DEAD', doneEstimate: at(1) }) : Object.assign(out, { cropState: 'DISEASED', doneEstimate: seen });
+  const need = last - stage + 1;
+  if (passed >= need) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: at(need) });
+  return Object.assign(out, { cropState: 'GROWING', watered: kind === 2 && passed === 0, stage: stage + passed, doneEstimate: at(need) });
 }
 
 module.exports = function farming(ctx) {
@@ -55,6 +77,8 @@ module.exports = function farming(ctx) {
   let timer = null;
   let account = null;
   let patches = {}; // index -> { state, raw, changed, seen }
+  let timing = null; // { offset, clock, skew }: the server's growth clock, as the patches were last seen
+  let lastCheck = Date.now();
   let icons = {};
   let notify = {}; // index -> true (the bell)
   const told = new Set();
@@ -65,7 +89,8 @@ module.exports = function farming(ctx) {
     for (const c of Object.values(DATA.crops)) if (c.item) ids.add(c.item);
     return [...ids].filter((id) => !icons[id]);
   };
-  const toPage = (enabled) => ctx.sendToGame({ type: 'plugin-config', id: 'farming', enabled, config: enabled ? { wantIcons: wantIcons() } : {} });
+  const VARPS = [...new Set(DATA.patches.map((p) => p.varp)), DATA.appVarps.offset, DATA.appVarps.clock];
+  const toPage = (enabled) => ctx.sendToGame({ type: 'plugin-config', id: 'farming', enabled, config: enabled ? { wantIcons: wantIcons(), varps: VARPS } : {} });
 
   function load(name) {
     const key = String(name || '').toLowerCase();
@@ -75,18 +100,30 @@ module.exports = function farming(ctx) {
     const saved = saves()[key] || {};
     patches = Object.assign({}, saved.patches || {});
     notify = Object.assign({}, saved.notify || {});
+    timing = saved.timing || null;
     report();
   }
   function save() {
     if (!account) return;
     const all = saves();
-    all[account] = { patches, notify };
+    all[account] = { patches, notify, timing };
     ctx.setState('saves', all);
   }
 
   function onVarps(varps) {
     if (!account) return;
     const now = Date.now();
+    // the patches are only taken with the server's clock, which says what minute they're as of
+    const offset = (varps[DATA.appVarps.offset] | 0) - 1;
+    const clock = varps[DATA.appVarps.clock] | 0;
+    if (offset < 0 || clock <= 0) return;
+    if (!timing || timing.clock !== clock || timing.offset !== offset) {
+      // the server's clock less the computer's, to the minute (the clock ticks over a few seconds
+      // after its minute: farming_tick looks every 3 seconds, the page every 2)
+      const skew = Math.round((clock * 60000 - (now - 2500)) / 60000) * 60000;
+      timing = { offset, clock, skew: timing && timing.clock === clock ? timing.skew : skew };
+      save();
+    }
     let changed = false;
     for (const p of DATA.patches) {
       const state = decodePatch(p, varps);
@@ -102,16 +139,18 @@ module.exports = function farming(ctx) {
 
   function report() {
     const now = Date.now();
-    const list = DATA.patches.map((p) => ({ index: p.index, type: p.type, title: p.place, notify: !!notify[p.index], prediction: predict(p, patches[p.index]) }));
+    const list = DATA.patches.map((p) => ({ index: p.index, type: p.type, title: p.place, notify: !!notify[p.index], prediction: predict(p, patches[p.index], timing, now) }));
     for (const d of list) {
       const pr = d.prediction;
-      if (!d.notify || !pr || pr.weeds || pr.doneEstimate > now) continue;
-      const id = `${account}:${d.index}:${patches[d.index] && patches[d.index].changed}`;
+      // RuneLite: told when it comes done between one check and the next
+      if (!d.notify || !pr || pr.weeds || pr.doneEstimate > now || pr.doneEstimate <= lastCheck) continue;
+      const id = `${account}:${d.index}:${pr.doneEstimate}`;
       if (told.has(id)) continue;
       told.add(id);
       // RuneLite's wording (FarmingTracker.sendNotification)
       if (ctx.notify && pr.cropState !== 'DEAD' && pr.cropState !== 'DISEASED') ctx.notify('Time Tracking', `Your ${pr.produce} is ready to harvest in ${d.title}.`);
     }
+    lastCheck = now;
     ctx.report({ account, patches: list, types: DATA.types, tabOrder: DATA.tabOrder, overviewIcon: DATA.overviewIcon, weedsIcon: DATA.weeds, icons, timeFormatMode: ctx.config('timeFormatMode') || 'ABSOLUTE_24H' });
   }
 
@@ -159,4 +198,5 @@ module.exports = function farming(ctx) {
 module.exports.decodePatch = decodePatch;
 module.exports.lastStage = lastStage;
 module.exports.predict = predict;
+module.exports.ticks = ticks;
 module.exports.DATA = DATA;

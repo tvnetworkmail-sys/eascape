@@ -75,6 +75,19 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             return true;
         }
 
+        // EASCape: the app's Time Tracking asks for the farming growth clock (only from the app:
+        // eascape_app.rs2)
+        if (cmd === 'appfarming') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,eascape_app_farming_set]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
+            }
+            return true;
+        }
+
         // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
         // and every quest's ::<quest>pack (cheat_questpacks.rs2) and ::questpacks, the list of them
         if (!Environment.NODE_PRODUCTION && (EASCAPE_TEST_COMMANDS.includes(cmd) || (/^[a-z0-9_]+packs?$/.test(cmd) && ScriptProvider.getByName(`[debugproc,${cmd}]`)))) {

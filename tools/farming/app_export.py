@@ -42,6 +42,8 @@ for body in re.findall(r'(?ms)^\[farming_crop_\w+\]\n(.*?)(?=^\[|\Z)', open(C + 
 data = {'types': {k: {'key': a, 'title': b, 'ticks': c, 'icon': objid[d]} for k, (a, b, c, d) in TYPES.items()},
         'tabOrder': [3, 2, 1, 4],  # RuneLite's FARMING_TABS order: herb, flower, allotment, hops
         'weeds': objid['weeds'],
+        # the varps the server sends the app (::appfarming, eascape_app.rs2): growth offset + 1, clock minute
+        'appVarps': {'offset': ids['eascape_farming_offset'], 'clock': ids['eascape_farming_clock']},
         # RuneLite's Overview tab icon is the DS2 Crandor notes, not in this game: the Crandor map (our choice)
         'overviewIcon': objid['dragonmap'], 'patches': patches, 'decode': decode, 'crops': crops, 'tickMinutes': 5}
 json.dump(data, open(OUT, 'w'), indent=1)
