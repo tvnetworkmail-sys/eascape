@@ -16,6 +16,19 @@ export function getConfigBoolean(input: string): boolean {
     return input === 'yes' || input === 'true' || input === '1';
 }
 
+// EASCape: configs may be added after the ones we had when this check was last set (the Warriors'
+// Guild, 26 Oct 2026); those first ones (count, and the bytes up to prefixLength) must still match.
+function checkcrcAllowAdded(client: Packet, count: number, prefixLength: number, crc: number): boolean {
+    const now = (client.data[0] << 8) | client.data[1];
+    if (now <= count) {
+        return Packet.checkcrc(client.data, 0, client.pos, crc);
+    }
+    const copy = Uint8Array.from(client.data.subarray(0, prefixLength));
+    copy[0] = count >> 8;
+    copy[1] = count & 0xff;
+    return Packet.checkcrc(copy, 0, copy.length, crc);
+}
+
 export class PackedData {
     dat: Packet;
     idx: Packet;
@@ -612,7 +625,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 1122990828);
+                return checkcrcAllowAdded(client, 3997, 345391, 1122990828);
             }
         );
     }
@@ -697,7 +710,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 2029068104);
+                return checkcrcAllowAdded(client, 666, 8481, 2029068104);
             }
         );
     }
@@ -722,7 +735,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 455764595);
+                return checkcrcAllowAdded(client, 3852, 356796, 455764595);
             }
         );
     }
@@ -752,7 +765,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 // options for when it's worn (wornop, 20 Oct 2026), plus the Slayer plugin's rat picture. Any other change to the item data
                 // still fails this check.
                 if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
-                return Packet.checkcrc(client.data, 0, client.pos, -1522472590); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026)
+                return checkcrcAllowAdded(client, 7957, 460532, -1522472590); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026)
             }
         );
     }
