@@ -329,6 +329,12 @@ def_int $banked = 0;
 $banked = calc($banked + ~questpack_give(chisel, 1));
 ~questpack_done("Haunted Mine", $banked);
 
+[debugproc,hazeelcultpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+mes("Hazeel Cult needs no items: just start it.");
+
 [debugproc,heropack]
 if (p_finduid(uid) = false) {
     return;
@@ -458,6 +464,15 @@ $banked = calc($banked + ~questpack_give(bat_bones, 1));
 $banked = calc($banked + ~questpack_give(jangerberries, 1));
 ~questpack_done("Watchtower", $banked);
 
+[debugproc,junglepotionpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(3doseantipoison, 2));
+$banked = calc($banked + ~questpack_give(lobster, 10));
+~questpack_done("Jungle Potion", $banked);
+
 [debugproc,legendspack]
 if (p_finduid(uid) = false) {
     return;
@@ -538,6 +553,12 @@ if (p_finduid(uid) = false) {
 def_int $banked = 0;
 $banked = calc($banked + ~questpack_give(pot_empty, 1));
 ~questpack_done("Murder Mystery", $banked);
+
+[debugproc,priestpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+mes("The Restless Ghost needs no items: just start it.");
 
 [debugproc,priestperilpack]
 if (p_finduid(uid) = false) {
@@ -681,6 +702,14 @@ $banked = calc($banked + ~questpack_give(yew_longbow, 1));
 $banked = calc($banked + ~questpack_give(iron_arrow, 100));
 ~questpack_done("Tai Bwo Wannai Trio", $banked);
 
+[debugproc,totempack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 60));
+~questpack_done("Tribal Totem", $banked);
+
 [debugproc,treepack]
 if (p_finduid(uid) = false) {
     return;
@@ -807,12 +836,13 @@ mes("::chompybirdpack ::cogpack ::cookpack ::crestpack ::deathpack ::demonpack")
 mes("::desertrescuepack ::doricpack ::dragonpack ::druidpack ::druidspiritpack");
 mes("::drunkmonkpack ::eadgarpack ::elemental_workshoppack ::elenapack");
 mes("::fishingcompopack ::fluffspack ::fortresspack ::gobdippack ::golempack");
-mes("::grailpack ::grandtreepack ::hauntedpack ::hauntedminepack ::heropack");
-mes("::hettypack ::horrorpack ::huntpack ::ikovpack ::imppack ::itexampack");
-mes("::itgronigenpack ::itwatchtowerpack ::legendspack ::mcannonpack ::miscpack");
-mes("::mmpack ::morttonpack ::murderpack ::priestperilpack ::princepack");
+mes("::grailpack ::grandtreepack ::hauntedpack ::hauntedminepack");
+mes("::hazeelcultpack ::heropack ::hettypack ::horrorpack ::huntpack ::ikovpack");
+mes("::imppack ::itexampack ::itgronigenpack ::itwatchtowerpack");
+mes("::junglepotionpack ::legendspack ::mcannonpack ::miscpack ::mmpack");
+mes("::morttonpack ::murderpack ::priestpack ::priestperilpack ::princepack");
 mes("::regicidepack ::romeojulietpack ::routequestpack ::runemysteriespack");
 mes("::scorpcatcherpack ::seaslugpack ::sheeppack ::sheepherderpack ::squirepack");
-mes("::tbwtpack ::treepack ::trollpack ::troll_lovepack ::upasspack");
+mes("::tbwtpack ::totempack ::treepack ::trollpack ::troll_lovepack ::upasspack");
 mes("::vampirepack ::vikingpack ::waterfallpack ::zanarispack ::zombiequeenpack");
 mes("::dtpack");

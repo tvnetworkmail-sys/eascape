@@ -24,7 +24,9 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::farmtick 16` | Runs that many 5-minute growth ticks now (most 128), disease chances included. 16 ticks is 80 minutes: herbs go from seed to grown |
 | `::jewels` | One of each 2006 enchanted jewellery piece in your pack, fully charged (glory, dueling, games necklace, wealth, life, recoil, forging) |
 | `::slayertask dustdevil 20` | Gives you that Slayer task with that many left to kill (no level or quest check). `::slayertask list` shows the monster names |
-| `::questhelper cook` | Quest Helper: follow that quest (chat line on each new step, the yellow arrow, the step in its journal). `::questhelper off` stops, `::questhelper list` shows the quests with guides (cook, priestperil, waterfall, troll, ikov, itexam, desertrescue, deserttreasure). Works for every player, not just in test mode |
+| `::questhelper cook` | Quest Helper: follow that quest (chat line on each new step, the yellow arrow, the step in its journal). `::questhelper off` stops, `::questhelper list` shows the keys of all 70 guides (one for every quest in the game). Opening a quest's journal starts its guide too. Works for every player, not just in test mode |
+| `::questpacks` | Lists every quest pack command |
+| `::demonpack` (and so on) | The items one quest needs (the wiki's "Items required", as our items). One for each of the 69 quests built (Desert Treasure keeps its own `::dtpack`; quests that need no items just say so): the name is the quest's key, the same one `::questhelper` uses, plus `pack`. What doesn't fit in your pack goes to your bank. Skills and the quests it needs first: `::maxstats` and `::questdone` |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
