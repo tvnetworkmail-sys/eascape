@@ -94,11 +94,23 @@ switch_loc (loc_type) {
     case viking_fish_market : 
         longqueue(stolen_from_stall_vikingfish, ^vikingfish_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^vikingfish_stall_index);
+    case misc_fish_market :
+        longqueue(stolen_from_stall_miscfish, ^miscfish_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^miscfish_stall_index);
+    case misc_veg_market :
+        longqueue(stolen_from_stall_miscveg, ^miscveg_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^miscveg_stall_index);
+    case etc_fish_market :
+        longqueue(stolen_from_stall_etcfish, ^etcfish_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^etcfish_stall_index);
+    case etc_veg_market :
+        longqueue(stolen_from_stall_etcveg, ^etcveg_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^etcveg_stall_index);
 }
 ~stealing_check_for_reward($data);
 stat_advance(thieving, $experience);
 // Temp note: dur does not need updated
-if(loc_type = viking_fur_market | loc_type = viking_fish_market) loc_change(viking_market, $respawn_ticks);
+if(loc_type = viking_fur_market | loc_type = viking_fish_market | loc_type = misc_fish_market | loc_type = misc_veg_market | loc_type = etc_fish_market | loc_type = etc_veg_market) loc_change(viking_market, $respawn_ticks);
 else loc_change(market, $respawn_ticks);
 
 [label,activate_trapped_chest]

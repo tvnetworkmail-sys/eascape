@@ -17,6 +17,8 @@ vislevel=hide
 head1=npc_1553_head
 head2=npc_1125_headi2
 moverestrict=nomove
+wanderrange=0
+defaultmode=none
 
 [trollromance_aga]
 name=Aga
@@ -34,6 +36,8 @@ op1=Talk-to
 vislevel=hide
 head1=npc_1554_head
 moverestrict=nomove
+wanderrange=0
+defaultmode=none
 
 [trollromance_arrg]
 name=Arrg
@@ -57,9 +61,32 @@ resizev=150
 vislevel=113
 head1=npc_1125_head
 moverestrict=nomove
-// EASCape: aggression from Void (arrg_troll_stronghold_tunnels: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
+wanderrange=0
+maxrange=10
+attack=70
+defence=40
+strength=140
+hitpoints=140
+ranged=70
+magic=0
+defaultmode=none
+param=attackrate,4
+param=attackbonus,60
+param=strengthbonus,100
+param=stabdefence,35
+param=slashdefence,60
+param=crushdefence,35
+param=magicdefence,200
+param=rangedefence,200
+param=damagetype,^slash_style
+param=attack_anim,troll_attack
+param=defend_anim,troll_block
+param=death_anim,troll_death
+param=attack_sound,warhammer_crush
+param=defend_sound,troll_hit
+param=death_sound,troll_death
 
 [trollromance_arrg_attackable]
 name=Arrg
@@ -83,7 +110,6 @@ resizev=150
 vislevel=113
 head1=npc_1125_head
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (arrg_troll_stronghold_tunnels); hitpoints and hits are Void's divided by 10
 hitpoints=140
 attack=70
 strength=140
@@ -99,6 +125,18 @@ param=defend_anim,trollromance_toboggan_defend
 param=death_anim,troll_death
 param=defend_sound,troll_hit
 param=death_sound,troll_death
+wanderrange=0
+maxrange=20
+param=attackrate,4
+param=strengthbonus,100
+param=stabdefence,35
+param=slashdefence,60
+param=crushdefence,35
+param=magicdefence,200
+param=rangedefence,200
+param=death_drop,bones
+param=rangeattack_sound,troll_throw_rock
+param=proj_travel,troll_rock_travel
 
 [trollromance_eat_test]
 name=Ug
@@ -132,11 +170,9 @@ walkanim=dog_walk
 readyanim=dog_ready
 op2=Attack
 vislevel=96
-// EASCape: aggression from Void (ice_wolf_trollweiss: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_wolf
-// EASCape: combat from Void (ice_wolf_trollweiss); hitpoints and hits are Void's divided by 10
 hitpoints=70
 attack=100
 strength=90
@@ -153,6 +189,9 @@ param=death_anim,dog_death
 param=defend_sound,wolf_hit
 param=death_sound,wolf_death
 param=eascape_drops,void_drop_ice_wolf_drop_table
+wanderrange=6
+param=attackrate,4
+param=death_drop,wolf_bones
 
 [trollromance_ice_wolf_2]
 name=Ice wolf
@@ -169,6 +208,24 @@ op2=Attack
 resizev=110
 resizeh=110
 vislevel=132
+wanderrange=6
+maxrange=8
+attack=150
+defence=70
+strength=150
+hitpoints=70
+respawnrate=100
+huntmode=cowardly
+huntrange=5
+param=attackrate,4
+param=damagetype,^stab_style
+param=attack_anim,dog_attack
+param=defend_anim,dog_block
+param=death_anim,dog_death
+param=attack_sound,wolf_attack
+param=defend_sound,wolf_hit
+param=death_sound,wolf_death
+param=death_drop,wolf_bones
 
 [trollromance_icetroll_melee1]
 name=Ice Troll
@@ -187,11 +244,9 @@ resizeh=134
 resizev=134
 op2=Attack
 vislevel=124
-// EASCape: aggression from Void (ice_troll_troll_tunnels: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels); hitpoints and hits are Void's divided by 10
 hitpoints=80
 attack=140
 strength=120
@@ -209,6 +264,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee2]
 name=Ice Troll
@@ -229,11 +291,9 @@ resizeh=128
 resizev=128
 op2=Attack
 vislevel=123
-// EASCape: aggression from Void (ice_troll_troll_tunnels_2: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_2); hitpoints and hits are Void's divided by 10
 hitpoints=80
 attack=120
 strength=120
@@ -251,6 +311,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee3]
 name=Ice Troll
@@ -270,11 +337,9 @@ resizeh=139
 resizev=139
 op2=Attack
 vislevel=120
-// EASCape: aggression from Void (ice_troll_troll_tunnels_3: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_3); hitpoints and hits are Void's divided by 10
 hitpoints=100
 attack=100
 strength=100
@@ -292,6 +357,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee4]
 name=Ice Troll
@@ -312,11 +384,9 @@ resizeh=134
 resizev=134
 op2=Attack
 vislevel=121
-// EASCape: aggression from Void (ice_troll_troll_tunnels_4: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_4); hitpoints and hits are Void's divided by 10
 hitpoints=90
 attack=110
 strength=110
@@ -334,6 +404,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee5]
 name=Ice Troll
@@ -353,11 +430,9 @@ resizeh=138
 resizev=138
 op2=Attack
 vislevel=120
-// EASCape: aggression from Void (ice_troll_troll_tunnels_5: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_5); hitpoints and hits are Void's divided by 10
 hitpoints=100
 attack=100
 strength=100
@@ -375,6 +450,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee6]
 name=Ice Troll
@@ -395,11 +477,9 @@ resizeh=125
 resizev=125
 op2=Attack
 vislevel=120
-// EASCape: aggression from Void (ice_troll_troll_tunnels_6: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_6); hitpoints and hits are Void's divided by 10
 hitpoints=100
 attack=100
 strength=100
@@ -417,6 +497,13 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
 
 [trollromance_icetroll_melee7]
 name=Ice Troll
@@ -435,11 +522,9 @@ resizeh=134
 resizev=134
 op2=Attack
 vislevel=121
-// EASCape: aggression from Void (ice_troll_troll_tunnels_7: cowardly, range 5)
 huntmode=cowardly
 huntrange=5
 param=slayer_category,^slayer_troll
-// EASCape: combat from Void (ice_troll_troll_tunnels_7); hitpoints and hits are Void's divided by 10
 hitpoints=80
 attack=100
 strength=120
@@ -457,3 +542,10 @@ param=death_anim,troll_death
 param=defend_sound,ice_troll_hit
 param=death_sound,troll_death
 param=eascape_drops,void_drop_ice_troll_drop_table
+wanderrange=5
+param=attackrate,4
+param=strengthbonus,60
+param=stabdefence,30
+param=slashdefence,60
+param=crushdefence,30
+param=death_drop,big_bones
