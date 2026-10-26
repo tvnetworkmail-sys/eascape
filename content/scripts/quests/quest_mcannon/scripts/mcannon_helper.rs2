@@ -1,11 +1,17 @@
 // EASCape: Quest Helper for Dwarf Cannon, converted from RuneLite's Quest Helper (dwarfcannon, BSD 2-Clause)
 // by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNONMULTI_TOOL1') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNONMULTI_TOOL2') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNONMULTI_TOOL3') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING1_FIXED') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING2_FIXED') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING3_FIXED') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING4_FIXED') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING5_FIXED') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_RAILING6_FIXED') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_SAFETY_ON') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'MCANNON_SPRING_SET') not in our game
+//   WidgetPresenceRequirement not carried over
 
 [proc,questhelper_mcannon]()(int)
 def_int $v = %mcannon;
@@ -14,21 +20,21 @@ if ($v > 10) {
 }
 if ($v >= 10) {
     if (~qh_mcannon_c3 = true) {
-        return(22);
+        return(29);
     }
-    return(21);
+    return(28);
 }
 if ($v >= 9) {
     if (~qh_mcannon_c3 = true) {
-        return(22);
+        return(29);
     }
-    return(21);
+    return(28);
 }
 if ($v >= 8) {
-    return(20);
+    return(27);
 }
 if ($v >= 7) {
-    return(-1); // ('name', 'pwFixMulticannon')
+    return(26);
 }
 if ($v >= 6) {
     if (~qh_mcannon_c4 = true) {

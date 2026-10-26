@@ -5,6 +5,7 @@
 //   NPC CLIVET_HAZEEL_CULTIST_VIS not matched
 //   NPC SIR_CERIL_CARNILLEAN_VIS not matched
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'HAZEELCULT_CLIVET_LOCATION') not in our game
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'HAZEELCULT_GIVEN_SCROLL') not in our game
 //   VarbitRequirement ('field', ('name', 'VarbitID'), 'HAZEELCULT_POISON_SUCCESS') not in our game
 //   field not carried over
 
@@ -14,43 +15,127 @@ if ($v > 7) {
     return(0); // done
 }
 if ($v >= 7) {
-    return(-1); // ('name', 'hazeelSteps')
-}
-if ($v >= 6) {
-    return(-1); // ('name', 'hazeelSteps')
-}
-if ($v >= 5) {
+    if (~qh_hazeelcult_c4 = true) {
+        return(4);
+    }
+    if (~qh_hazeelcult_c6 = true) {
+        return(9);
+    }
+    if (~qh_hazeelcult_c9 = true) {
+        return(6);
+    }
+    if (~qh_hazeelcult_c10 = true) {
+        return(7);
+    }
+    if (~qh_hazeelcult_c12 = true) {
+        return(5);
+    }
     if (~qh_hazeelcult_c3 = true) {
-        return(20);
+        return(8);
+    }
+    if (~qh_hazeelcult_c14 = true) {
+        return(10);
+    }
+    if (~qh_hazeelcult_c15 = true) {
+        return(11);
+    }
+    if (~qh_hazeelcult_c16 = true) {
+        return(12);
+    }
+    if (~qh_hazeelcult_c18 = true) {
+        return(13);
+    }
+    if (~qh_hazeelcult_c13 = true) {
+        return(14);
+    }
+    if (~qh_hazeelcult_c17 = true) {
+        return(15);
     }
     if (~qh_hazeelcult_c5 = true) {
-        return(24);
+        return(17);
     }
-    return(25);
+    if (~qh_hazeelcult_c1 = true) {
+        return(16);
+    }
+    return(18);
+}
+if ($v >= 6) {
+    if (~qh_hazeelcult_c4 = true) {
+        return(4);
+    }
+    if (~qh_hazeelcult_c6 = true) {
+        return(9);
+    }
+    if (~qh_hazeelcult_c9 = true) {
+        return(6);
+    }
+    if (~qh_hazeelcult_c10 = true) {
+        return(7);
+    }
+    if (~qh_hazeelcult_c12 = true) {
+        return(5);
+    }
+    if (~qh_hazeelcult_c3 = true) {
+        return(8);
+    }
+    if (~qh_hazeelcult_c14 = true) {
+        return(10);
+    }
+    if (~qh_hazeelcult_c15 = true) {
+        return(11);
+    }
+    if (~qh_hazeelcult_c16 = true) {
+        return(12);
+    }
+    if (~qh_hazeelcult_c18 = true) {
+        return(13);
+    }
+    if (~qh_hazeelcult_c13 = true) {
+        return(14);
+    }
+    if (~qh_hazeelcult_c17 = true) {
+        return(15);
+    }
+    if (~qh_hazeelcult_c5 = true) {
+        return(17);
+    }
+    if (~qh_hazeelcult_c1 = true) {
+        return(16);
+    }
+    return(18);
+}
+if ($v >= 5) {
+    if (~qh_hazeelcult_c20 = true) {
+        return(35);
+    }
+    if (~qh_hazeelcult_c17 = true) {
+        return(39);
+    }
+    return(40);
 }
 if ($v >= 4) {
-    if (~qh_hazeelcult_c6 = true) {
+    if (~qh_hazeelcult_c21 = true) {
+        if (~qh_hazeelcult_c17 = true) {
+            return(31);
+        }
         if (~qh_hazeelcult_c5 = true) {
-            return(16);
+            return(32);
         }
-        if (~qh_hazeelcult_c4 = true) {
-            return(17);
-        }
-        return(18);
+        return(33);
     }
-    if (~qh_hazeelcult_c4 = true) {
-        return(19);
+    if (~qh_hazeelcult_c5 = true) {
+        return(34);
     }
     return(2);
 }
 if ($v >= 3) {
-    if (~qh_hazeelcult_c4 = true) {
+    if (~qh_hazeelcult_c5 = true) {
         return(3);
     }
     return(2);
 }
 if ($v >= 2) {
-    if (~qh_hazeelcult_c4 = true) {
+    if (~qh_hazeelcult_c5 = true) {
         return(3);
     }
     return(2);
@@ -65,22 +150,93 @@ if (inzone(0_40_151_40_2, 0_40_151_55_29, coord) = true) return(true);
 return(false);
 
 [proc,qh_hazeelcult_c2]()(boolean)
-if (calc(inv_total(inv, mark_of_hazeel) + inv_total(worn, mark_of_hazeel)) >= 1) return(true);
+if (calc(inv_total(inv, hazeel_scroll) + inv_total(worn, hazeel_scroll)) >= 1) return(true);
 return(false);
 
 [proc,qh_hazeelcult_c3]()(boolean)
-if (~qh_hazeelcult_c1 = false) return(false);
-if (~qh_hazeelcult_c2 = false) return(false);
-return(true);
+if (~qh_hazeelcult_c2 = true) return(true);
+return(false);
 
 [proc,qh_hazeelcult_c4]()(boolean)
+if (~qh_hazeelcult_c1 = false) return(false);
+if (~qh_hazeelcult_c3 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c5]()(boolean)
 if (inzone(0_40_151_5_15, 0_40_151_11_21, coord) = true) return(true);
 return(false);
 
-[proc,qh_hazeelcult_c5]()(boolean)
+[proc,qh_hazeelcult_c6]()(boolean)
+if (~qh_hazeelcult_c5 = false) return(false);
+if (~qh_hazeelcult_c3 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c7]()(boolean)
+if (inzone(1_40_51_4_3, 1_40_51_16_11, coord) = true) return(true);
+return(false);
+
+[proc,qh_hazeelcult_c8]()(boolean)
+if (inzone(1_40_51_11_7, 1_40_51_13_7, coord) = true) return(true);
+return(false);
+
+[proc,qh_hazeelcult_c9]()(boolean)
+if (~qh_hazeelcult_c7 = false) return(false);
+if (~qh_hazeelcult_c3 = false) return(false);
+if (~qh_hazeelcult_c8 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c10]()(boolean)
+if (~qh_hazeelcult_c7 = false) return(false);
+if (~qh_hazeelcult_c3 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c11]()(boolean)
+if (inzone(2_40_51_4_3, 2_40_51_16_11, coord) = true) return(true);
+return(false);
+
+[proc,qh_hazeelcult_c12]()(boolean)
+if (~qh_hazeelcult_c11 = false) return(false);
+if (~qh_hazeelcult_c3 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c13]()(boolean)
+if (calc(inv_total(inv, carnilleanchestkey) + inv_total(worn, carnilleanchestkey)) >= 1) return(true);
+return(false);
+
+[proc,qh_hazeelcult_c14]()(boolean)
+if (~qh_hazeelcult_c11 = false) return(false);
+if (~qh_hazeelcult_c13 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c15]()(boolean)
+if (~qh_hazeelcult_c7 = false) return(false);
+if (~qh_hazeelcult_c13 = false) return(false);
+if (~qh_hazeelcult_c8 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c16]()(boolean)
+if (~qh_hazeelcult_c7 = false) return(false);
+if (~qh_hazeelcult_c13 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c17]()(boolean)
 if (inzone(0_39_151_39_28, 0_39_151_54_39, coord) = true) return(true);
 return(false);
 
-[proc,qh_hazeelcult_c6]()(boolean)
+[proc,qh_hazeelcult_c18]()(boolean)
+if (~qh_hazeelcult_c17 = false) return(false);
+if (~qh_hazeelcult_c13 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c19]()(boolean)
+if (calc(inv_total(inv, mark_of_hazeel) + inv_total(worn, mark_of_hazeel)) >= 1) return(true);
+return(false);
+
+[proc,qh_hazeelcult_c20]()(boolean)
+if (~qh_hazeelcult_c1 = false) return(false);
+if (~qh_hazeelcult_c19 = false) return(false);
+return(true);
+
+[proc,qh_hazeelcult_c21]()(boolean)
 if (calc(inv_total(inv, poison) + inv_total(worn, poison)) >= 1) return(true);
 return(false);

@@ -4,6 +4,7 @@
 //   NPC KINGLATHAS_VIS not matched
 //   NPC MOURNERSTEW2_VIS not matched
 //   NPC OMART_VIS not matched
+//   VarbitRequirement ('field', ('name', 'VarbitID'), 'BIOHAZARD_FREE_CLOTHES') not in our game
 
 [proc,questhelper_biohazard]()(int)
 def_int $v = %biohazard;
@@ -11,34 +12,115 @@ if ($v > 15) {
     return(0); // done
 }
 if ($v >= 15) {
-    return(-1); // ('name', 'talkToTheKing')
+    if (~qh_biohazard_c1 = true) {
+        return(21);
+    }
+    return(22);
 }
 if ($v >= 14) {
     return(20);
 }
 if ($v >= 12) {
-    return(-1); // ('name', 'smuggleInChemicals')
+    if (~qh_biohazard_c9 = true) {
+        return(24);
+    }
+    if (~qh_biohazard_c10 = true) {
+        return(26);
+    }
+    if (~qh_biohazard_c11 = true) {
+        return(27);
+    }
+    if (~qh_biohazard_c12 = true) {
+        return(28);
+    }
+    if (~qh_biohazard_c2 = true) {
+        return(29);
+    }
+    if (~qh_biohazard_c13 = true) {
+        return(30);
+    }
+    return(31);
 }
 if ($v >= 10) {
     return(23);
 }
 if ($v >= 7) {
-    return(-1); // ('name', 'returnToElenaWithDistillator')
+    if (~qh_biohazard_c16 = true) {
+        return(18);
+    }
+    if (~qh_biohazard_c18 = true) {
+        return(19);
+    }
+    if (~qh_biohazard_c15 = true) {
+        return(17);
+    }
+    if (~qh_biohazard_c20 = true) {
+        return(16);
+    }
+    if (~qh_biohazard_c14 = true) {
+        return(15);
+    }
+    if (~qh_biohazard_c21 = true) {
+        return(14);
+    }
+    if (~qh_biohazard_c23 = true) {
+        return(13);
+    }
+    if (~qh_biohazard_c17 = true) {
+        return(11);
+    }
+    return(7);
 }
 if ($v >= 6) {
-    return(-1); // ('name', 'infiltrateMourners')
+    if (~qh_biohazard_c24 = true) {
+        return(12);
+    }
+    if (~qh_biohazard_c20 = true) {
+        return(16);
+    }
+    if (~qh_biohazard_c14 = true) {
+        return(15);
+    }
+    if (~qh_biohazard_c21 = true) {
+        return(14);
+    }
+    if (~qh_biohazard_c23 = true) {
+        return(13);
+    }
+    if (~qh_biohazard_c17 = true) {
+        return(11);
+    }
+    return(7);
 }
 if ($v >= 5) {
-    return(-1); // ('name', 'poisonFood')
+    if (~qh_biohazard_c26 = true) {
+        return(10);
+    }
+    if (~qh_biohazard_c24 = true) {
+        return(9);
+    }
+    if (~qh_biohazard_c17 = true) {
+        return(8);
+    }
+    return(7);
 }
 if ($v >= 4) {
     return(7);
 }
 if ($v >= 3) {
-    return(-1); // ('name', 'causeADistraction')
+    if (~qh_biohazard_c27 = true) {
+        return(6);
+    }
+    return(4);
 }
 if ($v >= 2) {
-    return(-1); // ('name', 'prepareADistraction')
+    if (~qh_biohazard_c29 = true) {
+        return(3);
+    }
+    if (~qh_biohazard_c30 = true) {
+        return(4);
+    }
+    return(5);
 }
 if ($v >= 1) {
     return(2);
@@ -47,3 +129,141 @@ if ($v >= 0) {
     return(1);
 }
 return(1);
+
+[proc,qh_biohazard_c1]()(boolean)
+if (inzone(1_40_51_10_19, 1_40_51_30_46, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c2]()(boolean)
+if (inzone(0_51_52_1_48, 1_51_53_23_15, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c3]()(boolean)
+if (calc(inv_total(inv, liquid_honey) + inv_total(worn, liquid_honey)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c4]()(boolean)
+if (calc(inv_total(inv, ethenea) + inv_total(worn, ethenea)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c5]()(boolean)
+if (calc(inv_total(inv, sulphuric_broline) + inv_total(worn, sulphuric_broline)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c6]()(boolean)
+if (calc(inv_total(inv, priest_robe) + inv_total(worn, priest_robe)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c7]()(boolean)
+if (calc(inv_total(inv, priest_gown) + inv_total(worn, priest_gown)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c8]()(boolean)
+if (~qh_biohazard_c6 = false) return(false);
+if (~qh_biohazard_c7 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c9]()(boolean)
+if (~qh_biohazard_c2 = false) return(false);
+if (~qh_biohazard_c3 = false) return(false);
+if (~qh_biohazard_c4 = false) return(false);
+if (~qh_biohazard_c5 = false) return(false);
+if (~qh_biohazard_c8 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c10]()(boolean)
+if (~qh_biohazard_c2 = false) return(false);
+if (~qh_biohazard_c3 = false) return(false);
+if (~qh_biohazard_c4 = false) return(false);
+if (~qh_biohazard_c5 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c11]()(boolean)
+if (~qh_biohazard_c2 = false) return(false);
+if (~qh_biohazard_c3 = false) return(false);
+if (~qh_biohazard_c4 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c12]()(boolean)
+if (~qh_biohazard_c2 = false) return(false);
+if (~qh_biohazard_c3 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c13]()(boolean)
+if (~qh_biohazard_c4 = true) return(true);
+if (~qh_biohazard_c3 = true) return(true);
+if (~qh_biohazard_c5 = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c14]()(boolean)
+if (inzone(1_39_51_46_57, 1_39_51_59_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c15]()(boolean)
+if (calc(inv_total(inv, distillator) + inv_total(worn, distillator)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c16]()(boolean)
+if (~qh_biohazard_c14 = false) return(false);
+if (~qh_biohazard_c15 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c17]()(boolean)
+if (inzone(0_38_51_28_15, 2_39_52_60_6, coord) = true | inzone(0_38_51_2_41, 2_38_51_32_59, coord) = true | inzone(0_39_51_14_1, 2_39_51_60_16, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c18]()(boolean)
+if (~qh_biohazard_c15 = false) return(false);
+if (~qh_biohazard_c17 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c19]()(boolean)
+if (calc(inv_total(inv, mournerkeytw) + inv_total(worn, mournerkeytw)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c20]()(boolean)
+if (~qh_biohazard_c19 = false) return(false);
+if (~qh_biohazard_c14 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c21]()(boolean)
+if (inzone(0_39_51_51_57, 0_39_51_59_63, coord) = true | inzone(0_39_51_46_60, 0_39_51_50_63, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c22]()(boolean)
+if (calc(inv_total(inv, doctor_gown) + inv_total(worn, doctor_gown)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c23]()(boolean)
+if (~qh_biohazard_c17 = false) return(false);
+if (~qh_biohazard_c22 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c24]()(boolean)
+if (inzone(0_39_52_46_0, 0_39_52_59_5, coord) = true) return(true);
+return(false);
+
+[proc,qh_biohazard_c25]()(boolean)
+if (calc(inv_total(inv, rottenapples) + inv_total(worn, rottenapples)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c26]()(boolean)
+if (~qh_biohazard_c24 = false) return(false);
+if (~qh_biohazard_c25 = false) return(false);
+return(true);
+
+[proc,qh_biohazard_c27]()(boolean)
+if (calc(inv_total(inv, pigeons) + inv_total(worn, pigeons)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c28]()(boolean)
+if (calc(inv_total(inv, birdfeed) + inv_total(worn, birdfeed)) >= 1) return(true);
+return(false);
+
+[proc,qh_biohazard_c29]()(boolean)
+if (~qh_biohazard_c28 = true) return(false);
+return(true);
+
+[proc,qh_biohazard_c30]()(boolean)
+if (~qh_biohazard_c27 = true) return(false);
+return(true);

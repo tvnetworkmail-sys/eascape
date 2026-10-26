@@ -181,6 +181,10 @@ def load(dirname):
         out.append(st)
     return out
 
+CHAIN = {'addStep', 'addDialogStep', 'addDialogSteps', 'addSubSteps', 'addAlternateNpcs', 'addIcon', 'addTeleport', 'addWidgetHighlight', 'addTileMarker', 'addTileMarkers', 'setLockingCondition', 'setAllowInCutscene', 'addSpellHighlight'}
+
+WRAP = ('copy', 'puzzleWrapStep', 'puzzleWrapStepWithDefaultText')
+
 def parse_all(stmts):
     assigns, calls, puts = {}, [], []
     for st in stmts:
@@ -189,7 +193,17 @@ def parse_all(stmts):
         m = re.match(r'^(?:this\.)?(\w+)\s*=\s*(.*)$', st, re.S)
         try:
             if m and not re.match(r'return\b', st):
-                assigns[m.group(1)] = P(tokens(m.group(2))).expr()
+                v, e = m.group(1), P(tokens(m.group(2))).expr()
+                # new ConditionalStep(...).addStep(a, b).addStep(c, d): the builder calls return
+                # the step itself, so they're calls on v
+                chain = []
+                while e[0] == 'call' and e[1] is not None and e[2] in CHAIN:
+                    chain.append(('call', ('name', v), e[2], e[3])); e = e[1]
+                old = assigns.get(v)
+                if old and old[0] == 'new' and old[1].endswith('Step') and not (e[0] == 'new' and e[1].endswith('Step')) and not (e[0] == 'call' and e[2] in ('copy', 'puzzleWrapStep', 'puzzleWrapStepWithDefaultText')):
+                    continue  # a list or panel later reusing a step's name in another method
+                assigns[v] = e
+                calls.extend(reversed(chain))
                 continue
             e = P(tokens(st)).expr()
         except Exception:
@@ -214,6 +228,33 @@ def helpers(dirname):
         out[m.group(1)] = (params, m.group(3))
     return out
 
+def block_helpers(dirname):
+    """methods that build a step in several statements and return it:
+    name -> (params, [statement texts], returned local)"""
+    src = ''.join(rd(f) for f in sorted(glob.glob(f'{QH}/helpers/quests/{dirname}/*.java')))
+    src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)
+    src = re.sub(r'(?m)//[^\n]*$', '', src)
+    out = {}
+    for m in re.finditer(r'\b(?:private|public|protected)\s+(?:\w+Step|QuestStep)\s+(\w+)\s*\(([^)]*)\)\s*\{', src):
+        i, depth = m.end(), 1
+        while i < len(src) and depth:
+            depth += {'{': 1, '}': -1}.get(src[i], 0); i += 1
+        body = src[m.end():i - 1]
+        frags = [f for f, end in statements(body) if end == ';']
+        if len(frags) < 2: continue
+        r = re.match(r'^return\s+(\w+)$', frags[-1].strip())
+        if not r: continue
+        params = []
+        for prm in m.group(2).split(','):
+            prm = prm.strip()
+            if prm: params.append((prm.split()[-1], '...' in prm))
+        sts = []
+        for f in frags[:-1]:
+            f = re.sub(r'^(?:final\s+)?(?:var|[A-Z]\w*(?:<[^=]*?>)?)\s+(?=\w+\s*=)', '', f.strip())
+            sts.append(f)
+        out[m.group(1)] = (params, sts, r.group(1))
+    return out
+
 class Quest:
     def __init__(s, key, num, dirname):
         s.key, s.guide, s.dir = key, num, dirname
@@ -236,6 +277,53 @@ class Quest:
                     if isinstance(x, list): return [rep(y) for y in x]
                     return x
                 s.assigns[v] = rep(body)
+        # and the helpers that take several statements (Jungle Potion's getReturnHerbStep): their
+        # locals get the caller's name in front, and the one returned is the caller's step
+        blocks = block_helpers(dirname)
+        extra = []
+        for v, e in list(s.assigns.items()):
+            if not (e[0] == 'call' and e[1] is None and e[2] in blocks): continue
+            params, sts, ret = blocks[e[2]]
+            sub = {}
+            for k, (pn, va) in enumerate(params):
+                sub[pn] = ('list', list(e[3][k:])) if va else (e[3][k] if k < len(e[3]) else ('name', 'null'))
+            a2, c2, _ = parse_all(sts)
+            local = {n: (v if n == ret else f'{v}__{n}') for n in a2}
+            def rep(x):
+                if isinstance(x, tuple):
+                    if len(x) == 2 and x[0] == 'name':
+                        if x[1] in sub: return sub[x[1]]
+                        if x[1] in local: return ('name', local[x[1]])
+                    return tuple(rep(y) for y in x)
+                if isinstance(x, list): return [rep(y) for y in x]
+                return x
+            for n, ex in a2.items():
+                ex = rep(ex)
+                if ex[0] == 'call' and ex[1] is None and ex[2] in s.helpers:
+                    hp, ht = s.helpers[ex[2]]
+                    try:
+                        hb = P(tokens(ht)).expr()
+                        hs = dict(zip(hp, ex[3]))
+                        def rep2(x):
+                            if isinstance(x, tuple):
+                                if len(x) == 2 and x[0] == 'name' and x[1] in hs: return hs[x[1]]
+                                return tuple(rep2(y) for y in x)
+                            if isinstance(x, list): return [rep2(y) for y in x]
+                            return x
+                        ex = rep2(hb)
+                    except Exception:
+                        pass
+                s.assigns[local[n]] = ex
+            extra += [rep(c) for c in c2]
+        s.calls = extra + s.calls
+        # cond.addStep(req, new ObjectStep(...)): the step gets a name of its own
+        for k, c in enumerate(s.calls):
+            if c[0] == 'call' and c[2] == 'addStep' and len(c[3]) == 2 and c[1] and c[1][0] == 'name':
+                st = c[3][1]
+                if st[0] == 'new' and st[1].endswith('Step') and st[1] != 'ConditionalStep':
+                    nm = f'{c[1][1]}__step{k}'
+                    s.assigns[nm] = st
+                    s.calls[k] = ('call', c[1], 'addStep', [c[3][0], ('name', nm)])
         s.procs = {}      # condition proc name -> body lines
         s.condcache = {}
         s.steps = {}      # step var -> dict
@@ -441,8 +529,8 @@ class Quest:
         e = s.val(('name', var))
         # x = other.copy() (Quest Helper's QuestStep.copy): the same step, maybe retitled after
         base = None
-        while e and e[0] == 'call' and e[2] in ('copy', 'withNoHelpHiddenInSidebar', 'puzzleWrapStep') and e[1] is not None:
-            if e[2] == 'puzzleWrapStep' and e[1][0] == 'name':
+        while e and e[0] == 'call' and e[2] in ('copy', 'withNoHelpHiddenInSidebar', 'puzzleWrapStep', 'puzzleWrapStepWithDefaultText') and e[1] is not None:
+            if e[2] in ('puzzleWrapStep', 'puzzleWrapStepWithDefaultText') and e[1][0] == 'name':
                 base = e[1][1]; e = s.val(e[1]); continue
             if e[1][0] == 'name':
                 base = e[1][1]
@@ -507,15 +595,17 @@ class Quest:
 
     def is_cond(s, var):
         e = s.val(('name', var))
-        while e and e[0] == 'call' and e[2] == 'copy' and e[1] is not None and e[1][0] == 'name':
+        while e and e[0] == 'call' and e[2] in WRAP and e[1] is not None and e[1][0] == 'name':
             e = s.val(e[1])
         return e and e[0] == 'new' and e[1] in ('ConditionalStep', 'ConditionalStep')
 
     def cond_step(s, var):
         if var in s.cond: return s.cond[var]
         e = s.val(('name', var))
-        if e and e[0] == 'call' and e[2] == 'copy' and e[1] and e[1][0] == 'name':
-            s.cond[var] = s.cond_step(e[1][1]); return s.cond[var]
+        if e and e[0] == 'call' and e[2] in WRAP and e[1] and e[1][0] == 'name':
+            d, br = s.cond_step(e[1][1])
+            own = [(c[3][0], c[3][1]) for c in s.calls if c[1] == ('name', var) and c[2] == 'addStep' and len(c[3]) == 2]
+            s.cond[var] = (d, list(br) + own); return s.cond[var]
         default = e[2][1] if len(e[2]) > 1 else None
         branches = []
         for c in s.calls:
@@ -542,6 +632,8 @@ class Quest:
         if e[0] == 'name' and s.is_cond(e[1]):
             d, br = s.cond_step(e[1])
             for c, st in br:
+                if c == ('name', 'null'):  # addStep(null, x): always
+                    s.emit_choice(st, lines, ind, number); return
                 cp = s.cond_proc(c)
                 if cp is None: continue
                 lines.append(f'{ind}if (~{cp} = true) {{')

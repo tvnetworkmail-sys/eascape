@@ -1,6 +1,8 @@
 // EASCape: Quest Helper for Big Chompy Bird Hunting, converted from RuneLite's Quest Helper (bigchompybirdhunting, BSD 2-Clause)
 // by tools/quests/qh2server.py. Conditions it couldn't carry over count as not met:
+//   DialogRequirement not carried over
 //   NPC CHOMPYBIRD not matched
+//   NpcHintArrowRequirement not carried over
 
 [proc,questhelper_chompybird]()(int)
 def_int $v = %chompybird;
@@ -11,13 +13,19 @@ if ($v >= 60) {
     return(33);
 }
 if ($v >= 55) {
-    return(-1); // ('name', 'seasonChompy')
+    if (~qh_chompybird_c8 = true) {
+        return(22);
+    }
+    return(20);
 }
 if ($v >= 50) {
-    return(-1); // ('name', 'bringChompyToRantz')
+    if (~qh_chompybird_c9 = true) {
+        return(34);
+    }
+    return(20);
 }
 if ($v >= 45) {
-    return(-1); // ('name', 'getChompy')
+    return(18);
 }
 if ($v >= 40) {
     return(17);
@@ -32,16 +40,16 @@ if ($v >= 25) {
     return(15);
 }
 if ($v >= 20) {
-    if (~qh_chompybird_c3 = true) {
+    if (~qh_chompybird_c11 = true) {
         return(11);
     }
     if (~qh_chompybird_c1 = true) {
         return(10);
     }
-    if (~qh_chompybird_c4 = true) {
+    if (~qh_chompybird_c12 = true) {
         return(14);
     }
-    if (~qh_chompybird_c5 = true) {
+    if (~qh_chompybird_c13 = true) {
         return(13);
     }
     return(12);
@@ -56,19 +64,19 @@ if ($v >= 10) {
     return(8);
 }
 if ($v >= 5) {
-    if (~qh_chompybird_c6 = true) {
+    if (~qh_chompybird_c14 = true) {
         return(7);
     }
-    if (~qh_chompybird_c9 = true) {
+    if (~qh_chompybird_c17 = true) {
         return(6);
     }
-    if (~qh_chompybird_c7 = true) {
+    if (~qh_chompybird_c15 = true) {
         return(5);
     }
-    if (~qh_chompybird_c10 = true) {
+    if (~qh_chompybird_c18 = true) {
         return(4);
     }
-    if (~qh_chompybird_c11 = true) {
+    if (~qh_chompybird_c19 = true) {
         return(3);
     }
     return(2);
@@ -83,43 +91,75 @@ if (inzone(0_41_146_3_33, 0_41_146_39_62, coord) = true) return(true);
 return(false);
 
 [proc,qh_chompybird_c2]()(boolean)
-if (calc(inv_total(inv, empty_ogre_bellows) + inv_total(worn, empty_ogre_bellows)) >= 1) return(true);
+if (calc(inv_total(inv, doogleleaves) + inv_total(worn, doogleleaves)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c3]()(boolean)
-if (~qh_chompybird_c1 = false) return(false);
-if (~qh_chompybird_c2 = false) return(false);
-return(true);
+if (calc(inv_total(inv, tomato) + inv_total(worn, tomato)) >= 1) return(true);
+return(false);
 
 [proc,qh_chompybird_c4]()(boolean)
-if (calc(inv_total(inv, bloated_toad) + inv_total(worn, bloated_toad)) >= 1) return(true);
+if (calc(inv_total(inv, cabbage) + inv_total(worn, cabbage)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c5]()(boolean)
-if (calc(inv_total(inv, filled_ogre_bellow1) + inv_total(worn, filled_ogre_bellow1)) >= 1) return(true);
+if (calc(inv_total(inv, equa_leaves) + inv_total(worn, equa_leaves)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c6]()(boolean)
-if (calc(inv_total(inv, ogre_arrow) + inv_total(worn, ogre_arrow)) >= 6) return(true);
+if (calc(inv_total(inv, onion) + inv_total(worn, onion)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c7]()(boolean)
-if (calc(inv_total(inv, ogre_headless_arrow) + inv_total(worn, ogre_headless_arrow)) >= 1) return(true);
+if (calc(inv_total(inv, potato) + inv_total(worn, potato)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c8]()(boolean)
-if (calc(inv_total(inv, wolfbone_arrowheads) + inv_total(worn, wolfbone_arrowheads)) >= 1) return(true);
-return(false);
-
-[proc,qh_chompybird_c9]()(boolean)
-if (~qh_chompybird_c7 = false) return(false);
-if (~qh_chompybird_c8 = false) return(false);
+if (~qh_chompybird_c1 = false) return(false);
 return(true);
 
+[proc,qh_chompybird_c9]()(boolean)
+if (npc_find(coord, chompybird_dead, 15, 0) = true) return(true);
+return(false);
+
 [proc,qh_chompybird_c10]()(boolean)
-if (calc(inv_total(inv, ogre_arrow_shaft) + inv_total(worn, ogre_arrow_shaft)) >= 6) return(true);
+if (calc(inv_total(inv, empty_ogre_bellows) + inv_total(worn, empty_ogre_bellows)) >= 1) return(true);
 return(false);
 
 [proc,qh_chompybird_c11]()(boolean)
+if (~qh_chompybird_c1 = false) return(false);
+if (~qh_chompybird_c10 = false) return(false);
+return(true);
+
+[proc,qh_chompybird_c12]()(boolean)
+if (calc(inv_total(inv, bloated_toad) + inv_total(worn, bloated_toad)) >= 1) return(true);
+return(false);
+
+[proc,qh_chompybird_c13]()(boolean)
+if (calc(inv_total(inv, filled_ogre_bellow1) + inv_total(worn, filled_ogre_bellow1)) >= 1) return(true);
+return(false);
+
+[proc,qh_chompybird_c14]()(boolean)
+if (calc(inv_total(inv, ogre_arrow) + inv_total(worn, ogre_arrow)) >= 6) return(true);
+return(false);
+
+[proc,qh_chompybird_c15]()(boolean)
+if (calc(inv_total(inv, ogre_headless_arrow) + inv_total(worn, ogre_headless_arrow)) >= 1) return(true);
+return(false);
+
+[proc,qh_chompybird_c16]()(boolean)
+if (calc(inv_total(inv, wolfbone_arrowheads) + inv_total(worn, wolfbone_arrowheads)) >= 1) return(true);
+return(false);
+
+[proc,qh_chompybird_c17]()(boolean)
+if (~qh_chompybird_c15 = false) return(false);
+if (~qh_chompybird_c16 = false) return(false);
+return(true);
+
+[proc,qh_chompybird_c18]()(boolean)
+if (calc(inv_total(inv, ogre_arrow_shaft) + inv_total(worn, ogre_arrow_shaft)) >= 6) return(true);
+return(false);
+
+[proc,qh_chompybird_c19]()(boolean)
 if (calc(inv_total(inv, achey_tree_logs) + inv_total(worn, achey_tree_logs)) >= 1) return(true);
 return(false);

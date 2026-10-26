@@ -8,37 +8,55 @@ if ($v > 11) {
     return(0); // done
 }
 if ($v >= 11) {
-    return(8);
+    return(19);
 }
 if ($v >= 10) {
-    return(-1); // ('name', 'cleanAndReturnRoguesPurse')
+    if (~qh_junglepotion_c1 = true) {
+        return(16);
+    }
+    if (~qh_junglepotion_c2 = true) {
+        return(17);
+    }
+    return(18);
 }
 if ($v >= 9) {
-    if (~qh_junglepotion_c1 = true) {
-        return(7);
+    if (~qh_junglepotion_c2 = true) {
+        return(15);
     }
-    return(6);
+    return(14);
 }
 if ($v >= 8) {
-    return(-1); // ('name', 'cleanAndReturnVolenciaMoss')
+    if (~qh_junglepotion_c3 = true) {
+        return(12);
+    }
+    return(13);
 }
 if ($v >= 7) {
-    return(5);
+    return(11);
 }
 if ($v >= 6) {
-    return(-1); // ('name', 'cleanAndReturnSitoFoil')
+    if (~qh_junglepotion_c4 = true) {
+        return(9);
+    }
+    return(10);
 }
 if ($v >= 5) {
-    return(4);
+    return(8);
 }
 if ($v >= 4) {
-    return(-1); // ('name', 'cleanAndReturnArdrigal')
+    if (~qh_junglepotion_c5 = true) {
+        return(6);
+    }
+    return(7);
 }
 if ($v >= 3) {
-    return(3);
+    return(5);
 }
 if ($v >= 2) {
-    return(-1); // ('name', 'cleanAndReturnSnakeWeed')
+    if (~qh_junglepotion_c6 = true) {
+        return(3);
+    }
+    return(4);
 }
 if ($v >= 1) {
     return(2);
@@ -49,5 +67,25 @@ if ($v >= 0) {
 return(1);
 
 [proc,qh_junglepotion_c1]()(boolean)
+if (calc(inv_total(inv, rogues_purse) + inv_total(worn, rogues_purse)) >= 1) return(true);
+return(false);
+
+[proc,qh_junglepotion_c2]()(boolean)
 if (inzone(0_44_147_8_54, 0_45_148_3_61, coord) = true) return(true);
+return(false);
+
+[proc,qh_junglepotion_c3]()(boolean)
+if (calc(inv_total(inv, volencia_moss) + inv_total(worn, volencia_moss)) >= 1) return(true);
+return(false);
+
+[proc,qh_junglepotion_c4]()(boolean)
+if (calc(inv_total(inv, sito_foil) + inv_total(worn, sito_foil)) >= 1) return(true);
+return(false);
+
+[proc,qh_junglepotion_c5]()(boolean)
+if (calc(inv_total(inv, ardrigal) + inv_total(worn, ardrigal)) >= 1) return(true);
+return(false);
+
+[proc,qh_junglepotion_c6]()(boolean)
+if (calc(inv_total(inv, snake_weed) + inv_total(worn, snake_weed)) >= 1) return(true);
 return(false);
