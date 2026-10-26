@@ -54,15 +54,23 @@ if (map_blocked($back) = false) {
 }
 p_delay(0);
 npc_add($animator, ~wg_armour_npc($tier), 500);
-npc_anim(wg_seq_4166, 0);
+npc_anim(wg_seq_4166, 0); // it rises from lying on the animator
 npc_say("I'm ALIVE!");
 %npc_aggressive_player = uid;
 %npc_attacking_uid = uid;
 %wg_fled = 0;
-npc_setmode(opplayer2);
+// it stays put while it rises: the client holds an animation while an NPC walks, so one that
+// set off at once just popped up and walked (wg_seq_4166 runs 1.9 seconds, a bit over 3 ticks)
+npc_setmode(none);
 %wg_armour_npc = npc_uid;
 hint_npc;
 settimer(wg_armour_watch, 1);
+p_delay(3);
+if (npc_finduid(%wg_armour_npc) = true) {
+    if (%wg_fled = 0) {
+        npc_setmode(opplayer2);
+    }
+}
 
 [proc,wg_armour_tier](obj $obj)(int)
 switch_obj ($obj) {
