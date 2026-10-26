@@ -80,14 +80,25 @@
     iconCache: new Map(),
     iconQueue: new Set(),
 
-    itemIcon(id) {
-      const c = this.iconCache.get(id);
+    // An item's picture changes with the stack (coins, tokens, arrows: the item data's
+    // countN, which in our game all start at 2, 3, 4, 5, 10, 25, 100, 250, 1,000 or 10,000), so
+    // icons are kept per item and per step: the step a count falls on.
+    STACK_STEPS: [10000, 1000, 250, 100, 25, 10, 5, 4, 3, 2],
+    iconStep(count) {
+      const n = count | 0;
+      for (const s of this.STACK_STEPS) if (n >= s) return s;
+      return 1;
+    },
+
+    itemIcon(id, count = 1) {
+      const key = `${id}:${this.iconStep(count)}`;
+      const c = this.iconCache.get(key);
       if (c && c.px) return c;
       // Not drawn yet, or the item's model hadn't loaded (the web client fetches models as
       // they're needed): ask again every second for a while.
       const now = performance.now();
       if (c && (c.tries >= 60 || now < c.retryAt)) return null;
-      if (this.api && this.api.objIcon && this.fields.iconData) this.iconQueue.add(id);
+      if (this.api && this.api.objIcon && this.fields.iconData) this.iconQueue.add(key);
       else if (!this.iconsMissing) {
         this.iconsMissing = true;
         post('log', `item icons unavailable (draw: ${!!(this.api && this.api.objIcon)}, pixels: ${!!this.fields.iconData})`);
@@ -98,9 +109,10 @@
     /** The item's icon as a PNG data URL, for sidebar panels (3.7: icons come from the 2004
      *  client itself). null until the game has drawn it; ask again on a later frame. */
     iconUrls: new Map(),
-    itemIconUrl(id) {
-      if (this.iconUrls.has(id)) return this.iconUrls.get(id);
-      const icon = this.itemIcon(id);
+    itemIconUrl(id, count = 1) {
+      const key = `${id}:${this.iconStep(count)}`;
+      if (this.iconUrls.has(key)) return this.iconUrls.get(key);
+      const icon = this.itemIcon(id, count);
       if (!icon || typeof document === 'undefined' || !document.createElement) return null;
       try {
         const cv = document.createElement('canvas');
@@ -117,7 +129,7 @@
         }
         cx.putImageData(img, 0, 0);
         const url = cv.toDataURL('image/png');
-        this.iconUrls.set(id, url);
+        this.iconUrls.set(key, url);
         return url;
       } catch {
         return null;
@@ -126,11 +138,12 @@
 
     drawIcons() {
       const now = performance.now();
-      for (const id of this.iconQueue) {
-        this.iconQueue.delete(id);
+      for (const key of this.iconQueue) {
+        this.iconQueue.delete(key);
+        const [id, step] = String(key).split(':').map(Number);
         let icon = null;
         try {
-          const sprite = this.api.objIcon(id, 1);
+          const sprite = this.api.objIcon(id, step || 1);
           const data = sprite && sprite[this.fields.iconData];
           if (data && data.length === 1024) {
             const px = new Array(1024);
@@ -144,11 +157,11 @@
         } catch (e) {
           post('runtime-error', `item icon ${id}: ${e && e.stack ? e.stack.split('\n').slice(0, 2).join(' ') : e}`);
         }
-        const before = this.iconCache.get(id);
+        const before = this.iconCache.get(key);
         const tries = ((before && before.tries) || 0) + 1;
-        this.iconCache.set(id, icon || { tries, retryAt: now + 1000 });
+        this.iconCache.set(key, icon || { tries, retryAt: now + 1000 });
         // say once how it went, so a missing picture can be traced in the log
-        if (icon || tries === 1 || tries === 60) post('log', `item icon ${id}: ${icon ? 'drawn' : `not ready (try ${tries})`}`);
+        if (icon || tries === 1 || tries === 60) post('log', `item icon ${key}: ${icon ? 'drawn' : `not ready (try ${tries})`}`);
       }
     },
 

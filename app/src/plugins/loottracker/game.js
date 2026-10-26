@@ -8,6 +8,10 @@ const clues = require('./clues.json');
 // RuneLite's LootTrackerMapping: every clue scroll of a tier is one item ("Clue scroll
 // (easy)"), though each clue step is its own item in the game, so they add up together.
 const CANON = { Easy: 2677, Medium: 2801, Hard: 2722 };
+// the stack steps the game's pictures change at (the runtime's iconStep): icons are kept as
+// "id:step", so a pile of 1,791 coins shows the big pile
+const STEPS = [10000, 1000, 250, 100, 25, 10, 5, 4, 3, 2];
+const step = (n) => STEPS.find((s) => (n | 0) >= s) || 1;
 function canonical(it) {
   const tier = clues[it.id];
   if (!tier || !CANON[tier] || !/^clue scroll/i.test(String(it.name || ''))) return it;
@@ -38,6 +42,7 @@ module.exports = function lootTracker(ctx) {
     const config = {};
     for (const it of descriptor.config.items) config[it.key] = ctx.config(it.key);
     config.clues = clues;
+    config.wantIcons = wanted();
     ctx.sendToGame({ type: 'plugin-config', id: 'loottracker', enabled, config });
   }
 
@@ -56,6 +61,18 @@ module.exports = function lootTracker(ctx) {
     ctx.setState('records', all);
   }
 
+  /** The totals whose stack picture we haven't got yet. */
+  function wanted() {
+    const out = [];
+    for (const r of Object.values(records)) {
+      for (const it of Object.values(r.items)) {
+        const s = step(it.quantity);
+        if (!icons[`${it.id}:${s}`]) out.push([it.id, s]);
+      }
+    }
+    return out.slice(0, 200);
+  }
+
   function report() {
     ctx.report({ records, icons, account });
   }
@@ -67,12 +84,15 @@ module.exports = function lootTracker(ctx) {
       const it = canonical(raw);
       const have = r.items[it.id] || (r.items[it.id] = { id: it.id, name: it.name, quantity: 0 });
       have.quantity += it.quantity || 1;
-      if (it.icon && !icons[it.id]) icons[it.id] = it.icon;
-      if (it.id !== raw.id && icons[raw.id] && !icons[it.id]) icons[it.id] = icons[raw.id];
+      const k = `${raw.id}:${raw.step || step(raw.quantity)}`;
+      if (raw.icon && !icons[k]) icons[k] = raw.icon;
+      const ck = `${it.id}:${raw.step || step(raw.quantity)}`;
+      if (it.id !== raw.id && icons[k] && !icons[ck]) icons[ck] = icons[k];
     }
     ctx.setState('icons', icons);
     save();
     report();
+    if (wanted().length) send(true); // ask for the new totals' pictures
   }
 
   return {
@@ -80,8 +100,8 @@ module.exports = function lootTracker(ctx) {
       off = ctx.onRuntime((type, data) => {
         if (type === 'player' && data && data.name && String(data.name).toLowerCase() !== account) load(data.name);
         else if (type === 'loot' && data && Array.isArray(data.items)) add(data);
-        else if (type === 'loot-icon' && data && data.id >= 0 && data.url && !icons[data.id]) {
-          icons[data.id] = data.url;
+        else if (type === 'loot-icon' && data && data.id >= 0 && data.url && !icons[`${data.id}:${data.step || 1}`]) {
+          icons[`${data.id}:${data.step || 1}`] = data.url;
           ctx.setState('icons', icons);
           report();
         }

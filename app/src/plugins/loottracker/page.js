@@ -54,18 +54,21 @@
     return out;
   }
 
-  /** The item's icon as a PNG for the sidebar (the runtime's, drawn by the game itself). */
-  function iconUrl(id) {
-    const url = ll.itemIconUrl ? ll.itemIconUrl(id) : null;
-    if (url) iconPending.delete(id);
-    else iconPending.add(id);
+  /** The item's icon as a PNG for the sidebar (the runtime's, drawn by the game itself), for
+   *  a stack of n: coins, tokens and the like change picture as the stack grows. */
+  const step = (n) => (ll.iconStep ? ll.iconStep(n) : 1);
+  function iconUrl(id, n = 1) {
+    const key = `${id}:${step(n)}`;
+    const url = ll.itemIconUrl ? ll.itemIconUrl(id, n) : null;
+    if (url) iconPending.delete(key);
+    else iconPending.add(key);
     return url;
   }
 
   function send(k) {
     const items = [...k.items.values()].map((it) => {
       const info = ll.itemInfo(it.id);
-      return { id: it.id, name: info.name, quantity: it.n, icon: iconUrl(it.id) };
+      return { id: it.id, name: info.name, quantity: it.n, icon: iconUrl(it.id, it.n), step: step(it.n) };
     });
     if (!items.length) return;
     window.postMessage({ __lostlite: true, type: 'loot', data: { name: k.name, level: k.level, items } }, '*');
@@ -205,7 +208,7 @@
     const k = { name, level: 0, items: new Map() };
     m.items.forEach((it, i) => {
       k.items.set(`win,${i}`, { id: it.id, n: it.quantity || 1 });
-      iconUrl(it.id);
+      iconUrl(it.id, it.quantity || 1);
     });
     send(k);
   }
@@ -223,7 +226,7 @@
       const k = { name: `Clue Scroll (${clueTier || 'Unknown'})`, level: 0, items: new Map() };
       items.forEach((it, i) => {
         k.items.set(`clue,${i}`, { id: it.id, n: it.quantity || 1 });
-        iconUrl(it.id);
+        iconUrl(it.id, it.quantity || 1);
       });
       send(k);
     } else if (now - pendingClue > 2500) {
@@ -239,9 +242,10 @@
     const now = performance.now();
     watchClues(now);
     // icons that weren't ready: send them as they come
-    for (const id of [...iconPending]) {
-      const url = iconUrl(id);
-      if (url) window.postMessage({ __lostlite: true, type: 'loot-icon', data: { id, url } }, '*');
+    for (const key of [...iconPending]) {
+      const [id, n] = key.split(':').map(Number);
+      const url = iconUrl(id, n);
+      if (url) window.postMessage({ __lostlite: true, type: 'loot-icon', data: { id, step: n, url } }, '*');
     }
     if (now - lastScan < 200) return;
     lastScan = now;
@@ -286,7 +290,7 @@
           if (k.before.has(key) || k.items.has(key)) continue;
           k.items.set(key, it);
           k.lastNew = now;
-          iconUrl(it.id); // ask the game to draw it now
+          iconUrl(it.id, it.n); // ask the game to draw it now
         }
       }
       if ((k.lastNew && now - k.lastNew > QUIET) || now - k.time >= WINDOW) {
@@ -301,6 +305,8 @@
   ll.registerPlugin('loottracker', {
     configure(config) {
       cfg = config || {};
+      // the panel's totals want the picture for their stack size
+      for (const [id, n] of cfg.wantIcons || []) iconUrl(id, n);
     },
     frame,
     chat,

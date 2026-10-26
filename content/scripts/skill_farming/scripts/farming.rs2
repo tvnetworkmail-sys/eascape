@@ -491,24 +491,29 @@ switch_int (~farming_compost($patch)) {
 }
 def_int $key = ~farming_state($patch);
 if ($key = 0) {
-    mes("<$text> The patch is empty.");
+    mes($text);
+    mes("The patch is empty.");
     return;
 }
 if ($key >= 0 & $key < 1000) {
-    mes("<$text> The patch needs weeding.");
+    mes($text);
+    mes("The patch needs weeding.");
     return;
 }
 def_int $kind = calc(($key / 100) % 10);
 if ($kind = 4 | calc($key / 1000) = ^farming_crop_herb_dead) {
-    mes("<$text> The patch has become infected by disease and has died.");
+    mes($text);
+    mes("The patch has become infected by disease and has died.");
     return;
 }
 if ($kind = 3) {
-    mes("<$text> The patch has become infected by disease.");
+    mes($text);
+    mes("The patch has become infected by disease.");
     return;
 }
 if (~farming_harvestable($patch, $key) = true) {
-    mes("<$text> The patch is fully grown.");
+    mes($text);
+    mes("The patch is fully grown.");
     return;
 }
 def_dbrow $row = ~farming_crop_row(calc($key / 1000));
@@ -518,7 +523,8 @@ if ($row ! null) {
     $crop = db_getfield($row, farming_crop:name, 0);
     $stages = calc(db_getfield($row, farming_crop:stages, 0) + 1);
 }
-mes("<$text> The patch has <$crop> growing in it and is at state <tostring(calc($key % 100 + 1))>/<tostring($stages)>.");
+mes($text);
+mes("The patch has <$crop> growing in it and is at state <tostring(calc($key % 100 + 1))>/<tostring($stages)>.");
 
 [proc,farming_guide]
 mes("The Farming guide isn't in the game yet."); // our wording: the skill guide has no Farming page

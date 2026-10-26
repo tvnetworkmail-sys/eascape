@@ -1,0 +1,50 @@
+// EASCape: the log balance over the river east of Ardougne (2598-2602, 3336), the 377 cache's
+// loc_9328-9330. Void (LogBalance.kt, ardougne_log_balance_*): 33 Agility; success 90-250 out of
+// 256 from level 1 to 99; 4 XP across. A fall washes you down the river to the far bank: 2-4
+// damage (Void's 20-41 on its x10 hitpoints) and 2 XP.
+[oploc1,loc_9328] ~ardougne_log_balance;
+[oploc1,loc_9329] ~ardougne_log_balance;
+[oploc1,loc_9330] ~ardougne_log_balance;
+
+[proc,ardougne_log_balance]
+if (stat(agility) < 33) {
+    mes("You need an Agility level of 33 to negotiate this obstacle.");
+    return;
+}
+def_int $dir = -1; // from the east bank, going west
+def_int $startx = 2602;
+if (coordx(coord) <= 2599) {
+    $dir = 1;
+    $startx = 2598;
+}
+def_coord $start = movecoord(coord, calc($startx - coordx(coord)), 0, calc(3336 - coordz(coord)));
+if (coord ! $start) {
+    p_teleport($start);
+    p_delay(0);
+}
+mes("You attempt to walk across the slippery log.");
+~set_readywalk_bas(human_walk_logbalance_ready, human_walk_logbalance);
+~forcemove(movecoord(coord, calc($dir * 2), 0, 0));
+sound_synth(log_balance, 2, 0);
+if (stat_random(agility, 90, 250) = true) {
+    ~forcemove(movecoord(coord, calc($dir * 2), 0, 0));
+    sound_synth(log_balance, 1, 0);
+    ~update_bas;
+    mes("You make it across the log without any problems.");
+    stat_advance(agility, 40);
+    return;
+}
+mes("You lose your footing and fall into the water.");
+~update_bas;
+anim(human_falling, 0);
+p_delay(1);
+p_teleport(movecoord(coord, 0, 0, -1));
+mes("You're being washed down the river.");
+p_delay(2);
+mes("You feel like you're drowning...");
+p_teleport(movecoord(coord, 0, 0, -6));
+p_delay(2);
+p_teleport(movecoord(coord, calc($dir * 2), 0, 0));
+mes("You finally come to shore.");
+~damage_self(calc(2 + random(3)));
+stat_advance(agility, 20);

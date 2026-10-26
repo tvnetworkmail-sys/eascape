@@ -12,6 +12,8 @@ window.Panels = window.Panels || [];
   const state = () => (App.state.pluginState || {}).loottracker || null;
   const command = (action, extra) => App.setConfig('loottracker', 'command', { action, t: Date.now(), ...extra });
   const fmt = (n) => Math.round(n).toLocaleString('en-GB');
+  const STEPS = [10000, 1000, 250, 100, 25, 10, 5, 4, 3, 2];
+  const step = (n) => STEPS.find((x) => (n | 0) >= x) || 1;
   // RuneLite's QuantityFormatter.quantityToStackSize
   const stack = (n) => (n >= 10000000 ? `${Math.floor(n / 1000000)}M` : n >= 100000 ? `${Math.floor(n / 1000)}K` : String(n));
 
@@ -19,7 +21,9 @@ window.Panels = window.Panels || [];
     // most of first (RuneLite sorts by value, which 2004 doesn't have)
     const items = Object.values(r.items).sort((a, b) => b.quantity - a.quantity);
     const slots = items.map((it) => {
-      const icon = s.icons && s.icons[it.id];
+      // the picture for this stack (coins, tokens: the pile grows), else a single one; icons
+      // saved before stacks were kept by id alone
+      const icon = s.icons && (s.icons[`${it.id}:${step(it.quantity)}`] || s.icons[`${it.id}:1`] || s.icons[it.id]);
       return h('div', { class: 'lt-slot', tip: `${it.name} x ${fmt(it.quantity)}` },
         icon ? h('img', { src: icon, alt: '', draggable: 'false' }) : h('span.lt-noicon', { text: it.name.slice(0, 3) }),
         it.quantity > 1 ? h('span.lt-qty', { text: stack(it.quantity) }) : null);

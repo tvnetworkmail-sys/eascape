@@ -317,8 +317,11 @@ emit('loot', loot.data);
 emit('loot', loot.data);
 assert.ok(reported.records.Goblin.kills === 2 && reported.records.Goblin.items[995].quantity === 24, 'two kills added up');
 assert.strictEqual(store.records.tester.Goblin.kills, 2, 'remembered for the account');
-emit('loot-icon', { id: 995, url: 'data:image/png;base64,AAA' });
-assert.strictEqual(reported.icons[995], 'data:image/png;base64,AAA', 'icons kept for the panel');
+emit('loot-icon', { id: 995, step: 1, url: 'data:image/png;base64,AAA' });
+assert.strictEqual(reported.icons['995:1'], 'data:image/png;base64,AAA', 'icons kept for the panel');
+// a stack's own picture: 24 coins is the 10 step (coins' piles change at 2-5, 10, 25, 100 ...)
+emit('loot-icon', { id: 995, step: 10, url: 'data:image/png;base64,BBB' });
+assert.strictEqual(reported.icons['995:10'], 'data:image/png;base64,BBB', 'stack pictures kept apart');
 // different easy clue steps are one item, as RuneLite counts them
 emit('loot', { name: 'Guard', level: 21, items: [{ id: 2678, name: 'Clue scroll', quantity: 1 }] });
 emit('loot', { name: 'Guard', level: 21, items: [{ id: 2690, name: 'Clue scroll', quantity: 1 }] });
