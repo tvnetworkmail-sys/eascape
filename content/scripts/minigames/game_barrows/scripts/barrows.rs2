@@ -206,7 +206,7 @@ hint_npc;
 %npc_aggressive_player = uid;
 %npc_attacking_uid = uid;
 %npc_lastcombat = map_clock;
-npc_settimer(30);
+npc_settimer(1);
 if (npc_type = barrows_ahrim | npc_type = barrows_karil) {
     npc_setmode(applayer2);
 } else {
@@ -394,7 +394,8 @@ if (%barrows_chest_open = 1) {
 ~barrows_check_setup;
 def_int $index = ~barrows_tunnel_brother;
 if (~barrows_killed($index) = false & ~barrows_brother_out($index) = false) {
-    ~barrows_spawn_brother($index, map_findsquare(loc_coord, 1, 4, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
+    // next to you, not next to the chest's corner (that could put him inside the chest)
+    ~barrows_spawn_brother($index, map_findsquare(coord, 1, 3, ^map_findsquare_lineofwalk), "You dare disturb my rest!");
 }
 %barrows_chest_open = 1;
 
@@ -720,13 +721,18 @@ if ($index = ^barrows_ahrim | $index = ^barrows_karil) {
 [ai_timer,barrows_torag] ~barrows_brother_timer;
 [ai_timer,barrows_verac] ~barrows_brother_timer;
 
+// checked every tick, so he's gone as soon as you leave (your call, 26 Oct 2026); poison still
+// works on its usual 30-tick beat
 [proc,barrows_brother_timer]
-~npc_poison_timer;
-npc_settimer(30);
+npc_settimer(1);
 if (finduid(%npc_aggressive_player) = false) {
     npc_del;
     return;
 }
 if (coordy(coord) ! coordy(npc_coord) | distance(coord, npc_coord) > 20) {
     npc_del;
+    return;
+}
+if (calc(map_clock % 30) = 0) {
+    ~npc_poison_timer;
 }

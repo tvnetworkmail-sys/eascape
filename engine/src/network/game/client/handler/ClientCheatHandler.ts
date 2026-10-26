@@ -588,7 +588,10 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                     bob: '0,50,50,32,3', // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
                     tzhaar: '0,38,80,6,48', // Mor Ul Rek, by the Fight Cave entrance (2006Scape's way out of the cave)
                     fightpit: '0,37,80,31,57', // outside the Fight Pit's waiting room door (maps/m37_80.jm2)
-                    warriorsguild: '0,44,55,59,26' // just inside the Warriors' Guild's front door (maps/m44_55.jm2)
+                    warriorsguild: '0,44,55,59,26', // just inside the Warriors' Guild's front door (maps/m44_55.jm2)
+                    wyverns: '0,47,149,48,27', // by the Icy Cavern to the skeletal wyverns (wyvern_cave.rs2)
+                    lavamaze: '0,47,60,51,47', // by the Lava Maze's rune rocks (maps/m47_60.jm2)
+                    wildmine: '0,48,58,8,50' // the Wilderness mine with mithril, adamantite and iron (maps/m48_58.jm2)
                 };
                 const coord = (places[args[0].toLowerCase()] ?? args[0]).split(',');
                 if (coord.length < 3) {

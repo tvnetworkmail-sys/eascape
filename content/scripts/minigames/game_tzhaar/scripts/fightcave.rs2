@@ -189,10 +189,13 @@ if (%fightcave_wave = 0) {
 clearsofttimer(fightcave_watch);
 ~fightcave_clear_monsters;
 ~stat_reset_all; // back to your normal levels (your call, 19 Oct 2026)
-~fightcave_give(tzhaar_cape_fire, 1);
-~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
 mes("You were victorious!");
 p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
+// out of the cave first: with a full pack the cape is dropped where you arrive, not left in
+// the cave behind you
+p_delay(0);
+~fightcave_give(tzhaar_cape_fire, 1);
+~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
 ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You even defeated TzTok-Jad, I am most impressed!|Please accept this gift as a reward.");
 
 // ---- a check every 5 ticks that the wave can't get stuck: if none of your monsters are left

@@ -33,6 +33,9 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |
 | `::tele fightpit` | Outside the Fight Pit's waiting room door |
 | `::tele warriorsguild` | Just inside the Warriors' Guild's front door |
+| `::tele wyverns` | Outside the Icy Cavern to the skeletal wyverns (Asgarnian Ice Dungeon) |
+| `::tele lavamaze` | By the Lava Maze's rune rocks |
+| `::tele wildmine` | The Wilderness mine with mithril, adamantite and iron rocks |
 
 ## Moving around
 
