@@ -37,6 +37,7 @@ module.exports = [
   require('./cooking/descriptor'),
   require('./fishing/descriptor'),
   require('./loottracker/descriptor'),
+  require('./farming/descriptor'),
   require('./chatnotifications/descriptor'),
   require('./devtools/descriptor'),
 ];

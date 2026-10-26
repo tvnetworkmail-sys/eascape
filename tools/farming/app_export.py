@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""Farming tracker data for the app (app/src/plugins/farming/patches.json), from our own
+content: each patch's varbit (its varp and bits, all transmitted to the client), where it is
+(Void's names for the same varbit ids), its type, the decode tables (varbit value -> packed
+crop * 1000 + kind * 100 + stage, farming_states.enum) and each crop's name and stages
+(farming_crops.dbrow). Growth intervals are farming.rs2's: flowers every 5-minute tick,
+allotments and hops every 2nd, herbs every 4th."""
+import re, json, os
+E = os.path.join(os.path.dirname(__file__), '..', '..')
+C = E + '/content'
+OUT = E + '/app/src/plugins/farming/patches.json'
+PLACES = {708: 'Falador (north-west)', 709: 'Falador (south-east)', 710: 'Catherby (north)',
+          711: 'Catherby (south)', 712: 'Ardougne (north)', 713: 'Ardougne (south)',
+          714: 'Morytania (north-west)', 715: 'Morytania (south-east)', 728: 'Falador',
+          729: 'Catherby', 730: 'Ardougne', 731: 'Morytania', 780: 'Falador', 781: 'Catherby',
+          782: 'Ardougne', 783: 'Morytania', 716: 'Yanille', 717: 'Entrana', 718: 'Lumbridge',
+          719: "Seers' Village"}  # Void's farming.varbits.toml names for these ids
+TYPES = {1: ('allotment', 'Allotments', 2), 2: ('flower', 'Flower patches', 1), 3: ('herb', 'Herb patches', 4), 4: ('hops', 'Hops patches', 2)}
+order = list(range(708, 716)) + list(range(728, 732)) + list(range(780, 784)) + list(range(716, 720))
+vb = dict(re.findall(r'(?ms)^\[(\w+)\]\n(.*?)(?=^\[|\Z)', open(C + '/scripts/_unpack/377/all.varbit').read()))
+ids = {l.split('=', 1)[1].strip(): int(l.split('=', 1)[0]) for l in open(C + '/pack/varp.pack') if '=' in l}
+patches = []
+for i, v in enumerate(order, 1):
+    b = vb[f'varbit_{v}']
+    base = re.search(r'basevar=(\w+)', b).group(1)
+    t = 1 if i <= 8 else 2 if i <= 12 else 3 if i <= 16 else 4
+    patches.append({'index': i, 'varbit': v, 'varp': ids[base], 'start': int(re.search(r'startbit=(\d+)', b).group(1)),
+                    'end': int(re.search(r'endbit=(\d+)', b).group(1)), 'type': t, 'place': PLACES[v]})
+enum = open(C + '/scripts/skill_farming/configs/farming_states.enum').read()
+decode = {}
+for name, body in re.findall(r'(?ms)^\[farming_(\w+)_decode\]\n(.*?)(?=^\[|\Z)', enum):
+    decode[name] = {int(a): int(b) for a, b in re.findall(r'^val=(\d+),(-?\d+)', body, re.M)}
+crops = {}
+for body in re.findall(r'(?ms)^\[farming_crop_\w+\]\n(.*?)(?=^\[|\Z)', open(C + '/scripts/skill_farming/configs/farming_crops.dbrow').read()):
+    g = lambda k: re.search(r'^data=' + k + r',(.*)$', body, re.M).group(1)
+    crops[int(g('index'))] = {'name': g('name').replace('_', ' '), 'stages': int(g('stages')), 'type': int(g('patchtype'))}
+data = {'types': {k: {'key': a, 'title': b, 'ticks': c} for k, (a, b, c) in TYPES.items()},
+        'patches': patches, 'decode': decode, 'crops': crops, 'tickMinutes': 5}
+json.dump(data, open(OUT, 'w'), indent=1)
+print(len(patches), 'patches,', {k: len(v) for k, v in decode.items()}, len(crops), 'crops ->', OUT)

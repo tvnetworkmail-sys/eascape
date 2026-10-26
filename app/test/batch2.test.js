@@ -447,3 +447,30 @@ chat({ kind: 'game', text: 'Ann: selling rune scimitar', own: true });
 chat({ kind: 'public', name: 'Tester', text: 'rune dragon' });
 assert.deepStrictEqual(notes, ['Bob: hi tester how are you', 'Ann: selling rune scimitar', 'Cat wishes to trade with you.'], `notifications: ${notes.join(' | ')}`);
 console.log('chat notifications: ok');
+
+// ---------------------------------------------------------------- Farming tracker
+{
+  const farming = require('../src/plugins/farming/game');
+  const D = farming.DATA;
+  const potato0 = Number(Object.keys(D.decode.allotment).find((k) => D.decode.allotment[k] === 1100));
+  assert.deepStrictEqual(farming.decodePatch(D.patches[0], { 504: potato0 }), { raw: potato0, crop: 1, kind: 1, stage: 0 });
+  // the second Falador patch is the next 8 bits of the same varp
+  assert.strictEqual(farming.decodePatch(D.patches[1], { 504: potato0 << 8 }).crop, 1);
+  const reps = [];
+  const fl = [];
+  const store = {};
+  const fp = farming({ config: () => false, state: (k, d) => store[k] ?? d, setState: (k, v) => { store[k] = v; }, onRuntime: (fn) => { fl.push(fn); return () => {}; }, report: (d) => reps.push(d) });
+  fp.start();
+  fl.forEach((fn) => fn('player', { name: 'Tester' }));
+  fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0 } }));
+  const r = reps[reps.length - 1];
+  const pot = r.patches[0];
+  assert.strictEqual(pot.crop, 'potato');
+  assert.strictEqual(pot.status, 'growing');
+  // potatoes: 4 growth ticks of 10 minutes (wiki: 40 minutes)
+  assert.strictEqual(pot.total, 40 * 60000);
+  assert.strictEqual(r.patches[1].status, 'weeds');
+  assert.ok(store.saves && store.saves.tester, 'saved per account');
+  fp.stop();
+  console.log('farming tracker: ok');
+}
