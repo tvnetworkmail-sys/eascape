@@ -124,7 +124,7 @@ if(inv_total(worn, mm_amulet_of_monkey_speak) = 0) {
 switch_int(~p_choice2("Yes, please.", 1, "No, thanks.", 2)) {
     case 1 :
         ~chatplayer("<p,neutral>Yes, please.");
-        ~openshop_activenpc;
+        ~mm_daga_shop;
     case 2 :
         ~chatplayer("<p,neutral>No, thanks.");
 }
@@ -137,6 +137,16 @@ if(~mm_wearing_greegree = false) {
     } else {
         ~chatnpc("<p,neutral>Guards! Guards! Remove this human!");
     }
+    return;
+}
+~mm_daga_shop;
+
+// EASCape: once Monkey Madness is done, Daga's stock has the dragon scimitar (4, restocking);
+// before that it isn't on sale (OSRS wiki, Daga's Scimitar Smithy: "0 stock" until then).
+// mm_scimitar_shop2 is Lost City's second stock; nothing opened it before.
+[proc,mm_daga_shop]
+if (%mm_main >= ^mm_complete) {
+    ~openshop(mm_scimitar_shop2, npc_param(shop_buy_multiplier), npc_param(shop_sell_multiplier), npc_param(shop_delta), npc_param(shop_title));
     return;
 }
 ~openshop_activenpc;
