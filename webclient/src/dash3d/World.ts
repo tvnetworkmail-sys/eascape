@@ -94,6 +94,9 @@ export default class World {
     private static fillQueue: LinkList<Square> = new LinkList();
 
     static maxLevel: number = 0;
+    // LostLite: Hide roofs - squares above maxLevel are still drawn where this is 1 (open air:
+    // trees and the like); see Client.roofFreeColumns
+    static roofFree: Uint8Array | null = null;
 
     private static cycleNo: number = 0;
 
@@ -1012,7 +1015,7 @@ export default class World {
                         continue;
                     }
 
-                    if (tile.drawLevel <= maxLevel && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
+                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1)) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
                         tile.drawFront = true;
                         tile.drawBack = true;
                         tile.drawSprites = tile.spriteCount > 0;

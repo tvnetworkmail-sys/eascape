@@ -4274,9 +4274,11 @@ export class Client extends GameShell {
         if (this.cinemaCam) {
             level = this.roofCheck2();
         } else {
-            // LostLite: Hide roofs always draws your own level, like standing indoors
+            // LostLite: Hide roofs draws your own level, like standing indoors, but keeps what's
+            // above open ground (tall trees, towers' tops), as RuneLite's roof removal does
             level = lostlite()?.hideRoofs ? this.minusedlevel : this.roofCheck();
         }
+        World.roofFree = lostlite()?.hideRoofs && !this.cinemaCam ? this.roofFreeColumns() : null;
 
         const camX: number = this.camX;
         const camY: number = this.camY;
@@ -4528,6 +4530,38 @@ export class Client extends GameShell {
 
         const y: number = this.getAvH(this.camX, this.camZ, this.minusedlevel);
         return y - this.camY >= 800 || (this.mapl[this.minusedlevel][this.camX >> 7][this.camZ >> 7] & MapFlag.RemoveRoof) === 0 ? 3 : this.minusedlevel;
+    }
+
+    // LostLite: Hide roofs - 1 where no square within one tile of (x, z) on your level is under a
+    // roof (MapFlag.RemoveRoof, what the game itself uses to lift roofs when you're inside)
+    private roofFreeMap: Uint8Array = new Uint8Array(104 * 104);
+    private roofFreeColumns(): Uint8Array {
+        const map: Uint8Array = this.roofFreeMap;
+        const mapl = this.mapl;
+        if (!mapl) {
+            map.fill(0);
+            return map;
+        }
+        const flags = mapl[this.minusedlevel];
+        for (let x: number = 0; x < 104; x++) {
+            for (let z: number = 0; z < 104; z++) {
+                let free: number = 1;
+                for (let dx: number = -1; dx <= 1 && free; dx++) {
+                    const nx: number = x + dx;
+                    if (nx < 0 || nx >= 104) continue;
+                    for (let dz: number = -1; dz <= 1; dz++) {
+                        const nz: number = z + dz;
+                        if (nz < 0 || nz >= 104) continue;
+                        if ((flags[nx][nz] & MapFlag.RemoveRoof) !== 0) {
+                            free = 0;
+                            break;
+                        }
+                    }
+                }
+                map[x * 104 + z] = free;
+            }
+        }
+        return map;
     }
 
     private roofCheck(): number {

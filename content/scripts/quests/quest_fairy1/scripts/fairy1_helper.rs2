@@ -6,34 +6,33 @@ def_boolean $zanaris = inzone(0_37_68_0_1, 0_38_69_63_63, coord);
 switch_int ($s) {
     case ^fairy1_not_started : return(1);
     case ^fairy1_gardeners :
-        if (~fairy1_gardeners_asked >= ^fairy1_gardeners_needed) return(3);
+        if (~fairy1_gardeners_asked >= ^fairy1_gardeners_needed) return(7);
         // Quest Helper's five, one at a time, skipping any you've asked (fairy1_gardener_bit)
-        if (testbit(%fairy_gardeners, 20) = ^false) return(16); // Frizzy Skernip
-        if (testbit(%fairy_gardeners, 0) = ^false) return(17); // Elstan
-        if (testbit(%fairy_gardeners, 17) = ^false) return(18); // Heskel
-        if (testbit(%fairy_gardeners, 18) = ^false) return(19); // Treznor
-        if (testbit(%fairy_gardeners, 12) = ^false) return(20); // Dreven
-        return(2);
+        if (testbit(%fairy_gardeners, 20) = ^false) return(2); // Frizzy Skernip
+        if (testbit(%fairy_gardeners, 0) = ^false) return(3); // Elstan
+        if (testbit(%fairy_gardeners, 17) = ^false) return(4); // Heskel
+        if (testbit(%fairy_gardeners, 18) = ^false) return(5); // Treznor
+        return(6); // Dreven
     case ^fairy1_godfather :
-        if ($zanaris = true) return(5);
-        return(4);
-    case ^fairy1_nuff :
-        if ($zanaris = true) return(6);
-        return(4);
-    case ^fairy1_zandar : return(7);
-    case ^fairy1_malignius :
-        if (~obj_gettotal(fairy_skull) > 0) return(9);
-        if (testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^false) return(9);
+        if ($zanaris = true) return(9);
         return(8);
+    case ^fairy1_nuff :
+        if ($zanaris = true) return(10);
+        return(8);
+    case ^fairy1_zandar : return(11);
+    case ^fairy1_malignius :
+        if (~obj_gettotal(fairy_skull) > 0) return(13);
+        if (testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^false) return(13);
+        return(12);
     case ^fairy1_grotto :
-        if (inzone(1_53_152_43_5, 1_53_152_56_18, coord) = true) return(11);
-        return(10);
+        if (inzone(1_53_152_43_5, 1_53_152_56_18, coord) = true) return(15);
+        return(14);
     case ^fairy1_tanglefoot :
-        if (inzone(0_37_68_0_1, 0_37_68_30_47, coord) = true) return(14);
-        if ($zanaris = true) return(13);
-        return(12);
+        if (inzone(0_37_68_0_1, 0_37_68_30_47, coord) = true) return(18);
+        if ($zanaris = true) return(17);
+        return(16);
     case ^fairy1_return :
-        if ($zanaris = true) return(15);
-        return(12);
+        if ($zanaris = true) return(19);
+        return(16);
 }
 return(0);
