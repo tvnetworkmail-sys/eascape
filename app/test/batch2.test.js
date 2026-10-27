@@ -465,7 +465,8 @@ console.log('chat notifications: ok');
   // nothing is taken until the server has sent its growth clock (::appfarming)
   fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0 } }));
   assert.strictEqual(reps[reps.length - 1].patches[0].prediction, null);
-  const nowMin = Math.floor(Date.now() / 60000);
+  // a clock minute the tracker reads as no skew from this computer (it rounds the difference)
+  const nowMin = Math.round((Date.now() - 2500) / 60000);
   fl.forEach((fn) => fn('farming-varps', { varps: { 504: potato0, 505: 0, 506: 0, 508: 0, 515: 0, [D.appVarps.offset]: 8, [D.appVarps.clock]: nowMin } }));
   const r = reps[reps.length - 1];
   const pot = r.patches[0];
