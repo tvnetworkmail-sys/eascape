@@ -17,6 +17,7 @@
   let courses = [];
   const courseOf = new Map(); // loc id -> course
   let shortcuts = {}; // loc id -> level
+  let shortcutAt = {}; // 'x,z' -> level, where one loc is two shortcuts (RuneLite's WorldPoint)
   let found = []; // [{ typecode, x, z, level }] near you, from the last scan
   let lastScan = 0;
   let session = null; // { course, laps, last, times: [], lapsTill }
@@ -53,7 +54,8 @@
       for (let z = Math.max(0, pz - r); z <= Math.min(103, pz + r); z++) {
         for (const l of g.locs(x, z)) {
           const course = courseOf.get(l.id);
-          const level = shortcuts[l.id];
+          let level = shortcuts[l.id];
+          if (level !== undefined && shortcutAt[`${g.baseX + x},${g.baseZ + z}`] !== undefined) level = shortcutAt[`${g.baseX + x},${g.baseZ + z}`];
           if (!course && level === undefined) continue;
           found.push({ typecode: l.typecode, x, z, shortcut: !course, level: level || 0, course });
         }
@@ -145,6 +147,7 @@
       if (cfg.data) {
         courses = cfg.data.courses || [];
         shortcuts = cfg.data.shortcuts || {};
+        shortcutAt = cfg.data.shortcutAt || {};
         courseOf.clear();
         for (const c of courses) for (const id of c.locs) courseOf.set(id, c);
         lastScan = 0;
