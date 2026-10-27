@@ -856,7 +856,14 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, -1350285786);
+                // EASCape: varbits may be added after the cache's 2113 (Fairytale II, 27 Oct 2026); an
+                // entry is opcode 1 with basevar, startbit and endbit (6 bytes) or just its 0 (1 byte)
+                let prefix = 2;
+                for (let i = 0; i < 2113 && prefix < client.pos; i++) {
+                    if (client.data[prefix] === 1) prefix += 5;
+                    prefix += 1;
+                }
+                return checkcrcAllowAdded(client, 2113, prefix, -1350285786);
             }
         );
     }

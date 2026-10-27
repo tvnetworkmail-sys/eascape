@@ -865,3 +865,52 @@ if (%fairy_farmers_quest >= ^fairy1_grotto & %fairy_farmers_quest < ^fairy1_comp
     $banked = calc($banked + ~questpack_give(~fairy1_nature_item(%fairy_nature_item3), 1));
 }
 ~questpack_done("A Fairy Tale Pt. 1", $banked);
+
+// ::ft2look - Fairytale II's people and creatures from the 2007 cache, around you for a minute,
+// to look at (tools/fairytale2/convert_content.py; the quest's changing versions aren't shown)
+[debugproc,ft2look]
+if (p_finduid(uid) = false) {
+    return;
+}
+~ft2_look_add(ft2_gorak);
+~ft2_look_add(ft2_cosmic_being);
+~ft2_look_add(ft2_fairy_godfather);
+~ft2_look_add(ft2_fairy_nuff);
+~ft2_look_add(ft2_fairy_queen);
+~ft2_look_add(ft2_centaur_4438);
+~ft2_look_add(ft2_centaur_4439);
+~ft2_look_add(ft2_stag);
+~ft2_look_add(ft2_wood_dryad);
+~ft2_look_add(ft2_fairy_very_wise);
+~ft2_look_add(ft2_fairy_4443);
+~ft2_look_add(ft2_fairy_4444);
+~ft2_look_add(ft2_fairy_4445);
+~ft2_look_add(ft2_fairy_4446);
+~ft2_look_add(ft2_rabbit_4447);
+~ft2_look_add(ft2_rabbit_4448);
+~ft2_look_add(ft2_butterfly_4449);
+~ft2_look_add(ft2_butterfly_4450);
+~ft2_look_add(ft2_starflower_4451);
+~ft2_look_add(ft2_starflower_4452);
+~ft2_look_add(ft2_fairy_fixit);
+~ft2_look_add(ft2_ork_4456);
+~ft2_look_add(ft2_ork_4457);
+~ft2_look_add(ft2_ork_4458);
+~ft2_look_add(ft2_ork_4459);
+mes("Fairytale II: 25 people and creatures, for a minute.");
+
+[proc,ft2_look_add](npc $npc)
+npc_add(map_findsquare(coord, 2, 8, ^map_findsquare_lineofwalk), $npc, 100);
+
+// ::ft2song 1-3 - Fairytale II's music from the 2007 cache: We are the Fairies, Dimension X,
+// All's Fairy in Love & War
+[debugproc,ft2song](int $n)
+if (p_finduid(uid) = false) {
+    return;
+}
+switch_int ($n) {
+    case 2 : midi_song("dimension x");
+    case 3 : midi_song("alls fairy in love n war");
+    case default : midi_song("we are the fairies");
+}
+
