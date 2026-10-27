@@ -1074,22 +1074,16 @@ switch_coord (loc_coord) {
 }
 
 [oploc1,fai_darkwiztower_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_climb(loc_coord);
 
 [oploc2,fai_darkwiztower_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_op(loc_coord, 2);
 
 [oploc3,fai_darkwiztower_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_op(loc_coord, 3);
 
 [oploc1,fai_darkwiztower_spiralstairstop]
 // arrive delay?
@@ -1140,22 +1134,16 @@ switch_coord (loc_coord) {
 }
 
 [oploc1,wild6_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_climb(loc_coord);
 
 [oploc2,wild6_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_op(loc_coord, 2);
 
 [oploc3,wild6_spiralstairs_middle]
-// arrive delay?
-switch_coord (loc_coord) {
-    case default : @unhandled_stairs(loc_coord);
-}
+// EASCape: Climb asks up or down; Climb-up and Climb-down take their own links (they all went up)
+@unhandled_stairs_op(loc_coord, 3);
 
 [oploc1,wild6_spiralstairstop]
 // arrive delay?
@@ -1171,6 +1159,23 @@ if ($option = 1) {
 } else if ($option = 2) {
     p_telejump($down);
 }
+
+// EASCape: a middle staircase's Climb: up (its Climb-up) or down (its Climb-down)
+[label,unhandled_stairs_climb](coord $coord)
+def_int $option = ~p_choice2_header("Climb up the stairs.", 1, "Climb down the stairs.", 2, "Climb up or down the stairs?");
+if ($option = 1) {
+    @unhandled_stairs_op($coord, 2);
+} else if ($option = 2) {
+    @unhandled_stairs_op($coord, 3);
+}
+
+// EASCape: where the map data says this option leads (eascape_world)
+[label,unhandled_stairs_op](coord $coord, int $op)
+if (~eascape_link_go($coord, $op) = true) {
+    return;
+}
+mes("Unhandled stairs: <lc_debugname(loc_type)> at");
+mes(~coord_tostring($coord));
 
 [label,unhandled_stairs](coord $coord)
 // EASCape: where the map data says it leads (eascape_world)
