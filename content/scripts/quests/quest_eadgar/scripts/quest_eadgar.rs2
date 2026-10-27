@@ -515,16 +515,22 @@ while (huntnext = true) {
     ~troll_guard_attack;
 }
 
-huntall(~movecoord_indirection(npc_coord, %npc_int, 1), 0, 0);
-while (huntnext = true) {
-    ~troll_guard_attack;
-}
-
-if(npc_coord = npc_destination) return;
-
-huntall(~movecoord_indirection(npc_coord, %npc_int, 2), 0, 0);
-while (huntnext = true) {
-    ~troll_guard_attack;
+// EASCape: a guard sees you straight ahead of him up to five squares away, unless a crate is in
+// the way (RuneScape Wiki, Troll Stronghold storeroom: "directly facing the player and within
+// (approximately) five squares"). Lost City looked one square ahead (two while walking), so
+// the guards seldom caught anyone.
+def_int $d = 1;
+def_coord $ahead;
+while ($d <= 5) {
+    $ahead = ~movecoord_indirection(npc_coord, %npc_int, $d);
+    if (lineofsight(npc_coord, $ahead) = false) {
+        return;
+    }
+    huntall($ahead, 0, 0);
+    while (huntnext = true) {
+        ~troll_guard_attack;
+    }
+    $d = calc($d + 1);
 }
 
 [proc,troll_guard_attack]
