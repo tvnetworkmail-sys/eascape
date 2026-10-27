@@ -87,8 +87,8 @@ if (%fairy_farmers_quest >= ^fairy1_complete) {
 ~chatplayer("<p,quiz>What are you doing all the way over here? Shouldn't you be at the market door?");
 ~fairy1_gatekeeper_says("<p,neutral>Yes, that's my usual spot, but the Godfather said I should be here, so here I am.");
 
-// the gap in the outer wall, by the Gate Keeper (0_37_68_31_27); east of it is Zanaris, west the
-// tunnel to the grove
+// the gap in the outer wall, by the Gate Keeper (0_37_68_31_27): east of it is Zanaris; it takes
+// you through the short tunnel (its squares can't be stood on) right into the grove
 [oploc1,fairy_walls_multi]
 if (coordx(coord) <= 2398) {
     ~fairy1_squeeze(0_37_68_32_27);
@@ -104,21 +104,21 @@ if (%fairy_farmers_quest >= ^fairy1_return) {
         inv_add(inv, fairy_queen_secateurs, 1);
         ~objbox(fairy_queen_secateurs, "You find the Queen's secateurs!", 250, 0, 0);
     }
-    ~fairy1_squeeze(0_37_68_30_27);
+    ~fairy1_squeeze(0_37_68_28_27);
     return;
 }
 ~fairy1_gatekeeper_says("<p,neutral>I've received orders to let you through if you want. Good luck.");
 ~mesbox("You squeeze past the thorny vines into a small tunnel.");
-~fairy1_squeeze(0_37_68_30_27);
+~fairy1_squeeze(0_37_68_28_27);
+~fairy1_tanglefoot_appear;
 
-// the inner gap, from the tunnel into the grove (0_37_68_29_27)
+// the gap at the grove's end of the tunnel (0_37_68_29_27): out to Zanaris from the grove
 [oploc1,fairy_wall_tangle_door_open1]
 if (coordx(coord) <= 2396) {
-    ~fairy1_squeeze(0_37_68_30_27);
+    ~fairy1_squeeze(0_37_68_32_27);
     return;
 }
 ~fairy1_squeeze(0_37_68_28_27);
-~fairy1_tanglefoot_appear;
 
 [proc,fairy1_squeeze](coord $to)
 if_close;

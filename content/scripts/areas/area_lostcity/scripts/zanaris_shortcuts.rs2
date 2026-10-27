@@ -1,0 +1,47 @@
+// EASCape: the jutting walls on the way to the Cosmic Altar in Zanaris, Agility shortcuts
+// (OSRS wiki, Jutting wall (Zanaris): 46 Agility for the one at x 2400, 66 for the other two;
+// 9.9 experience, 6 on a failure, when the damaged wall opposite spikes you for a little but you
+// still get past; success chance 50/254 to 255 at 1 and 99). The squeeze and the spikes are
+// Void's (content/area/misthalin/zanaris/Zanaris.kt): its hits of 2 + 2 are the wiki's 4.
+[oploc1,loc_12127]
+def_int $level = 66;
+if (coordx(loc_coord) = 2400) {
+    $level = 46;
+}
+if (stat(agility) < $level) {
+    ~mesbox("You need an Agility level of <tostring($level)> to squeeze past the jutting wall.");
+    return;
+}
+// across the wall, north or south
+def_int $dz = 1;
+def_int $dir = ^exact_north;
+if (coordz(coord) > coordz(loc_coord)) {
+    $dz = -1;
+    $dir = ^exact_south;
+}
+def_coord $start = movecoord(loc_coord, 0, 0, sub(0, $dz));
+def_coord $end = movecoord(loc_coord, 0, 0, $dz);
+if (coord ! $start) {
+    p_walk($start);
+    p_delay(0);
+}
+mes("You try to squeeze past.");
+if (stat_random(agility, 50, 254) = true) {
+    ~agility_exactmove(human_speartrap_walk_sidestep_long, 0, 4, $start, $end, 28, 124, $dir, false);
+    sound_synth(squeeze_out, 1, 0);
+    stat_advance(agility, 99);
+    return;
+}
+~agility_exactmove(human_speartrap_walk_sidestep_caught, 0, 2, $start, loc_coord, 28, 48, $dir, false);
+if (loc_find(movecoord(loc_coord, -1, 0, 0), loc_12126) = true) {
+    loc_anim(speartrap_release);
+}
+say("Ahhh...");
+p_delay(0);
+say("Owww...");
+p_delay(0);
+say("Arrgghhhh!");
+damage(uid, 1, 2);
+damage(uid, 1, 2);
+stat_advance(agility, 60);
+~agility_exactmove(human_speartrap_walk_sidestep_long, 0, 1, loc_coord, $end, 10, 20, $dir, false);
