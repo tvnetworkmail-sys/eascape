@@ -15,7 +15,9 @@
 #     models, recolours and animation converted. Their sounds (468 opcodes 78/79) and 'blocks walk
 #     only' (27) have no 377 equivalent and are left out.
 #   - floors: 377 has one floor list where 468 splits underlays and overlays; the ids line up
-#     (both 1-based in the map), except where 2007 has a floor 377 doesn't: those get new floors.
+#     (both 1-based in the map). Where 2007 has a floor 377 lacks, one of ours that looks the same
+#     is used, else a new overlay; an underlay must be one of 377's own 174 (one byte in the map),
+#     so a new one takes a floor no map of ours uses (UNDERLAY_SLOTS).
 #   - the rings on squares we have: every loc of the 2007 ring's 3x3 (the ring and its eight
 #     trampled-grass parts) replaces whatever our 2006 square has there (the 2006 placeholder ring
 #     and its sparkle, grass and flowers), and the 2007 map icon is added; a tree the 2007 map moved
@@ -80,7 +82,7 @@ def ourflo():
             elif op == 6: e = d.index(10, p); p = e + 1
         out.append(o)
     return out
-OURFLO = ourflo()
+OURFLO = ourflo()[:ORIG['flo']]   # the build may already have floors from a run before
 
 def flo468(b):
     o = {}; p = 0
@@ -99,21 +101,40 @@ flo_out = []
 flo_map = {'u': {}, 'o': {}}   # 468 map value -> our map value
 TEXNAME = __import__('port468').readpack('texture')
 
+# An underlay is one byte in the 377 map (82-255: floors 1-174), so it can only be one of 377's
+# own 174 floors. A 2007 underlay 377 has no floor for goes into one of these, which no map of ours
+# uses (their 2006 definitions are replaced; see UNDERLAY_SLOTS_NOTE in the .flo).
+UNDERLAY_SLOTS = ['flo_160', 'flo_161']
+underlay_edits = []   # (our floor name, 468 underlay definition)
+
+def _cmp(o, kind):
+    keys = ('rgb', 'tex') if kind == 'u' else ('rgb', 'tex', 'occ', 'map')
+    return {k: x for k, x in o.items() if k in keys}
+
 def floor(kind, v):
     if v in flo_map[kind]:
         return flo_map[kind][v]
     src = (U468 if kind == 'u' else O468)[v - 1]
     a = flo468(src)
-    ours = OURFLO[v - 1] if v - 1 < len(OURFLO) else None
-    if ours is not None:
-        b = {k: x for k, x in ours.items() if k in ('rgb', 'tex', 'occ', 'map')}
-        if a == b and bool(ours.get('ovl')) == (kind == 'o'):
-            flo_map[kind][v] = v
-            return v
-    name = f"ft2_{'underlay' if kind == 'u' else 'overlay'}_{v - 1}"
+    want = _cmp(a, kind)
+    # the same id, or else any of ours that looks the same (for an underlay only its colour counts)
+    order = [v - 1] + [k for k in range(len(OURFLO)) if k != v - 1]
+    for k in order:
+        ours = OURFLO[k]
+        if _cmp(ours, kind) == want and (kind == 'u' or ours.get('ovl')):
+            flo_map[kind][v] = k + 1
+            return k + 1
+    if kind == 'u':
+        if 'tex' in a or set(a) - {'rgb'}:
+            raise SystemExit(f'underlay {v}: {a}')
+        slot = UNDERLAY_SLOTS[len(underlay_edits)]
+        underlay_edits.append((slot, a))
+        k = next(i for i, n in pt.P['flo'].items() if n == slot)
+        flo_map[kind][v] = k + 1
+        return k + 1
+    name = f"ft2_overlay_{v - 1}"
     fid = pt.newid('flo', name)
-    lines = [f'[{name}]']
-    if kind == 'o': lines.append('overlay=yes')
+    lines = [f'[{name}]', 'overlay=yes']
     if 'rgb' in a: lines.append(f"colour=0x{a['rgb']}")
     if 'tex' in a: lines.append(f"texture={TEXNAME[a['tex']]}")
     if a.get('occ') is False: lines.append('occlude=no')
@@ -306,6 +327,17 @@ for (mx, mz), what in SQUARES.items():
     open(path, 'w').write('\n'.join(lines) + '\n')
     report.append(f'm{mx}_{mz} ({what}): {len(locs)} locs, {nn} npcs' + (f', left out {sorted(set(skipped))}' if skipped else ''))
 
+# the build only packs map squares listed in map.pack
+with open(f'{E}/content/pack/map.pack') as f:
+    mp = {l.split('=', 1)[1].strip() for l in f if '=' in l}
+with open(f'{E}/content/pack/map.pack') as f:
+    nxt = max(int(l.split('=')[0]) for l in f if '=' in l) + 1
+with open(f'{E}/content/pack/map.pack', 'a') as f:
+    for (mx, mz) in SQUARES:
+        for k in 'ml':
+            if f'{k}{mx}_{mz}' not in mp:
+                f.write(f'{nxt}={k}{mx}_{mz}\n'); nxt += 1
+
 # ---------------------------------------------------------------- rings on squares we have
 rings = []
 for (mx, mz) in m.squares():
@@ -370,6 +402,16 @@ os.makedirs(d, exist_ok=True)
 hdr = ("// EASCape: {what} from the August 2007 cache (build 468, OpenRS2 633), converted by\n"
        "// tools/fairytale2/convert_maps.py; 468 ids in the names.\n\n")
 open(f'{d}/fairy_rings.loc', 'w').write(hdr.format(what="the fairy rings and the scenery of the places they lead to") + '\n\n'.join(loc_out) + '\n')
+if underlay_edits:
+    p = f'{E}/content/scripts/_unpack/377/all.flo'
+    s = open(p).read()
+    for slot, a in underlay_edits:
+        blk = re.search(r'\[' + slot + r'\]\n(?:[^\n\[]+\n)*', s)
+        new = (f"// EASCape: unused by our maps; now the 2007 underlay 0x{a['rgb']} (Fairytale II's places,\n"
+               f"// tools/fairytale2/convert_maps.py), as 377 underlays can only be its own 174 floors\n"
+               f"[{slot}]\ncolour=0x{a['rgb']}\n")
+        s = s[:blk.start()] + new + s[blk.end():]
+    open(p, 'w').write(s)
 if flo_out:
     open(f'{d}/fairy_rings.flo', 'w').write(hdr.format(what='the floors 377 lacks') + '\n\n'.join(flo_out) + '\n')
 if pt.seq_out:

@@ -685,9 +685,9 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                // EASCape: the floors 377 lacks, from the 2007 cache, come after its 174 (Fairytale
-                // II's places, 27 Oct 2026)
-                return checkcrcAllowAdded(client, 174, 3305, 691874834);
+                // EASCape: 377's 174 floors, with flo_160 and flo_161 (unused by our maps) redefined as
+                // two 2007 underlays, then the 2007 overlays 377 lacks (Fairytale II's places, 27 Oct 2026)
+                return checkcrcAllowAdded(client, 174, 3293, -568217208);
             }
         );
     }
