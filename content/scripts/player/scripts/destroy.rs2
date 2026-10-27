@@ -1,0 +1,34 @@
+// EASCape: the 2006 "Are you sure you want to destroy this object?" box (interface 289 in our
+// cache: the item, its name, a line saying where to get another, and Yes / No). Items whose Destroy
+// should ask first call ~destroy_confirm from their [opheld5] script; the line is the item's
+// destroy message from the OSRS wiki.
+[proc,destroy_confirm](namedobj $obj, string $text)(boolean)
+inv_clear(destroy_item);
+inv_add(destroy_item, $obj, 1);
+if_openchat(inter_289);
+inv_transmit(destroy_item, inter_289:com_0);
+if_settext(inter_289:com_13, oc_name($obj));
+if_sethide(inter_289:com_9, false);
+if_sethide(inter_289:com_10, true);
+if_settext(inter_289:com_6, $text);
+if_addresumebutton(inter_289:com_4);
+if_addresumebutton(inter_289:com_5);
+p_pausebutton;
+def_boolean $yes = false;
+if (last_com = inter_289:com_4) {
+    $yes = true;
+}
+inv_stoptransmit(inter_289:com_0);
+inv_clear(destroy_item);
+if_close;
+return($yes);
+
+// Fairytale II (OSRS wiki, Nuff's certificate: "Maybe I can find another in Fairy Nuff's grotto.")
+[opheld5,ft2_nuffs_certificate]
+def_int $slot = last_slot;
+if (~destroy_confirm(ft2_nuffs_certificate, "Maybe I can find another in Fairy Nuff's grotto.") = false) {
+    return;
+}
+if (inv_getobj(inv, $slot) = ft2_nuffs_certificate) {
+    inv_delslot(inv, $slot);
+}
