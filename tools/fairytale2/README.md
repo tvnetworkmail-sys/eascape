@@ -42,7 +42,10 @@ Run after `convert_maps.py`, once each:
   Last-destination; Configure and Last-destination on the Zanaris ring) and examines.
 - `ring_interface.py <cache468 dir>` makes the code screen from the 2007 interface 426
   (`area_fairy_rings/interfaces/fairyrings.if`) with its models.
-- `ring_log_interface.py` makes the travel log side panel (ours: 2007 has none).
+- `ring_log_interface.py` makes the travel log side panel (ours, laid out like the OSRS one: 2007
+  has none), on our own parchment and heart sprites (`content/sprites/eascape_*`).
+- `ring_dial_anim.py <cache468 dir>` brings over the 2007 dial-turning animations (seqs
+  4290-4297) and makes the two-quarter turns and still positions from their frames.
 
 The network itself is `content/scripts/areas/area_fairy_rings/scripts/fairy_rings.rs2` and the
 codes `configs/fairy_rings.dbrow`; its header says where each rule comes from.

@@ -10378,7 +10378,8 @@ export class Client extends GameShell {
                 } else if (child.fill) {
                     Pix2D.fillRectTrans(childX, childY, child.width, child.height, colour, 256 - (child.trans & 0xff));
                 } else {
-                    Pix2D.drawRect(childX, childY, child.width, child.height, colour);
+                    // EASCape: only the see-through outline (an opaque one drawn under it too made
+                    // invisible buttons, trans 255, show as boxes)
                     Pix2D.drawRectTrans(childX, childY, child.width, child.height, colour, 256 - (child.trans & 0xff));
                 }
             } else if (child.type === ComponentType.TYPE_TEXT) {
