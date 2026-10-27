@@ -914,3 +914,18 @@ switch_int ($n) {
     case default : midi_song("we are the fairies");
 }
 
+
+// Fairytale II: next to the ring in each of the five places the 2007 map adds
+// (1 hideout, 2 cosmic plane, 3 Gorak's plane, 4 Enchanted Valley, 5 Abyssal area)
+[debugproc,ft2place](int $n)
+if (p_finduid(uid) = false) {
+    return;
+}
+switch_int ($n) {
+    case 1 : p_teleport(0_36_69_24_9); mes("The Fairy Resistance hideout.");
+    case 2 : p_teleport(0_32_75_27_47); mes("The cosmic entity's plane.");
+    case 3 : p_teleport(0_47_83_30_35); mes("Gorak's plane.");
+    case 4 : p_teleport(0_47_70_33_51); mes("The Enchanted Valley.");
+    case 5 : p_teleport(0_47_76_51_10); mes("The Abyssal area.");
+    case default : mes("::ft2place 1-5: 1 hideout, 2 cosmic plane, 3 Gorak's plane, 4 Enchanted Valley, 5 Abyssal area");
+}

@@ -1,0 +1,15 @@
+// EASCape: music in the places the 2007 map adds for Fairytale II's fairy rings (Void's music
+// areas, music_tracks.toml; the OSRS wiki agrees for the hideout and Gorak's plane). The four 2007
+// tracks aren't on our 2006 music list (its interface has no buttons for them), so they play here
+// without unlocking anything; the Abyssal area plays and unlocks Into the Abyss like anywhere else.
+[mapzone,0_36_69] ~fairy_rings_song("All's Fairy in Love & War", "alls fairy in love n war");
+[mapzone,0_32_75] ~fairy_rings_song("We are the Fairies", "we are the fairies");
+[mapzone,0_47_83] ~fairy_rings_song("Dimension X", "dimension x");
+[mapzone,0_47_70] ~fairy_rings_song("On the Wing", "on the wing");
+[mapzone,0_47_76] @music_playbyregion(coord);
+
+[proc,fairy_rings_song](string $name, midi $song)
+if (%musicplay ! 0) {
+    if_settext(music:com_177, $name);
+    midi_song($song);
+}

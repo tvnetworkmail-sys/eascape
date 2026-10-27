@@ -17,3 +17,20 @@ pipeline (`tools/warriors_guild/js5.py`, `defs451.py`) underneath.
 
 Run with `python3 -I`. `names.pkl` is the converter's own record of the names it gave, kept for the
 next steps and not committed.
+
+## Step 2: the places the rings lead to, and the rings
+
+- `maps468.py` reads the 2007 map squares (terrain plain, locs with the OpenRS2 XTEA keys); `jag.py`
+  reads our built 377 config archive, so the converter can compare 2007 configs with ours.
+- `port468.py` is the shared porting (new ids after ours, colours, animations), reusing the names
+  step 1 gave (`names.pkl`).
+- `convert_maps.py <cache468 dir> <keys.json> <void data dir>` adds the five map squares our 2006
+  map lacks (36_69 the Fairy Resistance hideout, 32_75 the cosmic entity's plane, 47_83 Gorak's
+  plane, 47_70 the Enchanted Valley, 47_76 the Abyssal area) and puts every 2007 fairy ring on the
+  squares we have the way 2007 has it (the header of the script says exactly what changes). New
+  locs are in `content/scripts/areas/area_fairy_rings`, their models in
+  `content/models/loc/fairytale2`. Spawns are Void's. Left out: loc sounds (no 377 equivalent),
+  the Enchanted Valley's fishing spot and General Gromblod (after 2007), the Dream World above
+  the cosmic plane (Lunar Diplomacy's), and the rings on Lunar Isle and south of Dorgesh-Kaan
+  (squares we don't have).
+- `convert_music.py` also brought over On the Wing, the Enchanted Valley's music.

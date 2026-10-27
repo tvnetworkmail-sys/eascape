@@ -18,6 +18,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::fairytale1pack` | The items A Fairy Tale Pt. 1 (Fairytale I) needs: secateurs, a spade, a ghostspeak amulet and a dramen staff; once Malignius has named them, run it again for the three items the Nature Spirit needs. `::questdone fairytale1` marks it done; `::questhelper fairy_farmers` follows its guide |
 | `::ft2look` | Fairytale II (being built): puts the 25 new people and creatures from the 2007 cache around you for a minute, so you can check how they look and move |
 | `::ft2song 1` / `2` / `3` | Fairytale II (being built): plays its new music: 1 We are the Fairies, 2 Dimension X, 3 All's Fairy in Love & War |
+| `::ft2place 1`-`5` | Fairytale II (being built): takes you next to the fairy ring in each place the 2007 map adds: 1 the Fairy Resistance hideout, 2 the cosmic entity's plane, 3 Gorak's plane, 4 the Enchanted Valley, 5 the Abyssal area |
 | `::spellbookswap` | Swaps between the normal spells and the Ancient Magicks. `::spellbookswap ancient` or `::spellbookswap normal` picks one. Works whether or not Desert Treasure is done |
 | `::allrunes` | 100,000 of each of the 13 runes in the 2006 game (air, water, earth, fire, mind, body, cosmic, chaos, nature, law, death, blood, soul) |
 | `::warriorsguildpack` | Warriors' Guild testing (needs 12 free spaces): a bronze and a rune full helm, platebody and platelegs for the animators, 200 tokens for the cyclopes, a pestle and mortar, ashes and ground ashes for the shot put, and an iron defender to show Kamfreena |

@@ -1,7 +1,7 @@
-# Fairytale II's three tracks from the August 2007 cache (archive 6, Jagex's packed format) as
+# Fairytale II's three tracks, and On the Wing (the Enchanted Valley's, Void's music areas), from the August 2007 cache (archive 6, Jagex's packed format) as
 # standard MIDI files in content/songs, with new ids after ours in midi.pack. Names as the cache
 # has them ("alls fairy in love n war" is the wiki's "All's Fairy in Love & War").
-# Usage: convert_music.py <cache468 flat dir>   (run once)
+# Usage: convert_music.py <cache468 flat dir>   (tracks already in midi.pack are skipped)
 import os, sys
 W = os.path.dirname(os.path.abspath(__file__)); E = os.path.abspath(W + '/../..')
 sys.path.insert(0, W)
@@ -12,7 +12,7 @@ pack = f'{E}/content/pack/midi.pack'
 ids = {int(l.split('=')[0]): l.split('=', 1)[1].strip() for l in open(pack) if '=' in l}
 nxt = max(ids) + 1
 with open(pack, 'a') as f:
-    for name in ('we are the fairies', 'dimension x', 'alls fairy in love n war'):
+    for name in ('we are the fairies', 'dimension x', 'alls fairy in love n war', 'on the wing'):
         if name in ids.values():
             continue
         g = c.group_by_name(6, name)

@@ -685,7 +685,9 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return Packet.checkcrc(client.data, 0, client.pos, 691874834);
+                // EASCape: the floors 377 lacks, from the 2007 cache, come after its 174 (Fairytale
+                // II's places, 27 Oct 2026)
+                return checkcrcAllowAdded(client, 174, 3305, 691874834);
             }
         );
     }
