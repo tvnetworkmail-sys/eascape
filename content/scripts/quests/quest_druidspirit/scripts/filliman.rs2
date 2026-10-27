@@ -120,6 +120,14 @@ if(%druidspirit < ^druidspirit_full_transform) {
     return;
 }
 if(%druidspirit = ^druidspirit_complete) {
+    // EASCape: Fairytale I's enchanted secateurs (quest_fairy1/fairy1_grove.rs2)
+    if (~fairy1_needs_spirit = true) {
+        if (inv_total(worn, amulet_of_ghostspeak) = 0) {
+            ~chatnpc("<p,neutral>Ahhrs Oooohh arhhhhAHhhh.");
+            return;
+        }
+        @fairy1_spirit;
+    }
     mes("This spirit seems to be busy.");
     return;
 }

@@ -27,9 +27,43 @@ if ($s = ^fairy1_gardeners) {
 $t = append($t, "|@str@I asked five of the gardeners. Their theories ranged from|@str@the weather to fairies, and Martin thought the fairies|@str@might be worth looking into.|");
 if ($s = ^fairy1_godfather) {
     $t = append($t, "|@dbl@I should go to @dre@Zanaris@dbl@, through the shed in the|@dre@Lumbridge Swamp@dbl@, and find out what the fairies know.");
+} else {
+    $t = append($t, "|@str@In Zanaris a Fairy Godfather sits where the Queen's throne|@str@was. He told me the Queen had been hurt fighting a|@str@Tanglefoot and was in a magic sleep.|");
+}
+if ($s = ^fairy1_nuff) {
+    $t = append($t, "|@dbl@I should see @dre@Fairy Nuff@dbl@, the healer, in the north-west of|@dbl@Zanaris.");
+} else if ($s > ^fairy1_nuff) {
+    $t = append($t, "|@str@Fairy Nuff gave me a list of the Queen's symptoms.|");
+}
+if ($s = ^fairy1_zandar) {
+    $t = append($t, "|@dbl@I should take the @dre@symptoms list@dbl@ to @dre@Zandar Horfyre@dbl@ at the top|@dbl@of the @dre@Dark Wizards' Tower@dbl@ west of Falador.");
+} else if ($s > ^fairy1_zandar) {
+    $t = append($t, "|@str@Zandar Horfyre thinks the Queen lost her life essence to|@str@the Tanglefoot, and sent me to a necromancer.|");
+}
+if ($s = ^fairy1_malignius) {
+    if (testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^true) {
+        $t = append($t, "|@dbl@@dre@Malignius Mortifer@dbl@ wants a @dre@skull@dbl@ from the grave behind|@dre@Draynor Manor@dbl@ before he will tell me how to beat the|@dbl@Tanglefoot.");
+    } else {
+        $t = append($t, "|@dbl@I should ask @dre@Malignius Mortifer@dbl@, at the crossroads south of|@dbl@Falador, how to fight a Tanglefoot.");
+    }
+} else if ($s > ^fairy1_malignius) {
+    $t = append($t, "|@str@Malignius Mortifer took the Draynor skull and told me how|@str@to make enchanted secateurs.|");
+}
+if ($s = ^fairy1_grotto) {
+    $t = append($t, "|@dbl@I need to take @dre@secateurs@dbl@, @dre@<~fairy1_nature_items_text>|@dbl@to the @dre@Nature Spirit@dbl@ in the grotto in Mort Myre, and ask him|@dbl@to perform the ceremony of Phasma Phasmatis Natura.");
+} else if ($s > ^fairy1_grotto) {
+    $t = append($t, "|@str@The Nature Spirit enchanted my secateurs.|");
+}
+if ($s = ^fairy1_tanglefoot) {
+    $t = append($t, "|@dbl@I should kill the @dre@Tanglefoot@dbl@ with the @dre@magic secateurs@dbl@. It's in|@dbl@the grove past the gap by the @dre@Cosmic Altar@dbl@ ruins in Zanaris.");
+} else if ($s > ^fairy1_tanglefoot) {
+    $t = append($t, "|@str@I killed the Tanglefoot and took the Queen's secateurs.|");
+}
+if ($s = ^fairy1_return) {
+    $t = append($t, "|@dbl@I should take the @dre@Queen's secateurs@dbl@ back to the @dre@Fairy|@dre@Godfather@dbl@.");
 }
 if ($s >= ^fairy1_complete) {
-    $t = append($t, "||@red@QUEST COMPLETE!");
+    $t = append($t, "|@str@I gave the secateurs to the Fairy Godfather, who will give|@str@them to Fairy Nuff to heal the Queen.||@red@QUEST COMPLETE!");
 }
 ~quest_journal("A Fairy Tale Pt. 1", $t);
 

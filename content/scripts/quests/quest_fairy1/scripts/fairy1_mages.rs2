@@ -1,0 +1,322 @@
+// Fairytale I - Growing Pains: Zandar Horfyre at the top of the Dark Wizards' Tower, Malignius
+// Mortifer at the crossroads south of Falador, and the Draynor skull in the grave behind Draynor
+// Manor. Lines: the OSRS wiki's quest transcript and its Zandar Horfyre and Malignius Mortifer
+// transcripts; Malignius's everyday menu is Void's (MaligniusMortifer.kt), without what came
+// later (Summoning, Swan Song). Ours where marked.
+
+// ---------------------------------------------------------------- Zandar Horfyre
+
+[opnpc1,zandar_horfyre]
+if (%fairy_farmers_quest = ^fairy1_zandar) {
+    @fairy1_zandar_quest;
+}
+~chatplayer("<p,quiz>Who are you?");
+~chatnpc("<p,angry>My name is Zandar Horfyre, and you <displayname> are trespassing in my tower, not to mention attacking my students! I thank you to leave immediately!");
+if (~p_choice2("Ok, I was going anyway.", 1, "No, I think I'll stay for a bit.", 2) = 1) {
+    ~chatplayer("<p,neutral>Ok, I was going anyway.");
+    ~chatnpc("<p,angry>Good! And don't forget to close the door behind you!");
+    return;
+}
+~chatplayer("<p,neutral>No, I think I'll stay for a bit.");
+~chatnpc("<p,angry>Actually, that wasn't an invitation. I've tried being polite, now we'll do it the hard way!");
+if_close;
+npc_anim(human_casting, 0);
+spotanim_pl(teleport_casting, 92, 0);
+p_delay(2);
+// the Lumbridge Swamp (ours: a free square near the middle of it)
+p_teleport(map_findsquare(0_49_49_40_40, 0, 4, ^map_findsquare_lineofwalk));
+~chatplayer("<p,angry>Zamorak curse that mage!");
+~chatplayer("<p,shifty>Actually, I guess he already has!");
+
+[label,fairy1_zandar_quest]
+~chatplayer("<p,neutral>Hello, I need your help.");
+~chatnpc("<p,angry>And why should I help you, fool? You attack my brethren and I, and then you demand my help! I think not!");
+~chatplayer("<p,shock>But Fairy Nuff said you would help me!");
+~chatnpc("<p,shock>Fairy Nuff sent you!");
+~chatplayer("<p,sad>The Fairy Queen is extremely ill. She was in a battle with a Tanglefoot and her injuries have resulted in her being in a coma.");
+~chatnpc("<p,sad>This is grave news indeed!");
+~chatnpc("<p,confused>You think the Tanglefoot is responsible? I don't see how that could be. A Tanglefoot will normally kill its victim outright...unless...hmmmm...I wonder...");
+if (inv_total(inv, fairy_symptoms_list) = 0) {
+    ~chatplayer("<p,sad>Fairy Nuff gave me a list of her symptoms, but I don't have it with me.");
+    ~chatnpc("<p,neutral>Well, I can't diagnose the problem without knowing the symptoms. You'd better go and find that list, or get Fairy Nuff to give you another one.");
+    return;
+}
+~chatplayer("<p,neutral>Fairy Nuff gave me a list of her symptoms. Here, have a look at it.");
+inv_del(inv, fairy_symptoms_list, 1);
+~chatnpc("<p,neutral>Hmm...yes...slow discorporation of ethreal body, eh? Hmm...I think I know what the problem might be.");
+~chatplayer("<p,happy>You do? That's great! What is it?");
+~chatnpc("<p,neutral>From what I know about fairies, their basic lifeforce is pure magic. Much as we humans would refer to our souls as our life essence, so too does a fairy have a life essence of pure magic.");
+~chatnpc("<p,neutral>You could actually refer to fairies as magic embodied and not be wrong.");
+~chatplayer("<p,quiz>Yes, but about the Fairy Queen?");
+~chatnpc("<p,neutral>Patience, I'm getting to that. It appears the Fairy Queen has lost a large part, indeed the majority, of her life essence. Either it was drained from her by the Tanglefoot or she did it voluntarily.");
+~chatnpc("<p,confused>Although why she would do that is beyond me.");
+~chatplayer("<p,quiz>So I guess I need to go and kill this Tanglefoot and get back her magic essence if I am to help her?");
+~chatnpc("<p,neutral>Yes, but if I were you I would seek out a necromancer by the name of Malignus Mortifer. I believe that he once fought a Tanglefoot, many years ago.");
+~chatnpc("<p,neutral>You should probably ask him for advice on how to combat it.");
+%fairy_farmers_quest = ^fairy1_malignius;
+~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+~chatplayer("<p,quiz>Malignus Mortifer. Any idea where I can find him?");
+~chatnpc("<p,neutral>He's rumoured to have been seen near Port Sarim with his followers recently. Rumour has it that he's working on a spell that has something to do with fungus!");
+~chatplayer("<p,happy>Ok, thanks very much.");
+~chatnpc("<p,neutral>Don't mention it, and give my regards to Nuff, when you see her next.");
+
+// ---------------------------------------------------------------- Malignius Mortifer
+
+[opnpc1,elemental_wizard_boss]
+~chatnpc("<p,neutral>So, <displayname>, your curiosity leads you to speak to me?");
+def_int $s = %fairy_farmers_quest;
+def_string $quest = "";
+if ($s = ^fairy1_malignius) {
+    if (testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^true) {
+        $quest = "I was asking you about fighting a Tanglefoot...";
+    } else {
+        $quest = "I need help with fighting a Tanglefoot.";
+    }
+} else if ($s > ^fairy1_malignius & $s < ^fairy1_complete) {
+    $quest = "I was asking you about fighting a Tanglefoot...";
+} else if ($s >= ^fairy1_complete) {
+    $quest = "About those enchanted secateurs again...";
+}
+def_int $choice;
+if (string_length($quest) > 0) {
+    $choice = ~p_choice5_header($quest, 1, "Who are you and what are you doing here?", 2, "Can you teach me something about magic?", 3, "Where can I get clothes like those?", 4, "Actually, I don't want to talk to you.", 5, "What would you like to say?");
+} else {
+    $choice = ~p_choice4_header("Who are you and what are you doing here?", 2, "Can you teach me something about magic?", 3, "Where can I get clothes like those?", 4, "Actually, I don't want to talk to you.", 5, "What would you like to say?");
+}
+switch_int ($choice) {
+    case 1 : @fairy1_malignius_quest;
+    case 2 : @fairy1_malignius_who;
+    case 3 : @fairy1_malignius_teach;
+    case 4 : @fairy1_malignius_clothes;
+    case 5 :
+        ~chatplayer("<p,confused>Actually, I don't want to talk to you.");
+        ~chatnpc("<p,angry>Bah! Then go away!");
+}
+
+[label,fairy1_malignius_quest]
+def_int $s = %fairy_farmers_quest;
+if ($s >= ^fairy1_complete) {
+    @fairy1_malignius_sell;
+}
+if ($s = ^fairy1_malignius & testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^false) {
+    ~chatplayer("<p,quiz>I need help with fighting a Tanglefoot. Can you help me?");
+    ~chatnpc("<p,neutral>Almost certainly, I am a great practitioner of the magic arts, after all.");
+    ~chatplayer("<p,happy>Great, thanks. I was told by Zandar Horfyre that you fought one once.");
+    ~chatnpc("<p,neutral>That is true and an epic battle it was too.");
+    ~chatplayer("<p,quiz>That's great! I presume you won as you are here to tell me about it, could you tell me how to defeat one, please?");
+    ~chatnpc("<p,angry>Of course I won! As I've already stated I am a master of the magic arts.");
+    ~chatnpc("<p,quiz>Why do you want to know how to kill a Tanglefoot?");
+    ~chatplayer("<p,neutral>There is a Tanglefoot in the lost city of Zanaris and I have been asked to kill it.");
+    ~chatnpc("<p,shifty>I see. Well I could tell you how to defeat your Tanglefoot, however I would need you to perform a little undertaking for me first.");
+    ~chatplayer("<p,quiz>What exactly did you have in mind?");
+    ~chatnpc("<p,neutral>To the north-east of here is a haunted manor. Bring me a skull from a grave you find there and you shall have your answer.");
+    %fairy_gardeners = setbit(%fairy_gardeners, ^fairy1_malignius_asked);
+    if (inv_total(inv, fairy_skull) > 0) {
+        ~chatplayer("<p,happy>Actually I have it right here.");
+        @fairy1_malignius_skull;
+    }
+    ~chatplayer("<p,neutral>I'll go and get it then.");
+    ~chatnpc("<p,neutral>Fine, I'll see you soon.");
+    return;
+}
+~chatplayer("<p,neutral>I was asking you about fighting a Tanglefoot...");
+if ($s = ^fairy1_malignius) {
+    ~chatnpc("<p,quiz>So, have you brought me the skull?");
+    if (inv_total(inv, fairy_skull) > 0) {
+        ~chatplayer("<p,happy>Actually I have it right here."); // the transcript's line from when you first ask
+        @fairy1_malignius_skull;
+    }
+    ~chatplayer("<p,neutral>No, not yet.");
+    ~chatnpc("<p,neutral>Well come and talk to me once you have it.");
+    return;
+}
+~chatnpc("<p,angry>I have already told you all I know about fighting a Tanglefoot. What more would you have of me?");
+if (~p_choice2("Could you tell me how to kill a Tanglefoot again, please?", 1, "What did I need to take to the Nature Spirit again?", 2) = 1) {
+    ~chatplayer("<p,quiz>Could you tell me how to kill a Tanglefoot again, please?");
+    ~chatnpc("<p,angry>I guess so. Forgot to take notes did you? Well, listen carefully this time. You will need to enchant a pair of secateurs. Only these can harm a Tanglefoot.");
+    ~chatplayer("<p,happy>Great, thanks very much.");
+    return;
+}
+~chatplayer("<p,quiz>What did I need to take to the Nature Spirit again?");
+~chatnpc("<p,neutral>You will need a pair of secateurs. You will also need to gather <~fairy1_nature_items_text>.");
+~chatnpc("<p,neutral>Take them to the Nature Spirit and ask him to perform the ceremony of Phasma Phasmatis Natura.");
+~chatplayer("<p,happy>Great, thanks very much.");
+
+[label,fairy1_malignius_skull]
+~chatnpc("<p,happy>Excellent, hand it over then.");
+inv_del(inv, fairy_skull, 1);
+// three items in a row from the wiki's list of 31 (fairy1.enum)
+def_int $first = random(29);
+%fairy_nature_item1 = $first;
+%fairy_nature_item2 = calc($first + 1);
+%fairy_nature_item3 = calc($first + 2);
+%fairy_farmers_quest = ^fairy1_grotto;
+~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+~chatnpc("<p,neutral>Right then, to business. A Tanglefoot can not be harmed by might nor magic. The only weapon that can damage them are a pair of enchanted secateurs!");
+~chatplayer("<p,quiz>Where can I get a pair of these enchanted secateurs?");
+~chatnpc("<p,neutral>You will have to make them... listen carefully and I'll tell you how.");
+~chatnpc("<p,neutral>Obviously you will need a pair of secateurs, you will also need to gather <~fairy1_nature_items_text>.");
+~chatnpc("<p,neutral>Take them to the Nature Spirit and ask him to perform the ceremony of Phasma Phasmatis Natura.");
+~chatplayer("<p,neutral>Phasma Phasmatis Natura. Got it! Is that all?");
+~chatnpc("<p,neutral>Yes, that's all. You'll be able to use those secateurs to kill the monster.");
+~chatplayer("<p,happy>Great, thanks very much.");
+
+// "white berries, mort myre pear and mort myre stem"
+[proc,fairy1_nature_items_text]()(string)
+return("<~fairy1_nature_item_name(%fairy_nature_item1)>, <~fairy1_nature_item_name(%fairy_nature_item2)> and <~fairy1_nature_item_name(%fairy_nature_item3)>");
+
+[proc,fairy1_nature_item_name](int $i)(string)
+return(lowercase(oc_name(enum(int, namedobj, fairy1_nature_items, $i))));
+
+[proc,fairy1_nature_item](int $i)(namedobj)
+return(enum(int, namedobj, fairy1_nature_items, $i));
+
+[label,fairy1_malignius_sell]
+~chatplayer("<p,quiz>About those enchanted secateurs again...");
+~chatnpc("<p,neutral>What now, <displayname>, can't you just leave me alone to practice my art?");
+if (~p_choice2("Can I get another set of enchanted secateurs?", 1, "Sorry to have bothered you.", 2) = 2) {
+    ~chatplayer("<p,neutral>Sorry to have bothered you.");
+    ~chatnpc("<p,neutral>That's ok, I shouldn't have been so abrupt with you.");
+    return;
+}
+~chatplayer("<p,quiz>Can I get another set of enchanted secateurs?");
+~chatnpc("<p,neutral>Well I guess it's your lucky day! Since your last visit I've been thinking, I never use my enchanted secateurs anymore, I could sell them to you, if you like.");
+~chatplayer("<p,happy>That's great!");
+~chatplayer("<p,quiz>How much would they cost?");
+~chatnpc("<p,neutral>I could let you have them for a mere 40,000 gp.");
+switch_int (~p_choice3("40,000! That's outrageous!", 1, "That's too expensive for me I'm afraid.", 2, "Ok, great.", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>40,000! That's outrageous!");
+        ~chatnpc("<p,neutral>Well, that's my price. If you change your mind, you can come back and talk to me. Good day.");
+    case 2 :
+        ~chatplayer("<p,sad>That's too expensive for me I'm afraid.");
+        ~chatnpc("<p,neutral>Well, that's my price. If you change your mind, you can come back and talk to me. Good day.");
+    case 3 :
+        ~chatplayer("<p,neutral>Ok, great.");
+        if (inv_total(inv, coins) < 40000) {
+            ~chatnpc("<p,angry>You don't have 40,000 gp with you! Do you take me for a fool?");
+            ~chatplayer("<p,neutral>Sorry, I didn't realise. I'll have to visit a bank.");
+            ~chatnpc("<p,neutral>Fine, I might see you later then.");
+            return;
+        }
+        if (inv_freespace(inv) = 0 & inv_total(inv, coins) > 40000) {
+            ~chatnpc("<p,angry>You don't have room to hold them. Stop wasting my time.");
+            return;
+        }
+        inv_del(inv, coins, 40000);
+        inv_add(inv, fairy_enchanted_secateurs, 1);
+        ~objbox(fairy_enchanted_secateurs, "Malignius Mortifer hands you a pair of magic secateurs.", 250, 0, 0);
+        ~chatnpc("<p,neutral>A pleasure doing business with you, <displayname>.");
+}
+
+[label,fairy1_malignius_who]
+~chatplayer("<p,quiz>Who are you and what are you doing here?");
+~chatnpc("<p,bored>I am the great Malignius Mortifer, wielder of strange and terrible powers. These lowly followers of mine are dedicated students of the magical arts. Their business is to follow me and learn all they can.");
+~chatplayer("<p,laugh>They don't look very tough.");
+~chatnpc("<p,shifty>You may believe that, but even if you strike one down, another will rise up within minutes.");
+~chatplayer("<p,bored>Yeah, right.");
+~chatnpc("<p,neutral>Each of my followers is a master of his chosen element. His life becomes bound to that element in a way you could not hope to understand.");
+~chatplayer("<p,quiz>And what do you do?");
+~chatnpc("<p,shifty>I am mastering a branch of magic that few dare to attempt: Necromancy! The fools in the Guild of Wizards shun anyone who practices this art, but there are a few in this land who know the rudiments.");
+~chatnpc("<p,neutral>Grayzag and Invrigar... Even Melzar studied the methods of necromancy, until an accident affected his mind. Now his spells tend to result in...");
+~chatnpc("<p,sad>... well, let us simply say that he does NOT raise armies of undead minions.");
+def_int $asked = 0;
+def_int $c;
+while (1 = 1) {
+    if ($asked = 0) {
+        $c = ~p_choice3("What happened to Melzar?", 1, "Why do you keep making fungi appear?", 2, "Thanks, I'll be off now.", 3);
+    } else if ($asked = 1) {
+        $c = ~p_choice2("Why do you keep making fungi appear?", 2, "Thanks, I'll be off now.", 3);
+    } else {
+        $c = ~p_choice2("What happened to Melzar?", 1, "Thanks, I'll be off now.", 3);
+    }
+    switch_int ($c) {
+        case 1 :
+            ~chatplayer("<p,quiz>What happened to Melzar?");
+            ~chatnpc("<p,neutral>The forces required to wield power over the dead are very difficult to control. Melzar's concentration slipped, and his spell rebounded upon him.");
+            ~chatnpc("<p,neutral>Although he did not die, his mind broke. Now he dwells amidst the beasts that fill his strange home, and when he attempts to do magic he gets... amusing results.");
+            $asked = 1;
+        case 2 :
+            ~chatplayer("<p,quiz>Why do you keep making fungi appear?");
+            ~chatnpc("<p,shifty>Necromancy is... still not fully understood. So few people dare to study it. Although my spells usually raise whichever undead creature I desire, they sometimes misfire. As Melzar has learnt!");
+            $asked = 2;
+        case 3 :
+            ~chatplayer("<p,neutral>Thanks, I'll be off now.");
+            ~chatnpc("<p,shifty>I am sure your curiosity will eventually draw you to speak to me again, <displayname>.");
+            return;
+    }
+}
+
+[label,fairy1_malignius_teach]
+~chatplayer("<p,quiz>Can you teach me something about magic?");
+if (%runemysteries < ^runemysteries_complete) {
+    ~chatnpc("<p,bored>I see no glimmer of understanding in your eyes; my time would be wasted trying to teach you of the subtle arts.");
+    ~chatnpc("<p,neutral>If you are truly interested in magic, perhaps you should go and speak to the Duke of Lumbridge, who lives east of this place. Perchance he will have a mission for you that will teach you something.");
+    return;
+}
+~chatnpc("<p,neutral>Ah, you are an inquisitive fellow. I shall speak of the great Wizards' Tower, destroyed by fire many years ago...");
+~chatnpc("<p,neutral>Many say it was the greatest building in the history of Gielinor, a magnificent monument to human ingenuity.");
+~chatnpc("<p,neutral>Yet when humans are offered great power, they so often buy it at the cost of their principles.");
+~chatnpc("<p,neutral>Wizards who claimed allegiance to Saradomin began to insist that magic be restricted to the few they deemed 'worthy' of such powers.");
+~chatnpc("<p,neutral>Before long, those who did not share their fatuous obsession with Saradomin were excluded from the Tower completely. This state of affairs could not continue.");
+~chatnpc("<p,neutral>One dark night, a brave band of magi loyal to the great Lord Zamorak stormed the Tower. Despite heavy losses, they fought their way up the levels until they reached the Great Library.");
+~chatnpc("<p,neutral>Alas, they were trapped and could not steal the precious records. But before they could be defeated, the bravest of them took it upon himself to blast the writings into nothingness, destroying the library.");
+~chatnpc("<p,neutral>The ensuing fire raced through the tower, and none escaped its fury. Some say that Lord Zamorak himself fanned the flames to ensure the destruction of his enemies!");
+~chatnpc("<p,neutral>Much of that knowledge was lost, and some has never yet been rediscovered. Still, the power of magic remains in the world, and we who dedicate our lives to its study may yet perform great works...");
+~chatplayer("<p,neutral>Thanks, I'll be going now.");
+~chatnpc("<p,neutral>As you wish.");
+
+[label,fairy1_malignius_clothes]
+~chatplayer("<p,quiz>Where can I get clothes like those?");
+~chatnpc("<p,angry>Bah! Our garments are an outward sign of our dominance of the magical arts. You cannot simply buy them in a shop!");
+~chatplayer("<p,quiz>What happens if I kill you and take them?");
+~chatnpc("<p,laugh>Try it and see!");
+~chatplayer("<p,quiz>How about if you teach me enough about magic so I can wear those clothes too?");
+~chatnpc("<p,bored>How about if I turn you into a mushroom to make you stop bothering me?");
+if_close;
+npc_anim(human_casting, 0);
+p_delay(1);
+spotanim_pl(zamorak_flame, 0, 0);
+// Void: the player becomes a fungus for ten ticks (ours: our cache's Fungi, the zygomite's cap)
+p_transmogrify(slayer_mutated_zygomite_adolescent_cap);
+~bas_set(zygomite_wiggle, zygomite_wiggle, zygomite_wiggle, zygomite_wiggle, zygomite_wiggle, zygomite_wiggle, null);
+p_animprotect(^true);
+buildappearance(worn);
+~chatplayer("<p,neutral>MMMmmph!");
+p_delay(8);
+p_animprotect(^false);
+p_transmogrify(null);
+~update_bas;
+buildappearance(worn);
+
+[opnpcu,elemental_wizard_boss]
+~chatnpc("<p,angry>Oi - stop waving your items at me!");
+
+// ---------------------------------------------------------------- the Draynor skull
+
+// the grave behind Draynor Manor (its mound, 0_48_52_34_54-55); the skull can be dug up any time,
+// once (OSRS wiki, Draynor skull: "it can still be obtained after the quest is completed")
+[proc,fairy1_at_grave]()(boolean)
+return(inzone(0_48_52_33_53, 0_48_52_35_56, coord));
+
+[label,fairy1_dig_grave]
+p_arrivedelay;
+p_stopaction;
+anim(human_dig, 0);
+p_delay(1);
+anim(null, 0);
+if (inv_total(inv, fairy_skull) > 0) {
+    mes("You have already dug up the skull."); // ours
+    return;
+}
+if (~obj_gettotal(fairy_skull) > 0) {
+    // the wiki: "your character will mention that they think they stored it in the bank"
+    ~chatplayer("<p,neutral>I think I've stored the skull in the bank.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room to carry anything you find."); // ours
+    return;
+}
+inv_add(inv, fairy_skull, 1);
+~objbox(fairy_skull, "You dig up a skull from the grave.", 250, 0, 0); // ours

@@ -37,6 +37,9 @@ if ($hit = true) {
     if((npc_param(slayer_category) = ^slayer_kurask | npc_param(slayer_category) = ^slayer_turoth) & inv_total(worn, slayer_leafbladed_spear) = 0) {
         $maxhit = 0;
     }
+    if (~fairy1_is_tanglefoot(npc_type) = true) { // EASCape: Fairytale I's magic secateurs (fairy1_grove.rs2)
+        $maxhit = ~fairy1_tanglefoot_maxhit($maxhit);
+    }
     $damage = randominc(min($maxhit, npc_param(max_dealt)));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     // EASCape: Desert Treasure's Fareed knocks your weapon away without ice gloves

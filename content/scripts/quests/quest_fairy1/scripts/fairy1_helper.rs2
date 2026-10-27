@@ -1,17 +1,33 @@
 // Quest Helper: which step of A Fairy Tale Pt. 1 you're on (fairy1_helper.dbrow), from
-// %fairy_farmers_quest and how many gardeners you have asked (RuneLite's FairytaleI.java).
+// %fairy_farmers_quest, your items and where you are (RuneLite's FairytaleI.java).
 [proc,questhelper_fairy1]()(int)
 def_int $s = %fairy_farmers_quest;
-if ($s >= ^fairy1_complete) {
-    return(0);
+def_boolean $zanaris = inzone(0_37_68_0_1, 0_38_69_63_63, coord);
+switch_int ($s) {
+    case ^fairy1_not_started : return(1);
+    case ^fairy1_gardeners :
+        if (~fairy1_gardeners_asked >= ^fairy1_gardeners_needed) return(3);
+        return(2);
+    case ^fairy1_godfather :
+        if ($zanaris = true) return(5);
+        return(4);
+    case ^fairy1_nuff :
+        if ($zanaris = true) return(6);
+        return(4);
+    case ^fairy1_zandar : return(7);
+    case ^fairy1_malignius :
+        if (~obj_gettotal(fairy_skull) > 0) return(9);
+        if (testbit(%fairy_gardeners, ^fairy1_malignius_asked) = ^false) return(9);
+        return(8);
+    case ^fairy1_grotto :
+        if (inzone(1_53_152_43_5, 1_53_152_56_18, coord) = true) return(11);
+        return(10);
+    case ^fairy1_tanglefoot :
+        if (inzone(0_37_68_0_1, 0_37_68_30_47, coord) = true) return(14);
+        if ($zanaris = true) return(13);
+        return(12);
+    case ^fairy1_return :
+        if ($zanaris = true) return(15);
+        return(12);
 }
-if ($s = ^fairy1_not_started) {
-    return(1);
-}
-if ($s = ^fairy1_gardeners) {
-    if (~fairy1_gardeners_asked >= ^fairy1_gardeners_needed) {
-        return(3);
-    }
-    return(2);
-}
-return(4);
+return(0);

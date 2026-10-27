@@ -5,7 +5,9 @@
 //   - there are no skillcapes in our game yet (they came in July 2006), so Martin's "Ask about
 //     the Skillcape of Farming." / "Ask about the quest." menu is left out: Talk-to goes straight
 //     to the quest;
-//   - OSRS's "Start the quest?" box came long after 2006, so agreeing to help starts it;
+//   - OSRS's start box (the recommended-levels warning and "Start the ... quest?"): your call
+//     (27 Oct 2026). The recommended levels are the wiki's: combat 50, and Strength and Farming
+//     together 40 (its "a combined level of 40 is sufficient") for the skills line;
 //   - Lost City and Nature Spirit are needed to start (OSRS); without them Martin is too busy;
 //   - the transcript has nothing for Martin between telling you to find a fairy and the end, so
 //     there he asks how you are getting on (his own line from the transcript) and you say you're
@@ -87,6 +89,25 @@ if (stat_base(farming) > 1) {
 } else {
     ~chatnpc("<p,neutral>If you were more interested in turning your hand to farming, you would have noticed it too.");
 }
+// OSRS's start box
+def_string $warn = "";
+if (~player_combat_level < 50) {
+    $warn = "Before starting this quest, be aware that your combat level is lower than the recommended level of 50.";
+}
+if (calc(stat_base(strength) + stat_base(farming)) < 40) {
+    if (string_length($warn) = 0) {
+        $warn = "Before starting this quest, be aware that one or more of your skill levels are lower than recommended.";
+    } else {
+        $warn = append($warn, " One or more of your skill levels are also lower than recommended.");
+    }
+}
+if (string_length($warn) > 0) {
+    ~mesbox($warn);
+}
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Fairytale I - Growing Pains quest?") = 2) {
+    ~chatplayer("<p,neutral>This doesn't sound like something I can help with. Good luck.");
+    return;
+}
 ~chatplayer("<p,quiz>So what do you want me to do?");
 ~chatnpc("<p,neutral>I'd like you to find out what is causing this terrible problem and to try and rectify whatever the problem is.");
 %fairy_farmers_quest = ^fairy1_gardeners;
@@ -127,6 +148,10 @@ switch_int (~fairy1_gardeners_asked) {
         ~chatplayer("<p,shifty>O-kay! You're the boss, any idea which flower I should look under to find a fairy?");
         %fairy_farmers_quest = ^fairy1_godfather;
         ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+        // the Godfather on the throne and the Queen asleep in Nuff's room (the cache's multinpcs and
+        // multilocs; RuneLite's Quest Helper sees both turn on as you enter Zanaris)
+        %fairy_queen_check = 1;
+        %fairy_godfather_check = 1;
         ~chatnpc("<p,neutral>No, sorry, but I did hear that there were some adventurers with a similar problem in the swamps near Lumbridge. Just don't mention my name if you talk to them, they're trying to keep it a secret, but everybody actually knows what they're up to.");
         ~chatplayer("<p,neutral>Yes, I've spoken to them before.");
 }

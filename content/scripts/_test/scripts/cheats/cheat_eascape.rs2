@@ -847,8 +847,8 @@ while ($i <= $count) {
 mes("<tostring($count)> growth ticks run.");
 
 // ::fairytale1pack - the items Fairytale I needs (OSRS wiki's item list): secateurs, a spade, a
-// ghostspeak amulet and a dramen staff. The Draynor skull and the three random items for the
-// Nature Spirit come during the quest.
+// ghostspeak amulet and a dramen staff, and once Malignius has named them the three random
+// items for the Nature Spirit (run it again then). The Draynor skull comes from its grave.
 [debugproc,fairytale1pack]
 if (p_finduid(uid) = false) {
     return;
@@ -858,4 +858,10 @@ $banked = calc($banked + ~questpack_give(secateurs, 1));
 $banked = calc($banked + ~questpack_give(spade, 1));
 $banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
 $banked = calc($banked + ~questpack_give(dramen_staff, 1));
+// once Malignius has named them: the three items for the Nature Spirit
+if (%fairy_farmers_quest >= ^fairy1_grotto & %fairy_farmers_quest < ^fairy1_complete) {
+    $banked = calc($banked + ~questpack_give(~fairy1_nature_item(%fairy_nature_item1), 1));
+    $banked = calc($banked + ~questpack_give(~fairy1_nature_item(%fairy_nature_item2), 1));
+    $banked = calc($banked + ~questpack_give(~fairy1_nature_item(%fairy_nature_item3), 1));
+}
 ~questpack_done("A Fairy Tale Pt. 1", $banked);

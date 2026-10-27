@@ -17,6 +17,9 @@ if (($attackrange <= 1 & ~player_in_combat_check = false) | npc_range(coord) > $
 if (~player_in_combat_check = false) {
     return;
 }
+if (~fairy1_tanglefoot_blocks = true) { // EASCape: Fairytale I's tanglefoots (quest_fairy1/fairy1_grove.rs2)
+    return;
+}
 if (~sa_enabled = true) {
     @player_special_attack;
 }
@@ -38,6 +41,9 @@ if (($attackrange <= 1) | npc_range(coord) > $attackrange) {
 @player_combat_start_nomulti;
 
 [label,player_combat_start_nomulti]
+if (~fairy1_tanglefoot_blocks = true) {
+    return;
+}
 if (~sa_enabled = true) {
     @player_special_attack;
 }

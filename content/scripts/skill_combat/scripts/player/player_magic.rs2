@@ -73,6 +73,11 @@ if (npc_type = troll_block_1 | npc_type = troll_block_2) {
     ~dt_ice_block_spell($spell_data);
     return;
 }
+// EASCape: Fairytale I's tanglefoots can't be hurt by magic (quest_fairy1/fairy1_grove.rs2)
+if (~fairy1_is_tanglefoot(npc_type) = true) {
+    mes("I can't deal any damage...");
+    return;
+}
 if (~pvm_combat_spell_checks($spell_data) = false) {
     return;
 }

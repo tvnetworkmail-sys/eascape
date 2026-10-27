@@ -1,0 +1,226 @@
+// Fairytale I - Growing Pains in Zanaris: the Fairy Godfather on the Queen's throne, his
+// henchmen Slim Louie and Fat Rocco, and Fairy Nuff the healer with the sleeping Queen. They are
+// the cache's own multinpcs (on fairy_godfather_check / fairy_queen_check, set when Martin sends
+// you to find a fairy), so their triggers are on the multi types and their lines name the NPC
+// (chatnpc_specific). Lines: the OSRS wiki's quest transcript and its NPC transcripts (Fairy
+// Godfather, Slim Louie, Fat Rocco, Fairy Nuff). Ours where marked.
+
+[proc,fairy1_godfather_says](string $text)
+~chatnpc_specific("Fairy Godfather", fairy_godfather, $text);
+
+[proc,fairy1_rocco_says](string $text)
+~chatnpc_specific("Fat Rocco", fairy_henchman2, $text);
+
+// ---------------------------------------------------------------- the Fairy Godfather
+
+[opnpc1,fairy_godfather_multi]
+def_int $s = %fairy_farmers_quest;
+if ($s >= ^fairy1_complete) {
+    ~mesbox("The Godfather is ignoring you.");
+    return;
+}
+if ($s = ^fairy1_return & inv_total(inv, fairy_queen_secateurs) > 0) {
+    @fairy1_godfather_finish;
+}
+if ($s > ^fairy1_godfather) {
+    ~fairy1_rocco_says("<p,angry>Da Boss is a busy fairy! He don' have time to talk to yous humans. Vamoose!");
+    return;
+}
+~chatplayer("<p,confused>Who are you? Where's the Fairy Queen? What's going on here? Where's the Fairy Queen's throne gone?");
+~fairy1_godfather_says("<p,neutral>Ciao esploratore! So many questions. Whicha one would you hava me answer first?");
+while (1 = 1) {
+    switch_int (~p_choice5("Who are you?", 1, "Where's the Fairy Queen?", 2, "What's going on here?", 3, "Where's the Fairy Queen's throne gone?", 4, "That's all, thanks.", 5)) {
+        case 1 :
+            ~chatplayer("<p,quiz>Who are you?");
+            ~fairy1_godfather_says("<p,neutral>Me?! I am-a da Fairy Godfather.");
+            ~chatplayer("<p,confused>...?");
+            ~fairy1_godfather_says("<p,neutral>I see-a by your face dat you have-a not-a heard of-a me. Irrispettoso, eet iz of no eemportance. You weesh-a to know sometheeng else or no?");
+        case 2 :
+            ~fairy1_godfather_says("<p,sad>Ah, eet iz a trageec-a tale. Da Queen Bee she iz-a, how-you-say, seek?");
+            ~chatplayer("<p,quiz>You mean sick. What happened?");
+            ~fairy1_godfather_says("<p,sad>Ah, a tragedy to be-a struck-a down so young.");
+            ~fairy1_godfather_says("<p,quiz>How-a much do ya know about-a da fairy folk, my beeg friend?");
+            ~chatplayer("<p,neutral>Not actually a whole deal, I'm afraid.");
+            ~fairy1_godfather_says("<p,neutral>Well, let-a me enlighten yous. Zanaris iz-a a nexus of-a da worlds. Da Queen Bee, she iz-a da guardian of-a all da folk dat live-a in Zanaris.");
+            ~fairy1_godfather_says("<p,neutral>So when-a thees Tanglefoot arrives, da Queen Bee she-a goes to da Cosmic Temple area to kill-a eet, but someting goes-a wrong. Da Queen Bee, she gets-a hurt and is-a now inna da magic sleep.");
+            ~chatplayer("<p,neutral>Thanks, I'll go see her then. Goodbye.");
+            %fairy_farmers_quest = ^fairy1_nuff;
+            ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+            ~fairy1_godfather_says("<p,neutral>Ciao. Oh, and <displayname>...");
+            ~chatplayer("<p,quiz>Yes?");
+            ~fairy1_godfather_says("<p,shifty>A word-a of advice. You be-a careful not to cause da trouble for da folk while you are Zanaris. Ciao.");
+            ~chatplayer("<p,confused>?");
+            return;
+        case 3 :
+            ~chatplayer("<p,quiz>What's going on here?");
+            ~fairy1_godfather_says("<p,neutral>Hmm, an eenteresting question, my friend. I am-a trying to run-a da fairy kingdom, and youz iz-a being da irritating adventurer.");
+            ~chatplayer("<p,angry>That's not what I mean!");
+            ~fairy1_godfather_says("<p,neutral>No, but-a dat iz da question I answered. Now iz-a dere anything else?");
+        case 4 :
+            ~chatplayer("<p,quiz>Where's the Fairy Queen's throne gone?");
+            ~fairy1_godfather_says("<p,neutral>An eenteresting place to start... I am-a here, ze Queen Bee iz not. So my chair - eet iz-a here, her throne - eet iz- a not. Eez there anytheeng else? I ama a bizy fairy.");
+        case 5 :
+            ~chatplayer("<p,neutral>That's all, thanks.");
+            ~fairy1_godfather_says("<p,neutral>Eef there iz anytheeng I can-a help you weeth whilst you are-a veesiting Zanaris, plsi, do not-a trouble to bother me.");
+            return;
+    }
+}
+
+[label,fairy1_godfather_finish]
+~fairy1_godfather_says("<p,happy>Ciao <displayname>. I am-a glad to see-a yous back! I was-a worried that the Tanglefoot would-a kill-a you too.");
+~chatplayer("<p,happy>You needn't have worried I managed to kill it!");
+~fairy1_godfather_says("<p,happy>Ben fatto, my friend! Da folk-a dey owe yous a great-a deal! So did-a youss getta back da Queen Bee's magic power?");
+~chatplayer("<p,neutral>I retrieved this pair of Enchanted secateurs, I think they must contain the Queen's missing magic.");
+~fairy1_godfather_says("<p,happy>Grazie infinite! I will give-a dem to da healing fairy. Da Queen Bee, she will-a soon be strong again!");
+inv_del(inv, fairy_queen_secateurs, 1);
+queue(fairy1_complete, 0, 0);
+
+// the reward: the wiki's (2 quest points, 3,500 Farming, 2,000 Attack and 1,000 Magic experience,
+// and the magic secateurs you already have)
+[queue,fairy1_complete]
+%fairy_farmers_quest = ^fairy1_complete;
+stat_advance(farming, 35000);
+stat_advance(attack, 20000);
+stat_advance(magic, 10000);
+session_log(^log_adventure, "Quest complete: Fairytale I - Growing Pains");
+~send_quest_complete(questlist:fairy_farmers, fairy_enchanted_secateurs, 250, ^fairy1_questpoints, "You have completed A Fairy Tale Pt. 1!", "2 Quest Points|3,500 Farming XP|2,000 Attack XP|1,000 Magic XP|Magic secateurs");
+
+// ---------------------------------------------------------------- the henchmen
+
+[opnpc1,fairy_henchman1_multi]
+~chatnpc_specific("Slim Louie", fairy_henchman1, "<p,angry>Ah don' talk to humans! Yous wanna talk, talk to da boss!");
+
+[opnpc1,fairy_henchman2_multi]
+~fairy1_rocco_says("<p,angry>Don' say nuffin' to me! Say it to da boss!");
+
+// ---------------------------------------------------------------- Fairy Nuff
+
+[opnpc1,fairy_nuff]
+def_int $s = %fairy_farmers_quest;
+if ($s >= ^fairy1_complete) {
+    ~chatplayer("<p,quiz>How is the Fairy Queen doing?");
+    ~chatnpc("<p,sad>Not too well; the Godfather hasn't given me those secateurs yet.");
+    return;
+}
+if ($s = ^fairy1_godfather) {
+    // ours: you've not yet seen the Godfather
+    ~chatnpc("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
+    return;
+}
+if ($s = ^fairy1_nuff) {
+    @fairy1_nuff_list;
+}
+if ($s > ^fairy1_nuff) {
+    if ($s = ^fairy1_return & inv_total(inv, fairy_queen_secateurs) > 0) {
+        ~chatplayer("<p,happy>I did it! I've got the Fairy Queens' enchanted secateurs!");
+        ~chatnpc("<p,happy>That's fantastic! You'd better take them to the Fairy Godfather though; he'd be cross if he knew you brought them to me first. But, come back to me once the queen has had a chance to recover. I'm sure she'll want to thank you personally.");
+        return;
+    }
+    ~chatnpc("<p,quiz>You're back soon! Did you find out what ails the Fairy Queen?");
+    if ($s = ^fairy1_zandar & ~obj_gettotal(fairy_symptoms_list) = 0) {
+        ~chatplayer("<p,sad>No, I'm afraid I've lost the list of symptoms you gave me.");
+        ~chatnpc("<p,neutral>Well not to worry, I have a copy of it here.");
+        inv_add(inv, fairy_symptoms_list, 1);
+        return;
+    }
+    ~chatplayer("<p,neutral>Not yet, I'm still working on it."); // ours
+    return;
+}
+// the healer, before the quest reaches her
+if (%fairy_nuff_check = 0) {
+    %fairy_nuff_check = 1;
+    ~chatplayer("<p,quiz>What do you do around here?");
+    ~chatnpc("<p,happy>Oh, I'm the resident healer. My name is Nuff, Fairy Nuff. Who are you?");
+    ~chatplayer("<p,neutral>My name is <displayname>.");
+    ~chatnpc("<p,happy>Pleased to meet you, <displayname>. As I was saying, I'm the healer in Zanaris. I graduated over 200 human years ago. Look, there's my Advanced Healing Certificate on the wall. I never go anywhere without it.");
+    ~chatnpc("<p,neutral>It's my job to look after the sick, wounded or dying fairies around here. Of course, fairies being magical by nature, not many of them get hurt, so I don't normally have much to do.");
+    ~chatplayer("<p,quiz>What about healing humans? Lots of adventurers must get hurt fighting the Otherworldly beings.");
+    ~chatnpc("<p,neutral>Yes they do. Silly isn't it? I do use my healing magic on humans sometimes, but I don't like them attacking our other guests, so I charge them for the service.");
+    ~chatplayer("<p,quiz>How much do you charge to heal someone, then?");
+    ~chatnpc("<p,neutral>Well, the gold that you humans are so fond of has no real value in Zanaris, so I ask my patients to pay me in gems.");
+    ~chatnpc("<p,neutral>I will heal 4 hitpoints for an opal, 5 hitpoints for either a sapphire or a piece of jade, 7 hitpoints for an emerald or red topaz, 9 for a ruby and 11 for a diamond.");
+    ~chatplayer("<p,shock>Only 11 hitpoints for a diamond? Doesn't that seem a bit steep?");
+    ~chatnpc("<p,neutral>Maybe to you, but you'd be surprised how many adventurer's are willing to pay those prices.");
+    return;
+}
+~chatnpc("<p,quiz>Hello <displayname>, do you need any assistance?");
+if (~p_choice2("Yes, please. I need healing.", 1, "No thanks. Just looking around.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks. Just looking around.");
+    ~chatnpc("<p,neutral>Ok. If you want to know anything, just ask.");
+    return;
+}
+~chatplayer("<p,quiz>Yes, please. I need healing.");
+~chatnpc("<p,quiz>Sure, how many hitpoints would you like me to heal?");
+// the prices are what she says when you first meet (the wiki's menu has the ruby and diamond
+// the other way round)
+switch_int (~p_choice5("4 Hitpoints.", 4, "5 Hitpoints.", 5, "7 Hitpoints.", 7, "9 Hitpoints.", 9, "11 Hitpoints.", 11)) {
+    case 4 : ~fairy1_nuff_heal(4, opal, null, "1 opal", "You don't have a opal to pay me!");
+    case 5 : ~fairy1_nuff_heal(5, sapphire, jade, "1 sapphire or 1 piece of jade", "You don't have a sapphire or a piece of jade with you!");
+    case 7 : ~fairy1_nuff_heal(7, emerald, red_topaz, "1 emerald or 1 red topaz", "You don't have an emerald or a red topaz to pay me with!");
+    case 9 : ~fairy1_nuff_heal(9, ruby, null, "1 ruby", "You don't have a ruby to pay me!");
+    case 11 : ~fairy1_nuff_heal(11, diamond, null, "1 diamond", "You don't have a diamond to pay me!");
+}
+
+[proc,fairy1_nuff_heal](int $hp, obj $gem1, obj $gem2, string $cost, string $missing)
+~chatplayer("<p,neutral><tostring($hp)> Hitpoints.");
+~chatnpc("<p,neutral>That will cost you <$cost>.");
+if (~p_choice2("All right.", 1, "On second thoughts, no thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>On second thoughts, no thanks.");
+    ~chatnpc("<p,neutral>Ok, suit yourself.");
+    return;
+}
+~chatplayer("<p,neutral>All right.");
+def_obj $gem = null;
+if (inv_total(inv, $gem1) > 0) {
+    $gem = $gem1;
+} else if ($gem2 ! null) {
+    if (inv_total(inv, $gem2) > 0) $gem = $gem2;
+}
+if ($gem = null) {
+    ~chatnpc("<p,neutral><$missing>");
+    ~chatplayer("<p,shifty>Whoops, sorry.");
+    return;
+}
+// ours: the wiki has no lines for paying
+inv_del(inv, $gem, 1);
+stat_heal(hitpoints, $hp, 0);
+mes("Fairy Nuff heals you.");
+
+[label,fairy1_nuff_list]
+~chatnpc("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
+~chatplayer("<p,angry>I did, he said I should come and talk to you!");
+~chatnpc("<p,shock>Oh!");
+~chatnpc("<p,sad>Sorry, I didn't realise.");
+~chatplayer("<p,neutral>Actually it's more a case of what I can help you with? I told the Fairy Godfather that I would help you find a cure for the Queen.");
+~chatnpc("<p,happy>Oh, thank you! I really need help, I have no idea what ails the Queen. You must be a mighty healer!");
+~chatplayer("<p,neutral>Err...no, not me.");
+~chatnpc("<p,quiz>A great druid then?");
+~chatplayer("<p,neutral>Umm...'fraid not.");
+~chatnpc("<p,quiz>A shaman?");
+~chatplayer("<p,neutral>No.");
+~chatnpc("<p,quiz>A surgeon?");
+~chatplayer("<p,neutral>No.");
+~chatnpc("<p,quiz>A doctor, medic, nurse?");
+~chatplayer("<p,neutral>No, no and no.");
+~chatnpc("<p,confused>So what are you then?");
+~chatplayer("<p,happy>I'm a mighty adventurer!");
+~chatnpc("<p,shock>A what?!");
+~chatplayer("<p,happy>A mighty adventurer!");
+~chatnpc("<p,neutral>Yes, I heard. It's just not what I was expecting to hear.");
+~chatnpc("<p,happy>But hang on, you might be just the sort of person I need to help me!");
+~chatplayer("<p,quiz>How is that then?");
+~chatnpc("<p,quiz>I'm sure the Godfather told you that the Queen is in an enchanted sleep?");
+~chatplayer("<p,confused>Well sort of, I couldn't really understand everything he was talking about.");
+~chatnpc("<p,shifty>Shhh, somebody might hear. Look you're a visitor, so I'll tell you this much; it doesn't pay to talk about the Godfather behind his back.");
+~chatnpc("<p,sad>But back to the problem at hand - the Fairy Queen. She was brought here after her battle with the Tanglefoot in a terrible state, extremely weak and barely able to fly!");
+~chatnpc("<p,sad>When the Queen got back here, she was clearly weakening fast. It appears as if the magic force that is her life essence is slowly unravelling.");
+~chatnpc("<p,neutral>Now, what I need you to do is find a mage by the name of Zandar Horfyre. He has spent many years studying magical illness. Take the list to him and ask him if he knows what ails the Queen, please.");
+inv_add(inv, fairy_symptoms_list, 1);
+%fairy_farmers_quest = ^fairy1_zandar;
+~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+~chatplayer("<p,quiz>That doesn't sound too difficult, where will I find him.");
+~chatnpc("<p,sad>I believe he now resides in the Dark Wizard's tower near Falador, and <displayname>, please hurry. I fear the Queen doesn't have much time left!");
+
+// the symptoms list (the OSRS wiki's transcript of it)
+[opheld1,fairy_symptoms_list]
+~mesbox("List of Fairy Queen's Symptoms.|Extremely weak, Slow discorporation of ethereal body, Drifting in and out of coma, Shallow breath, Fading magical energy, High fever");

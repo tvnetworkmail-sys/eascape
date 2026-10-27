@@ -1,0 +1,177 @@
+// Fairytale I - Growing Pains: the Nature Spirit's ceremony, and the shady grove by the Cosmic
+// Altar ruins in Zanaris, where the Tanglefoot lives with its babies. Lines: the OSRS wiki's quest
+// transcript and its Gatekeeper transcript. Our choices:
+//   - the grove isn't an instance (OSRS made it one later): you squeeze through the gap the cache
+//     opens from step 10 (fairy_walls_multi) into the little tunnel, and through the inner gap
+//     into the grove; the Tanglefoot appears for you there (step 7) if it isn't about;
+//   - the quest moves on to step 8 when the Tanglefoot dies (it drops the Queen's secateurs; if
+//     you lose them you find them again in the gap, as the wiki says);
+//   - only the magic secateurs, in melee, can hurt a tanglefoot (wiki); anything else gets the
+//     wiki's "I can't deal any damage..." and you don't attack. Their max hit adds your Farming to
+//     your Strength the way Strength counts in melee: with 99 Strength and Farming, Piety and a
+//     super combat potion that gives the wiki's 26.
+
+// ---------------------------------------------------------------- the Nature Spirit
+
+// you need the spirit: to enchant the secateurs, or another pair if you've lost them
+[proc,fairy1_needs_spirit]()(boolean)
+if (%fairy_farmers_quest = ^fairy1_grotto) {
+    return(true);
+}
+if (%fairy_farmers_quest = ^fairy1_tanglefoot & ~obj_gettotal(fairy_enchanted_secateurs) = 0) {
+    return(true);
+}
+return(false);
+
+// entering the grotto after Nature Spirit: the spirit comes back when you need it
+[proc,fairy1_grotto_entered]
+if (~fairy1_needs_spirit = false) {
+    return;
+}
+if (npc_find(1_53_152_49_10, filliman_tarlock_ns, 10, 0) = false) {
+    npc_add(1_53_152_49_10, filliman_tarlock_ns, 200);
+    npc_setmode(playerface);
+}
+
+[label,fairy1_spirit]
+if (%fairy_farmers_quest = ^fairy1_tanglefoot) {
+    ~chatnpc("<p,quiz>Hello, <displayname>. Why have you returned so soon after your last visit?");
+    ~chatplayer("<p,sad>I'm glad you're here. I'm afraid I've lost the secateurs you enchanted for me.");
+    ~chatnpc("<p,neutral>That's alright; if you bring me the components for the spell, I'll enchant another pair for you. Would you happen to have all of the required items for the ceremony with you now?");
+    @fairy1_spirit_items;
+}
+~chatnpc("<p,neutral>Welcome back, my friend. I sensed that you require my help and so I have once more returned.");
+~chatplayer("<p,happy>Thank you! I need your help in enchanting a pair of secateurs.");
+~chatnpc("<p,confused>Secateurs? That's a strange thing to enchant. Would you care to inform me why you need them?");
+~chatplayer("<p,neutral>Sure. A Tanglefoot has invaded the fairy kingdom of Zanaris and the only way I can fight it is with a pair of enchanted secateurs, apparently.");
+~chatnpc("<p,neutral>Ah, a Tanglefoot! Your information is correct, secateurs that have been blessed by a Nature Spirit are the only weapons that can harm such a terrible creature.");
+~chatnpc("<p,quiz>I shall be glad to help you. Do you have all of the required items for the ceremony?");
+@fairy1_spirit_items;
+
+[label,fairy1_spirit_items]
+if (inv_total(inv, secateurs) = 0 | inv_total(inv, ~fairy1_nature_item(%fairy_nature_item1)) = 0
+    | inv_total(inv, ~fairy1_nature_item(%fairy_nature_item2)) = 0 | inv_total(inv, ~fairy1_nature_item(%fairy_nature_item3)) = 0) {
+    ~chatplayer("<p,sad>No, I still need to collect some things.");
+    ~chatnpc("<p,neutral>Alright, my friend. Return to me when you have all that is required. I shall be waiting.");
+    return;
+}
+~chatplayer("<p,happy>Yes, I have everything right here.");
+~chatnpc("<p,neutral>Then let us begin...");
+if_close;
+npc_anim(human_casting, 0);
+spotanim_pl(druidicspirit_effect, 0, 0);
+p_delay(2);
+inv_del(inv, secateurs, 1);
+inv_del(inv, ~fairy1_nature_item(%fairy_nature_item1), 1);
+inv_del(inv, ~fairy1_nature_item(%fairy_nature_item2), 1);
+inv_del(inv, ~fairy1_nature_item(%fairy_nature_item3), 1);
+inv_add(inv, fairy_enchanted_secateurs, 1);
+~objbox(fairy_enchanted_secateurs, "The Nature Spirit enchants the secateurs.", 250, 0, 0);
+if (%fairy_farmers_quest = ^fairy1_grotto) {
+    %fairy_farmers_quest = ^fairy1_tanglefoot;
+    ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+}
+~chatnpc("<p,happy>It is done!");
+~chatnpc("<p,neutral>Farewell, <displayname> and good luck with your coming battle.");
+
+// ---------------------------------------------------------------- the Gate Keeper and the gaps
+
+[proc,fairy1_gatekeeper_says](string $text)
+~chatnpc_specific("Gate Keeper", fairy_mindslayer_guard, $text);
+
+[opnpc1,fairy_mindslayer_guard_multi]
+if (%fairy_farmers_quest >= ^fairy1_complete) {
+    ~fairy1_gatekeeper_says("<p,quiz>Hello, did you just come from the market gates? Are my brothers doing their job well? I do worry that they'll start letting people into the market for free without me being there to supervise them!");
+    return;
+}
+~chatplayer("<p,quiz>What are you doing all the way over here? Shouldn't you be at the market door?");
+~fairy1_gatekeeper_says("<p,neutral>Yes, that's my usual spot, but the Godfather said I should be here, so here I am.");
+
+// the gap in the outer wall, by the Gate Keeper (0_37_68_31_27); east of it is Zanaris, west the
+// tunnel to the grove
+[oploc1,fairy_walls_multi]
+if (coordx(coord) <= 2398) {
+    ~fairy1_squeeze(0_37_68_32_27);
+    return;
+}
+if (~obj_gettotal(fairy_enchanted_secateurs) = 0) {
+    ~fairy1_gatekeeper_says("<p,neutral>I'm afraid nobody is allowed in there, orders from the boss.");
+    return;
+}
+if (%fairy_farmers_quest >= ^fairy1_return) {
+    ~fairy1_gatekeeper_says("<p,neutral>Be careful in there, there are still some of those baby Tanglefootii around.");
+    if (%fairy_farmers_quest = ^fairy1_return & ~obj_gettotal(fairy_queen_secateurs) = 0) {
+        inv_add(inv, fairy_queen_secateurs, 1);
+        ~objbox(fairy_queen_secateurs, "You find the Queen's secateurs!", 250, 0, 0);
+    }
+    ~fairy1_squeeze(0_37_68_30_27);
+    return;
+}
+~fairy1_gatekeeper_says("<p,neutral>I've received orders to let you through if you want. Good luck.");
+~mesbox("You squeeze past the thorny vines into a small tunnel.");
+~fairy1_squeeze(0_37_68_30_27);
+
+// the inner gap, from the tunnel into the grove (0_37_68_29_27)
+[oploc1,fairy_wall_tangle_door_open1]
+if (coordx(coord) <= 2396) {
+    ~fairy1_squeeze(0_37_68_30_27);
+    return;
+}
+~fairy1_squeeze(0_37_68_28_27);
+~fairy1_tanglefoot_appear;
+
+[proc,fairy1_squeeze](coord $to)
+if_close;
+p_delay(0);
+p_teleport($to);
+
+// the Tanglefoot, for you, while you're on step 7
+[proc,fairy1_tanglefoot_appear]
+if (%fairy_farmers_quest ! ^fairy1_tanglefoot) {
+    return;
+}
+if (npc_find(0_37_68_7_33, fairy_tanglefoot, 20, 0) = true) {
+    return;
+}
+npc_add(0_37_68_7_33, fairy_tanglefoot, 500);
+
+[ai_queue3,fairy_tanglefoot]
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+if (%fairy_farmers_quest < ^fairy1_complete) {
+    obj_add(npc_coord, fairy_queen_secateurs, 1, ^lootdrop_duration);
+}
+if (%fairy_farmers_quest = ^fairy1_tanglefoot) {
+    queue(fairy1_tanglefoot_killed, 0, 0);
+}
+
+[queue,fairy1_tanglefoot_killed]
+if (%fairy_farmers_quest = ^fairy1_tanglefoot) {
+    %fairy_farmers_quest = ^fairy1_return;
+    ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+}
+
+// ---------------------------------------------------------------- fighting them
+
+[proc,fairy1_is_tanglefoot](npc $npc)(boolean)
+if ($npc = fairy_tanglefoot | $npc = fairy_tanglefoot_sml1 | $npc = fairy_tanglefoot_sml2) {
+    return(true);
+}
+return(false);
+
+// called as you start an attack: true stops it
+[proc,fairy1_tanglefoot_blocks]()(boolean)
+if (~fairy1_is_tanglefoot(npc_type) = false) {
+    return(false);
+}
+if (inv_total(worn, fairy_enchanted_secateurs) > 0 & %damagetype ! ^ranged_style & ~player_autocast_enabled = false & ~sa_enabled = false) {
+    return(false);
+}
+mes("I can't deal any damage...");
+return(true);
+
+// the magic secateurs' max hit on a tanglefoot: Farming counts on top of Strength
+[proc,fairy1_tanglefoot_maxhit](int $maxhit)(int)
+return(add($maxhit, scale(add(oc_param(fairy_enchanted_secateurs, strengthbonus), 64), 640, stat(farming))));

@@ -57,9 +57,9 @@ switch_npc ($npc) {
 }
 return(-1);
 
-// how many gardeners you have asked (every bit but Martin's pickpocket one)
+// how many gardeners you have asked (bits 0-20; 29 and 30 are Malignius's and Martin's)
 [proc,fairy1_gardeners_asked]()(int)
-return(bitcount(clearbit(%fairy_gardeners, ^fairy1_martin_pickpocketed)));
+return(bitcount(clearbit(clearbit(%fairy_gardeners, ^fairy1_martin_pickpocketed), ^fairy1_malignius_asked)));
 
 [proc,fairy1_gardener]
 if (%fairy_farmers_quest = ^fairy1_gardeners) {

@@ -459,6 +459,15 @@ def_namedobj $produce = db_getfield($row, farming_crop:produce, 0);
 def_int $low;
 def_int $high;
 $low, $high = db_getfield($row, farming_crop:chance, 0);
+// EASCape: Fairytale I's magic secateurs, worn or carried, raise the chance of another harvest by
+// a tenth on allotments, herbs, hops and limpwurt (OSRS wiki, Magic secateurs; Void
+// FarmingPatchPick.saveLife adds a tenth to both ends)
+if (inv_total(inv, fairy_enchanted_secateurs) > 0 | inv_total(worn, fairy_enchanted_secateurs) > 0) {
+    if (~farming_patch_type($patch) ! 2 | calc($key / 1000) = ^farming_crop_limpwurt) {
+        $low = add($low, divide($low, 10));
+        $high = add($high, divide($high, 10));
+    }
+}
 mes("You begin to harvest the <~farming_patch_name($patch)>.");
 while (~farming_harvestable($patch, ~farming_state($patch)) = true) {
     if (inv_freespace(inv) = 0 & (oc_stackable($produce) = false | inv_total(inv, $produce) = 0)) {

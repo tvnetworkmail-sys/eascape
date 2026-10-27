@@ -100,8 +100,12 @@ if(%druidspirit < ^druidspirit_performed_ritual) {
     @filliman_spirit_dialogue;
 } else {
     mes("You see a beautifully tended small grotto area.");
-    if(%druidspirit = ^druidspirit_complete) p_teleport(1_53_152_50_6);
-    else p_teleport(0_53_152_50_6);
+    if(%druidspirit = ^druidspirit_complete) {
+        p_teleport(1_53_152_50_6);
+        ~fairy1_grotto_entered; // EASCape: Fairytale I's Nature Spirit (quest_fairy1/fairy1_grove.rs2)
+    } else {
+        p_teleport(0_53_152_50_6);
+    }
     if(%druidspirit = ^druidspirit_performed_ritual) %druidspirit = ^druidspirit_entered_grotto;
 }
 
