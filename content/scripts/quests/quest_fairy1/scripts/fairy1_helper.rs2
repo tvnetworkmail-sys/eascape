@@ -1,0 +1,17 @@
+// Quest Helper: which step of A Fairy Tale Pt. 1 you're on (fairy1_helper.dbrow), from
+// %fairy_farmers_quest and how many gardeners you have asked (RuneLite's FairytaleI.java).
+[proc,questhelper_fairy1]()(int)
+def_int $s = %fairy_farmers_quest;
+if ($s >= ^fairy1_complete) {
+    return(0);
+}
+if ($s = ^fairy1_not_started) {
+    return(1);
+}
+if ($s = ^fairy1_gardeners) {
+    if (~fairy1_gardeners_asked >= ^fairy1_gardeners_needed) {
+        return(3);
+    }
+    return(2);
+}
+return(4);

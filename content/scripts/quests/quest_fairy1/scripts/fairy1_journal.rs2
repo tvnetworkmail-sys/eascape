@@ -1,0 +1,40 @@
+// Fairytale I's quest journal: EASCape's wording (the wiki has no transcript of this journal), in
+// the style of the others. Done steps are struck through. The later steps are added as they are
+// built.
+[if_button,questlist:fairy_farmers]
+def_int $s = %fairy_farmers_quest;
+def_string $t;
+if ($s = ^fairy1_not_started) {
+    $t = "@dbl@I can start this quest by speaking to @dre@Martin the Master|@dre@Gardener@dbl@ in the @dre@Draynor Village@dbl@ market.||@dbl@To start this quest I need to have completed:|";
+    $t = append($t, ~fairy1_journal_req(%zanaris, ^zanaris_complete, "Lost City"));
+    $t = append($t, ~fairy1_journal_req(%druidspirit, ^druidspirit_complete, "Nature Spirit"));
+    $t = append($t, "|@dbl@I must be able to defeat a level 111 Tanglefoot with|@dbl@limited weaponry.");
+    ~quest_journal("A Fairy Tale Pt. 1", $t);
+    return;
+}
+$t = "@str@Martin the Master Gardener told me that the crops all over|@str@the land have been failing.|";
+if ($s = ^fairy1_gardeners) {
+    def_int $asked = ~fairy1_gardeners_asked;
+    if ($asked >= ^fairy1_gardeners_needed) {
+        $t = append($t, "|@dbl@I have spoken to five members of the Group of Advanced|@dbl@Gardeners. I should go back and talk to @dre@Martin@dbl@.");
+    } else {
+        $t = append($t, "|@dbl@He wants me to ask some of the other @dre@gardeners@dbl@ who tend|@dbl@the farming patches what they think is wrong.|");
+        $t = append($t, "|@dbl@I have asked @dre@<tostring($asked)>@dbl@ of the @dre@5@dbl@ I should talk to.");
+    }
+    ~quest_journal("A Fairy Tale Pt. 1", $t);
+    return;
+}
+$t = append($t, "|@str@I asked five of the gardeners. Their theories ranged from|@str@the weather to fairies, and Martin thought the fairies|@str@might be worth looking into.|");
+if ($s = ^fairy1_godfather) {
+    $t = append($t, "|@dbl@I should go to @dre@Zanaris@dbl@, through the shed in the|@dre@Lumbridge Swamp@dbl@, and find out what the fairies know.");
+}
+if ($s >= ^fairy1_complete) {
+    $t = append($t, "||@red@QUEST COMPLETE!");
+}
+~quest_journal("A Fairy Tale Pt. 1", $t);
+
+[proc,fairy1_journal_req](int $have, int $need, string $text)(string)
+if ($have >= $need) {
+    return("@str@<$text>|");
+}
+return("@dre@<$text>|");

@@ -267,6 +267,8 @@ if (compare($name, "runemysteries") = 0) {
     %hauntedmine = ^hauntedmine_complete;
 } else if (compare($name, "routequest") = 0) {
     %routequest = ^routequest_complete;
+} else if (compare($name, "fairytale1") = 0) {
+    %fairy_farmers_quest = ^fairy1_complete;
 } else {
     mes("No quest called <$name>. Try ::questdone list.");
     return;
@@ -284,6 +286,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
+mes("fairytale1 (A Fairy Tale Pt. 1)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
 // run energy, poison cured
@@ -842,3 +845,17 @@ while ($i <= $count) {
     $i = calc($i + 1);
 }
 mes("<tostring($count)> growth ticks run.");
+
+// ::fairytale1pack - the items Fairytale I needs (OSRS wiki's item list): secateurs, a spade, a
+// ghostspeak amulet and a dramen staff. The Draynor skull and the three random items for the
+// Nature Spirit come during the quest.
+[debugproc,fairytale1pack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(secateurs, 1));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
+$banked = calc($banked + ~questpack_give(dramen_staff, 1));
+~questpack_done("A Fairy Tale Pt. 1", $banked);

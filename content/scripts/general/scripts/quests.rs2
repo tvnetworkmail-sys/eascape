@@ -268,6 +268,9 @@ if (%horrorquest >= ^horror_complete) {
 if (%misc_quest >= ^misc_complete) {
     $questpoints = add($questpoints, ^misc_questpoints);
 }
+if (%fairy_farmers_quest >= ^fairy1_complete) {
+    $questpoints = add($questpoints, ^fairy1_questpoints);
+}
 if (%mm_main >= ^mm_complete) {
     $questpoints = add($questpoints, ^mm_questpoints);
 }
@@ -363,6 +366,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:hauntedmine, %hauntedmine, ^hauntedmine_complete);
 ~send_quest_progress_colour(questlist:horror, %horrorquest, ^horror_complete);
 ~send_quest_progress_colour(questlist:misc, %misc_quest, ^misc_complete);
+~send_quest_progress_colour(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);
 ~send_quest_progress_colour(questlist:regicide, %regicide_quest, ^regicide_complete);

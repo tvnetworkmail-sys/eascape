@@ -1,0 +1,132 @@
+// Fairytale I - Growing Pains: Martin the Master Gardener in the Draynor Village market, who
+// starts the quest and hears what the gardeners think. Every line is the OSRS wiki's quest
+// transcript (Transcript:Fairytale I - Growing Pains) unless marked as ours. The steps are
+// RuneLite's Quest Helper (FairytaleI.java). Our choices:
+//   - there are no skillcapes in our game yet (they came in July 2006), so Martin's "Ask about
+//     the Skillcape of Farming." / "Ask about the quest." menu is left out: Talk-to goes straight
+//     to the quest;
+//   - OSRS's "Start the quest?" box came long after 2006, so agreeing to help starts it;
+//   - Lost City and Nature Spirit are needed to start (OSRS); without them Martin is too busy;
+//   - the transcript has nothing for Martin between telling you to find a fairy and the end, so
+//     there he asks how you are getting on (his own line from the transcript) and you say you're
+//     still working on it (ours);
+//   - after the quest, Void's lines (Martin.kt).
+
+[opnpc1,martin_the_master_farmer]
+def_int $s = %fairy_farmers_quest;
+if ($s = ^fairy1_not_started) {
+    @fairy1_martin_start;
+}
+if ($s = ^fairy1_gardeners) {
+    @fairy1_martin_report;
+}
+if ($s >= ^fairy1_complete) {
+    // Void (Martin.kt)
+    ~chatplayer("<p,happy>Okay, this time I've really solved your problems! I've woken up the Fairy Queen!");
+    ~chatnpc("<p,shifty>Hmm, right. You'll forgive me if I reserve judgement on this until I actually have some crops grow.");
+    ~chatplayer("<p,happy>Of course. The problem was the Godfather, he wanted to take control of Zanaris himself, so he didn't give Fairy Nuff the Queen's secateurs!");
+    ~chatnpc("<p,neutral>Godfather...Fairy Nuff...the Queen, I don't know what you're talking about and I don't care. I just want my crops to start growing again. Come back and claim your reward once they've had a chance to grow.");
+    return;
+}
+~chatnpc("<p,quiz>Hello again, <displayname>. How are you getting on with solving the Gardening Group's problems?");
+~chatplayer("<p,neutral>I'm still working on it."); // ours
+
+[label,fairy1_martin_start]
+if (testbit(%fairy_gardeners, ^fairy1_martin_pickpocketed) = ^true) {
+    %fairy_gardeners = clearbit(%fairy_gardeners, ^fairy1_martin_pickpocketed);
+    ~chatnpc("<p,angry>Hello, <displayname>, you look familiar. Didn't I catch you going through my pockets not that long ago?");
+    ~chatplayer("<p,shifty>Me? No, I'm afraid you must have me confused with somebody else!");
+    ~chatnpc("<p,confused>I could have sworn ...");
+    ~chatnpc("<p,sad>Oh well, never mind. I have bigger problems to worry about right now.");
+} else {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,sad>I can't chat now, I have too many things to worry about.");
+}
+if (%zanaris < ^zanaris_complete | %druidspirit < ^druidspirit_complete) {
+    return; // ours: not until Lost City and Nature Spirit are done
+}
+switch_int (~p_choice3("Anything I can help with?", 1, "Oh dear. I hope you can sort them out by yourself.", 2, "What is the banner for?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Anything I can help with?");
+        ~chatnpc("<p,neutral>I certainly could do with some help.");
+        @fairy1_martin_problems;
+    case 2 :
+        ~chatplayer("<p,neutral>Oh dear. I hope you can sort them out by yourself.");
+        ~chatnpc("<p,sad>I'm not sure I can, but I guess I have to try.");
+    case 3 :
+        ~chatplayer("<p,quiz>What is the banner for?");
+        ~chatnpc("<p,neutral>That banner is the emblem of the Group of Advanced Gardeners. We're a loosely affiliated group of gardeners that are united in our concern for declining vegetable production.");
+        ~chatplayer("<p,shifty>Err, of course you are.");
+        ~chatnpc("<p,quiz>Say, you're a brave adventurer, would you be interested in trying to get to the root of our woes? There would be a cash reward if you could help us.");
+        if (~p_choice2("Of course I'll help.", 1, "Sorry, I have better things to do.", 2) = 1) {
+            ~chatplayer("<p,happy>Of course I'll help.");
+            ~chatnpc("<p,sad>I'm so glad to hear that.");
+            ~chatplayer("<p,neutral>You don't look it.");
+            ~chatnpc("<p,confused>Sorry, what was that?");
+            ~chatplayer("<p,neutral>Oh, nothing. Don't worry about it.");
+            @fairy1_martin_problems;
+        }
+        ~chatplayer("<p,neutral>Sorry, I have better things to do.");
+        ~chatnpc("<p,sad>Oh. Oh dear. Oh well, if there's nothing I can do to make you change your mind...");
+        ~chatplayer("<p,neutral>No, nothing. My mind is made up.");
+        ~chatnpc("<p,neutral>Well come back and chat to me if you change it.");
+}
+
+[label,fairy1_martin_problems]
+~chatplayer("<p,quiz>So tell me about your problems.");
+~chatnpc("<p,neutral>It all seemed to start about a month ago. I grow roses, you know?");
+~chatplayer("<p,neutral>Um, you seem to be getting side-tracked already.");
+~chatnpc("<p,confused>What? Oh sorry.");
+~chatnpc("<p,neutral>As I was saying about a month ago I noticed that the yield on my prize rose bushes had dropped slightly. I immediately suspected Crown Gall, a disease that can be fatal to a Mister Lincoln.");
+~chatplayer("<p,confused>You're not making much sense. Who's Mister Lincoln?");
+~chatnpc("<p,neutral>Sorry, Mister Lincoln's are the variety of roses that I specialise in. None of the plants showed any other symptoms of disease though. Then I noticed a reduced yield occurring in most of my other crops too.");
+~chatnpc("<p,sad>I spoke to other gardeners that I know, and they had all noticed similar problems.");
+~chatnpc("<p,sad>Vegetable patches are growing fewer vegetables, bushes are producing fewer berries and everything that is planted seems to be more prone to disease!");
+if (stat_base(farming) > 1) {
+    ~chatnpc("<p,quiz>You've done some farming, haven't you noticed a decrease in the amount of produce you are getting lately?");
+} else {
+    ~chatnpc("<p,neutral>If you were more interested in turning your hand to farming, you would have noticed it too.");
+}
+~chatplayer("<p,quiz>So what do you want me to do?");
+~chatnpc("<p,neutral>I'd like you to find out what is causing this terrible problem and to try and rectify whatever the problem is.");
+%fairy_farmers_quest = ^fairy1_gardeners;
+~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+~chatplayer("<p,quiz>Do you have any ideas where I should start?");
+~chatnpc("<p,neutral>If I were you I would start by speaking to some of the other gardeners.");
+
+// back with Martin while asking the gardeners: what the last one you asked thought
+[label,fairy1_martin_report]
+switch_int (~fairy1_gardeners_asked) {
+    case 0 :
+        ~chatnpc("<p,quiz>Have you spoken to any other members of the Gardening Group yet?");
+        ~chatplayer("<p,neutral>No, I haven't had a chance yet.");
+        ~chatnpc("<p,sad>Well please hurry, otherwise I won't be able to make enough produce to feed my 13 children soon.");
+    case 1 :
+        ~chatplayer("<p,neutral>I've spoken to one of your members and they reckon that it's the lack of rain that we've had recently.");
+        ~chatnpc("<p,neutral>I'm afraid that can't be the problem. It never rains on the farming patches. That's why we have to water the crops.");
+        ~chatplayer("<p,neutral>Oh, yeah. I hadn't thought of that.");
+        ~chatnpc("<p,neutral>Go chat to some other group members. Maybe somebody has a different idea.");
+    case 2 :
+        ~chatplayer("<p,shock>Insects! You need to get rid of the insects! They're eating the crops.");
+        ~chatnpc("<p,neutral>Good idea, but I spray my crops with insecticide every week. No, that's not the problem.");
+    case 3 :
+        ~chatplayer("<p,angry>One of your members is implying that the gardeners' problems are all caused by adventurers using the plots. I would like to point out that these plots are communal property and that we have as much right as anyone to grow plants here!");
+        ~chatnpc("<p,shock>All right! All right! You're absolutely right! I never said there was a problem with anybody using my plots. Besides, we get part of our income from watching crops for adventurers. I'm afraid that our problem is something totally different.");
+    case 4 :
+        ~chatplayer("<p,neutral>Apparently, the seasons are all mixed up. Late summers and early winters. I don't know what I can do to solve that problem, though.");
+        ~chatnpc("<p,neutral>Yes, I've noticed that the seasons seem to be slightly confused, but that hasn't been a big enough change to affect the crops so badly. I'm afraid you should try a different branch of investigation to get to the root of our problems.");
+        ~chatplayer("<p,laugh>Ha ha!");
+        ~chatnpc("<p,angry>What are you laughing at? These are serious problems!");
+        ~chatplayer("<p,neutral>You're absolutely right. Don't worry, I'll find out what the problem is.");
+    case default :
+        ~chatnpc("<p,quiz>Hello again, <displayname>. How are you getting on with solving the Gardening Group's problems?");
+        ~chatplayer("<p,shifty>To be honest I'm worried about the sort of person you let join your organisation.");
+        ~chatnpc("<p,confused>Why is that?");
+        ~chatplayer("<p,neutral>I've heard theories ranging from climate change to fairies from your members.");
+        ~chatnpc("<p,neutral>Hmm, that's an interesting idea. Now that I think about it that does make some sense. Yes, maybe you should talk to a fairy about it.");
+        ~chatplayer("<p,shifty>O-kay! You're the boss, any idea which flower I should look under to find a fairy?");
+        %fairy_farmers_quest = ^fairy1_godfather;
+        ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
+        ~chatnpc("<p,neutral>No, sorry, but I did hear that there were some adventurers with a similar problem in the swamps near Lumbridge. Just don't mention my name if you talk to them, they're trying to keep it a secret, but everybody actually knows what they're up to.");
+        ~chatplayer("<p,neutral>Yes, I've spoken to them before.");
+}

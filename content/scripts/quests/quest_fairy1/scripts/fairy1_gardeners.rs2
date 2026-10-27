@@ -1,0 +1,157 @@
+// Fairytale I - Growing Pains: the gardeners of the Group of Advanced Gardeners. Martin wants you
+// to ask five of them why the crops are failing; any gardener who tends a farming patch will do
+// (OSRS wiki, Group of Advanced Gardeners), and Frizzy Skernip is from the 2007 cache
+// (fairy1.npc). The first you ask blames the rain, the second insects, the third adventurers, the
+// fourth the seasons and the fifth fairies, whoever they are. Lines from the OSRS wiki's quest
+// transcript; the menu and the farming advice are Void's (Farmer.kt). Our choices:
+//   - the quest's question is only on the menu while you're asking (step 10);
+//   - "Would you look after my crops for me?" and "Can you sell me something?" aren't on it
+//     yet: paying gardeners and their shops come with Farming step 2.
+
+[opnpc1,elstan] ~fairy1_gardener;
+[opnpc1,dantaera] ~fairy1_gardener;
+[opnpc1,kragen] ~fairy1_gardener;
+[opnpc1,lyra] ~fairy1_gardener;
+[opnpc1,francis] ~fairy1_gardener;
+[opnpc1,farming_gardener_fruit_1] ~fairy1_gardener;
+[opnpc1,farming_gardener_fruit_2] ~fairy1_gardener;
+[opnpc1,farming_gardener_fruit_3] ~fairy1_gardener;
+[opnpc1,farming_gardener_fruit_4] ~fairy1_gardener;
+[opnpc1,farming_gardener_hops_1] ~fairy1_gardener;
+[opnpc1,farming_gardener_hops_3] ~fairy1_gardener;
+[opnpc1,farming_gardener_hops_4] ~fairy1_gardener;
+[opnpc1,farming_gardener_bush_1] ~fairy1_gardener;
+[opnpc1,farming_gardener_bush_2] ~fairy1_gardener;
+[opnpc1,farming_gardener_bush_3] ~fairy1_gardener;
+[opnpc1,farming_gardener_bush_4] ~fairy1_gardener;
+[opnpc1,farming_gardener_tree_1] ~fairy1_gardener;
+[opnpc1,farming_gardener_tree_2] ~fairy1_gardener;
+[opnpc1,farming_gardener_tree_3] ~fairy1_gardener;
+[opnpc1,farming_gardener_tree_4] ~fairy1_gardener;
+[opnpc1,frizzy_skernip] ~fairy1_gardener;
+
+// each gardener's bit in %fairy_gardeners (-1: not one of them)
+[proc,fairy1_gardener_bit](npc $npc)(int)
+switch_npc ($npc) {
+    case elstan : return(0);
+    case dantaera : return(1);
+    case kragen : return(2);
+    case lyra : return(3);
+    case francis : return(4);
+    case farming_gardener_fruit_1 : return(5);
+    case farming_gardener_fruit_2 : return(6);
+    case farming_gardener_fruit_3 : return(7);
+    case farming_gardener_fruit_4 : return(8);
+    case farming_gardener_hops_1 : return(9);
+    case farming_gardener_hops_3 : return(10);
+    case farming_gardener_hops_4 : return(11);
+    case farming_gardener_bush_1 : return(12);
+    case farming_gardener_bush_2 : return(13);
+    case farming_gardener_bush_3 : return(14);
+    case farming_gardener_bush_4 : return(15);
+    case farming_gardener_tree_1 : return(16);
+    case farming_gardener_tree_2 : return(17);
+    case farming_gardener_tree_3 : return(18);
+    case farming_gardener_tree_4 : return(19);
+    case frizzy_skernip : return(20);
+}
+return(-1);
+
+// how many gardeners you have asked (every bit but Martin's pickpocket one)
+[proc,fairy1_gardeners_asked]()(int)
+return(bitcount(clearbit(%fairy_gardeners, ^fairy1_martin_pickpocketed)));
+
+[proc,fairy1_gardener]
+if (%fairy_farmers_quest = ^fairy1_gardeners) {
+    switch_int (~p_choice3("Are you a member of the Group of Advanced Gardeners?", 1, "Can you give me any farming advice?", 2, "I'll come back another time.", 3)) {
+        case 1 : ~fairy1_gardener_ask;
+        case 2 : ~fairy1_gardener_advice;
+        case 3 : ~chatplayer("<p,neutral>I'll come back another time.");
+    }
+    return;
+}
+switch_int (~p_choice2("Can you give me any farming advice?", 1, "I'll come back another time.", 2)) {
+    case 1 : ~fairy1_gardener_advice;
+    case 2 : ~chatplayer("<p,neutral>I'll come back another time.");
+}
+
+[proc,fairy1_gardener_ask]
+def_int $bit = ~fairy1_gardener_bit(npc_type);
+~chatplayer("<p,quiz>Are you a member of the Group of Advanced Gardeners?");
+if (map_members = ^false) {
+    ~chatnpc("<p,neutral>I am, but this isn't a good time to talk about that.");
+    return;
+}
+if ($bit >= 0 & testbit(%fairy_gardeners, $bit) = ^true) {
+    ~chatnpc("<p,neutral>I've already told you everything I suspect.");
+    return;
+}
+def_int $asked = ~fairy1_gardeners_asked;
+if ($asked = 0) {
+    ~chatnpc("<p,quiz>Why, yes I am. Why do you ask?");
+    ~chatplayer("<p,neutral>Martin has asked me to investigate why all the crops are failing.");
+    ~chatnpc("<p,neutral>Ah, Martin sent you, why didn't you say so? I personally think that our problems are all down to the fact that we haven't had enough rain of late. It's plain to see - just look at the levels of the rivers.");
+    ~chatnpc("<p,quiz>We need more rain. I don't suppose you can do anything about that?");
+    ~chatplayer("<p,neutral>No, I'm afraid not.");
+    ~fairy1_gardener_heard($bit);
+    ~chatnpc("<p,neutral>Well there you go then. Until you find out how to make it rain you're going to have a hard time solving our problems.");
+    return;
+}
+~chatnpc("<p,quiz>Why, yes I am. Why do you ask?");
+~chatplayer("<p,neutral>Martin has asked me to investigate why all the crops are failing.");
+switch_int ($asked) {
+    case 1 :
+        ~fairy1_gardener_heard($bit);
+        ~chatnpc("<p,angry>Insects! That's what you can tell him! Insects! Stop the insects from eating so many of our crops and we'd get maximum yield, I tell you!");
+    case 2 :
+        ~fairy1_gardener_heard($bit);
+        ~chatnpc("<p,angry>How can you ask such a thing? It's obvious! It's all you adventurers. Every time I get a crop planted, some adventurer comes along and digs it up and plants crops of their own, as if they owned my farming patch!");
+        ~chatnpc("<p,angry>It's really annoying! You should speak to your friends about their rude behaviour!");
+        ~chatplayer("<p,shock>But...but...they're not my friends! I've never even spoken to most of them!");
+        ~chatnpc("<p,angry>Don't give me that! You're an adventurer, they're all adventurers. I bet you have some sort of secret guild and you gather there and say things like 'let's annoy the gardeners this week', don't you?");
+        ~chatplayer("<p,shifty>No, I mean yes. There is a heroes guild, but ...!");
+        ~chatnpc("<p,angry>Aha, so you admit it then! You should be ashamed of yourselves!");
+        ~chatplayer("<p,sad>Oh, I give up!");
+    case 3 :
+        ~fairy1_gardener_heard($bit);
+        ~chatnpc("<p,neutral>Well obviously it's the seasons. They all seem to be out-of-wack these days. Summer comes earlier and earlier each year, but then it simply rushes by!");
+        ~chatnpc("<p,neutral>If you find out what is upsetting the seasons you'll find out what is causing the harvest to fail.");
+        ~chatplayer("<p,quiz>I don't suppose you have any ideas about what could cause the seasons to be mixed up?");
+        ~chatnpc("<p,neutral>No, sorry, but find that out and you'll get to the root of our problems.");
+    case 4 :
+        ~chatnpc("<p,shifty>Well I can tell by the look on your face that I'm not the first person you've asked. Why don't you tell me what you've heard from other members of the group so far?");
+        ~chatplayer("<p,neutral>Why not? They all seem to be a bunch of loonies anyway.");
+        ~chatplayer("<p,neutral>I've been told that it's the lack of rain, plagues of insects and recently I was told that the entire order of seasons is confused!");
+        ~chatnpc("<p,quiz>Did you ever consider that all those theories might be correct?");
+        ~chatplayer("<p,confused>But they're all different, how could they all be correct?");
+        ~fairy1_gardener_heard($bit);
+        ~chatnpc("<p,shifty>I'll let you into a little secret that'll explain it all to you. In a word - fairies!");
+        ~chatplayer("<p,sad>Oh no! Not another crack-pot theory!");
+        ~chatnpc("<p,neutral>I'm serious!");
+        ~chatnpc("<p,neutral>Think it through. There are fairies who control everything natural from the weather to the seasons.");
+        ~chatplayer("<p,neutral>Right, well thanks for your input. I'll think over what you said.");
+    case default :
+        ~chatnpc("<p,angry>I don't think the crops ARE failing, now leave me alone, I have work to do.");
+}
+
+[proc,fairy1_gardener_heard](int $bit)
+if ($bit >= 0) {
+    %fairy_gardeners = setbit(%fairy_gardeners, $bit);
+}
+
+// Void (Farmer.kt): a random piece of advice (its 4 gives the last one, as in Void)
+[proc,fairy1_gardener_advice]
+~chatplayer("<p,quiz>Can you give me any farming advice?");
+switch_int (random(11)) {
+    case 0 : ~chatnpc("<p,neutral>There is a special patch for growing Belladonna - I believe that it is somewhere near Draynor Manor, where the ground is a tad 'unblessed'");
+    case 1 : ~chatnpc("<p,neutral>Hops are good for brewing ales. I believe there's a brewery up in Keldagrim somewhere, and I've heard rumours that a place called Phasmatys used to be good for that type of thing. 'Fore they all died, of course.");
+    case 2 : ~chatnpc("<p,neutral>There are many Farming areas out there. I know of Elstan's area near Falador, Dantaera's area near Catherby, Kragen's area near Ardougne and Lyra's area in Morytania. That said, I'm sure there's plenty more that I don't know about.");
+    case 3 : ~chatnpc("<p,neutral>Don't just throw away your weeds after you've raked a patch - put them in a compost bin and make some compost.");
+    case 5 : ~chatnpc("<p,neutral>You don't have to buy all your plantpots you know, you can make them yourself on a pottery wheel. If you're good enough at crafting, that is.");
+    case 6 : ~chatnpc("<p,neutral>You can put up to ten potatoes, cabbages or onions in vegetable sacks, although you can't have a mix in the same sack.");
+    case 7 : ~chatnpc("<p,neutral>If you want to grow fruit trees you could try a few places: Catherby, Brimhaven and The Gnome Stronghold all have fruit tree patches.");
+    case 8 : ~chatnpc("<p,neutral>You can fill plantpots with soil from any empty patch, if you have a gardening trowel.");
+    case 9 : ~chatnpc("<p,neutral>The only way to cure a bush or tree of disease is to prune away the diseased leaves with a pair of secateurs. For all other crops I would just apply some plant-cure.");
+    case 10 : ~chatnpc("<p,neutral>You can buy all the farming tools from farming shops, which can be found close to the allotments in catherby.");
+    case default : ~chatnpc("<p,neutral>Vegetables, hops and flowers need constant watering - if you ignore my advice, you will sooner or later find yourself in possession of a dead farming patch.");
+}
