@@ -94,9 +94,16 @@ export default class World {
     private static fillQueue: LinkList<Square> = new LinkList();
 
     static maxLevel: number = 0;
-    // LostLite: Hide roofs - squares above maxLevel are still drawn where this is 1 (open air:
-    // trees and the like); see Client.roofFreeColumns
+    // LostLite: Hide roofs - squares above maxLevel may still be drawn where this is 1 (away from any
+    // roofed square) and the square is open air (see openAir); see Client.roofFreeColumns
     static roofFree: Uint8Array | null = null;
+
+    // LostLite: Hide roofs - a square above your level only counts as open air when it holds
+    // nothing but scenery (a tree's top): no floor, no wall, no wall decoration. Floors and walls
+    // up there are roofs, upper rooms or a cave's ceiling and stay hidden.
+    static openAir(tile: Square): boolean {
+        return tile.quickGround === null && tile.ground === null && tile.wall === null && tile.decor === null;
+    }
 
     private static cycleNo: number = 0;
 
@@ -1015,7 +1022,7 @@ export default class World {
                         continue;
                     }
 
-                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1)) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
+                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1 && World.openAir(tile))) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
                         tile.drawFront = true;
                         tile.drawBack = true;
                         tile.drawSprites = tile.spriteCount > 0;
