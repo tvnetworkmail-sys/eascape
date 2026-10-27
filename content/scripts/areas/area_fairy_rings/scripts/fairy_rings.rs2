@@ -1,0 +1,318 @@
+// EASCape: the fairy ring network (Fairytale II). From the OSRS wiki (Fairy ring): the rings work
+// once the Fairy Godfather has given you permission, while you wield a dramen staff ("The fairy
+// rings only work for those who wield fairy magic."); a code with no ring, or the ring you are at,
+// leaves you where you are ("Wow, fairy magic sure is useful, I hardly moved at all!"); the
+// hideout is reached by dialling AIR, DLR, DJQ and AJS in that order; the right-click options are
+// the OSRS ones (Zanaris, Configure, Last-destination). The code screen is the August 2007 cache's
+// (fairyrings.if), its dials turning a quarter at a time clockwise, as in 2007 (one letter layer
+// per quarter turn; the 2007 dial varbits count A, D, C, B). Void's code (FairyRing.kt): no
+// permission ("You don't have permission to use that fairy ring.").
+// Our choices: a code that needs a quest you haven't done also leaves you where you are; the
+// travel log (fairyrings_log.if) lists the codes you have used, in code order; Last-destination
+// with no code used yet says so.
+
+// ---------------------------------------------------------------- the rings' options
+[oploc1,_fairy_ring]
+if (~fairy_rings_can_use = false) {
+    return;
+}
+~fairy_rings_travel(loc_coord, ^fairyring_zanaris);
+~fairy_rings_visited(~fairy_rings_index_of("BKS"));
+
+[oploc2,_fairy_ring] ~fairy_rings_configure(loc_coord);
+[oploc1,_fairy_ring_zanaris] ~fairy_rings_configure(loc_coord);
+
+[oploc3,_fairy_ring] ~fairy_rings_last(loc_coord);
+[oploc3,_fairy_ring_zanaris] ~fairy_rings_last(loc_coord);
+
+[proc,fairy_rings_can_use]()(boolean)
+if (%fairy2_queencure_quest < ^fairy2_rings_allowed & %fairyring_test_unlock = 0) {
+    mes("You don't have permission to use that fairy ring.");
+    return(false);
+}
+if (inv_total(worn, dramen_staff) = 0) {
+    mes("The fairy rings only work for those who wield fairy magic.");
+    return(false);
+}
+return(true);
+
+[proc,fairy_rings_last](coord $ring)
+if (~fairy_rings_can_use = false) {
+    return;
+}
+if (%fairyring_last = 0) {
+    mes("You haven't travelled by fairy ring yet.");
+    return;
+}
+~fairy_rings_go($ring, calc(%fairyring_last - 1));
+
+// ---------------------------------------------------------------- the code screen
+[proc,fairy_rings_configure](coord $ring)
+if (~fairy_rings_can_use = false) {
+    return;
+}
+%fairyring_at = $ring;
+~fairy_rings_show_dials;
+~fairy_rings_fill_log;
+if_openmain_side(fairyrings, fairyrings_log);
+
+[if_button,fairyrings:turn1]
+%fairyring_dial1 = calc((%fairyring_dial1 + 1) % 4);
+~fairy_rings_show_dials;
+[if_button,fairyrings:turn2]
+%fairyring_dial2 = calc((%fairyring_dial2 + 1) % 4);
+~fairy_rings_show_dials;
+[if_button,fairyrings:turn3]
+%fairyring_dial3 = calc((%fairyring_dial3 + 1) % 4);
+~fairy_rings_show_dials;
+
+[if_button,fairyrings:teleport]
+if_close;
+if (~fairy_rings_can_use = false) {
+    return;
+}
+~fairy_rings_go(%fairyring_at, ~fairy_rings_dialled);
+
+// the code on the dials (the dial varbits count A, D, C, B: letter = (4 - value) % 4)
+[proc,fairy_rings_dialled]()(int)
+return(calc(((4 - %fairyring_dial1) % 4) * 16 + ((4 - %fairyring_dial2) % 4) * 4 + (4 - %fairyring_dial3) % 4));
+
+// one layer per dial: the one showing its varbit's letter under the peg bar
+[proc,fairy_rings_show_dials]
+if_sethide(fairyrings:d1_a, ~fairy_rings_not(%fairyring_dial1, 0));
+if_sethide(fairyrings:d1_d, ~fairy_rings_not(%fairyring_dial1, 1));
+if_sethide(fairyrings:d1_c, ~fairy_rings_not(%fairyring_dial1, 2));
+if_sethide(fairyrings:d1_b, ~fairy_rings_not(%fairyring_dial1, 3));
+if_sethide(fairyrings:d2_i, ~fairy_rings_not(%fairyring_dial2, 0));
+if_sethide(fairyrings:d2_l, ~fairy_rings_not(%fairyring_dial2, 1));
+if_sethide(fairyrings:d2_k, ~fairy_rings_not(%fairyring_dial2, 2));
+if_sethide(fairyrings:d2_j, ~fairy_rings_not(%fairyring_dial2, 3));
+if_sethide(fairyrings:d3_p, ~fairy_rings_not(%fairyring_dial3, 0));
+if_sethide(fairyrings:d3_s, ~fairy_rings_not(%fairyring_dial3, 1));
+if_sethide(fairyrings:d3_r, ~fairy_rings_not(%fairyring_dial3, 2));
+if_sethide(fairyrings:d3_q, ~fairy_rings_not(%fairyring_dial3, 3));
+
+[proc,fairy_rings_not](int $value, int $want)(boolean)
+if ($value = $want) {
+    return(false);
+}
+return(true);
+
+// set the dials to a code (the travel log)
+[proc,fairy_rings_set_dials](int $index)
+%fairyring_dial1 = calc((4 - $index / 16) % 4);
+%fairyring_dial2 = calc((4 - ($index / 4) % 4) % 4);
+%fairyring_dial3 = calc((4 - $index % 4) % 4);
+~fairy_rings_show_dials;
+
+// ---------------------------------------------------------------- the travel log
+[proc,fairy_rings_fill_log]
+def_int $i = 0;
+def_int $slot = 0;
+while ($i < 64) {
+    if (~fairy_rings_has_visited($i) = true) {
+        db_find(fairy_ring_code:index, $i);
+        def_dbrow $row = db_findnext;
+        if ($row ! null & $slot < 36) {
+            ~fairy_rings_log_slot($slot, $row);
+            $slot = calc($slot + 1);
+        }
+    }
+    $i = calc($i + 1);
+}
+if ($slot = 0) {
+    if_settext(fairyrings_log:empty, "No fairy ring codes used yet.");
+} else {
+    if_settext(fairyrings_log:empty, "");
+}
+while ($slot < 36) {
+    if_sethide(enum(int, component, fairy_rings_log_slots, $slot), true);
+    $slot = calc($slot + 1);
+}
+
+[proc,fairy_rings_log_slot](int $slot, dbrow $row)
+def_string $name = db_getfield($row, fairy_ring_code:name, 0);
+def_string $region = $name;
+def_string $place = "";
+def_int $colon = string_indexof_string(": ", $name);
+if ($colon > 0) {
+    $region = substring($name, 0, calc($colon + 1));
+    $place = substring($name, calc($colon + 2), string_length($name));
+}
+if_sethide(enum(int, component, fairy_rings_log_slots, $slot), false);
+if_settext(enum(int, component, fairy_rings_log_codes, $slot), db_getfield($row, fairy_ring_code:code, 0));
+if_settext(enum(int, component, fairy_rings_log_regions, $slot), $region);
+if_settext(enum(int, component, fairy_rings_log_places, $slot), $place);
+
+// a click on a slot: the slot's code, counting the used codes in code order as the log does
+[proc,fairy_rings_log_pick](int $slot)
+def_int $i = 0;
+def_int $n = 0;
+while ($i < 64) {
+    if (~fairy_rings_has_visited($i) = true & ~fairy_rings_row($i) ! null) {
+        if ($n = $slot) {
+            ~fairy_rings_set_dials($i);
+            return;
+        }
+        $n = calc($n + 1);
+    }
+    $i = calc($i + 1);
+}
+
+[proc,fairy_rings_has_visited](int $index)(boolean)
+if ($index < 32) {
+    if (testbit(%fairyring_log1, $index) = ^true) {
+        return(true);
+    }
+    return(false);
+}
+if (testbit(%fairyring_log2, calc($index - 32)) = ^true) {
+    return(true);
+}
+return(false);
+
+[proc,fairy_rings_visited](int $index)
+if ($index < 0) {
+    return;
+}
+if ($index < 32) {
+    %fairyring_log1 = setbit(%fairyring_log1, $index);
+} else {
+    %fairyring_log2 = setbit(%fairyring_log2, calc($index - 32));
+}
+
+[proc,fairy_rings_row](int $index)(dbrow)
+db_find(fairy_ring_code:index, $index);
+return(db_findnext);
+
+[proc,fairy_rings_index_of](string $code)(int)
+def_int $i = 0;
+while ($i < 64) {
+    def_dbrow $row = ~fairy_rings_row($i);
+    if ($row ! null) {
+        if (compare(db_getfield($row, fairy_ring_code:code, 0), $code) = 0) {
+            return($i);
+        }
+    }
+    $i = calc($i + 1);
+}
+return(-1);
+
+// ---------------------------------------------------------------- travelling
+[proc,fairy_rings_go](coord $ring, int $index)
+%fairyring_last = calc($index + 1);
+def_dbrow $row = ~fairy_rings_row($index);
+def_string $code = "";
+if ($row ! null) {
+    $code = db_getfield($row, fairy_ring_code:code, 0);
+}
+// the hideout: AIR, DLR, DJQ, AJS, one after the other
+def_int $seq = %fairyring_seq;
+%fairyring_seq = 0;
+if (compare($code, "AIR") = 0) {
+    %fairyring_seq = 1;
+} else if ($seq = 1 & compare($code, "DLR") = 0) {
+    %fairyring_seq = 2;
+} else if ($seq = 2 & $index = ^fairyring_djq) {
+    %fairyring_seq = 3;
+} else if ($seq = 3 & compare($code, "AJS") = 0) {
+    ~fairy_rings_travel($ring, ^fairyring_hideout);
+    return;
+}
+if ($row = null) {
+    ~fairy_rings_stay($ring);
+    return;
+}
+if (~fairy_rings_unlocked(db_getfield($row, fairy_ring_code:lock, 0)) = false) {
+    ~fairy_rings_stay($ring);
+    return;
+}
+def_coord $dest = db_getfield($row, fairy_ring_code:dest, 0);
+// the Fisher King's realm: as the magic whistle takes you (quest_grail.rs2)
+if (compare($code, "BJR") = 0 & %grail < ^grail_given_whistle) {
+    $dest = movecoord($dest, 128, 0, 0);
+}
+if (distance($dest, $ring) < 3) {
+    ~fairy_rings_stay($ring);
+    return;
+}
+~fairy_rings_visited($index);
+~fairy_rings_travel($ring, $dest);
+
+[proc,fairy_rings_unlocked](int $lock)(boolean)
+switch_int ($lock) {
+    case 1 : if (%priestperil >= ^priestperil_complete) { return(true); }
+    case 2 : if (%grail > ^grail_not_started) { return(true); }
+    case 3 : if (%viking >= ^viking_complete) { return(true); }
+    case default : return(true);
+}
+return(false);
+
+[proc,fairy_rings_stay](coord $ring)
+~fairy_rings_travel($ring, $ring);
+say("Wow, fairy magic sure is useful, I hardly moved at all!");
+
+// into the middle of the ring, the flowers, and out at the other ring
+[proc,fairy_rings_travel](coord $ring, coord $dest)
+if_close;
+if (coord ! $ring) {
+    facesquare($ring);
+    p_exactmove(coord, $ring, 0, 30, ~fairy_rings_dir(coord, $ring));
+    p_delay(0);
+}
+anim(human_fairy_vanish, 0);
+spotanim_pl(fairy_flower_ring, 0, 0);
+p_delay(2);
+p_telejump($dest);
+anim(human_fairy_appear, 0);
+p_delay(0);
+
+[proc,fairy_rings_dir](coord $from, coord $to)(int)
+if (coordz($to) > coordz($from)) {
+    return(^exact_north);
+}
+if (coordz($to) < coordz($from)) {
+    return(^exact_south);
+}
+if (coordx($to) > coordx($from)) {
+    return(^exact_east);
+}
+return(^exact_west);
+
+// ---------------------------------------------------------------- the travel log's slots
+[if_button,fairyrings_log:button0] ~fairy_rings_log_pick(0);
+[if_button,fairyrings_log:button1] ~fairy_rings_log_pick(1);
+[if_button,fairyrings_log:button2] ~fairy_rings_log_pick(2);
+[if_button,fairyrings_log:button3] ~fairy_rings_log_pick(3);
+[if_button,fairyrings_log:button4] ~fairy_rings_log_pick(4);
+[if_button,fairyrings_log:button5] ~fairy_rings_log_pick(5);
+[if_button,fairyrings_log:button6] ~fairy_rings_log_pick(6);
+[if_button,fairyrings_log:button7] ~fairy_rings_log_pick(7);
+[if_button,fairyrings_log:button8] ~fairy_rings_log_pick(8);
+[if_button,fairyrings_log:button9] ~fairy_rings_log_pick(9);
+[if_button,fairyrings_log:button10] ~fairy_rings_log_pick(10);
+[if_button,fairyrings_log:button11] ~fairy_rings_log_pick(11);
+[if_button,fairyrings_log:button12] ~fairy_rings_log_pick(12);
+[if_button,fairyrings_log:button13] ~fairy_rings_log_pick(13);
+[if_button,fairyrings_log:button14] ~fairy_rings_log_pick(14);
+[if_button,fairyrings_log:button15] ~fairy_rings_log_pick(15);
+[if_button,fairyrings_log:button16] ~fairy_rings_log_pick(16);
+[if_button,fairyrings_log:button17] ~fairy_rings_log_pick(17);
+[if_button,fairyrings_log:button18] ~fairy_rings_log_pick(18);
+[if_button,fairyrings_log:button19] ~fairy_rings_log_pick(19);
+[if_button,fairyrings_log:button20] ~fairy_rings_log_pick(20);
+[if_button,fairyrings_log:button21] ~fairy_rings_log_pick(21);
+[if_button,fairyrings_log:button22] ~fairy_rings_log_pick(22);
+[if_button,fairyrings_log:button23] ~fairy_rings_log_pick(23);
+[if_button,fairyrings_log:button24] ~fairy_rings_log_pick(24);
+[if_button,fairyrings_log:button25] ~fairy_rings_log_pick(25);
+[if_button,fairyrings_log:button26] ~fairy_rings_log_pick(26);
+[if_button,fairyrings_log:button27] ~fairy_rings_log_pick(27);
+[if_button,fairyrings_log:button28] ~fairy_rings_log_pick(28);
+[if_button,fairyrings_log:button29] ~fairy_rings_log_pick(29);
+[if_button,fairyrings_log:button30] ~fairy_rings_log_pick(30);
+[if_button,fairyrings_log:button31] ~fairy_rings_log_pick(31);
+[if_button,fairyrings_log:button32] ~fairy_rings_log_pick(32);
+[if_button,fairyrings_log:button33] ~fairy_rings_log_pick(33);
+[if_button,fairyrings_log:button34] ~fairy_rings_log_pick(34);
+[if_button,fairyrings_log:button35] ~fairy_rings_log_pick(35);

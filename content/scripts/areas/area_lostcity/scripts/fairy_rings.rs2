@@ -1,6 +1,9 @@
-[oploc1,fairy_mushroom_ring]
-p_walk(loc_coord);
-anim(human_fairy_vanish, 0);
-p_telejump(0_50_49_1_33);
-anim(human_fairy_appear, 0);
-p_delay(0);
+// The two rings in Zanaris that are one-way exits (OSRS wiki, Fairy ring (Zanaris)): by the
+// Chicken Shrine to the shed in the Lumbridge Swamp, and in the marketplace to Al Kharid, behind
+// the bank (Void, FairyAttendant.kt: 3260,3171). EASCape: both are the 2007 cache's rings now
+// (area_fairy_rings), with the fairy ring's flowers.
+[oploc1,ft2_fairy_ring_12094] ~zanaris_exit_ring(0_50_49_1_33);
+[oploc1,ft2_fairy_ring_12003] ~zanaris_exit_ring(0_50_49_60_35);
+
+[proc,zanaris_exit_ring](coord $dest)
+~fairy_rings_travel(loc_coord, $dest);

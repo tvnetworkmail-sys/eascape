@@ -34,3 +34,15 @@ next steps and not committed.
   the cosmic plane (Lunar Diplomacy's), and the rings on Lunar Isle and south of Dorgesh-Kaan
   (squares we don't have).
 - `convert_music.py` also brought over On the Wing, the Enchanted Valley's music.
+
+## Step 2b: the ring network
+
+Run after `convert_maps.py`, once each:
+- `ring_ops.py` gives the rings the OSRS right-click options (Zanaris, Configure,
+  Last-destination; Configure and Last-destination on the Zanaris ring) and examines.
+- `ring_interface.py <cache468 dir>` makes the code screen from the 2007 interface 426
+  (`area_fairy_rings/interfaces/fairyrings.if`) with its models.
+- `ring_log_interface.py` makes the travel log side panel (ours: 2007 has none).
+
+The network itself is `content/scripts/areas/area_fairy_rings/scripts/fairy_rings.rs2` and the
+codes `configs/fairy_rings.dbrow`; its header says where each rule comes from.

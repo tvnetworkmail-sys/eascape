@@ -929,3 +929,24 @@ switch_int ($n) {
     case 5 : p_teleport(0_47_76_51_10); mes("The Abyssal area.");
     case default : mes("::ft2place 1-5: 1 hideout, 2 cosmic plane, 3 Gorak's plane, 4 Enchanted Valley, 5 Abyssal area");
 }
+
+// Fairytale II: the fairy rings without the quest's permission, and a dramen staff to wield.
+// ::fairyrings 2 also fills the travel log with every code; ::fairyrings 0 locks them again.
+[debugproc,fairyrings](int $n)
+if (p_finduid(uid) = false) {
+    return;
+}
+if ($n = 0 & %fairyring_test_unlock = 1) {
+    %fairyring_test_unlock = 0;
+    mes("Fairy rings: back to Fairytale II's permission.");
+    return;
+}
+%fairyring_test_unlock = 1;
+if (inv_total(inv, dramen_staff) = 0 & inv_total(worn, dramen_staff) = 0) {
+    inv_add(inv, dramen_staff, 1);
+}
+if ($n = 2) {
+    %fairyring_log1 = -1;
+    %fairyring_log2 = -1;
+}
+mes("Fairy rings: unlocked (wield the dramen staff).");
