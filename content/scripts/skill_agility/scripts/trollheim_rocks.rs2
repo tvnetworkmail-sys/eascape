@@ -1,0 +1,85 @@
+// EASCape: the climbing rocks on Trollheim's west side (locs 9303-9306), after Void
+// (content/area/troll_country/trollheim/Trollheim.kt: which way each goes, the climb down
+// backwards, the climb up, the experience). They were sent through the links table to Eadgar's
+// cave, as if they were a cave entrance. The levels are the OSRS wiki's (Agility shortcuts:
+// easy 41, medium 43, hard 47); Void gives the first two and none for 9306, so it has none.
+// Our choices: no falling (Void has none yet); the timings are ours.
+
+// down: climb backwards onto the far square, facing the rocks
+[proc,trollheim_rocks_down](coord $dest, int $face, int $xp)
+anim(human_climbing_down, 10);
+p_exactmove(coord, $dest, 0, 120, $face);
+p_delay(3);
+anim(null, 0);
+stat_advance(agility, $xp);
+
+// up: walk over the rocks climbing
+[proc,trollheim_rocks_up](coord $dest, int $xp)
+~set_forcemove_bas(human_climbing);
+~forcemove($dest);
+~update_bas;
+stat_advance(agility, $xp);
+
+[proc,trollheim_rocks_level](int $level)(boolean)
+if (stat(agility) < $level) {
+    mes("You need an Agility level of at least <tostring($level)> to attempt this.");
+    return(false);
+}
+return(true);
+
+// 2901,3680 and 2902,3680: from the top down to 2903, from below up to 2900 (Void)
+[oploc1,loc_9306]
+p_arrivedelay;
+if (loc_coord = 0_45_57_21_32) {
+    ~trollheim_rocks_down(0_45_57_23_32, ^exact_west, 10);
+} else {
+    ~trollheim_rocks_up(0_45_57_20_32, 80);
+}
+
+// the easy scramble: two squares east or west
+[oploc1,loc_9303]
+if (~trollheim_rocks_level(41) = false) {
+    return;
+}
+p_arrivedelay;
+if (coordx(coord) >= coordx(loc_coord)) {
+    ~trollheim_rocks_down(movecoord(loc_coord, -2, 0, 0), ^exact_east, 80);
+} else {
+    ~trollheim_rocks_up(movecoord(loc_coord, 2, 0, 0), 80);
+}
+
+// the medium scramble: two squares north or south
+[oploc1,loc_9304]
+if (~trollheim_rocks_level(43) = false) {
+    return;
+}
+p_arrivedelay;
+if (coordz(coord) >= coordz(loc_coord)) {
+    ~trollheim_rocks_down(movecoord(loc_coord, 0, 0, -2), ^exact_north, 80);
+} else {
+    ~trollheim_rocks_up(movecoord(loc_coord, 0, 0, 2), 80);
+}
+
+// the hard scramble: 2908,3682 down to 2909,3684 by way of the rocks; 2909,3683 up by 2909,3682
+// to 2907,3682 (Void)
+[oploc1,loc_9305]
+if (~trollheim_rocks_level(47) = false) {
+    return;
+}
+p_arrivedelay;
+if (loc_coord = 0_45_57_28_34) {
+    anim(human_climbing_down, 10);
+    p_exactmove(coord, loc_coord, 0, 40, ^exact_west);
+    p_delay(1);
+    anim(human_climbing_down, 10);
+    p_exactmove(coord, 0_45_57_29_36, 0, 120, ^exact_south);
+    p_delay(3);
+    anim(null, 0);
+    stat_advance(agility, 80);
+    return;
+}
+~set_forcemove_bas(human_climbing);
+~forcemove(0_45_57_29_34);
+~forcemove(0_45_57_27_34);
+~update_bas;
+stat_advance(agility, 80);

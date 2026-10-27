@@ -4,6 +4,10 @@
 [if_button,magic:camelot_teleport] @magic_teleport(^camelot_teleport);
 [if_button,magic:ardougne_teleport] @magic_teleport(^ardougne_teleport);
 [if_button,magic:watchtower_teleport] @magic_teleport(^watchtower_teleport);
+// EASCape: Trollheim Teleport (our spellbook's com_492), from Lost City 289
+[if_button,magic:com_492] @magic_teleport(^trollheim_teleport);
+// EASCape: Teleport to Ape Atoll (our spellbook's com_569)
+[if_button,magic:com_569] @magic_teleport(^apeatoll_teleport);
 
 [label,magic_teleport](int $spell)
 if_close;
@@ -26,7 +30,21 @@ if (p_finduid(uid) = true) {
         mes("You must have completed Watch Tower to use this spell.");
         return;
     }
+    // EASCape: the RuneScape Wiki has it unlocked by Recipe for Disaster's Freeing King
+    // Awowogei, which our game doesn't have; ours: Monkey Madness. It takes a banana too.
+    if($spell = ^apeatoll_teleport & %mm_main < ^mm_complete) {
+        mes("You need to have completed Monkey Madness to use this spell."); // ours
+        return;
+    }
+    if($spell = ^apeatoll_teleport & inv_total(inv, banana) = 0) {
+        mes("You need a banana to cast this spell."); // ours
+        return;
+    }
     // https://www.reddit.com/r/2007scape/comments/b4vdki/watchtower_teleport_not_working_despite/, https://runescape.salmoneus.net/forums/topic/212538-cant-do-ardougne-tele-why-is-it-so/
+    if($spell = ^trollheim_teleport & %eadgar_quest < ^eadgar_complete) {
+        mes("You need to have completed the Eadgar's Ruse Quest to use this spell."); // from Lost City 289 (wiki.lostcity.rs: Trollheim-tele-message.jpg)
+        return;
+    }
     if(($spell = ^ardougne_teleport & %elenaquest < ^elena_complete_read_scroll) | ($spell = ^watchtower_teleport & %itwatchtower < ^itwatchtower_complete_read_scroll)) {
         mes("You havn't learnt how to cast this spell yet.");
         return;
@@ -40,6 +58,9 @@ if (p_finduid(uid) = true) {
     }
     // delete runes and give xp
     ~delete_spell_runes($spell_data);
+    if($spell = ^apeatoll_teleport) {
+        inv_del(inv, banana, 1);
+    }
     ~give_spell_xp($spell_data);
     // give additional affects
     // teleport player. Always a radius of 2
