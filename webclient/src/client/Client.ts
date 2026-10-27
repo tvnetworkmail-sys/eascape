@@ -9589,7 +9589,7 @@ export class Client extends GameShell {
                                 continue;
                             }
 
-                            this.menuOption[this.menuNumEntries] = loc.op[i] + ' @cya@' + loc.name;
+                            this.menuOption[this.menuNumEntries] = this.fairyRingOp(loc.op[i]) + ' @cya@' + loc.name;
 
                             if (i === 0) {
                                 this.menuAction[this.menuNumEntries] = MiniMenuAction.OP_LOC1;
@@ -10194,6 +10194,26 @@ export class Client extends GameShell {
         }
     }
 
+    private ifDrawDepth: number = 0;
+
+    // EASCape: a fairy ring's "Last-destination" option names the code, as in OSRS
+    // ("Last-destination (BKS)"). The code is varbit 2131 (fairyring_last in content/pack/varbit.pack):
+    // the code's place in the 64 plus one, the place being A-D x 16 + I-L x 4 + P-S.
+    private fairyRingOp(op: string | null): string | null {
+        if (op !== 'Last-destination') {
+            return op;
+        }
+        const varbit: VarBitType | undefined = VarBitType.list[2131];
+        if (!varbit) {
+            return op;
+        }
+        const value: number = ((this.var[varbit.basevar] >> varbit.startbit) & Client.readbit[varbit.endbit - varbit.startbit]) - 1;
+        if (value < 0 || value >= 64) {
+            return op;
+        }
+        return op + ' (' + 'ABCD'[value >> 4] + 'IJKL'[(value >> 2) & 3] + 'PQRS'[value & 3] + ')';
+    }
+
     private drawInterface(com: IfType, x: number, y: number, scrollY: number): void {
         if (com.type !== 0 || !com.children || (com.hide && this.overMainComId !== com.id && this.overSideComId !== com.id && this.overChatComId !== com.id)) {
             return;
@@ -10204,7 +10224,13 @@ export class Client extends GameShell {
         const right: number = Pix2D.clipMaxX;
         const bottom: number = Pix2D.clipMaxY;
 
-        Pix2D.setClipping(x, y, x + com.width, y + com.height);
+        // EASCape: a layer inside a scrolling layer is clipped to it too (377 set each layer's own
+        // box, so rows scrolled out of a list were drawn above and below it)
+        if (this.ifDrawDepth === 0) {
+            Pix2D.setClipping(x, y, x + com.width, y + com.height);
+        } else {
+            Pix2D.setClipping(Math.max(x, left), Math.max(y, top), Math.min(x + com.width, right), Math.min(y + com.height, bottom));
+        }
 
         const children: number = com.children.length;
         for (let i: number = 0; i < children; i++) {
@@ -10238,7 +10264,9 @@ export class Client extends GameShell {
                     child.scrollPos = 0;
                 }
 
+                this.ifDrawDepth++;
                 this.drawInterface(child, childX, childY, child.scrollPos);
+                this.ifDrawDepth--;
 
                 if (child.scrollHeight > child.height) {
                     this.drawScrollbar(childX + child.width, childY, child.scrollPos, child.scrollHeight, child.height);
@@ -10883,8 +10911,12 @@ export class Client extends GameShell {
 
         for (let i: number = 0; i < parent.children.length && parent.children[i] !== -1; i++) {
             const child: IfType = IfType.list[parent.children[i]];
-            if (child.type === 1) {
-                updated ||= this.animateInterface(child.id, delta);
+            // EASCape: animate models inside layers too (377 only looked into type 1, which nothing
+            // uses), and don't let an earlier update skip a layer (||= stops at true)
+            if (child.type === ComponentType.TYPE_LAYER) {
+                if (this.animateInterface(child.id, delta)) {
+                    updated = true;
+                }
             }
 
             if (child.type === 6 && (child.modelAnim !== -1 || child.modelAnim2 !== -1)) {

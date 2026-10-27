@@ -482,7 +482,7 @@ function findRoute(args) {
 
 ipcMain.handle('route-find', (e, args) => {
   if (!gameView || e.sender !== gameView.webContents || !args || !args.from || !args.to) return { tiles: [], pts: [] };
-  return findRoute({ from: args.from, to: args.to, near: args.near | 0 });
+  return findRoute({ from: args.from, to: args.to, near: args.near | 0, allow: Array.isArray(args.allow) ? args.allow.slice(0, 8) : [] });
 });
 
 // Plugins running in the game page may only store values in their own config group.

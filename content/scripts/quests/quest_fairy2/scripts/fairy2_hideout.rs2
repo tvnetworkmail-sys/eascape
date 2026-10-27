@@ -1,0 +1,172 @@
+// Fairytale II - Cure a Queen in the Fairy Resistance Hideout (m36_69): Fairy Nuff, Fairy Very Wise
+// and the fairies who fled Zanaris. They are the 2007 cache's multinpcs (by quest stage), so their
+// lines name them (chatnpc_specific). Lines from the OSRS wiki's quest transcript; ours where
+// marked. The potion and the Queen come in the next part.
+
+[proc,fairy2_nuff_says](string $text)
+~chatnpc_specific("Fairy Nuff", ft2_fairy_nuff, $text);
+
+[proc,fairy2_wise_says](string $text)
+~chatnpc_specific("Fairy Very Wise", ft2_fairy_very_wise, $text);
+
+// ---------------------------------------------------------------- Fairy Nuff
+[opnpc1,ft2_multi_4432]
+def_int $s = %fairy2_queencure_quest;
+if ($s < ^fairy2_secateurs) {
+    @fairy2_nuff_found;
+}
+if ($s = ^fairy2_secateurs) {
+    ~fairy2_nuff_says("<p,angry>What are you doing? You need to get those secateurs back very urgently!");
+    return;
+}
+if ($s = ^fairy2_got_secateurs) {
+    ~fairy2_nuff_says("<p,happy>Oh, <displayname>, you're back! I'm so glad. Did you manage to get the secateurs?");
+    if (inv_total(inv, ft2_queens_secateurs) = 0) {
+        ~chatplayer("<p,shifty>Yes, but I seem to have lost them somewhere.");
+        ~fairy2_nuff_says("<p,angry>I can't believe you did that! You know how important it is that I get those secateurs as soon as possible! Please go and find them immediately!");
+        return;
+    }
+    ~chatplayer("<p,happy>You should have seen me! The Godfather didn't even know I was going through his pockets! Here they are.");
+    ~fairy2_nuff_says("<p,happy>Fantastic! Let's just hope that it's not too late ...");
+    inv_del(inv, ft2_queens_secateurs, 1);
+    %fairy2_queencure_quest = ^fairy2_gave_secateurs;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+    ~objbox(ft2_queens_secateurs, "You hand fairy Nuff the Queen's enchanted secateurs.", 250, 0, 0);
+    ~fairy2_nuff_says("<p,sad>Oh no! It didn't work! She's been asleep too long!");
+    ~chatplayer("<p,neutral>Calm down! There's got to be something that we can do. After all, we've given her back her magical essence, right?");
+    @fairy2_nuff_lecture;
+}
+if ($s = ^fairy2_gave_secateurs) {
+    @fairy2_nuff_lecture;
+}
+@fairy2_nuff_potion;
+
+// the first time: stage 45 (found the hideout) to 50 (sent for the secateurs)
+[label,fairy2_nuff_found]
+~fairy2_nuff_says("<p,happy><displayname>! You found us! I'm so glad, I was afraid you wouldn't get my message.");
+~chatplayer("<p,quiz>Fairy Nuff, what happened?");
+~fairy2_nuff_says("<p,sad>After you brought back the Queen's enchanted secateurs and gave them to the Fairy Godfather, I went to him to ask for them so that I could wake Her Majesty up, but he refused to give them to me.");
+~fairy2_nuff_says("<p,sad>Then I noticed that lots of my friends were missing, when I asked him about them he said they were off working for him and then he threatened to have his bodyguards pull my wings off! I was scared for the Queen, and so I moved her here.");
+~fairy2_nuff_says("<p,sad>When I returned to Zanaris I found my cave ransacked! There were other fairies that had been attacked by the Godfather and so we fled the city and came here. I managed to hide a note that I hoped you would find...");
+~fairy2_nuff_says("<p,happy>... obviously you did.");
+~chatplayer("<p,quiz>But why would the Godfather do this?");
+~fairy2_nuff_says("<p,angry>Isn't it obvious? He wants to rule Zanaris instead of the Fairy Queen. The latest fairies to arrive have even reported that he has invited all sorts of monsters to the Lost City.");
+~chatplayer("<p,quiz>So what should we do about it do you think?");
+~mesbox("You see a fairy approaching ...");
+~fairy2_wise_says("<p,shock>I've got terrible news! One of our spies has just returned from Zanaris and has reported that the Godfather has enlisted an army of orcs! Apparently they are wandering freely around our homes!");
+~chatplayer("<p,confused>I'm sorry, but who are you?");
+~fairy2_nuff_says("<p,happy>Oh, how rude of me! <displayname> this is Fairy Very Wise, advisor to the Queen. Fairy Very Wise, this is <displayname>.");
+~fairy2_wise_says("<p,neutral>Oh, I've heard of you. You're the young adventurer that defeated the Tanglefoot.");
+~chatplayer("<p,happy>Yes, that's me.");
+~fairy2_wise_says("<p,angry>So you're also the idiot who gave that Godfather maniac the Fairy Queen's magic secateurs!");
+~chatplayer("<p,shock>But that was a mistake! I thought he was trying to help the Fairy Queen!");
+~fairy2_wise_says("<p,angry>So you're not evil, you're just not too bright. Well I'm glad you found this place, although if you can find it it's obviously not much of a hiding place, now you can help fix the damage that you've done!");
+~chatplayer("<p,neutral>Alright, what do I need to do?");
+~fairy2_wise_says("<p,neutral>The first thing we have to do is wake up the Fairy Queen. You will have to go back to Zanaris and find a way to get those magical secateurs back from the Godfather!");
+~chatplayer("<p,happy>That's easy I'll just pickpocket them off of him, I'm really good at that.");
+~fairy2_wise_says("<p,neutral>Ok, just be careful, his henchmen have keen eyes and will be watching out for him.");
+// the Godfather can be pick-pocketed from here (the 2007 cache's Godfather with "Pick-pocket")
+%fairy_godfather_check = 2;
+%fairy2_queencure_quest = ^fairy2_secateurs;
+~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+
+// stage 65 (gave her the secateurs) to 70 (sent for a potion of magic essence)
+[label,fairy2_nuff_lecture]
+~fairy2_nuff_says("<p,neutral>Yes, we have. There is one small chance that we might be able to wake her up still, but I'd need a potion of Magic Essence.");
+~chatplayer("<p,quiz>Well that doesn't seem too bad, what do I need to do to make one?");
+~fairy2_nuff_says("<p,neutral>A potion of magic essence is made in the same way as any other potion, first you mix a vial of water with a base herb, in this case a Star Flower. Star Flowers are rich in magic essence and are excellent for curing poisons and that's what the Queen is suffering from - a poisoning of her life essence.");
+~fairy2_nuff_says("<p,neutral>Then we need to add the catalyst ingredient; a powdered Gorak's claw. Goraks drain the life from their prey, so by using one of their claws we are hoping to draw the Queen's life essence back.");
+~chatplayer("<p,quiz>Thanks for the lecture, but where do I get one of these Star Flowers and where can I find a Gorak?");
+~fairy2_nuff_says("<p,neutral>Star Flowers only grow on the higher planes and even there they are extremely rare. You should be able to access some of the higher planes by using the fairy rings.");
+~fairy2_nuff_says("<p,neutral>Goraks also live on a different plane. They are vicious creatures that draw the life essence from any living thing they find. It seems that in drawing the life force from the world that they live on they have trapped themselves on a small plane, as far as I am aware, the only way onto or off of their world is through the fairy rings.");
+if (%fairy2_queencure_quest < ^fairy2_potion) {
+    %fairy2_queencure_quest = ^fairy2_potion;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+}
+
+// stage 70 on: the potion (the next part brings the planes, the star flower and the Goraks)
+[label,fairy2_nuff_potion]
+if (inv_total(inv, ft2_magic_essence_4) > 0 | inv_total(inv, ft2_magic_essence_3) > 0 | inv_total(inv, ft2_magic_essence_2) > 0 | inv_total(inv, ft2_magic_essence_1) > 0) {
+    ~chatplayer("<p,happy>I've got it, I've made a potion of magic essence!");
+    ~fairy2_nuff_says("<p,happy>Oh, <displayname> that's fantastic! Please give it to Her Majesty immediately.");
+    return;
+}
+if (inv_total(inv, ft2_unfinished_potion) > 0) {
+    ~fairy2_nuff_says("<p,quiz>How's that potion of Magic Essence coming along, <displayname>?");
+    ~chatplayer("<p,happy>I've half made it, I found a Starflower on this really wierd plane.");
+    ~fairy2_nuff_says("<p,neutral>That's nice for you, but please stop wasting time. You need to finish the potion with a Gorak's claw.");
+    return;
+}
+~fairy2_nuff_says("<p,quiz>Hello <displayname>. How are you getting on with making that potion?");
+~chatplayer("<p,shifty>I haven't found a Star Flower yet.");
+~fairy2_nuff_says("<p,angry>I don't have to tell you again how important it is that you hurry!");
+
+[opnpcu,ft2_multi_4432]
+if (last_useitem ! ft2_nuffs_certificate) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~objbox(ft2_nuffs_certificate, "You show the certificate to the Fairy Nuff.", 250, 0, 0);
+~chatplayer("<p,quiz>Do you know what these strange marks mean?");
+~fairy2_nuff_says("<p,neutral>Thank you, <displayname> but you'd better keep hold of it. You can't get to this hideout without it.");
+
+// ---------------------------------------------------------------- Fairy Very Wise
+[opnpc1,ft2_multi_4435]
+if (%fairy2_queencure_quest >= ^fairy2_queen_awake) {
+    ~fairy2_wise_says("<p,happy>Thank you for your great service to the fairy people, we are indebted to you!");
+    return;
+}
+~fairy2_wise_says("<p,sad>I'm so worried about the Queen, without her the fairy people may be chased out of Gielinor completely! You must wake her, for all our sakes!");
+
+[opnpc1,ft2_multi_4453]
+~fairy2_wise_says("<p,happy>Thank you for your great service to the fairy people, we are indebted to you!");
+
+// ---------------------------------------------------------------- the fairies who fled
+[opnpc1,ft2_multi_4426] @fairy2_hideout_fairy;
+[opnpc1,ft2_multi_4427] @fairy2_hideout_fairy;
+[opnpc1,ft2_multi_4428] @fairy2_hideout_fairy;
+[opnpc1,ft2_multi_4429] @fairy2_hideout_fairy;
+[opnpc1,ft2_multi_4430] @fairy2_hideout_fairy;
+
+[label,fairy2_hideout_fairy]
+def_string $line;
+switch_int (random(7)) {
+    case 0 : $line = "<p,scared>I don't want to go back! That orc tried to kill me!";
+    case 1 : $line = "<p,angry>We must find a way to fight back! To throw those villains out of our homes.";
+    case 2 : $line = "<p,shock>I can't believe that there are orcs in Zanaris.";
+    case 3 : $line = "<p,shock>Have you heard? The Godfather has allowed orcs into Zanaris!";
+    case 4 : $line = "<p,angry>Those fairies that side with the Godfather are all traitors! The Queen is the true ruler of Zanaris!";
+    case 5 : $line = "<p,sad>Have you seen Fairy Cake? She went to talk to the Godfather and I haven't seen her since.";
+    case default : $line = "<p,quiz>How is the Queen? Has she woken up yet?";
+}
+~chatnpc_specific("Fairy", fairy, $line);
+
+// ---------------------------------------------------------------- reaching the hideout
+// The fairy rings' last code of AIR, DLR, DJQ, AJS (areas/area_fairy_rings/scripts/fairy_rings.rs2).
+// The wiki: without the certificate you're left by the penguins ("Maybe you should bring that
+// certificate with you."), and with it but not having worked it all out, "Maybe you need to
+// investigate further first..". Ours: once the quest is done, the codes alone take you there; on
+// the first arrival the quest moves to 45.
+[proc,fairy2_hideout_open]()(boolean)
+def_int $s = %fairy2_queencure_quest;
+if ($s >= ^fairy2_complete) {
+    return(true);
+}
+if ($s < ^fairy2_rings_allowed) {
+    return(false);
+}
+if (inv_total(inv, ft2_nuffs_certificate) = 0) {
+    mes("Maybe you should bring that certificate with you.");
+    return(false);
+}
+if (%fairy2_certificute_examined = 0 | %fairy2_sign_read < ^fairy2_sign_was_read) {
+    mes("Maybe you need to investigate further first..");
+    return(false);
+}
+return(true);
+
+[proc,fairy2_hideout_arrived]
+if (%fairy2_queencure_quest = ^fairy2_rings_allowed) {
+    %fairy2_queencure_quest = ^fairy2_hideout;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+}

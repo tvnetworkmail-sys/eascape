@@ -17,6 +17,7 @@ const serverByNum = Object.fromEntries(Object.values(serverGuides).map((g) => [g
 module.exports = function questHelper(ctx) {
   const engine = new QuestEngine({ progress, guides: oldGuides });
   let server = { guide: 0, step: 0 }; // what the server says you're following
+  let unlocks = []; // ways across the routes may use ("fairyrings"), from the page
   let serverCmd = null; // { text, t } for the page to send
   let off = null;
   let account = null;
@@ -117,6 +118,7 @@ module.exports = function questHelper(ctx) {
     if (d.dialogue) moved = moved.concat(engine.dialogue(d.dialogue));
     for (const m of d.messages || []) moved = moved.concat(engine.message(m));
     have.npcs = new Set(d.npcs || []);
+    if (Array.isArray(d.unlocks)) unlocks = d.unlocks;
     if (d.server && (d.server.guide !== server.guide || d.server.step !== server.step)) {
       const was = server.guide;
       server = d.server;
@@ -160,7 +162,7 @@ module.exports = function questHelper(ctx) {
     if (!ctx.config('showRoute') && !ctx.config('showMapRoute')) return null;
     if (!step || !step.at || !pos) return null;
     const near = step.npc ? 1 : step.locAt ? 1 : 0;
-    const key = `${step.at.join(',')}|${near}`;
+    const key = `${step.at.join(',')}|${near}|${unlocks.join(',')}`;
     const now = Date.now();
     const same = route && route.key === key;
     const onRoute = same && route.tiles.some((t) => t.level === pos.level && Math.max(Math.abs(t.x - pos.x), Math.abs(t.z - pos.z)) <= 3);
@@ -171,7 +173,7 @@ module.exports = function questHelper(ctx) {
     routeBusy = true;
     lastRouteAt = now;
     const from = { ...pos };
-    ctx.invoke('route-find', { from, to: { x: step.at[0], z: step.at[1], level: step.at[2] }, near }).then((r) => {
+    ctx.invoke('route-find', { from, to: { x: step.at[0], z: step.at[1], level: step.at[2] }, near, allow: unlocks }).then((r) => {
       routeBusy = false;
       route = { key, tiles: (r && r.tiles) || [], pts: (r && r.pts) || [] };
       lastRouteAt = Date.now();

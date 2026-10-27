@@ -651,16 +651,17 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
             },
             (client: Packet, _server: Packet): boolean => {
                 // EASCape: locs may be added after the 14974 from 377 (the Warriors' Guild, 21 Oct
-                // 2026); the 377 ones (the first 735811 bytes) must still match
+                // 2026); the 377 ones (the first 735813 bytes) must still match. Fairytale II (27 Oct
+                // 2026) gave the Queen's throne the 2007 cache's third state (fairy_throne_multi).
                 const original = 14974;
                 const count = (client.data[0] << 8) | client.data[1];
                 if (count <= original) {
-                    return Packet.checkcrc(client.data, 0, client.pos, 967458629);
+                    return Packet.checkcrc(client.data, 0, client.pos, -767308590);
                 }
-                const copy = Uint8Array.from(client.data.subarray(0, 735811));
+                const copy = Uint8Array.from(client.data.subarray(0, 735813));
                 copy[0] = original >> 8;
                 copy[1] = original & 0xff;
-                return Packet.checkcrc(copy, 0, copy.length, 967458629);
+                return Packet.checkcrc(copy, 0, copy.length, -767308590);
             }
         );
     }
@@ -737,7 +738,9 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 idx.release();
             },
             (client: Packet, _server: Packet): boolean => {
-                return checkcrcAllowAdded(client, 3852, 356796, 455764595);
+                // EASCape: Fairytale II (27 Oct 2026) gave the Godfather and his henchmen the 2007
+                // cache's third state (fairy_godfather_multi, fairy_henchman1/2_multi)
+                return checkcrcAllowAdded(client, 3852, 356802, 1344216493);
             }
         );
     }
@@ -865,7 +868,9 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                     if (client.data[prefix] === 1) prefix += 5;
                     prefix += 1;
                 }
-                return checkcrcAllowAdded(client, 2113, prefix, -1350285786);
+                // Fairytale II also moved fairy_queen_check, fairy_godfather_check and fairy_nuff_check
+                // to the 2007 cache's bits (fairy2_login moves saves over)
+                return checkcrcAllowAdded(client, 2113, prefix, -603607362);
             }
         );
     }

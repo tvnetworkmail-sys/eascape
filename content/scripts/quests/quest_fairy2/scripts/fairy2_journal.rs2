@@ -1,0 +1,81 @@
+// Fairytale II's quest journal: EASCape's wording (the wiki has no transcript of this journal), in
+// the style of the others. Done steps are struck through. The requirements are the OSRS wiki's.
+[if_button,questlist:fairy2]
+def_int $s = %fairy2_queencure_quest;
+def_string $t;
+if ($s = ^fairy2_not_started) {
+    $t = "@dbl@I can start this quest by speaking to @dre@Martin the Master|@dre@Gardener@dbl@ in the @dre@Draynor Village@dbl@ market.||@dbl@To start this quest I need to have completed:|";
+    $t = append($t, ~fairy1_journal_req(%fairy_farmers_quest, ^fairy1_complete, "A Fairy Tale Pt. 1"));
+    $t = append($t, "|@dbl@To finish it I will need:|");
+    $t = append($t, ~fairy2_journal_stat(thieving, 40, "Thieving"));
+    $t = append($t, ~fairy2_journal_stat(farming, 49, "Farming"));
+    $t = append($t, ~fairy2_journal_stat(herblore, 57, "Herblore"));
+    $t = append($t, "|@dbl@I must be able to defeat several level 145 Goraks.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = "@str@I told Martin the Master Gardener that the Fairy Queen|@str@would soon be well again.|";
+if ($s = ^fairy2_planting) {
+    $t = append($t, "|@dbl@He has planted some seeds. I should come back to @dre@Martin@dbl@|@dbl@once they have had a chance to grow.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+if ($s = ^fairy2_crops_grown) {
+    $t = append($t, "|@dbl@His crops should have grown by now. I should see @dre@Martin@dbl@.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@His crops are still failing, and he blames me.|");
+if ($s = ^fairy2_started) {
+    $t = append($t, "|@dbl@I should go to @dre@Zanaris@dbl@ and find out why the Fairy Queen|@dbl@hasn't woken. @dre@Fairy Nuff@dbl@ was looking after her.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@Fairy Nuff's room was ransacked, and she and the Queen|@str@were gone. The Godfather let me use the fairy rings.|");
+if ($s = ^fairy2_rings_allowed) {
+    $t = append($t, "|@dbl@Fairy Nuff may have left a clue in her room. The @dre@Co-ordinator|@dbl@can tell me how the @dre@fairy rings@dbl@ work.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@Fairy Nuff's certificate led me to the fairies' hideout.|");
+if ($s = ^fairy2_hideout) {
+    $t = append($t, "|@dbl@I should talk to @dre@Fairy Nuff@dbl@ in the hideout.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@The Godfather kept the Queen's secateurs from Fairy Nuff.|");
+if ($s = ^fairy2_secateurs) {
+    $t = append($t, "|@dbl@I need to pick-pocket the @dre@Queen's secateurs@dbl@ from the @dre@Fairy|@dre@Godfather@dbl@ in Zanaris, without his henchmen seeing.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+if ($s = ^fairy2_got_secateurs) {
+    $t = append($t, "|@dbl@I have the secateurs. I should take them to @dre@Fairy Nuff@dbl@.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@I took the secateurs back, but the Queen didn't wake.|");
+if ($s = ^fairy2_gave_secateurs) {
+    $t = append($t, "|@dbl@I should talk to @dre@Fairy Nuff@dbl@ again.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+if ($s < ^fairy2_queen_cured) {
+    $t = append($t, "|@dbl@Fairy Nuff needs a @dre@potion of magic essence@dbl@: a @dre@Star Flower@dbl@ in|@dbl@a @dre@vial of water@dbl@, with a powdered @dre@Gorak's claw@dbl@. Both are found|@dbl@on other planes, through the fairy rings.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@I made a potion of magic essence and gave it to the Queen.|");
+if ($s < ^fairy2_complete) {
+    $t = append($t, "|@dbl@The @dre@Fairy Queen@dbl@ is awake. I should talk to her.");
+    ~quest_journal("Fairytale II - Cure a Queen", $t);
+    return;
+}
+$t = append($t, "|@str@The Queen woke, and learnt what the Godfather had done.|@str@She thanked me with a magic lamp.||@red@QUEST COMPLETE!");
+~quest_journal("Fairytale II - Cure a Queen", $t);
+
+[proc,fairy2_journal_stat](stat $stat, int $level, string $text)(string)
+if (stat_base($stat) >= $level) {
+    return("@str@Level <tostring($level)> <$text>|");
+}
+return("@dre@Level <tostring($level)> <$text>|");

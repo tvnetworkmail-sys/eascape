@@ -270,6 +270,16 @@ if (compare($name, "runemysteries") = 0) {
     %routequest = ^routequest_complete;
 } else if (compare($name, "fairytale1") = 0) {
     %fairy_farmers_quest = ^fairy1_complete;
+} else if (compare($name, "fairytale2") = 0) {
+    // and what the quest leaves set: the fairy rings, the Godfather with his pocket, the Queen and
+    // Fairy Nuff gone from Nuff's room (quest_fairy2)
+    %fairy2_queencure_quest = ^fairy2_complete;
+    %fairyring_use = 1;
+    %fairyring_permission = 2;
+    %fairy_queen_check = 2;
+    %fairy_godfather_check = 2;
+    %fairy2_nuffvisible = 1;
+    %fairynuff_cert_taken = 1;
 } else {
     mes("No quest called <$name>. Try ::questdone list.");
     return;
@@ -287,7 +297,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
 // run energy, poison cured
@@ -866,6 +876,22 @@ if (%fairy_farmers_quest >= ^fairy1_grotto & %fairy_farmers_quest < ^fairy1_comp
     $banked = calc($banked + ~questpack_give(~fairy1_nature_item(%fairy_nature_item3), 1));
 }
 ~questpack_done("A Fairy Tale Pt. 1", $banked);
+
+// ::fairytale2pack - what Fairytale II needs you to bring (OSRS wiki's item list): a dramen staff,
+// a vial of water and a pestle and mortar, and Nuff's certificate while the quest needs it (it's
+// found on her shelves too)
+[debugproc,fairytale2pack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(dramen_staff, 1));
+$banked = calc($banked + ~questpack_give(vial_water, 1));
+$banked = calc($banked + ~questpack_give(pestle_and_mortar, 1));
+if (%fairy2_queencure_quest >= ^fairy2_started & %fairy2_queencure_quest < ^fairy2_complete) {
+    $banked = calc($banked + ~questpack_give(ft2_nuffs_certificate, 1));
+}
+~questpack_done("Fairytale II - Cure a Queen", $banked);
 
 // ::ft2look - Fairytale II's people and creatures from the 2007 cache, around you for a minute,
 // to look at (tools/fairytale2/convert_content.py; the quest's changing versions aren't shown)

@@ -8,6 +8,9 @@
 [proc,fairy1_godfather_says](string $text)
 ~chatnpc_specific("Fairy Godfather", fairy_godfather, $text);
 
+[proc,fairy1_nuff_says](string $text)
+~chatnpc_specific("Fairy Nuff", fairy_nuff, $text);
+
 [proc,fairy1_rocco_says](string $text)
 ~chatnpc_specific("Fat Rocco", fairy_henchman2, $text);
 
@@ -16,8 +19,7 @@
 [opnpc1,fairy_godfather_multi]
 def_int $s = %fairy_farmers_quest;
 if ($s >= ^fairy1_complete) {
-    ~mesbox("The Godfather is ignoring you.");
-    return;
+    @fairy2_godfather; // EASCape: Fairytale II (quest_fairy2/fairy2_zanaris.rs2)
 }
 if ($s = ^fairy1_return & inv_total(inv, fairy_queen_secateurs) > 0) {
     @fairy1_godfather_finish;
@@ -95,16 +97,20 @@ session_log(^log_adventure, "Quest complete: Fairytale I - Growing Pains");
 
 // ---------------------------------------------------------------- Fairy Nuff
 
-[opnpc1,fairy_nuff]
+[opnpc1,fairy_nuff] @fairy1_nuff;
+// EASCape: Fairytale II puts her in the 2007 cache's multinpc (gone while the quest has her away)
+[opnpc1,ft2_multi_4431] @fairy1_nuff;
+
+[label,fairy1_nuff]
 def_int $s = %fairy_farmers_quest;
 if ($s >= ^fairy1_complete) {
     ~chatplayer("<p,quiz>How is the Fairy Queen doing?");
-    ~chatnpc("<p,sad>Not too well; the Godfather hasn't given me those secateurs yet.");
+    ~fairy1_nuff_says("<p,sad>Not too well; the Godfather hasn't given me those secateurs yet.");
     return;
 }
 if ($s = ^fairy1_godfather) {
     // ours: you've not yet seen the Godfather
-    ~chatnpc("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
+    ~fairy1_nuff_says("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
     return;
 }
 if ($s = ^fairy1_nuff) {
@@ -113,13 +119,13 @@ if ($s = ^fairy1_nuff) {
 if ($s > ^fairy1_nuff) {
     if ($s = ^fairy1_return & inv_total(inv, fairy_queen_secateurs) > 0) {
         ~chatplayer("<p,happy>I did it! I've got the Fairy Queens' enchanted secateurs!");
-        ~chatnpc("<p,happy>That's fantastic! You'd better take them to the Fairy Godfather though; he'd be cross if he knew you brought them to me first. But, come back to me once the queen has had a chance to recover. I'm sure she'll want to thank you personally.");
+        ~fairy1_nuff_says("<p,happy>That's fantastic! You'd better take them to the Fairy Godfather though; he'd be cross if he knew you brought them to me first. But, come back to me once the queen has had a chance to recover. I'm sure she'll want to thank you personally.");
         return;
     }
-    ~chatnpc("<p,quiz>You're back soon! Did you find out what ails the Fairy Queen?");
+    ~fairy1_nuff_says("<p,quiz>You're back soon! Did you find out what ails the Fairy Queen?");
     if ($s = ^fairy1_zandar & ~obj_gettotal(fairy_symptoms_list) = 0) {
         ~chatplayer("<p,sad>No, I'm afraid I've lost the list of symptoms you gave me.");
-        ~chatnpc("<p,neutral>Well not to worry, I have a copy of it here.");
+        ~fairy1_nuff_says("<p,neutral>Well not to worry, I have a copy of it here.");
         inv_add(inv, fairy_symptoms_list, 1);
         return;
     }
@@ -130,27 +136,27 @@ if ($s > ^fairy1_nuff) {
 if (%fairy_nuff_check = 0) {
     %fairy_nuff_check = 1;
     ~chatplayer("<p,quiz>What do you do around here?");
-    ~chatnpc("<p,happy>Oh, I'm the resident healer. My name is Nuff, Fairy Nuff. Who are you?");
+    ~fairy1_nuff_says("<p,happy>Oh, I'm the resident healer. My name is Nuff, Fairy Nuff. Who are you?");
     ~chatplayer("<p,neutral>My name is <displayname>.");
-    ~chatnpc("<p,happy>Pleased to meet you, <displayname>. As I was saying, I'm the healer in Zanaris. I graduated over 200 human years ago. Look, there's my Advanced Healing Certificate on the wall. I never go anywhere without it.");
-    ~chatnpc("<p,neutral>It's my job to look after the sick, wounded or dying fairies around here. Of course, fairies being magical by nature, not many of them get hurt, so I don't normally have much to do.");
+    ~fairy1_nuff_says("<p,happy>Pleased to meet you, <displayname>. As I was saying, I'm the healer in Zanaris. I graduated over 200 human years ago. Look, there's my Advanced Healing Certificate on the wall. I never go anywhere without it.");
+    ~fairy1_nuff_says("<p,neutral>It's my job to look after the sick, wounded or dying fairies around here. Of course, fairies being magical by nature, not many of them get hurt, so I don't normally have much to do.");
     ~chatplayer("<p,quiz>What about healing humans? Lots of adventurers must get hurt fighting the Otherworldly beings.");
-    ~chatnpc("<p,neutral>Yes they do. Silly isn't it? I do use my healing magic on humans sometimes, but I don't like them attacking our other guests, so I charge them for the service.");
+    ~fairy1_nuff_says("<p,neutral>Yes they do. Silly isn't it? I do use my healing magic on humans sometimes, but I don't like them attacking our other guests, so I charge them for the service.");
     ~chatplayer("<p,quiz>How much do you charge to heal someone, then?");
-    ~chatnpc("<p,neutral>Well, the gold that you humans are so fond of has no real value in Zanaris, so I ask my patients to pay me in gems.");
-    ~chatnpc("<p,neutral>I will heal 4 hitpoints for an opal, 5 hitpoints for either a sapphire or a piece of jade, 7 hitpoints for an emerald or red topaz, 9 for a ruby and 11 for a diamond.");
+    ~fairy1_nuff_says("<p,neutral>Well, the gold that you humans are so fond of has no real value in Zanaris, so I ask my patients to pay me in gems.");
+    ~fairy1_nuff_says("<p,neutral>I will heal 4 hitpoints for an opal, 5 hitpoints for either a sapphire or a piece of jade, 7 hitpoints for an emerald or red topaz, 9 for a ruby and 11 for a diamond.");
     ~chatplayer("<p,shock>Only 11 hitpoints for a diamond? Doesn't that seem a bit steep?");
-    ~chatnpc("<p,neutral>Maybe to you, but you'd be surprised how many adventurer's are willing to pay those prices.");
+    ~fairy1_nuff_says("<p,neutral>Maybe to you, but you'd be surprised how many adventurer's are willing to pay those prices.");
     return;
 }
-~chatnpc("<p,quiz>Hello <displayname>, do you need any assistance?");
+~fairy1_nuff_says("<p,quiz>Hello <displayname>, do you need any assistance?");
 if (~p_choice2("Yes, please. I need healing.", 1, "No thanks. Just looking around.", 2) = 2) {
     ~chatplayer("<p,neutral>No thanks. Just looking around.");
-    ~chatnpc("<p,neutral>Ok. If you want to know anything, just ask.");
+    ~fairy1_nuff_says("<p,neutral>Ok. If you want to know anything, just ask.");
     return;
 }
 ~chatplayer("<p,quiz>Yes, please. I need healing.");
-~chatnpc("<p,quiz>Sure, how many hitpoints would you like me to heal?");
+~fairy1_nuff_says("<p,quiz>Sure, how many hitpoints would you like me to heal?");
 // the prices are what she says when you first meet (the wiki's menu has the ruby and diamond
 // the other way round)
 switch_int (~p_choice5("4 Hitpoints.", 4, "5 Hitpoints.", 5, "7 Hitpoints.", 7, "9 Hitpoints.", 9, "11 Hitpoints.", 11)) {
@@ -163,10 +169,10 @@ switch_int (~p_choice5("4 Hitpoints.", 4, "5 Hitpoints.", 5, "7 Hitpoints.", 7, 
 
 [proc,fairy1_nuff_heal](int $hp, obj $gem1, obj $gem2, string $cost, string $missing)
 ~chatplayer("<p,neutral><tostring($hp)> Hitpoints.");
-~chatnpc("<p,neutral>That will cost you <$cost>.");
+~fairy1_nuff_says("<p,neutral>That will cost you <$cost>.");
 if (~p_choice2("All right.", 1, "On second thoughts, no thanks.", 2) = 2) {
     ~chatplayer("<p,neutral>On second thoughts, no thanks.");
-    ~chatnpc("<p,neutral>Ok, suit yourself.");
+    ~fairy1_nuff_says("<p,neutral>Ok, suit yourself.");
     return;
 }
 ~chatplayer("<p,neutral>All right.");
@@ -177,7 +183,7 @@ if (inv_total(inv, $gem1) > 0) {
     if (inv_total(inv, $gem2) > 0) $gem = $gem2;
 }
 if ($gem = null) {
-    ~chatnpc("<p,neutral><$missing>");
+    ~fairy1_nuff_says("<p,neutral><$missing>");
     ~chatplayer("<p,shifty>Whoops, sorry.");
     return;
 }
@@ -187,39 +193,39 @@ stat_heal(hitpoints, $hp, 0);
 mes("Fairy Nuff heals you.");
 
 [label,fairy1_nuff_list]
-~chatnpc("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
+~fairy1_nuff_says("<p,neutral>Sorry, I'm very busy and can't chat. If you want to know something go and talk to the Godfather.");
 ~chatplayer("<p,angry>I did, he said I should come and talk to you!");
-~chatnpc("<p,shock>Oh!");
-~chatnpc("<p,sad>Sorry, I didn't realise.");
+~fairy1_nuff_says("<p,shock>Oh!");
+~fairy1_nuff_says("<p,sad>Sorry, I didn't realise.");
 ~chatplayer("<p,neutral>Actually it's more a case of what I can help you with? I told the Fairy Godfather that I would help you find a cure for the Queen.");
-~chatnpc("<p,happy>Oh, thank you! I really need help, I have no idea what ails the Queen. You must be a mighty healer!");
+~fairy1_nuff_says("<p,happy>Oh, thank you! I really need help, I have no idea what ails the Queen. You must be a mighty healer!");
 ~chatplayer("<p,neutral>Err...no, not me.");
-~chatnpc("<p,quiz>A great druid then?");
+~fairy1_nuff_says("<p,quiz>A great druid then?");
 ~chatplayer("<p,neutral>Umm...'fraid not.");
-~chatnpc("<p,quiz>A shaman?");
+~fairy1_nuff_says("<p,quiz>A shaman?");
 ~chatplayer("<p,neutral>No.");
-~chatnpc("<p,quiz>A surgeon?");
+~fairy1_nuff_says("<p,quiz>A surgeon?");
 ~chatplayer("<p,neutral>No.");
-~chatnpc("<p,quiz>A doctor, medic, nurse?");
+~fairy1_nuff_says("<p,quiz>A doctor, medic, nurse?");
 ~chatplayer("<p,neutral>No, no and no.");
-~chatnpc("<p,confused>So what are you then?");
+~fairy1_nuff_says("<p,confused>So what are you then?");
 ~chatplayer("<p,happy>I'm a mighty adventurer!");
-~chatnpc("<p,shock>A what?!");
+~fairy1_nuff_says("<p,shock>A what?!");
 ~chatplayer("<p,happy>A mighty adventurer!");
-~chatnpc("<p,neutral>Yes, I heard. It's just not what I was expecting to hear.");
-~chatnpc("<p,happy>But hang on, you might be just the sort of person I need to help me!");
+~fairy1_nuff_says("<p,neutral>Yes, I heard. It's just not what I was expecting to hear.");
+~fairy1_nuff_says("<p,happy>But hang on, you might be just the sort of person I need to help me!");
 ~chatplayer("<p,quiz>How is that then?");
-~chatnpc("<p,quiz>I'm sure the Godfather told you that the Queen is in an enchanted sleep?");
+~fairy1_nuff_says("<p,quiz>I'm sure the Godfather told you that the Queen is in an enchanted sleep?");
 ~chatplayer("<p,confused>Well sort of, I couldn't really understand everything he was talking about.");
-~chatnpc("<p,shifty>Shhh, somebody might hear. Look you're a visitor, so I'll tell you this much; it doesn't pay to talk about the Godfather behind his back.");
-~chatnpc("<p,sad>But back to the problem at hand - the Fairy Queen. She was brought here after her battle with the Tanglefoot in a terrible state, extremely weak and barely able to fly!");
-~chatnpc("<p,sad>When the Queen got back here, she was clearly weakening fast. It appears as if the magic force that is her life essence is slowly unravelling.");
-~chatnpc("<p,neutral>Now, what I need you to do is find a mage by the name of Zandar Horfyre. He has spent many years studying magical illness. Take the list to him and ask him if he knows what ails the Queen, please.");
+~fairy1_nuff_says("<p,shifty>Shhh, somebody might hear. Look you're a visitor, so I'll tell you this much; it doesn't pay to talk about the Godfather behind his back.");
+~fairy1_nuff_says("<p,sad>But back to the problem at hand - the Fairy Queen. She was brought here after her battle with the Tanglefoot in a terrible state, extremely weak and barely able to fly!");
+~fairy1_nuff_says("<p,sad>When the Queen got back here, she was clearly weakening fast. It appears as if the magic force that is her life essence is slowly unravelling.");
+~fairy1_nuff_says("<p,neutral>Now, what I need you to do is find a mage by the name of Zandar Horfyre. He has spent many years studying magical illness. Take the list to him and ask him if he knows what ails the Queen, please.");
 inv_add(inv, fairy_symptoms_list, 1);
 %fairy_farmers_quest = ^fairy1_zandar;
 ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
 ~chatplayer("<p,quiz>That doesn't sound too difficult, where will I find him.");
-~chatnpc("<p,sad>I believe he now resides in the Dark Wizard's tower near Falador, and <displayname>, please hurry. I fear the Queen doesn't have much time left!");
+~fairy1_nuff_says("<p,sad>I believe he now resides in the Dark Wizard's tower near Falador, and <displayname>, please hurry. I fear the Queen doesn't have much time left!");
 
 // the symptoms list (the OSRS wiki's transcript of it)
 [opheld1,fairy_symptoms_list]

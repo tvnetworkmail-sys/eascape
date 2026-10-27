@@ -68,45 +68,8 @@ midi_jingle($jingle);
 .%musicstart = add(map_clock, midi_length($jingle));
 .midi_jingle($jingle);
 
-// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
-[label,eadgar_default_tree]
-switch_int(~p_choice3("Why do you live so close to the trolls?", 1, "What do you have to offer?", 2, "No thanks, Eadgar.", 3)) {
-    case 1 : @eadgar_live_so_close;
-    case 2 : @eadgar_what_do_you_have;
-    case 3 : @eadgar_nothanks;    
-}
 
-// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
-[label,eadgar_live_so_close]
-~chatplayer("<p,confused>Why do you live so close to the trolls? Isn't it dangerous?");
-~chatnpc("<p,happy>Well, I suppose I do keep getting captured by the trolls and thrown in prison...But they always release me in the end, I'm far too old and skinny for their tastes.");
-~chatnpc("<p,happy>In any case, this is my home, and I'm not leaving it. And this area has the tastiest goats!");
 
-// from 274: quests/quest_troll/scripts/troll_eadgar.rs2
-[label,eadgar_what_do_you_have]
-~chatplayer("<p,confused>What do you have to offer?");
-~chatnpc("<p,happy>The chef's recommendation for today is mountain goat stew. I'll give some stew in exchange for logs for my fire. They're hard to come by around here.");
-switch_int(~p_choice2("I'd like some mountain goat stew, please.", 1, "No thanks, Eadgar.", 2)) {
-    case 1 :
-        ~chatplayer("<p,neutral>I'd like some mountain goat stew, please.");
-        if(inv_totalcat(inv, category_22) = 0) {
-            ~chatnpc("<p,angry>You don't have any logs! I may be mad, but I'm not stupid!");
-            return;
-        }
-        ~inv_delcat(inv, category_22);
-        ~chatnpc("<p,happy>Here you go! Enjoy!");
-        if_close;
-        mes("You get a bowl of mountain goat stew.");
-        anim(human_eat, 0);
-        sound_synth(eat, 1, 0);
-        p_delay(1);
-        mes("You eat the mountain goat stew.");
-        if (stat(hitpoints) < stat_base(hitpoints)) {
-            mes("It heals some health.");
-            stat_heal(hitpoints, 20, 0);
-        }
-    case 2 : @eadgar_nothanks;
-}
 
 // from 274: minigames/game_trail/scripts/trail_clue_helper.rs2
 [label,trail_clue_loc_interact](obj $clue)

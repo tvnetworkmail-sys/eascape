@@ -427,6 +427,45 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   }
 }
 
+// EASCape: the fairy rings (Fairytale II, areas/area_fairy_rings): from every ring, Zanaris (its
+// first option) and every code that needs no quest (fairy_rings.dbrow), and the hideout (the four
+// codes AIR, DLR, DJQ, AJS). The rings work only once the Fairy Godfather has said so, so these
+// carry "needs": "fairyrings" and a route only takes them for a player the app sees has that
+// (game.js); the codes behind a quest (lock) are left out.
+{
+  const dir = path.join(root, 'scripts', 'areas', 'area_fairy_rings');
+  const dbrow = path.join(dir, 'configs', 'fairy_rings.dbrow');
+  const constants = path.join(dir, 'configs', 'fairy_rings.constant');
+  if (fs.existsSync(dbrow) && fs.existsSync(constants)) {
+    const k = {};
+    for (const line of fs.readFileSync(constants, 'utf8').split('\n')) {
+      const m = /^\^(\w+)\s*=\s*(\S+)/.exec(line.trim());
+      if (m) k[m[1]] = m[2];
+    }
+    const dests = [{ code: 'Zanaris', to: coord(k.fairyring_zanaris) }, { code: 'AIR DLR DJQ AJS', to: coord(k.fairyring_hideout) }];
+    let row = null;
+    const flush = () => { if (row && row.dest && !row.lock) dests.push({ code: row.code, to: row.dest }); };
+    for (const raw of fs.readFileSync(dbrow, 'utf8').split('\n')) {
+      const s = raw.trim();
+      if (s.startsWith('[')) { flush(); row = {}; continue; }
+      const m = /^data=(\w+),(.*)$/.exec(s);
+      if (!m || !row) continue;
+      if (m[1] === 'code') row.code = m[2];
+      else if (m[1] === 'dest') row.dest = coord(m[2]);
+      else if (m[1] === 'lock') row.lock = +m[2];
+    }
+    flush();
+    for (const nm of [...(byCategory.get('fairy_ring') || []), ...(byCategory.get('fairy_ring_zanaris') || [])]) {
+      for (const inst of instances.get(nm) || []) {
+        for (const d of dests) {
+          if (Math.max(Math.abs(d.to.x - inst.x), Math.abs(d.to.z - inst.z)) < 3 && d.to.level === inst.level) continue;
+          transports.push({ x: inst.x, z: inst.z, level: inst.level, w: inst.w, l: inst.l, to: [d.to.x, d.to.z, d.to.level], name: nm, op: 2, needs: 'fairyrings', note: `fairy ring: ${d.code}` });
+        }
+      }
+    }
+  }
+}
+
 // Ways across that the scripts work out at run time (tools/routes/extra.json).
 for (const t of JSON.parse(fs.readFileSync(path.join(__dirname, 'extra.json'), 'utf8'))) transports.push(t);
 

@@ -179,13 +179,28 @@ while ($pass < 2) {
 }
 return(-1);
 
+// one pass over the codes for each half of the list (favourites, then the rest), each row placed
+// under the one before at its own height (fairy_rings_log.enum, fairyrings_log.if)
 [proc,fairy_rings_fill_log]
 def_int $slot = 0;
-def_int $index = ~fairy_rings_log_code(0);
-while ($index ! -1 & $slot < 36) {
-    ~fairy_rings_log_slot($slot, $index);
-    $slot = calc($slot + 1);
-    $index = ~fairy_rings_log_code($slot);
+def_int $y = 1;
+def_int $pass = 0;
+while ($pass < 2) {
+    def_int $i = 0;
+    while ($i < 64 & $slot < 36) {
+        if (~fairy_rings_has_visited($i) = true) {
+            def_boolean $fav = ~fairy_rings_is_favourite($i);
+            if (($pass = 0 & $fav = true) | ($pass = 1 & $fav = false)) {
+                def_dbrow $row = ~fairy_rings_row($i);
+                if ($row ! null) {
+                    $y = calc($y + ~fairy_rings_log_slot($slot, $row, $fav, $y));
+                    $slot = calc($slot + 1);
+                }
+            }
+        }
+        $i = calc($i + 1);
+    }
+    $pass = calc($pass + 1);
 }
 if ($slot = 0) {
     if_settext(fairyrings_log:empty, "No fairy ring codes used yet.");
@@ -197,29 +212,27 @@ while ($slot < 36) {
     $slot = calc($slot + 1);
 }
 
-// the code, its place in up to two lines (broken at a space), and its heart
-[proc,fairy_rings_log_slot](int $slot, int $index)
-def_dbrow $row = ~fairy_rings_row($index);
-def_string $name = db_getfield($row, fairy_ring_code:name, 0);
-def_string $line1 = $name;
+// the code, its place in one or two lines, its heart and its Select box; returns its height
+[proc,fairy_rings_log_slot](int $slot, dbrow $row, boolean $fav, int $y)(int)
 def_string $line2 = "";
-if (string_length($name) > ^fairyring_log_line) {
-    def_int $cut = ^fairyring_log_line;
-    while ($cut > 0 & compare(substring($name, $cut, calc($cut + 1)), " ") ! 0) {
-        $cut = calc($cut - 1);
-    }
-    if ($cut > 0) {
-        $line1 = substring($name, 0, $cut);
-        $line2 = substring($name, calc($cut + 1), string_length($name));
-    }
+def_int $height = 29;
+def_boolean $two = false;
+if (db_getfieldcount($row, fairy_ring_code:line2) > 0) {
+    $line2 = db_getfield($row, fairy_ring_code:line2, 0);
+    $height = 42;
+    $two = true;
 }
-if_sethide(enum(int, component, fairy_rings_log_slots, $slot), false);
+def_component $layer = enum(int, component, fairy_rings_log_slots, $slot);
+if_setposition($layer, 0, $y);
+if_sethide($layer, false);
 if_settext(enum(int, component, fairy_rings_log_codes, $slot), db_getfield($row, fairy_ring_code:code, 0));
-if_settext(enum(int, component, fairy_rings_log_line1s, $slot), $line1);
+if_settext(enum(int, component, fairy_rings_log_line1s, $slot), db_getfield($row, fairy_ring_code:line1, 0));
 if_settext(enum(int, component, fairy_rings_log_line2s, $slot), $line2);
-def_boolean $fav = ~fairy_rings_is_favourite($index);
+if_sethide(enum(int, component, fairy_rings_log_shorts, $slot), $two);
+if_sethide(enum(int, component, fairy_rings_log_talls, $slot), ~fairy_rings_not_bool($two));
 if_sethide(enum(int, component, fairy_rings_log_adds, $slot), $fav);
 if_sethide(enum(int, component, fairy_rings_log_removes, $slot), ~fairy_rings_not_bool($fav));
+return($height);
 
 [proc,fairy_rings_not_bool](boolean $b)(boolean)
 if ($b = true) {
@@ -325,8 +338,12 @@ if (compare($code, "AIR") = 0) {
 } else if ($seq = 2 & $index = ^fairyring_djq) {
     %fairyring_seq = 3;
 } else if ($seq = 3 & compare($code, "AJS") = 0) {
-    ~fairy_rings_travel($ring, ^fairyring_hideout);
-    return;
+    // Fairytale II's hideout, once you've worked out the way (quest_fairy2/fairy2_hideout.rs2)
+    if (~fairy2_hideout_open = true) {
+        ~fairy_rings_travel($ring, ^fairyring_hideout);
+        ~fairy2_hideout_arrived;
+        return;
+    }
 }
 if ($row = null) {
     ~fairy_rings_stay($ring);
@@ -371,6 +388,8 @@ if (coord ! $ring) {
 }
 anim(human_fairy_vanish, 0);
 spotanim_pl(fairy_flower_ring, 0, 0);
+// the sound: 2009Scape (TeleportManager FAIRY_RING, Sounds.FT_FAIRY_TELEPORT_1098), our FT_fairy_teleport
+sound_synth(FT_fairy_teleport, 1, 0);
 p_delay(2);
 p_telejump($dest);
 anim(human_fairy_appear, 0);
@@ -387,113 +406,3 @@ if (coordx($to) > coordx($from)) {
     return(^exact_east);
 }
 return(^exact_west);
-
-// ---------------------------------------------------------------- the travel log's slots
-[if_button,fairyrings_log:button0] ~fairy_rings_log_pick(0);
-[if_button,fairyrings_log:addheart0] ~fairy_rings_log_favourite(0, true);
-[if_button,fairyrings_log:removeheart0] ~fairy_rings_log_favourite(0, false);
-[if_button,fairyrings_log:button1] ~fairy_rings_log_pick(1);
-[if_button,fairyrings_log:addheart1] ~fairy_rings_log_favourite(1, true);
-[if_button,fairyrings_log:removeheart1] ~fairy_rings_log_favourite(1, false);
-[if_button,fairyrings_log:button2] ~fairy_rings_log_pick(2);
-[if_button,fairyrings_log:addheart2] ~fairy_rings_log_favourite(2, true);
-[if_button,fairyrings_log:removeheart2] ~fairy_rings_log_favourite(2, false);
-[if_button,fairyrings_log:button3] ~fairy_rings_log_pick(3);
-[if_button,fairyrings_log:addheart3] ~fairy_rings_log_favourite(3, true);
-[if_button,fairyrings_log:removeheart3] ~fairy_rings_log_favourite(3, false);
-[if_button,fairyrings_log:button4] ~fairy_rings_log_pick(4);
-[if_button,fairyrings_log:addheart4] ~fairy_rings_log_favourite(4, true);
-[if_button,fairyrings_log:removeheart4] ~fairy_rings_log_favourite(4, false);
-[if_button,fairyrings_log:button5] ~fairy_rings_log_pick(5);
-[if_button,fairyrings_log:addheart5] ~fairy_rings_log_favourite(5, true);
-[if_button,fairyrings_log:removeheart5] ~fairy_rings_log_favourite(5, false);
-[if_button,fairyrings_log:button6] ~fairy_rings_log_pick(6);
-[if_button,fairyrings_log:addheart6] ~fairy_rings_log_favourite(6, true);
-[if_button,fairyrings_log:removeheart6] ~fairy_rings_log_favourite(6, false);
-[if_button,fairyrings_log:button7] ~fairy_rings_log_pick(7);
-[if_button,fairyrings_log:addheart7] ~fairy_rings_log_favourite(7, true);
-[if_button,fairyrings_log:removeheart7] ~fairy_rings_log_favourite(7, false);
-[if_button,fairyrings_log:button8] ~fairy_rings_log_pick(8);
-[if_button,fairyrings_log:addheart8] ~fairy_rings_log_favourite(8, true);
-[if_button,fairyrings_log:removeheart8] ~fairy_rings_log_favourite(8, false);
-[if_button,fairyrings_log:button9] ~fairy_rings_log_pick(9);
-[if_button,fairyrings_log:addheart9] ~fairy_rings_log_favourite(9, true);
-[if_button,fairyrings_log:removeheart9] ~fairy_rings_log_favourite(9, false);
-[if_button,fairyrings_log:button10] ~fairy_rings_log_pick(10);
-[if_button,fairyrings_log:addheart10] ~fairy_rings_log_favourite(10, true);
-[if_button,fairyrings_log:removeheart10] ~fairy_rings_log_favourite(10, false);
-[if_button,fairyrings_log:button11] ~fairy_rings_log_pick(11);
-[if_button,fairyrings_log:addheart11] ~fairy_rings_log_favourite(11, true);
-[if_button,fairyrings_log:removeheart11] ~fairy_rings_log_favourite(11, false);
-[if_button,fairyrings_log:button12] ~fairy_rings_log_pick(12);
-[if_button,fairyrings_log:addheart12] ~fairy_rings_log_favourite(12, true);
-[if_button,fairyrings_log:removeheart12] ~fairy_rings_log_favourite(12, false);
-[if_button,fairyrings_log:button13] ~fairy_rings_log_pick(13);
-[if_button,fairyrings_log:addheart13] ~fairy_rings_log_favourite(13, true);
-[if_button,fairyrings_log:removeheart13] ~fairy_rings_log_favourite(13, false);
-[if_button,fairyrings_log:button14] ~fairy_rings_log_pick(14);
-[if_button,fairyrings_log:addheart14] ~fairy_rings_log_favourite(14, true);
-[if_button,fairyrings_log:removeheart14] ~fairy_rings_log_favourite(14, false);
-[if_button,fairyrings_log:button15] ~fairy_rings_log_pick(15);
-[if_button,fairyrings_log:addheart15] ~fairy_rings_log_favourite(15, true);
-[if_button,fairyrings_log:removeheart15] ~fairy_rings_log_favourite(15, false);
-[if_button,fairyrings_log:button16] ~fairy_rings_log_pick(16);
-[if_button,fairyrings_log:addheart16] ~fairy_rings_log_favourite(16, true);
-[if_button,fairyrings_log:removeheart16] ~fairy_rings_log_favourite(16, false);
-[if_button,fairyrings_log:button17] ~fairy_rings_log_pick(17);
-[if_button,fairyrings_log:addheart17] ~fairy_rings_log_favourite(17, true);
-[if_button,fairyrings_log:removeheart17] ~fairy_rings_log_favourite(17, false);
-[if_button,fairyrings_log:button18] ~fairy_rings_log_pick(18);
-[if_button,fairyrings_log:addheart18] ~fairy_rings_log_favourite(18, true);
-[if_button,fairyrings_log:removeheart18] ~fairy_rings_log_favourite(18, false);
-[if_button,fairyrings_log:button19] ~fairy_rings_log_pick(19);
-[if_button,fairyrings_log:addheart19] ~fairy_rings_log_favourite(19, true);
-[if_button,fairyrings_log:removeheart19] ~fairy_rings_log_favourite(19, false);
-[if_button,fairyrings_log:button20] ~fairy_rings_log_pick(20);
-[if_button,fairyrings_log:addheart20] ~fairy_rings_log_favourite(20, true);
-[if_button,fairyrings_log:removeheart20] ~fairy_rings_log_favourite(20, false);
-[if_button,fairyrings_log:button21] ~fairy_rings_log_pick(21);
-[if_button,fairyrings_log:addheart21] ~fairy_rings_log_favourite(21, true);
-[if_button,fairyrings_log:removeheart21] ~fairy_rings_log_favourite(21, false);
-[if_button,fairyrings_log:button22] ~fairy_rings_log_pick(22);
-[if_button,fairyrings_log:addheart22] ~fairy_rings_log_favourite(22, true);
-[if_button,fairyrings_log:removeheart22] ~fairy_rings_log_favourite(22, false);
-[if_button,fairyrings_log:button23] ~fairy_rings_log_pick(23);
-[if_button,fairyrings_log:addheart23] ~fairy_rings_log_favourite(23, true);
-[if_button,fairyrings_log:removeheart23] ~fairy_rings_log_favourite(23, false);
-[if_button,fairyrings_log:button24] ~fairy_rings_log_pick(24);
-[if_button,fairyrings_log:addheart24] ~fairy_rings_log_favourite(24, true);
-[if_button,fairyrings_log:removeheart24] ~fairy_rings_log_favourite(24, false);
-[if_button,fairyrings_log:button25] ~fairy_rings_log_pick(25);
-[if_button,fairyrings_log:addheart25] ~fairy_rings_log_favourite(25, true);
-[if_button,fairyrings_log:removeheart25] ~fairy_rings_log_favourite(25, false);
-[if_button,fairyrings_log:button26] ~fairy_rings_log_pick(26);
-[if_button,fairyrings_log:addheart26] ~fairy_rings_log_favourite(26, true);
-[if_button,fairyrings_log:removeheart26] ~fairy_rings_log_favourite(26, false);
-[if_button,fairyrings_log:button27] ~fairy_rings_log_pick(27);
-[if_button,fairyrings_log:addheart27] ~fairy_rings_log_favourite(27, true);
-[if_button,fairyrings_log:removeheart27] ~fairy_rings_log_favourite(27, false);
-[if_button,fairyrings_log:button28] ~fairy_rings_log_pick(28);
-[if_button,fairyrings_log:addheart28] ~fairy_rings_log_favourite(28, true);
-[if_button,fairyrings_log:removeheart28] ~fairy_rings_log_favourite(28, false);
-[if_button,fairyrings_log:button29] ~fairy_rings_log_pick(29);
-[if_button,fairyrings_log:addheart29] ~fairy_rings_log_favourite(29, true);
-[if_button,fairyrings_log:removeheart29] ~fairy_rings_log_favourite(29, false);
-[if_button,fairyrings_log:button30] ~fairy_rings_log_pick(30);
-[if_button,fairyrings_log:addheart30] ~fairy_rings_log_favourite(30, true);
-[if_button,fairyrings_log:removeheart30] ~fairy_rings_log_favourite(30, false);
-[if_button,fairyrings_log:button31] ~fairy_rings_log_pick(31);
-[if_button,fairyrings_log:addheart31] ~fairy_rings_log_favourite(31, true);
-[if_button,fairyrings_log:removeheart31] ~fairy_rings_log_favourite(31, false);
-[if_button,fairyrings_log:button32] ~fairy_rings_log_pick(32);
-[if_button,fairyrings_log:addheart32] ~fairy_rings_log_favourite(32, true);
-[if_button,fairyrings_log:removeheart32] ~fairy_rings_log_favourite(32, false);
-[if_button,fairyrings_log:button33] ~fairy_rings_log_pick(33);
-[if_button,fairyrings_log:addheart33] ~fairy_rings_log_favourite(33, true);
-[if_button,fairyrings_log:removeheart33] ~fairy_rings_log_favourite(33, false);
-[if_button,fairyrings_log:button34] ~fairy_rings_log_pick(34);
-[if_button,fairyrings_log:addheart34] ~fairy_rings_log_favourite(34, true);
-[if_button,fairyrings_log:removeheart34] ~fairy_rings_log_favourite(34, false);
-[if_button,fairyrings_log:button35] ~fairy_rings_log_pick(35);
-[if_button,fairyrings_log:addheart35] ~fairy_rings_log_favourite(35, true);
-[if_button,fairyrings_log:removeheart35] ~fairy_rings_log_favourite(35, false);

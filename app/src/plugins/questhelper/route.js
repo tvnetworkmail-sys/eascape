@@ -130,8 +130,10 @@ class World {
    * Route from `from` to `to` ({x, z, level}). `near` (squares) ends the route as soon as
    * it's that close on the right floor (an NPC or object: you stand next to it). Returns
    * [{x, z, level, via?}] or null. via marks the square where you take stairs/a ladder.
+   * `allow` lists what the player has that some ways across need (a transport's "needs", such
+   * as "fairyrings"); the others are left out.
    */
-  find(from, to, { near = 0, maxNodes = 400000, weight = 1 } = {}) {
+  find(from, to, { near = 0, maxNodes = 400000, weight = 1, allow = [] } = {}) {
     const start = this.nearestWalkable(from.x, from.z, from.level, 2);
     if (!start) return null;
     const goalLevel = to.level;
@@ -175,6 +177,7 @@ class World {
       }
       for (const { t, inside } of this.links.get(k) || []) {
         if (inside) continue;
+        if (t.needs && !allow.includes(t.needs)) continue;
         let dest;
         if (t.rel) {
           dest = this.nearestWalkable(x + t.rel[0], z + t.rel[2], level + t.rel[1], 2);

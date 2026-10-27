@@ -13,6 +13,9 @@ const { load } = require('../../src/plugins/questhelper/route');
 
 const GOLDEN = path.join(__dirname, 'golden.json');
 const OPTS = { near: 1, maxNodes: 400000, weight: 2 };
+// a route works if it can be walked without what some players have yet, or else with it (the
+// fairy rings, once Fairytale II allows them: a search that may take them looks much further)
+const UNLOCKS = ['fairyrings'];
 
 function pairs() {
   const guides = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'plugins', 'questhelper', 'server-guides.json'), 'utf8'));
@@ -30,7 +33,9 @@ function pairs() {
 }
 
 function works(world, p) {
-  return !!world.find({ x: p.a[0], z: p.a[1], level: p.a[2] }, { x: p.b[0], z: p.b[1], level: p.b[2] }, OPTS);
+  const from = { x: p.a[0], z: p.a[1], level: p.a[2] };
+  const to = { x: p.b[0], z: p.b[1], level: p.b[2] };
+  return !!world.find(from, to, OPTS) || !!world.find(from, to, { ...OPTS, allow: UNLOCKS });
 }
 
 const world = load();

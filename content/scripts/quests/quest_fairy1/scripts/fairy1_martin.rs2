@@ -12,7 +12,7 @@
 //   - the transcript has nothing for Martin between telling you to find a fairy and the end, so
 //     there he asks how you are getting on (his own line from the transcript) and you say you're
 //     still working on it (ours);
-//   - after the quest, Void's lines (Martin.kt).
+//   - after the quest, Martin starts Fairytale II (quest_fairy2).
 
 [opnpc1,martin_the_master_farmer]
 def_int $s = %fairy_farmers_quest;
@@ -23,12 +23,7 @@ if ($s = ^fairy1_gardeners) {
     @fairy1_martin_report;
 }
 if ($s >= ^fairy1_complete) {
-    // Void (Martin.kt)
-    ~chatplayer("<p,happy>Okay, this time I've really solved your problems! I've woken up the Fairy Queen!");
-    ~chatnpc("<p,shifty>Hmm, right. You'll forgive me if I reserve judgement on this until I actually have some crops grow.");
-    ~chatplayer("<p,happy>Of course. The problem was the Godfather, he wanted to take control of Zanaris himself, so he didn't give Fairy Nuff the Queen's secateurs!");
-    ~chatnpc("<p,neutral>Godfather...Fairy Nuff...the Queen, I don't know what you're talking about and I don't care. I just want my crops to start growing again. Come back and claim your reward once they've had a chance to grow.");
-    return;
+    @fairy2_martin; // Fairytale II (quest_fairy2/scripts/fairy2_martin.rs2)
 }
 ~chatnpc("<p,quiz>Hello again, <displayname>. How are you getting on with solving the Gardening Group's problems?");
 ~chatplayer("<p,neutral>I'm still working on it."); // ours

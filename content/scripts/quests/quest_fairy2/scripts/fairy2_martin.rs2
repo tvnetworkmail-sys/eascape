@@ -1,0 +1,91 @@
+// Fairytale II - Cure a Queen: Martin the Master Gardener, who starts it. Lines from the OSRS
+// wiki's quest transcript (Transcript:Fairytale II - Cure a Queen); after the quest, Void's
+// (Martin.kt: its "Ask about the quest." once the Queen is awake). Our choices:
+//   - as in Fairytale I, no skillcape menu (skillcapes came later), so Talk-to goes to the quest;
+//   - his crops take about five and a half minutes of logged-in time (wiki): a timer, started
+//     again if you log out before it's done;
+//   - the quest's skill levels (Thieving 40, Farming 49, Herblore 57) aren't needed to start it
+//     (wiki: they're needed to finish it, not for the fairy rings).
+
+[label,fairy2_martin]
+def_int $s = %fairy2_queencure_quest;
+if ($s = ^fairy2_not_started) {
+    ~chatplayer("<p,happy>I've solved your problems! I've returned the Fairy Queen's magical essence!");
+    ~chatnpc("<p,confused>What are you talking about?");
+    ~chatplayer("<p,neutral>The Fairy Queen was in an enchanted deep sleep, because the Tanglefoot had taken the secateurs that contained her magic. I fought and killed the Tanglefoot and have given the Godfather the Fairy Queen's secateurs. She'll wake up now and everything will get back to normal.");
+    ~chatnpc("<p,neutral>I'm glad to hear it, but if you don't mind I'll go and plant some seeds now and wait until they grow before I give you the reward that I promised.");
+    ~chatplayer("<p,neutral>I guess it does sound rather far-fetched. Ok, I'll come back and see you after your crops have had a chance to grow.");
+    %fairy2_queencure_quest = ^fairy2_planting;
+    %fairy2_martinchat = 1;
+    settimer(fairy2_crops, ^fairy2_crops_ticks);
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+    ~chatnpc("<p,happy>Great! I'll see you soon then.");
+    return;
+}
+if ($s = ^fairy2_planting) {
+    ~chatplayer("<p,quiz>So, have your vegetables grown yet?");
+    ~chatnpc("<p,angry>Stop being so impatient, <displayname>. They'll grow in their own good time - come back later.");
+    return;
+}
+if ($s = ^fairy2_crops_grown) {
+    ~chatplayer("<p,quiz>Hello Martin, you must be the slowest gardener in the world! I don't suppose those crops have grown yet?");
+    ~chatnpc("<p,angry>Well, you've got a nerve showing up around here again!");
+    ~chatplayer("<p,confused>What? What are you talking about?");
+    ~chatnpc("<p,angry>You told me that you'd solved the problems of the Gardening Group's members, well I've planted loads of seeds since then and there's no doubt that even more plants are dying!");
+    ~chatplayer("<p,confused>But I gave the Fairy Queen's secateurs back to the Godfather, things should be growing again.");
+    ~chatnpc("<p,angry>Yah, sure, whatever. You know, I didn't believe you when you told me that story about 'the fairies' in the first place. You'd just better solve this problem, when people get hungry, they get angry and you're the person who said that everything would be all right, so you're the person who they'll get angry with!");
+    if (~p_choice2_header("Yes.", 1, "No.", 2, "Start Fairytale II - Cure a Queen quest?") = 1) {
+        ~chatplayer("<p,neutral>I suppose I'd better go and see what the problem is then.");
+        ~fairy2_start;
+        return;
+    }
+    ~chatplayer("<p,angry>I've done enough for you, sort it out yourself!");
+    return;
+}
+if ($s >= ^fairy2_complete) {
+    // Void (Martin.kt)
+    ~chatplayer("<p,happy>Okay, this time I've really solved your problems! I've woken up the Fairy Queen!");
+    ~chatnpc("<p,shifty>Hmm, right. You'll forgive me if I reserve judgement on this until I actually have some crops grow.");
+    ~chatplayer("<p,happy>Of course. The problem was the Godfather, he wanted to take control of Zanaris himself, so he didn't give Fairy Nuff the Queen's secateurs!");
+    ~chatnpc("<p,neutral>Godfather...Fairy Nuff...the Queen, I don't know what you're talking about and I don't care. I just want my crops to start growing again. Come back and claim your reward once they've had a chance to grow.");
+    return;
+}
+~chatnpc("<p,sad>Hello again, <displayname>. Our crops are still failing. Please do something fast, the food reserves are starting to fail. People will start to realise that there is an imminent food crisis soon!");
+~chatplayer("<p,neutral>Don't worry, I'm working on it.");
+~chatnpc("<p,sad>Please hurry. Things are getting dire!");
+
+[timer,fairy2_crops]
+cleartimer(fairy2_crops);
+if (%fairy2_queencure_quest = ^fairy2_planting) {
+    %fairy2_queencure_quest = ^fairy2_crops_grown;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+}
+
+// the quest starts: in Zanaris Fairy Nuff and the sleeping Queen are gone (the 2007 cache:
+// fairy_queen_check 2, fairy2_nuffvisible 1) and her room is ransacked, the certificate on the
+// floor (fairynuff_cert_taken 1)
+[proc,fairy2_start]
+%fairy2_queencure_quest = ^fairy2_started;
+%fairy_queen_check = 2;
+%fairy2_nuffvisible = 1;
+%fairynuff_cert_taken = 1;
+~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+
+// at login: Fairytale I's three Zanaris varbits move to the 2007 cache's bits once (the 2007
+// cache's own fairy2_varbits_changed flag), and Martin's crops carry on growing
+[proc,fairy2_login]
+if (%fairy2_varbits_changed = 0) {
+    %fairy2_varbits_changed = 1;
+    def_int $v = %fairytale_multi;
+    def_int $queen = getbit_range($v, 22, 22);
+    def_int $godfather = getbit_range($v, 23, 23);
+    def_int $nuff = getbit_range($v, 25, 26);
+    $v = clearbit_range($v, 22, 27);
+    $v = setbit_range_toint($v, $queen, 22, 23);
+    $v = setbit_range_toint($v, $godfather, 24, 25);
+    $v = setbit_range_toint($v, $nuff, 26, 27);
+    %fairytale_multi = $v;
+}
+if (%fairy2_queencure_quest = ^fairy2_planting) {
+    settimer(fairy2_crops, ^fairy2_crops_ticks);
+}

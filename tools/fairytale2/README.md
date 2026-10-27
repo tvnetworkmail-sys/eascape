@@ -43,9 +43,24 @@ Run after `convert_maps.py`, once each:
 - `ring_interface.py <cache468 dir>` makes the code screen from the 2007 interface 426
   (`area_fairy_rings/interfaces/fairyrings.if`) with its models.
 - `ring_log_interface.py` makes the travel log side panel (ours, laid out like the OSRS one: 2007
-  has none), on our own parchment and heart sprites (`content/sprites/eascape_*`).
+  has none) on the side panel's stone, with our heart sprite (`content/sprites/eascape_hearts`);
+  it breaks each place's name into the log's lines, measured in the p12 font (`fontwidth.py`),
+  and writes them to `fairy_rings.dbrow`, with the row enums and buttons. Re-run after changing a
+  code's name.
 - `ring_dial_anim.py <cache468 dir>` brings over the 2007 dial-turning animations (seqs
   4290-4297) and makes the two-quarter turns and still positions from their frames.
 
 The network itself is `content/scripts/areas/area_fairy_rings/scripts/fairy_rings.rs2` and the
 codes `configs/fairy_rings.dbrow`; its header says where each rule comes from.
+
+## Step 4: the quest
+
+Run once each:
+- `scroll_interfaces.py <cache468 dir>` makes the quest's four scrolls from the 2007 interfaces
+  (Nuff's certificate read and studied, the rune temple sign, the Godfather's contract), the two
+  symbol texts drawn from the 2007 fonts into sprites (`if468.py`, `sprites468.py`).
+- `zanaris_ft2.py <cache468 dir>` puts the quest's 2007 multilocs in Fairy Nuff's room and the
+  rune temple sign by the Cosmic Altar ruins (`loc468.py` ports locs), and the quest's people in
+  Zanaris and the hideout (its header says where each comes from).
+
+The quest is `content/scripts/quests/quest_fairy2`.

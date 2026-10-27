@@ -1,0 +1,48 @@
+// Quest Helper: which step of Fairytale II - Cure a Queen you're on (fairy2_helper.dbrow), from
+// %fairy2_queencure_quest, your items and where you are, in the order RuneLite's FairytaleII.java
+// checks them (its zones: Zanaris 2368,4353-2495,4479, the hideout 2324,4420-2367,4468, the
+// cosmic entity's plane 2060,4806-2098,4862, the Gorak's plane 3009,5312-3072,5380).
+[proc,questhelper_fairy2]()(int)
+def_int $s = %fairy2_queencure_quest;
+def_boolean $zanaris = inzone(0_37_68_0_1, 0_38_69_63_63, coord);
+def_boolean $hideout = inzone(0_36_69_20_4, 0_36_69_63_52, coord);
+def_boolean $starplane = inzone(0_32_75_12_6, 0_32_75_50_62, coord);
+def_boolean $gorakplane = inzone(0_47_83_1_0, 0_47_84_63_4, coord);
+if ($s = ^fairy2_not_started) return(1);
+if ($s = ^fairy2_planting) return(2);
+if ($s = ^fairy2_crops_grown) return(3);
+if ($s < ^fairy2_secateurs) {
+    if ($hideout = true) return(10);
+    def_boolean $studied = false;
+    if (%fairy2_certificute_examined = 1) $studied = true;
+    def_boolean $sign = false;
+    if (%fairy2_sign_read >= ^fairy2_sign_was_read) $sign = true;
+    if ($studied = true & $sign = true & $s >= ^fairy2_rings_allowed) return(9);
+    if ($zanaris = true & $studied = true & $sign = true) return(8);
+    if ($zanaris = true & $studied = true) return(7);
+    if ($zanaris = true & ~obj_gettotal(ft2_nuffs_certificate) > 0) return(6);
+    if ($zanaris = true) return(5);
+    return(4);
+}
+if ($s < ^fairy2_gave_secateurs) {
+    if (~obj_gettotal(ft2_queens_secateurs) > 0) return(12);
+    return(11);
+}
+if ($s = ^fairy2_gave_secateurs) return(13);
+if ($s < ^fairy2_queen_cured) {
+    def_boolean $essence = false;
+    if (~obj_gettotal(ft2_magic_essence_4) > 0 | ~obj_gettotal(ft2_magic_essence_3) > 0 | ~obj_gettotal(ft2_magic_essence_2) > 0 | ~obj_gettotal(ft2_magic_essence_1) > 0) $essence = true;
+    def_boolean $unf = false;
+    if ($s >= ^fairy2_flower_added & ~obj_gettotal(ft2_unfinished_potion) > 0) $unf = true;
+    if ($s >= ^fairy2_claw_added & $essence = true & $hideout = true) return(22);
+    if ($s >= ^fairy2_claw_added & $essence = true) return(21);
+    if ($unf = true & ~obj_gettotal(ft2_gorak_claw_powder) > 0) return(20);
+    if ($unf = true & ~obj_gettotal(ft2_gorak_claws) > 0) return(19);
+    if (~obj_gettotal(ft2_gorak_claws) > 0 & ~obj_gettotal(ft2_star_flower) > 0) return(18);
+    if ((~obj_gettotal(ft2_star_flower) > 0 | $unf = true) & $gorakplane = true) return(17);
+    if (~obj_gettotal(ft2_star_flower) > 0 | $unf = true) return(16);
+    if ($starplane = true) return(15);
+    return(14);
+}
+if ($s < ^fairy2_complete) return(23);
+return(0);
