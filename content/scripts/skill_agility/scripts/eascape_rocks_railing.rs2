@@ -1,0 +1,56 @@
+// EASCape: two shortcuts the links table had sent underground, as if they were cave entrances.
+
+// The Gnome Stronghold's rocks (locs 9316 top, 9317 bottom), after Void
+// (TreeGnomeStronghold.kt): Agility 37, its path and message; no experience (Void gives none).
+[oploc1,loc_9316]
+if (stat(agility) < 37) {
+    mes("You need an Agility level of 37 to negotiate these rocks.");
+    return;
+}
+p_arrivedelay;
+~forcemove(0_38_54_54_59);
+~forcemove(0_38_54_55_59);
+anim(human_climbing_down, 0);
+p_exactmove(coord, 0_38_54_56_60, 20, 80, ^exact_south);
+p_delay(3);
+~forcemove(0_38_54_57_61);
+anim(human_climbing_down, 0);
+p_exactmove(coord, 0_38_55_57_1, 0, 120, ^exact_south);
+p_delay(4);
+anim(null, 0);
+
+[oploc1,loc_9317]
+if (stat(agility) < 37) {
+    mes("You need an Agility level of 37 to negotiate these rocks.");
+    return;
+}
+p_arrivedelay;
+~forcemove(0_38_55_57_1);
+~set_forcemove_bas(human_climbing);
+~forcemove(0_38_54_57_63);
+~forcemove(0_38_54_57_61);
+~forcemove(0_38_54_56_60);
+~forcemove(0_38_54_55_59);
+~update_bas;
+~forcemove(0_38_54_54_59);
+
+// The ornate railing in Morytania (loc 9337), after 2009Scape (BarSqueezeShortcut.java):
+// Agility 66, Priest in Peril done, 1 experience, through to the other side with its animation.
+[oploc1,loc_9337]
+if (%priestperil < ^priestperil_complete) {
+    ~mesbox("You need to have completed Priest in Peril in order to do this.");
+    return;
+}
+if (stat(agility) < 66) {
+    mes("You need an Agility level of at least 66 to attempt this."); // ours
+    return;
+}
+p_arrivedelay;
+def_int $dz = -1;
+if (coordz(coord) < coordz(loc_coord)) {
+    $dz = 1;
+}
+anim(roguesden_contortion, 0);
+~forcemove(movecoord(coord, 0, 0, $dz));
+anim(null, 0);
+stat_advance(agility, 10);
