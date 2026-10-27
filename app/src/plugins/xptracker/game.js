@@ -208,6 +208,9 @@ module.exports = function xpTracker(ctx) {
     for (const s of stats) if (SKILLS.includes(s.skill)) by[s.skill] = s.xp;
     // the game fills your stats in just after logging in: wait for a reading with XP in
     if (!Object.values(by).some((v) => v > 0)) return;
+    // ...and for all of them: the game sends each skill on its own, and a reading caught halfway
+    // (some skills still at level 0) made the rest look like they'd gone from 0 to all their XP
+    if (stats.some((s) => SKILLS.includes(s.skill) && s.level === 0)) return;
     const total = Object.values(by).reduce((a, b) => a + b, 0);
     if (!initialised) {
       // First reading this login: XP gained somewhere else since the save isn't ours.

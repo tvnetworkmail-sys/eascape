@@ -300,6 +300,10 @@ function loadTracker(conf, clock) {
   assert.ok(wc && wc.xpGained === 60 && wc.xp === 1090, `restored: ${JSON.stringify(wc)}`);
   t.send('stats', stats(1100, 300));
   assert.strictEqual(t.rep().skills.find((s) => s.skill === 'woodcutting').xpGained, 70, 'keeps counting');
+  // a reading caught while the game is still filling your stats in (level 0) is skipped
+  t.send('stats', [{ skill: 'woodcutting', xp: 0, level: 0 }, { skill: 'attack', xp: 0, level: 1 }, { skill: 'slayer', xp: 300, level: 4 }]);
+  t.send('stats', stats(1100, 300));
+  assert.strictEqual(t.rep().skills.find((s) => s.skill === 'woodcutting').xpGained, 70, 'half-loaded stats are no gain');
   // Reset starts the skill again from its XP now
   conf.command = { action: 'reset', skill: 'woodcutting' };
   t.inst.configChanged('command');
