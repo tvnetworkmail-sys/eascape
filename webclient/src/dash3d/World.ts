@@ -101,8 +101,14 @@ export default class World {
     // LostLite: Hide roofs - a square above your level only counts as open air when it holds
     // nothing but scenery (a tree's top): no floor, no wall, no wall decoration. Floors and walls
     // up there are roofs, upper rooms or a cave's ceiling and stay hidden.
-    static openAir(tile: Square): boolean {
-        return tile.quickGround === null && tile.ground === null && tile.wall === null && tile.decor === null;
+    // EASCape: and only above a square with a floor and no wall (a tree's top stands over its own
+    // grass): scenery over the void or over a wall is a cave's upper rock (the Fairy Resistance
+    // hideout's level 1), which drawn on its own left a checkerboard of rock and black.
+    static openAir(tile: Square, below: Square | null): boolean {
+        if (tile.quickGround !== null || tile.ground !== null || tile.wall !== null || tile.decor !== null) {
+            return false;
+        }
+        return below !== null && (below.quickGround !== null || below.ground !== null) && below.wall === null;
     }
 
     private static cycleNo: number = 0;
@@ -1022,7 +1028,7 @@ export default class World {
                         continue;
                     }
 
-                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1 && World.openAir(tile))) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
+                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1 && World.openAir(tile, level > 0 ? this.squares[level - 1][x][z] : null))) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
                         tile.drawFront = true;
                         tile.drawBack = true;
                         tile.drawSprites = tile.spriteCount > 0;
