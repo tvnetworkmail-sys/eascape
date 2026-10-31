@@ -25,3 +25,19 @@ if (~bank_check_nobreak($item) = true) {
 }
 // Okay, deposit it into the bank.
 ~bank_deposit_request(inv, $item, $number, $slot);
+
+// EASCape: the bank's "Deposit inventory" button (the app's Bank plugin; ClientCheatHandler's
+// appbankall runs this): every item in the pack goes into the bank, one slot at a time, the
+// same way depositing All does.
+[proc,bank_deposit_inventory]
+def_int $slot = 0;
+def_obj $obj;
+while ($slot < inv_size(inv)) {
+    $obj = inv_getobj(inv, $slot);
+    if ($obj ! null) {
+        if (~bank_check_nobreak($obj) = false) {
+            ~bank_deposit_request(inv, $obj, inv_total(inv, $obj), $slot);
+        }
+    }
+    $slot = add($slot, 1);
+}

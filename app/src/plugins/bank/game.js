@@ -4,15 +4,18 @@
 // it sits on the real chatbox background); this draws the search button over the bank
 // and handles typing (keys go to the search, not the game, while the prompt is showing).
 
-// Positions in game pixels. The bank is drawn at (4, 4); its Insert button ends at x 221
-// and Item starts at 291, both at y 291-327. The chatbox text area starts at (17, 357).
-const BUTTON = { x: 4 + 238, y: 4 + 291, w: 36, h: 36 };
+// Positions in game pixels. The bank is drawn at (4, 4). EASCape: the search button and the
+// Deposit inventory button sit bottom right, as in OSRS (your call, 31 Oct 2026); the bank's
+// "Withdraw as: Item / Note" buttons were moved left 52 pixels to make room (bank_main.if),
+// so they now span x 239-384 at y 291-327. The chatbox text area starts at (17, 357).
+const BUTTON = { x: 4 + 400, y: 4 + 291, w: 36, h: 36 };
+const DEPOSIT = { x: 4 + 437, y: 4 + 291, w: 36, h: 36 };
 // The bank's own 72 x 36 buttons, used as artwork for ours: Item and Note (one is red
 // when selected, the other grey). Not Swap and Insert: the "Rearrange mode:" label above
 // them has a descender (the g) that dips into the buttons' top row and showed up as an
 // orange dot. "Withdraw as:" above Item and Note has none.
-const ITEM = { x: 4 + 291, y: 4 + 291 };
-const NOTE = { x: 4 + 364, y: 4 + 291 };
+const ITEM = { x: 4 + 239, y: 4 + 291 };
+const NOTE = { x: 4 + 312, y: 4 + 291 };
 const BODY_TOP = 8;
 const BODY_H = 23;
 const MAX_LEN = 30;
@@ -23,6 +26,7 @@ module.exports = function bankSearch(ctx) {
   let query = '';
   let found = -1;
   let button = null;
+  let deposit = null;
   let off = null;
 
   function send() {
@@ -136,12 +140,54 @@ module.exports = function bankSearch(ctx) {
     icon('rgb(220, 220, 210)', 0, 0, 2);
   }
 
-  function blockGame(el) {
+  // Deposit inventory: the same grey button with a small chest and a green arrow going in,
+  // drawn after the OSRS button (your screenshot)
+  function drawDeposit() {
+    if (!art) captureArt();
+    const g = deposit.getContext('2d');
+    g.clearRect(0, 0, DEPOSIT.w, DEPOSIT.h);
+    if (art) {
+      g.drawImage(art.grey, 0, 0);
+    } else {
+      g.fillStyle = 'rgb(72, 64, 52)';
+      g.fillRect(1, BODY_TOP + 1, 34, BODY_H - 2);
+    }
+    // chest: outline, lid and body, a gold clasp
+    g.fillStyle = '#000';
+    g.fillRect(12, 15, 16, 13);
+    g.fillStyle = 'rgb(120, 72, 32)';
+    g.fillRect(13, 16, 14, 4);
+    g.fillStyle = 'rgb(96, 56, 24)';
+    g.fillRect(13, 21, 14, 6);
+    g.fillStyle = '#000';
+    g.fillRect(12, 20, 16, 1);
+    g.fillStyle = 'rgb(220, 180, 60)';
+    g.fillRect(19, 19, 2, 3);
+    // green arrow, down and to the right into the chest
+    const arrow = (fill, dx, dy) => {
+      g.fillStyle = fill;
+      g.beginPath();
+      g.moveTo(5 + dx, 10 + dy);
+      g.lineTo(9 + dx, 10 + dy);
+      g.lineTo(14 + dx, 15 + dy);
+      g.lineTo(16 + dx, 13 + dy);
+      g.lineTo(16 + dx, 20 + dy);
+      g.lineTo(9 + dx, 20 + dy);
+      g.lineTo(11 + dx, 18 + dy);
+      g.lineTo(5 + dx, 12 + dy);
+      g.closePath();
+      g.fill();
+    };
+    arrow('#000', 1, 1);
+    arrow('rgb(40, 200, 40)', 0, 0);
+  }
+
+  function blockGame(el, onClick = toggle) {
     for (const t of ['pointerdown', 'mousedown', 'mouseup', 'pointerup', 'click', 'contextmenu', 'mousemove', 'pointermove', 'wheel']) {
       el.addEventListener(t, (e) => {
         e.stopImmediatePropagation();
         if (t !== 'mousemove' && t !== 'pointermove') e.preventDefault();
-        if (t === 'pointerdown' && e.button === 0) toggle();
+        if (t === 'pointerdown' && e.button === 0) onClick();
       }, true);
     }
   }
@@ -150,6 +196,7 @@ module.exports = function bankSearch(ctx) {
     const g = scale();
     if (!open || !g) {
       if (button) button.style.display = 'none';
+      if (deposit) deposit.style.display = 'none';
       showPrompt(false);
       return;
     }
@@ -166,6 +213,18 @@ module.exports = function bankSearch(ctx) {
     button.style.display = 'block';
     place(button, BUTTON, g);
     drawButton(typing || !!query);
+    if (!deposit) {
+      deposit = document.createElement('canvas');
+      deposit.className = 'll-bank ll-bank-btn';
+      deposit.width = DEPOSIT.w;
+      deposit.height = DEPOSIT.h;
+      deposit.title = 'Deposit inventory';
+      blockGame(deposit, () => ctx.sendToGame({ type: 'bank-deposit-all' }));
+      document.body.appendChild(deposit);
+    }
+    deposit.style.display = 'block';
+    place(deposit, DEPOSIT, g);
+    drawDeposit();
 
     showPrompt(typing);
   }
@@ -291,6 +350,8 @@ module.exports = function bankSearch(ctx) {
       window.removeEventListener('resize', onResize);
       if (button) button.remove();
       button = null;
+      if (deposit) deposit.remove();
+      deposit = null;
       query = '';
       typing = false;
       showPrompt(false);

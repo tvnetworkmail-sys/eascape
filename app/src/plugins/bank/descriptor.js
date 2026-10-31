@@ -1,11 +1,11 @@
 'use strict';
-// Port of RuneLite's bank search: a search button on the bank (in the gap between Insert
-// and Item, since the 2004 bank has no button bar), a prompt in the chatbox while you type,
+// Port of RuneLite's bank search: a search button on the bank (bottom right, with EASCape's
+// Deposit inventory button beside it), a prompt in the chatbox while you type,
 // and the bank title showing what you're searching for.
 module.exports = {
   id: 'bank',
   name: 'Bank',
-  description: 'Search your bank by item name, and keep placeholders',
+  description: 'Search your bank by item name, deposit your whole inventory, and keep placeholders',
   tags: ['bank', 'search', 'find', 'filter', 'items', 'placeholders'],
   enabledByDefault: true,
   game: './bank/game.js',

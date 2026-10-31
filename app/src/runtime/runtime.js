@@ -2058,6 +2058,9 @@
         this.bankSearch(cmd.query);
       } else if (cmd.type === 'bank-layout') {
         this.bankLayout(cmd);
+      } else if (cmd.type === 'bank-deposit-all') {
+        // EASCape: the bank's Deposit inventory button (ClientCheatHandler appbankall)
+        if (this.api && this.api.command) this.api.command('appbankall');
       } else if (cmd.type === 'login-config') {
         this.hideUser = !!cmd.hideUser;
         this.login = {

@@ -79,6 +79,17 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
         // EASCape: the app's hitpoints orb, clicked while poisoned: drink the first antipoison in
         // the pack (antipoison, superantipoison, antidote+ or antidote++), the same as clicking
         // its Drink option (only from the app)
+        // EASCape: the bank's Deposit inventory button (app Bank plugin): only with the bank open
+        if (cmd === 'appbankall') {
+            if (!isClientConnected(player) || !player.client.isApp || player.delayed || player.modalMain !== Component.getId('bank_main')) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,bank_deposit_inventory]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player), true);
+            }
+            return true;
+        }
         if (cmd === 'appantipoison') {
             if (!isClientConnected(player) || !player.client.isApp || player.delayed) {
                 return true;
