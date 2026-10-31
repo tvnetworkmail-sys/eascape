@@ -748,7 +748,9 @@
         return found;
       };
       const side = typeof c[f.sideModal] === 'number' && c[f.sideModal] !== -1 ? c[f.sideModal] : f.sideIcon && f.activeTab && c[f.sideIcon] ? c[f.sideIcon][c[f.activeTab]] : -1;
-      const roots = [[c[f.mainModal], 4, 4, null], [side, 553, 205, f.redrawSide], [f.chatModal ? c[f.chatModal] : -1, 17, 357, f.redrawChat]];
+      // EASCape: the side panel and chat box sit elsewhere with the 2007 interface (the client says where)
+      const fr = (typeof window !== 'undefined' && window.__eascapeFrame) || { sideX: 553, sideY: 205, chatX: 17, chatY: 357 };
+      const roots = [[c[f.mainModal], 4, 4, null], [side, fr.sideX, fr.sideY, f.redrawSide], [f.chatModal ? c[f.chatModal] : -1, fr.chatX, fr.chatY, f.redrawChat]];
       for (const [id, x, y, redraw] of roots) {
         if (typeof id !== 'number' || id < 0) continue;
         const layer = find(list[id], x, y, 0, 0);

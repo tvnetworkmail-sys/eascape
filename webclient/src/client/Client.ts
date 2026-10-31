@@ -353,6 +353,29 @@ export class Client extends GameShell {
     private redrawChatMode: boolean = false;
 
     private mapback: Pix8 | null = null;
+    // EASCape: the 2007 interface (the app's "2007 interface" plugin sets lostlite().frame2007): the
+    // August 2007 game frame (tools/frame2007/build.py, sprites f2007_*) and its places for the
+    // side panel, chat box and minimap; 2006's by default
+    private frame2007: boolean = false;
+    private sideX: number = 553;
+    private frameChatX: number = 17;
+    private frameChatY: number = 357;
+    private mapX: number = 550;
+    private chatView07: number = 0; // the chat buttons' All (0) or Game (1)
+    private f07Frame: Pix32 | null = null;
+    private f07Sideback: Pix32 | null = null;
+    private f07Chatback: Pix32 | null = null;
+    private f07Topbar: Pix32 | null = null;
+    private f07Bottombar: Pix32 | null = null;
+    private f07Stones: (Pix32 | null)[] = [];
+    private f07Icons: (Pix32 | null)[] = [];
+    private f07Chatbar: Pix32 | null = null;
+    private f07Chatbtn: (Pix32 | null)[] = [];
+    private f07Report: (Pix32 | null)[] = [];
+    private areaF07Frame: PixMap | null = null;
+    private areaF07Top: PixMap | null = null;
+    private areaF07Bottom: PixMap | null = null;
+    private areaF07Chat: PixMap | null = null;
     private compassMaskLineOffsets: Int32Array = new Int32Array(33);
     private compassMaskLineLengths: Int32Array = new Int32Array(33);
     private minimapMaskLineOffsets: Int32Array = new Int32Array(151);
@@ -1041,6 +1064,33 @@ export class Client extends GameShell {
 
             this.mapedge = Pix32.depack(media, 'mapedge', 0);
             this.mapedge.trim();
+
+            // EASCape: the 2007 interface's sprites (tools/frame2007/build.py)
+            try {
+                this.f07Frame = Pix32.depack(media, 'f2007_frame', 0);
+                this.f07Sideback = Pix32.depack(media, 'f2007_sideback', 0);
+                this.f07Chatback = Pix32.depack(media, 'f2007_chatback', 0);
+                this.f07Topbar = Pix32.depack(media, 'f2007_topbar', 0);
+                this.f07Bottombar = Pix32.depack(media, 'f2007_bottombar', 0);
+                this.f07Chatbar = Pix32.depack(media, 'f2007_chatbar', 0);
+                for (let i: number = 0; i < 5; i++) {
+                    this.f07Stones[i] = Pix32.depack(media, 'f2007_stones', i);
+                    this.f07Chatbtn[i] = Pix32.depack(media, 'f2007_chatbtn', i);
+                }
+                for (let i: number = 0; i < 14; i++) {
+                    this.f07Icons[i] = Pix32.depack(media, 'f2007_icons', i);
+                }
+                for (let i: number = 0; i < 2; i++) {
+                    this.f07Report[i] = Pix32.depack(media, 'f2007_report', i);
+                }
+                this.areaF07Frame = new PixMap(765, 503);
+                this.f07Frame.plotSprite(0, 0);
+                this.areaF07Top = new PixMap(249, 45);
+                this.areaF07Bottom = new PixMap(246, 37);
+                this.areaF07Chat = new PixMap(519, 23);
+            } catch (e) {
+                this.f07Frame = null;
+            }
 
             // the 377 client's sprite counts (Client.load)
             for (let i: number = 0; i < 72; i++) {
@@ -2573,11 +2623,11 @@ export class Client extends GameShell {
 
         this.lastOverComId = 0;
 
-        if (this.mouseX > 553 && this.mouseY > 205 && this.mouseX < 743 && this.mouseY < 466) {
+        if (this.mouseX > this.sideX && this.mouseY > 205 && this.mouseX < this.sideX + 190 && this.mouseY < 466) {
             if (this.sideModalId !== -1) {
-                this.addComponentOptions(IfType.list[this.sideModalId], this.mouseX, this.mouseY, 553, 205, 0);
+                this.addComponentOptions(IfType.list[this.sideModalId], this.mouseX, this.mouseY, this.sideX, 205, 0);
             } else if (this.sideIcon[this.activeIcon] !== -1) {
-                this.addComponentOptions(IfType.list[this.sideIcon[this.activeIcon]], this.mouseX, this.mouseY, 553, 205, 0);
+                this.addComponentOptions(IfType.list[this.sideIcon[this.activeIcon]], this.mouseX, this.mouseY, this.sideX, 205, 0);
             }
         }
 
@@ -2588,11 +2638,11 @@ export class Client extends GameShell {
 
         this.lastOverComId = 0;
 
-        if (this.mouseX > 17 && this.mouseY > 357 && this.mouseX < 496 && this.mouseY < 453) {
+        if (this.mouseX > this.frameChatX && this.mouseY > this.frameChatY && this.mouseX < this.frameChatX + 479 && this.mouseY < this.frameChatY + 96) {
             if (this.chatModalId !== -1) {
-                this.addComponentOptions(IfType.list[this.chatModalId], this.mouseX, this.mouseY, 17, 357, 0);
-            } else if (this.mouseY < 434 && this.mouseX < 426) {
-                this.addChatOptions(this.mouseX - 17, this.mouseY - 357);
+                this.addComponentOptions(IfType.list[this.chatModalId], this.mouseX, this.mouseY, this.frameChatX, this.frameChatY, 0);
+            } else if (this.mouseY < this.frameChatY + 77 && this.mouseX < this.frameChatX + 409) {
+                this.addChatOptions(this.mouseX - this.frameChatX, this.mouseY - this.frameChatY);
             }
         }
 
@@ -2783,7 +2833,7 @@ export class Client extends GameShell {
             return;
         }
 
-        let x: number = this.mouseClickX - 25 - 550;
+        let x: number = this.mouseClickX - 25 - this.mapX;
         let y: number = this.mouseClickY - 4 - 4;
 
         if (x < 0 || y < 0 || x >= 146 || y >= 151) {
@@ -2825,6 +2875,28 @@ export class Client extends GameShell {
     // todo: order
     private iconLoop(): void {
         if (this.mouseClickButton !== 1) {
+            return;
+        }
+
+        if (this.frame2007) {
+            // the 2007 tab bars: seven cells each, 38, 33 x 5, 38 wide from x 522
+            const cells: number[] = [522, 560, 593, 626, 659, 692, 725, 763];
+            let row: number = -1;
+            if (this.mouseClickY >= 168 && this.mouseClickY < 205) {
+                row = 0;
+            } else if (this.mouseClickY >= 466 && this.mouseClickY < 503) {
+                row = 1;
+            }
+            if (row !== -1) {
+                for (let c: number = 0; c < 7; c++) {
+                    const tab: number = row * 7 + c;
+                    if (this.mouseClickX >= cells[c] && this.mouseClickX < cells[c + 1] && this.sideIcon[tab] != -1) {
+                        this.redrawSide = true;
+                        this.activeIcon = tab;
+                        this.redrawIcons = true;
+                    }
+                }
+            }
             return;
         }
 
@@ -2893,6 +2965,11 @@ export class Client extends GameShell {
             return;
         }
 
+        if (this.frame2007) {
+            this.chatModeLoop2007();
+            return;
+        }
+
         if (this.mouseClickX >= 6 && this.mouseClickX <= 106 && this.mouseClickY >= 467 && this.mouseClickY <= 499) {
             this.chatPublicMode = (this.chatPublicMode + 1) % 4;
             this.redrawChatMode = true;
@@ -2933,6 +3010,146 @@ export class Client extends GameShell {
                 }
             }
 
+            if (this.isMobile) {
+                MobileKeyboard.show();
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- EASCape: the 2007 interface
+    // The app's "2007 interface" plugin turns it on (lostlite().frame2007). The August 2007 frame
+    // (interface 548) puts the side panel at 547,205, the minimap at 545,4 and the chat at 20,362;
+    // its tab bars and chat buttons are drawn here from its sprites (tools/frame2007/build.py).
+    private syncFrame2007(): void {
+        const want: boolean = !!lostlite()?.frame2007 && this.f07Frame !== null;
+        if (want === this.frame2007) {
+            return;
+        }
+        this.frame2007 = want;
+        this.sideX = want ? 547 : 553;
+        this.frameChatX = want ? 20 : 17;
+        this.frameChatY = want ? 362 : 357;
+        this.mapX = want ? 545 : 550;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).__eascapeFrame = { frame2007: want, sideX: this.sideX, sideY: 205, chatX: this.frameChatX, chatY: this.frameChatY, mapX: this.mapX };
+        this.redrawFrame = true;
+        this.isMenuOpen = false;
+    }
+
+    private drawTabs2007(): void {
+        const stoneX: number[] = [6, 44, 77, 110, 143, 176, 209];
+        const flash = (tab: number): boolean => this.tutFlashIcon !== tab || Client.loopCycle % 20 < 10;
+
+        this.areaF07Top?.setPixels();
+        this.f07Topbar?.plotSprite(0, 0);
+        if (this.sideModalId === -1) {
+            if (this.activeIcon < 7 && this.sideIcon[this.activeIcon] !== -1) {
+                const stone: number = this.activeIcon === 0 ? 0 : this.activeIcon === 6 ? 1 : 4;
+                this.f07Stones[stone]?.plotSprite(stoneX[this.activeIcon], 8);
+            }
+            const at: number[][] = [[13, 9], [44, 8], [79, 9], [111, 7], [143, 10], [176, 8], [210, 9]];
+            for (let i: number = 0; i < 7; i++) {
+                if (this.sideIcon[i] !== -1 && flash(i)) {
+                    this.f07Icons[i]?.plotSprite(at[i][0], at[i][1]);
+                }
+            }
+        }
+        this.areaF07Top?.draw(516, 160);
+
+        this.areaF07Bottom?.setPixels();
+        this.f07Bottombar?.plotSprite(0, 0);
+        if (this.sideModalId === -1) {
+            if (this.activeIcon >= 7 && this.sideIcon[this.activeIcon] !== -1) {
+                const cell: number = this.activeIcon - 7;
+                const stone: number = cell === 0 ? 2 : cell === 6 ? 3 : 4;
+                this.f07Stones[stone]?.plotSprite(stoneX[cell] - 3, 0);
+            }
+            // the first cell is 2007's clan chat, which the 2006 game hasn't got: left empty
+            const at: number[][] = [[6, 1], [42, 2], [75, 2], [108, 4], [142, 1], [175, 3], [208, 3]];
+            for (let i: number = 8; i < 14; i++) {
+                if (this.sideIcon[i] !== -1 && flash(i)) {
+                    this.f07Icons[i]?.plotSprite(at[i - 7][0], at[i - 7][1]);
+                }
+            }
+        }
+        this.areaF07Bottom?.draw(519, 466);
+    }
+
+    private drawChatButtons2007(): void {
+        const font: PixFont | null = this.p11;
+        this.areaF07Chat?.setPixels();
+        this.f07Chatbar?.plotSprite(0, 0);
+        const xs: number[] = [5, 71, 137, 203, 269, 335];
+        for (let i: number = 0; i < 6; i++) {
+            const selected: boolean = (i === 0 && this.chatView07 === 0) || (i === 1 && this.chatView07 === 1);
+            this.f07Chatbtn[selected ? 3 : 0]?.plotSprite(xs[i], 0);
+        }
+        this.f07Report[0]?.plotSprite(404, 0);
+
+        const mode = (m: number, three: boolean): [string, number] => {
+            if (m === 0) return ['On', Colour.GREEN];
+            if (m === 1) return ['Friends', Colour.YELLOW];
+            if (m === 2) return ['Off', Colour.RED];
+            return [three ? 'Hide' : 'Off', Colour.CYAN];
+        };
+        font?.centreStringTag('All', 33, 15, Colour.WHITE, true);
+        font?.centreStringTag('Game', 99, 15, Colour.WHITE, true);
+        const pub = mode(this.chatPublicMode, true);
+        const prv = mode(this.chatPrivateMode, false);
+        const trd = mode(this.chatTradeMode, false);
+        font?.centreStringTag('Public', 165, 10, Colour.WHITE, true);
+        font?.centreStringTag(pub[0], 165, 21, pub[1], true);
+        font?.centreStringTag('Private', 231, 10, Colour.WHITE, true);
+        font?.centreStringTag(prv[0], 231, 21, prv[1], true);
+        // Clan: no clan chat in the 2006 game, so just its name
+        font?.centreStringTag('Clan', 297, 15, Colour.WHITE, true);
+        font?.centreStringTag('Trade', 363, 10, Colour.WHITE, true);
+        font?.centreStringTag(trd[0], 363, 21, trd[1], true);
+        font?.centreStringTag('Report Abuse', 459, 15, Colour.WHITE, true);
+        this.areaF07Chat?.draw(0, 480);
+    }
+
+    private chatModeLoop2007(): void {
+        const x: number = this.mouseClickX;
+        const y: number = this.mouseClickY;
+        if (y < 480 || y > 502) {
+            return;
+        }
+        const setMode = (): void => {
+            this.redrawChatMode = true;
+            this.redrawChat = true;
+            this.out.p1Enc(ClientProt.CHAT_SETMODE);
+            this.out.p1(this.chatPublicMode);
+            this.out.p1(this.chatPrivateMode);
+            this.out.p1(this.chatTradeMode);
+        };
+        if (x >= 5 && x < 61) {
+            this.chatView07 = 0;
+            this.redrawChatMode = true;
+            this.redrawChat = true;
+        } else if (x >= 71 && x < 127) {
+            this.chatView07 = 1;
+            this.redrawChatMode = true;
+            this.redrawChat = true;
+        } else if (x >= 137 && x < 193) {
+            this.chatPublicMode = (this.chatPublicMode + 1) % 4;
+            setMode();
+        } else if (x >= 203 && x < 259) {
+            this.chatPrivateMode = (this.chatPrivateMode + 1) % 3;
+            setMode();
+        } else if (x >= 335 && x < 391) {
+            this.chatTradeMode = (this.chatTradeMode + 1) % 3;
+            setMode();
+        } else if (x >= 404 && x < 515) {
+            this.closeModal();
+            this.reportAbuseInput = '';
+            this.reportAbuseMuteOption = false;
+            for (let i: number = 0; i < IfType.list.length; i++) {
+                if (IfType.list[i] && IfType.list[i].clientCode === ClientCode.CC_REPORT_INPUT) {
+                    this.reportAbuseComId = this.mainModalId = IfType.list[i].layerId;
+                    break;
+                }
+            }
             if (this.isMobile) {
                 MobileKeyboard.show();
             }
@@ -3957,6 +4174,23 @@ export class Client extends GameShell {
             return;
         }
 
+        this.syncFrame2007();
+
+        if (this.redrawFrame && this.frame2007) {
+            this.redrawFrame = false;
+            this.areaF07Frame?.draw(0, 0);
+
+            this.redrawSide = true;
+            this.redrawChat = true;
+            this.redrawIcons = true;
+            this.redrawChatMode = true;
+
+            if (this.sceneState !== 2) {
+                this.areaGame?.draw(4, 4);
+                this.areaMap?.draw(this.mapX, 4);
+            }
+        }
+
         if (this.redrawFrame) {
             this.redrawFrame = false;
 
@@ -3977,7 +4211,7 @@ export class Client extends GameShell {
 
             if (this.sceneState !== 2) {
                 this.areaGame?.draw(4, 4);
-                this.areaMap?.draw(550, 4);
+                this.areaMap?.draw(this.mapX, 4);
             }
         }
 
@@ -4013,7 +4247,7 @@ export class Client extends GameShell {
             this.chatInterface.scrollPos = this.chatScrollHeight - this.chatScrollPos - 77;
 
             if (this.mouseX > 448 && this.mouseX < 560 && this.mouseY > 332) {
-                this.doScrollbar(this.mouseX - 17, this.mouseY - 357, this.chatScrollHeight, 77, false, 463, 0, this.chatInterface);
+                this.doScrollbar(this.mouseX - this.frameChatX, this.mouseY - this.frameChatY, this.chatScrollHeight, 77, false, 463, 0, this.chatInterface);
             }
 
             let offset: number = this.chatScrollHeight - this.chatInterface.scrollPos - 77;
@@ -4061,7 +4295,7 @@ export class Client extends GameShell {
 
         if (this.sceneState === 2) {
             this.minimapDraw();
-            this.areaMap?.draw(550, 4);
+            this.areaMap?.draw(this.mapX, 4);
         }
 
         if (this.tutFlashIcon !== -1) {
@@ -4076,6 +4310,9 @@ export class Client extends GameShell {
             }
 
             this.redrawIcons = false;
+            if (this.frame2007) {
+                this.drawTabs2007();
+            } else {
             this.areaBackhmid1?.setPixels();
             this.backhmid1?.plotSprite(0, 0);
 
@@ -4177,7 +4414,14 @@ export class Client extends GameShell {
             }
 
             this.areaBackbase2?.draw(496, 466);
+            }
 
+            this.areaGame?.setPixels();
+        }
+
+        if (this.redrawChatMode && this.frame2007) {
+            this.redrawChatMode = false;
+            this.drawChatButtons2007();
             this.areaGame?.setPixels();
         }
 
@@ -8521,11 +8765,11 @@ export class Client extends GameShell {
                     clickX -= 4;
                     clickY -= 4;
                 } else if (this.menuArea === 1) {
-                    clickX -= 553;
+                    clickX -= this.sideX;
                     clickY -= 205;
                 } else if (this.menuArea === 2) {
-                    clickX -= 17;
-                    clickY -= 357;
+                    clickX -= this.frameChatX;
+                    clickY -= this.frameChatY;
                 }
 
                 let option: number = -1;
@@ -8557,11 +8801,11 @@ export class Client extends GameShell {
                     x -= 4;
                     y -= 4;
                 } else if (this.menuArea === 1) {
-                    x -= 553;
+                    x -= this.sideX;
                     y -= 205;
                 } else if (this.menuArea === 2) {
-                    x -= 17;
-                    y -= 357;
+                    x -= this.frameChatX;
+                    y -= this.frameChatY;
                 }
 
                 if (x < this.menuX - 10 || x > this.menuX + this.menuWidth + 10 || y < this.menuY - 10 || y > this.menuY + this.menuHeight + 10) {
@@ -8647,11 +8891,11 @@ export class Client extends GameShell {
             mouseX -= 4;
             mouseY -= 4;
         } else if (this.menuArea === 1) {
-            mouseX -= 553;
+            mouseX -= this.sideX;
             mouseY -= 205;
         } else if (this.menuArea === 2) {
-            mouseX -= 17;
-            mouseY -= 357;
+            mouseX -= this.frameChatX;
+            mouseY -= this.frameChatY;
         } else if (floating) {
             mouseX -= this.menuX;
             mouseY -= this.menuY;
@@ -8735,7 +8979,7 @@ export class Client extends GameShell {
         }
 
         // the sidebar/tabs area
-        if (this.mouseClickX > 553 && this.mouseClickY > 205 && this.mouseClickX < 743 && this.mouseClickY < 466 && width > 190) {
+        if (this.mouseClickX > this.sideX && this.mouseClickY > 205 && this.mouseClickX < this.sideX + 190 && this.mouseClickY < 466 && width > 190) {
             // EASCape: wider than the panel: float it over the window (menuArea 3)
             x = this.mouseClickX - ((width / 2) | 0);
             if (x + width > 765) {
@@ -8757,8 +9001,8 @@ export class Client extends GameShell {
             this.menuY = y;
             this.menuWidth = width;
             this.menuHeight = this.menuNumEntries * 15 + 22;
-        } else if (this.mouseClickX > 553 && this.mouseClickY > 205 && this.mouseClickX < 743 && this.mouseClickY < 466) {
-            x = this.mouseClickX - ((width / 2) | 0) - 553;
+        } else if (this.mouseClickX > this.sideX && this.mouseClickY > 205 && this.mouseClickX < this.sideX + 190 && this.mouseClickY < 466) {
+            x = this.mouseClickX - ((width / 2) | 0) - this.sideX;
             if (x < 0) {
                 x = 0;
             } else if (x + width > 190) {
@@ -8781,15 +9025,15 @@ export class Client extends GameShell {
         }
 
         // the chatbox area
-        if (this.mouseClickX > 17 && this.mouseClickY > 357 && this.mouseClickX < 496 && this.mouseClickY < 453) {
-            x = this.mouseClickX - ((width / 2) | 0) - 17;
+        if (this.mouseClickX > this.frameChatX && this.mouseClickY > this.frameChatY && this.mouseClickX < this.frameChatX + 479 && this.mouseClickY < this.frameChatY + 96) {
+            x = this.mouseClickX - ((width / 2) | 0) - this.frameChatX;
             if (x < 0) {
                 x = 0;
             } else if (x + width > 479) {
                 x = 479 - width;
             }
 
-            y = this.mouseClickY - 357;
+            y = this.mouseClickY - this.frameChatY;
             if (y < 0) {
                 y = 0;
             } else if (y + height > 96) {
@@ -11500,7 +11744,11 @@ export class Client extends GameShell {
             Pix3D.scanline = this.sideScanline;
         }
 
-        this.invback?.plotSprite(0, 0);
+        if (this.frame2007) {
+            this.f07Sideback?.plotSprite(0, 0);
+        } else {
+            this.invback?.plotSprite(0, 0);
+        }
 
         if (this.sideModalId !== -1) {
             this.drawInterface(IfType.list[this.sideModalId], 0, 0, 0);
@@ -11512,7 +11760,7 @@ export class Client extends GameShell {
             this.drawMinimenu();
         }
 
-        this.areaSide?.draw(553, 205);
+        this.areaSide?.draw(this.sideX, 205);
 
         this.areaGame?.setPixels();
         if (this.gameScanline) {
@@ -11527,7 +11775,11 @@ export class Client extends GameShell {
             Pix3D.scanline = this.chatScanline;
         }
 
-        this.chatback?.plotSprite(0, 0);
+        if (this.frame2007) {
+            this.f07Chatback?.plotSprite(0, 0);
+        } else {
+            this.chatback?.plotSprite(0, 0);
+        }
 
         // LostLite: plugin prompts (bank search) drawn like the game's own "Enter amount:"
         const llPrompt = lostlite()?.chatPrompt;
@@ -11560,6 +11812,10 @@ export class Client extends GameShell {
                 }
 
                 const type: number = this.chatType[i];
+                // EASCape: the 2007 interface's Game button shows only the game's messages
+                if (this.frame2007 && this.chatView07 === 1 && type !== 0) {
+                    continue;
+                }
                 const y: number = this.chatScrollPos + 70 - line * 14;
 
                 let sender = this.chatUsername[i];
@@ -11673,7 +11929,7 @@ export class Client extends GameShell {
             this.drawMinimenu();
         }
 
-        this.areaChat?.draw(17, 357);
+        this.areaChat?.draw(this.frameChatX, this.frameChatY);
 
         this.areaGame?.setPixels();
         if (this.gameScanline) {
@@ -12474,7 +12730,7 @@ export class Client extends GameShell {
     }
 
     private insideSide() {
-        const x1: number = 553;
+        const x1: number = this.sideX;
         const y1: number = 205;
         const x2: number = x1 + 190;
         const y2: number = y1 + 261;
@@ -12482,24 +12738,24 @@ export class Client extends GameShell {
     }
 
     private insideChat() {
-        const x1: number = 480;
-        const y1: number = 357;
+        const x1: number = this.frameChatX + 463;
+        const y1: number = this.frameChatY;
         const x2: number = x1 + 16;
         const y2: number = y1 + 77;
         return this.ingame && !this.dialogInputOpen && !this.socialInputOpen && this.mouseX >= x1 && this.mouseX <= x2 && this.mouseY >= y1 && this.mouseY <= y2;
     }
 
     private insideChatInput() {
-        const x1: number = 17;
-        const y1: number = 434;
+        const x1: number = this.frameChatX;
+        const y1: number = this.frameChatY + 77;
         const x2: number = x1 + 479;
         const y2: number = y1 + 26;
         return this.ingame && this.chatModalId === -1 && !this.dialogInputOpen && !this.socialInputOpen && this.mouseX >= x1 && this.mouseX <= x2 && this.mouseY >= y1 && this.mouseY <= y2;
     }
 
     protected insideChatPopup() {
-        const x1: number = 17;
-        const y1: number = 357;
+        const x1: number = this.frameChatX;
+        const y1: number = this.frameChatY;
         const x2: number = x1 + 479;
         const y2: number = y1 + 96;
         return this.ingame && (this.dialogInputOpen || this.socialInputOpen) && this.mouseX >= x1 && this.mouseX <= x2 && this.mouseY >= y1 && this.mouseY <= y2;
