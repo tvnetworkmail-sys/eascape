@@ -1,0 +1,226 @@
+// EASCape: Farming step 2d: compost bins (Falador, Catherby, Port Phasmatys, Ardougne). After Void
+// (CompostBin.kt: what goes in, the questions, closing at 15, rotting, opening, buckets out with
+// 4.5 / 8.5 XP, rotten tomatoes out, the spade to dump it, its messages). States: the bins' own
+// varbits (740-743), read through farming_compost.enum (tools/farming/compost.py): contents * 100
+// + count (1 compostable, 2 compost, 3 rotting, 4 ready, 5 supercompostable, 6 supercompost,
+// 7 rotting, 8 ready, 9 tomatoes, 10 rotten tomatoes, 11 rotting, 12 ready).
+// Void rots a bin a step every 2 minutes from a random 0-14 up to 30 (30 to 60 minutes); ours
+// steps at the 5-minute growth ticks, 2 and 3 in turn (the same 2.5 a 5 minutes).
+// In the 2006 cache a bin can only be closed when it's full (op Close on the full bin only).
+
+[proc,farming_bin_get](int $bin)(int)
+switch_int ($bin) {
+    case 1 : return(enum(int, int, farming_compost_decode, %varbit_740));
+    case 2 : return(enum(int, int, farming_compost_decode, %varbit_741));
+    case 3 : return(enum(int, int, farming_compost_decode, %varbit_742));
+    case 4 : return(enum(int, int, farming_compost_decode, %varbit_743));
+}
+return(-1);
+
+[proc,farming_bin_set](int $bin, int $key)
+def_int $value = enum(int, int, farming_compost_encode, $key);
+if ($value = -1) return;
+switch_int ($bin) {
+    case 1 : %varbit_740 = $value;
+    case 2 : %varbit_741 = $value;
+    case 3 : %varbit_742 = $value;
+    case 4 : %varbit_743 = $value;
+}
+
+// the growth tick: rotting bins rot on
+[proc,farming_grow_compost](int $minute)
+def_int $bin = 1;
+while ($bin <= 4) {
+    def_int $key = ~farming_bin_get($bin);
+    def_int $c = calc($key / 100);
+    if ($c = 3 | $c = 7 | $c = 11) {
+        def_int $n = calc($key % 100 + 3);
+        if (calc($minute % 10) = 0) $n = calc($n - 1);
+        if ($n >= 30) {
+            ~farming_bin_set($bin, calc(($c + 1) * 100)); // ready
+        } else {
+            ~farming_bin_set($bin, calc($c * 100 + $n));
+        }
+    }
+    $bin = calc($bin + 1);
+}
+
+[oploc1,farming_compost_bin_1] ~farming_bin_op1(1);
+[oploc1,farming_compost_bin_2] ~farming_bin_op1(2);
+[oploc1,farming_compost_bin_3] ~farming_bin_op1(3);
+[oploc1,farming_compost_bin_4] ~farming_bin_op1(4);
+[oplocu,farming_compost_bin_1] ~farming_bin_use(1);
+[oplocu,farming_compost_bin_2] ~farming_bin_use(2);
+[oplocu,farming_compost_bin_3] ~farming_bin_use(3);
+[oplocu,farming_compost_bin_4] ~farming_bin_use(4);
+
+// Close (a full bin), Open (a closed one), Take-tomato
+[proc,farming_bin_op1](int $bin)
+def_int $key = ~farming_bin_get($bin);
+def_int $c = calc($key / 100);
+def_int $n = calc($key % 100);
+if (($c = 1 | $c = 5 | $c = 9) & $n = 15) {
+    mes("You close the compost bin.");
+    anim(human_push, 0);
+    sound_synth(compost_close, 1, 0);
+    p_delay(1);
+    ~farming_bin_set($bin, calc(($c + 2) * 100 + random(15)));
+    mes("The contents have begun to rot.");
+    return;
+}
+if ($c = 3 | $c = 7 | $c = 11) {
+    ~mesbox("The vegetation hasn't finished rotting yet.");
+    return;
+}
+if ($c = 4 | $c = 8 | $c = 12) {
+    anim(human_push, 0);
+    sound_synth(compost_open, 1, 0);
+    mes("You open the compost bin.");
+    // compostable -> compost, supercompostable -> supercompost, tomatoes -> rotten tomatoes
+    ~farming_bin_set($bin, calc(($c - 2) * 100 + 15));
+    return;
+}
+if ($c = 10) {
+    ~farming_bin_take_tomatoes($bin);
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,farming_bin_use](int $bin)
+def_obj $item = last_useitem;
+def_int $key = ~farming_bin_get($bin);
+def_int $c = calc($key / 100);
+if ($item = bucket_empty) {
+    if ($c = 2 | $c = 6) {
+        ~farming_bin_fill_buckets($bin);
+        return;
+    }
+}
+if ($item = spade) {
+    ~farming_bin_dump($bin);
+    return;
+}
+def_int $kind = enum(obj, int, farming_compostable, $item);
+if ($kind = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($c = 3 | $c = 4 | $c = 7 | $c = 8 | $c = 11 | $c = 12) {
+    ~mesbox("The compost bin is closed.");
+    return;
+}
+if ($c = 2 | $c = 6 | $c = 10) {
+    ~mesbox("The compost bin must be emptied before you can put new items in it.");
+    return;
+}
+if (calc($key % 100) = 15) {
+    ~mesbox("The compost bin is too full to put anything else in it.");
+    return;
+}
+// what the bin will make (Void type): 1 compostable, 5 supercompostable, 9 tomatoes
+def_int $type = 1;
+if ($c = 5) {
+    if ($kind = 2) {
+        $type = 5;
+    } else if (~p_choice2_header("I just want to make normal compost now.", 1, "I want to stick to making supercompost.", 2, "The compost bin contains supercompostable items") = 1) {
+        $type = 1;
+    } else {
+        return;
+    }
+} else if ($c = 1) {
+    if ($kind = 2) {
+        if (~p_choice2_header("Yes, I want to use it to make normal compost.", 1, "No, I don't want to waste it making normal compost.", 2, "This is a supercompostable item - are you sure?") ! 1) {
+            return;
+        }
+    }
+    $type = 1;
+} else if ($c = 9) {
+    if ($item ! tomato) $type = 1;
+    else $type = 9;
+} else {
+    if ($kind = 2) $type = 5;
+    else if ($item = tomato) $type = 9;
+}
+// one at a time until the bin is full or you've none left
+def_int $n = calc(~farming_bin_get($bin) % 100);
+if ($c ! $type) {
+    // tomatoes in a bin of compostables (or the other way): the whole bin makes normal compost
+    $c = $type;
+}
+while ($n < 15 & inv_total(inv, $item) > 0) {
+    anim(human_pickuptable, 0);
+    sound_synth(farming_putin, 1, 0);
+    p_delay(0);
+    if (inv_total(inv, $item) = 0) return;
+    inv_del(inv, $item, 1);
+    $n = calc($n + 1);
+    ~farming_bin_set($bin, calc($type * 100 + $n));
+}
+
+// Void empty: a bucket at a time, 4.5 XP for compost, 8.5 for supercompost
+[proc,farming_bin_fill_buckets](int $bin)
+while (inv_total(inv, bucket_empty) > 0) {
+    def_int $key = ~farming_bin_get($bin);
+    def_int $c = calc($key / 100);
+    def_int $n = calc($key % 100);
+    if (($c ! 2 & $c ! 6) | $n < 1) return;
+    anim(human_pickuptable, 0);
+    sound_synth(farming_fillpot, 1, 0);
+    p_delay(0);
+    if (inv_total(inv, bucket_empty) = 0) return;
+    inv_del(inv, bucket_empty, 1);
+    if ($c = 6) {
+        inv_add(inv, bucket_supercompost, 1);
+        stat_advance(farming, 85);
+    } else {
+        inv_add(inv, bucket_compost, 1);
+        stat_advance(farming, 45);
+    }
+    if ($n = 1) {
+        ~farming_bin_set($bin, 0);
+        return;
+    }
+    ~farming_bin_set($bin, calc($c * 100 + $n - 1));
+    p_delay(2);
+}
+
+[proc,farming_bin_take_tomatoes](int $bin)
+while (1 = 1) {
+    def_int $key = ~farming_bin_get($bin);
+    def_int $n = calc($key % 100);
+    if (calc($key / 100) ! 10 | $n < 1) return;
+    if (inv_freespace(inv) = 0) {
+        mes("You don't have enough inventory space.");
+        return;
+    }
+    anim(human_pickuptable, 0);
+    sound_synth(farming_fillpot, 1, 0);
+    p_delay(0);
+    inv_add(inv, rotten_tomato, 1);
+    stat_advance(farming, 45);
+    if ($n = 1) {
+        ~farming_bin_set($bin, 0);
+        return;
+    }
+    ~farming_bin_set($bin, calc(1000 + $n - 1));
+    p_delay(2);
+}
+
+// Void: the spade dumps an open bin
+[proc,farming_bin_dump](int $bin)
+def_int $key = ~farming_bin_get($bin);
+def_int $c = calc($key / 100);
+if ($key = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($c = 3 | $c = 4 | $c = 7 | $c = 8 | $c = 11 | $c = 12) {
+    ~mesbox("The compost bin is closed.");
+    return;
+}
+if (~p_choice2_header("Yes, throw it all away.", 1, "No, keep it.", 2, "Dump the entire contents of the bin?") ! 1) {
+    return;
+}
+anim(human_pickuptable, 0);
+sound_synth(farming_putin, 1, 0);
+~farming_bin_set($bin, 0);

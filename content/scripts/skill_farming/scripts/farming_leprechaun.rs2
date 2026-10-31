@@ -1,0 +1,226 @@
+// EASCape: Farming step 2d: the Tool Leprechauns. After Void (ToolLeprechaun.kt: the talk,
+// "Exchange" and notes for produce used on him; FarmingEquipmentStore.kt: what's stored, the
+// limits, the messages). The store is the 2006 "Amazing Farming Equipment Store" (tool_leprechaun
+// + tool_leprechaun_side); the counts are the cache's own farming_tools varbits, which its text
+// reads. Our choices: magic secateurs are remembered with a varp of ours; the fullest watering can
+// is the one stored.
+
+[opnpc1,farming_tools_leprechaun]
+~chatnpc("<p,happy>Ah, 'tis a foine day to be sure! Were yez wantin' me to store yer tools, or maybe ye might be wantin' yer stuff back from me?");
+~farming_leprechaun_menu;
+
+[opnpc3,farming_tools_leprechaun] ~farming_store_open;
+
+[proc,farming_leprechaun_menu]
+switch_int (~p_choice4("Yes please.", 1, "What can you store?", 2, "What do you do with the tools you're storing?", 3, "No thanks, I'll keep hold of my stuff.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes please.");
+        ~farming_store_open;
+    case 2 :
+        ~chatplayer("<p,quiz>What can you store?");
+        ~chatnpc("<p,happy>We'll hold onto yer rake, yer seed dibber, yer spade, yer secateurs, yer waterin' can and yer trowel - but mind it's not one of them fancy trowels only archaeologists use!");
+        ~chatnpc("<p,bored>We'll take a few buckets off yer hands too, and even yer compost, supercompost an' ultracompost! Also plant cure vials.");
+        ~chatnpc("<p,happy>Aside from that, if ye hands me yer farming produce, I can mebbe change it into banknotes for ye.");
+        ~chatnpc("<p,quiz>So... do ye want to be using the store?");
+        ~farming_leprechaun_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>What do you do with the tools you're storing? They can't possibly all fit in your pockets!");
+        ~chatnpc("<p,laugh>We leprechauns have a shed where we keep 'em. It's a magic shed, so ye can get yer items back from any of us leprechauns whenever ye want. Saves ye havin' to carry loads of stuff around the country!");
+        ~chatnpc("<p,quiz>So... do ye want to be using the store?");
+        ~farming_leprechaun_menu;
+    case 4 :
+        ~chatplayer("<p,neutral>No thanks, I'll keep hold of my stuff.");
+        ~chatnpc("<p,laugh>Ye must be dafter than ye look if ye likes luggin' yer tools everywhere ye goes!");
+}
+
+// produce used on him: banknotes (Void: only things that go in a compost bin)
+[opnpcu,farming_tools_leprechaun]
+def_obj $item = last_useitem;
+if (oc_cert($item) = $item) {
+    ~chatnpc("<p,neutral>Nay, there's no such thing as a banknote for that.");
+    return;
+}
+if (enum(obj, int, farming_compostable, $item) = 0) {
+    ~chatnpc("<p,neutral>Nay, I've got no banknotes to exchange for that item.");
+    return;
+}
+def_int $n = inv_total(inv, $item);
+inv_moveitem_cert(inv, inv, $item, $n);
+~mesbox("The leprechaun exchanges your items for banknotes.");
+
+// ---------------------------------------------------------------- the store
+[proc,farming_store_open]
+inv_transmit(farming_tools_store, tool_leprechaun:com_67);
+inv_transmit(farming_tools_store_bulk, tool_leprechaun:com_68);
+inv_transmit(farming_tools_store, tool_leprechaun_side:com_0);
+inv_transmit(farming_tools_store_bulk, tool_leprechaun_side:com_1);
+if_openmain_side(tool_leprechaun, tool_leprechaun_side);
+
+[if_close,tool_leprechaun]
+inv_stoptransmit(tool_leprechaun:com_67);
+inv_stoptransmit(tool_leprechaun:com_68);
+inv_stoptransmit(tool_leprechaun_side:com_0);
+inv_stoptransmit(tool_leprechaun_side:com_1);
+
+// what's stored in a slot (0-5 tools, 6 buckets, 7 compost, 8 supercompost)
+[proc,farming_store_count](int $slot)(int)
+switch_int ($slot) {
+    case 0 : return(%farming_tools_rake);
+    case 1 : return(%farming_tools_dibber);
+    case 2 : return(%farming_tools_spade);
+    case 3 : return(%farming_tools_secateurs);
+    case 4 : return(%farming_tools_wateringcan);
+    case 5 : return(%farming_tools_trowel);
+    case 6 : return(%farming_tools_buckets);
+    case 7 : return(%farming_tools_compost);
+    case 8 : return(%farming_tools_supercompost);
+}
+return(0);
+
+[proc,farming_store_set](int $slot, int $n)
+switch_int ($slot) {
+    case 0 : %farming_tools_rake = $n;
+    case 1 : %farming_tools_dibber = $n;
+    case 2 : %farming_tools_spade = $n;
+    case 3 : %farming_tools_secateurs = $n;
+    case 4 : %farming_tools_wateringcan = $n;
+    case 5 : %farming_tools_trowel = $n;
+    case 6 : %farming_tools_buckets = $n;
+    case 7 : %farming_tools_compost = $n;
+    case 8 : %farming_tools_supercompost = $n;
+}
+
+[proc,farming_store_limit](int $slot)(int)
+switch_int ($slot) {
+    case 6 : return(31);
+    case 7, 8 : return(255);
+}
+return(1);
+
+[proc,farming_store_item](int $slot)(namedobj)
+switch_int ($slot) {
+    case 0 : return(rake);
+    case 1 : return(dibber);
+    case 2 : return(spade);
+    case 3 :
+        if (%farming_tool_magic_secateurs = 1) return(fairy_enchanted_secateurs);
+        return(secateurs);
+    case 5 : return(gardening_trowel);
+    case 6 : return(bucket_empty);
+    case 7 : return(bucket_compost);
+    case 8 : return(bucket_supercompost);
+}
+return(null);
+
+[proc,farming_store_name](int $slot)(string)
+switch_int ($slot) {
+    case 0 : return("rake");
+    case 1 : return("seed dibber");
+    case 2 : return("spade");
+    case 3 : return("secateurs");
+    case 4 : return("watering can");
+    case 5 : return("gardening trowel");
+    case 6 : return("bucket");
+    case 7 : return("compost");
+}
+return("supercompost");
+
+[inv_button1,tool_leprechaun:com_67] ~farming_store_remove(last_slot, 1);
+[inv_button1,tool_leprechaun:com_68] ~farming_store_remove(calc(last_slot + 6), 1);
+[inv_button2,tool_leprechaun:com_68] ~farming_store_remove(calc(last_slot + 6), 5);
+[inv_button3,tool_leprechaun:com_68] ~farming_store_remove(calc(last_slot + 6), 255);
+[inv_button4,tool_leprechaun:com_68]
+def_int $slot = calc(last_slot + 6);
+p_countdialog;
+if (last_int > 0) ~farming_store_remove($slot, last_int);
+
+[inv_button1,tool_leprechaun_side:com_0] ~farming_store_put(last_slot, 1);
+[inv_button1,tool_leprechaun_side:com_1] ~farming_store_put(calc(last_slot + 6), 1);
+[inv_button2,tool_leprechaun_side:com_1] ~farming_store_put(calc(last_slot + 6), 5);
+[inv_button3,tool_leprechaun_side:com_1] ~farming_store_put(calc(last_slot + 6), 255);
+[inv_button4,tool_leprechaun_side:com_1]
+def_int $slot = calc(last_slot + 6);
+p_countdialog;
+if (last_int > 0) ~farming_store_put($slot, last_int);
+
+// Void: take out up to what's stored and what you've room for
+[proc,farming_store_remove](int $slot, int $amount)
+if ($slot > 8) return;
+def_int $have = ~farming_store_count($slot);
+if ($have < 1) return;
+if (inv_freespace(inv) = 0) {
+    mes("You don't have room to hold that.");
+    return;
+}
+if ($slot = 4) {
+    def_namedobj $can = ~farming_store_can(calc($have - 1));
+    inv_add(inv, $can, 1);
+    ~farming_store_set(4, 0);
+    return;
+}
+def_namedobj $item = ~farming_store_item($slot);
+def_int $n = min($amount, $have);
+def_int $added = 0;
+while ($added < $n & inv_freespace(inv) > 0) {
+    inv_add(inv, $item, 1);
+    $added = calc($added + 1);
+}
+~farming_store_set($slot, calc($have - $added));
+if ($slot = 3 & calc($have - $added) = 0) %farming_tool_magic_secateurs = 0;
+
+// Void: put in up to the limit; the fullest watering can, the magic secateurs before the plain
+[proc,farming_store_put](int $slot, int $amount)
+if ($slot > 8) return;
+def_int $have = ~farming_store_count($slot);
+def_int $limit = ~farming_store_limit($slot);
+def_string $name = ~farming_store_name($slot);
+if ($have >= $limit) {
+    if ($slot = 6) mes("You cannot store that many buckets in here.");
+    else if ($slot = 7 | $slot = 8) mes("You cannot store that much <$name> in here.");
+    else if ($slot = 3) mes("You cannot store more than one pair of secateurs in here.");
+    else mes("You cannot store more than one <$name> in here.");
+    return;
+}
+if ($slot = 4) {
+    def_int $i = 8;
+    while ($i >= 0) {
+        def_namedobj $can = ~farming_store_can($i);
+        if (inv_total(inv, $can) > 0) {
+            inv_del(inv, $can, 1);
+            ~farming_store_set(4, calc($i + 1));
+            return;
+        }
+        $i = calc($i - 1);
+    }
+    mes("You haven't got a watering can to store.");
+    return;
+}
+def_namedobj $item = ~farming_store_item($slot);
+if ($slot = 3) {
+    $item = secateurs;
+    if (inv_total(inv, fairy_enchanted_secateurs) > 0) $item = fairy_enchanted_secateurs;
+}
+def_int $n = min(min($amount, calc($limit - $have)), inv_total(inv, $item));
+if ($n < 1) {
+    mes("You haven't got a <$name> to store.");
+    return;
+}
+inv_del(inv, $item, $n);
+~farming_store_set($slot, calc($have + $n));
+if ($slot = 3) {
+    if ($item = fairy_enchanted_secateurs) %farming_tool_magic_secateurs = 1;
+    else %farming_tool_magic_secateurs = 0;
+}
+
+[proc,farming_store_can](int $n)(namedobj)
+switch_int ($n) {
+    case 1 : return(watering_can_1);
+    case 2 : return(watering_can_2);
+    case 3 : return(watering_can_3);
+    case 4 : return(watering_can_4);
+    case 5 : return(watering_can_5);
+    case 6 : return(watering_can_6);
+    case 7 : return(watering_can_7);
+    case 8 : return(watering_can_8);
+}
+return(watering_can_0);
