@@ -39,6 +39,11 @@ if ($s = ^fairy2_got_secateurs) {
 if ($s = ^fairy2_gave_secateurs) {
     @fairy2_nuff_lecture;
 }
+if ($s >= ^fairy2_queen_cured) {
+    // ours: the transcript has nothing for her once the Queen is awake
+    ~fairy2_nuff_says("<p,happy>Thank you, <displayname>! Her Majesty is awake at last!");
+    return;
+}
 @fairy2_nuff_potion;
 
 // the first time: stage 45 (found the hideout) to 50 (sent for the secateurs)
@@ -97,6 +102,17 @@ if (inv_total(inv, ft2_unfinished_potion) > 0) {
     ~fairy2_nuff_says("<p,neutral>That's nice for you, but please stop wasting time. You need to finish the potion with a Gorak's claw.");
     return;
 }
+// having been to both planes (the 2007 cache's fairyring_cosmic_plane and fairyring_gorack_plane)
+// but with nothing yet: the transcript's "after visiting the Cosmic Plane and Gorak Plane"
+if (%fairyring_cosmic_plane = 1 & %fairyring_gorack_plane = 1 & %fairy2_nuff_told_planes = 0 & inv_total(inv, ft2_star_flower) = 0 & inv_total(inv, ft2_gorak_claws) = 0 & inv_total(inv, ft2_gorak_claw_powder) = 0) {
+    %fairy2_nuff_told_planes = 1;
+    ~fairy2_nuff_says("<p,neutral>A potion of magic essence is made in the same way as any other potion, first you mix a vial of water with a base herb, in this case a Star Flower. Star Flowers are rich in magic essence and are excellent for curing poisons and that's what the Queen is suffering from - a poisoning of her life essence.");
+    ~fairy2_nuff_says("<p,neutral>Then we need to add the catalyst ingredient; a powdered Gorak's claw. Goraks drain the life from their prey, so by using one of their claws we are hoping to draw the Queen's life essence back.");
+    ~chatplayer("<p,happy>Thanks for the lecture. Fortunately I think I know where to get all of the ingredients you need.");
+    ~fairy2_nuff_says("<p,happy>That's great news! Well what are you waiting for? We need that potion as soon as possible!");
+    ~chatplayer("<p,neutral>Yes, I'm on my way.");
+    return;
+}
 ~fairy2_nuff_says("<p,quiz>Hello <displayname>. How are you getting on with making that potion?");
 ~chatplayer("<p,shifty>I haven't found a Star Flower yet.");
 ~fairy2_nuff_says("<p,angry>I don't have to tell you again how important it is that you hurry!");
@@ -118,8 +134,10 @@ if (%fairy2_queencure_quest >= ^fairy2_queen_awake) {
 }
 ~fairy2_wise_says("<p,sad>I'm so worried about the Queen, without her the fairy people may be chased out of Gielinor completely! You must wake her, for all our sakes!");
 
+// after the quest (the OSRS wiki's Fairy Very Wise transcript)
 [opnpc1,ft2_multi_4453]
-~fairy2_wise_says("<p,happy>Thank you for your great service to the fairy people, we are indebted to you!");
+~chatplayer("<p,quiz>How goes the council of war?");
+~fairy2_wise_says("<p,sad>Slowly, I'm afraid. We're still trying to come up with a reasonable plan.");
 
 // ---------------------------------------------------------------- the fairies who fled
 [opnpc1,ft2_multi_4426] @fairy2_hideout_fairy;

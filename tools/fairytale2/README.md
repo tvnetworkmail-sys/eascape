@@ -64,3 +64,9 @@ Run once each:
   Zanaris and the hideout (its header says where each comes from).
 
 The quest is `content/scripts/quests/quest_fairy2`.
+
+## Step 4 part 2: the Goraks' combat animations
+
+- `gorak_anims.py <cache468 dir>` ports seqs 4300-4302 (the Goraks' attack, defend and death; Void's
+  and 2009Scape's ids) into `quest_fairy2/configs/fairy2_gorak.seq`. Their combat stats and drops are
+  Void's, through `tools/void/slayer.py` (`ft2_gorak` as Void's `gorak`, `gorak_claws` as ours).

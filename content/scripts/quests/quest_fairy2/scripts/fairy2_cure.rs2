@@ -1,0 +1,284 @@
+// Fairytale II - Cure a Queen, the last part: the Cosmic Being and the star flowers on the cosmic
+// entity's plane, the Goraks, the potion of magic essence, waking the Queen, and the rewards.
+// Sources:
+//   - lines: the OSRS wiki's quest transcript (Transcript:Fairytale II - Cure a Queen) and its NPC
+//     transcripts (Cosmic Being with his universal mysteries, Fairy Queen, Fairy Very Wise);
+//   - the potion and the Goraks' combat and drops: Void (herblore recipes, gorak.*.toml);
+//   - star flowers (49 Farming to pick, "You already have a Star flower..."), the rewards (2 quest
+//     points, 3,500 Herblore and 2,500 Thieving experience, the antique lamp: 2,500 experience in a
+//     skill of level 30 or more): the OSRS wiki.
+// Our choices (marked where they are): how the star flowers come up (a shoot by you every 30
+// seconds that blooms 30 seconds later and lasts 2 minutes, so they come faster with more people
+// there, as the wiki says); the picking, too-low-level and lamp messages; the Gorak's stat drain
+// on a hit that does damage (Void: any skill but Hitpoints, 1-4 levels); the Queen's "Fairy Queen
+// Awakens!" jingle isn't in our cache, so the quest's is the usual quest complete one.
+
+[proc,fairy2_queen_says](string $text)
+~chatnpc_specific("Fairy Queen", ft2_fairy_queen, $text);
+
+// ---------------------------------------------------------------- the cosmic entity's plane
+// Arriving (fairy_rings_music.rs2's mapzone): the visited flag (the 2007 cache's
+// fairyring_cosmic_plane) and the star flowers start coming up around you.
+[proc,fairy2_cosmic_arrive]
+%fairyring_cosmic_plane = 1;
+%ft2_starflower_spot = null;
+settimer(ft2_starflowers, 50);
+
+[proc,fairy2_gorak_arrive]
+%fairyring_gorack_plane = 1;
+
+[proc,fairy2_on_cosmic_plane]()(boolean)
+return(inzone(0_32_75_12_6, 0_32_75_50_62, coord));
+
+// every 30 seconds while you're there: last time's shoot blooms (for 2 minutes) and a new shoot
+// comes up somewhere on the plane (ours, see the top)
+[timer,ft2_starflowers]
+if (~fairy2_on_cosmic_plane = false) {
+    %ft2_starflower_spot = null;
+    cleartimer(ft2_starflowers);
+    return;
+}
+if (%ft2_starflower_spot ! null) {
+    if (npc_find(%ft2_starflower_spot, ft2_starflower_4451, 0, 0) = true) {
+        npc_del;
+    }
+    npc_add(%ft2_starflower_spot, ft2_starflower_4452, 200);
+}
+def_coord $spot = movecoord(0_32_75_14_8, random(35), 0, random(53));
+$spot = map_findsquare($spot, 0, 3, ^map_findsquare_lineofwalk);
+if ($spot = null | npc_find($spot, ft2_starflower_4452, 1, 0) = true | npc_find($spot, ft2_cosmic_being, 2, 0) = true) {
+    %ft2_starflower_spot = null;
+    return;
+}
+npc_add($spot, ft2_starflower_4451, 50);
+%ft2_starflower_spot = $spot;
+
+[opnpc1,ft2_starflower_4452]
+if (stat(farming) < 49) {
+    mes("You need a Farming level of 49 to pick this flower."); // ours
+    return;
+}
+if (%fairy2_queencure_quest < ^fairy2_potion) {
+    mes("You have no reason to pick this flower."); // ours: before Fairy Nuff asks for the potion
+    return;
+}
+if (%fairy2_queencure_quest < ^fairy2_complete & inv_total(inv, ft2_star_flower) > 0) {
+    mes("You already have a Star flower, you don't need another one.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space.");
+    return;
+}
+anim(human_pickupfloor, 0);
+p_delay(0);
+npc_del;
+inv_add(inv, ft2_star_flower, 1);
+mes("You pick a Star flower."); // ours
+
+// ---------------------------------------------------------------- the Cosmic Being
+[opnpc1,ft2_cosmic_being]
+~chatplayer("<p,happy>Hello there.");
+~chatnpc("<p,happy>Salutations traveller! It is unusual for one of the creatures called 'humans' to visit this plane. How can I assist you?");
+def_int $choice;
+if (%fairy2_queencure_quest >= ^fairy2_potion & %fairy2_queencure_quest < ^fairy2_complete) {
+    $choice = ~p_choice3("I'm just looking around, thanks.", 1, "Who are you?", 2, "I'm looking for a Star Flower.", 3);
+} else {
+    $choice = ~p_choice2("I'm just looking around, thanks.", 1, "Who are you?", 2);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,neutral>I'm just looking around, thanks.");
+        ~chatnpc("<p,happy>I hope the beauty of my world brings you great joy.");
+        ~fairy2_universal_mystery;
+    case 2 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,neutral>My name, in your language, would be Bubrezankaldargarez'jk, but you can just call me Bub. This small plane is my home, here I study and ponder the mysteries of existence.");
+        ~chatplayer("<p,quiz>Mysteries of existence, eh? Like what?");
+        ~fairy2_universal_mystery;
+    case 3 :
+        ~chatplayer("<p,quiz>I'm looking for a Star Flower.");
+        ~chatnpc("<p,neutral>Then you've come to the right place. Star Flower, which is much prized for its magical properties, only grows on this plane. It has a very short life-span; plants grow, flower and die in the space of minutes!");
+        ~chatnpc("<p,neutral>If you search around you might find some growing somewhere.");
+}
+
+[proc,fairy2_universal_mystery]
+%fairy2_universal_mystery = 1;
+switch_int (random(11)) {
+    case 0 : ~chatnpc("<p,quiz>Where do flies go at night?");
+    case 1 : ~chatnpc("<p,quiz>Have you ever flicked through a dictionary and afterwards felt really depressed by how much you don't know?");
+    case 2 : ~chatnpc("<p,quiz>Do other birds speak pigeon pidgin?");
+    case 3 : ~chatnpc("<p,neutral>Political philosophy is an oxymoron.");
+    case 4 : ~chatnpc("<p,quiz>Why are yawns contagious?");
+    case 5 : ~chatnpc("<p,quiz>Do sick days include when you're sick of work?");
+    case 6 : ~chatnpc("<p,neutral>To be is to be the value of a variable.");
+    case 7 : ~chatnpc("<p,quiz>How do you know when you've run out of invisible ink?");
+    case 8 : ~chatnpc("<p,quiz>Where does a snake's tail begin?");
+    case 9 : ~chatnpc("<p,quiz>How long do fish wait to swim after they eat?");
+    case default : ~chatnpc("<p,quiz>If you're halfway from here to there, which is which?");
+}
+
+// ---------------------------------------------------------------- the Goraks
+// Void's gorak: typeless crush melee (protection prayers don't stop it: the wiki's 100% prayer
+// penetration), max 14, and a hit that does damage drains a random skill other than Hitpoints by
+// 1-4 (Void's impact_drain).
+[ai_opplayer2,ft2_gorak]
+if (%death = ^true) {
+    npc_setmode(null);
+    return;
+}
+if (%npc_action_delay > map_clock) return;
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) {
+    return;
+}
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+def_int $attack_roll = ~npc_melee_attack_roll;
+def_int $defence_roll = ~player_defence_roll_specific(^crush_style);
+if (randominc($attack_roll) > randominc($defence_roll)) {
+    def_int $damage = randominc(~npc_melee_maxhit);
+    ~playerhit_n_melee(false, $damage, npc_param(attackrate));
+    if ($damage > 0) {
+        stat_drain(~fairy2_gorak_drain_stat, calc(randominc(3) + 1), 0);
+    }
+    return;
+}
+~playerhit_n_melee(false, 0, npc_param(attackrate));
+
+[proc,fairy2_gorak_drain_stat]()(stat)
+switch_int (random(20)) {
+    case 0 : return(attack);
+    case 1 : return(defence);
+    case 2 : return(strength);
+    case 3 : return(ranged);
+    case 4 : return(prayer);
+    case 5 : return(magic);
+    case 6 : return(cooking);
+    case 7 : return(woodcutting);
+    case 8 : return(fletching);
+    case 9 : return(fishing);
+    case 10 : return(firemaking);
+    case 11 : return(crafting);
+    case 12 : return(smithing);
+    case 13 : return(mining);
+    case 14 : return(herblore);
+    case 15 : return(agility);
+    case 16 : return(thieving);
+    case 17 : return(slayer);
+    case 18 : return(farming);
+}
+return(runecraft);
+
+// ---------------------------------------------------------------- the potion
+// a pestle and mortar on the claws (Void's crushing recipe; skill_herblore's grinding)
+[opheldu,ft2_gorak_claws] ~attempt_grind_ingredient(last_useslot, last_slot);
+// the star flower and the powder (skill_herblore's brewing, fairy2_brew.struct); the quest moves
+// on in ~brew_potion (herblore.rs2)
+[opheldu,ft2_star_flower] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,ft2_unfinished_potion] ~attempt_brew_potion(last_useslot, last_slot);
+[opheldu,ft2_gorak_claw_powder] ~attempt_brew_potion(last_useslot, last_slot);
+
+[proc,fairy2_potion_made](namedobj $mixture)
+if ($mixture = ft2_unfinished_potion & %fairy2_queencure_quest = ^fairy2_potion) {
+    %fairy2_queencure_quest = ^fairy2_flower_added;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+} else if ($mixture = ft2_magic_essence_3 & %fairy2_queencure_quest = ^fairy2_flower_added) {
+    %fairy2_queencure_quest = ^fairy2_claw_added;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+}
+
+// ---------------------------------------------------------------- waking the Queen
+[oplocu,ft2_loc_16316]
+def_obj $item = last_useitem;
+if ($item ! ft2_magic_essence_4 & $item ! ft2_magic_essence_3 & $item ! ft2_magic_essence_2 & $item ! ft2_magic_essence_1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%fairy2_queencure_quest < ^fairy2_potion | %fairy2_queencure_quest >= ^fairy2_queen_cured) {
+    mes("Nothing interesting happens.");
+    return;
+}
+// one dose (ours: the potion's next dose, or the empty vial)
+inv_delslot(inv, last_useslot);
+inv_setslot(inv, last_useslot, oc_param($item, next_obj_stage), 1);
+anim(human_pickuptable, 0);
+mes("You give the Fairy Queen a dose of the magic essence."); // ours
+%fairy2_queencure_quest = ^fairy2_queen_cured;
+p_delay(1);
+%fairy2_queencure_quest = ^fairy2_queen_awake;
+~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+~fairy2_queen_wakes;
+
+[proc,fairy2_queen_wakes]
+~fairy2_queen_says("<p,sad>...Urgh! Wh... what happened? ...Why do I feel so awful?");
+~fairy2_nuff_says("<p,happy>Your majesty! You're awake!");
+~fairy2_queen_says("<p,confused>Wh... what happened? The last thing I remember was confronting that Tanglefoot with the aid of the Godfather.");
+~chatplayer("<p,shock>THE GODFATHER?");
+~fairy2_queen_says("<p,confused>Yes, that's what I said... oh, hello <displayname>. Please excuse me for not having noticed you earlier, I'm not feeling quite myself. Why did you shout about the Godfather?");
+~chatplayer("<p,shifty>I'm not really sure how to tell you this, your majesty... It seems as though you've fallen foul of a clever scheme of the Godfather's...");
+~fairy2_queen_says("<p,confused>That's absurd, why would the Godfather want to hurt me?");
+~fairy2_wise_says("<p,sad>I'm afraid it's true your majesty. You see nobody knew that the Godfather was with you when you fought the Tanglefoot...");
+~fairy2_queen_says("<p,neutral>But that's the point, I didn't fight the Tanglefoot. We had only just entered its lair and sensing the danger to itself, the Tanglefoot fled down a passage, then... blackness!");
+~fairy2_wise_says("<p,sad>Then your majesty, I think it may be worse than I imagined. I suspect the Fairy Godfather attacked you from behind and left you for dead. He has taken over control of Zanaris whilst you were...er, ...sleeping.");
+~fairy2_wise_says("<p,sad>He has enlisted the aid of orcs and other assorted ruffians, if any of your subjects dared to question him, they were assaulted. I very much suspect that if it wasn't for the quick thinking of Fairy Nuff here, you would be dead!");
+~fairy2_wise_says("<p,neutral>She fled here with you and as many of your loyal fairies as she could gather. We've been in hiding ever since, until this brave adventurer managed to awaken you.");
+~fairy2_queen_says("<p,shock>I can't believe it!");
+~fairy2_queen_says("<p,angry>He shan't get away with this, how do I get back to Zanaris? The Godfather shall answer for his crimes!");
+~fairy2_wise_says("<p,shock>No! Stop your majesty!");
+~fairy2_queen_says("<p,quiz>Why, old friend?");
+~fairy2_wise_says("<p,neutral>The Godfather has recruited an army of villains, whilst we just have the few fairies who escaped and although they would gladly follow you into battle, many are still wounded from their treatment at the tyrant's hands.");
+~fairy2_wise_says("<p,neutral>I must counsel caution, lest this brave hero's efforts are all wasted and the godfather captures you. He won't let you survive a second time.");
+~fairy2_queen_says("<p,neutral>There is wisdom in what you say. I shall ponder your words before I act rashly. As for you, <displayname>, how can I reward you? You have done the fairy people a great favour that shall not be forgotten.");
+~fairy2_queen_says("<p,neutral>I'm afraid you find us in trying times, but please accept this magic lamp as a sign of our thanks.");
+~fairy2_queen_reward;
+
+// the lamp, or "come back and get it" (stage 90) when there's no room
+[proc,fairy2_queen_reward]
+if (inv_freespace(inv) = 0) {
+    ~chatplayer("<p,sad>Thanks, but I don't have any space to carry it.");
+    ~fairy2_queen_says("<p,happy>That's alright, come back and get it when you can.");
+    %fairy2_queencure_quest = ^fairy2_lamp_owed;
+    ~send_quest_progress(questlist:fairy2, %fairy2_queencure_quest, ^fairy2_complete);
+    return;
+}
+inv_add(inv, twocats_rewardlamp, 1);
+%fairy2_rewardgiven = 1;
+~objbox(twocats_rewardlamp, "The Fairy Queen gives you an XP lamp.", 250, 0, 0);
+~fairy2_complete;
+
+// the quest's end: the rewards (the OSRS wiki) and what the quest leaves set (the fairy rings,
+// the Queen and Fairy Very Wise in the hideout)
+[proc,fairy2_complete]
+%fairy2_queencure_quest = ^fairy2_complete;
+%fairyring_use = 1;
+%fairyring_permission = 2;
+stat_advance(herblore, 35000);
+stat_advance(thieving, 25000);
+session_log(^log_adventure, "Quest complete: Fairytale II - Cure a Queen");
+~send_quest_complete(questlist:fairy2, ft2_magic_essence_4, 250, ^fairy2_questpoints, "You have completed\\nFairytale II - Cure a Queen!", "3,500 Herblore XP|2,500 Thieving XP|An antique lamp (2,500 XP)|Use of the fairy rings");
+
+// the awake Queen (stages 80 and 90: the 2007 cache's ft2_multi_4436)
+[opnpc1,ft2_multi_4436]
+if (%fairy2_queencure_quest = ^fairy2_lamp_owed) {
+    // ours: she still has your lamp
+    ~fairy2_queen_says("<p,happy>Hello again, <displayname>. I still have the magic lamp for you.");
+    ~fairy2_queen_reward;
+    return;
+}
+~fairy2_queen_wakes;
+
+// after the quest (ft2_multi_4454 and ft2_multi_4453; the OSRS wiki's NPC transcripts)
+[opnpc1,ft2_multi_4454]
+~chatplayer("<p,quiz>Have you managed to work out a plan yet?");
+~fairy2_queen_says("<p,neutral>Not yet, <displayname>, but it looks like we'll need to ask you for your help again, I'm afraid. I'll be able to tell you more once we have finished making our battle plans.");
+
+// ---------------------------------------------------------------- the antique lamp
+// 2,500 experience in a skill of level 30 or more (the OSRS wiki); the genie lamp's window
+[opheld1,twocats_rewardlamp]
+%xplamp_kind = 1;
+%xplamp = ^xplamp_none;
+if_openmain(xplamp);
