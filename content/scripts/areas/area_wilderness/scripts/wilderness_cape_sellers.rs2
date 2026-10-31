@@ -1,0 +1,32 @@
+// EASCape: the Wilderness cape merchants (William, Ian, Larry, Darren, Edward, Richard, Neil,
+// Edmond, Simon, Sam). Trade is the shop_keeper category (the cache's wildernesscapeshop1-10;
+// titles from 2006Scape's shops). Talk-to is the OSRS wiki's cape merchant transcript (Edward's;
+// Void, 2006Scape and 2009Scape have no dialogue for them).
+
+[opnpc1,wilderness_capeseller_1] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_2] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_3] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_4] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_5] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_6] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_7] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_8] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_9] ~wilderness_capeseller_talk;
+[opnpc1,wilderness_capeseller_10] ~wilderness_capeseller_talk;
+
+[proc,wilderness_capeseller_talk]
+~chatnpc("<p,happy>Hello there, are you interested in buying one of my special capes?");
+switch_int (~p_choice3("What's so special about your capes?", 1, "Yes please!", 2, "No thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's so special about your capes?");
+        ~chatnpc("<p,neutral>Ahh well they make it less likely that you'll accidently attack anyone wearing the same cape as you");
+        ~chatnpc("<p,neutral>from everyone else. They're very useful when out in the wilderness with friends or anyone else you don't want to harm.");
+        ~chatnpc("<p,quiz>So would you like to buy one?");
+        if (~p_choice2("Yes please!", 1, "No thanks.", 2) = 1) {
+            ~openshop_activenpc;
+        } else {
+            ~chatplayer("<p,neutral>No thanks.");
+        }
+    case 2 : ~openshop_activenpc;
+    case 3 : ~chatplayer("<p,neutral>No thanks.");
+}
