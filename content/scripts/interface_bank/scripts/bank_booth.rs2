@@ -5,4 +5,25 @@ if (npc_findcat(loc_coord, bank_teller, 2, 0) = true) {
 @openbank; // default to just open bank if a bank teller was not found to start dialogue.
 
 [oploc2,bankbooth] @openbank;
+
+// EASCape: the other bank booths (the later cache's booth, Port Phasmatys, Nardah, Keldagrim, Mos
+// Le'Harmless, Pest Control) work like the plain one; the Champions' Guild chest opens the bank.
+[oploc1,loc_11758] @bankbooth_use;
 [oploc2,loc_11758] @openbank;
+[oploc1,ahoy_bankbooth] @bankbooth_use;
+[oploc2,ahoy_bankbooth] @openbank;
+[oploc1,elid_bankbooth] @bankbooth_use;
+[oploc2,elid_bankbooth] @openbank;
+[oploc1,dwarf_keldagrim_bankbooth] @bankbooth_use;
+[oploc2,dwarf_keldagrim_bankbooth] @openbank;
+[oploc1,fever_bankbooth] @bankbooth_use;
+[oploc2,fever_bankbooth] @openbank;
+[oploc1,pest_bankbooth] @bankbooth_use;
+[oploc2,pest_bankbooth] @openbank;
+[oploc1,champions_bankchest] @openbank;
+
+[label,bankbooth_use]
+if (npc_findcat(loc_coord, bank_teller, 2, 0) = true) {
+    @talk_to_banker;
+}
+@openbank;
