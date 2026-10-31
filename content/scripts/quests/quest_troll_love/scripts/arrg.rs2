@@ -66,8 +66,11 @@ if ($choice = 1) {
 // TODO: Implement boss fight properly (Ranged and melee)
 
 [label,trollromance_arrg_combat]
-p_teleport(map_findsquare(0_45_56_34_27, 1, 2, ^map_findsquare_lineofwalk));
-npc_add(movecoord(coord, -4, 0, 0), trollromance_arrg_attackable, 500);
+// EASCape: Arrg is put in the troll arena by you (the player's coord still read the cave here,
+// before the teleport happened, so he was added in the cave: you were hit and couldn't fight him)
+def_coord $arena = map_findsquare(0_45_56_34_27, 1, 2, ^map_findsquare_lineofwalk);
+p_teleport($arena);
+npc_add(map_findsquare(movecoord($arena, -4, 0, 0), 0, 2, ^map_findsquare_lineofwalk), trollromance_arrg_attackable, 500);
 npc_setmode(opplayer2);
 %npc_aggressive_player = uid;
 hint_npc;
