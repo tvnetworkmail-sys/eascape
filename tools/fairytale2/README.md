@@ -70,3 +70,9 @@ The quest is `content/scripts/quests/quest_fairy2`.
 - `gorak_anims.py <cache468 dir>` ports seqs 4300-4302 (the Goraks' attack, defend and death; Void's
   and 2009Scape's ids) into `quest_fairy2/configs/fairy2_gorak.seq`. Their combat stats and drops are
   Void's, through `tools/void/slayer.py` (`ft2_gorak` as Void's `gorak`, `gorak_claws` as ours).
+
+## Rings onto blocked ground
+
+- `ring_walkable.py <cache468 dir> <keys.json>` opens the tiles the 2007 map has walkable on six
+  ring squares our 2006 map blocks (AIR, BIP, DLR islands; AKQ Piscatoris and DKS Polar Hunter
+  areas; DJP Tower of Life). Flags only.
