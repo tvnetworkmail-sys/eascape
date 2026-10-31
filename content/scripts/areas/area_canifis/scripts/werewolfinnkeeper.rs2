@@ -7,7 +7,15 @@ if(inv_total(inv, trail_clue_medium_anagram017) > 0) {
 }
 ~chatplayer("<p,happy>Hello there!");
 ~chatnpc("<p,happy>Greetings traveller. Welcome to 'The Hair Of The Dog' Tavern. What can I do you for?");
+// EASCape: Creature of Fenkenstrain's pickled brain, while you need it (fenk_castle.rs2; ours)
+if (%fenk_quest >= ^fenk_body_parts & %fenk_quest < ^fenk_complete & %fenk_head = 0 & inv_total(inv, fenk_brain) = 0 & inv_total(inv, fenk_head_full) = 0) {
+    @multi5("Can I buy a beer?", roavar_beer, "Can I get something to eat?", roavar_eat, "Can I hear some gossip?", roavar_gossip, "Can I hear a story?", roavar_story, "Nothing thanks.", roavar_nothing);
+}
 @multi4("Can I buy a beer?", roavar_beer, "Can I hear some gossip?", roavar_gossip, "Can I hear a story?", roavar_story, "Nothing thanks.", roavar_nothing);
+
+[label,roavar_eat]
+~chatplayer("<p,quiz>Can I get something to eat?");
+@fenk_roavar_brain;
 
 [label,roavar_beer]
 ~chatplayer("<p,quiz>Can I buy a beer?");

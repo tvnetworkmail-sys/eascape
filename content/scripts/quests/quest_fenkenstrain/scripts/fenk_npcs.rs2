@@ -429,6 +429,19 @@ return("<$ns><$ew>");
 
 // every 2 ticks while he walks with you: keep him close; his ten minutes are 300 of these
 [timer,fenk_gardener_timer]
+// leaving: a few seconds after his last words (ours: at his grave once you have his head)
+if (%fenk_gardener_ticks >= 1000) {
+    %fenk_gardener_ticks = add(%fenk_gardener_ticks, 1);
+    if (%fenk_gardener_ticks >= 1003) {
+        ~fenk_gardener_end;
+    }
+    return;
+}
+if (npc_finduid(%fenk_gardener_uid) = true & inzone(0_56_54_22_33, 0_56_54_26_36, coord) = true & (inv_total(inv, fenk_head_empty) > 0 | inv_total(inv, fenk_head_full) > 0 | %fenk_head = 1)) {
+    npc_say("This is the place where I met me maker.");
+    %fenk_gardener_ticks = 1000;
+    return;
+}
 %fenk_gardener_ticks = add(%fenk_gardener_ticks, 1);
 if (%fenk_gardener_ticks >= 300 | npc_finduid(%fenk_gardener_uid) = false) {
     ~fenk_gardener_end;

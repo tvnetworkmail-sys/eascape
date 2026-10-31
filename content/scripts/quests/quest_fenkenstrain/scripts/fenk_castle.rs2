@@ -29,6 +29,11 @@ if (obj_coord ! 0_54_54_36_18) {
 if (npc_find(coord, werewolfinnkeeper, 10, 0) = false) {
     @pickup_obj;
 }
+@fenk_roavar_brain;
+
+// ours (your call, 31 Oct 2026): Roavar's "Can I get something to eat?" while you need the brain
+// leads here too; the sources only have him offer it when you pick the jar up
+[label,fenk_roavar_brain]
 if (inv_total(inv, fenk_brain) > 0) {
     ~chatnpc_specific("Roavar", werewolfinnkeeper, "<p,neutral>You can leave that alone, my friend. I've already sold you one of your own- eat that. I can't afford to give away freebies in this business!");
     return;
