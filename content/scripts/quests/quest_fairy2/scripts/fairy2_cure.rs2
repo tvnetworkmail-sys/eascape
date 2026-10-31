@@ -44,9 +44,9 @@ if (%ft2_starflower_spot ! null) {
     }
     npc_add(%ft2_starflower_spot, ft2_starflower_4452, 200);
 }
-def_coord $spot = movecoord(0_32_75_14_8, random(35), 0, random(53));
-$spot = map_findsquare($spot, 0, 3, ^map_findsquare_lineofwalk);
-if ($spot = null | npc_find($spot, ft2_starflower_4452, 1, 0) = true | npc_find($spot, ft2_cosmic_being, 2, 0) = true) {
+// a tile of the plane's land (fairy2_starflower.enum), not the void around it
+def_coord $spot = enum(int, coord, ft2_starflower_spots, random(enum_getoutputcount(ft2_starflower_spots)));
+if ($spot = null | map_blocked($spot) = true | npc_find($spot, ft2_starflower_4452, 1, 0) = true | npc_find($spot, ft2_cosmic_being, 2, 0) = true) {
     %ft2_starflower_spot = null;
     return;
 }
