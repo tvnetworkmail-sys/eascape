@@ -2,24 +2,7 @@
 // WallBeast.kt). Stepping onto the tile in front of a hole in the wall, there's a 1 in 4
 // chance the beast grabs you. A spiny helmet repels it and it comes out to fight; without one
 // it holds you by the head for 8 ticks, then lets go for 16 damage.
-// The hole looks every tick for a player on the square in front of it. (It used to hunt, but
-// the hole sits in the cave wall, so it never "saw" the player and never grabbed anyone.)
-[ai_timer,swamp_wallbeast]
-if (%npc_action_delay > map_clock) {
-    return;
-}
-def_coord $spot = movecoord(npc_coord, 0, 0, -1);
-huntall($spot, 0, 0);
-while (huntnext = true) {
-    if (coord = $spot) {
-        // one roll per visit: it won't try again for a few ticks
-        %npc_action_delay = add(map_clock, 8);
-        if (random(4) = 0) {
-            strongqueue*(eascape_wallbeast_grab, 1)(npc_uid);
-        }
-        return;
-    }
-}
+// The chance is rolled from the player in the caves (lumbridge_swamp_caves.rs2, swamp_cave_wallbeast_check).
 
 [queue,eascape_wallbeast_grab](npc_uid $beast)
 if (npc_finduid($beast) = false) {

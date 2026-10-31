@@ -34,6 +34,7 @@ if (%swamp_caves_roped_entrance = 1) {
     anim(human_pickupfloor, 0);
     p_delay(1);
     p_telejump(0_49_149_31_37);
+    ~swamp_cave_dark_refresh;
     return;
 }
 if (inv_total(inv, rope) > 0) {
@@ -68,13 +69,18 @@ if (coordz(coord) < coordz(loc_coord)) {
 } else {
     p_telejump(0_50_150_24_0);
 }
+~swamp_cave_dark_refresh;
 
 // ---------------------------------------------------------------- stepping stones
-[oploc1,swamp_cave_steppingstone_a] ~swamp_cave_stepping_stone(true);
-[oploc1,swamp_cave_steppingstone_b] ~swamp_cave_stepping_stone(false);
+// the stones stand in the water, so they're jumped onto from two squares away (Void approaches them)
+[aploc1,swamp_cave_steppingstone_a] ~swamp_cave_stepping_stone(true);
+[aploc1,swamp_cave_steppingstone_b] ~swamp_cave_stepping_stone(false);
 
 [proc,swamp_cave_stepping_stone](boolean $eastwest)
-p_arrivedelay;
+if (distance(coord, loc_coord) > 2) {
+    p_aprange(2);
+    return;
+}
 def_int $dx = 0;
 def_int $dz = 0;
 if ($eastwest = true) {
@@ -133,6 +139,7 @@ settimer(swamp_cave_dark, 1);
 
 [timer,swamp_cave_dark]
 ~swamp_cave_dark_refresh;
+~swamp_cave_wallbeast_check;
 if (%swamp_cave_dark = 2 & map_clock >= %swamp_cave_bites) {
     sound_synth(insect_bites, 1, 0);
     queue(damage_player, 0, 1);
@@ -257,4 +264,22 @@ switch_int (random(5)) {
         ~chatnpc("<p,quiz>Above ground? Where is that?");
         ~chatplayer("<p,neutral>You know, out of caves, in the open air, with sunshine and wide open spaces!");
         ~chatnpc("<p,neutral>Ick. Sounds horrible.");
+}
+
+// ---------------------------------------------------------------- wall beasts
+// Each tick in the caves: standing on the square in front of a hole (Void's wall_beast_spot_1-7,
+// the square south of each hole) gives the beast its 1 in 4 chance (skill_slayer's
+// eascape_wall_beast.rs2 does the grab). Checked from the player's side: the hole sits in the
+// wall, so it never found players itself.
+[proc,swamp_cave_wallbeast_check]
+if (npc_find(movecoord(coord, 0, 0, 1), swamp_wallbeast, 0, 0) = false) {
+    return;
+}
+if (npc_coord ! movecoord(coord, 0, 0, 1) | %npc_action_delay > map_clock) {
+    return;
+}
+// one roll per visit: it won't try again for a few ticks
+%npc_action_delay = add(map_clock, 8);
+if (random(4) = 0) {
+    strongqueue*(eascape_wallbeast_grab, 1)(npc_uid);
 }

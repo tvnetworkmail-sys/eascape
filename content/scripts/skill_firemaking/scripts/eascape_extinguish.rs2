@@ -1,0 +1,21 @@
+// EASCape: putting out a light source (Void LightSource.kt, light_source.tables.toml "extinguish"):
+// it goes back to its unlit form, "You extinguish the flame." In a dark place (the Lumbridge
+// Swamp Caves) you can't put out your last light: "Extinguishing the <type> would leave you
+// without a light source."
+[opheld1,lit_candle] ~eascape_extinguish(unlit_candle, "candle");
+[opheld1,lit_black_candle] ~eascape_extinguish(unlit_black_candle, "candle");
+[opheld1,torch_lit] ~eascape_extinguish(torch_unlit, "torch");
+[opheld1,tog_sapphire_lantern_lit] ~eascape_extinguish(tog_sapphire_lantern_unlit, "lantern");
+[opheld2,oil_lamp_lit] ~eascape_extinguish(oil_lamp_unlit, "lamp");
+[opheld2,candle_lantern_lit] ~eascape_extinguish(candle_lantern_unlit, "lantern");
+[opheld2,candle_lantern_black_lit] ~eascape_extinguish(candle_lantern_black_unlit, "lantern");
+[opheld2,oil_lantern_lit] ~eascape_extinguish(oil_lantern_unlit, "lantern");
+[opheld2,bullseye_lantern_lit] ~eascape_extinguish(bullseye_lantern_unlit, "lantern");
+
+[proc,eascape_extinguish](namedobj $unlit, string $type)
+if (~swamp_cave_in_dark(coord) = true & calc(inv_totalcat(inv, light_source_lit) + inv_totalcat(worn, light_source_lit)) <= 1) {
+    mes("Extinguishing the <$type> would leave you without a light source.");
+    return;
+}
+inv_setslot(inv, last_slot, $unlit, 1);
+mes("You extinguish the flame.");
