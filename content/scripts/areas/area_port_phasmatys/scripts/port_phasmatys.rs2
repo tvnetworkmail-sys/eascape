@@ -1,0 +1,372 @@
+// EASCape: Port Phasmatys. Ported from Void (GregHib/void): PortPhasmatysBarrier.kt,
+// Ectofuntus.kt, BoneGrinder.kt, GhostDisciple.kt, Ectopool.kt (quest/member/ghosts_ahoy),
+// Nettles.kt, Tea.kt and the nettle recipes (cooking.recipes.toml, ghosts_ahoy.recipes.toml),
+// their words and order. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- ghostspeak
+// Void GhostsAhoy.kt checkGhostspeak
+[proc,ahoy_ghostspeak]()(boolean)
+def_obj $neck = inv_getobj(worn, ^wearpos_front);
+if ($neck = amulet_of_ghostspeak | $neck = amulet_of_ghostspeak_enchanted) {
+    return(true);
+}
+~chatnpc("<p,neutral>Woooo wooo wooooo woooo");
+~mesbox("You cannot understand the ghost.");
+return(false);
+
+// ---------------------------------------------------------------- the energy barrier
+// Two barriers: 3652,3485 (angle 2, crossed in x) and 3659,3508 (angle 3, crossed in z).
+// The toll is 2 ectotokens on the way in; leaving is free, and so is everything after Ghosts
+// Ahoy. Ours: 2006's barrier has only Pass, so Pass pays the toll (Void has Pay-toll(2-Ecto)).
+[oploc1,ahoy_town_barrier]
+def_boolean $leaving = ~ahoy_barrier_inside;
+if ($leaving = false) {
+    if (%ahoy_questvar >= 8) {
+        mes("All visitors to Port Phasmatys must pay a toll charge of 2 Ectotokens. However, you have done the ghosts of our town a service that surpasses all values, so you may pass without charge.");
+    } else if (inv_total(inv, ectotoken) < 2) {
+        mes("All visitors to Port Phasmatys must pay a toll charge of 2 Ectotokens.");
+        mes("You need to go to the Temple and earn some. Talk to the disciples - they will tell you how.");
+        return;
+    } else {
+        inv_del(inv, ectotoken, 2);
+        mes("You pay the toll charge of 2 Ectotokens.");
+    }
+}
+~ahoy_barrier_cross;
+
+[proc,ahoy_barrier_inside]()(boolean)
+if (loc_angle = 2) {
+    if (coordx(coord) > coordx(loc_coord)) return(true);
+    return(false);
+}
+if (coordz(coord) < coordz(loc_coord)) return(true);
+return(false);
+
+[proc,ahoy_barrier_cross]
+def_int $lx = coordx(loc_coord);
+def_int $lz = coordz(loc_coord);
+def_int $px = coordx(coord);
+def_int $pz = coordz(coord);
+def_coord $line;
+def_coord $dest;
+if (loc_angle = 2) {
+    def_int $z = max($lz, min($pz, add($lz, 1)));
+    def_int $x = $lx;
+    if ($px <= $lx) $x = add($lx, 1);
+    $line = movecoord(coord, 0, 0, sub($z, $pz));
+    $dest = movecoord(coord, sub($x, $px), 0, sub($z, $pz));
+} else {
+    def_int $x = max($lx, min($px, add($lx, 1)));
+    def_int $z = $lz;
+    if ($pz >= $lz) $z = sub($lz, 1);
+    $line = movecoord(coord, sub($x, $px), 0, 0);
+    $dest = movecoord(coord, sub($x, $px), 0, sub($z, $pz));
+}
+if ($line ! coord) {
+    ~forcewalk2($line);
+}
+~forcewalk2($dest);
+
+// ---------------------------------------------------------------- the Ectofuntus
+// Void Ectofuntus.kt: 4x the bones' burying xp, 53 worships before the tokens must be collected
+[oploc1,ahoy_ectofunctus]
+if (%ecto_worships >= 53) {
+    mes("The Ectofuntus is full.");
+    return;
+}
+def_obj $meal = ~ecto_bonemeal_in_inv;
+def_int $slime = inv_total(inv, bucket_ectoplasm);
+if ($meal = null & $slime = 0) {
+    mes("You don't have any ectoplasm or crushed bones to put into the Ectofuntus.");
+    return;
+}
+if ($meal = null) {
+    mes("You need a pot of crushed bones to put into the Ectofuntus.");
+    return;
+}
+if ($slime = 0) {
+    mes("You need ectoplasm to put into the Ectofuntus.");
+    return;
+}
+inv_del(inv, bucket_ectoplasm, 1);
+inv_add(inv, bucket_empty, 1);
+inv_del(inv, $meal, 1);
+inv_add(inv, pot_empty, 1);
+anim(ahoy_prayer, 0);
+stat_advance(prayer, enum(obj, int, ecto_bonemeal_xp, $meal));
+%ecto_worships = add(%ecto_worships, 1);
+mes("You put some ectoplasm and bonemeal into the Ectofuntus, and worship it.");
+
+// ---------------------------------------------------------------- the ghost disciples
+[opnpc1,ahoy_disciple]
+if (~ahoy_ghostspeak = false) return;
+if (%ecto_worships > 0) {
+    @ahoy_disciple_collect;
+}
+if (coordy(coord) > 0) {
+    ~chatnpc("<p,neutral>Put bones of any type into the machine's hopper, and then turn the handle to grind them. You will need a pot to empty the machine of ground up bones.");
+    return;
+}
+~chatnpc("<p,neutral>This is the Ectofuntus, the most marvellous creation of Necrovarus, our glorious leader.");
+@ahoy_disciple_options;
+
+[label,ahoy_disciple_collect]
+def_int $amount = multiply(%ecto_worships, 5);
+if (inv_freespace(inv) = 0 & inv_total(inv, ectotoken) = 0) {
+    ~chatnpc("<p,neutral>I have <tostring($amount)> ectotokens waiting for you mortal, but you do not have room in your inventory for them.");
+    return;
+}
+%ecto_worships = 0;
+inv_add(inv, ectotoken, $amount);
+~chatnpc("<p,neutral>Certainly, mortal. Here's <tostring($amount)> ectotokens.");
+
+[label,ahoy_disciple_options]
+switch_int (~p_choice5("What is the Ectofuntus?", 1, "Where do I get ectoplasm from?", 2, "How do I grind bones?", 3, "How do I receive Ectotokens?", 4, "Thanks for your time.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What is the Ectofuntus?");
+        ~chatnpc("<p,neutral>It provides the power to keep us ghosts from passing over into the next plane of existence.");
+        ~chatplayer("<p,quiz>And how does it work?");
+        ~chatnpc("<p,neutral>You have to pour a bucket of ectoplasm into the fountain, a pot of ground bones, and then worship at the Ectofuntus. A unit of unholy power will then be created.");
+        @ahoy_disciple_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Where do I get ectoplasm from?");
+        ~chatnpc("<p,neutral>Necrovarus sensed the power bubbling beneath our feet, and we delved long and deep beneath Port Phasmatys, until we found a pool of natural ectoplasm. You may find it by using the trapdoor over there.");
+        @ahoy_disciple_options;
+    case 3 :
+        ~chatplayer("<p,quiz>How do I grind bones?");
+        ~chatnpc("<p,neutral>There is a bone grinding machine upstairs. Put bones of any type into the machine's hopper, and then turn the handle to grind them. You will need a pot to empty the machine of ground up bones.");
+        @ahoy_disciple_options;
+    case 4 :
+        ~chatplayer("<p,quiz>How do I receive Ectotokens?");
+        ~chatnpc("<p,neutral>We disciples keep track of how many units of power have been produced. Just talk to us once you have generated some and we will reimburse you with the correct amount of Ectotokens.");
+        ~chatplayer("<p,quiz>How do I generate units of power?");
+        ~chatnpc("<p,neutral>You have to pour a bucket of ectoplasm into the fountain and then worship at the Ectofuntus with a pot of ground bones. This will create a unit of unholy power.");
+        @ahoy_disciple_options;
+    case 5 :
+        ~chatplayer("<p,neutral>Thanks for your time.");
+}
+
+// ---------------------------------------------------------------- the bone grinder
+// Void BoneGrinder.kt (manual mode; 2006's grinder has no Settings, so no automatic mode)
+// %ecto_grinder_stage: 0 empty, 1 bones in the hopper, 2 bonemeal in the bin
+[oplocu,ahoy_grinder_loader]
+if (%ecto_grinder_stage ! 0) {
+    mes("You already have some bones in the hopper.");
+    return;
+}
+def_namedobj $meal = enum(obj, namedobj, ecto_bonemeal, last_useitem);
+if ($meal = null) {
+    // ours: Void says this only for bones with no bonemeal; we say it for anything else too
+    ~mesbox("These bones could break the bone grinder. Perhaps I should find some different bones.");
+    return;
+}
+anim(ahoy_bone_dump, 0);
+sound_synth(fill_grinder, 1, 0);
+inv_del(inv, last_useitem, 1);
+%ecto_grinder_bones = last_useitem;
+%ecto_grinder_stage = 1;
+mes("You fill the hopper with bones.");
+
+[oploc1,ahoy_grinder_handle]
+if (%ecto_grinder_stage = 0) {
+    mes("You have no bones loaded to grind.");
+    return;
+}
+if (%ecto_grinder_stage = 2) {
+    mes("You already have some bonemeal that needs to be collected.");
+    return;
+}
+anim(ahoy_bone_grind, 0);
+sound_synth(grinder_grinding, 1, 0);
+%ecto_grinder_stage = 2;
+mes("You wind the grinder handle.");
+mes("Some crushed bones pour into the bin.");
+
+[oploc2,ahoy_grinder_handle]
+// ours: Void adds "The grinder is set to manual."; 2006's grinder has no settings
+if (%ecto_grinder_stage = 1) {
+    mes("There are <lowercase(oc_name(%ecto_grinder_bones))> in the hopper.");
+} else if (%ecto_grinder_stage = 2) {
+    mes("There is bonemeal waiting in the bin.");
+} else {
+    mes("The grinder is empty.");
+}
+
+[oploc1,ahoy_grinder_chute]
+if (%ecto_grinder_stage ! 2) {
+    mes("You have no bonemeal to collect.");
+    return;
+}
+if (inv_total(inv, pot_empty) = 0) {
+    mes("You don't have any pots to take the bonemeal with.");
+    return;
+}
+def_namedobj $meal = enum(obj, namedobj, ecto_bonemeal, %ecto_grinder_bones);
+if ($meal = null) return;
+anim(ahoy_fillbucket_bonedust, 0);
+sound_synth(grinder_empty, 1, 0);
+inv_del(inv, pot_empty, 1);
+inv_add(inv, $meal, 1);
+%ecto_grinder_stage = 0;
+%ecto_grinder_bones = null;
+mes("You empty the bin into the pot.");
+
+// ---------------------------------------------------------------- the trapdoor and the pool
+// (Void port_phasmatys.teles.toml; messages as our other trapdoors, trapdoors.rs2)
+[oploc1,ahoy_trapdoor]
+mes("The trapdoor opens...");
+sound_synth(door_open, 1, 0);
+loc_change(ahoy_trapdoor_open, 500);
+
+[oploc1,ahoy_trapdoor_open]
+mes("You climb down through the trapdoor...");
+anim(human_pickupfloor, 0);
+p_delay(0);
+p_telejump(3_57_154_21_32);
+
+[oploc2,ahoy_trapdoor_open]
+mes("You close the trapdoor.");
+sound_synth(door_close, 1, 0);
+loc_change(ahoy_trapdoor, 500);
+
+// the weathered wall shortcut, Agility 58, no xp (Void Ectopool.kt; anims ours from 2006's
+// agility_shortcut_wall_* as Void's jump_* are Barbarian Outpost's)
+[oploc1,loc_9308]
+if (stat(agility) < 58) {
+    mes("You need an agility level of at least 58 to climb down this wall.");
+    return;
+}
+anim(agility_shortcut_wall_jumpdown, 0);
+p_delay(0);
+p_telejump(2_57_154_23_32);
+anim(agility_shortcut_wall_jumpdown2, 0);
+
+[oploc1,loc_9307]
+if (stat(agility) < 58) {
+    mes("You need an agility level of at least 58 to climb up this wall.");
+    return;
+}
+anim(agility_shortcut_wall_jump2, 0);
+p_delay(0);
+p_telejump(3_57_154_22_32);
+
+// fills every empty bucket in turn (Void: fill_bucket_slime, ours human_fillbucket_sandpit)
+[oplocu,_ecto_pool]
+if (last_useitem ! bucket_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@ahoy_fill_ectoplasm;
+
+[label,ahoy_fill_ectoplasm]
+if (inv_total(inv, bucket_empty) = 0) return;
+anim(human_fillbucket_sandpit, 0);
+sound_synth(fill_ectoplasm, 1, 0);
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, bucket_ectoplasm, 1);
+p_delay(2);
+mes("You fill the bucket with ectoplasm.");
+@ahoy_fill_ectoplasm;
+
+// ---------------------------------------------------------------- nettles
+// Void Nettles.kt: 2 damage without gloves
+[oploc1,_nettles]
+if (inv_freespace(inv) = 0) {
+    ~mesbox("You can't carry any more nettles.");
+    return;
+}
+def_obj $hands = inv_getobj(worn, ^wearpos_hands);
+if ($hands = null | string_indexof_string("glove", lowercase(oc_name($hands))) = -1) {
+    anim(human_pickupfloor, 0);
+    p_delay(1);
+    ~damage_self(2);
+    mes("You have been stung by the nettles.");
+    return;
+}
+anim(human_pickupfloor, 0);
+sound_synth(pick, 1, 0);
+mes("You pick a handful of nettles.");
+inv_add(inv, nettles_picked, 1);
+loc_del(15);
+
+// ---------------------------------------------------------------- nettle tea
+// bowl_water + nettles → nettle-water (water_sources.rs2 sends it here); cook it on a fire or
+// range for nettle tea (cooking_generic.dbrow); milk and cups from Void's recipes
+[label,ahoy_nettlewater]
+inv_del(inv, bowl_water, 1);
+inv_del(inv, nettles_picked, 1);
+inv_add(inv, bowl_nettlewater, 1);
+mes("You place the nettles into the bowl of water.");
+
+[opheldu,bowl_nettletea]
+switch_obj (last_useitem) {
+    case bucket_milk : ~ahoy_tea_mix(bowl_nettletea, bucket_milk, bowl_nettletea_milky, bucket_empty);
+    case cup_empty : ~ahoy_tea_mix(bowl_nettletea, cup_empty, cup_of_nettletea, bowl_empty);
+    case chinacup_empty : ~ahoy_tea_mix(bowl_nettletea, chinacup_empty, chinacup_of_nettletea, bowl_empty);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_nettletea_milky]
+switch_obj (last_useitem) {
+    case cup_empty : ~ahoy_tea_mix(bowl_nettletea_milky, cup_empty, cup_of_nettletea_milky, bowl_empty);
+    case chinacup_empty : ~ahoy_tea_mix(bowl_nettletea_milky, chinacup_empty, chinacup_of_nettletea_milky, bowl_empty);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,cup_of_nettletea]
+switch_obj (last_useitem) {
+    case bucket_milk : ~ahoy_tea_mix(cup_of_nettletea, bucket_milk, cup_of_nettletea_milky, bucket_empty);
+    case chinacup_empty : ~ahoy_tea_mix(cup_of_nettletea, chinacup_empty, chinacup_of_nettletea, cup_empty);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,cup_of_nettletea_milky]
+switch_obj (last_useitem) {
+    case chinacup_empty : ~ahoy_tea_mix(cup_of_nettletea_milky, chinacup_empty, chinacup_of_nettletea_milky, cup_empty);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,chinacup_of_nettletea]
+switch_obj (last_useitem) {
+    case bucket_milk : ~ahoy_tea_mix(chinacup_of_nettletea, bucket_milk, chinacup_of_nettletea_milky, bucket_empty);
+    case default : ~displaymessage(^dm_default);
+}
+
+[proc,ahoy_tea_mix](obj $a, obj $b, namedobj $ra, namedobj $rb)
+inv_del(inv, $a, 1);
+inv_del(inv, $b, 1);
+inv_add(inv, $ra, 1);
+inv_add(inv, $rb, 1);
+sound_synth(liquid, 1, 0);
+
+// drinking (Void heals: nettle-water 1, nettle tea 3, milky cups 0; the bowl of nettle tea also
+// gives 5% run energy, Tea.kt). Ours: the porcelain cups, which Void can't drink, drink like
+// the plain cups.
+[opheld2,bowl_nettlewater] @ahoy_drink(bowl_empty, 1, 0);
+[opheld2,bowl_nettletea] @ahoy_drink(bowl_empty, 3, 500);
+[opheld2,bowl_nettletea_milky] @ahoy_drink(bowl_empty, 3, 0);
+[opheld2,cup_of_nettletea] @ahoy_drink(cup_empty, 3, 0);
+[opheld2,cup_of_nettletea_milky] @ahoy_drink(cup_empty, 0, 0);
+[opheld2,chinacup_of_nettletea] @ahoy_drink(chinacup_empty, 3, 0);
+[opheld2,chinacup_of_nettletea_milky] @ahoy_drink(chinacup_empty, 0, 0);
+
+[label,ahoy_drink](namedobj $empty, int $heal, int $energy)
+if (%eat_delay >= map_clock) return;
+%eat_delay = calc(map_clock + 2);
+def_obj $drink = last_item;
+inv_setslot(inv, last_slot, $empty, 1);
+anim(human_eat, 0);
+sound_synth(liquid, 1, 0);
+mes("You drink the <lowercase(oc_name($drink))>.");
+if ($heal > 0) stat_heal(hitpoints, $heal, 0);
+if ($energy > 0) healenergy($energy);
+
+// Empty (iop3) on the cups (ours)
+[opheld3,cup_of_nettletea] @ahoy_empty_cup(cup_empty);
+[opheld3,cup_of_nettletea_milky] @ahoy_empty_cup(cup_empty);
+[opheld3,chinacup_of_nettletea] @ahoy_empty_cup(chinacup_empty);
+[opheld3,chinacup_of_nettletea_milky] @ahoy_empty_cup(chinacup_empty);
+
+[label,ahoy_empty_cup](namedobj $empty)
+inv_setslot(inv, last_slot, $empty, 1);
+mes("You empty the cup.");
