@@ -1,0 +1,28 @@
+// EASCape: Zavistic Rarve, the Grand Secretary of the Wizards' Guild. Void ZavisticRarve.kt's plain
+// Talk-to and guild menu (Zogre Flesh Eaters and The Hand in the Sand aren't in our game, so his
+// quest talk isn't either).
+
+[opnpc1,zogre_human_zavistic_rarve]
+~chatnpc("<p,neutral>What are you doing bothering me? Don't you think some of us have work to do?");
+~chatplayer("<p,neutral>I thought you were here to help?");
+~chatnpc("<p,neutral>Well... I am, I suppose, anyway... we're very busy here, hurry up, what do you want?");
+~zavistic_guild_menu;
+
+[proc,zavistic_guild_menu]
+switch_int (~p_choice4("What is there to do in the Wizards' Guild?", 1, "What are the requirements to get in the Wizards' Guild?", 2, "What do you do in the Guild?", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What is there to do in the Wizards' Guild?");
+        ~chatnpc("<p,neutral>This is the finest wizards' establishment in the land. We have magic portals to the other towers of wizardry around RuneScape. We have a particularly wide collection of runes in our rune shop. We sell some of");
+        ~chatnpc("<p,neutral>the finest mage robes in the land and we have a training area full of zombies for you to practice your magic on.");
+        ~zavistic_guild_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the requirements to get in the Wizards' Guild?");
+        ~chatnpc("<p,neutral>You need a magic level of 66, the high magic energy level is too dangerous for anyone below that level.");
+        ~zavistic_guild_menu;
+    case 3 :
+        ~chatplayer("<p,neutral>What do you do in the Guild?");
+        ~chatnpc("<p,neutral>I'm the Grand Secretary for the Wizards' Guild, I have lots of correspondence to keep up with, as well as attending to the discipline of the more problematic guild members.");
+        ~zavistic_guild_menu;
+    case 4 :
+        ~chatplayer("<p,neutral>Ok, thanks.");
+}
