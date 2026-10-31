@@ -371,11 +371,14 @@ switch_int ($choice) {
             return;
         }
         ~chatnpc("<p,neutral>Well, oi s'pose oi've got ten minutes to spare.");
-        // ten minutes (Void); ours: he finds his way to you if left behind, as other followers do
-        npc_add(npc_coord, fenk_gardener, 1000);
+        // ten minutes (Void). Ours: he appears next to you, and if he falls more than 10 squares
+        // behind or is left on another floor, he catches you up (fenk_gardener_timer)
+        npc_add(map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk), fenk_gardener, 1000);
         npc_setmode(playerfollow);
+        %fenk_gardener_uid = npc_uid;
         %fenk_gardener_directions = 1;
-        settimer(fenk_gardener_timer, 1000);
+        %fenk_gardener_ticks = 0;
+        settimer(fenk_gardener_timer, 2);
     case 5 :
         ~chatplayer("<p,quiz>What's your name?");
         ~chatnpc("<p,neutral>Me name? It's been a moivellous long while, mate, since I had any use for such a thing as a name.");
@@ -400,11 +403,7 @@ if (%fenk_gardener_directions = 0) {
 if (inzone(0_56_54_22_33, 0_56_54_26_36, coord) = true) {
     npc_say("This is the place where I met me maker.");
     p_delay(5);
-    if (npc_finduid(npc_uid) = true) { // ours: he may be gone already
-        npc_del;
-    }
-    %fenk_gardener_directions = 0;
-    cleartimer(fenk_gardener_timer);
+    ~fenk_gardener_end;
     return;
 }
 if (inzone(0_55_53_41_63, 0_57_54_0_54, coord) = true) {
@@ -428,7 +427,25 @@ if (string_length($ns) > 0 & string_length($ew) > 0) {
 }
 return("<$ns><$ew>");
 
+// every 2 ticks while he walks with you: keep him close; his ten minutes are 300 of these
 [timer,fenk_gardener_timer]
+%fenk_gardener_ticks = add(%fenk_gardener_ticks, 1);
+if (%fenk_gardener_ticks >= 300 | npc_finduid(%fenk_gardener_uid) = false) {
+    ~fenk_gardener_end;
+    return;
+}
+if (npc_range(coord) > 10 | coordy(npc_coord) ! coordy(coord)) {
+    npc_tele(map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk));
+}
+if (npc_getmode ! playerfollow) {
+    npc_setmode(playerfollow);
+}
+
+[proc,fenk_gardener_end]
+if (npc_finduid(%fenk_gardener_uid) = true) {
+    npc_del;
+}
+%fenk_gardener_uid = null;
 %fenk_gardener_directions = 0;
 cleartimer(fenk_gardener_timer);
 
