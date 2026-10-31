@@ -1,0 +1,344 @@
+// EASCape: Farming, step 2a: tree and fruit tree patches, plant pots and saplings. After Void
+// (content/skill/farming: FarmingPatchPick claim/pick, FarmingPatchClear stumps, FarmingPatchCure
+// pruning, PlantPots, Farming.growSaplings; content/skill/woodcutting/Woodcutting.deplete for farmed
+// trees). States: kind 6 = grown, its health wants checking; 7 = a stump; a tree's kind 5 is a tree
+// ready to chop, a fruit tree's kind 5 stage N is N fruit on it.
+// Our choices: a checked fruit tree starts with all 6 fruit (Void starts it at 1); a fruit tree
+// picked bare is chopped down in one go with any axe (it gives no logs); fruit trees can be pruned
+// too (Void only prunes trees) and give no leaves; a farmed tree falls 1 time in 8 like the game's
+// other trees; pruning uses the 2006 "pruning_all" animation (Void's is a later one).
+
+// ---------------------------------------------------------------- the tree's first option
+[proc,farming_tree_op1](int $patch, int $key)
+def_int $kind = calc(($key / 100) % 10);
+def_int $stage = calc($key % 100);
+def_int $type = ~farming_patch_type($patch);
+if ($kind = 6) {
+    ~farming_check_health($patch, $key);
+    return;
+}
+if ($type = 5 & $kind = 5) {
+    ~farming_chop_tree($patch, $key);
+    return;
+}
+if ($type = 6 & $kind = 5) {
+    ~farming_pick_fruit($patch);
+    return;
+}
+if ($type = 6 & $kind = 1 & ~farming_claimed($patch) = true) {
+    ~farming_chop_fruit_tree($patch, $key);
+    return;
+}
+~displaymessage(^dm_default);
+
+// Void claim: the check gives the tree's experience
+[proc,farming_check_health](int $patch, int $key)
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+if ($row = null) return;
+mes("You examine the tree for signs of disease and find that it is in perfect health.");
+def_boolean $ok;
+if (~farming_patch_type($patch) = 6) {
+    $ok = ~farming_set_state($patch, calc($key / 1000), 5, 6);
+    ~farming_set_claimed($patch, true);
+} else {
+    $ok = ~farming_set_state($patch, calc($key / 1000), 5, 1);
+}
+if (db_getfieldcount($row, farming_crop:checkxp) > 0) {
+    stat_advance(farming, db_getfield($row, farming_crop:checkxp, 0));
+}
+
+// ---------------------------------------------------------------- chopping
+// a farmed tree is chopped like the game's own (woodcut.rs2: the same tree rows, chances, logs and
+// experience); when it falls it leaves a stump
+[proc,farming_chop_tree](int $patch, int $key)
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+if ($row = null) return;
+def_namedobj $logs = db_getfield($row, farming_crop:produce, 0);
+def_dbrow $data = null;
+switch_obj ($logs) {
+    case oak_logs : db_find(woodcutting_trees:tree, oak_tree_fullygrown_2);
+    case willow_logs : db_find(woodcutting_trees:tree, willow_tree_fullygrown_2);
+    case maple_logs : db_find(woodcutting_trees:tree, maple_tree_fullygrown_2);
+    case yew_logs : db_find(woodcutting_trees:tree, yew_tree_fullygrown_2);
+    case magic_logs : db_find(woodcutting_trees:tree, magic_tree_fullygrown_2);
+    case default : return;
+}
+$data = db_findnext;
+if ($data = null) return;
+def_int $level = db_getfield($data, woodcutting_trees:levelrequired, 0);
+if (stat(woodcutting) < $level) {
+    mes("You need a Woodcutting level of <tostring($level)> to chop down this tree.");
+    return;
+}
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+mes("You swing your axe at the tree.");
+def_int $low;
+def_int $high;
+while (1 = 1) {
+    if (inv_freespace(inv) < 1) {
+        anim(null, 0);
+        mes("Your inventory is too full to hold any more logs.");
+        return;
+    }
+    $axe = ~woodcutting_axe_checker(false);
+    if ($axe = null) {
+        anim(null, 0);
+        return;
+    }
+    anim(~rcu_abyss_axe_anim($axe), 0);
+    sound_synth(woodchop1, 1, 0);
+    p_delay(3);
+    $low, $high = ~woodcutting_successchance($data, $axe);
+    if (stat_random(woodcutting, $low, $high) = true) {
+        mes("You get some <lowercase(oc_name($logs))>.");
+        stat_advance(woodcutting, db_getfield($data, woodcutting_trees:productexp, 0));
+        inv_add(inv, $logs, 1);
+        if (map_members = ^true & random(256) = 0) {
+            ~drop_bird_nest;
+        }
+        if (random(8) = 0) {
+            def_boolean $ok = ~farming_set_state($patch, calc($key / 1000), 7, 0);
+            sound_synth(tree_fall, 1, 0);
+            anim(null, 0);
+            return;
+        }
+    }
+}
+
+// a fruit tree picked bare: chopped down (ours: no logs, any axe)
+[proc,farming_chop_fruit_tree](int $patch, int $key)
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+mes("You swing your axe at the tree.");
+anim(~rcu_abyss_axe_anim($axe), 0);
+sound_synth(woodchop1, 1, 0);
+p_delay(3);
+anim(null, 0);
+sound_synth(tree_fall, 1, 0);
+def_boolean $ok = ~farming_set_state($patch, calc($key / 1000), 7, 0);
+mes("You chop down the tree."); // ours
+
+// ---------------------------------------------------------------- fruit
+// Void pick: one a turn, "You pick an apple."; the tree keeps its health check
+[proc,farming_pick_fruit](int $patch)
+while (1 = 1) {
+    def_int $key = ~farming_state($patch);
+    if (calc(($key / 100) % 10) ! 5) {
+        anim(null, 0);
+        return;
+    }
+    def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+    if ($row = null) return;
+    def_namedobj $fruit = db_getfield($row, farming_crop:produce, 0);
+    if (inv_freespace(inv) = 0) {
+        mes("You have run out of inventory space.");
+        anim(null, 0);
+        return;
+    }
+    anim(picking_high, 0);
+    sound_synth(pick, 1, 0);
+    p_delay(1);
+    inv_add(inv, $fruit, 1);
+    mes("You pick <~add_article(lowercase(oc_name($fruit)))>.");
+    stat_advance(farming, db_getfield($row, farming_crop:harvestxp, 0));
+    def_int $left = calc($key % 100 - 1);
+    def_boolean $ok;
+    if ($left > 0) {
+        $ok = ~farming_set_state($patch, calc($key / 1000), 5, $left);
+    } else {
+        $ok = ~farming_set_state($patch, calc($key / 1000), 1, db_getfield($row, farming_crop:stages, 0));
+        anim(null, 0);
+        return;
+    }
+}
+
+// ---------------------------------------------------------------- disease and stumps
+// Void prune: secateurs take the diseased leaves off a tree
+[proc,farming_prune](int $patch)
+def_int $key = ~farming_state($patch);
+if (~farming_patch_type($patch) < 5 | $key < 1000 | calc(($key / 100) % 10) ! 3) {
+    ~displaymessage(^dm_default);
+    return;
+}
+mes("You start pruning the tree...");
+anim(pruning_all, 0);
+sound_synth(farming_prune, 1, 0);
+p_delay(3);
+mes("You have successfully removed all the diseased leaves.");
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+if ($row ! null & ~farming_patch_type($patch) = 5) {
+    def_namedobj $leaves = null;
+    switch_obj (db_getfield($row, farming_crop:produce, 0)) {
+        case oak_logs : $leaves = leaves_oak;
+        case willow_logs : $leaves = leaves_willow;
+        case maple_logs : $leaves = leaves_maple;
+        case yew_logs : $leaves = leaves_yew;
+        case magic_logs : $leaves = leaves_magic;
+    }
+    if ($leaves ! null) {
+        if (inv_freespace(inv) > 0 | inv_total(inv, $leaves) > 0) inv_add(inv, $leaves, 1);
+        else obj_add(coord, $leaves, 1, ^lootdrop_duration);
+    }
+}
+anim(null, 0);
+def_boolean $ok = ~farming_set_state($patch, calc($key / 1000), 1, calc($key % 100));
+
+// Void FarmingPatchClear: a tree's stump gives roots (one, up to four from the tree's level to 99),
+// a fruit tree's none
+[proc,farming_dig_stump](int $patch)
+if (inv_total(inv, spade) = 0) {
+    mes("You need a spade to clear a farming patch.");
+    return;
+}
+def_int $key = ~farming_state($patch);
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+mes("You start digging up the tree stump.");
+def_namedobj $roots = null;
+def_int $count = 1;
+if ($row ! null & ~farming_patch_type($patch) = 5) {
+    switch_obj (db_getfield($row, farming_crop:produce, 0)) {
+        case oak_logs : $roots = oak_roots;
+        case willow_logs : $roots = willow_roots;
+        case maple_logs : $roots = maple_roots;
+        case yew_logs : $roots = yew_roots;
+        case magic_logs : $roots = magic_roots;
+    }
+    def_int $level = db_getfield($row, farming_crop:level, 0);
+    def_int $span = max(1, calc(99 - $level));
+    $count = calc(1 + (max(stat(farming), $level) - $level) * 3 / $span);
+}
+def_int $tries = 0;
+while ($tries < 100) {
+    $tries = calc($tries + 1);
+    anim(human_dig, 0);
+    sound_synth(digspade, 1, 0);
+    p_delay(1);
+    if (stat_random(farming, 60, 255) = true) {
+        if ($roots ! null) {
+            if (inv_freespace(inv) > 0 | inv_total(inv, $roots) > 0) inv_add(inv, $roots, 1);
+            else obj_add(coord, $roots, 1, ^lootdrop_duration);
+        }
+        $count = calc($count - 1);
+        if ($count <= 0) {
+            mes("You dig up the tree stump.");
+            ~farming_empty($patch);
+            anim(null, 0);
+            return;
+        }
+    }
+}
+
+// ---------------------------------------------------------------- plant pots
+// Void PlantPots: an empty plant pot used on a weeded patch, with a gardening trowel, fills with
+// soil; every empty pot you carry, one at a time
+[proc,farming_fill_pots](int $patch)
+def_int $key = ~farming_state($patch);
+if ($key >= 1 & $key <= 3) {
+    mes("This patch needs weeding first.");
+    return;
+}
+if ($key ! 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, gardening_trowel) = 0) {
+    mes("You need a gardening trowel to do that.");
+    return;
+}
+while (inv_total(inv, plantpot_empty) > 0) {
+    anim(farming_trowel_digging, 0);
+    sound_synth(farming_fillpot, 1, 0);
+    p_delay(1);
+    if (inv_total(inv, plantpot_empty) = 0 | inv_total(inv, gardening_trowel) = 0) return;
+    inv_del(inv, plantpot_empty, 1);
+    inv_add(inv, plantpot_compost, 1);
+    mes("You fill the plant pot with soil."); // ours
+}
+anim(null, 0);
+
+// a tree seed sown in a pot of soil (Void potted_plants: a gardening trowel, its message)
+[opheldu,plantpot_compost]
+def_namedobj $seedling = enum(obj, namedobj, farming_sapling_sow, last_useitem);
+if ($seedling = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, gardening_trowel) = 0) {
+    mes("You need a gardening trowel to do that.");
+    return;
+}
+def_obj $seed = last_useitem;
+inv_del(inv, $seed, 1);
+inv_del(inv, plantpot_compost, 1);
+inv_add(inv, $seedling, 1);
+mes(enum(obj, string, farming_sapling_sowmes, $seed));
+
+// watering a seedling (Void potted_plants: the can loses a dose)
+[proc,farming_water_seedling](obj $seedling, obj $can)
+def_namedobj $watered = enum(obj, namedobj, farming_sapling_water, $seedling);
+if ($watered = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($can = watering_can_0) {
+    mes("You need to fill the watering can first."); // Void
+    return;
+}
+switch_obj ($can) {
+    case watering_can_1, watering_can_2, watering_can_3, watering_can_4, watering_can_5, watering_can_6, watering_can_7, watering_can_8 :
+    case default :
+        ~displaymessage(^dm_default);
+        return;
+}
+def_namedobj $less = ~farming_can_less($can);
+anim(farming_watering, 0);
+sound_synth(farming_watering, 1, 0);
+inv_del(inv, $can, 1);
+inv_add(inv, $less, 1);
+inv_del(inv, $seedling, 1);
+inv_add(inv, $watered, 1);
+mes(enum(obj, string, farming_sapling_watermes, $seedling));
+
+[opheldu,plantpot_acorn] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_willow_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_maple_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_yew_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_magic_tree_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_spirit_tree_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_apple_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_banana_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_orange_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_curry_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_pineapple_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_papaya_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_palm_seed] ~farming_water_seedling(last_item, last_useitem);
+[opheldu,plantpot_calquat_seed] ~farming_water_seedling(last_item, last_useitem);
+
+// Void growSaplings: at every growth tick (5 minutes) the watered seedlings you carry or bank
+// become saplings
+[proc,farming_grow_saplings]
+~farming_grow_saplings_in(inv);
+~farming_grow_saplings_in(bank);
+
+[proc,farming_grow_saplings_in](inv $inv)
+def_int $slot = 0;
+def_obj $obj;
+def_namedobj $sapling;
+def_int $n;
+while ($slot < inv_size($inv)) {
+    $obj = inv_getobj($inv, $slot);
+    if ($obj ! null) {
+        $sapling = enum(obj, namedobj, farming_sapling_grow, $obj);
+        if ($sapling ! null) {
+            $n = inv_getnum($inv, $slot);
+            if ($inv = bank & inv_total(bank, $sapling) > 0) {
+                inv_delslot(bank, $slot);
+                inv_add(bank, $sapling, $n);
+            } else {
+                inv_setslot($inv, $slot, $sapling, $n);
+            }
+        }
+    }
+    $slot = calc($slot + 1);
+}

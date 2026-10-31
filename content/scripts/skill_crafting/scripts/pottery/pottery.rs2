@@ -15,7 +15,7 @@ switch_obj (last_useitem)
 [label,use_pottery_oven](obj $item)
 switch_obj ($item)
 {
-    case bowl_unfired, piedish_unfired, pot_unfired : @fire_pottery(last_useslot);
+    case bowl_unfired, piedish_unfired, pot_unfired, plantpot_unfired : @fire_pottery(last_useslot);
     case default : ~displaymessage(^dm_default);
 };
 
@@ -42,15 +42,17 @@ inv_add(inv, softclay, 1);
 p_delay(1); // 2 ticks
 mes("You now have some soft workable clay.");
 
-[label,craft_pottery_interface] 
-def_namedobj $choice = ~multiobj3(
-    "What would you like to make?", 
-    pot_unfired, 0, 2, 185, "Pot", 0, 0, 
-    piedish_unfired, 0, -4, 190, "Pie Dish", 0, 0, 
-    bowl_unfired, 0, 0, 200, "Bowl", 0, 0
-);
+[label,craft_pottery_interface]
+// EASCape: the wheel's picture menu (multiobj3) isn't in our cache, so it's a list; the plant pot
+// (Crafting 19, for Farming's saplings: pottery.struct plantpot_unfired) is on it too (ours)
+def_namedobj $choice = null;
+switch_int (~p_choice5("Pot", 1, "Pie Dish", 2, "Bowl", 3, "Plant pot", 4, "Nothing", 5)) {
+    case 1 : $choice = pot_unfired;
+    case 2 : $choice = piedish_unfired;
+    case 3 : $choice = bowl_unfired;
+    case 4 : $choice = plantpot_unfired;
+}
 if ($choice = null) {
-    ~displaymessage(^dm_default);
     return;
 }
 @craft_pottery($choice);

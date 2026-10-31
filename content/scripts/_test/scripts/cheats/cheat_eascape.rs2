@@ -821,6 +821,40 @@ inv_add(inv, jute_seed, 20);
 inv_add(inv, scarecrow_complete, 1);
 mes("Farming pack: tools, seeds, compost (noted: unnote at a bank) and plant cures.");
 
+// ::farmtreepack - Farming step 2a: tools for trees, plant pots, tree seeds and saplings.
+[debugproc,farmtreepack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 24) {
+    mes("::farmtreepack needs 24 free inventory spaces.");
+    return;
+}
+inv_add(inv, spade, 1);
+inv_add(inv, rake, 1);
+inv_add(inv, secateurs, 1);
+inv_add(inv, gardening_trowel, 1);
+inv_add(inv, watering_can_8, 1);
+inv_add(inv, rune_axe, 1);
+inv_add(inv, cert_plantpot_empty, 10);
+inv_add(inv, acorn, 3);
+inv_add(inv, magic_tree_seed, 3);
+inv_add(inv, apple_tree_seed, 3);
+inv_add(inv, palm_tree_seed, 3);
+inv_add(inv, plantpot_oak_sapling, 1);
+inv_add(inv, plantpot_willow_sapling, 1);
+inv_add(inv, plantpot_maple_sapling, 1);
+inv_add(inv, plantpot_yew_sapling, 1);
+inv_add(inv, plantpot_magic_tree_sapling, 1);
+inv_add(inv, plantpot_apple_sapling, 1);
+inv_add(inv, plantpot_banana_sapling, 1);
+inv_add(inv, plantpot_orange_sapling, 1);
+inv_add(inv, plantpot_papaya_sapling, 1);
+inv_add(inv, plantpot_palm_sapling, 1);
+inv_add(inv, cert_bucket_compost, 5);
+mes("Tree pack: tools, plant pots (noted: unnote at a bank), tree seeds and saplings.");
+mes("::farmgrow grows planted trees to their health check; ::farmtick 8 = 40 minutes.");
+
 [debugproc,farmgrow]
 if (p_finduid(uid) = false) {
     return;
@@ -829,7 +863,11 @@ def_int $patch = 1;
 def_int $grown = 0;
 while ($patch <= ~farming_patch_count) {
     def_int $key = ~farming_state($patch);
-    if ($key >= 1000 & calc($key / 1000) ! ^farming_crop_herb_dead & calc(($key / 100) % 10) < 4) {
+    if ($key >= 1000 & ~farming_patch_type($patch) >= 5 & calc(($key / 100) % 10) < 4) {
+        // trees and fruit trees: grown, waiting for their health check
+        def_boolean $treeok = ~farming_set_state($patch, calc($key / 1000), 6, 0);
+        $grown = calc($grown + 1);
+    } else if ($key >= 1000 & calc($key / 1000) ! ^farming_crop_herb_dead & calc(($key / 100) % 10) < 4) {
         def_int $crop = calc($key / 1000);
         def_int $stage = calc($key % 100);
         while (~farming_harvestable($patch, ~farming_state($patch)) = false & $stage < 20) {

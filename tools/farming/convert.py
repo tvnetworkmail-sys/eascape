@@ -19,7 +19,7 @@ ORIG_OBJ = 7957
 voidid = {}
 for f in glob.glob(VOID + '/**/*.items.toml', recursive=True):
     txt = open(f, encoding='utf-8', errors='replace').read()
-    for m in re.finditer(r'^\[([\w.]+)\]\s*\nid = (\d+)', txt, re.M):
+    for m in re.finditer(r'^\[([\w.]+)\]\s*\n(?:(?!\[)[^\n]*\n)*?id = (\d+)', txt, re.M):
         voidid.setdefault(m.group(1), int(m.group(2)))
 def our(name):
     i = voidid.get(name)
@@ -55,8 +55,21 @@ TYPES = [  # (our type id, name, void patch type, a Void varbit of that type, ha
     (2, 'flower', 'flower', 'farming_flower_patch_falador', 'flower_patch'),
     (3, 'herb', 'herb', 'farming_herb_patch_falador', 'herb_patch'),
     (4, 'hops', 'hops', 'farming_hops_patch_lumbridge', 'hop_patch'),
+    # step 2a: trees and fruit trees (kinds 6 check-health, 7 stump; a fruit tree's lifeN is N fruit)
+    (5, 'tree', 'tree', 'farming_tree_patch_lumbridge', 'tree_patch'),
+    (6, 'fruit_tree', 'fruit_tree', 'farming_fruit_tree_patch_catherby', 'fruit_tree_patch'),
 ]
 KIND = {'grow': 1, 'watered': 2, 'diseased': 3, 'dead': 4, 'life': 5}
+# trees: what they give (logs are woodcutting's; fruit trees their fruit), Void's names
+TREE_PRODUCE = {'oak': 'oak_logs', 'willow': 'willow_logs', 'maple': 'maple_logs', 'yew': 'yew_logs', 'magic': 'magic_logs',
+                'apple': 'cooking_apple', 'banana': 'banana', 'orange': 'orange', 'curry': 'curry_leaf',
+                'pineapple': 'pineapple', 'papaya': 'papaya_fruit', 'palm': 'coconut'}
+claimxp = {}
+for objfile in ('tree_patch', 'fruit_tree_patch'):
+    for k, v in tomllib.load(open(F + f'/patch/{objfile}.objs.toml', 'rb')).items():
+        if not isinstance(v, dict) or 'farming_xp' not in v: continue
+        m = re.match(r'^(\w+?)_tree_(claim_xp|fullygrown_1)$', k)
+        if m: claimxp[m.group(1)] = round(float(v['farming_xp']) * 10)
 
 crops = []      # dicts
 cropidx = {}    # crop name -> index
@@ -103,6 +116,11 @@ for tid, tname, vtype, vb, objfile in TYPES:
         if name.startswith('herb_dead_'):
             key = HERB_DEAD * 1000 + 4 * 100 + int(name.rsplit('_', 1)[1])
             dec.setdefault(val, key); enc.setdefault(key, val); continue
+        m = re.match(r'^(\w+?)_(claim|stump)$', name)
+        if m and tid >= 5:
+            if m.group(1) not in okcrops: continue
+            key = crop_index(m.group(1)) * 1000 + (6 if m.group(2) == 'claim' else 7) * 100
+            dec.setdefault(val, key); enc.setdefault(key, val); continue
         m = re.match(r'^(\w+?)_(watered_|diseased_|dead_)?(life)?(\d+)$', name)
         if not m:
             continue
@@ -119,6 +137,8 @@ for tid, tname, vtype, vb, objfile in TYPES:
         if crop_index(crop) and not any(k // 1000 == cropidx[crop] for k in enc):
             continue
         prod = harvest.get(crop) or harvest.get(crop + '_hops')
+        if tid >= 5:
+            prod = TREE_PRODUCE.get(crop)
         if tid == 3:
             prod = 'grimy_' + crop
         if crop == 'barley':
@@ -126,10 +146,11 @@ for tid, tname, vtype, vb, objfile in TYPES:
         p = itemparams.get(prod if crop != 'barley' else 'barley_malt', {}) if prod else {}
         ch = p.get('farming_chance', '0-0').split('-')
         stages = max(k % 100 for k in enc if k // 1000 == cropidx[crop] and (k // 100) % 10 == 1)
-        crops.append(dict(idx=cropidx[crop], crop=crop, type=tid, seed=our(sname), produce=our(prod) if prod else None,
+        dkey = crop + ('_plant' if crop == 'pineapple' else '_tree') if tid >= 5 else crop
+        crops.append(dict(checkxp=claimxp.get(crop, 0), idx=cropidx[crop], crop=crop, type=tid, seed=our(sname), produce=our(prod) if prod else None,
                           level=s.get('farming_level', 1), xp=round(float(s.get('farming_xp', 0)) * 10),
                           amount=s.get('farming_amount', 1), hxp=round(float(p.get('farming_xp', 0)) * 10),
-                          clow=int(ch[0]), chigh=int(ch[1]), disease=disease.get(crop, 0), stages=stages,
+                          clow=int(ch[0]), chigh=int(ch[1]), disease=disease.get(dkey, 0), stages=stages,
                           name=crop.replace('_', ' ')))
     out_enum += [f'[farming_{tname}_decode]', 'inputtype=int', 'outputtype=int', 'default=-1']
     out_enum += [f'val={k},{v}' for k, v in sorted(dec.items())] + ['']
@@ -143,7 +164,8 @@ tbl = ['// EASCape: Farming crops (tools/farming/convert.py, from Void\'s seed, 
        'column=index,int,INDEXED,REQUIRED', 'column=seed,obj,INDEXED,REQUIRED', 'column=produce,namedobj',
        'column=name,string,REQUIRED', 'column=patchtype,int,REQUIRED', 'column=level,int,REQUIRED',
        'column=plantxp,int,REQUIRED', 'column=harvestxp,int,REQUIRED', 'column=seeds,int,REQUIRED',
-       'column=chance,int,int,REQUIRED', 'column=disease,int,REQUIRED', 'column=stages,int,REQUIRED', '']
+       'column=chance,int,int,REQUIRED', 'column=disease,int,REQUIRED', 'column=stages,int,REQUIRED',
+       '// trees and fruit trees: the check-health experience (tenths)', 'column=checkxp,int', '']
 open(cfg + '/farming_crops.dbtable', 'w').write('\n'.join(tbl))
 rows = ['// EASCape: Farming crops (tools/farming/convert.py). XP in tenths. chance: Void\'s',
         '// farming_chance (a harvest keeps the patch going, out of 256 from level 1 to 99).', '']
@@ -152,7 +174,9 @@ for c in sorted(crops, key=lambda c: c['idx']):
     if c['produce']: rows.append(f"data=produce,{c['produce']}")
     rows += [f"data=name,{c['name']}", f"data=patchtype,{c['type']}", f"data=level,{c['level']}",
              f"data=plantxp,{c['xp']}", f"data=harvestxp,{c['hxp']}", f"data=seeds,{c['amount']}",
-             f"data=chance,{c['clow']},{c['chigh']}", f"data=disease,{c['disease']}", f"data=stages,{c['stages']}", '']
+             f"data=chance,{c['clow']},{c['chigh']}", f"data=disease,{c['disease']}", f"data=stages,{c['stages']}"]
+    if c['checkxp']: rows.append(f"data=checkxp,{c['checkxp']}")
+    rows.append('')
 open(cfg + '/farming_crops.dbrow', 'w').write('\n'.join(rows))
 for c in sorted(crops, key=lambda c: c['idx']):
     print(c['idx'], c['type'], c['crop'], c['seed'], c['produce'], c['level'], c['xp'], c['hxp'], c['amount'], c['clow'], c['chigh'], c['disease'], c['stages'])

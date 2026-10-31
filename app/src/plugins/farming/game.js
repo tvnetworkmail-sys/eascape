@@ -64,7 +64,10 @@ function predict(p, s, t, now = Date.now()) {
   const last = lastStage(p.type, crop);
   const out = { produce: title(c.name || `crop ${crop}`), item: c.item || null, stage: Math.min(stage, last + 1), stages: last + 2 };
   if (c.name === 'scarecrow') out.ignore = true; // RuneLite's Produce.SCARECROW: left out of the overview like weeds
-  if (kind === 5) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: seen });
+  // EASCape: trees (step 2a): 6 grown, its health to check; 5 a tree to chop / fruit on the tree;
+  // 7 a stump, back at the next tick
+  if (kind === 5 || kind === 6) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: seen });
+  if (kind === 7) return Object.assign(out, { cropState: passed > 0 ? 'HARVESTABLE' : 'GROWING', stage: out.stages - 1, doneEstimate: at(1) });
   if (kind === 4) return Object.assign(out, { cropState: 'DEAD', doneEstimate: seen });
   if (kind === 3) return passed > 0 ? Object.assign(out, { cropState: 'DEAD', doneEstimate: at(1) }) : Object.assign(out, { cropState: 'DISEASED', doneEstimate: seen });
   const need = last - stage + 1;
