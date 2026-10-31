@@ -58,13 +58,20 @@ inv_del(inv, coins, 875);
 ~mesbox("You pay Saniboch 875 coins.");
 ~chatnpc_specific("Saniboch", tribesman_doorman, "<p,neutral>Many thanks. You may now pass the door. May your death be a glorious one!");
 
-// the entrance: once each time you've paid (the way in itself is the links table's)
+// the entrance: once each time you've paid (the way in itself is the links table's). On going in
+// the fee is marked used with the tick (minus it), so the same click run again straight after
+// (as entering this way can) still gets in rather than being turned away.
 [oploc1,dungeon_tree_closed]
+p_arrivedelay;
+if (%saniboch_paid < 0 & calc(map_clock + %saniboch_paid) <= 3) {
+    ~eascape_link(1);
+    return;
+}
 if (%saniboch_paid ! 1) {
     ~mesbox("You can't go in there without paying!");
     return;
 }
-%saniboch_paid = 0;
+%saniboch_paid = calc(0 - map_clock);
 ~eascape_link(1);
 
 // ---------------------------------------------------------------- vines
