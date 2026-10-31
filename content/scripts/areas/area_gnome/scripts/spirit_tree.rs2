@@ -15,6 +15,17 @@ switch_int(~p_choice2("No thanks, old tree.", 1, "Where can I go?", 2)) {
         ~mesbox("You can travel to the trees|which are related to me.");
 }
 def_coord $end_pos = ^stronghold_tree;
+// EASCape: a spirit tree you've grown is on the list too (skill_farming/farming_trees.rs2)
+def_int $mine = ~farming_spirit_tree_patch;
+if ($mine > 0) {
+    switch_int(~p_choice4("Tree Gnome Village.", 1, "Forest north of Varrock.", 2, "Battlefield of Khazard.", 3, "Your spirit tree (<~farming_spirit_tree_name($mine)>).", 4)) {
+        case 1 : $end_pos = ^village_tree;
+        case 2 : $end_pos = ^varrock_tree;
+        case 3 : $end_pos = ^khazard_tree;
+        case 4 : $end_pos = ~farming_spirit_tree_coord($mine);
+    }
+    @spirit_tree_tele($end_pos);
+}
 switch_int(~p_choice3("Tree Gnome Village.", 1, "Forest north of Varrock.", 2, "Battlefield of Khazard.", 3)) {
     case 1 : $end_pos = ^village_tree;
     case 2 : $end_pos = ^varrock_tree;
@@ -39,6 +50,17 @@ switch_int(~p_choice2("No thanks, old tree.", 1, "Where can I go?", 2)) {
         ~mesbox("You can travel to the trees|which are related to me.");
 }
 def_coord $end_pos = ^village_tree;
+// EASCape: a spirit tree you've grown is on the list too (skill_farming/farming_trees.rs2)
+def_int $mine = ~farming_spirit_tree_patch;
+if ($mine > 0) {
+    switch_int(~p_choice4("Battlefield of Khazard.", 1, "Forest north of Varrock.", 2, "Gnome stronghold.", 3, "Your spirit tree (<~farming_spirit_tree_name($mine)>).", 4)) {
+        case 1 : $end_pos = ^khazard_tree;
+        case 2 : $end_pos = ^varrock_tree;
+        case 3 : $end_pos = ^stronghold_tree;
+        case 4 : $end_pos = ~farming_spirit_tree_coord($mine);
+    }
+    @spirit_tree_tele($end_pos);
+}
 switch_int(~p_choice3("Battlefield of Khazard.", 1, "Forest north of Varrock.", 2, "Gnome stronghold.", 3)) {
     case 1 : $end_pos = ^khazard_tree;
     case 2 : $end_pos = ^varrock_tree;

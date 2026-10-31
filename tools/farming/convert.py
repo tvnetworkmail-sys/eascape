@@ -61,6 +61,11 @@ TYPES = [  # (our type id, name, void patch type, a Void varbit of that type, ha
     # step 2b: bushes (kind 6 check-health; kind 5 stage N is N berries: Void's lifeN is the Nth
     # pick, berries 5 - N)
     (7, 'bush', 'bush', 'farming_bush_patch_varrock', 'bush_patch'),
+    # step 2c: the special patches Void has values for (cactus: kind 5 stage N is N spines;
+    # belladonna harvested; spirit tree: kind 5 is the grown tree you talk to)
+    (8, 'cactus', 'cactus', 'farming_cactus_patch_al_kharid', 'cactus_patch'),
+    (9, 'belladonna', 'belladonna', 'farming_belladonna_patch_draynor', 'belladonna_patch'),
+    (12, 'spirit_tree', 'spirit_tree', 'farming_spirit_tree_patch_port_sarim', 'tree_patch'),
 ]
 KIND = {'grow': 1, 'watered': 2, 'diseased': 3, 'dead': 4, 'life': 5}
 # trees: what they give (logs are woodcutting's; fruit trees their fruit), Void's names
@@ -69,13 +74,13 @@ TREE_PRODUCE = {'oak': 'oak_logs', 'willow': 'willow_logs', 'maple': 'maple_logs
                 'pineapple': 'pineapple', 'papaya': 'papaya_fruit', 'palm': 'coconut'}
 claimxp = {}
 bushberry = {}
-for objfile in ('tree_patch', 'fruit_tree_patch', 'bush_patch'):
+for objfile in ('tree_patch', 'fruit_tree_patch', 'bush_patch', 'cactus_patch'):
     for k, v in tomllib.load(open(F + f'/patch/{objfile}.objs.toml', 'rb')).items():
         if not isinstance(v, dict): continue
-        m = re.match(r'^(\w+?)_bush_berry_1$', k)
+        m = re.match(r'^(\w+?)_(?:bush_berry|spines)_1$', k)
         if m and 'harvest' in v: bushberry[m.group(1)] = v['harvest']
         if 'farming_xp' not in v: continue
-        m = re.match(r'^(\w+?)_(?:tree|bush)_(claim_xp|fullygrown_1)$', k)
+        m = re.match(r'^(\w+?)(?:_tree|_bush)?_(claim_xp|fullygrown_1)$', k)
         if m: claimxp[m.group(1)] = round(float(v['farming_xp']) * 10)
 
 crops = []      # dicts
@@ -148,8 +153,10 @@ for tid, tname, vtype, vb, objfile in TYPES:
         prod = harvest.get(crop) or harvest.get(crop + '_hops')
         if tid in (5, 6):
             prod = TREE_PRODUCE.get(crop)
-        if tid == 7:
+        if tid in (7, 8):
             prod = bushberry.get(crop.replace('_', ''))
+        if tid == 12:
+            prod = None
         if tid == 3:
             prod = 'grimy_' + crop
         if crop == 'barley':
@@ -157,7 +164,7 @@ for tid, tname, vtype, vb, objfile in TYPES:
         p = itemparams.get(prod if crop != 'barley' else 'barley_malt', {}) if prod else {}
         ch = p.get('farming_chance', '0-0').split('-')
         stages = max(k % 100 for k in enc if k // 1000 == cropidx[crop] and (k // 100) % 10 == 1)
-        dkey = crop + ('_plant' if crop == 'pineapple' else '_tree') if tid in (5, 6) else crop
+        dkey = crop + ('_plant' if crop == 'pineapple' else '_tree') if tid in (5, 6) else 'spirit_tree' if tid == 12 else crop
         crops.append(dict(checkxp=claimxp.get(crop, claimxp.get(crop.replace('_', ''), 0)), idx=cropidx[crop], crop=crop, type=tid, seed=our(sname), produce=our(prod) if prod else None,
                           level=s.get('farming_level', 1), xp=round(float(s.get('farming_xp', 0)) * 10),
                           amount=s.get('farming_amount', 1), hxp=round(float(p.get('farming_xp', 0)) * 10),
@@ -167,6 +174,49 @@ for tid, tname, vtype, vb, objfile in TYPES:
     out_enum += [f'val={k},{v}' for k, v in sorted(dec.items())] + ['']
     out_enum += [f'[farming_{tname}_encode]', 'inputtype=int', 'outputtype=int', 'default=-1']
     out_enum += [f'val={k},{v}' for k, v in sorted(enc.items())] + ['']
+
+# step 2c: the mushroom and calquat patches. Void has no values for them, so their states come from
+# the 2006 cache's own multiloc names (farming.loc), and the crops from 2009Scape (Plantable.kt:
+# levels, experience, stages; Void's disease chances: bittercap_mushroom 25, calquat 14)
+LOC = open(E + '/content/scripts/skill_farming/configs/farming.loc').read()
+def cachetype(tid, tname, patchloc, crop, pat):
+    body = re.search(r'(?ms)^\[' + patchloc + r'\]\n(.*?)(?=^\[|\Z)', LOC).group(1)
+    ci = crop_index(crop)
+    dec, enc = {}, {}
+    for val, name in re.findall(r'^multiloc=(\d+),(\w+)$', body, re.M):
+        val = int(val); key = None
+        m = re.match(r'^\w+_patch_weeds_(\d)$', name)
+        if m: key = int(m.group(1))
+        elif name.endswith('_patch_weeded'): key = 0
+        else:
+            for rx, f in pat:
+                m = re.match(rx, name)
+                if m:
+                    key = ci * 1000 + f(m); break
+        if key is None: continue
+        dec.setdefault(val, key)
+        if key >= 1000 or key not in enc or name.endswith('_weeded') or name.endswith('weeds_3') and val == 0:
+            enc.setdefault(key, val)
+    enc[0] = [v for v, k in dec.items() if k == 0][0]
+    globals()['out_enum'] += [f'[farming_{tname}_decode]', 'inputtype=int', 'outputtype=int', 'default=-1']
+    globals()['out_enum'] += [f'val={k},{v}' for k, v in sorted(dec.items())] + ['']
+    globals()['out_enum'] += [f'[farming_{tname}_encode]', 'inputtype=int', 'outputtype=int', 'default=-1']
+    globals()['out_enum'] += [f'val={k},{v}' for k, v in sorted(enc.items())] + ['']
+    return ci
+g = lambda n: (lambda m: n)
+mi = cachetype(10, 'mushroom', 'farming_mushroom_patch', 'bittercap', [
+    (r'^bittercap_seed$', g(100)), (r'^bittercap_(\d)$', lambda m: 100 + int(m.group(1))),
+    (r'^bittercap_fullygrown_(\d)$', lambda m: 500 + 7 - int(m.group(1))),
+    (r'^bittercap_(\d)_diseased$', lambda m: 300 + int(m.group(1))), (r'^bittercap_(\d)_dead$', lambda m: 400 + int(m.group(1)))])
+crops.append(dict(idx=mi, crop='bittercap', type=10, seed='mushroom_seed', produce='bittercap_mushroom', level=53, xp=615,
+                  amount=1, hxp=577, clow=0, chigh=0, disease=25, stages=5, name='bittercap mushroom', checkxp=0))
+ki = cachetype(11, 'calquat', 'farming_calquat_tree_patch', 'calquat', [
+    (r'^calquat_tree_seedling$', g(100)), (r'^calquat_tree_(\d)$', lambda m: 100 + int(m.group(1))),
+    (r'^calquat_tree_fullygrown$', g(108)), (r'^calquat_tree_fruit_(\d)$', lambda m: 500 + int(m.group(1))),
+    (r'^calquat_tree_(\d)_diseased$', lambda m: 300 + int(m.group(1))), (r'^calquat_tree_(\d)_dead$', lambda m: 400 + int(m.group(1))),
+    (r'^calquat_tree_stump$', g(700)), (r'^calquat_tree_claimxp$', g(600))])
+crops.append(dict(idx=ki, crop='calquat', type=11, seed='plantpot_calquat_sapling', produce='calquat_fruit', level=72, xp=1305,
+                  amount=1, hxp=485, clow=0, chigh=0, disease=14, stages=8, name='calquat', checkxp=120960))
 
 cfg = E + '/content/scripts/skill_farming/configs'
 open(cfg + '/farming_states.enum', 'w').write('\n'.join(out_enum))

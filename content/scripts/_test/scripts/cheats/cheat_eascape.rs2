@@ -858,6 +858,30 @@ inv_add(inv, poisonivy_bush_seed, 3);
 mes("Tree pack: tools, plant pots (noted: unnote at a bank), tree seeds, saplings and bush seeds.");
 mes("::farmgrow grows planted trees to their health check; ::farmtick 8 = 40 minutes.");
 
+// ::farmspecialpack - Farming step 2c: tools and seeds for the special patches (cactus at Al
+// Kharid, belladonna by Draynor Manor, mushrooms in Canifis, calquat at Tai Bwo Wannai, spirit
+// trees at Port Sarim, Etceteria and Brimhaven).
+[debugproc,farmspecialpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 12) {
+    mes("::farmspecialpack needs 12 free inventory spaces.");
+    return;
+}
+inv_add(inv, spade, 1);
+inv_add(inv, rake, 1);
+inv_add(inv, dibber, 1);
+inv_add(inv, secateurs, 1);
+inv_add(inv, rune_axe, 1);
+inv_add(inv, plant_cure, 2);
+inv_add(inv, cactus_seed, 2);
+inv_add(inv, belladonna_seed, 2);
+inv_add(inv, mushroom_seed, 2);
+inv_add(inv, plantpot_calquat_sapling, 1);
+inv_add(inv, plantpot_spirit_tree_sapling, 1);
+mes("Special patch pack: tools, cactus, belladonna and mushroom seeds, calquat and spirit tree saplings.");
+
 [debugproc,farmgrow]
 if (p_finduid(uid) = false) {
     return;
@@ -866,7 +890,7 @@ def_int $patch = 1;
 def_int $grown = 0;
 while ($patch <= ~farming_patch_count) {
     def_int $key = ~farming_state($patch);
-    if ($key >= 1000 & ~farming_patch_type($patch) >= 5 & calc(($key / 100) % 10) < 4) {
+    if ($key >= 1000 & ~farming_treelike(~farming_patch_type($patch)) = true & calc(($key / 100) % 10) < 4) {
         // trees and fruit trees: grown, waiting for their health check
         def_boolean $treeok = ~farming_set_state($patch, calc($key / 1000), 6, 0);
         $grown = calc($grown + 1);

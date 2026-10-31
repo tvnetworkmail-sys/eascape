@@ -18,6 +18,11 @@ switch_int ($type) {
     case 5 : return(enum(int, int, farming_tree_decode, $value));
     case 6 : return(enum(int, int, farming_fruit_tree_decode, $value));
     case 7 : return(enum(int, int, farming_bush_decode, $value));
+    case 8 : return(enum(int, int, farming_cactus_decode, $value));
+    case 9 : return(enum(int, int, farming_belladonna_decode, $value));
+    case 10 : return(enum(int, int, farming_mushroom_decode, $value));
+    case 11 : return(enum(int, int, farming_calquat_decode, $value));
+    case 12 : return(enum(int, int, farming_spirit_tree_decode, $value));
 }
 return(enum(int, int, farming_hops_decode, $value));
 
@@ -29,6 +34,11 @@ switch_int ($type) {
     case 5 : return(enum(int, int, farming_tree_encode, $key));
     case 6 : return(enum(int, int, farming_fruit_tree_encode, $key));
     case 7 : return(enum(int, int, farming_bush_encode, $key));
+    case 8 : return(enum(int, int, farming_cactus_encode, $key));
+    case 9 : return(enum(int, int, farming_belladonna_encode, $key));
+    case 10 : return(enum(int, int, farming_mushroom_encode, $key));
+    case 11 : return(enum(int, int, farming_calquat_encode, $key));
+    case 12 : return(enum(int, int, farming_spirit_tree_encode, $key));
 }
 return(enum(int, int, farming_hops_encode, $key));
 
@@ -55,23 +65,54 @@ def_boolean $ok = ~farming_set_state($patch, 0, 0, 0);
 
 // step 2a: a fruit tree whose health has been checked (farming_claimed)
 [proc,farming_claimed](int $patch)(boolean)
+if ($patch > 31) {
+    if (testbit(%farming_claimed_b, calc($patch - 32)) = ^true) return(true);
+    return(false);
+}
 if (testbit(%farming_claimed, calc($patch - 1)) = ^true) return(true);
 return(false);
 
 [proc,farming_set_claimed](int $patch, boolean $on)
+if ($patch > 31) {
+    if ($on = true) %farming_claimed_b = setbit(%farming_claimed_b, calc($patch - 32));
+    else %farming_claimed_b = clearbit(%farming_claimed_b, calc($patch - 32));
+    return;
+}
 if ($on = true) {
     %farming_claimed = setbit(%farming_claimed, calc($patch - 1));
 } else {
     %farming_claimed = clearbit(%farming_claimed, calc($patch - 1));
 }
 
+// trees, fruit trees, bushes, cactus, calquat and spirit trees: checked for health, not harvested
+[proc,farming_treelike](int $type)(boolean)
+switch_int ($type) {
+    case 5, 6, 7, 8, 11, 12 : return(true);
+}
+return(false);
+
+// fruit trees, bushes, cactus, calquat: something on them to pick that grows back
+[proc,farming_fruitlike](int $type)(boolean)
+switch_int ($type) {
+    case 6, 7, 8, 11 : return(true);
+}
+return(false);
+
+// how many a checked plant starts with: 6 fruit, 4 berries, 3 spines, 6 calquats
+[proc,farming_full_count](int $type)(int)
+switch_int ($type) {
+    case 7 : return(4);
+    case 8 : return(3);
+}
+return(6);
+
 // a crop at its last stage with no harvests after (flowers) or one on a harvest stage
 [proc,farming_harvestable](int $patch, int $key)(boolean)
 if ($key < 1000) {
     return(false);
 }
-if (~farming_patch_type($patch) >= 5) {
-    return(false); // trees and fruit trees: chopped and picked, not harvested (step 2a)
+if (~farming_treelike(~farming_patch_type($patch)) = true) {
+    return(false); // trees and the like: chopped, picked or talked to, not harvested (step 2a)
 }
 def_int $crop = calc($key / 1000);
 def_int $kind = calc(($key / 100) % 10);
@@ -103,6 +144,11 @@ switch_int (~farming_patch_type($patch)) {
     case 5 : return("tree patch");
     case 6 : return("fruit tree patch");
     case 7 : return("bush patch");
+    case 8 : return("cactus patch");
+    case 9 : return("belladonna patch");
+    case 10 : return("mushroom patch");
+    case 11 : return("calquat patch");
+    case 12 : return("spirit tree patch");
 }
 return("hops patch");
 
@@ -180,8 +226,10 @@ while ($patch <= $count) {
     switch_int (~farming_patch_type($patch)) {
         case 1, 4 : $mult = 2;
         case 3, 7 : $mult = 4;
-        case 5 : $mult = 8;
-        case 6 : $mult = 32;
+        case 5, 10 : $mult = 8;
+        case 8, 9 : $mult = 16;
+        case 6, 11 : $mult = 32;
+        case 12 : $mult = 64;
     }
     if (calc($minute % (5 * $mult)) = 0) {
         ~farming_grow_patch($patch);
@@ -206,20 +254,20 @@ if ($crop = 0) {
     return;
 }
 def_int $type = ~farming_patch_type($patch);
-if ($type >= 5) {
+if (~farming_treelike($type) = true) {
     // Void Farming.grow: a stump grows back (a tree ready to chop again, a fruit tree full of fruit);
     // fruit grows back one at a time; a checked fruit tree picked bare starts again
     if ($kind = 7) {
         if ($type = 5) $ok = ~farming_set_state($patch, $crop, 5, 1);
-        else $ok = ~farming_set_state($patch, $crop, 5, 6);
+        else $ok = ~farming_set_state($patch, $crop, 5, ~farming_full_count($type));
         return;
     }
     if ($kind = 6) return;
     if ($kind = 5) {
-        if ($type ! 5) $ok = ~farming_set_state($patch, $crop, 5, calc($stage + 1));
+        if (~farming_fruitlike($type) = true) $ok = ~farming_set_state($patch, $crop, 5, calc($stage + 1));
         return;
     }
-    if ($kind = 1 & $type ! 5 & ~farming_claimed($patch) = true) {
+    if ($kind = 1 & ~farming_fruitlike($type) = true & ~farming_claimed($patch) = true) {
         $ok = ~farming_set_state($patch, $crop, 5, 1);
         return;
     }
@@ -243,7 +291,7 @@ if (~farming_disease($patch, $crop, $kind, $stage) = true) {
     }
 }
 if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
-    if ($type >= 5) {
+    if (~farming_treelike($type) = true) {
         $ok = ~farming_set_state($patch, $crop, 6, 0); // grown: its health wants checking
         return;
     }
@@ -258,7 +306,7 @@ if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
 if ($stage = 0 | $kind ! 1) {
     return(false);
 }
-if (~farming_patch_type($patch) >= 6 & ~farming_claimed($patch) = true) {
+if (~farming_fruitlike(~farming_patch_type($patch)) = true & ~farming_claimed($patch) = true) {
     return(false); // a grown fruit tree or bush, picked bare
 }
 if (~farming_patch_type($patch) = 1) {
@@ -339,6 +387,7 @@ while ($key >= 1 & $key <= 3) {
 anim(null, 0);
 
 [proc,farming_plant](int $patch, dbrow $row)
+def_boolean $spade = false; // saplings go in with a spade
 def_obj $seed = db_getfield($row, farming_crop:seed, 0);
 def_int $amount = db_getfield($row, farming_crop:seeds, 0);
 def_string $seeds = lowercase(oc_name($seed));
@@ -356,7 +405,21 @@ if (~farming_state($patch) ! 0) {
     ~mesbox("You can only plant <$seeds> in an empty patch.");
     return;
 }
-if (~farming_patch_type($patch) = 5 | ~farming_patch_type($patch) = 6) {
+switch_int (~farming_patch_type($patch)) {
+    case 5, 6, 11, 12 : $spade = true;
+}
+if (~farming_patch_type($patch) = 12) {
+    // Void: one spirit tree at a time
+    def_int $sp = 37;
+    while ($sp <= 39) {
+        if ($sp ! $patch & ~farming_state($sp) >= 1000) {
+            mes("You can only plant one spirit tree at a time.");
+            return;
+        }
+        $sp = calc($sp + 1);
+    }
+}
+if ($spade = true) {
     if (inv_total(inv, spade) = 0) {
         mes("You need a spade to do that."); // Void
         return;
@@ -375,7 +438,7 @@ if (inv_total(inv, $seed) < $amount) {
     return;
 }
 inv_del(inv, $seed, $amount);
-if (~farming_patch_type($patch) = 5 | ~farming_patch_type($patch) = 6) {
+if ($spade = true) {
     anim(human_dig, 0);
     sound_synth(digspade, 1, 0);
 } else {
@@ -457,7 +520,7 @@ mes("You treat the <~farming_patch_name($patch)> with <$name>.");
 stat_advance(farming, $xp);
 
 [proc,farming_cure](int $patch)
-if (~farming_patch_type($patch) >= 5) {
+if (~farming_treelike(~farming_patch_type($patch)) = true & ~farming_patch_type($patch) ! 8) {
     mes("To cure trees you need to prune the diseased leaves away with a pair of secateurs."); // Void
     return;
 }
@@ -493,7 +556,7 @@ if ($key >= 1000 & calc(($key / 100) % 10) = 7) {
     return;
 }
 // step 2b: a grown bush is dug up (OSRS; Void has no option for it): the patch is left empty
-if (~farming_patch_type($patch) = 7 & $key >= 1000 & (calc(($key / 100) % 10) >= 5 | ~farming_claimed($patch) = true)) {
+if ((~farming_patch_type($patch) = 7 | ~farming_patch_type($patch) = 8) & $key >= 1000 & (calc(($key / 100) % 10) >= 5 | ~farming_claimed($patch) = true)) {
     ~farming_clear($patch);
     return;
 }
@@ -522,7 +585,7 @@ while ($tries < 100) {
 // ================================================================ the patch's options
 [proc,farming_op1](int $patch)
 def_int $key = ~farming_state($patch);
-if (~farming_patch_type($patch) >= 5 & $key >= 1000) {
+if (~farming_treelike(~farming_patch_type($patch)) = true & $key >= 1000) {
     ~farming_tree_op1($patch, $key);
     return;
 }
@@ -625,7 +688,7 @@ if ($kind = 7) {
     mes("The patch has the remains of a tree stump in it."); // Void
     return;
 }
-if ($kind = 5 | $kind = 6 | (~farming_patch_type($patch) >= 6 & ~farming_claimed($patch) = true)) {
+if ($kind = 5 | $kind = 6 | (~farming_fruitlike(~farming_patch_type($patch)) = true & ~farming_claimed($patch) = true)) {
     mes($text);
     mes("The patch is fully grown.");
     return;

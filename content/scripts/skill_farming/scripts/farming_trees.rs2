@@ -22,11 +22,15 @@ if ($type = 5 & $kind = 5) {
     ~farming_chop_tree($patch, $key);
     return;
 }
-if ($type >= 6 & $kind = 5) {
+if ($type = 12 & $kind = 5) {
+    ~farming_spirit_tree_talk($patch);
+    return;
+}
+if (~farming_fruitlike($type) = true & $kind = 5) {
     ~farming_pick_fruit($patch);
     return;
 }
-if ($type = 6 & $kind = 1 & ~farming_claimed($patch) = true) {
+if (($type = 6 | $type = 11) & $kind = 1 & ~farming_claimed($patch) = true) {
     ~farming_chop_fruit_tree($patch, $key);
     return;
 }
@@ -38,12 +42,9 @@ def_dbrow $row = ~farming_crop_row(calc($key / 1000));
 if ($row = null) return;
 mes("You examine the tree for signs of disease and find that it is in perfect health.");
 def_boolean $ok;
-if (~farming_patch_type($patch) = 6) {
-    $ok = ~farming_set_state($patch, calc($key / 1000), 5, 6);
-    ~farming_set_claimed($patch, true);
-} else if (~farming_patch_type($patch) = 7) {
-    // a bush: 4 berries (Void's life1)
-    $ok = ~farming_set_state($patch, calc($key / 1000), 5, 4);
+if (~farming_fruitlike(~farming_patch_type($patch)) = true) {
+    // all its fruit, berries or spines (Void's life1 is 4 berries, 1 fruit: ours 6, see above)
+    $ok = ~farming_set_state($patch, calc($key / 1000), 5, ~farming_full_count(~farming_patch_type($patch)));
     ~farming_set_claimed($patch, true);
 } else {
     $ok = ~farming_set_state($patch, calc($key / 1000), 5, 1);
@@ -168,7 +169,7 @@ while (1 = 1) {
 // Void prune: secateurs take the diseased leaves off a tree
 [proc,farming_prune](int $patch)
 def_int $key = ~farming_state($patch);
-if (~farming_patch_type($patch) < 5 | $key < 1000 | calc(($key / 100) % 10) ! 3) {
+if (~farming_treelike(~farming_patch_type($patch)) = false | ~farming_patch_type($patch) = 8 | $key < 1000 | calc(($key / 100) % 10) ! 3) {
     ~displaymessage(^dm_default);
     return;
 }
@@ -352,4 +353,68 @@ while ($slot < inv_size($inv)) {
         }
     }
     $slot = calc($slot + 1);
+}
+
+// ---------------------------------------------------------------- spirit trees (step 2c)
+// A grown spirit tree you've checked joins the gnomes' spirit trees: talking to it takes you to
+// theirs, and theirs offer a ride to it (area_gnome/spirit_tree.rs2). Like theirs it needs Tree
+// Gnome Village done. Ours: the lines and the place you land beside your tree.
+[proc,farming_spirit_tree_talk](int $patch)
+if (%treequest ! ^tree_complete) {
+    ~mesbox("The tree doesn't feel like talking.");
+    return;
+}
+~mesbox("Your spirit tree talks...|Where would you like to go?");
+def_coord $dest = null;
+switch_int (~p_choice5("Tree Gnome Village.", 1, "Gnome Stronghold.", 2, "Battlefield of Khazard.", 3, "Forest north of Varrock.", 4, "Nowhere.", 5)) {
+    case 1 : $dest = ^village_tree;
+    case 2 : $dest = ^stronghold_tree;
+    case 3 : $dest = ^khazard_tree;
+    case 4 : $dest = ^varrock_tree;
+}
+if ($dest = null) return;
+~farming_spirit_tele($dest);
+
+// the patch of your grown spirit tree (37-39), 0 if none
+[proc,farming_spirit_tree_patch]()(int)
+def_int $sp = 37;
+while ($sp <= 39) {
+    def_int $key = ~farming_state($sp);
+    if ($key >= 1000 & calc(($key / 100) % 10) = 5) return($sp);
+    $sp = calc($sp + 1);
+}
+return(0);
+
+[proc,farming_spirit_tree_name](int $patch)(string)
+switch_int ($patch) {
+    case 37 : return("Port Sarim");
+    case 38 : return("Etceteria");
+    case 39 : return("Brimhaven");
+}
+return("");
+
+// beside the tree (the patch's south-west corner is at these squares; the tree is 3 by 3)
+[proc,farming_spirit_tree_coord](int $patch)(coord)
+def_coord $c = 0_47_50_52_58;
+switch_int ($patch) {
+    case 38 : $c = 0_40_60_53_18;
+    case 39 : $c = 0_43_50_50_3;
+}
+return(map_findsquare($c, 2, 3, ^map_findsquare_lineofwalk));
+
+// spirit_tree.rs2's spirit_tree_tele, as a proc
+[proc,farming_spirit_tele](coord $dest)
+if (map_members = ^false) {
+    if_close;
+    mes(^mes_members_feature);
+    return;
+}
+~mesbox("You place your hands on the dry tough bark of the spirit tree,|and feel a surge of energy run through your veins.");
+if_close;
+anim(human_reachforladder, 0);
+p_delay(0);
+p_telejump($dest);
+if (inv_total(inv, plaguesample) > 0) {
+    inv_del(inv, plaguesample, ^max_32bit_int);
+    mes("The plague sample is too delicate...it disintegrates in the crossing.");
 }
