@@ -115,6 +115,11 @@ if(inv_total(inv, mm_monkey_in_backpack) > 0) {
 ~hauntedmine_fungus_crumble;
 
 [proc,pre_tele_checks](coord $coord)(boolean)
+// EASCape: Tele Block (teleother.rs2; 2006Scape's message)
+if (%teleblock > 0) {
+    mes("You are teleblocked and can't teleport.");
+    return(false);
+}
 if(inv_total(inv, thanainabarrel) > 0) {
     ~chatnpc_specific("Ana (in a Barrel)", anabarrel, "<p,idle>@dbl@-- You can't teleport while holding the barrel, it's just @dbl@too difficult to concentrate. --");
     return(false);

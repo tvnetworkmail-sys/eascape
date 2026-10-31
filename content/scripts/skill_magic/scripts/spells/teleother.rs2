@@ -1,0 +1,144 @@
+// EASCape: Teleother (Lumbridge, Falador, Camelot) and Tele Block.
+// Teleother, after Void (TeleportOther.kt) and 2006Scape (CastOnOther.java): cast on a player who
+// has Accept Aid on ("That player won't let you teleport them.") and isn't busy ("That player is
+// busy."); it takes the runes, gives the experience, plays the casting animation, spotanim and
+// sound, and shows the other player the 2006 "Teleport Option" screen (inter_251: who, where,
+// Accept / Decline). Accepting plays the impact animation and spotanim, and 3 ticks later they
+// land where that city's own teleport spell lands.
+// Tele Block, after Void (TeleportBlock.kt) and 2006Scape (CombatAssistant.java): players only
+// ("You can't use that against an NPC."); a hit blocks teleporting for 5 minutes, half that if
+// they're praying Protect from Magic; "You have been teleblocked.", "Your teleblock is about to
+// wear off." and "Your teleblock has worn off."; "That player is already affected by this spell."
+// Every teleport that goes through ~pre_tele_checks is stopped: "You are teleblocked and can't
+// teleport." (2006Scape's message).
+// Our choices: the projectile's heights and speed are Stun's; "about to wear off" comes 30 seconds
+// before the end; the block survives logging out (2006Scape saves it).
+
+// ---------------------------------------------------------------- Teleother
+[opplayert,magic:com_511] ~teleother_cast(^teleother_lumbridge, ^lumbridge_teleport, "Lumbridge");
+[applayert,magic:com_511] ~teleother_cast(^teleother_lumbridge, ^lumbridge_teleport, "Lumbridge");
+[opplayert,magic:com_521] ~teleother_cast(^teleother_falador, ^falador_teleport, "Falador");
+[applayert,magic:com_521] ~teleother_cast(^teleother_falador, ^falador_teleport, "Falador");
+[opplayert,magic:com_541] ~teleother_cast(^teleother_camelot, ^camelot_teleport, "Camelot");
+[applayert,magic:com_541] ~teleother_cast(^teleother_camelot, ^camelot_teleport, "Camelot");
+
+[proc,teleother_cast](int $spell, int $city_teleport, string $city)
+// ($city is kept for reading the triggers; the other player's screen names it from the spell)
+p_stopaction;
+facesquare(.coord);
+if (map_clock < %action_delay) {
+    return;
+}
+if (.%option_aid ! 1) {
+    mes("That player won't let you teleport them.");
+    return;
+}
+if (.busy = true) {
+    mes("That player is busy.");
+    return;
+}
+def_dbrow $spell_data = ~get_spell_data($spell);
+if (~check_spell_requirements($spell_data) = false) {
+    return;
+}
+~delete_spell_runes($spell_data);
+~give_spell_xp($spell_data);
+anim(human_teleport_other_casting, 0);
+spotanim_pl(teleport_other_casting, 92, 0);
+sound_synth(tele_other_cast, 1, 0);
+%action_delay = calc(map_clock + 3);
+.queue*(teleother_offer, 0)(uid, $city_teleport);
+
+// the other player's screen: who's offering and where to
+[queue,teleother_offer](player_uid $caster, int $city_teleport)
+if (busy = true) {
+    return;
+}
+%teleother_dest = $city_teleport;
+def_string $city = "Lumbridge";
+if (%teleother_dest = ^falador_teleport) $city = "Falador";
+else if (%teleother_dest = ^camelot_teleport) $city = "Camelot";
+def_string $name = "Someone";
+if (.finduid($caster) = true) $name = .displayname;
+if_settext(inter_251:com_89, $name);
+if_settext(inter_251:com_91, $city);
+if_openmain(inter_251);
+
+[if_button,inter_251:com_97]
+if_close;
+if (%teleother_dest = null) {
+    return;
+}
+def_coord $dest = db_getfield(~get_spell_data(%teleother_dest), magic_spell_table:tele_coord, 0);
+%teleother_dest = null;
+if (~wilderness_level(coord) > 20) {
+    mes("A mysterious force blocks your teleport spell!");
+    mes("You can't use this teleport after level 20 wilderness.");
+    return;
+}
+if (~pre_tele_checks(coord) = false) {
+    return;
+}
+p_stopaction;
+sound_synth(teleport_all, 1, 0);
+anim(human_teleport_other_impact, 0);
+spotanim_pl(teleport_other_impact, 92, 0);
+p_delay(2);
+~p_telejump_safe(map_findsquare($dest, 0, 2, ^map_findsquare_lineofwalk));
+
+[if_button,inter_251:com_99]
+if_close;
+%teleother_dest = null;
+
+// ---------------------------------------------------------------- Tele Block
+[opplayert,magic:com_531] ~tele_block_cast;
+[applayert,magic:com_531] ~tele_block_cast;
+[opnpct,magic:com_531] mes("You can't use that against an NPC.");
+[apnpct,magic:com_531] mes("You can't use that against an NPC.");
+
+[proc,tele_block_cast]
+def_dbrow $spell_data = ~get_spell_data(^tele_block);
+if (~pvp_combat_spell_checks($spell_data) = false) {
+    return;
+}
+if (.%teleblock > 0) {
+    mes("That player is already affected by this spell.");
+    return;
+}
+def_int $duration = ~pvp_spell_cast($spell_data);
+if (~pvp_hit_roll(^magic_style) = true) {
+    ~pvp_spell_success($spell_data, ~magic_spell_maxhit($spell_data), $duration);
+    def_int $ticks = 500;
+    if (~.check_protect_prayer(^magic_style) = true) {
+        $ticks = 250;
+    }
+    .queue(tele_block_hit, calc($duration / 30 + 1), $ticks);
+} else {
+    ~pvp_spell_fail($spell_data, $duration);
+}
+
+[queue,tele_block_hit](int $ticks)
+if (%teleblock > 0) {
+    return;
+}
+%teleblock = $ticks;
+mes("You have been teleblocked.");
+settimer(tele_block, 50);
+
+// counts down 50 ticks at a time
+[timer,tele_block]
+%teleblock = calc(%teleblock - 50);
+if (%teleblock <= 0) {
+    %teleblock = 0;
+    mes("Your teleblock has worn off.");
+    cleartimer(tele_block);
+    return;
+}
+if (%teleblock <= 50) {
+    mes("Your teleblock is about to wear off.");
+}
+
+[proc,tele_block_login]
+if (%teleblock > 0) {
+    settimer(tele_block, 50);
+}
