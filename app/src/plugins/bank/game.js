@@ -4,12 +4,13 @@
 // it sits on the real chatbox background); this draws the search button over the bank
 // and handles typing (keys go to the search, not the game, while the prompt is showing).
 
-// Positions in game pixels. The bank is drawn at (4, 4). EASCape: the search button and the
-// Deposit inventory button sit bottom right, as in OSRS (your call, 31 Oct 2026); the bank's
-// "Withdraw as: Item / Note" buttons were moved left 52 pixels to make room (bank_main.if),
-// so they now span x 239-384 at y 291-327. The chatbox text area starts at (17, 357).
-const BUTTON = { x: 4 + 400, y: 4 + 291, w: 36, h: 36 };
-const DEPOSIT = { x: 4 + 437, y: 4 + 291, w: 36, h: 36 };
+// Positions in game pixels. EASCape: the search button and the Deposit inventory button sit
+// bottom right, as in OSRS (your call, 31 Oct 2026). The bank's "Withdraw as: Item / Note"
+// buttons were moved left 52 pixels to make room (bank_main.if). Measured from your
+// screenshot (31 Oct): the buttons' bottoms line up with the bottom of Item and Note
+// (y 322), they stop left of the scrollbar (x 467), and Note ends at x 386.
+const BUTTON = { x: 392, y: 286, w: 36, h: 36 };
+const DEPOSIT = { x: 430, y: 286, w: 36, h: 36 };
 const MAX_LEN = 30;
 const ICONS = require('./icons.js');
 
@@ -83,9 +84,13 @@ module.exports = function bankSearch(ctx) {
     const img = pic('search');
     if (img) g.drawImage(img, 0, 0);
     if (on) {
-      // while searching, the button glows red like the bank's selected buttons
-      g.fillStyle = 'rgba(160, 30, 20, 0.45)';
-      g.fillRect(3, 3, BUTTON.w - 6, BUTTON.h - 6);
+      // while searching, the whole button turns dark red (only its own pixels, not the
+      // see-through corners)
+      g.save();
+      g.globalCompositeOperation = 'source-atop';
+      g.fillStyle = 'rgba(100, 14, 10, 0.6)';
+      g.fillRect(0, 0, BUTTON.w, BUTTON.h);
+      g.restore();
     }
   }
 
