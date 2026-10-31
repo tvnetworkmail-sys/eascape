@@ -1643,3 +1643,42 @@ $banked = calc($banked + ~questpack_give(glarials_amulet_waterfall_quest, 1));
 $banked = calc($banked + ~questpack_give(rope, 1));
 $banked = calc($banked + ~questpack_give(spade, 1));
 ~questpack_done("Roving Elves", $banked);
+
+// ::crystalbow <n> / ::crystalshield <n> - use up n charges of the crystal bow / shield you wear,
+// as n shots / hits would (crystal_equipment.rs2), then say what is left
+[debugproc,crystalbow](int $n)
+if (p_finduid(uid) = false) {
+    return;
+}
+if (~crystal_bow(inv_getobj(worn, ^wearpos_rhand)) = false) {
+    mes("Wield your crystal bow first.");
+    return;
+}
+$n = min(max($n, 1), 2500);
+while ($n > 0 & ~crystal_bow(inv_getobj(worn, ^wearpos_rhand)) = true) {
+    ~crystal_bow_shot;
+    $n = sub($n, 1);
+}
+def_obj $bow = inv_getobj(worn, ^wearpos_rhand);
+if (~crystal_bow($bow) = true) {
+    ~crystal_check($bow, %crystal_bow_shots);
+}
+
+[debugproc,crystalshield](int $n)
+if (p_finduid(uid) = false) {
+    return;
+}
+def_obj $shield = inv_getobj(worn, ^wearpos_lhand);
+if (~crystal_tenths($shield) = 0 | ~crystal_bow($shield) = true) {
+    mes("Wear your crystal shield first.");
+    return;
+}
+$n = min(max($n, 1), 2500);
+while ($n > 0 & ~crystal_tenths(inv_getobj(worn, ^wearpos_lhand)) > 0) {
+    ~crystal_shield_hit;
+    $n = sub($n, 1);
+}
+$shield = inv_getobj(worn, ^wearpos_lhand);
+if (~crystal_tenths($shield) > 0) {
+    ~crystal_check($shield, %crystal_shield_hits);
+}
