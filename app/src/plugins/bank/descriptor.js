@@ -5,15 +5,14 @@
 module.exports = {
   id: 'bank',
   name: 'Bank',
-  description: 'Search your bank by item name, deposit your whole inventory, and keep placeholders',
-  tags: ['bank', 'search', 'find', 'filter', 'items', 'placeholders'],
+  description: 'Search your bank by item name and deposit your whole inventory',
+  tags: ['bank', 'search', 'find', 'filter', 'items'],
   enabledByDefault: true,
   game: './bank/game.js',
   config: {
     group: 'bank',
     sections: [],
     items: [
-      { key: 'placeholders', name: 'Bank placeholders', description: 'When you take all of an item out of the bank, keep its place with a faded icon ("0") so it goes back there. Right-click a placeholder to release it. EASCape keeps this layout on this PC, per account; the game itself still keeps its own order.', type: 'boolean', default: true, position: 1 },
       { key: 'searchHotkey', name: 'Search hotkey', description: 'Start a bank search from the keyboard while the bank is open', type: 'hotkey', default: 'Ctrl+F', position: 0 },
     ],
   },

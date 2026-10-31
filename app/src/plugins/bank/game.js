@@ -27,17 +27,10 @@ module.exports = function bankSearch(ctx) {
     ctx.sendToGame({ type: 'bank-search', query });
   }
 
-  // ---- placeholders: the bank's layout (item ids in order) per account, kept on this PC
-  let account = null;
-  function sendLayout(on = ctx.config('placeholders') !== false) {
-    const all = ctx.state('layouts', {}) || {};
-    ctx.sendToGame({ type: 'bank-layout', placeholders: on, layout: account && Array.isArray(all[account]) ? all[account] : [] });
-  }
-  function saveLayout(layout) {
-    if (!account || !Array.isArray(layout)) return;
-    const all = Object.assign({}, ctx.state('layouts', {}));
-    all[account] = layout;
-    ctx.setState('layouts', all);
+  // EASCape: bank placeholders were taken out (your call, 31 Oct 2026); this keeps them off
+  // in the page, so the bank shows the server's own order
+  function sendLayout() {
+    ctx.sendToGame({ type: 'bank-layout', placeholders: false, layout: [] });
   }
 
   function ensureStyle() {
@@ -228,12 +221,7 @@ module.exports = function bankSearch(ctx) {
   return {
     start() {
       off = ctx.onRuntime((type, data) => {
-        if (type === 'player' && data && data.name && String(data.name).toLowerCase() !== account) {
-          account = String(data.name).toLowerCase();
-          sendLayout();
-        } else if (type === 'bank-layout') {
-          saveLayout(data);
-        } else if (type === 'bank-open') {
+        if (type === 'bank-open') {
           open = !!data;
           if (!open) {
             query = '';
@@ -254,10 +242,9 @@ module.exports = function bankSearch(ctx) {
       window.addEventListener('resize', onResize);
       sendLayout();
     },
-    configChanged: () => sendLayout(),
     gameReady: () => sendLayout(),
     stop() {
-      sendLayout(false);
+      sendLayout();
       if (off) off();
       if (offHotkey) offHotkey();
       offHotkey = null;
