@@ -1,0 +1,59 @@
+// EASCape: the Elven Overpass climbing rocks between Arandar and Isafdar (locs 9296 top, 9297
+// bottom), after Void (content/area/tirannwn/isafdar/ElvenOverpass.kt: the three climbs, their
+// Agility levels 59, 68 and 85, and where each leads; down backwards facing the cliff, up tile by
+// tile). They went through the links table, which had nothing for them. Void gives no experience,
+// so none here; the timings are ours (as trollheim_rocks.rs2).
+[oploc1,loc_9296] @elven_overpass;
+[oploc1,loc_9297] @elven_overpass;
+
+[label,elven_overpass]
+p_arrivedelay;
+switch_coord (loc_coord) {
+    case 0_36_51_42_35 :
+        if (~elven_overpass_level(59) = false) return;
+        ~elven_overpass_down(0_36_51_40_30, ^exact_north);
+    case 0_36_51_40_31 :
+        if (~elven_overpass_level(59) = false) return;
+        ~set_forcemove_bas(human_climbing);
+        ~forcemove(0_36_51_40_31);
+        ~forcemove(0_36_51_40_32);
+        ~forcemove(0_36_51_41_33);
+        ~forcemove(0_36_51_41_34);
+        ~forcemove(0_36_51_42_35);
+        ~forcemove(0_36_51_42_36);
+        ~update_bas;
+    case 0_36_51_34_18 :
+        if (~elven_overpass_level(68) = false) return;
+        ~elven_overpass_down(0_36_51_34_22, ^exact_south);
+    case 0_36_51_34_21 :
+        if (~elven_overpass_level(68) = false) return;
+        ~set_forcemove_bas(human_climbing);
+        ~forcemove(0_36_51_34_21);
+        ~forcemove(0_36_51_34_17);
+        ~update_bas;
+    case 0_36_50_29_52 :
+        if (~elven_overpass_level(85) = false) return;
+        ~elven_overpass_down(0_36_50_34_53, ^exact_west);
+    case 0_36_50_33_53 :
+        if (~elven_overpass_level(85) = false) return;
+        ~set_forcemove_bas(human_climbing);
+        ~forcemove(0_36_50_33_53);
+        ~forcemove(0_36_50_28_52);
+        ~update_bas;
+    case default : mes("Nothing interesting happens.");
+}
+
+[proc,elven_overpass_level](int $level)(boolean)
+if (stat(agility) < $level) {
+    mes("You need an Agility level of <tostring($level)> to negotiate these rocks.");
+    return(false);
+}
+return(true);
+
+// down: climb backwards onto the far square, facing the cliff
+[proc,elven_overpass_down](coord $dest, int $face)
+anim(human_climbing_down, 10);
+sound_synth(climbing_loop, 6, 10);
+p_exactmove(coord, $dest, 0, 120, $face);
+p_delay(3);
+anim(null, 0);
