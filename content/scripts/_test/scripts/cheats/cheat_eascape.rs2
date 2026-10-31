@@ -134,9 +134,12 @@ if (p_finduid(uid) = false) {
 %eascape_onehit = ^false;
 mes("One-hit is off: your hits are back to normal.");
 
-// every quest that counts quest points, set to complete on your own account (::questdone list
-// shows the names). Your call, 19 Oct 2026: for testing past quest locks. Built from
-// count_questpoints in general/scripts/quests.rs2.
+// every quest in the quest list, done on your own account (::questdone list shows the names; the
+// app's quest list has "Mark done"). Your calls, 19 and 31 Oct 2026: for testing past quest locks,
+// and marking a quest done gives what finishing it does: its quest points, experience and rewards,
+// with the quest's own "Quest complete" scroll. Rewards the quest hands over in its dialogue are
+// given here too, and its reward choices (Tourist Trap, Legends' Quest) are asked. Built from
+// update_questlist in general/scripts/quests.rs2 and each quest's own completion.
 [debugproc,questdone](string $name)
 if (p_finduid(uid) = false) {
     return;
@@ -146,133 +149,522 @@ if (compare($name, "list") = 0) {
     return;
 }
 if (compare($name, "runemysteries") = 0) {
+    if (%runemysteries = ^runemysteries_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %runemysteries = ^runemysteries_complete;
+    ~questdone_give(air_talisman, 1);
+    queue(rune_mysteries_complete, 0, 0);
 } else if (compare($name, "doricquest") = 0) {
+    if (%doricquest = ^doric_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %doricquest = ^doric_complete;
+    ~questdone_give(coins, 180);
+    queue(doric_quest_complete, 0, 0);
 } else if (compare($name, "cookquest") = 0) {
+    if (%cookquest = ^cook_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %cookquest = ^cook_complete;
+    queue(cooks_quest_complete, 0, 0);
 } else if (compare($name, "rjquest") = 0) {
+    if (%rjquest = ^romeojuliet_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %rjquest = ^romeojuliet_complete;
+    queue(romeo_and_juliet_complete, 0, 0);
 } else if (compare($name, "hetty") = 0) {
+    if (%hetty = ^hetty_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %hetty = ^hetty_complete;
+    queue(hetty_quest_complete, 0, 0);
 } else if (compare($name, "chompybird") = 0) {
+    if (%chompybird = ^chompybird_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %chompybird = ^chompybird_complete;
+    ~questdone_give(ogre_bow, 1);
+    queue(quest_chompybird_complete, 0, 0);
 } else if (compare($name, "prieststart") = 0) {
+    if (%prieststart = ^priest_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %prieststart = ^priest_complete;
+    ~questdone_give(amulet_of_ghostspeak, 1);
+    queue(priest_quest_complete, 0, 0);
 } else if (compare($name, "squire") = 0) {
+    if (%squire = ^squire_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %squire = ^squire_complete;
+    queue(squire_complete, 0, 0);
 } else if (compare($name, "imp") = 0) {
+    if (%imp = ^imp_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %imp = ^imp_complete;
+    queue(imp_quest_complete, 0, 0);
 } else if (compare($name, "druidquest") = 0) {
+    if (%druidquest = ^druid_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %druidquest = ^druid_complete;
+    stat_advance(herblore, 2500);
+    ~send_quest_complete(questlist:druid, marentill, 220, ^druid_questpoints, "You have completed the\\nDruidic Ritual Quest!", "Access to the Herblore Skill|250 Herblore XP");
 } else if (compare($name, "druidspirit") = 0 | compare($name, "naturespirit") = 0) {
+    if (%druidspirit = ^druidspirit_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %druidspirit = ^druidspirit_complete;
+    queue(druidspirit_quest_complete, 0, 0);
 } else if (compare($name, "goblinquest") = 0) {
+    if (%goblinquest = ^gobdip_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %goblinquest = ^gobdip_complete;
+    queue(goblin_diplomacy_complete_quest, 0, 0);
 } else if (compare($name, "sheep") = 0) {
+    if (%sheep = ^sheep_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %sheep = ^sheep_complete;
+    queue(sheep_complete, 0, 0);
 } else if (compare($name, "fluffs") = 0) {
+    if (%fluffs = ^fluffs_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %fluffs = ^fluffs_complete;
+    ~questdone_give(chocolate_cake, 1);
+    ~questdone_give(stew, 1);
+    ~gertrude_give_cat;
+    queue(fluffs_complete, 0, 0);
 } else if (compare($name, "demonstart") = 0) {
+    if (%demonstart = ^demon_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %demonstart = ^demon_complete;
+    ~questdone_give(silverlight, 1);
+    queue(demon_slayer_complete, 0, 0);
 } else if (compare($name, "princequest") = 0) {
+    if (%princequest = ^prince_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %princequest = ^prince_complete;
+    queue(prince_complete, 0, 0);
 } else if (compare($name, "spy") = 0) {
+    if (%spy = ^blackknight_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %spy = ^blackknight_complete;
+    queue(black_knights_fortress_quest_complete, 0, 0);
+} else if (compare($name, "blackarmgang") = 0 | compare($name, "shieldofarrav") = 0 | compare($name, "arrav") = 0) {
+    if (%blackarmgang = ^blackarmgang_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %blackarmgang = ^blackarmgang_complete;
+    queue(blackarmgang_quest_complete, 0, 0);
 } else if (compare($name, "haunted") = 0) {
+    if (%haunted = ^haunted_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %haunted = ^haunted_complete;
+    queue(haunted_quest_complete, 0, 0);
 } else if (compare($name, "hunt") = 0) {
+    if (%hunt = ^hunt_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %hunt = ^hunt_complete;
+    queue(hunt_quest_complete, 0, 0);
 } else if (compare($name, "drunkmonkquest") = 0) {
+    if (%drunkmonkquest = ^drunkmonk_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %drunkmonkquest = ^drunkmonk_complete;
+    queue(drunkmonk_complete, 0, 0);
 } else if (compare($name, "vampire") = 0) {
+    if (%vampire = ^vampire_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %vampire = ^vampire_complete;
+    queue(quest_vampire_complete, 0, 0);
 } else if (compare($name, "totemquest") = 0) {
+    if (%totemquest = ^totem_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %totemquest = ^totem_complete;
+    queue(totem_quest_complete, 0, 0);
 } else if (compare($name, "fishingcompo") = 0) {
+    if (%fishingcompo = ^fishingcompo_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %fishingcompo = ^fishingcompo_complete;
+    queue(fishingcompo_quest_complete, 0, 0);
 } else if (compare($name, "scorpcatcher") = 0) {
+    if (%scorpcatcher = ^scorpcatcher_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %scorpcatcher = ^scorpcatcher_complete;
+    queue(scorpcatcher_quest_complete, 0, 0);
 } else if (compare($name, "zanaris") = 0) {
+    if (%zanaris = ^zanaris_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %zanaris = ^zanaris_complete;
+    queue(zanaris_quest_complete, 0, 0);
 } else if (compare($name, "elenaquest") = 0) {
+    if (%elenaquest = ^elena_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %elenaquest = ^elena_complete;
+    queue(quest_elena_complete, 0, 0);
 } else if (compare($name, "dragonquest") = 0) {
+    if (%dragonquest = ^dragon_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %dragonquest = ^dragon_complete;
+    queue(dragon_complete, 0, 0);
 } else if (compare($name, "seaslugquest") = 0) {
+    if (%seaslugquest = ^seaslug_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %seaslugquest = ^seaslug_complete;
+    ~questdone_give(bigoysterpearls, 1);
+    stat_advance(fishing, 71750);
+    queue(seaslug_quest_complete, 0, 0);
 } else if (compare($name, "arthur") = 0) {
+    if (%arthur = ^arthur_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %arthur = ^arthur_complete;
+    ~questdone_give(excalibur, 1);
+    queue(arthur_quest_complete, 0, 0);
 } else if (compare($name, "treequest") = 0) {
+    if (%treequest = ^tree_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %treequest = ^tree_complete;
+    queue(tree_quest_complete, 0, 0);
 } else if (compare($name, "waterfall_quest") = 0) {
+    if (%waterfall_quest = ^waterfall_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %waterfall_quest = ^waterfall_complete;
+    queue(waterfall_quest_complete, 0, 0);
 } else if (compare($name, "grail") = 0) {
+    if (%grail = ^grail_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %grail = ^grail_complete;
+    queue(grail_quest_complete, 0, 0);
 } else if (compare($name, "ballquest") = 0) {
+    if (%ballquest = ^ball_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %ballquest = ^ball_complete;
+    queue(ball_quest_complete, 0, 0);
 } else if (compare($name, "murderquest") = 0) {
+    if (%murderquest = ^murder_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %murderquest = ^murder_complete;
+    queue(murder_quest_complete, 0, 0);
 } else if (compare($name, "hazeelcultquest") = 0) {
+    if (%hazeelcultquest = ^hazeelcult_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %hazeelcultquest = ^hazeelcult_complete;
+    queue(hazeelcult_quest_complete, 0, 0);
 } else if (compare($name, "heroquest") = 0) {
+    if (%heroquest = ^hero_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %heroquest = ^hero_complete;
+    queue(hero_quest_complete, 0, 0);
 } else if (compare($name, "itgronigen") = 0) {
+    if (%itgronigen = ^itgronigen_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %itgronigen = ^itgronigen_complete;
+    stat_advance(crafting, 22500);
+    ~questdone_give(uncut_sapphire, 1);
+    queue(itgronigen_quest_complete, 0, 0);
 } else if (compare($name, "arenaquest") = 0) {
+    if (%arenaquest = ^arena_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %arenaquest = ^arena_complete;
+    queue(arena_quest_complete, 0, 0);
 } else if (compare($name, "junglepotion") = 0) {
+    if (%junglepotion = ^junglepotion_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %junglepotion = ^junglepotion_complete;
+    queue(junglepotion_quest_complete, 0, 0);
 } else if (compare($name, "ikov") = 0) {
+    if (%ikov = ^ikov_completed_armadyl) {
+        mes("You've already done that quest.");
+        return;
+    }
     %ikov = ^ikov_completed_armadyl;
+    stat_advance(ranged, 105000);
+    stat_advance(fletching, 80000);
+    ~send_quest_complete(questlist:ikov, yew_longbow, 250, ^ikov_questpoints, "You have completed the\\nTemple of Ikov Quest for Armadyl!", "10,500 Ranged XP|8,000 Fletching XP");
 } else if (compare($name, "biohazard") = 0) {
+    if (%biohazard = ^biohazard_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %biohazard = ^biohazard_complete;
+    queue(quest_biohazard_complete, 0, 0);
 } else if (compare($name, "sheepherderquest") = 0) {
+    if (%sheepherderquest = ^sheepherder_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %sheepherderquest = ^sheepherder_complete;
+    queue(sheepherder_complete, 0, 0);
 } else if (compare($name, "mcannon") = 0) {
+    if (%mcannon = ^mcannon_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %mcannon = ^mcannon_complete;
+    queue(mcannon_complete, 0, 0);
 } else if (compare($name, "grandtree") = 0) {
+    if (%grandtree = ^grandtree_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %grandtree = ^grandtree_complete;
+    queue(grandtree_quest_complete, 0, 0);
 } else if (compare($name, "upass") = 0) {
+    if (%upass = ^upass_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %upass = ^upass_complete;
+    ~questdone_give(ibanstaff, 1);
+    queue(upass_quest_complete, 0, 0);
 } else if (compare($name, "zombiequeen") = 0) {
+    if (%zombiequeen = ^zombiequeen_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %zombiequeen = ^zombiequeen_complete;
+    queue(zombiequeen_quest_complete, 0, 0);
 } else if (compare($name, "crestquest") = 0) {
+    if (%crestquest = ^crest_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %crestquest = ^crest_complete;
+    queue(crest_complete, 0, 0);
 } else if (compare($name, "itexamlevel") = 0) {
+    if (%itexamlevel = ^itexam_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %itexamlevel = ^itexam_complete;
+    queue(itexam_complete, 0, 0);
 } else if (compare($name, "desertrescue") = 0) {
+    if (%desertrescue = ^desertrescue_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %desertrescue = ^desertrescue_complete;
+    ~questdone_pick4("Fletching.", fletching, "Agility.", agility, "Smithing.", smithing, "Thieving", thieving, 46500);
+    ~questdone_pick4("Fletching.", fletching, "Agility.", agility, "Smithing.", smithing, "Thieving", thieving, 46500);
+    queue(desertrescue_complete, 0, 0);
 } else if (compare($name, "itwatchtower") = 0) {
+    if (%itwatchtower = ^itwatchtower_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %itwatchtower = ^itwatchtower_complete;
+    stat_advance(magic, 153000);
+    ~questdone_give(coins, 5000);
+    ~questdone_give(watchtowerspell, 1);
+    queue(itwatchtower_quest_complete, 0, 0);
 } else if (compare($name, "legendsquest") = 0) {
+    if (%legendsquest = ^legends_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %legendsquest = ^legends_complete;
+    ~questdone_legends_training;
+    queue(legends_quest_complete, 0, 0);
 } else if (compare($name, "priestperil") = 0 | compare($name, "priest_in_peril") = 0) {
+    if (%priestperil = ^priestperil_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %priestperil = ^priestperil_complete;
+    queue(priestperil_complete, 0, 0);
 } else if (compare($name, "death_equiproom") = 0) {
+    if (%death_equiproom = ^death_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %death_equiproom = ^death_complete;
     ~death_set_map(^death_got_map); // Tenzing's map, so his doors open as after playing it
+    queue(death_quest_complete, 0, 0);
 } else if (compare($name, "troll_quest") = 0) {
+    if (%troll_quest = ^troll_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %troll_quest = ^troll_complete;
+    queue(troll_quest_complete, 0, 0);
 } else if (compare($name, "troll_love") = 0) {
+    if (%troll_love = ^troll_love_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %troll_love = ^troll_love_complete;
+    queue(trollromance_quest_complete, 0, 0);
 } else if (compare($name, "golem_a") = 0) {
+    if (%golem_a = ^golem_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %golem_a = ^golem_complete;
+    queue(golem_complete, 0, 0);
 } else if (compare($name, "deserttreasure") = 0) {
+    if (%deserttreasure = ^deserttreasure_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %deserttreasure = ^deserttreasure_complete;
+    queue(dt_complete, 0, 0);
+} else if (compare($name, "eadgar") = 0) {
+    if (%eadgar_quest = ^eadgar_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %eadgar_quest = ^eadgar_complete;
+    queue(eadgar_quest_complete, 0, 0);
+} else if (compare($name, "horror") = 0) {
+    if (%horrorquest = ^horror_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %horrorquest = ^horror_complete;
+    queue(quest_horror_complete, 0, 0);
+} else if (compare($name, "mortton") = 0) {
+    if (%morttonquest = ^mortton_quest_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %morttonquest = ^mortton_quest_complete;
+    queue(mortton_quest_complete, 0, 0);
+} else if (compare($name, "regicide") = 0) {
+    if (%regicide_quest = ^regicide_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %regicide_quest = ^regicide_complete;
+    queue(quest_regicide_complete, 0, 0);
+} else if (compare($name, "tbwt") = 0) {
+    if (%tbwt_main = ^tbwt_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %tbwt_main = ^tbwt_complete;
+    queue(tbwt_quest_complete, 0, 0);
+} else if (compare($name, "viking") = 0 | compare($name, "fremennik") = 0) {
+    if (%viking = ^viking_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %viking = ^viking_complete;
+    queue(viking_quest_complete, 0, 0);
 } else if (compare($name, "mm") = 0) {
+    if (%mm_main = ^mm_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %mm_main = ^mm_complete;
+    ~questdone_give(coins, 10000);
+    ~questdone_give(diamond, 3);
+    queue(mm_quest_complete, 0, 0);
 } else if (compare($name, "misc") = 0) {
+    if (%misc_quest = ^misc_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %misc_quest = ^misc_complete;
+    queue(misc_quest_complete, 0, 0);
 } else if (compare($name, "hauntedmine") = 0) {
+    if (%hauntedmine = ^hauntedmine_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %hauntedmine = ^hauntedmine_complete;
+    stat_advance(strength, 220000);
+    ~questdone_give(crystalshard_necklace_unstrung, 1);
+    ~send_quest_complete(questlist:hauntedmine, crystalshard_necklace, 250, 2, "You have completed the\\nHaunted Mine Quest!", "22,000 Strength XP|Salve amulet|Crystal outcrop shortcut");
 } else if (compare($name, "routequest") = 0) {
+    if (%routequest = ^routequest_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %routequest = ^routequest_complete;
+    queue(routequest_complete, 0, 0);
 } else if (compare($name, "fairytale1") = 0) {
+    if (%fairy_farmers_quest = ^fairy1_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %fairy_farmers_quest = ^fairy1_complete;
+    ~questdone_give(fairy_enchanted_secateurs, 1);
+    queue(fairy1_complete, 0, 0);
 } else if (compare($name, "fairytale2") = 0) {
-    // and what the quest leaves set: the fairy rings, the Godfather with his pocket, the Queen and
-    // Fairy Nuff gone from Nuff's room (quest_fairy2)
+    if (%fairy2_queencure_quest = ^fairy2_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
     %fairy2_queencure_quest = ^fairy2_complete;
     %fairyring_use = 1;
     %fairyring_permission = 2;
@@ -288,6 +680,68 @@ if (compare($name, "runemysteries") = 0) {
 ~update_questlist;
 mes("Quest marked complete: <$name>.");
 
+// a reward the quest hands you: in your pack, or the bank when it's full
+[proc,questdone_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+inv_add(bank, $obj, $count);
+mes("Your pack is full: <oc_name($obj)> went to your bank.");
+
+// Tourist Trap: two lots of 4,650 experience, as Irena asks (irena_xpreward)
+[proc,questdone_pick4](string $a, stat $sa, string $b, stat $sb, string $c, stat $sc, string $d, stat $sd, int $xp)
+def_stat $stat = $sa;
+switch_int (~p_choice4($a, 1, $b, 2, $c, 3, $d, 4)) {
+    case 2 : $stat = $sb;
+    case 3 : $stat = $sc;
+    case 4 : $stat = $sd;
+}
+stat_advance($stat, $xp);
+mes("You advance your stat in <~stat_name($stat)>.");
+
+// Legends' Quest: Sir Radimus's four lots of training, from his four skill menus (radimus_menu1-4)
+[proc,questdone_legends_training]
+def_int $left = 4;
+while ($left > 0) {
+    def_stat $stat = ~questdone_radimus_menu;
+    stat_advance($stat, 76500);
+    ~mesbox("You receive some training and increase experience to your <~stat_name($stat)>.");
+    $left = calc($left - 1);
+}
+
+[proc,questdone_radimus_menu]()(stat)
+def_int $menu = 1;
+while (1 = 1) {
+    if ($menu = 1) {
+        switch_int (~p_choice4("* Attack *", 1, "* Defence *", 2, "* Strength *", 3, "--- Go to Skill Menu 2 ----", 4)) {
+            case 1 : return(attack);
+            case 2 : return(defence);
+            case 3 : return(strength);
+        }
+    } else if ($menu = 2) {
+        switch_int (~p_choice4("* Hitpoints *", 1, "* Prayer *", 2, "* Magic *", 3, "--- Go to Skill Menu 3 ----", 4)) {
+            case 1 : return(hitpoints);
+            case 2 : return(prayer);
+            case 3 : return(magic);
+        }
+    } else if ($menu = 3) {
+        switch_int (~p_choice4("* Woodcutting *", 1, "* Crafting *", 2, "* Smithing *", 3, "--- Go to Skill Menu 4 ----", 4)) {
+            case 1 : return(woodcutting);
+            case 2 : return(crafting);
+            case 3 : return(smithing);
+        }
+    } else {
+        switch_int (~p_choice4("* Herblore *", 1, "* Agility *", 2, "* Thieving *", 3, "--- Go to Skill Menu 1 ----", 4)) {
+            case 1 : return(herblore);
+            case 2 : return(agility);
+            case 3 : return(thieving);
+        }
+    }
+    $menu = calc($menu % 4 + 1);
+}
+return(attack);
+
 [proc,questdone_list]
 mes("runemysteries, doricquest, cookquest, rjquest, hetty, chompybird, prieststart, squire");
 mes("imp, druidquest, druidspirit, goblinquest, sheep, fluffs, demonstart, princequest");
@@ -298,6 +752,7 @@ mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestq
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
 mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen)");
+mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
 // run energy, poison cured
