@@ -254,7 +254,12 @@ if (%misc_restotal > 0) {
 ~chatnpc("<p,shifty>Here is a list of what your subjects have collected.");
 def_string $resource_str = ~manage_misc_resource_generation; // IMPT: THIS LINE DOES THE CALCULATION 
 // ~bank_deposit_all_misc_resources; // Later when misc_resources_collected inv exists
-~mesbox($resource_str); //Replace this line later when UI exists with ~open_interface(resource_collection);
+// EASCape: the collection shows in a loot window like the Barrows chest's (your call, 31 Oct 2026)
+if (inv_freespace(misc_collectinv) < inv_size(misc_collectinv)) {
+    ~misc_collect_show;
+    return;
+}
+~mesbox($resource_str);
 // ~chatnpc("<p,shifty>I shall tell your subjects to deliver your resources to your storage right away, Your Royal Highness.");
 @misc_open_manage_misc_interface;
 

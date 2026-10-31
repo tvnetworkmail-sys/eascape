@@ -201,11 +201,12 @@ if(%misc_last_update ! $misc_last_update) %misc_last_update = date_minutes;
 // Fetch varps and varbits
 def_int $ResourcePts = %misc_restotal;
 def_int $CurrentSlot = 0;
+inv_clear(misc_collectinv);
 
 // Wood[Maple Logs] (InverseCost = 160)
 def_int $wood_qty = calc(160 * $ResourcePts * %misc_points_wood / 2048);
 if ($wood_qty > 0) {
-    inv_add(inv, cert_maple_logs, $wood_qty);
+    ~misc_collect_give(cert_maple_logs, $wood_qty);
     // inv_setslot(misc_resources_collected, $CurrentSlot, maple_logs, $wood_qty);
     // $CurrentSlot = add($CurrentSlot, 1);
     // For 2005, add nest drops. 1 nest per 100.
@@ -214,7 +215,7 @@ if ($wood_qty > 0) {
 // Coal (InverseCost = 98)
 def_int $coal_qty = calc(98 * $ResourcePts * %misc_points_mine / 2048);
 if ($coal_qty > 0) {
-    inv_add(inv, cert_coal, $coal_qty);
+    ~misc_collect_give(cert_coal, $coal_qty);
     // inv_setslot(misc_resources_collected, $CurrentSlot, coal, $coal_qty);
     // $CurrentSlot = add($CurrentSlot, 1);
     // For 2005, add gems drops. 1 gem for 100 coal, 1 per 200 thereafter
@@ -224,15 +225,15 @@ if ($coal_qty > 0) {
 def_int $fish_qty =  calc(158 * $ResourcePts * %misc_points_fish / 2048);
 if ($fish_qty > 0) {
     if (%misc_cooked = 1) {
-        inv_add(inv, cert_tuna, calc($fish_qty / 2));
-        inv_add(inv, cert_swordfish, calc($fish_qty * 3 / 20));
+        ~misc_collect_give(cert_tuna, calc($fish_qty / 2));
+        ~misc_collect_give(cert_swordfish, calc($fish_qty * 3 / 20));
         // inv_setslot(misc_resources_collected, $CurrentSlot, tuna, calc($fish_qty / 2)); // 50% Quantity
         // $CurrentSlot = add($CurrentSlot, 1);
         // inv_setslot(misc_resources_collected, $CurrentSlot, swordfish, calc($fish_qty * 3 / 20)); // 15% Quantity
         // $CurrentSlot = add($CurrentSlot, 1);
     } else {
-        inv_add(inv, cert_raw_tuna, calc($fish_qty / 2));
-        inv_add(inv, cert_raw_swordfish, calc($fish_qty * 3 / 20));
+        ~misc_collect_give(cert_raw_tuna, calc($fish_qty / 2));
+        ~misc_collect_give(cert_raw_swordfish, calc($fish_qty * 3 / 20));
         // inv_setslot(misc_resources_collected, $CurrentSlot, raw_tuna, calc($fish_qty / 2)); // 50% Quantity
         // $CurrentSlot = add($CurrentSlot, 1);
         // inv_setslot(misc_resources_collected, $CurrentSlot, raw_swordfish, calc($fish_qty * 3 / 20)); // 15% Quantity
@@ -262,7 +263,7 @@ def_int $flax_qty = 0;
 if (%misc_flax = 1) {
     $flax_qty = calc(224 * $ResourcePts * %misc_points_herb / 2048);
     $herb_qty = 0;
-    if ($flax_qty > 0) inv_add(inv, cert_flax, $flax_qty);
+    if ($flax_qty > 0) ~misc_collect_give(cert_flax, $flax_qty);
 }
 def_int $herb_count = $herb_qty;
 while ($herb_count > 0) {
@@ -282,47 +283,47 @@ while ($herb_count > 0) {
 }
 
 if ($tarromin_count > 0) {
-    inv_add(inv, cert_tarromin, $tarromin_count);
+    ~misc_collect_give(cert_tarromin, $tarromin_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_tarromin, $tarromin_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($harralander_count > 0) {
-    inv_add(inv, cert_harralander, $harralander_count);
+    ~misc_collect_give(cert_harralander, $harralander_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_harralander, $harralander_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($ranarr_count > 0) {
-    inv_add(inv, cert_ranarr_weed, $ranarr_count);
+    ~misc_collect_give(cert_ranarr_weed, $ranarr_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_ranarr, $ranarr_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($irit_count > 0) {
-    inv_add(inv, cert_irit_leaf, $irit_count);
+    ~misc_collect_give(cert_irit_leaf, $irit_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_irit, $irit_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($avantoe_count > 0) {
-    inv_add(inv, cert_avantoe, $avantoe_count);
+    ~misc_collect_give(cert_avantoe, $avantoe_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_avantoe, $avantoe_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($kwuarm_count > 0) {
-    inv_add(inv, cert_kwuarm, $kwuarm_count);
+    ~misc_collect_give(cert_kwuarm, $kwuarm_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_kwuarm, $kwuarm_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($cadantine_count > 0) {
-    inv_add(inv, cert_cadantine, $cadantine_count);
+    ~misc_collect_give(cert_cadantine, $cadantine_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_cadantine, $cadantine_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($lantadyme_count > 0) {
-    inv_add(inv, cert_lantadyme, $lantadyme_count);
+    ~misc_collect_give(cert_lantadyme, $lantadyme_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_lantadyme, $lantadyme_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
 if ($dwarf_weed_count > 0) {
-    inv_add(inv, cert_dwarf_weed, $dwarf_weed_count);
+    ~misc_collect_give(cert_dwarf_weed, $dwarf_weed_count);
     // inv_setslot(misc_resources_collected, $CurrentSlot, unidentified_dwarf_weed, $dwarf_weed_count);
     // $CurrentSlot = calc($CurrentSlot + 1);
 }
@@ -386,3 +387,20 @@ if ($random < 10) {
 } else if ($random < 46) {
     return (unidentified_dwarf_weed, 1);
 }
+// EASCape: each collected resource goes into your pack (on the floor if it's full, like the Barrows
+// chest) and into the "Resources collected" window (misc_collect.if, the Barrows chest's design)
+[proc,misc_collect_give](namedobj $obj, int $count)
+if ($count < 1) return;
+inv_add(misc_collectinv, $obj, $count);
+if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = true) {
+    inv_add(inv, $obj, $count);
+} else {
+    obj_add(coord, $obj, $count, ^lootdrop_duration);
+}
+
+[proc,misc_collect_show]
+inv_transmit(misc_collectinv, misc_collect:inv);
+if_openmain(misc_collect);
+
+[if_close,misc_collect]
+inv_stoptransmit(misc_collect:inv);
