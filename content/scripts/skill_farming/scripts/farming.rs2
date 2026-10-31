@@ -197,7 +197,8 @@ if ($patch > 30) {
 if (%farming_offset = 0) {
     %farming_offset = calc(random(30) + 1); // stored + 1: 0 means not chosen yet
 }
-~farming_catch_up;
+// EASCape: the catching up is left to the timer (its first look is 3 seconds in), so nothing in it
+// can stop your login
 // EASCape: looked at every 5 ticks (3 seconds; it was every 100), so a tick's growth shows within
 // seconds of its minute and the app's Time Tracking times are right to the minute (our choice)
 settimer(farming_tick, 5);
@@ -226,9 +227,18 @@ def_int $m = $from;
 while (calc(($m - $offset) % 5) ! 0) {
     $m = calc($m + 1);
 }
+// EASCape: at most 12 growth ticks a go (an hour's worth); the rest on the next look, 3 seconds
+// later. All 128 at once (a long time away, with a full bank's saplings looked at each tick) ran
+// past the script's instruction limit and stopped your login half way.
+def_int $done = 0;
 while ($m <= $now) {
+    if ($done >= 12) {
+        %farming_last = calc($m - 1);
+        return;
+    }
     ~farming_grow(calc($m - $offset));
     $m = calc($m + 5);
+    $done = calc($done + 1);
 }
 %farming_last = $now;
 // the app's Time Tracking, while it has asked (eascape_app.rs2)
