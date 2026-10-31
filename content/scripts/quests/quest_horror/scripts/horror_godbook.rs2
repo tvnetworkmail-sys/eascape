@@ -502,3 +502,18 @@ switch_int($op) {
         say("May Guthix bring you balance.");
 }
 ~sub_sa_energy(250);
+
+// EASCape: Check on a damaged book: which of its four pages are in it (2009scape's
+// GodBookPlugin, "The first page is in the book." / "The first page is missing.")
+[opheld3,unfinished_saradominbook] ~horror_check_book(%horror_holypage1, %horror_holypage2, %horror_holypage3, %horror_holypage4);
+[opheld3,unfinished_zamorakbook] ~horror_check_book(%horror_unholypage1, %horror_unholypage2, %horror_unholypage3, %horror_unholypage4);
+[opheld3,unfinished_guthixbook] ~horror_check_book(%horror_balancepage1, %horror_balancepage2, %horror_balancepage3, %horror_balancepage4);
+
+[proc,horror_check_book](int $p1, int $p2, int $p3, int $p4)
+~mesbox("<~horror_check_page("first", $p1)>|<~horror_check_page("second", $p2)>|<~horror_check_page("third", $p3)>|<~horror_check_page("fourth", $p4)>");
+
+[proc,horror_check_page](string $which, int $in)(string)
+if ($in = ^true) {
+    return("The <$which> page is in the book.");
+}
+return("The <$which> page is missing.");
