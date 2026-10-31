@@ -7,3 +7,15 @@ switch_int(~p_choice2("Yes please.", 1, "No thank you.", 2)) {
     case 2 :
         ~chatplayer("<p,neutral>No thank you.");
 } 
+
+// EASCape: the Robe Store owner upstairs, with the mystic robes; his greeting is ours (the Magic
+// Guild Store owner's, as no transcript of his has been found)
+[opnpc1,magic_store_owner2]
+~chatnpc("<p,happy>Welcome to the Magic Guild Store.|Would you like to buy some mystic robes?");
+switch_int(~p_choice2("Yes please.", 1, "No thank you.", 2)) {
+    case 1 :
+        ~chatplayer("<p,happy>Yes please.");
+        ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,neutral>No thank you.");
+}
