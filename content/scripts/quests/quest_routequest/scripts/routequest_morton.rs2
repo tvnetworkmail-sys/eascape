@@ -20,18 +20,41 @@ switch_int(~p_choice2("Yes, I'll pay ten gold.", 1, "No, I won't use the boat.",
         ~chatplayer("<p,neutral>No, I won't use the boat.");
 }
 
-// [oploc2,route_rowboat_mortton] later 2005
-// if(%routequest < ^routequest_boatman_repaired) {
-//     ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,angry>Hey, hands off my boat!");
-//     return;
-// }
-// if(inv_total(inv, coins) < 10) {
-//     ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,neutral>Sorry my friend. You don't seem to have the funds for the trip. It will cost you 10 gold.");
-//     return;
-// }
-// @travel_to_hollow;
+// EASCape: our maps have the later 2005 boats (route_rowboat_mortton by Cyreg, route_rowboat_hollows
+// at the Hollows), which had no scripts. Board asks as the old boat does; Board ( Pay 10 ) pays.
+[oploc1,route_rowboat_mortton]
+if(%routequest < ^routequest_boatman_repaired) {
+    ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,angry>Hey, hands off my boat!");
+    return;
+}
+~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,neutral>It costs 10 gold to cover the loan of the boat. Will you pay?");
+switch_int(~p_choice2("Yes, I'll pay ten gold.", 1, "No, I won't use the boat.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes, I'll pay ten gold.");
+        if(inv_total(inv, coins) >= 10) {
+            @travel_to_hollow;
+        } else {
+            ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,neutral>Sorry, but you don't have that much. No money, no boat!");
+        }
+    case 2 :
+        ~chatplayer("<p,neutral>No, I won't use the boat.");
+}
+
+[oploc2,route_rowboat_mortton]
+if(%routequest < ^routequest_boatman_repaired) {
+    ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,angry>Hey, hands off my boat!");
+    return;
+}
+if(inv_total(inv, coins) < 10) {
+    ~chatnpc_specific("Cyreg Paddlehorn", route_cyreg_paddlehorn, "<p,neutral>Sorry my friend. You don't seem to have the funds for the trip. It will cost you 10 gold.");
+    return;
+}
+@travel_to_hollow;
+
+[oploc1,route_rowboat_hollows] @route_rowboat_hollows;
 
 [label,travel_to_hollow]
+inv_del(inv, coins, 10); // EASCape: the loan was never taken
 if_settab(null, 0);
 if_settab(null, 1);
 if_settab(null, 2);
