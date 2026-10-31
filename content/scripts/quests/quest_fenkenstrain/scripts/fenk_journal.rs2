@@ -1,0 +1,72 @@
+// EASCape: Creature of Fenkenstrain's journal, Void's lines (CreatureOfFenkenstrain.kt)
+[if_button,questlist:creatureoffenkenstrain]
+def_int $s = %fenk_quest;
+def_string $t;
+if ($s = ^fenk_not_started) {
+    if (%fenk_read_signpost = 1) {
+        $t = "@str@I read the signpost in Canifis, which tells of a butler|@str@position that is available at the castle to the northeast.|@dbl@I should go up to the castle and speak to @dre@Dr Fenkenstrain@dbl@.";
+    } else {
+        $t = "@dbl@I can start this quest by reading the signpost in the|@dbl@centre of @dre@Canifis.|@dbl@I must be able to defeat a @dre@level 51 monster@dbl@, and need the|@dbl@following skill levels:|";
+        $t = append($t, ~fenk_journal_line(stat_base(crafting), 20, "Level 20 Crafting", "@dbl@Level 20 @dre@Crafting"));
+        $t = append($t, ~fenk_journal_line(stat_base(thieving), 25, "Level 25 Thieving", "@dbl@Level 25 @dre@Thieving"));
+        $t = append($t, "@dbl@I also need to have completed the following quests:|");
+        $t = append($t, ~fenk_journal_line(%priestperil, ^priestperil_complete, "Priest in Peril", "@dre@Priest in Peril"));
+        $t = append($t, ~fenk_journal_line(%haunted, ^haunted_complete, "Restless Ghost", "@dre@Restless Ghost"));
+    }
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = "@str@I read the signpost in Canifis, which tells of a butler|@str@position that is available at the castle to the northeast.|@str@I spoke to Fenkenstrain, who wanted me to find him some|@str@body parts so that he could build a creature.|";
+if ($s = ^fenk_body_parts) {
+    $t = append($t, "@dbl@I need to find these body parts for @dre@Fenkenstrain@dbl@:|");
+    $t = append($t, ~fenk_journal_line(%fenk_arms, 1, "a pair of arms", "@dbl@a pair of @dre@arms"));
+    $t = append($t, ~fenk_journal_line(%fenk_legs, 1, "a pair of legs", "@dbl@a pair of @dre@legs"));
+    $t = append($t, ~fenk_journal_line(%fenk_torso, 1, "a torso", "@dbl@a @dre@torso"));
+    $t = append($t, ~fenk_journal_line(%fenk_head, 1, "a head", "@dbl@a @dre@head"));
+    $t = append($t, "||@dbl@Apparently the soil of @dre@Morytania@dbl@ has a unique quality|@dbl@which preserves the bodies of the dead better than|@dbl@elsewhere, so perhaps I should look at the graves in the|@dbl@local area.");
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@I gave a torso, some arms and legs, and a head to|@str@Fenkenstrain, who then wanted a needle and 5 lots of|@str@thread, so that he could sew the bodyparts together and|@str@create his creature.|");
+if ($s = ^fenk_sewing) {
+    $t = append($t, ~fenk_journal_line(%fenk_needle, 1, "I have given Fenkenstrain a needle.", "@dbl@I need to bring @dre@Fenkenstrain@dbl@ a @dre@needle."));
+    if (%fenk_threads_given >= 5) {
+        $t = append($t, "@str@I brought Fenkenstrain 5 quantities of thread.");
+    } else {
+        $t = append($t, "@dbl@I need to bring Fenkenstrain @dre@<tostring(calc(5 - %fenk_threads_given))>@dbl@ quantities of @dre@thread.");
+    }
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@I brought Fenkenstrain a needle and 5 quantities of|@str@thread.|");
+if ($s = ^fenk_conductor) {
+    $t = append($t, "@dre@Fenkenstrain@dbl@ has ordered me to repair the lightning|@dbl@conductor.");
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@I repaired the lightning conductor, and Fenkenstrain|@str@brought the Creature to life.|");
+if ($s = ^fenk_creature_alive) {
+    $t = append($t, "@dbl@I should go to @dre@Fenkenstrain@dbl@ to see if he is pleased with my|@dbl@work on the lightning conductor.");
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@The Creature went on a rampage, and Fenkenstrain sent|@str@me up to the Tower to destroy it.|");
+if ($s = ^fenk_creature_loose) {
+    $t = append($t, "@dre@Fenkenstrain@dbl@ has ordered me to go and destroy the|@dbl@Creature.");
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@The Creature convinced me to stop Fenkenstrain's|@str@experiments once and for all, and has told me the true|@str@history of Fenkenstrain's treachery.|");
+if ($s = ^fenk_creature_convinced) {
+    $t = append($t, "@dbl@I must find a way to stop @dre@Fenkenstrain@dbl@'s experiments.");
+    ~quest_journal("Creature of Fenkenstrain", $t);
+    return;
+}
+$t = append($t, "@str@I stole Fenkenstrain's Ring of Charos, and he released me|@str@from his service||@red@QUEST COMPLETE!");
+~quest_journal("Creature of Fenkenstrain", $t);
+
+[proc,fenk_journal_line](int $have, int $need, string $struck, string $open)(string)
+if ($have >= $need) {
+    return("@str@<$struck>|");
+}
+return("<$open>|");

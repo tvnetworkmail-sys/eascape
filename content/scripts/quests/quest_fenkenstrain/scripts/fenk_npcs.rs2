@@ -1,0 +1,436 @@
+// EASCape: Creature of Fenkenstrain, its people. Ported from Void (GregHib/void:
+// content/area/morytania/fenkenstrains_castle/DrFenkenstrain.kt, LordRologarth.kt and
+// GardenerGhost.kt), their words and order. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- Dr Fenkenstrain
+// (the 377 cache's fenk_fenkenstrain shows him at stages 0-7; fenk_fenkenstrain_in_tower at 8)
+[opnpc1,fenk_fenkenstrain] @fenk_talk_fenkenstrain;
+[opnpc1,fenk_fenkenstrain_in_tower] @fenk_talk_fenkenstrain;
+
+[label,fenk_talk_fenkenstrain]
+switch_int (%fenk_quest) {
+    case ^fenk_not_started : @fenk_interview;
+    case ^fenk_body_parts : @fenk_body_parts;
+    case ^fenk_sewing : @fenk_needle_thread;
+    case ^fenk_conductor :
+        ~chatplayer("<p,quiz>How do I repair the lightning conductor?");
+        ~chatnpc("<p,angry>Oh, it would be easier to do it myself! If you find a conductor mould you should be able to cast a new one.");
+        ~chatnpc("<p,neutral>Remember this, <displayname>: my experiment will only work with a conductor made from silver.");
+    case ^fenk_creature_alive : @fenk_rampage;
+    case ^fenk_creature_loose :
+        ~chatnpc("<p,quiz>So have you destroyed it?!!?");
+        if (inv_total(inv, fenk_tower_key) = 0 & %fenk_unlocked_tower = 0) {
+            ~chatplayer("<p,sad>I seem to have lost the Tower key.");
+            ~fenk_give(fenk_tower_key);
+            ~chatnpc("<p,angry>Oh, for goodness sake. Here's a copy I had made.");
+            return;
+        }
+        ~chatplayer("<p,neutral>Not yet.");
+        ~chatnpc("<p,scared>Please, hurry - save me!!!!");
+    case ^fenk_creature_convinced :
+        ~chatnpc("<p,quiz>So have you destroyed it?!!?");
+        ~chatplayer("<p,angry>Never, now that he has told me the truth!");
+        ~chatnpc("<p,scared>Oh my, oh my, this is exactly what I feared!");
+        ~chatnpc("<p,scared>Why did you have to pick Rologarth's brain of all brains?!?");
+        ~chatplayer("<p,angry>I'm through working for you.");
+        ~chatnpc("<p,angry>No!! I refuse to release you!! You must help me build another creature to destroy this dreadful mistake!!");
+        ~chatplayer("<p,angry>It is all you deserve. Lord Rologarth is master of this castle once more. Let him protect you - if he wants to.");
+        ~chatnpc("<p,scared>theyrecomingtogetme theyrecomingtogetme...");
+    case default :
+        ~chatnpc("<p,scared>theyrecomingtogetme theyrecomingtogetme...");
+        ~chatplayer("<p,angry>It is all you deserve. Lord Rologarth is master of this castle once more. Let him protect you - if he wants to.");
+        ~chatnpc("<p,scared>theyrecomingtogetme theyrecomingtogetme...");
+}
+
+[label,fenk_interview]
+~chatnpc("<p,neutral>Have you come to apply for the job?");
+def_int $choice = ~p_choice2("Yes.", 1, "No.", 2);
+if ($choice = 2) {
+    ~chatplayer("<p,neutral>No thanks, I wouldn't work here if you paid me.");
+    ~chatnpc("<p,neutral>Charming.");
+    return;
+}
+if ($choice ! 1) {
+    return;
+}
+~chatplayer("<p,neutral>Yes, if it pays well.");
+~chatnpc("<p,neutral>I'll have to ask you some questions first.");
+~chatplayer("<p,neutral>Okay...");
+~chatnpc("<p,quiz>How would you describe yourself in one word?");
+$choice = ~p_choice4("Stunning", 1, "Awe-inspiring", 2, "Breathtaking", 3, "Braindead", 4);
+if ($choice ! 4) {
+    @fenk_rejected;
+}
+~chatnpc("<p,neutral>Mmmm, I see.");
+~chatnpc("<p,quiz>Just one more question. What would you say is your greatest skill?");
+$choice = ~p_choice4("Combat", 1, "Magic", 2, "Cooking", 3, "Grave-digging", 4);
+if ($choice ! 4) {
+    @fenk_rejected;
+}
+%fenk_quest = ^fenk_body_parts;
+~send_quest_progress(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
+~chatnpc("<p,neutral>Mmmm, I see.");
+~chatnpc("<p,happy>Looks like you're just the <text_gender("man", "woman")> for the job! Welcome aboard!");
+~chatplayer("<p,quiz>Is there anything you'd like me to do for you, sir?");
+~chatnpc("<p,neutral>Yes, there is. You're highly skilled at grave-digging, yes?");
+~chatplayer("<p,shifty>Er...yes, that's what I said.");
+~chatnpc("<p,neutral>Excellent. Now listen carefully.");
+~chatnpc("<p,shifty>I need you to find some... stuff...for me.");
+~chatplayer("<p,quiz>Stuff?");
+~chatnpc("<p,neutral>That's what I said...stuff.");
+~chatplayer("<p,quiz>What kind of stuff?");
+~chatnpc("<p,neutral>Well...dead stuff.");
+~chatplayer("<p,neutral>Go on...");
+~chatnpc("<p,neutral>I need you to get me enough dead body parts for me to stitch together a complete body, which I plan to bring to life.");
+~chatplayer("<p,scared>Right...okay...if you insist.");
+
+[label,fenk_rejected]
+~chatnpc("<p,neutral>Mmmm, I see.");
+~chatnpc("<p,neutral>I'm sorry, but I don't think you have the aptitude for this position.");
+
+[proc,fenk_all_parts]()(boolean)
+if (%fenk_arms = 1 & %fenk_legs = 1 & %fenk_torso = 1 & %fenk_head = 1) {
+    return(true);
+}
+return(false);
+
+[label,fenk_body_parts]
+if (~fenk_all_parts = true) {
+    @fenk_sewing;
+}
+def_boolean $part = false;
+if ((inv_total(inv, fenk_arms) > 0 & %fenk_arms = 0) | (inv_total(inv, fenk_legs) > 0 & %fenk_legs = 0) | (inv_total(inv, fenk_torso) > 0 & %fenk_torso = 0) | (inv_total(inv, fenk_head_full) > 0 & %fenk_head = 0)) {
+    $part = true;
+}
+def_int $choice;
+if ($part = true) {
+    $choice = ~p_choice5("I have some body parts for you.", 1, "Remind me what you want me to do.", 2, "Why are you trying to make this creature?", 3, "Will his creature put me out of a job?", 4, "I must get back to work, sir.", 5);
+} else {
+    $choice = ~p_choice5("Do you know where I could find body parts?", 6, "Remind me what you want me to do.", 2, "Why are you trying to make this creature?", 3, "Will his creature put me out of a job?", 4, "I must get back to work, sir.", 5);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,neutral>I have some body parts for you.");
+        if (inv_total(inv, fenk_arms) > 0 & %fenk_arms = 0) {
+            inv_del(inv, fenk_arms, 1);
+            %fenk_arms = 1;
+            ~chatnpc("<p,happy>Great you've brought me some arms.");
+        }
+        if (inv_total(inv, fenk_legs) > 0 & %fenk_legs = 0) {
+            inv_del(inv, fenk_legs, 1);
+            %fenk_legs = 1;
+            ~chatnpc("<p,happy>Excellent you've brought me some legs.");
+        }
+        if (inv_total(inv, fenk_torso) > 0 & %fenk_torso = 0) {
+            inv_del(inv, fenk_torso, 1);
+            %fenk_torso = 1;
+            ~chatnpc("<p,happy>Splendid you've brought me a torso.");
+        }
+        if (inv_total(inv, fenk_head_full) > 0 & %fenk_head = 0) {
+            inv_del(inv, fenk_head_full, 1);
+            %fenk_head = 1;
+            ~chatnpc("<p,happy>Fantastic you've brought me a head.");
+        }
+        if (~fenk_all_parts = true) {
+            @fenk_sewing;
+        }
+    case 6 :
+        ~chatplayer("<p,quiz>Do you know where I could find body parts?");
+        ~chatnpc("<p,neutral>The soil of Morytania is unique in its ability to preserve the bodies of the dead, which is one reason why I have chosen to carry out my experiments here.");
+        ~chatnpc("<p,neutral>I recommend digging up some graves in the local area. To the south-east you will find the Haunted Woods; I believe there are many graves there.");
+        ~chatnpc("<p,neutral>There is also a mausoleum on an island west of this castle. I expect the bodies that are buried there to be extremely well preserved, as they were wealthy in life.");
+    case 2 :
+        ~chatplayer("<p,quiz>Remind me what you want me to do.");
+        ~chatnpc("<p,neutral>I need you to get me enough dead body parts for me to stitch together a complete body, which I plan to bring to life.");
+        ~chatplayer("<p,scared>Right...okay...if you insist.");
+    case 3 :
+        ~chatplayer("<p,quiz>Why are you trying to make this creature?");
+        ~chatnpc("<p,neutral>I came to the land of Morytania many years ago, to find a safe sanctuary for my experiments. This abandoned castle suited my purposes exactly.");
+        ~chatplayer("<p,quiz>What were you experimenting in?");
+        ~chatnpc("<p,neutral>Oh, perfectly innocent experiments - for the good of mankind.");
+        ~chatplayer("<p,quiz>Then why did you need to come to Morytania?");
+        ~chatnpc("<p,neutral>Enough questions, now. Get back to your work.");
+    case 4 :
+        ~chatplayer("<p,quiz>Will his creature put me out of a job?");
+        ~chatnpc("<p,neutral>No, my friend. I have a very special purpose in mind for this creature.");
+    case 5 :
+        ~chatplayer("<p,neutral>I must get back to work, sir.");
+}
+
+[label,fenk_sewing]
+%fenk_quest = ^fenk_sewing;
+~send_quest_progress(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
+~chatnpc("<p,happy>Superb!! Those are all the parts I need. Now to sew them together ...");
+~chatnpc("<p,neutral>Oh bother! I haven't got a needle or thread!");
+~chatnpc("<p,neutral>Go and get me a needle, and I'll need 5 lots of thread.");
+
+[label,fenk_needle_thread]
+if (%fenk_needle = 1 & %fenk_threads_given >= 5) {
+    @fenk_sew;
+}
+if (%fenk_needle = 0 & %fenk_threads_given < 5) {
+    ~chatnpc("<p,quiz>Where are my needle and thread, <displayname>?");
+} else if (%fenk_threads_given < 5) {
+    ~chatnpc("<p,quiz>Where's my thread, <displayname>?");
+} else {
+    ~chatnpc("<p,quiz>Where's my needle, <displayname>?");
+}
+if (%fenk_needle = 0 & inv_total(inv, needle) > 0) {
+    inv_del(inv, needle, 1);
+    %fenk_needle = 1;
+    ~chatnpc("<p,happy>Ah, a needle. Wonderful.");
+}
+def_int $have = inv_total(inv, thread);
+if (%fenk_threads_given < 5 & $have > 0) {
+    def_int $give = min($have, calc(5 - %fenk_threads_given));
+    inv_del(inv, thread, $give);
+    %fenk_threads_given = calc(%fenk_threads_given + $give);
+    ~chatnpc("<p,happy>Some thread, excellent.");
+}
+if (%fenk_needle = 1 & %fenk_threads_given >= 5) {
+    @fenk_sew;
+}
+
+[label,fenk_sew]
+%fenk_quest = ^fenk_conductor;
+~send_quest_progress(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
+~mesbox("Fenkenstrain uses the needle and thread to sew the body parts together. Soon, a hideous creature lies inanimate on the ritual table.");
+~chatnpc("<p,neutral>Perfect. But I need one more thing from you - flesh and bones by themselves do not make life.");
+~chatplayer("<p,quiz>Really?");
+~chatnpc("<p,neutral>I have honed to perfection an ancient ritual that will give life to this creature, but for this I must harness the very power of Nature.");
+~chatplayer("<p,quiz>And what power is this?");
+~chatnpc("<p,neutral>The power of lightning.");
+~chatplayer("<p,confused>Sorry, can't make lightning, you've got the wrong <text_gender("man", "woman")>-");
+~chatnpc("<p,neutral>Silence your insolent tongue! The storm that brews overhead will create the lightning. What I need you to do is to repair the lightning conductor on the balcony above.");
+~chatplayer("<p,confused>Repair the lightning conductor, right. Can I have a break, soon? By law I'm entitled to 15 minutes every-");
+~chatnpc("<p,angry>Repair the conductor and BEGONE!!!");
+
+[label,fenk_rampage]
+~chatplayer("<p,quiz>So did it work, then?");
+~chatnpc("<p,scared>Yes, I'm afraid it did, <displayname> - all too well.");
+~chatplayer("<p,confused>I can't see it anywhere.");
+~chatnpc("<p,neutral>I tricked it into going up to the Tower, and there it remains, imprisoned.");
+~chatplayer("<p,quiz>So the creature wasn't all you'd hoped, then?");
+~chatnpc("<p,sad>...oh, what have I done...");
+~chatplayer("<p,quiz>Oh, I see, we're developing a sense of right and wrong now are we?");
+~chatplayer("<p,sad>Bit late for that, I'd say.");
+~chatnpc("<p,scared>I have no control over it! It's coming to get me!");
+~chatplayer("<p,quiz>What do you want me to do about it?");
+%fenk_quest = ^fenk_creature_loose;
+~send_quest_progress(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
+~chatnpc("<p,scared>Destroy it!!! Take the key to the Tower and take back the life I never should have granted!!!");
+~fenk_give(fenk_tower_key);
+
+[opnpc3,fenk_fenkenstrain] @fenk_pickpocket;
+[opnpc3,fenk_fenkenstrain_in_tower] @fenk_pickpocket;
+
+[label,fenk_pickpocket]
+if (stat(thieving) < 25) {
+    ~mesbox("You need level 25 Thieving to pickpocket Fenkenstrain.");
+    return;
+}
+if (%fenk_quest < ^fenk_creature_convinced | inv_total(inv, ring_of_charos) > 0 | inv_total(worn, ring_of_charos) > 0) {
+    ~chatnpc("<p,quiz>What do you think you're doing???");
+    return;
+}
+anim(human_pickpocket, 0);
+mes("You steal the Ring of Charos from Fenkenstrain.");
+if (%fenk_quest >= ^fenk_complete) {
+    ~fenk_give(ring_of_charos);
+    return;
+}
+~fenk_complete;
+
+[proc,fenk_complete]
+~fenk_give(ring_of_charos);
+%fenk_quest = ^fenk_complete;
+stat_advance(thieving, 10000);
+session_log(^log_adventure, "Quest complete: Creature of Fenkenstrain");
+~send_quest_complete(questlist:creatureoffenkenstrain, ring_of_charos, 250, ^fenk_questpoints, "You have completed\\nCreature of Fenkenstrain!", "2 Quest Points|Ring of Charos|1000 Thieving XP");
+
+// ---------------------------------------------------------------- the creature, Lord Rologarth
+// (fenk_creature in the tower at stages 0-7; fenk_creature_released at 8)
+[opnpc1,fenk_creature] @fenk_talk_creature;
+[opnpc1,fenk_creature_released] @fenk_talk_creature;
+
+[label,fenk_talk_creature]
+if (%fenk_quest = ^fenk_creature_loose) {
+    @fenk_creature_first;
+}
+if (%fenk_quest = ^fenk_creature_convinced) {
+    ~chatplayer("<p,quiz>Do you know how I can stop Fenkenstrain's experiments?");
+    ~chatnpc("<p,neutral>Take the Ring of Charos from him.");
+    ~chatplayer("<p,quiz>What is this ring?");
+    ~chatnpc("<p,neutral>It was my birthright, passed down to me through the ages, its origin forgotten.");
+    ~chatnpc("<p,neutral>The Ring of Charos has many powers, but Fenkenstrain has bent them to his own evil purposes. Without the power of the ring, he will not be able to raise the dead from their sleep.");
+    ~chatnpc("<p,neutral>It has one other, extremely important use - it confuses the werewolves' senses, making them believe that they smell one of their own kind. Without the ring, Fenkenstrain will be at their mercy.");
+    return;
+}
+if (%fenk_quest >= ^fenk_complete) {
+    ~chatnpc("<p,quiz>How goes it, friend?");
+    ~chatplayer("<p,happy>I stole the Ring of Charos from Fenkenstrain.");
+    ~chatnpc("<p,neutral>I saw him climb up into the Tower to hide. It doesn't matter - soon the werewolves will come for him, and his experiments will be forever ceased.");
+    ~chatplayer("<p,quiz>Do you want the ring back? It is yours after all.");
+    ~chatnpc("<p,neutral>No, you keep it, my friend. Werewolves hunger for the scent of live flesh. I have no need for the ring. I have my castle back, if not my soul.");
+}
+
+[label,fenk_creature_first]
+~chatplayer("<p,angry>I am commanded to destroy you, creature!");
+~chatnpc("<p,drunk>Oh that's *hic* not very *hic* nice ...");
+~chatplayer("<p,quiz>Are you feeling okay?");
+~chatnpc("<p,drunk>Abso *hic* lutely. Never *buuurrp* better.");
+~chatplayer("<p,confused>You don't look very dangerous.");
+~chatnpc("<p,confused>How *hic* do I look?");
+~chatplayer("<p,confused>You really don't know, do you? Have a look for yourself.");
+~mesbox("The creature stumbles over towards the mirror, focuses upon his reflection and...");
+~chatnpc("<p,scared>AAAAARRGGGGHHHH!");
+~mesbox("The creature becomes instantly sober, horror all too evident in his undead eyes.");
+~chatplayer("<p,sad>I'm sorry. I suppose I'm partly to blame for this.");
+~chatnpc("<p,angry>No - it was him I wager - Fenkenstrain - wasn't it? He's brought me back to life!");
+~chatplayer("<p,quiz>Who are - were - you?");
+~chatnpc("<p,neutral>I was Rologarth, Lord of the North Coast - this castle was once mine. Fenkenstrain was the castle doctor.");
+~chatplayer("<p,shock>So this castle wasn't really abandoned when he found it?");
+~chatnpc("<p,sad>Is that what he told you? No, no, this castle was once full of people and life. Fenkenstrain advised me to sell them to the vampires, which - I am sad to say - I did.");
+~chatplayer("<p,sad>I found your brain in a jar in Canifis, so he must have sold you too.");
+~chatnpc("<p,sad>Of that I will not speak. There lie memories that should rest with the dead, the living unable to bear them.");
+~chatplayer("<p,sad>That's it - I'm leaving this dreadful place, whether I get paid or not. Is there anything I can do for you before I leave?");
+%fenk_quest = ^fenk_creature_convinced;
+~send_quest_progress(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
+~chatnpc("<p,neutral>Only one - please stop Fenkenstrain from carrying on his experiments, once and for all, so that no other poor soul has to endure suffering such as that of my people and I.");
+
+// ---------------------------------------------------------------- the Headless Gardener
+// (fenk_gardener_multi_2 in the garden while fenk_gardener_directions is 0; the one that walks
+// you to his grave is a fenk_gardener of your own)
+[opnpc1,fenk_gardener_multi_2]
+if (%fenk_quest = ^fenk_not_started) {
+    ~chatplayer("<p,quiz>Who are you?");
+} else if (%fenk_quest > ^fenk_conductor) {
+    ~chatplayer("<p,quiz>How are you?");
+}
+if (inv_total(worn, amulet_of_ghostspeak) = 0 & inv_total(worn, amulet_of_ghostspeak_enchanted) = 0) {
+    ~mesbox("The Headless Gardener's neck twitches at you, but the lack of any head prevents him from speaking.");
+    return;
+}
+if (%fenk_quest = ^fenk_not_started) {
+    ~fenk_gardener_intro;
+    ~chatnpc("<p,neutral>Oim the 'eadless gardener, mate.");
+    return;
+}
+if (%fenk_quest > ^fenk_conductor) {
+    ~chatnpc("<p,neutral>Same as ever, mate, just gettin' on with it regardless.");
+    ~chatplayer("<p,confused>Good for you ... err ... mate.");
+    return;
+}
+def_int $choice;
+if (%fenk_quest = ^fenk_conductor) {
+    if (inv_total(inv, fenk_shed_key) = 0) {
+        $choice = ~p_choice4("Tell me about Fenkenstrain.", 1, "Do you know where the key to the shed is?", 2, "Do you know where a conductor mould is?", 3, "What happened to your head?", 4);
+    } else {
+        $choice = ~p_choice3("Tell me about Fenkenstrain.", 1, "Do you know where a conductor mould is?", 3, "What happened to your head?", 4);
+    }
+} else {
+    $choice = ~p_choice3("Tell me about Fenkenstrain.", 1, "What happened to your head?", 4, "What's your name?", 5);
+}
+~fenk_gardener_intro;
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>Tell me about Fenkenstrain.");
+        ~chatnpc("<p,neutral>Oi could tell you a few things about old Fenky, yeah.");
+        ~chatplayer("<p,quiz>Go on.");
+        ~chatnpc("<p,neutral>Once, this castle were full o' good fold - my friends. Fenky was just the castle doctor you know, to the Lord and the castle folk.");
+        ~chatnpc("<p,neutral>I don't know what happened to them all, but one by one they all disappeared. When they were gone a while, I went and dug graves for 'em in the forest.");
+        ~chatnpc("<p,neutral>After a while there weren't no-one left, but the Lord, Fenkenstrain, and meself.");
+        ~chatnpc("<p,neutral>Old Fenky sent me into the Forest to dig 'im a pit. Never said what for. Then would you believe it, someone chops me head off.");
+        ~chatplayer("<p,neutral>Did you see who did it, before...");
+        ~chatnpc("<p,neutral>Before oi kicked the bucket, you mean?");
+        ~chatplayer("<p,sad>Umm...");
+        ~chatnpc("<p,neutral>Don't worry yourself, I'm not worried about bein' dead. Worse things could happen, I suppose.");
+        ~chatnpc("<p,neutral>One thing I do know is, there ain't no Lord of the castle anymore, 'cept old Fenky. Makes you think a bit, don't it?");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you know where the key to the shed is?");
+        ~chatnpc("<p,neutral>Got it right 'ere in my pocket. Here you go.");
+        ~fenk_give(fenk_shed_key);
+        ~objbox(fenk_shed_key, "The headless gardener hands you a rusty key.", 250, 0, 0);
+    case 3 :
+        ~chatplayer("<p,quiz>Do you know where a conductor mould is?");
+        ~chatnpc("<p,neutral>A conductive mould, you say? Let me see-");
+        ~chatnpc("<p,neutral>There used to be a bloke 'ere, sort of an 'andyman e was. Did everything round the place - fixed what was broke, swept the chimneys and the like. He would 'ave had a mould, I imagine.");
+        ~chatplayer("<p,quiz>Where is he now?");
+        ~chatnpc("<p,neutral>E's dead, just like everyone else round 'ere ... 'cept for me.");
+    case 4 :
+        ~chatplayer("<p,quiz>What happened to your head?");
+        ~chatnpc("<p,neutral>Oi was in the old 'aunted Forest to the south, diggin' a pit for moi old maaster, old Fenkenstrain, when would you believe it, someone chops me head off. Awful bad luck, weren't it?");
+        ~chatplayer("<p,neutral>Oh yes, dreadful bad luck.");
+        ~chatnpc("<p,neutral>So oi thinks to meself, I don't needs any 'ead to be gettin on with me gardenin', long as I got me hands and me spade.");
+        if (%fenk_quest ! ^fenk_body_parts) {
+            return;
+        }
+        ~chatplayer("<p,quiz>Would you show me where the place was?");
+        if (inv_total(inv, fenk_head_empty) > 0 | inv_total(inv, fenk_head_full) > 0 | %fenk_head = 1) {
+            ~chatnpc("<p,neutral>No mate, you've found my head already, oi think.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Well, oi s'pose oi've got ten minutes to spare.");
+        // ten minutes (Void); ours: he finds his way to you if left behind, as other followers do
+        npc_add(npc_coord, fenk_gardener, 1000);
+        npc_setmode(playerfollow);
+        %fenk_gardener_directions = 1;
+        settimer(fenk_gardener_timer, 1000);
+    case 5 :
+        ~chatplayer("<p,quiz>What's your name?");
+        ~chatnpc("<p,neutral>Me name? It's been a moivellous long while, mate, since I had any use for such a thing as a name.");
+        ~chatplayer("<p,neutral>Don't worry, I was just trying to make conversation.");
+        ~chatnpc("<p,neutral>No, no, I can't be havin' that - I'll remember in a minute-");
+        ~chatplayer("<p,happy>Please, don't worry.");
+        ~chatnpc("<p,neutral>Lestwit, that's it! Ed Lestwit!");
+}
+
+[proc,fenk_gardener_intro]
+if (%fenk_spoken_to_gardener = 1) {
+    return;
+}
+~objbox(amulet_of_ghostspeak, "You feel power emanate from the Amulet of Ghostspeak, and the air around you vibrates with the ghostly voice of the Headless Gardener...", 250, 0, 0);
+%fenk_spoken_to_gardener = 1;
+
+// the gardener walking you to where he lost his head
+[opnpc1,fenk_gardener]
+if (%fenk_gardener_directions = 0) {
+    return;
+}
+if (inzone(0_56_54_22_33, 0_56_54_26_36, coord) = true) {
+    npc_say("This is the place where I met me maker.");
+    p_delay(5);
+    if (npc_finduid(npc_uid) = true) { // ours: he may be gone already
+        npc_del;
+    }
+    %fenk_gardener_directions = 0;
+    cleartimer(fenk_gardener_timer);
+    return;
+}
+if (inzone(0_55_53_41_63, 0_57_54_0_54, coord) = true) {
+    npc_say("Go <~fenk_direction(coord, 0_56_54_24_34)>, mate.");
+    return;
+}
+npc_say("You need to head off to them Haunted Woods, mate.");
+
+// the way from one square to another, as a compass point (ours: Void's Direction labels)
+[proc,fenk_direction](coord $from, coord $to)(string)
+def_int $dx = calc(coordx($to) - coordx($from));
+def_int $dz = calc(coordz($to) - coordz($from));
+def_string $ns = "";
+def_string $ew = "";
+if ($dz > 0) $ns = "north";
+if ($dz < 0) $ns = "south";
+if ($dx > 0) $ew = "east";
+if ($dx < 0) $ew = "west";
+if (string_length($ns) > 0 & string_length($ew) > 0) {
+    return("<$ns>-<$ew>");
+}
+return("<$ns><$ew>");
+
+[timer,fenk_gardener_timer]
+%fenk_gardener_directions = 0;
+cleartimer(fenk_gardener_timer);
+
+[proc,fenk_login]
+%fenk_gardener_directions = 0; // his ten minutes don't outlast a logout

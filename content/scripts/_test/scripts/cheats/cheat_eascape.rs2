@@ -675,6 +675,12 @@ if (compare($name, "runemysteries") = 0) {
     %fairy2_rewardgiven = 1;
     ~questdone_give(twocats_rewardlamp, 1);
     ~fairy2_complete; // its experience and quest complete scroll (fairy2_cure.rs2)
+} else if (compare($name, "fenkenstrain") = 0) {
+    if (%fenk_quest >= ^fenk_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~fenk_complete; // the ring, experience and quest complete scroll (fenk_npcs.rs2)
 } else {
     mes("No quest called <$name>. Try ::questdone list.");
     return;
@@ -754,7 +760,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1602,3 +1608,19 @@ mes("Collect now: <$haul>.");
 if (p_finduid(uid) = false) return;
 ~eascape_combat07_set(calc(1 - %eascape_combat07));
 mes("2007 combat tabs: <tostring(%eascape_combat07)>");
+
+// ::fenkenstrainpack - what Creature of Fenkenstrain needs you to bring (OSRS wiki's item list): a
+// ghostspeak amulet, a silver bar, 3 bronze wire, a needle, 5 thread, a spade and 50 coins
+[debugproc,fenkenstrainpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
+$banked = calc($banked + ~questpack_give(silver_bar, 1));
+$banked = calc($banked + ~questpack_give(bronzecraftwire, 3));
+$banked = calc($banked + ~questpack_give(needle, 1));
+$banked = calc($banked + ~questpack_give(thread, 5));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(coins, 50));
+~questpack_done("Creature of Fenkenstrain", $banked);
