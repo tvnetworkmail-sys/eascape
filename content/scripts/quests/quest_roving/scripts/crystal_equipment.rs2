@@ -1,0 +1,186 @@
+// EASCape: the crystal bow and crystal shield (Roving Elves' reward). Sources:
+// - 2009scape item_configs: each tenth's bonuses (bow ranged attack 100 down to 64, ranged
+//   strength 70 down to 52; the shield's in the 377 cache), speed 5, wear requirements (bow 70
+//   Ranged, shield 70 Defence, both 50 Agility), Roving Elves done to wear (the OSRS wiki)
+// - Void: the bow is its own ammunition, 250 shots to a tenth, new -> full on first use, the last
+//   tenth reverts to a crystal seed; the shield the same with hits
+// - OSRS wiki: 2,500 shots / hits in all; the reward's 500 charges (the 2/10 versions); Islwyn
+//   re-enchanting a seed for 900,000 less 180,000 for each one done before, down to 180,000
+//   (2009scape's crystalWeaponPrice; the wiki has Ilfeen do it, who isn't in the 2006 world)
+// Ours: one counter each for bow and shield (not per item); the Check option's wording; every hit
+// taken wears the shield (the wiki: 0 hits stopped counting in a later update).
+
+[proc,crystal_bow](obj $obj)(boolean)
+switch_obj ($obj) {
+    case roving_crystal_bow_new, roving_crystal_bow_1000, roving_crystal_bow_900, roving_crystal_bow_800, roving_crystal_bow_700, roving_crystal_bow_600, roving_crystal_bow_500, roving_crystal_bow_400, roving_crystal_bow_300, roving_crystal_bow_200, roving_crystal_bow_100 : return(true);
+}
+return(false);
+
+// tenths left in a bow or shield (11 for a new one: it becomes full on its first use)
+[proc,crystal_tenths](obj $obj)(int)
+switch_obj ($obj) {
+    case roving_crystal_bow_new, roving_crystal_shield_new : return(11);
+    case roving_crystal_bow_1000, roving_crystal_shield_1000 : return(10);
+    case roving_crystal_bow_900, roving_crystal_shield_900 : return(9);
+    case roving_crystal_bow_800, roving_crystal_shield_800 : return(8);
+    case roving_crystal_bow_700, roving_crystal_shield_700 : return(7);
+    case roving_crystal_bow_600, roving_crystal_shield_600 : return(6);
+    case roving_crystal_bow_500, roving_crystal_shield_500 : return(5);
+    case roving_crystal_bow_400, roving_crystal_shield_400 : return(4);
+    case roving_crystal_bow_300, roving_crystal_shield_300 : return(3);
+    case roving_crystal_bow_200, roving_crystal_shield_200 : return(2);
+    case roving_crystal_bow_100, roving_crystal_shield_100 : return(1);
+}
+return(0);
+
+[proc,crystal_next](obj $obj)(namedobj)
+switch_obj ($obj) {
+    case roving_crystal_bow_new : return(roving_crystal_bow_1000);
+    case roving_crystal_bow_1000 : return(roving_crystal_bow_900);
+    case roving_crystal_bow_900 : return(roving_crystal_bow_800);
+    case roving_crystal_bow_800 : return(roving_crystal_bow_700);
+    case roving_crystal_bow_700 : return(roving_crystal_bow_600);
+    case roving_crystal_bow_600 : return(roving_crystal_bow_500);
+    case roving_crystal_bow_500 : return(roving_crystal_bow_400);
+    case roving_crystal_bow_400 : return(roving_crystal_bow_300);
+    case roving_crystal_bow_300 : return(roving_crystal_bow_200);
+    case roving_crystal_bow_200 : return(roving_crystal_bow_100);
+    case roving_crystal_shield_new : return(roving_crystal_shield_1000);
+    case roving_crystal_shield_1000 : return(roving_crystal_shield_900);
+    case roving_crystal_shield_900 : return(roving_crystal_shield_800);
+    case roving_crystal_shield_800 : return(roving_crystal_shield_700);
+    case roving_crystal_shield_700 : return(roving_crystal_shield_600);
+    case roving_crystal_shield_600 : return(roving_crystal_shield_500);
+    case roving_crystal_shield_500 : return(roving_crystal_shield_400);
+    case roving_crystal_shield_400 : return(roving_crystal_shield_300);
+    case roving_crystal_shield_300 : return(roving_crystal_shield_200);
+    case roving_crystal_shield_200 : return(roving_crystal_shield_100);
+}
+return(crystal_seed_old);
+
+// ---------------------------------------------------------------- wearing out
+[proc,crystal_bow_shot]
+def_obj $bow = inv_getobj(worn, ^wearpos_rhand);
+if (~crystal_bow($bow) = false) {
+    return;
+}
+if ($bow = roving_crystal_bow_new) {
+    inv_setslot(worn, ^wearpos_rhand, roving_crystal_bow_1000, 1);
+    %crystal_bow_shots = 0;
+    ~update_all(null);
+    return;
+}
+%crystal_bow_shots = add(%crystal_bow_shots, 1);
+if (%crystal_bow_shots < 250) {
+    return;
+}
+%crystal_bow_shots = 0;
+def_namedobj $next = ~crystal_next($bow);
+inv_setslot(worn, ^wearpos_rhand, $next, 1);
+if ($next = crystal_seed_old) {
+    mes("Your crystal bow has reverted to a crystal seed."); // ours
+    p_stopaction;
+}
+~update_all(null);
+
+[proc,crystal_shield_hit]
+def_obj $shield = inv_getobj(worn, ^wearpos_lhand);
+if (~crystal_tenths($shield) = 0 | ~crystal_bow($shield) = true) {
+    return;
+}
+if ($shield = roving_crystal_shield_new) {
+    inv_setslot(worn, ^wearpos_lhand, roving_crystal_shield_1000, 1);
+    %crystal_shield_hits = 0;
+    ~update_all(null);
+    return;
+}
+%crystal_shield_hits = add(%crystal_shield_hits, 1);
+if (%crystal_shield_hits < 250) {
+    return;
+}
+%crystal_shield_hits = 0;
+def_namedobj $next = ~crystal_next($shield);
+inv_setslot(worn, ^wearpos_lhand, $next, 1);
+if ($next = crystal_seed_old) {
+    mes("Your crystal shield has reverted to a crystal seed."); // ours
+}
+~update_all(null);
+
+// ---------------------------------------------------------------- Check (your call: the charges left)
+[opheld3,roving_crystal_bow_new] ~crystal_check(roving_crystal_bow_new, 0);
+[opheld3,roving_crystal_bow_1000] ~crystal_check(roving_crystal_bow_1000, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_900] ~crystal_check(roving_crystal_bow_900, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_800] ~crystal_check(roving_crystal_bow_800, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_700] ~crystal_check(roving_crystal_bow_700, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_600] ~crystal_check(roving_crystal_bow_600, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_500] ~crystal_check(roving_crystal_bow_500, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_400] ~crystal_check(roving_crystal_bow_400, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_300] ~crystal_check(roving_crystal_bow_300, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_200] ~crystal_check(roving_crystal_bow_200, %crystal_bow_shots);
+[opheld3,roving_crystal_bow_100] ~crystal_check(roving_crystal_bow_100, %crystal_bow_shots);
+[opheld3,roving_crystal_shield_new] ~crystal_check(roving_crystal_shield_new, 0);
+[opheld3,roving_crystal_shield_1000] ~crystal_check(roving_crystal_shield_1000, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_900] ~crystal_check(roving_crystal_shield_900, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_800] ~crystal_check(roving_crystal_shield_800, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_700] ~crystal_check(roving_crystal_shield_700, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_600] ~crystal_check(roving_crystal_shield_600, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_500] ~crystal_check(roving_crystal_shield_500, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_400] ~crystal_check(roving_crystal_shield_400, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_300] ~crystal_check(roving_crystal_shield_300, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_200] ~crystal_check(roving_crystal_shield_200, %crystal_shield_hits);
+[opheld3,roving_crystal_shield_100] ~crystal_check(roving_crystal_shield_100, %crystal_shield_hits);
+
+[proc,crystal_check](obj $obj, int $used)
+def_string $kind = "bow";
+def_string $what = "shots";
+if (~crystal_bow($obj) = false) {
+    $kind = "shield";
+    $what = "hits";
+}
+if (~crystal_tenths($obj) = 11) {
+    mes("Your new crystal <$kind> is unused: it has 2,500 <$what> before it reverts to a seed.");
+    return;
+}
+def_int $left = sub(multiply(~crystal_tenths($obj), 250), $used);
+mes("Your crystal <$kind> has <tostring($left)> <$what> left before it reverts to a seed.");
+
+// ---------------------------------------------------------------- wearing them
+[opheld2,roving_crystal_bow_new] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_1000] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_900] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_800] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_700] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_600] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_500] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_400] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_300] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_200] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_bow_100] @crystal_wear(ranged, last_slot);
+[opheld2,roving_crystal_shield_new] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_1000] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_900] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_800] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_700] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_600] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_500] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_400] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_300] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_200] @crystal_wear(defence, last_slot);
+[opheld2,roving_crystal_shield_100] @crystal_wear(defence, last_slot);
+
+[label,crystal_wear](stat $stat, int $slot)
+if (%roving_elves_quest < ^roving_complete) {
+    mes("You have not earned the right to wear this yet.");
+    mes("You need to complete the Roving Elves quest."); // ours (as levelrequire.rs2's)
+    return;
+}
+if (stat_base($stat) < 70 | stat_base(agility) < 50) {
+    mes("You are not a high enough level to use this item.");
+    if ($stat = ranged) {
+        mes("You need to have a Ranged level of 70 and an Agility level of 50.");
+    } else {
+        mes("You need to have a Defence level of 70 and an Agility level of 50.");
+    }
+    return;
+}
+~equip($slot);

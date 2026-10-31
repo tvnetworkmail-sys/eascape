@@ -86,6 +86,10 @@ switch_category(oc_category($rhand)) {
 return($delay);
 
 [proc,ranged_dropammo_pvp](obj $ammo, int $delay)
+if (~crystal_bow($ammo) = true) { // EASCape: a shot from the crystal bow uses a charge
+    ~crystal_bow_shot;
+    return;
+}
 if($ammo = holy_water) {
     ~ranged_dropammo_holywater(.coord, $delay);
     return;

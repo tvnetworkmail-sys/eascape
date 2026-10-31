@@ -201,7 +201,7 @@ export type ConfigParseCallback = (key: string, value: string) => ConfigValue | 
 export type ConfigDatIdx = { client: PackedData; server: PackedData };
 export type ConfigPackCallback = (configs: Map<string, ConfigLine[]>, modelFlags: number[]) => ConfigDatIdx;
 export type ConfigSaveCallback = (dat: Packet, idx: Packet) => void;
-export type ConfigValidateCallback = (server: Packet, client: Packet) => boolean;
+export type ConfigValidateCallback = (server: Packet, client: Packet, clientIdx?: Packet) => boolean;
 
 export async function readConfigs(
     dirTree: Set<string>,
@@ -323,7 +323,7 @@ export async function readConfigs(
 
     const { client, server } = pack(configs, modelFlags);
 
-    if (Environment.BUILD_VERIFY && validate && !validate(client.dat, server.dat)) {
+    if (Environment.BUILD_VERIFY && validate && !validate(client.dat, server.dat, client.idx)) {
         throw new Error(`${extension} checksum mismatch!\nYou can disable this safety check by setting BUILD_VERIFY=false`);
     }
 
@@ -764,13 +764,26 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 dat.release();
                 idx.release();
             },
-            (client: Packet, _server: Packet): boolean => {
+            (client: Packet, _server: Packet, idx?: Packet): boolean => {
+                // EASCape: the first 7957 objs' length comes from the index (2 bytes each after the
+                // count), so options added to them (the crystal bow and shield's Check, 31 Oct 2026)
+                // only change the checksum below
+                let prefix = 2;
+                if (idx) {
+                    for (let i = 0; i < 7957; i++) prefix += (idx.data[2 + i * 2] << 8) | idx.data[3 + i * 2];
+                }
+                if (process.env.EASCAPE_PRINT_CRC) {
+                    const copy = Uint8Array.from(client.data.subarray(0, prefix));
+                    copy[0] = 7957 >> 8;
+                    copy[1] = 7957 & 0xff;
+                    console.log('obj prefix', prefix, 'crc', Packet.getcrc(copy, 0, copy.length));
+                }
                 // EASCape: 377's obj checksum was 122666554; ours differs because the grimy herbs are named
                 // like the later game's ("Grimy guam leaf", your call 19 Oct 2026) and the jewellery has
                 // options for when it's worn (wornop, 20 Oct 2026), plus the Slayer plugin's rat picture. Any other change to the item data
                 // still fails this check.
                 if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
-                return checkcrcAllowAdded(client, 7957, 460532, -1522472590); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026)
+                return checkcrcAllowAdded(client, 7957, idx ? prefix : 460686, -85911488); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026), crystal bow/shield Check (31 Oct 2026)
             }
         );
     }

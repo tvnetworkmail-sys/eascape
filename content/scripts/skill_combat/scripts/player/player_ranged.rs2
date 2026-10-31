@@ -89,6 +89,10 @@ def_category $weapon_cat = oc_category($rhand);
 if ($weapon_cat ! weapon_bow & $weapon_cat ! weapon_crossbow) {
     return($rhand); // in this case, the rhand is the ammo.
 }
+// EASCape: the crystal bow needs no ammunition: it is its own (crystal_equipment.rs2)
+if (~crystal_bow($rhand) = true) {
+    return($rhand);
+}
 def_obj $ammo = inv_getobj(worn, ^wearpos_quiver);
 if ($ammo = null) {
     if($rhand = ogre_bow) mes("There is no ammo left in your quiver");
@@ -140,6 +144,10 @@ switch_category(oc_category($rhand)) {
 return($delay);
 
 [proc,ranged_dropammo_npc](obj $ammo, int $delay)
+if (~crystal_bow($ammo) = true) { // EASCape: a shot from the crystal bow uses a charge
+    ~crystal_bow_shot;
+    return;
+}
 if($ammo = holy_water) {
     ~ranged_dropammo_holywater(npc_coord, $delay);
     return;

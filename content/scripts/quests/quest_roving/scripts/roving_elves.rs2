@@ -1,6 +1,7 @@
 // EASCape: Roving Elves, ported from 2009scape (content/region/tirranwn/quest/rovingelves: the
 // quest, Islwyn's and Eluned's dialogue, the moss giant guardian, the seed's planting), with the
-// OSRS wiki's rewards (10,000 Strength XP, a crystal bow or shield with 500 charges) and prices
+// OSRS wiki's rewards (10,000 Strength XP, a crystal bow or shield with 500 charges: the 2/10
+// versions, as 2009scape gives) and prices
 // (a new bow 900,000, a shield 750,000). Our choices are marked "ours".
 
 // ---------------------------------------------------------------- Islwyn
@@ -81,13 +82,18 @@ if ($choice ! 1) {
 def_int $choice = ~p_choice2("Shields are for wimps! Give me the bow!", 1, "I don't like running and hiding behind mushrooms. Shield please!", 2);
 if ($choice = 1) {
     ~chatplayer("<p,happy>Shields are for wimps! Give me the bow!");
-    ~roving_complete(roving_crystal_bow_500);
+    ~roving_complete(roving_crystal_bow_200);
 } else if ($choice = 2) {
     ~chatplayer("<p,happy>I don't like running and hiding behind mushrooms.|Shield please!");
-    ~roving_complete(roving_crystal_shield_500);
+    ~roving_complete(roving_crystal_shield_200);
 }
 
 [proc,roving_complete](namedobj $reward)
+if (~crystal_bow($reward) = true) {
+    %crystal_bow_shots = 0;
+} else {
+    %crystal_shield_hits = 0;
+}
 if (inv_freespace(inv) > 0) {
     inv_add(inv, $reward, 1);
 } else {
@@ -99,19 +105,53 @@ stat_advance(strength, 100000);
 session_log(^log_adventure, "Quest complete: Roving Elves");
 ~send_quest_complete(questlist:roving_elves, roving_crystal_bow_1000, 250, ^roving_questpoints, "You have completed\\nRoving Elves!", "1 Quest Point|Used elf equipment|10000 Strength XP");
 
-// after the quest: a new bow or shield (2009scape's choices; the OSRS wiki's prices). 2009scape's
-// recharging of seeds here is left out (the wiki has Ilfeen do that)
+// after the quest: a new bow or shield, or a seed re-enchanted (2009scape's choices; the OSRS
+// wiki's prices for new ones; re-enchanting is 2009scape's crystalWeaponPrice, the wiki's too)
 [label,roving_islwyn_after]
-~chatnpc("<p,happy>Welcome back to the land of the elves, friend!");
-def_int $choice = ~p_choice3("I'd like to buy a new bow.", 1, "I'd like to buy a new shield.", 2, "Nothing, thanks.", 3);
+~chatnpc("<p,happy>Welcome back to the land of the elves, friend!|Do you need your seeds charged into equipment?");
+def_int $choice = ~p_choice3("I need to buy a new piece of equipment.", 1, "I need to recharge my seeds into equipment.", 2, "Nothing, thanks.", 3);
 if ($choice = 1) {
-    ~chatplayer("<p,neutral>I'd like to buy a new bow.");
-    ~roving_buy(roving_crystal_bow_new, 900000);
+    ~chatplayer("<p,neutral>I need to buy a new piece of equipment.");
+    $choice = ~p_choice2("Purchase bow", 1, "Purchase shield", 2);
+    if ($choice = 1) {
+        ~chatplayer("<p,neutral>I'd like to buy a new bow.");
+        ~roving_buy(roving_crystal_bow_new, 900000);
+    } else if ($choice = 2) {
+        ~chatplayer("<p,neutral>I'd like to buy a new shield.");
+        ~roving_buy(roving_crystal_shield_new, 750000);
+    }
 } else if ($choice = 2) {
-    ~chatplayer("<p,neutral>I'd like to buy a new shield.");
-    ~roving_buy(roving_crystal_shield_new, 750000);
+    ~chatplayer("<p,neutral>I need to recharge my current seeds into equipment.");
+    $choice = ~p_choice2("Recharge seed into bow", 1, "Recharge seed into shield", 2);
+    if ($choice = 1) {
+        ~chatplayer("<p,neutral>Recharge my seed into a bow, please.");
+        ~roving_recharge(roving_crystal_bow_1000);
+    } else if ($choice = 2) {
+        ~chatplayer("<p,neutral>Recharge my seed into a shield, please.");
+        ~roving_recharge(roving_crystal_shield_1000);
+    }
 } else if ($choice = 3) {
     ~chatplayer("<p,neutral>Nothing, thanks."); // ours
+}
+
+[proc,roving_recharge](namedobj $obj)
+if (inv_total(inv, crystal_seed_old) = 0) {
+    ~mesbox("You don't have any seeds to recharge.");
+    return;
+}
+def_int $price = max(sub(900000, multiply(180000, %roving_update_ilfeen_chant)), 180000);
+if (inv_total(inv, coins) < $price) {
+    ~mesbox("You don't have enough coins, you need <tostring($price)>.");
+    return;
+}
+inv_del(inv, crystal_seed_old, 1);
+inv_del(inv, coins, $price);
+inv_add(inv, $obj, 1);
+%roving_update_ilfeen_chant = add(%roving_update_ilfeen_chant, 1);
+if (~crystal_bow($obj) = true) {
+    %crystal_bow_shots = 0;
+} else {
+    %crystal_shield_hits = 0;
 }
 
 [proc,roving_buy](namedobj $obj, int $price)
