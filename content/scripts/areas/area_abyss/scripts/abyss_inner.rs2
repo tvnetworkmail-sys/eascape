@@ -25,12 +25,18 @@ p_telejump(0_35_75_29_40);
 [oploc1,abyss_exit_to_nature]
 p_telejump(0_37_75_32_44);
 
+// EASCape: the law and death rifts went to the nature altar and to Lumbridge; their places are
+// Void's (abyss.teles.toml: law_rift, death_rift). As on Entrana, no weapons or armour into the
+// law altar (the monks' own check); the message is ours.
 [oploc1,abyss_exit_to_law]
-// TODO: Entrana gear check
-p_telejump(0_37_75_32_44);
+if (~has_entrana_restricted_items = true) {
+    mes("You can't take weapons or armour through to the Law altar.");
+    return;
+}
+p_telejump(0_38_75_32_26);
 
 [oploc1,abyss_exit_to_death]
-p_telejump(0_50_50_0_0);
+p_telejump(0_34_75_29_38);
 
 [oploc1,abyss_exit_to_blood]
 mes("A strange power blocks your exit.");

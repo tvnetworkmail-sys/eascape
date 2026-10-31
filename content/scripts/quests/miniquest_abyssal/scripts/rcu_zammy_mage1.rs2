@@ -22,18 +22,18 @@ if (%abyssal_miniquest ! ^miniquest_abyssal_complete) return;
 
 [label,rcu_zammy_mage1_no_runemysteries]
 // Unconfirmed dialog, cannot verify authenticity in osrs/rs3, variation of the osrs dialogue.
-~chatnpc("<p,angry>This is no place to talk!|You should leave.");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1a, "<p,angry>This is no place to talk!|You should leave.");
 
 [label,rcu_zammy_mage1_quest_start]
 %abyssal_miniquest = 1;
-~chatnpc("<p,neutral>Meet me in Varrock's Chaos Temple.|Here is not the place to talk.");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1a, "<p,neutral>Meet me in Varrock's Chaos Temple.|Here is not the place to talk.");
 
 [label,rcu_zammy_mage1_quest_in_progress]
 ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1a, "<p,angry>I already told you!|Meet me in the Varrock's Chaos Temple!");
 
 [label,rcu_zammy_mage1_quest_complete]
 // RS3 dialogue, cannot verify authenticity
-~chatnpc("<p,angry>This is no place to talk!|If you need help getting out of my sight I can send you to the Abyss?");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1a, "<p,angry>This is no place to talk!|If you need help getting out of my sight I can send you to the Abyss?");
 
 def_int $choice = ~p_choice2_header("Yes", 1, "No", 2, "Teleport to the Abyss?");
 

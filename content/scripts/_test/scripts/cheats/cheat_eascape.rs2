@@ -977,3 +977,20 @@ if ($n = 2) {
     %fairyring_log2 = -1;
 }
 mes("Fairy rings: unlocked (wield the dramen staff).");
+
+// ::abysspack - for the Abyss: a rune pickaxe and axe and a tinderbox for its obstacles, the four
+// essence pouches and 20 pure essence (each pouch still needs its Runecrafting level to use)
+[debugproc,abysspack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(rune_axe, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(rcu_pouch_small, 1));
+$banked = calc($banked + ~questpack_give(rcu_pouch_medium, 1));
+$banked = calc($banked + ~questpack_give(rcu_pouch_large, 1));
+$banked = calc($banked + ~questpack_give(rcu_pouch_giant, 1));
+$banked = calc($banked + ~questpack_give(blankrune_high, 20));
+~questpack_done("The Abyss", $banked);

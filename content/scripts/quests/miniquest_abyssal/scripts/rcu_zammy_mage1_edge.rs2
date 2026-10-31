@@ -159,7 +159,7 @@ while ($choice ! 0) {
 
         if (inv_total(inv, scrying_orb_empty) > 0) {
             ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>No you haven't.|I can see that you have it there in your backpack.|Now quit your foolishness and get on with the task at hand!");
-        } else if (inv_total(inv, scrying_orb_empty) > 0) {
+        } else if (inv_total(bank, scrying_orb_empty) > 0) { // EASCape: the bank (it checked the pack twice)
             ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>No you haven't.|You have it in your bank.|Now get on with it!");
         }
         
@@ -190,6 +190,7 @@ inv_del(inv, scrying_orb_full, ^max_32bit_int);
 %abyssal_miniquest = ^miniquest_abyssal_complete;
 inv_add(inv, rcu_instruction_book, 1);
 inv_add(inv, rcu_pouch_small, 1);
+stat_advance(runecraft, 10000); // EASCape: the 1000 Runecrafting experience he names (it was never given)
 ~chatplayer("<p,confused>Huh?|Abyss?|What are you talking about?|You told me that you would help me with");
 ~chatplayer("<p,confused>RuneCrafting!");
 ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>And so I have done.|Read my research notes, they may enlighten you somewhat.");
