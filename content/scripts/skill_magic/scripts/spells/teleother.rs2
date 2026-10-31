@@ -9,7 +9,9 @@
 // ("You can't use that against an NPC."); a hit blocks teleporting for 5 minutes, half that if
 // they're praying Protect from Magic; "You have been teleblocked.", "Your teleblock is about to
 // wear off." and "Your teleblock has worn off."; "That player is already affected by this spell."
-// Every teleport that goes through ~pre_tele_checks is stopped: "You are teleblocked and can't
+// Every teleport that goes through ~pre_tele_checks, and the Wilderness, King Black Dragon and
+// Mage Arena levers (2006Scape Levers.java), is stopped. It does no damage (2006Scape's max hit 0).
+// Stopped teleports say: "You are teleblocked and can't
 // teleport." (2006Scape's message).
 // Our choices: the projectile's heights and speed are Stun's; "about to wear off" comes 30 seconds
 // before the end; the block survives logging out (2006Scape saves it).
@@ -142,3 +144,11 @@ if (%teleblock <= 50) {
 if (%teleblock > 0) {
     settimer(tele_block, 50);
 }
+
+// the levers check this before pulling
+[proc,tele_block_check]()(boolean)
+if (%teleblock > 0) {
+    mes("You are teleblocked and can't teleport.");
+    return(true);
+}
+return(false);
