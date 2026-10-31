@@ -680,14 +680,14 @@ if (compare($name, "runemysteries") = 0) {
 ~update_questlist;
 mes("Quest marked complete: <$name>.");
 
-// a reward the quest hands you: in your pack, or the bank when it's full
+// a reward the quest hands you: in your pack, or on the ground under you when it's full
 [proc,questdone_give](namedobj $obj, int $count)
 if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
     inv_add(inv, $obj, $count);
     return;
 }
-inv_add(bank, $obj, $count);
-mes("Your pack is full: <oc_name($obj)> went to your bank.");
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground.");
 
 // Tourist Trap: two lots of 4,650 experience, as Irena asks (irena_xpreward)
 [proc,questdone_pick4](string $a, stat $sa, string $b, stat $sb, string $c, stat $sc, string $d, stat $sd, int $xp)
