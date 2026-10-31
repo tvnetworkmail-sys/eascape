@@ -3,7 +3,8 @@
 // pruning, PlantPots, Farming.growSaplings; content/skill/woodcutting/Woodcutting.deplete for farmed
 // trees). States: kind 6 = grown, its health wants checking; 7 = a stump; a tree's kind 5 is a tree
 // ready to chop, a fruit tree's kind 5 stage N is N fruit on it.
-// Our choices: a checked fruit tree starts with all 6 fruit (Void starts it at 1); a fruit tree
+// Step 2b, bushes (type 7): grown, checked, then picked like a fruit tree (4 berries, one back
+// each 20-minute tick); a bush is dug up with a spade. Our choices: a checked fruit tree starts with all 6 fruit (Void starts it at 1); a fruit tree
 // picked bare is chopped down in one go with any axe (it gives no logs); fruit trees can be pruned
 // too (Void only prunes trees) and give no leaves; a farmed tree falls 1 time in 8 like the game's
 // other trees; pruning uses the 2006 "pruning_all" animation (Void's is a later one).
@@ -21,7 +22,7 @@ if ($type = 5 & $kind = 5) {
     ~farming_chop_tree($patch, $key);
     return;
 }
-if ($type = 6 & $kind = 5) {
+if ($type >= 6 & $kind = 5) {
     ~farming_pick_fruit($patch);
     return;
 }
@@ -39,6 +40,10 @@ mes("You examine the tree for signs of disease and find that it is in perfect he
 def_boolean $ok;
 if (~farming_patch_type($patch) = 6) {
     $ok = ~farming_set_state($patch, calc($key / 1000), 5, 6);
+    ~farming_set_claimed($patch, true);
+} else if (~farming_patch_type($patch) = 7) {
+    // a bush: 4 berries (Void's life1)
+    $ok = ~farming_set_state($patch, calc($key / 1000), 5, 4);
     ~farming_set_claimed($patch, true);
 } else {
     $ok = ~farming_set_state($patch, calc($key / 1000), 5, 1);
@@ -140,7 +145,13 @@ while (1 = 1) {
     sound_synth(pick, 1, 0);
     p_delay(1);
     inv_add(inv, $fruit, 1);
-    mes("You pick <~add_article(lowercase(oc_name($fruit)))>.");
+    // Void's "a/an"; berries take "some" (ours: "You pick some redberries.")
+    def_string $fname = lowercase(oc_name($fruit));
+    if (compare(substring($fname, calc(string_length($fname) - 1), string_length($fname)), "s") = 0) {
+        mes("You pick some <$fname>.");
+    } else {
+        mes("You pick <~add_article($fname)>.");
+    }
     stat_advance(farming, db_getfield($row, farming_crop:harvestxp, 0));
     def_int $left = calc($key % 100 - 1);
     def_boolean $ok;

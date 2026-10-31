@@ -826,8 +826,8 @@ mes("Farming pack: tools, seeds, compost (noted: unnote at a bank) and plant cur
 if (p_finduid(uid) = false) {
     return;
 }
-if (inv_freespace(inv) < 24) {
-    mes("::farmtreepack needs 24 free inventory spaces.");
+if (inv_freespace(inv) < 27) {
+    mes("::farmtreepack needs 27 free inventory spaces.");
     return;
 }
 inv_add(inv, spade, 1);
@@ -852,7 +852,10 @@ inv_add(inv, plantpot_orange_sapling, 1);
 inv_add(inv, plantpot_papaya_sapling, 1);
 inv_add(inv, plantpot_palm_sapling, 1);
 inv_add(inv, cert_bucket_compost, 5);
-mes("Tree pack: tools, plant pots (noted: unnote at a bank), tree seeds and saplings.");
+inv_add(inv, dibber, 1);
+inv_add(inv, redberry_bush_seed, 3);
+inv_add(inv, poisonivy_bush_seed, 3);
+mes("Tree pack: tools, plant pots (noted: unnote at a bank), tree seeds, saplings and bush seeds.");
 mes("::farmgrow grows planted trees to their health check; ::farmtick 8 = 40 minutes.");
 
 [debugproc,farmgrow]

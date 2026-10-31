@@ -17,6 +17,7 @@ switch_int ($type) {
     case 3 : return(enum(int, int, farming_herb_decode, $value));
     case 5 : return(enum(int, int, farming_tree_decode, $value));
     case 6 : return(enum(int, int, farming_fruit_tree_decode, $value));
+    case 7 : return(enum(int, int, farming_bush_decode, $value));
 }
 return(enum(int, int, farming_hops_decode, $value));
 
@@ -27,6 +28,7 @@ switch_int ($type) {
     case 3 : return(enum(int, int, farming_herb_encode, $key));
     case 5 : return(enum(int, int, farming_tree_encode, $key));
     case 6 : return(enum(int, int, farming_fruit_tree_encode, $key));
+    case 7 : return(enum(int, int, farming_bush_encode, $key));
 }
 return(enum(int, int, farming_hops_encode, $key));
 
@@ -100,6 +102,7 @@ switch_int (~farming_patch_type($patch)) {
     case 3 : return("herb patch");
     case 5 : return("tree patch");
     case 6 : return("fruit tree patch");
+    case 7 : return("bush patch");
 }
 return("hops patch");
 
@@ -108,11 +111,18 @@ return("hops patch");
 if ($patch <= 15) {
     return(getbit_range(%farming_compost_a, calc(($patch - 1) * 2), calc(($patch - 1) * 2 + 1)));
 }
+if ($patch > 30) {
+    return(getbit_range(%farming_compost_c, calc(($patch - 31) * 2), calc(($patch - 31) * 2 + 1)));
+}
 return(getbit_range(%farming_compost_b, calc(($patch - 16) * 2), calc(($patch - 16) * 2 + 1)));
 
 [proc,farming_set_compost](int $patch, int $compost)
 if ($patch <= 15) {
     %farming_compost_a = setbit_range_toint(%farming_compost_a, $compost, calc(($patch - 1) * 2), calc(($patch - 1) * 2 + 1));
+    return;
+}
+if ($patch > 30) {
+    %farming_compost_c = setbit_range_toint(%farming_compost_c, $compost, calc(($patch - 31) * 2), calc(($patch - 31) * 2 + 1));
     return;
 }
 %farming_compost_b = setbit_range_toint(%farming_compost_b, $compost, calc(($patch - 16) * 2), calc(($patch - 16) * 2 + 1));
@@ -169,7 +179,7 @@ while ($patch <= $count) {
     // fruit trees 160
     switch_int (~farming_patch_type($patch)) {
         case 1, 4 : $mult = 2;
-        case 3 : $mult = 4;
+        case 3, 7 : $mult = 4;
         case 5 : $mult = 8;
         case 6 : $mult = 32;
     }
@@ -206,10 +216,10 @@ if ($type >= 5) {
     }
     if ($kind = 6) return;
     if ($kind = 5) {
-        if ($type = 6) $ok = ~farming_set_state($patch, $crop, 5, calc($stage + 1));
+        if ($type ! 5) $ok = ~farming_set_state($patch, $crop, 5, calc($stage + 1));
         return;
     }
-    if ($kind = 1 & $type = 6 & ~farming_claimed($patch) = true) {
+    if ($kind = 1 & $type ! 5 & ~farming_claimed($patch) = true) {
         $ok = ~farming_set_state($patch, $crop, 5, 1);
         return;
     }
@@ -248,8 +258,8 @@ if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
 if ($stage = 0 | $kind ! 1) {
     return(false);
 }
-if (~farming_patch_type($patch) = 6 & ~farming_claimed($patch) = true) {
-    return(false); // a grown fruit tree, picked bare
+if (~farming_patch_type($patch) >= 6 & ~farming_claimed($patch) = true) {
+    return(false); // a grown fruit tree or bush, picked bare
 }
 if (~farming_patch_type($patch) = 1) {
     def_int $flower = calc(~farming_state(calc(9 + ($patch - 1) / 2)) / 1000);
@@ -346,7 +356,7 @@ if (~farming_state($patch) ! 0) {
     ~mesbox("You can only plant <$seeds> in an empty patch.");
     return;
 }
-if (~farming_patch_type($patch) >= 5) {
+if (~farming_patch_type($patch) = 5 | ~farming_patch_type($patch) = 6) {
     if (inv_total(inv, spade) = 0) {
         mes("You need a spade to do that."); // Void
         return;
@@ -365,7 +375,7 @@ if (inv_total(inv, $seed) < $amount) {
     return;
 }
 inv_del(inv, $seed, $amount);
-if (~farming_patch_type($patch) >= 5) {
+if (~farming_patch_type($patch) = 5 | ~farming_patch_type($patch) = 6) {
     anim(human_dig, 0);
     sound_synth(digspade, 1, 0);
 } else {
@@ -480,6 +490,11 @@ if ($key >= 1000 & (calc(($key / 100) % 10) = 4 | calc($key / 1000) = ^farming_c
 }
 if ($key >= 1000 & calc(($key / 100) % 10) = 7) {
     ~farming_dig_stump($patch);
+    return;
+}
+// step 2b: a grown bush is dug up (OSRS; Void has no option for it): the patch is left empty
+if (~farming_patch_type($patch) = 7 & $key >= 1000 & (calc(($key / 100) % 10) >= 5 | ~farming_claimed($patch) = true)) {
+    ~farming_clear($patch);
     return;
 }
 ~displaymessage(^dm_default);
@@ -610,7 +625,7 @@ if ($kind = 7) {
     mes("The patch has the remains of a tree stump in it."); // Void
     return;
 }
-if ($kind = 5 | $kind = 6 | (~farming_patch_type($patch) = 6 & ~farming_claimed($patch) = true)) {
+if ($kind = 5 | $kind = 6 | (~farming_patch_type($patch) >= 6 & ~farming_claimed($patch) = true)) {
     mes($text);
     mes("The patch is fully grown.");
     return;

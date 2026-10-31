@@ -58,6 +58,9 @@ TYPES = [  # (our type id, name, void patch type, a Void varbit of that type, ha
     # step 2a: trees and fruit trees (kinds 6 check-health, 7 stump; a fruit tree's lifeN is N fruit)
     (5, 'tree', 'tree', 'farming_tree_patch_lumbridge', 'tree_patch'),
     (6, 'fruit_tree', 'fruit_tree', 'farming_fruit_tree_patch_catherby', 'fruit_tree_patch'),
+    # step 2b: bushes (kind 6 check-health; kind 5 stage N is N berries: Void's lifeN is the Nth
+    # pick, berries 5 - N)
+    (7, 'bush', 'bush', 'farming_bush_patch_varrock', 'bush_patch'),
 ]
 KIND = {'grow': 1, 'watered': 2, 'diseased': 3, 'dead': 4, 'life': 5}
 # trees: what they give (logs are woodcutting's; fruit trees their fruit), Void's names
@@ -65,10 +68,14 @@ TREE_PRODUCE = {'oak': 'oak_logs', 'willow': 'willow_logs', 'maple': 'maple_logs
                 'apple': 'cooking_apple', 'banana': 'banana', 'orange': 'orange', 'curry': 'curry_leaf',
                 'pineapple': 'pineapple', 'papaya': 'papaya_fruit', 'palm': 'coconut'}
 claimxp = {}
-for objfile in ('tree_patch', 'fruit_tree_patch'):
+bushberry = {}
+for objfile in ('tree_patch', 'fruit_tree_patch', 'bush_patch'):
     for k, v in tomllib.load(open(F + f'/patch/{objfile}.objs.toml', 'rb')).items():
-        if not isinstance(v, dict) or 'farming_xp' not in v: continue
-        m = re.match(r'^(\w+?)_tree_(claim_xp|fullygrown_1)$', k)
+        if not isinstance(v, dict): continue
+        m = re.match(r'^(\w+?)_bush_berry_1$', k)
+        if m and 'harvest' in v: bushberry[m.group(1)] = v['harvest']
+        if 'farming_xp' not in v: continue
+        m = re.match(r'^(\w+?)_(?:tree|bush)_(claim_xp|fullygrown_1)$', k)
         if m: claimxp[m.group(1)] = round(float(v['farming_xp']) * 10)
 
 crops = []      # dicts
@@ -128,6 +135,8 @@ for tid, tname, vtype, vb, objfile in TYPES:
         if crop not in okcrops:
             continue
         kind = 5 if life else KIND[kindp[:-1]] if kindp else 1
+        if life and tid == 7:
+            st = 5 - st  # bushes: berries left
         key = crop_index(crop) * 1000 + kind * 100 + st
         dec.setdefault(val, key); enc.setdefault(key, val)
     # the overgrown allotment shows as weeds_life3 (value 0)
@@ -137,8 +146,10 @@ for tid, tname, vtype, vb, objfile in TYPES:
         if crop_index(crop) and not any(k // 1000 == cropidx[crop] for k in enc):
             continue
         prod = harvest.get(crop) or harvest.get(crop + '_hops')
-        if tid >= 5:
+        if tid in (5, 6):
             prod = TREE_PRODUCE.get(crop)
+        if tid == 7:
+            prod = bushberry.get(crop.replace('_', ''))
         if tid == 3:
             prod = 'grimy_' + crop
         if crop == 'barley':
@@ -146,8 +157,8 @@ for tid, tname, vtype, vb, objfile in TYPES:
         p = itemparams.get(prod if crop != 'barley' else 'barley_malt', {}) if prod else {}
         ch = p.get('farming_chance', '0-0').split('-')
         stages = max(k % 100 for k in enc if k // 1000 == cropidx[crop] and (k // 100) % 10 == 1)
-        dkey = crop + ('_plant' if crop == 'pineapple' else '_tree') if tid >= 5 else crop
-        crops.append(dict(checkxp=claimxp.get(crop, 0), idx=cropidx[crop], crop=crop, type=tid, seed=our(sname), produce=our(prod) if prod else None,
+        dkey = crop + ('_plant' if crop == 'pineapple' else '_tree') if tid in (5, 6) else crop
+        crops.append(dict(checkxp=claimxp.get(crop, claimxp.get(crop.replace('_', ''), 0)), idx=cropidx[crop], crop=crop, type=tid, seed=our(sname), produce=our(prod) if prod else None,
                           level=s.get('farming_level', 1), xp=round(float(s.get('farming_xp', 0)) * 10),
                           amount=s.get('farming_amount', 1), hxp=round(float(p.get('farming_xp', 0)) * 10),
                           clow=int(ch[0]), chigh=int(ch[1]), disease=disease.get(dkey, 0), stages=stages,
