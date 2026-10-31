@@ -325,15 +325,22 @@ if (inv_total(inv, fenk_shed_key) > 0) {
 }
 ~eascape_door_walk;
 
-// the doors out to the lightning conductor, upstairs
-[oploc1,fenk_door] @fenk_door;
-[oploc1,fenk_door_mirror] @fenk_door;
-[label,fenk_door]
+// the castle's double doors: they open and stay open a while, as other double doors do (the
+// gardener can follow you through); upstairs, the doors out to the lightning conductor are locked
+// until Fenkenstrain sends you there
+[oploc1,fenk_door]
 if (coordy(loc_coord) = 1 & %fenk_quest < ^fenk_conductor) {
     mes("The door to the lightning conductor is locked.");
     return;
 }
-~eascape_door_walk;
+~open_double_doors_left(500, door_right_closed, loc_param(open_sound));
+
+[oploc1,fenk_door_mirror]
+if (coordy(loc_coord) = 1 & %fenk_quest < ^fenk_conductor) {
+    mes("The door to the lightning conductor is locked.");
+    return;
+}
+~open_double_doors_right(500, door_left_closed, loc_param(open_sound));
 
 // ---------------------------------------------------------------- the lightning conductor
 [oploc1,fenk_conductor_broken] @fenk_repair_conductor;
