@@ -43633,12 +43633,11 @@ readyanim=wall_beast_ready
 minimap=no
 vislevel=hide
 turnspeed=0
-// EASCape: waits in the wall for a player in front of it (skill_slayer/scripts/npcs/eascape_wall_beast.rs2)
+// EASCape: waits in the wall for a player in front of it, looking every tick
+// (skill_slayer/scripts/npcs/eascape_wall_beast.rs2)
 moverestrict=nomove
 wanderrange=0
-huntmode=eascape_wallbeast
-huntrange=1
-attackrange=1
+timer=1
 
 [swamp_wallbeast_combat]
 name=Wall Beast
@@ -43676,6 +43675,20 @@ walkanim=giant_frog_walk
 op2=Attack
 size=2
 vislevel=99
+// EASCape: combat and drops from Void (dorgesh_kaan_agility_course giant_frog); hitpoints and hits are Void's divided by 10
+hitpoints=100
+attack=100
+strength=80
+defence=65
+magic=1
+ranged=1
+respawnrate=50
+param=damagetype,^crush_style
+param=eascape_maxhit,9
+param=attack_anim,giant_frog_attack
+param=defend_anim,giant_frog_block
+param=death_anim,giant_frog_death
+param=eascape_drops,void_drop_giant_frog_drop_table
 
 [medium_frog]
 name=Big frog
@@ -43687,6 +43700,21 @@ walkanim=giant_frog_walk
 readyanim=giant_frog_ready
 op2=Attack
 vislevel=24
+// EASCape: combat and drops from Void (dorgesh_kaan_agility_course big_frog); hitpoints and hits are Void's divided by 10.
+// Void's big frog animations aren't in the 2006 cache; it's the giant frog's model, so it has its moves.
+hitpoints=25
+attack=25
+strength=20
+defence=15
+magic=1
+ranged=1
+respawnrate=50
+param=damagetype,^crush_style
+param=eascape_maxhit,3
+param=attack_anim,giant_frog_attack
+param=defend_anim,giant_frog_block
+param=death_anim,giant_frog_death
+param=eascape_drops,void_drop_big_frog_drop_table
 
 [little_frog]
 name=Frog

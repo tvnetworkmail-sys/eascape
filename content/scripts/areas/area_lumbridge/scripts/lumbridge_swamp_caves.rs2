@@ -1,0 +1,260 @@
+// EASCape: the Lumbridge Swamp Caves.
+// From Void (LumbridgeSwampCave.kt, CandleSeller.kt, LightSource.kt, lumbridge_swamp_caves.areas.toml):
+//   the rope (you need one the first time; it stays tied, varbit swamp_caves_roped_entrance),
+//   where you land (3167,9573), the light and tinderbox warnings, the stepping stones (a leap onto
+//   the stone and another off it, two squares each way), the candle seller's lines and his 1000
+//   coin candle, the darkness (the caves are x 3136-3263, z 9536-9602: with a light source the
+//   screen is dimmed, without one it goes dark, "Tiny biting insects swarm all over you!", and
+//   after 10 ticks they bite every tick).
+// From the OSRS wiki (Transcript: Cave goblin (monster)): the cave goblins' lines.
+// Our choices: the darkness screens are 2006's full-screen shades (inter_249 dimmed, inter_248
+// dark); Void's warning boxes are a yes/no choice here; the cave goblins talk as they do after
+// The Lost Tribe (that quest isn't in the game, and before it they're "too scared to talk");
+// the first stepping stone (rotated) is crossed east-west, Void has only the second; the hole
+// at 3224,9601 is squeezed through to the other side (it led to the swamp before; Lost Tribe's
+// tunnel, no source has it).
+
+// ---------------------------------------------------------------- the way in and out
+[oploc1,goblin_cave_entrance]
+p_arrivedelay;
+if (%swamp_caves_roped_entrance = 1) {
+    if (~swamp_cave_has_light = false) {
+        ~mesbox("It's very dark down there. You should find a light source and a tinderbox before going down there.");
+        if (~p_choice2_header("Yes, climb down anyway.", 1, "No.", 2, "Climb down without a light source?") ! 1) {
+            mes("You should find a light source and a tinderbox before going down there.");
+            return;
+        }
+    } else if (inv_total(inv, tinderbox) < 1) {
+        ~mesbox("You should find a tinderbox before going down there, in case your light goes out.");
+        if (~p_choice2_header("Yes, climb down anyway.", 1, "No.", 2, "Climb down without a tinderbox?") ! 1) {
+            mes("You should find a tinderbox before going down there.");
+            return;
+        }
+    }
+    anim(human_pickupfloor, 0);
+    p_delay(1);
+    p_telejump(0_49_149_31_37);
+    return;
+}
+if (inv_total(inv, rope) > 0) {
+    if (~p_choice2_header("Yes.", 1, "No.", 2, "Attach a rope to the top of the hole?") ! 1) {
+        return;
+    }
+    if (inv_total(inv, rope) < 1) {
+        return;
+    }
+    inv_del(inv, rope, 1);
+    anim(human_pickupfloor, 0);
+    %swamp_caves_roped_entrance = 1;
+    ~objbox(rope, "You tie the rope to the top of the hole and throw it down.", 250, 0, 0);
+    return;
+}
+~mesbox("There is a sheer drop below the hole. You will need a rope.");
+
+[oploc1,swamp_cave_climbing_rope]
+p_arrivedelay;
+anim(human_climbing, 0);
+p_delay(1);
+p_telejump(0_49_49_32_36);
+
+// ---------------------------------------------------------------- the hole to Lost Tribe's tunnel
+[oploc1,lost_tribe_hole_2]
+p_arrivedelay;
+mes("You squeeze through the hole.");
+anim(human_pickupfloor, 0);
+p_delay(1);
+if (coordz(coord) < coordz(loc_coord)) {
+    p_telejump(0_50_150_24_4);
+} else {
+    p_telejump(0_50_150_24_0);
+}
+
+// ---------------------------------------------------------------- stepping stones
+[oploc1,swamp_cave_steppingstone_a] ~swamp_cave_stepping_stone(true);
+[oploc1,swamp_cave_steppingstone_b] ~swamp_cave_stepping_stone(false);
+
+[proc,swamp_cave_stepping_stone](boolean $eastwest)
+p_arrivedelay;
+def_int $dx = 0;
+def_int $dz = 0;
+if ($eastwest = true) {
+    if (coordx(coord) > coordx(loc_coord)) $dx = -1;
+    else $dx = 1;
+} else if (coordz(coord) > coordz(loc_coord)) {
+    $dz = -1;
+} else {
+    $dz = 1;
+}
+def_coord $stone = loc_coord;
+def_coord $far = movecoord($stone, calc($dx * 2), 0, calc($dz * 2));
+mes("You leap across with a mighty leap!");
+anim(human_steppingstonejump, 30);
+p_exactmove(coord, $stone, 58, 70, ~coord_direction(coord, $stone));
+p_delay(2);
+anim(human_steppingstonejump, 30);
+p_exactmove($stone, $far, 58, 70, ~coord_direction($stone, $far));
+p_delay(2);
+
+// ---------------------------------------------------------------- darkness
+[proc,swamp_cave_has_light]()(boolean)
+if (inv_totalcat(inv, light_source_lit) > 0 | inv_totalcat(worn, light_source_lit) > 0) return(true);
+return(false);
+
+[proc,swamp_cave_in_dark](coord $coord)(boolean)
+if (coordy($coord) ! 0) return(false);
+if (coordx($coord) < 3136 | coordx($coord) > 3263) return(false);
+if (coordz($coord) < 9536 | coordz($coord) > 9602) return(false);
+return(true);
+
+// %swamp_cave_dark: 0 out of the caves, 1 with a light, 2 in the dark;
+// %swamp_cave_bites: the tick the insects start biting
+[proc,swamp_cave_dark_refresh]
+if (~swamp_cave_in_dark(coord) = false) {
+    if (%swamp_cave_dark ! 0) {
+        if_openoverlay(null);
+        %swamp_cave_dark = 0;
+    }
+    cleartimer(swamp_cave_dark);
+    return;
+}
+if (~swamp_cave_has_light = true) {
+    if (%swamp_cave_dark ! 1) {
+        if_openoverlay(inter_249);
+        %swamp_cave_dark = 1;
+    }
+} else if (%swamp_cave_dark ! 2) {
+    if_openoverlay(inter_248);
+    %swamp_cave_dark = 2;
+    %swamp_cave_bites = calc(map_clock + 10);
+    mes("Tiny biting insects swarm all over you!");
+    sound_synth(insect_swarm, 1, 0);
+}
+settimer(swamp_cave_dark, 1);
+
+[timer,swamp_cave_dark]
+~swamp_cave_dark_refresh;
+if (%swamp_cave_dark = 2 & map_clock >= %swamp_cave_bites) {
+    sound_synth(insect_bites, 1, 0);
+    queue(damage_player, 0, 1);
+}
+
+[mapzone,0_49_149] ~swamp_cave_dark_refresh; @music_playbyregion(coord);
+[mapzone,0_50_149] ~swamp_cave_dark_refresh; @music_playbyregion(coord);
+[mapzone,0_49_150] ~swamp_cave_dark_refresh; @music_playbyregion(coord);
+[mapzone,0_50_150] ~swamp_cave_dark_refresh; @music_playbyregion(coord);
+[mapzoneexit,0_49_149] ~swamp_cave_dark_refresh;
+[mapzoneexit,0_50_149] ~swamp_cave_dark_refresh;
+[mapzoneexit,0_49_150] ~swamp_cave_dark_refresh;
+[mapzoneexit,0_50_150] ~swamp_cave_dark_refresh;
+
+// ---------------------------------------------------------------- the candle seller
+[opnpc1,swamp_candle_guy]
+~chatnpc("<p,neutral>Do you want a lit candle for 1000 gold?");
+switch_int (~p_choice3("Yes please.", 1, "One thousand gold?!", 2, "No thanks, I'd rather curse the darkness.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes please.");
+        ~swamp_candle_buy;
+    case 2 :
+        ~chatplayer("<p,shock>One thousand gold?!");
+        ~chatnpc("<p,neutral>Look, you're not going to be able to survive down that hole without a light source.");
+        ~chatnpc("<p,neutral>So you could go off to the candle shop to buy one more cheaply. You could even make your own lantern, which is a lot better.");
+        ~chatnpc("<p,neutral>But I bet you want to find out what's down there right now, don't you? And you can pay me 1000 gold for the privilege!");
+        %swamp_candle_guy_conversation = 1;
+        switch_int (~p_choice3("All right, you win, I'll buy a candle.", 1, "No way.", 2, "How do you make lanterns?", 3)) {
+            case 1 :
+                ~chatplayer("<p,neutral>All right, you win, I'll buy a candle.");
+                ~swamp_candle_buy;
+            case 2 : ~chatplayer("<p,angry>No way.");
+            case 3 : ~swamp_candle_lanterns;
+        }
+    case 3 :
+        ~chatplayer("<p,neutral>No thanks, I'd rather curse the darkness.");
+        if (%swamp_candle_guy_conversation = 1) {
+            if (~p_choice2("How do you make lanterns?", 1, "Bye.", 2) = 1) ~swamp_candle_lanterns;
+        }
+}
+
+[proc,swamp_candle_buy]
+if (inv_total(inv, coins) < 1000) {
+    ~chatplayer("<p,sad>But I don't have that kind of money on me.");
+    ~chatnpc("<p,angry>Well then, no candle for you!");
+    return;
+}
+inv_del(inv, coins, 1000);
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, lit_candle, 1);
+} else {
+    obj_add(coord, lit_candle, 1, ^lootdrop_duration);
+}
+~chatnpc("<p,happy>Here you go then.");
+~chatnpc("<p,neutral>I should warn you, though, it can be dangerous to take a naked flame down there. You'd be better off making a lantern.");
+switch_int (~p_choice3("What's so dangerous about a naked flame?", 1, "How do you make lanterns?", 2, "Thanks, bye.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's so dangerous about a naked flame?");
+        ~chatnpc("<p,shifty>Heh heh... You'll find out.");
+    case 2 : ~swamp_candle_lanterns;
+    case 3 : ~chatplayer("<p,neutral>Thanks, bye.");
+}
+
+[proc,swamp_candle_lanterns]
+~chatplayer("<p,quiz>How do you make lanterns?");
+~chatnpc("<p,neutral>Out of glass. The more advanced lanterns have a metal component as well.");
+~chatnpc("<p,neutral>Firstly you can make a simple candle lantern out of glass. It's just like a candle, but the flame isn't exposed, so it's safer.");
+~chatnpc("<p,neutral>Then you can make an oil lamp, which is brighter but has an exposed flame. But if you make an iron frame for it you can turn it into an oil lantern.");
+~chatnpc("<p,neutral>Finally there's the bullseye lantern. You'll need to make a frame out of steel and add a glass lens.");
+~chatnpc("<p,neutral>Once you've made your lamp or lantern, you'll need to make lamp oil for it. The chemist near Rimmington has a machine for that.");
+~chatnpc("<p,neutral>For any light source, you'll need a tinderbox to light it. Keep your tinderbox handy in case it goes out!");
+~chatnpc("<p,happy>But if all that's too complicated, you can buy a candle right here for 1000 gold!");
+switch_int (~p_choice2("All right, you win, I'll buy a candle.", 1, "No thanks, I'd rather curse the darkness.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>All right, you win, I'll buy a candle.");
+        ~swamp_candle_buy;
+    case 2 : ~chatplayer("<p,neutral>No thanks, I'd rather curse the darkness.");
+}
+
+// ---------------------------------------------------------------- cave goblins
+[opnpc1,cave_goblin] ~swamp_cave_goblin_talk;
+[opnpc1,cave_goblin2] ~swamp_cave_goblin_talk;
+[opnpc1,cave_goblin3] ~swamp_cave_goblin_talk;
+[opnpc1,cave_goblin4] ~swamp_cave_goblin_talk;
+
+[proc,swamp_cave_goblin_talk]
+if (~swamp_cave_has_light = false) {
+    ~chatnpc("<p,neutral>What are you doing down here without a lamp?");
+    ~chatnpc("<p,neutral>Here, I have a spare torch.");
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, torch_lit, 1);
+    } else {
+        obj_add(coord, torch_lit, 1, ^lootdrop_duration);
+    }
+    ~chatnpc("<p,neutral>But be careful not to let it near swamp gas! Watch out for warning marks.");
+    ~chatplayer("<p,neutral>Er, thanks a lot.");
+    ~chatnpc("<p,happy>You're welcome.");
+    return;
+}
+if (inv_total(inv, lit_candle) > 0 | inv_total(inv, lit_black_candle) > 0 | inv_total(inv, torch_lit) > 0 | inv_total(inv, oil_lamp_lit) > 0) {
+    ~chatnpc("<p,neutral>Watch out! You don't want to let a naked flame near swamp gas! Look out for the warning marks.");
+    return;
+}
+switch_int (random(5)) {
+    case 0 :
+        ~chatnpc("<p,angry>Don't tread on my feet!");
+        ~chatplayer("<p,neutral>I'm not going to tread on your feet.");
+    case 1 :
+        ~chatnpc("<p,neutral>Beware of swamp gas! Look out for the warning marks!");
+        ~chatplayer("<p,neutral>Um, Thanks.");
+    case 2 :
+        ~chatplayer("<p,neutral>Hello, how are you?");
+        ~chatnpc("<p,sad>I'm a bit worried about the increase of humans these days.");
+        ~chatnpc("<p,happy>Present company excluded, of course!");
+    case 3 :
+        ~chatnpc("<p,happy>Nice weather we're having!");
+        ~chatplayer("<p,neutral>But you live underground. The weather is always the same!");
+        ~chatnpc("<p,happy>Yes, it's always nice!");
+    case default :
+        ~chatnpc("<p,quiz>Where did you come from?");
+        ~chatplayer("<p,neutral>From above ground.");
+        ~chatnpc("<p,quiz>Above ground? Where is that?");
+        ~chatplayer("<p,neutral>You know, out of caves, in the open air, with sunshine and wide open spaces!");
+        ~chatnpc("<p,neutral>Ick. Sounds horrible.");
+}
