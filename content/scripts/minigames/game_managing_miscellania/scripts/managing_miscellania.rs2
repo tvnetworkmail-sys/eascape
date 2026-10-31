@@ -73,6 +73,13 @@ if (%misc_points_fish > 0) {
 [if_button,inter_210:com_107]
 %misc_cooked = togglebit(%misc_cooked, 0);
 
+// EASCape: Herbs / Flax on the Herbs box (your OSRS picture, 31 Oct 2026): the herb workers
+// bring flax instead
+[if_button,inter_210:herb_radio] %misc_flax = 0;
+[if_button,inter_210:herb_text] %misc_flax = 0;
+[if_button,inter_210:flax_radio] %misc_flax = 1;
+[if_button,inter_210:flax_text] %misc_flax = 1;
+
 // Help Button
 [if_button,inter_210:com_95]
 %if2 = togglebit(%if2, 0);
@@ -248,6 +255,13 @@ def_int $lantadyme_count = 0;
 def_int $dwarf_weed_count = 0;
 // Herbs (InverseCost = 11) / Flax later at (InverseCost = 224)
 def_int $herb_qty =  calc(5 * $ResourcePts * %misc_points_herb / 2048);
+// EASCape: flax instead of herbs (OSRS: InverseCost 224, flax = 224 * points * workers / 2048)
+def_int $flax_qty = 0;
+if (%misc_flax = 1) {
+    $flax_qty = calc(224 * $ResourcePts * %misc_points_herb / 2048);
+    $herb_qty = 0;
+    if ($flax_qty > 0) inv_add(inv, cert_flax, $flax_qty);
+}
 def_int $herb_count = $herb_qty;
 while ($herb_count > 0) {
     $rolled_herb, $rolled_qty = ~misc_randomherb();
@@ -338,6 +352,9 @@ if (calc($fish_qty * 3 / 20) > 0) {
 }
 if ($herb_qty > 0) {
     $resourceStr = "<$resourceStr> <tostring($herb_qty)> Herbs|";
+}
+if ($flax_qty > 0) {
+    $resourceStr = "<$resourceStr> <tostring($flax_qty)> Flax|";
 }
 // To offset the empty string
 if (string_length($resourceStr) = 0) {

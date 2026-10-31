@@ -1540,3 +1540,51 @@ $banked = calc($banked + ~questpack_give(rcu_pouch_large, 1));
 $banked = calc($banked + ~questpack_give(rcu_pouch_giant, 1));
 $banked = calc($banked + ~questpack_give(blankrune_high, 20));
 ~questpack_done("The Abyss", $banked);
+
+// ---------------------------------------------------------------- Managing Miscellania checks
+// ::miscstatus - your kingdom: approval, coffer, resource points, how the workers are split and
+// what Advisor Ghrim would hand over if you collected now (the same sums as collecting).
+// ::miscday <days> - pretends that many days have passed (as if you'd been away), runs the daily
+// update, then shows ::miscstatus. ::miscapproval <percent> - sets your approval.
+[debugproc,miscstatus]
+if (p_finduid(uid) = false) {
+    return;
+}
+~misc_status;
+
+[debugproc,miscday](int $days)
+if (p_finduid(uid) = false) {
+    return;
+}
+if (%misc_quest < ^misc_complete) {
+    mes("Your kingdom only works once Throne of Miscellania is done (::questdone misc).");
+    return;
+}
+def_int $n = max(1, min(30, $days));
+def_int $coffer = %misc_coffers;
+def_int $approval = %misc_approval;
+%misc_last_update = calc(%misc_last_update - $n * ^MISCELLANIA_INTERVAL);
+~manage_misc_daily_update;
+mes("<tostring($n)> day(s) passed: coffer <tostring($coffer)> -> <tostring(%misc_coffers)>, approval <tostring(calc($approval * 100 / 127))>% -> <~misc_approval_percentage>%.");
+~misc_status;
+
+[debugproc,miscapproval](int $percent)
+if (p_finduid(uid) = false) {
+    return;
+}
+%misc_approval = max(0, min(127, calc(($percent * 127 + 99) / 100)));
+mes("Approval set to <~misc_approval_percentage>%.");
+
+[proc,misc_status]
+def_int $pts = %misc_restotal;
+def_int $idle = calc(10 - %misc_points_mine - %misc_points_wood - %misc_points_herb - %misc_points_fish);
+def_int $days = calc((date_minutes - %misc_last_update) / ^MISCELLANIA_INTERVAL);
+mes("Kingdom: approval <~misc_approval_percentage>% (<tostring(%misc_approval)>/127), coffer <tostring(%misc_coffers)>, resource points <tostring($pts)>, next update in <tostring(calc(^MISCELLANIA_INTERVAL - (date_minutes - %misc_last_update) % ^MISCELLANIA_INTERVAL))> min.");
+def_string $herbs = "herbs";
+if (%misc_flax = 1) $herbs = "flax";
+mes("Workers: mining <tostring(%misc_points_mine)>, wood <tostring(%misc_points_wood)>, <$herbs> <tostring(%misc_points_herb)>, fishing <tostring(%misc_points_fish)>, idle <tostring($idle)>.");
+def_int $fish = calc(100 * $pts * %misc_points_fish / 2048);
+def_string $haul = "maple logs <tostring(calc(102 * $pts * %misc_points_wood / 2048))>, coal <tostring(calc(60 * $pts * %misc_points_mine / 2048))>, tuna <tostring(calc($fish / 2))>, swordfish <tostring(calc($fish * 3 / 20))>";
+if (%misc_flax = 1) $haul = "<$haul>, flax <tostring(calc(224 * $pts * %misc_points_herb / 2048))>";
+else $haul = "<$haul>, herbs <tostring(calc(5 * $pts * %misc_points_herb / 2048))>";
+mes("Collect now: <$haul>.");
