@@ -1967,6 +1967,9 @@
       } else if (which === 'spec') {
         const bar = this.specBar();
         if (bar >= 0) this.pressButton(bar, 'ok');
+      } else if (which === 'antipoison') {
+        // EASCape: the server drinks the first antipoison in the pack (ClientCheatHandler)
+        if (this.api && this.api.command) this.api.command('appantipoison');
       } else if (which === 'prayer') {
         // Open the prayer tab, as clicking its icon does.
         if (c[f.sideIcon] && c[f.sideIcon][5] !== -1) {

@@ -73,12 +73,16 @@ module.exports = function statusOrbs(ctx) {
           e.stopImmediatePropagation();
           e.preventDefault();
           // pointerdown, not mousedown: cancelling pointerdown stops the mouse events firing.
-          if (t === 'pointerdown' && e.button === 0 && click) click();
+          if (t === 'pointerdown' && e.button === 0 && el.llClick) el.llClick();
         }, true);
       }
       document.body.appendChild(el);
       els.set(key, el);
     }
+    // the click can change (the hitpoints orb while you're poisoned)
+    el.llClick = click;
+    el.className = click ? 'll-orb click' : 'll-orb';
+    el.title = tip || '';
     const scale = (ctx.toGameScale() || 1) * (window.devicePixelRatio || 1);
     const W = Math.round(w * scale);
     const H = Math.round(h * scale);
@@ -110,8 +114,11 @@ module.exports = function statusOrbs(ctx) {
   const POISONED = [40, 160, 40];
 
   function drawOrb(def, value, max, active, fill = def.fill) {
-    const click = def.click ? () => ctx.sendToGame({ type: 'orb', which: def.click }) : null;
-    const { el, scale } = element(def.key, ORB.w, ORB.h, click, def.tip);
+    // the hitpoints orb, while you're poisoned: click to drink an antipoison
+    const poisoned = def.key === 'hitpoints' && fill === POISONED;
+    const which = poisoned ? 'antipoison' : def.click;
+    const click = which ? () => ctx.sendToGame({ type: 'orb', which }) : null;
+    const { el, scale } = element(def.key, ORB.w, ORB.h, click, poisoned ? 'Cure poison' : def.tip);
     place(el, def.cx - (ORB.w - ORB.r - 2), def.cy - ORB.h / 2, ORB.w, ORB.h);
     el.style.display = 'block';
     const g = el.getContext('2d');

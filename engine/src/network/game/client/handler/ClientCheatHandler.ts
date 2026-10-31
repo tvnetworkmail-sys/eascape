@@ -26,6 +26,7 @@ import Player, { getExpByLevel } from '#/engine/entity/Player.js';
 import { PlayerStat, PlayerStatEnabled, PlayerStatMap } from '#/engine/entity/PlayerStat.js';
 import ScriptProvider from '#/engine/script/ScriptProvider.js';
 import ScriptRunner from '#/engine/script/ScriptRunner.js';
+import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
 
 import ClientGameMessageHandler from '#/network/game/client/ClientGameMessageHandler.js';
 import ClientCheat from '#/network/game/client/model/ClientCheat.js';
@@ -72,6 +73,36 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             if (script) {
                 player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
             }
+            return true;
+        }
+
+        // EASCape: the app's hitpoints orb, clicked while poisoned: drink the first antipoison in
+        // the pack (antipoison, superantipoison, antidote+ or antidote++), the same as clicking
+        // its Drink option (only from the app)
+        if (cmd === 'appantipoison') {
+            if (!isClientConnected(player) || !player.client.isApp || player.delayed) {
+                return true;
+            }
+            const inv = player.getInventory(InvType.getId('inv'));
+            if (!inv) {
+                return true;
+            }
+            const cures = new Set(['antipoison', '2antipoison', 'antidote+', 'antidote++'].flatMap(k => [1, 2, 3, 4].map(n => (k.startsWith('antidote') ? `${k}${n}` : `${n}dose${k}`))).map(n => ObjType.getId(n)).filter(id => id !== -1));
+            for (let slot = 0; slot < inv.capacity; slot++) {
+                const item = inv.get(slot);
+                if (!item || !cures.has(item.id)) {
+                    continue;
+                }
+                const obj = ObjType.get(item.id);
+                player.lastItem = item.id;
+                player.lastSlot = slot;
+                const script = ScriptProvider.getByTrigger(ServerTriggerType.OPHELD1, obj.id, obj.category);
+                if (script) {
+                    player.executeScript(ScriptRunner.init(script, player), true);
+                }
+                return true;
+            }
+            player.messageGame("You don't have an antipoison to drink."); // ours
             return true;
         }
 
