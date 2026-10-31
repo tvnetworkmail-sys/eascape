@@ -5,9 +5,9 @@
 // fourth the seasons and the fifth fairies, whoever they are. Lines from the OSRS wiki's quest
 // transcript; the menu and the farming advice are Void's (Farmer.kt). Our choices:
 //   - the quest's question is only on the menu while you're asking (step 10);
-//   - "Would you look after my crops for me?" and "Can you sell me something?" aren't on it
-//     yet: paying gardeners and their shops come with Farming step 2 (the tree gardeners'
-//     "Would you chop my tree down for me?" is in, from step 2a).
+//   - Farming step 2 (2a, 2e): "Would you look after my crops for me?" and the tree gardeners'
+//     "Would you chop my tree down for me?" are on it (below). The farming shops are Sarah's,
+//     Vanessa's, Richard's and Alice's (their own Trade).
 
 [opnpc1,elstan] ~fairy1_gardener;
 [opnpc1,dantaera] ~fairy1_gardener;
@@ -63,44 +63,167 @@ return(-1);
 return(bitcount(clearbit(clearbit(%fairy_gardeners, ^fairy1_martin_pickpocketed), ^fairy1_malignius_asked)));
 
 [proc,fairy1_gardener]
-// EASCape: Farming step 2a: a tree or fruit tree gardener chops your tree down for 200 coins
-// while there's a tree in their patch (Void Farmer.kt's lines; OSRS: any tree, the patch is
-// left empty)
+// EASCape: Farming step 2: the menu is Void's (Farmer.kt): "Would you look after my crops for me?"
+// for the gardener's patch, "Would you chop my tree down for me?" while a tree's in a tree
+// gardener's patch, the advice and goodbye; and the quest's question while you're asking (step 10)
 def_int $patch = ~farming_gardener_tree_patch(npc_type);
 def_string $chop = "Would you chop my tree down for me?";
 if ($patch > 24) $chop = "Would you chop my fruit tree down for me?";
 if ($patch > 0) {
     if (~farming_state($patch) < 1000) $patch = 0;
 }
-if (%fairy_farmers_quest = ^fairy1_gardeners) {
-    if ($patch > 0) {
-        switch_int (~p_choice4("Are you a member of the Group of Advanced Gardeners?", 1, $chop, 4, "Can you give me any farming advice?", 2, "I'll come back another time.", 3)) {
-            case 1 : ~fairy1_gardener_ask;
-            case 2 : ~fairy1_gardener_advice;
-            case 3 : ~chatplayer("<p,neutral>I'll come back another time.");
-            case 4 : ~farming_gardener_chop($patch, $chop);
-        }
+def_boolean $quest = false;
+if (%fairy_farmers_quest = ^fairy1_gardeners) $quest = true;
+def_string $look = "Would you look after my crops for me?";
+def_string $advice = "Can you give me any farming advice?";
+def_string $bye = "I'll come back another time.";
+def_int $choice;
+if ($quest = true & $patch > 0) {
+    $choice = ~p_choice5("Are you a member of the Group of Advanced Gardeners?", 1, $chop, 4, $look, 5, $advice, 2, $bye, 3);
+} else if ($quest = true) {
+    $choice = ~p_choice4("Are you a member of the Group of Advanced Gardeners?", 1, $look, 5, $advice, 2, $bye, 3);
+} else if ($patch > 0) {
+    $choice = ~p_choice4($chop, 4, $look, 5, $advice, 2, $bye, 3);
+} else {
+    $choice = ~p_choice3($look, 5, $advice, 2, $bye, 3);
+}
+switch_int ($choice) {
+    case 1 : ~fairy1_gardener_ask;
+    case 2 : ~fairy1_gardener_advice;
+    case 3 : ~chatplayer("<p,neutral>I'll come back another time.");
+    case 4 : ~farming_gardener_chop($patch, $chop);
+    case 5 : ~farming_gardener_look_after;
+}
+
+// "Would you look after my crops for me?": the allotment farmers ask which patch (Void)
+[proc,farming_gardener_look_after]
+~chatplayer("<p,quiz>Would you look after my crops for me?");
+def_int $a;
+def_int $b;
+$a, $b = ~farming_gardener_patches(npc_type);
+if ($a = 0) {
+    ~chatnpc("<p,neutral>Sorry, I won't protect that."); // 2009Scape
+    return;
+}
+if ($b > 0) {
+    ~chatnpc("<p,neutral>I might - which patch were you thinking of?");
+    def_string $one = "The northwestern allotment";
+    def_string $two = "The southeastern allotment";
+    if (npc_type = dantaera | npc_type = kragen) {
+        $one = "The northern allotment"; // ours: Catherby's and Ardougne's are north and south
+        $two = "The southern allotment";
+    }
+    if (~p_choice2($one, 1, $two, 2) = 2) {
+        ~chatplayer("<p,neutral><$two>");
+        $a = $b;
+    } else {
+        ~chatplayer("<p,neutral><$one>");
+    }
+}
+~farming_protect_patch($a);
+
+// Void protectPatch (its lines; 2009Scape's for an empty or dead patch, which Void says nothing to)
+[proc,farming_protect_patch](int $patch)
+def_int $key = ~farming_state($patch);
+def_int $kind = calc(($key / 100) % 10);
+if ($key < 1000) {
+    ~chatnpc("<p,neutral>You don't have anything planted in that patch. Plant something and I might agree to look after it for you.");
+    return;
+}
+if ($kind = 4 | calc($key / 1000) = ^farming_crop_herb_dead) {
+    ~chatnpc("<p,neutral>That patch is dead - it's too late for me to do anything about it now.");
+    return;
+}
+if ($kind = 3) {
+    ~chatnpc("<p,confused>That patch is diseased - you should cure it before asking me to be responsible for it!");
+    return;
+}
+if ($kind = 7) {
+    ~chatnpc("<p,confused>That's a stump. It'll grow back if you just leave it a alone for a while.");
+    return;
+}
+if ($kind = 5 | $kind = 6 | ~farming_harvestable($patch, $key) = true | (~farming_fruitlike(~farming_patch_type($patch)) = true & ~farming_claimed($patch) = true)) {
+    ~chatnpc("<p,confused>That patch is already fully grown! I don't know what you want me to do with it!");
+    return;
+}
+if (~farming_protected($patch) = true) {
+    ~chatnpc("<p,confused>I'm already looking after that patch for you.");
+    return;
+}
+// the spirit tree (2009Scape): five monkey nuts and a monkey bar (its ground tooth isn't in the
+// 2006 game, so ours leaves it out)
+if (~farming_patch_type($patch) = 12) {
+    ~chatnpc("<p,neutral>If you like, but I want 5 monkey nuts and one monkey bar for that.");
+    if (~farming_pay_has(mm_monkey_nuts, 5) = false | ~farming_pay_has(mm_monkey_bar, 1) = false) {
+        ~chatplayer("<p,sad>I'm afraid I don't have any of those at the moment.");
+        ~chatnpc("<p,neutral>Well, I'm not wasting my time for free.");
         return;
     }
-    switch_int (~p_choice3("Are you a member of the Group of Advanced Gardeners?", 1, "Can you give me any farming advice?", 2, "I'll come back another time.", 3)) {
-        case 1 : ~fairy1_gardener_ask;
-        case 2 : ~fairy1_gardener_advice;
-        case 3 : ~chatplayer("<p,neutral>I'll come back another time.");
-    }
+    ~farming_pay_take(mm_monkey_nuts, 5);
+    ~farming_pay_take(mm_monkey_bar, 1);
+    ~farming_protect_done($patch);
     return;
 }
-if ($patch > 0) {
-    switch_int (~p_choice3($chop, 3, "Can you give me any farming advice?", 1, "I'll come back another time.", 2)) {
-        case 1 : ~fairy1_gardener_advice;
-        case 2 : ~chatplayer("<p,neutral>I'll come back another time.");
-        case 3 : ~farming_gardener_chop($patch, $chop);
-    }
+def_dbrow $row = ~farming_crop_row(calc($key / 1000));
+if ($row = null | db_getfieldcount($row, farming_crop:protect) = 0) {
+    ~chatnpc("<p,neutral>Sorry, I won't protect that."); // 2009Scape
     return;
 }
-switch_int (~p_choice2("Can you give me any farming advice?", 1, "I'll come back another time.", 2)) {
-    case 1 : ~fairy1_gardener_advice;
-    case 2 : ~chatplayer("<p,neutral>I'll come back another time.");
+def_namedobj $item;
+def_int $count;
+def_string $text;
+$item, $count, $text = db_getfield($row, farming_crop:protect, 0);
+def_string $amount = tostring($count);
+if ($count = 1) $amount = "one";
+~chatnpc("<p,neutral>If you like, but I want <$amount> <$text> for that.");
+if (~farming_pay_has($item, $count) = false) {
+    ~chatplayer("<p,sad>I'm afraid I don't have any of those at the moment.");
+    ~chatnpc("<p,neutral>Well, I'm not wasting my time for free.");
+    return;
 }
+~farming_pay_take($item, $count);
+~farming_protect_done($patch);
+
+[proc,farming_protect_done](int $patch)
+~farming_set_protected($patch, true);
+if (gender = ^gender_male) {
+    ~chatnpc("<p,neutral>That'll do nicely, sir. Leave it with me - I'll make sure that patch grows for you.");
+} else {
+    ~chatnpc("<p,neutral>That'll do nicely, madam. Leave it with me - I'll make sure that patch grows for you.");
+}
+
+// paid in the item or its banknotes (Void)
+[proc,farming_pay_has](namedobj $item, int $count)(boolean)
+if (inv_total(inv, $item) >= $count) return(true);
+if (oc_cert($item) ! $item & inv_total(inv, oc_cert($item)) >= $count) return(true);
+return(false);
+
+[proc,farming_pay_take](namedobj $item, int $count)
+if (inv_total(inv, $item) >= $count) {
+    inv_del(inv, $item, $count);
+    return;
+}
+inv_del(inv, oc_cert($item), $count);
+
+// each gardener's patches (farming_patches.rs2; Void's npc patch params): the allotment farmers
+// have two (north-west / north first)
+[proc,farming_gardener_patches](npc $npc)(int, int)
+switch_npc ($npc) {
+    case elstan : return(1, 2);
+    case dantaera : return(3, 4);
+    case kragen : return(5, 6);
+    case lyra : return(7, 8);
+    case farming_gardener_hops_1 : return(17, 0);
+    case francis : return(18, 0);
+    case farming_gardener_hops_3 : return(19, 0);
+    case farming_gardener_hops_4 : return(20, 0);
+    case farming_gardener_bush_1 : return(29, 0);
+    case farming_gardener_bush_2 : return(30, 0);
+    case farming_gardener_bush_3 : return(31, 0);
+    case farming_gardener_bush_4 : return(32, 0);
+    case frizzy_skernip : return(37, 0);
+}
+return(~farming_gardener_tree_patch($npc), 0);
 
 // the tree gardeners' patches (farming_patches.rs2): Alain Taverley, Heskel Falador, Treznor
 // Varrock, Fayeth Lumbridge; Bolongo the Gnome Stronghold, Gileth Tree Gnome Village, Garth

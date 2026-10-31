@@ -218,6 +218,30 @@ ki = cachetype(11, 'calquat', 'farming_calquat_tree_patch', 'calquat', [
 crops.append(dict(idx=ki, crop='calquat', type=11, seed='plantpot_calquat_sapling', produce='calquat_fruit', level=72, xp=1305,
                   amount=1, hxp=485, clow=0, chigh=0, disease=14, stages=8, name='calquat', checkxp=120960))
 
+# step 2e: what a farmer wants to look after the crop (2009Scape Plantable.kt's protection items;
+# Void's farming_protect_id / _amount agree where it has them) and how he says it (2009Scape
+# FarmerPayOptionDialogue.kt; otherwise the item's name). The spirit tree's (monkey nuts, a monkey
+# bar, a ground tooth) is in the script.
+PROTECT = {'potato': ('bucket_compost', 2, 'buckets of compost'), 'onion': ('sack_potato_10', 1, 'sack of potatoes'),
+           'cabbage': ('sack_onion_10', 1, 'sack of onions'), 'tomato': ('sack_cabbage_10', 2, 'sacks of cabbages'),
+           'sweetcorn': ('jute_fibre', 10, 'jute fibres'), 'strawberry': ('basket_apple_5', 1, 'basket of apples'),
+           'watermelon': ('curry_leaf', 10, 'curry leaves'), 'barley': ('bucket_compost', 3, 'buckets of compost'),
+           'hammerstone': ('marigold', 1, 'harvest of marigold'), 'asgarnian': ('sack_onion_10', 1, 'sack of onions'),
+           'jute': ('barley_malt', 6, 'barley malt'), 'yanillian': ('basket_tomato_5', 1, 'basket of tomatoes'),
+           'krandorian': ('sack_cabbage_10', 3, 'sacks of cabbages'), 'wildblood': ('nasturtium', 1, 'nasturtiums'),
+           'oak': ('basket_tomato_5', 1, 'basket of tomatoes'), 'willow': ('basket_apple_5', 1, 'basket of apples'),
+           'maple': ('basket_orange_5', 1, 'basket of oranges'), 'yew': ('cactus_spine', 10, 'cactus spines'),
+           'magic': ('coconut', 25, 'coconuts'), 'apple': ('sweetcorn', 9, 'sweetcorn'),
+           'banana': ('basket_apple_5', 4, 'baskets of apples'), 'orange': ('basket_strawberry_5', 3, 'baskets of strawberries'),
+           'curry': ('basket_banana_5', 5, 'baskets of bananas'), 'pineapple': ('watermelon', 10, 'watermelons'),
+           'papaya': ('pineapple', 10, 'pineapples'), 'palm': ('papaya', 15, 'papaya fruit'),
+           'redberry': ('sack_cabbage_10', 4, 'sacks of cabbages'), 'cadavaberry': ('basket_tomato_5', 3, 'baskets of tomatoes'),
+           'dwellberry': ('basket_strawberry_5', 3, 'baskets of strawberries'), 'jangerberry': ('watermelon', 6, 'watermelons'),
+           'whiteberry': ('bittercap_mushroom', 8, 'mushrooms'), 'calquat': ('poisonivy_berries', 8, 'poison ivy berries')}
+for c in crops:
+    if c['crop'] in PROTECT:
+        c['protect'] = PROTECT[c['crop']]
+
 cfg = E + '/content/scripts/skill_farming/configs'
 open(cfg + '/farming_states.enum', 'w').write('\n'.join(out_enum))
 tbl = ['// EASCape: Farming crops (tools/farming/convert.py, from Void\'s seed, produce and patch data).',
@@ -226,7 +250,8 @@ tbl = ['// EASCape: Farming crops (tools/farming/convert.py, from Void\'s seed, 
        'column=name,string,REQUIRED', 'column=patchtype,int,REQUIRED', 'column=level,int,REQUIRED',
        'column=plantxp,int,REQUIRED', 'column=harvestxp,int,REQUIRED', 'column=seeds,int,REQUIRED',
        'column=chance,int,int,REQUIRED', 'column=disease,int,REQUIRED', 'column=stages,int,REQUIRED',
-       '// trees and fruit trees: the check-health experience (tenths)', 'column=checkxp,int', '']
+       '// trees and fruit trees: the check-health experience (tenths)', 'column=checkxp,int',
+       '// step 2e: what a farmer wants to look after it, and how he says it', 'column=protect,namedobj,int,string', '']
 open(cfg + '/farming_crops.dbtable', 'w').write('\n'.join(tbl))
 rows = ['// EASCape: Farming crops (tools/farming/convert.py). XP in tenths. chance: Void\'s',
         '// farming_chance (a harvest keeps the patch going, out of 256 from level 1 to 99).', '']
@@ -237,6 +262,7 @@ for c in sorted(crops, key=lambda c: c['idx']):
              f"data=plantxp,{c['xp']}", f"data=harvestxp,{c['hxp']}", f"data=seeds,{c['amount']}",
              f"data=chance,{c['clow']},{c['chigh']}", f"data=disease,{c['disease']}", f"data=stages,{c['stages']}"]
     if c['checkxp']: rows.append(f"data=checkxp,{c['checkxp']}")
+    if c.get('protect'): rows.append(f"data=protect,{c['protect'][0]},{c['protect'][1]},{c['protect'][2]}")
     rows.append('')
 open(cfg + '/farming_crops.dbrow', 'w').write('\n'.join(rows))
 for c in sorted(crops, key=lambda c: c['idx']):

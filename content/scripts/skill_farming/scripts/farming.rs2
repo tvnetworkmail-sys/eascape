@@ -62,6 +62,25 @@ return(true);
 def_boolean $ok = ~farming_set_state($patch, 0, 0, 0);
 ~farming_set_compost($patch, 0);
 ~farming_set_claimed($patch, false);
+~farming_set_protected($patch, false);
+
+// step 2e: a farmer is looking after this patch (no disease until it's grown)
+[proc,farming_protected](int $patch)(boolean)
+if ($patch > 31) {
+    if (testbit(%farming_protect_b, calc($patch - 32)) = ^true) return(true);
+    return(false);
+}
+if (testbit(%farming_protect_a, calc($patch - 1)) = ^true) return(true);
+return(false);
+
+[proc,farming_set_protected](int $patch, boolean $on)
+if ($patch > 31) {
+    if ($on = true) %farming_protect_b = setbit(%farming_protect_b, calc($patch - 32));
+    else %farming_protect_b = clearbit(%farming_protect_b, calc($patch - 32));
+    return;
+}
+if ($on = true) %farming_protect_a = setbit(%farming_protect_a, calc($patch - 1));
+else %farming_protect_a = clearbit(%farming_protect_a, calc($patch - 1));
 
 // step 2a: a fruit tree whose health has been checked (farming_claimed)
 [proc,farming_claimed](int $patch)(boolean)
@@ -292,6 +311,7 @@ if (~farming_disease($patch, $crop, $kind, $stage) = true) {
     }
 }
 if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
+    ~farming_set_protected($patch, false); // grown: the farmer's job is done (Void)
     if (~farming_treelike($type) = true) {
         $ok = ~farming_set_state($patch, $crop, 6, 0); // grown: its health wants checking
         return;
@@ -306,6 +326,9 @@ if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
 [proc,farming_disease](int $patch, int $crop, int $kind, int $stage)(boolean)
 if ($stage = 0 | $kind ! 1) {
     return(false);
+}
+if (~farming_protected($patch) = true) {
+    return(false); // a farmer is looking after it (step 2e)
 }
 if (~farming_fruitlike(~farming_patch_type($patch)) = true & ~farming_claimed($patch) = true) {
     return(false); // a grown fruit tree or bush, picked bare

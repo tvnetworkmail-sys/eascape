@@ -882,6 +882,32 @@ inv_add(inv, plantpot_calquat_sapling, 1);
 inv_add(inv, plantpot_spirit_tree_sapling, 1);
 mes("Special patch pack: tools, cactus, belladonna and mushroom seeds, calquat and spirit tree saplings.");
 
+// ::farmerpack - Farming step 2e: what the farmers want for looking after crops: potato seeds and
+// 2 buckets of compost (Elstan, Dantaera, Kragen or Lyra), an oak sapling and a basket of tomatoes
+// (a tree gardener), monkey nuts and a monkey bar (Frizzy Skernip), and empty baskets and sacks.
+[debugproc,farmerpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+if (inv_freespace(inv) < 13) {
+    mes("::farmerpack needs 13 free inventory spaces.");
+    return;
+}
+inv_add(inv, spade, 1);
+inv_add(inv, rake, 1);
+inv_add(inv, dibber, 1);
+inv_add(inv, potato_seed, 3);
+inv_add(inv, bucket_compost, 2);
+inv_add(inv, plantpot_oak_sapling, 1);
+inv_add(inv, basket_tomato_5, 1);
+inv_add(inv, mm_monkey_nuts, 5);
+inv_add(inv, mm_monkey_bar, 1);
+inv_add(inv, basket_empty, 1);
+inv_add(inv, sack_empty, 1);
+inv_add(inv, tomato, 5);
+inv_add(inv, potato, 10);
+mes("Farmer pack: tools, potato seeds, compost, an oak sapling, a basket of tomatoes, monkey nuts and bar, baskets and sacks.");
+
 [debugproc,farmgrow]
 if (p_finduid(uid) = false) {
     return;
