@@ -124,8 +124,8 @@ export default class Component {
                     com.operable = dat.gbool();
                     com.usable = dat.gbool();
                     com.swappable = dat.gbool();
-                    com.marginX = dat.g1();
-                    com.marginY = dat.g1();
+                    com.marginX = dat.g1b();
+                    com.marginY = dat.g1b();
 
                     com.inventorySlotOffsetX = new Uint16Array(20).fill(0);
                     com.inventorySlotOffsetY = new Uint16Array(20).fill(0);

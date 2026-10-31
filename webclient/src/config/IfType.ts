@@ -191,8 +191,8 @@ export default class IfType {
                 com.objUse = data.g1() === 1;
                 com.objReplace = data.g1() === 1;
 
-                com.marginX = data.g1();
-                com.marginY = data.g1();
+                com.marginX = data.g1b(); // EASCape: signed, so an inv can sit tighter than 32 px (Resources Collected)
+                com.marginY = data.g1b();
 
                 com.invBackgroundX = new Int16Array(20);
                 com.invBackgroundY = new Int16Array(20);
