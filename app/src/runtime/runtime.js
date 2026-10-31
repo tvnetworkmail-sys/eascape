@@ -429,6 +429,8 @@
         // The game only sends health with a hit; the stat is always current.
         hitpoints: boosted ? boosted[3] | 0 : null,
         maxHitpoints: base ? base[3] | 0 : null,
+        // EASCape: poisoned (varp 102 poison: above 0 poisoned, below 0 an antipoison's immunity)
+        poisoned: varps ? (varps[102] | 0) > 0 : false,
         inCombat: typeof p[f.combatCycle] === 'number' && p[f.combatCycle] > loop,
         hitHealth: p[f.health] | 0,
         hitTotal: p[f.totalHealth] | 0,

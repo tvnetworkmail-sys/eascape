@@ -106,7 +106,10 @@ module.exports = function statusOrbs(ctx) {
     return `rgb(${r}, ${g}, 0)`;
   }
 
-  function drawOrb(def, value, max, active) {
+  // OSRS: the hitpoints orb fills green while you're poisoned
+  const POISONED = [40, 160, 40];
+
+  function drawOrb(def, value, max, active, fill = def.fill) {
     const click = def.click ? () => ctx.sendToGame({ type: 'orb', which: def.click }) : null;
     const { el, scale } = element(def.key, ORB.w, ORB.h, click, def.tip);
     place(el, def.cx - (ORB.w - ORB.r - 2), def.cy - ORB.h / 2, ORB.w, ORB.h);
@@ -146,7 +149,7 @@ module.exports = function statusOrbs(ctx) {
     g.clip();
     const inner = (ORB.r - 3) * 2;
     const top = cy + (ORB.r - 3) - inner * p;
-    const [fr, fg, fb] = def.fill;
+    const [fr, fg, fb] = fill;
     const grad = g.createLinearGradient(0, cy - ORB.r, 0, cy + ORB.r);
     grad.addColorStop(0, `rgb(${Math.min(255, fr + 60)}, ${Math.min(255, fg + 60)}, ${Math.min(255, fb + 60)})`);
     grad.addColorStop(1, `rgb(${fr * 0.55 | 0}, ${fg * 0.55 | 0}, ${fb * 0.55 | 0})`);
@@ -235,7 +238,7 @@ module.exports = function statusOrbs(ctx) {
         if (el) el.style.display = 'none';
         continue;
       }
-      drawOrb(def, value, max, active);
+      drawOrb(def, value, max, active, def.key === 'hitpoints' && p.poisoned ? POISONED : def.fill);
     }
     if (ctx.config('showWorldMap')) drawGlobe();
     else if (els.get('globe')) els.get('globe').style.display = 'none';
