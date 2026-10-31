@@ -22,7 +22,7 @@ from slayer_map import CATEGORY
 VOID, WRITE = sys.argv[1], '--write' in sys.argv
 # EASCape: monsters to import that aren't Slayer monsters (quest areas), from VOID_EXTRA (comma list)
 # plus the ones already imported that way (kept so re-runs give the same result)
-EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
+EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
 # EASCape: Void items that are ours under another name (the 2007 cache's, ported by name)
 ITEM_AS = {'gorak_claws': 'ft2_gorak_claws'}
 EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak'}

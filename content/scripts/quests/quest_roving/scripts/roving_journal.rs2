@@ -1,0 +1,37 @@
+// EASCape: Roving Elves' journal, 2009scape's lines (RovingElves.java)
+[if_button,questlist:roving_elves]
+def_int $s = %roving_elves_quest;
+def_string $t;
+if ($s = ^roving_not_started) {
+    ~quest_journal("Roving Elves", "@dbl@I can start this quest by talking to @dre@Islwyn@dbl@ found in @dre@Isafdar.||@dbl@Minimum requirements:|@dre@I must have completed the Waterfall quest|@dre@I must be able to kill a level 84 moss giant unarmed");
+    return;
+}
+if ($s = ^roving_started) {
+    ~quest_journal("Roving Elves", "@dbl@It appears that when I recovered @dre@Glarial's ashes@dbl@ from|@dbl@her @dre@tomb@dbl@ near the waterfall, I disturbed her peace.||@dbl@I talked to @dre@Islwyn,@dbl@ an elf that I found in the woods.|@dbl@When I offered to help he said I should talk with @dre@Eluned,|@dbl@she will tell me how @dre@elven consecration@dbl@ is done.");
+    return;
+}
+$t = "@str@It appears that when I recovered Glarial's ashes from|@str@her tomb near the waterfall, I disturbed her peace.|@str@I talked to Islwyn, an elf that I found in the woods.|@str@When I offered to help he said I should talk with Eluned,|@str@she will tell me how elven consecration is done.||";
+if ($s = ^roving_seed & inv_total(inv, roving_old_consecration_seed) = 0 & inv_total(inv, roving_new_consecration_seed) = 0) {
+    $t = append($t, "@dbl@Eluned told me that I must acquire the@dre@ old consecration|@dre@ seed @dbl@from the @dre@guardian spirit@dbl@ in @dre@Glarial's old tomb.||@dbl@Once I have the old seed I will need to return to Eluned, who|@dbl@will re-enchant it for me.");
+    ~quest_journal("Roving Elves", $t);
+    return;
+}
+$t = append($t, "@str@Eluned told me that I must acquire the old consecration|@str@seed from the guardian spirit in Glarial's old tomb.||@str@Once I have the old seed I will need to return to Eluned, who|@str@will re-enchant it for me.||");
+if ($s = ^roving_seed & inv_total(inv, roving_old_consecration_seed) > 0) {
+    $t = append($t, "@dbl@I have the @dre@consecration seed. @dbl@I should return to @dre@Eluned|@dbl@and have her enchant it for me.");
+    ~quest_journal("Roving Elves", $t);
+    return;
+}
+if ($s = ^roving_seed) {
+    $t = append($t, "@dbl@I have the @dre@charged consecration seed@dbl@.|@dbl@I need to head to the treasure room under the @dre@waterfall @dbl@and|@dbl@plant the @dre@consecration seed@dbl@ near the @dre@chalice@dbl@ in order to|@dbl@free Glarial's spirit.");
+    ~quest_journal("Roving Elves", $t);
+    return;
+}
+$t = append($t, "@str@I have the charged consecration seed.|@str@I need to head to the treasure room under the waterfall and|@str@plant the consecration seed near the chalice in order to|@str@free Glarial's spirit.||");
+if ($s = ^roving_planted) {
+    $t = append($t, "@dbl@I have freed @dre@Glarial's spirit @dbl@by planting the consecration seed near|@dbl@the chalice under the waterfall. The seed I planted|@dbl@vanished. I should go speak to @dre@Eluned@dbl@ again.");
+    ~quest_journal("Roving Elves", $t);
+    return;
+}
+$t = append($t, "@str@I have freed Glarial's spirit by planting the consecration seed near|@str@the chalice under the waterfall. The seed I planted|@str@vanished. I should go speak to Eluned again.||@red@QUEST COMPLETE!");
+~quest_journal("Roving Elves", $t);

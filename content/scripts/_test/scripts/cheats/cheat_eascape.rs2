@@ -675,6 +675,12 @@ if (compare($name, "runemysteries") = 0) {
     %fairy2_rewardgiven = 1;
     ~questdone_give(twocats_rewardlamp, 1);
     ~fairy2_complete; // its experience and quest complete scroll (fairy2_cure.rs2)
+} else if (compare($name, "roving") = 0) {
+    if (%roving_elves_quest >= ^roving_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~roving_complete(roving_crystal_bow_500); // the bow (Islwyn offers bow or shield), XP and scroll
 } else if (compare($name, "fenkenstrain") = 0) {
     if (%fenk_quest >= ^fenk_complete) {
         mes("You've already done that quest.");
@@ -760,7 +766,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1624,3 +1630,16 @@ $banked = calc($banked + ~questpack_give(thread, 5));
 $banked = calc($banked + ~questpack_give(spade, 1));
 $banked = calc($banked + ~questpack_give(coins, 50));
 ~questpack_done("Creature of Fenkenstrain", $banked);
+
+// ::rovingpack - what Roving Elves needs you to bring (OSRS wiki's item list): Glarial's pebble and
+// amulet, a rope and a spade (the waterfall dungeon's key is found there again)
+[debugproc,rovingpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(glarials_pebble_waterfall_quest, 1));
+$banked = calc($banked + ~questpack_give(glarials_amulet_waterfall_quest, 1));
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(spade, 1));
+~questpack_done("Roving Elves", $banked);
