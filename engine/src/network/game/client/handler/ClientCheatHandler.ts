@@ -38,7 +38,7 @@ import { printDebug } from '#/util/Logger.js';
 import { tryParseInt } from '#/util/TryParse.js';
 
 // EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
-const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff', 'questdone', 'restore', 'herbset', 'slayertask', 'jewels', 'dtpack', 'spellbookswap', 'allrunes', 'warriorsguildpack', 'wgtokens', 'farmingpack', 'farmtreepack', 'farmspecialpack', 'farmgrow', 'farmtick', 'miscstatus', 'miscday', 'miscapproval', 'ft2look', 'ft2song', 'ft2place', 'fairyrings'];
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff', 'questdone', 'restore', 'herbset', 'slayertask', 'jewels', 'dtpack', 'spellbookswap', 'allrunes', 'warriorsguildpack', 'wgtokens', 'farmingpack', 'farmtreepack', 'farmspecialpack', 'farmgrow', 'farmtick', 'miscstatus', 'miscday', 'miscapproval', 'ft2look', 'ft2song', 'ft2place', 'fairyrings', 'combat07'];
 
 export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
     handle(message: ClientCheat, player: Player): boolean {
@@ -114,6 +114,19 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                 return true;
             }
             player.messageGame("You don't have an antipoison to drink."); // ours
+            return true;
+        }
+
+        // EASCape: the app's "2007 interface" plugin: the 2007 combat tabs on or off (only from the
+        // app: combat07.rs2)
+        if (cmd === 'appcombat07') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,eascape_combat07_set]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
+            }
             return true;
         }
 

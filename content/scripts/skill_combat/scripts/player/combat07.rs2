@@ -1,0 +1,183 @@
+// EASCape: the 2007 combat tabs, shown instead of 2006's while the app's "2007 interface" plugin
+// is on (::appcombat07 on|off, only from the app: ClientCheatHandler). The interfaces are the
+// August 2007 cache's (tools/frame2007/combat_tabs.py); their buttons do what 2006's do. 2007 has
+// Auto Retaliate on this tab (2006 has it on the Controls tab); both set option_nodef.
+[proc,eascape_combat07_set](int $on)
+%eascape_combat07 = $on;
+~update_weapon_category(inv_getobj(worn, ^wearpos_rhand));
+
+// the 2007 tab for this weapon (update_weapon_category, while the plugin is on)
+[proc,combat07_tab](obj $obj)
+if ($obj = null | (map_members = ^false & oc_members($obj) = true)) {
+    if_settext(combat07_unarmed:name, "unarmed"); // as 2006's tab (player_attackstyles.rs2)
+    if_settab(combat07_unarmed, 0);
+    return;
+}
+switch_category (oc_category($obj)) {
+    case weapon_2h_sword : ~combat07_show(combat07_heavysword:name, combat07_heavysword, $obj, combat07_heavysword:specbar_layer);
+    case weapon_axe : ~combat07_show(combat07_axe:name, combat07_axe, $obj, combat07_axe:specbar_layer);
+    case weapon_blunt, flowers : ~combat07_show(combat07_blunt:name, combat07_blunt, $obj, combat07_blunt:specbar_layer);
+    case weapon_pickaxe : ~combat07_show(combat07_pickaxe:name, combat07_pickaxe, $obj, combat07_pickaxe:specbar_layer);
+    case weapon_scythe : ~combat07_show(combat07_scythe:name, combat07_scythe, $obj, null);
+    case weapon_slash : ~combat07_show(combat07_hacksword:name, combat07_hacksword, $obj, combat07_hacksword:specbar_layer);
+    case weapon_spear : ~combat07_show(combat07_spear:name, combat07_spear, $obj, combat07_spear:specbar_layer);
+    case weapon_spiked : ~combat07_show(combat07_spiked:name, combat07_spiked, $obj, combat07_spiked:specbar_layer);
+    case weapon_stab : ~combat07_show(combat07_stabsword:name, combat07_stabsword, $obj, combat07_stabsword:specbar_layer);
+    case weapon_claws : ~combat07_show(combat07_claw:name, combat07_claw, $obj, combat07_claw:specbar_layer);
+    case weapon_whip : ~combat07_show(combat07_whip:name, combat07_whip, $obj, combat07_whip:specbar_layer);
+    case weapon_bow : ~combat07_show(combat07_bow:name, combat07_bow, $obj, combat07_bow:specbar_layer);
+    case weapon_crossbow : ~combat07_show(combat07_crossbow:name, combat07_crossbow, $obj, combat07_crossbow:specbar_layer);
+    case weapon_thrown, weapon_javelin : ~combat07_show(combat07_thrown:name, combat07_thrown, $obj, combat07_thrown:specbar_layer);
+    case weapon_staff : ~combat07_show(combat07_staff:name, combat07_staff, $obj, combat07_staff:specbar_layer);
+    case default : ~combat07_show(combat07_unarmed:name, combat07_unarmed, $obj, combat07_unarmed:specbar_layer);
+}
+
+[proc,combat07_show](component $name, interface $interface, obj $obj, component $specbar_layer)
+if_settext($name, "<oc_name($obj)>");
+if ($specbar_layer ! null) {
+    if (oc_param($obj, specwep) = ^true) {
+        if_sethide($specbar_layer, false);
+    } else {
+        if_sethide($specbar_layer, true);
+    }
+}
+if ($interface = combat07_staff) {
+    ~combat07_staff_spell;
+}
+if_settab($interface, 0);
+
+// the staff tab's Spell box: the chosen spell's name, or 2007's spell icon while there is none
+[proc,combat07_staff_spell]
+if (%autocast_spell > 0) {
+    if_settext(combat07_staff:auto_spell, db_getfield(~get_spell_data(%autocast_spell), magic_spell_table:name, 0));
+    if_sethide(combat07_staff:auto_icon, true);
+} else {
+    if_settext(combat07_staff:auto_spell, "");
+    if_sethide(combat07_staff:auto_icon, false);
+}
+
+[if_button,combat07_staff:auto_choose] @open_autocast_interface;
+
+[if_button,combat07_heavysword:b0] ~set_attackstyle(0);
+[if_button,combat07_heavysword:b1] ~set_attackstyle(1);
+[if_button,combat07_heavysword:b2] ~set_attackstyle(2);
+[if_button,combat07_heavysword:b3] ~set_attackstyle(3);
+[if_button,combat07_heavysword:specbar] @toggle_sa;
+[if_button,combat07_heavysword:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_axe:b0] ~set_attackstyle(0);
+[if_button,combat07_axe:b1] ~set_attackstyle(1);
+[if_button,combat07_axe:b2] ~set_attackstyle(2);
+[if_button,combat07_axe:b3] ~set_attackstyle(3);
+[if_button,combat07_axe:specbar] @toggle_sa;
+[if_button,combat07_axe:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_blunt:b0] ~set_attackstyle(0);
+[if_button,combat07_blunt:b1] ~set_attackstyle(1);
+[if_button,combat07_blunt:b2] ~set_attackstyle(2);
+[if_button,combat07_blunt:specbar] @toggle_sa;
+[if_button,combat07_blunt:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_pickaxe:b0] ~set_attackstyle(0);
+[if_button,combat07_pickaxe:b1] ~set_attackstyle(1);
+[if_button,combat07_pickaxe:b2] ~set_attackstyle(2);
+[if_button,combat07_pickaxe:b3] ~set_attackstyle(3);
+[if_button,combat07_pickaxe:specbar] @toggle_sa;
+[if_button,combat07_pickaxe:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_scythe:b0] ~set_attackstyle(0);
+[if_button,combat07_scythe:b1] ~set_attackstyle(1);
+[if_button,combat07_scythe:b2] ~set_attackstyle(2);
+[if_button,combat07_scythe:b3] ~set_attackstyle(3);
+[if_button,combat07_scythe:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_hacksword:b0] ~set_attackstyle(0);
+[if_button,combat07_hacksword:b1] ~set_attackstyle(1);
+[if_button,combat07_hacksword:b2] ~set_attackstyle(2);
+[if_button,combat07_hacksword:b3] ~set_attackstyle(3);
+[if_button,combat07_hacksword:specbar] @toggle_sa;
+[if_button,combat07_hacksword:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_spear:b0] ~set_attackstyle(0);
+[if_button,combat07_spear:b1] ~set_attackstyle(1);
+[if_button,combat07_spear:b2] ~set_attackstyle(2);
+[if_button,combat07_spear:b3] ~set_attackstyle(3);
+[if_button,combat07_spear:specbar] @toggle_sa;
+[if_button,combat07_spear:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_spiked:b0] ~set_attackstyle(0);
+[if_button,combat07_spiked:b1] ~set_attackstyle(1);
+[if_button,combat07_spiked:b2] ~set_attackstyle(2);
+[if_button,combat07_spiked:b3] ~set_attackstyle(3);
+[if_button,combat07_spiked:specbar] @toggle_sa;
+[if_button,combat07_spiked:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_stabsword:b0] ~set_attackstyle(0);
+[if_button,combat07_stabsword:b1] ~set_attackstyle(1);
+[if_button,combat07_stabsword:b2] ~set_attackstyle(2);
+[if_button,combat07_stabsword:b3] ~set_attackstyle(3);
+[if_button,combat07_stabsword:specbar] @toggle_sa;
+[if_button,combat07_stabsword:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_claw:b0] ~set_attackstyle(0);
+[if_button,combat07_claw:b1] ~set_attackstyle(1);
+[if_button,combat07_claw:b2] ~set_attackstyle(2);
+[if_button,combat07_claw:b3] ~set_attackstyle(3);
+[if_button,combat07_claw:specbar] @toggle_sa;
+[if_button,combat07_claw:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_whip:b0] ~set_attackstyle(0);
+[if_button,combat07_whip:b1] ~set_attackstyle(1);
+[if_button,combat07_whip:b2] ~set_attackstyle(2);
+[if_button,combat07_whip:specbar] @toggle_sa;
+[if_button,combat07_whip:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_polearm:b0] ~set_attackstyle(0);
+[if_button,combat07_polearm:b1] ~set_attackstyle(1);
+[if_button,combat07_polearm:b2] ~set_attackstyle(2);
+[if_button,combat07_polearm:specbar] @toggle_sa;
+[if_button,combat07_polearm:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_bow:b0] ~set_attackstyle(0);
+[if_button,combat07_bow:b1] ~set_attackstyle(1);
+[if_button,combat07_bow:b2] ~set_attackstyle(2);
+[if_button,combat07_bow:specbar] @toggle_sa;
+[if_button,combat07_bow:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_crossbow:b0] ~set_attackstyle(0);
+[if_button,combat07_crossbow:b1] ~set_attackstyle(1);
+[if_button,combat07_crossbow:b2] ~set_attackstyle(2);
+[if_button,combat07_crossbow:specbar] @toggle_sa;
+[if_button,combat07_crossbow:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_thrown:b0] ~set_attackstyle(0);
+[if_button,combat07_thrown:b1] ~set_attackstyle(1);
+[if_button,combat07_thrown:b2] ~set_attackstyle(2);
+[if_button,combat07_thrown:specbar] @toggle_sa;
+[if_button,combat07_thrown:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_staff:b0] ~set_attackstyle(0);
+[if_button,combat07_staff:b1] ~set_attackstyle(1);
+[if_button,combat07_staff:b2] ~set_attackstyle(2);
+[if_button,combat07_staff:specbar] @toggle_sa;
+[if_button,combat07_staff:autoretaliate] ~combat07_autoretaliate;
+
+[if_button,combat07_unarmed:b0] ~set_attackstyle(0);
+[if_button,combat07_unarmed:b1] ~set_attackstyle(1);
+[if_button,combat07_unarmed:b2] ~set_attackstyle(2);
+[if_button,combat07_unarmed:specbar] @toggle_sa;
+[if_button,combat07_unarmed:autoretaliate] ~combat07_autoretaliate;
+
+// as the Controls tab's buttons (player_controls.rs2), one button that switches it
+[proc,combat07_autoretaliate]
+if_close;
+if (p_finduid(uid) = true) {
+    p_stopaction;
+    if (%option_nodef = ^player_auto_retaliate_on) {
+        %option_nodef = ^player_auto_retaliate_off;
+    } else {
+        %option_nodef = ^player_auto_retaliate_on;
+    }
+    return;
+}
+%option_nodef = %option_nodef; // resync varp

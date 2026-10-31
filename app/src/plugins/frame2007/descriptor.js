@@ -1,13 +1,13 @@
 'use strict';
-// EASCape: the 2007 interface - the game frame as it was in August 2007 (the stone pillars, the
-// tab bars with the 2007 icons and red stones, the 2007 chat box and its All / Game / Public /
-// Private / Clan / Trade / Report Abuse buttons), from the August 2007 cache's game frame
-// (tools/frame2007/build.py). The windows inside it stay 2006's. Your call, 31 Oct 2026.
+// EASCape: the 2007 interface - the combat tabs as they were in August 2007 (the weapon name and
+// "Combat Lvl", the style boxes, Auto Retaliate on the tab and the 2007 special attack bar), from
+// the August 2007 cache (tools/frame2007/combat_tabs.py). The game frame stays 2006's. Your call,
+// 31 Oct 2026.
 module.exports = {
   id: 'frame2007',
   name: '2007 interface',
-  description: 'Use the August 2007 game frame instead of the 2006 one',
-  tags: ['interface', 'frame', 'gameframe', '2007', 'skin', 'ui', 'layout'],
+  description: 'Use the August 2007 combat tabs and special attack bar',
+  tags: ['interface', 'combat', 'attack style', 'special attack', '2007', 'skin', 'ui'],
   enabledByDefault: false,
   game: './frame2007/game.js',
   page: './frame2007/page.js',
