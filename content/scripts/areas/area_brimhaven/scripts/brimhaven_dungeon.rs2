@@ -1,0 +1,191 @@
+// EASCape: the Brimhaven Dungeon. Saniboch's fee and lines are Void's (Saniboch.kt: 875 coins,
+// one entry each time you pay); the vines, stepping stones and log balance are Void's
+// (Vine.kt, BrimhavenShotcuts.kt: their levels, experience, messages and moves); the two pipes
+// are 2009Scape's (PipeShortcut.kt: Agility 22 for the red dragons' pipe, 34 for the moss
+// giants', 8.5 and 10 experience, 7 squares through). Ours: the timings.
+
+// ---------------------------------------------------------------- Saniboch
+[opnpc1,tribesman_doorman]
+~chatnpc("<p,neutral>Good day to you, Bwana.");
+switch_int (~p_choice4("Can I go through that door please?", 1, "Where does this strange entrance lead?", 2, "Good day to you too.", 3, "I'm impressed, that tree is growing on that shed.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can I go through that door please?");
+        if (%saniboch_paid = 1) {
+            ~chatnpc("<p,neutral>Most certainly, you have already given me lots of nice coins.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Most certainly, but I must charge you the sum of 875 coins first.");
+        if (inv_total(inv, coins) < 875) {
+            ~chatplayer("<p,neutral>I don't have the money on me at the moment.");
+            ~chatnpc("<p,neutral>Well this is a dungeon for the more wealthy discerning adventurer. Begone with you, riff raff.");
+            ~chatplayer("<p,neutral>But you don't even have clothes, how can you seriously call anyone riff raff.");
+            ~chatnpc("<p,neutral>Hummph.");
+            return;
+        }
+        switch_int (~p_choice3("Okay, here's 875 coins.", 1, "Never mind.", 2, "Why is it worth the entry cost?", 3)) {
+            case 1 : @saniboch_pay;
+            case 2 : ~chatplayer("<p,neutral>Never mind.");
+            case 3 :
+                ~chatplayer("<p,neutral>Why is it worth the entry cost?");
+                ~chatnpc("<p,neutral>It leads to a huge fearsome dungeon, populated by giants and strange dogs. Adventurers come from all around to explore its depths.");
+                ~chatnpc("<p,neutral>I know not what lies deeper in myself, for my skills in agility and woodcutting are inadequate, but I hear tell of even greater dangers deeper in.");
+        }
+    case 2 :
+        ~chatplayer("<p,quiz>Where does this strange entrance lead?");
+        ~chatnpc("<p,happy>To a huge fearsome dungeon, populated by giants and strange dogs. Adventurers come from all around to explore its depths.");
+        ~chatnpc("<p,neutral>I know not what lies deeper in myself, for my skills in agility and woodcutting are inadequate.");
+    case 3 : ~chatplayer("<p,neutral>Good day to you too.");
+    case 4 :
+        ~chatplayer("<p,neutral>I'm impressed, that tree is growing on that shed.");
+        ~chatnpc("<p,neutral>My employer tells me it is an uncommon sort of tree called the Fyburglars tree.");
+}
+
+[opnpc3,tribesman_doorman]
+if (%saniboch_paid = 1) {
+    ~chatnpc("<p,neutral>You have already given me lots of nice coins, you may go in.");
+    return;
+}
+if (inv_total(inv, coins) < 875) {
+    ~chatnpc("<p,neutral>I'll want 875 coins to let you enter.");
+    ~chatnpc("<p,neutral>Well this is a dungeon for the more wealthy discerning adventurer. Begone with you, riff raff.");
+    return;
+}
+@saniboch_pay;
+
+[label,saniboch_pay]
+inv_del(inv, coins, 875);
+%saniboch_paid = 1;
+~mesbox("You pay Saniboch 875 coins.");
+~chatnpc_specific("Saniboch", tribesman_doorman, "<p,neutral>Many thanks. You may now pass the door. May your death be a glorious one!");
+
+// the entrance: once each time you've paid (the way in itself is the links table's)
+[oploc1,dungeon_tree_closed]
+if (%saniboch_paid ! 1) {
+    ~mesbox("You can't go in there without paying!");
+    return;
+}
+%saniboch_paid = 0;
+~eascape_link(1);
+
+// ---------------------------------------------------------------- vines
+[oploc1,karam_dungeon_vineblocking1] @brimhaven_vine;
+[oploc1,karam_dungeon_vineblocking2] @brimhaven_vine;
+[oploc1,karam_dungeon_vineblocking3] @brimhaven_vine;
+[oploc1,karam_dungeon_vineblocking4] @brimhaven_vine;
+[oploc1,karam_dungeon_vineblocking5] @brimhaven_vine;
+
+[label,brimhaven_vine]
+def_namedobj $axe = ~rcu_abyss_axe;
+if ($axe = null) {
+    mes("You need a hatchet to cut through these vines.");
+    return;
+}
+if (stat(woodcutting) < 10) {
+    mes("You need a Woodcutting level of at least 10 to chop through the vines.");
+    return;
+}
+p_arrivedelay;
+mes("You swing your hatchet at the vines...");
+anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+p_delay(2);
+if (random(6) = 0) {
+    anim(null, 0);
+    mes("You fail to cut the vines.");
+    return;
+}
+anim(null, 0);
+mes("You hack your way through the vines.");
+// through to the other side of the vines (2009Scape: across them by their facing)
+def_coord $dest;
+if (calc(loc_angle % 2) ! 0) {
+    if (coordx(coord) > coordx(loc_coord)) $dest = movecoord(loc_coord, -1, 0, 0);
+    else $dest = movecoord(loc_coord, 1, 0, 0);
+} else if (coordz(coord) > coordz(loc_coord)) {
+    $dest = movecoord(loc_coord, 0, 0, -1);
+} else {
+    $dest = movecoord(loc_coord, 0, 0, 1);
+}
+loc_del(4);
+~forcemove(loc_coord);
+~forcemove($dest);
+
+// ---------------------------------------------------------------- stepping stones
+[oploc1,karam_dungeon_stone1]
+if (stat(agility) < 12) {
+    mes("You need an agility level of 12 to attempt to cross the stepping stones."); // Void's says "swing on this vine"
+    return;
+}
+p_arrivedelay;
+mes("You carefully start crossing the stepping stones...");
+~brimhaven_stone_jump(0, -1);
+~brimhaven_stone_jump(0, -1);
+~brimhaven_stone_jump(-1, 0);
+~brimhaven_stone_jump(-1, 0);
+~brimhaven_stone_jump(0, -1);
+~brimhaven_stone_jump(0, -1);
+~brimhaven_stone_jump(0, -1);
+stat_advance(agility, 75);
+mes("... You safely cross to the other side.");
+
+[oploc1,karam_dungeon_stone2]
+if (stat(agility) < 12) {
+    mes("You need an agility level of 12 to attempt to cross the stepping stones.");
+    return;
+}
+p_arrivedelay;
+mes("You carefully start crossing the stepping stones...");
+~brimhaven_stone_jump(0, 1);
+~brimhaven_stone_jump(0, 1);
+~brimhaven_stone_jump(0, 1);
+~brimhaven_stone_jump(1, 0);
+~brimhaven_stone_jump(1, 0);
+~brimhaven_stone_jump(0, 1);
+~brimhaven_stone_jump(0, 1);
+stat_advance(agility, 75);
+mes("... You safely cross to the other side.");
+
+[proc,brimhaven_stone_jump](int $dx, int $dz)
+def_coord $to = movecoord(coord, $dx, 0, $dz);
+anim(human_steppingstonejump, 0);
+p_exactmove(coord, $to, 5, 25, ~coord_direction(coord, $to));
+p_delay(1);
+
+// ---------------------------------------------------------------- log balance
+[oploc1,karam_dungeon_bamboo_logbalance1] ~brimhaven_log(2687);
+[oploc1,karam_dungeon_bamboo_logbalance3] ~brimhaven_log(2682);
+
+[proc,brimhaven_log](int $x)
+if (stat(agility) < 30) {
+    mes("You need an Agility level of 30 to cross the log.");
+    return;
+}
+p_arrivedelay;
+mes("You walk carefully across the slippery log...");
+~set_forcemove_bas(human_walk_logbalance);
+~forcemove(movecoord(loc_coord, 0, 0, calc(coordz(coord) - coordz(loc_coord))));
+~forcemove(movecoord(coord, calc($x - coordx(coord)), 0, 0));
+~update_bas;
+stat_advance(agility, 100);
+mes("... and make it safely to the other side.");
+
+// ---------------------------------------------------------------- pipes
+[oploc1,loc_5099] ~brimhaven_pipe(22, 85);
+[oploc1,loc_5100] ~brimhaven_pipe(34, 100);
+
+[proc,brimhaven_pipe](int $level, int $xp)
+if (stat(agility) < $level) {
+    mes("You need an Agility level of <tostring($level)> to squeeze through the pipe."); // ours
+    return;
+}
+p_arrivedelay;
+def_int $dz = 7;
+def_int $dir = ^exact_north;
+if (coordz(coord) > coordz(loc_coord)) {
+    $dz = -7;
+    $dir = ^exact_south;
+}
+anim(human_crawling, 0);
+p_exactmove(coord, movecoord(coord, 0, 0, $dz), 10, 150, $dir);
+p_delay(4);
+anim(null, 0);
+stat_advance(agility, $xp);
