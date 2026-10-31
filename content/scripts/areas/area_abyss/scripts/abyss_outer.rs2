@@ -258,19 +258,19 @@ if ($axe = null) {
     mes("You do not have an axe that you have the Woodcutting level to use.");
     return;
 }
-anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+anim(~rcu_abyss_axe_anim($axe), 0);
 sound_synth(woodchop_quick, 1, 0); // guess
 p_delay(1);
 
 if (stat_random(woodcutting, 0, 255) = true) {
-    anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+    anim(~rcu_abyss_axe_anim($axe), 0);
     sound_synth(woodchop_quick, 1, 0); // guess
     cam_moveto(coord, 2500, 0, 0);
     cam_lookat(loc_coord, 0, 10, 10);
     p_delay(1);
 
     %rcu_abyssal_generator = 14;
-    anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+    anim(~rcu_abyss_axe_anim($axe), 0);
     sound_synth(woodchop_quick, 1, 0); // guess
     p_delay(1);
     
@@ -427,3 +427,8 @@ if (($worn = steel_axe | inv_total(inv, steel_axe) > 0) & $level > 5) return(ste
 if ($worn = iron_axe | inv_total(inv, iron_axe) > 0) return(iron_axe);
 if ($worn = bronze_axe | inv_total(inv, bronze_axe) > 0) return(bronze_axe);
 return(null);
+
+// the chopping animation: the dragon axe has it in its woodcutting struct, the others as a param
+[proc,rcu_abyss_axe_anim](namedobj $axe)(seq)
+if (oc_param($axe, woodcutting_struct) ! null) return(struct_param(oc_param($axe, woodcutting_struct), skill_anim));
+return(oc_param($axe, woodcutting_anim));
