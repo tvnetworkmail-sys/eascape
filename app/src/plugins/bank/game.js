@@ -10,15 +10,8 @@
 // so they now span x 239-384 at y 291-327. The chatbox text area starts at (17, 357).
 const BUTTON = { x: 4 + 400, y: 4 + 291, w: 36, h: 36 };
 const DEPOSIT = { x: 4 + 437, y: 4 + 291, w: 36, h: 36 };
-// The bank's own 72 x 36 buttons, used as artwork for ours: Item and Note (one is red
-// when selected, the other grey). Not Swap and Insert: the "Rearrange mode:" label above
-// them has a descender (the g) that dips into the buttons' top row and showed up as an
-// orange dot. "Withdraw as:" above Item and Note has none.
-const ITEM = { x: 4 + 239, y: 4 + 291 };
-const NOTE = { x: 4 + 312, y: 4 + 291 };
-const BODY_TOP = 8;
-const BODY_H = 23;
 const MAX_LEN = 30;
+const ICONS = require('./icons.js');
 
 module.exports = function bankSearch(ctx) {
   let open = false;
@@ -72,114 +65,35 @@ module.exports = function bankSearch(ctx) {
     el.style.height = `${box.h * g.s}px`;
   }
 
-  // ---- button artwork: cut from the bank's own buttons so it matches exactly
-
-  let art = null; // { grey: canvas, red: canvas }
-
-  function grab(src) {
-    const c = ctx.canvas();
-    const out = document.createElement('canvas');
-    out.width = BUTTON.w;
-    out.height = BUTTON.h;
-    const g = out.getContext('2d');
-    // Left and right 18 columns of the 72-wide button keep both bevelled ends. Only the
-    // stone body (rows 8-30) is copied: the "Rearrange mode:" label overlaps the rows
-    // above it, and outside the body the bank's own background shows through.
-    g.drawImage(c, src.x, src.y + BODY_TOP, 18, BODY_H, 0, BODY_TOP, 18, BODY_H);
-    g.drawImage(c, src.x + 54, src.y + BODY_TOP, 18, BODY_H, 18, BODY_TOP, 18, BODY_H);
-    return out;
-  }
-
-  function isRed(src) {
-    try {
-      const probe = document.createElement('canvas');
-      probe.width = 1;
-      probe.height = 1;
-      const p = probe.getContext('2d');
-      p.drawImage(ctx.canvas(), src.x + 8, src.y + 20, 1, 1, 0, 0, 1, 1);
-      const [r, g] = p.getImageData(0, 0, 1, 1).data;
-      return r > g * 1.6;
-    } catch {
-      return false;
+  // the buttons' pictures (icons.js), loaded once; render again when they arrive
+  const pics = {};
+  function pic(name) {
+    if (!pics[name]) {
+      const img = new Image();
+      img.onload = () => render();
+      img.src = ICONS[name];
+      pics[name] = img;
     }
-  }
-
-  function captureArt() {
-    if (!ctx.canvas()) return;
-    const itemRed = isRed(ITEM);
-    const noteRed = isRed(NOTE);
-    if (itemRed === noteRed) return; // not drawn yet; try again on the next render
-    art = { red: grab(itemRed ? ITEM : NOTE), grey: grab(itemRed ? NOTE : ITEM) };
+    return pics[name].complete && pics[name].naturalWidth ? pics[name] : null;
   }
 
   function drawButton(on) {
-    if (!art) captureArt();
     const g = button.getContext('2d');
     g.clearRect(0, 0, BUTTON.w, BUTTON.h);
-    if (art) {
-      g.drawImage(on ? art.red : art.grey, 0, 0);
-    } else {
-      g.fillStyle = on ? 'rgb(128, 30, 21)' : 'rgb(72, 64, 52)';
-      g.fillRect(1, BODY_TOP + 1, 34, BODY_H - 2);
+    const img = pic('search');
+    if (img) g.drawImage(img, 0, 0);
+    if (on) {
+      // while searching, the button glows red like the bank's selected buttons
+      g.fillStyle = 'rgba(160, 30, 20, 0.45)';
+      g.fillRect(3, 3, BUTTON.w - 6, BUTTON.h - 6);
     }
-    // Magnifying glass, drawn in the game's style: light grey with a black outline.
-    const icon = (stroke, dx, dy, w) => {
-      g.strokeStyle = stroke;
-      g.lineWidth = w;
-      g.lineCap = 'round';
-      g.beginPath();
-      g.arc(16 + dx, 17 + dy, 4.5, 0, Math.PI * 2);
-      g.stroke();
-      g.beginPath();
-      g.moveTo(19.3 + dx, 20.3 + dy);
-      g.lineTo(23 + dx, 24 + dy);
-      g.stroke();
-    };
-    icon('#000', 1, 1, 3);
-    icon('#000', 0, 0, 4);
-    icon('rgb(220, 220, 210)', 0, 0, 2);
   }
 
-  // Deposit inventory: the same grey button with a small chest and a green arrow going in,
-  // drawn after the OSRS button (your screenshot)
   function drawDeposit() {
-    if (!art) captureArt();
     const g = deposit.getContext('2d');
     g.clearRect(0, 0, DEPOSIT.w, DEPOSIT.h);
-    if (art) {
-      g.drawImage(art.grey, 0, 0);
-    } else {
-      g.fillStyle = 'rgb(72, 64, 52)';
-      g.fillRect(1, BODY_TOP + 1, 34, BODY_H - 2);
-    }
-    // chest: outline, lid and body, a gold clasp
-    g.fillStyle = '#000';
-    g.fillRect(12, 15, 16, 13);
-    g.fillStyle = 'rgb(120, 72, 32)';
-    g.fillRect(13, 16, 14, 4);
-    g.fillStyle = 'rgb(96, 56, 24)';
-    g.fillRect(13, 21, 14, 6);
-    g.fillStyle = '#000';
-    g.fillRect(12, 20, 16, 1);
-    g.fillStyle = 'rgb(220, 180, 60)';
-    g.fillRect(19, 19, 2, 3);
-    // green arrow, down and to the right into the chest
-    const arrow = (fill, dx, dy) => {
-      g.fillStyle = fill;
-      g.beginPath();
-      g.moveTo(5 + dx, 10 + dy);
-      g.lineTo(9 + dx, 10 + dy);
-      g.lineTo(14 + dx, 15 + dy);
-      g.lineTo(16 + dx, 13 + dy);
-      g.lineTo(16 + dx, 20 + dy);
-      g.lineTo(9 + dx, 20 + dy);
-      g.lineTo(11 + dx, 18 + dy);
-      g.lineTo(5 + dx, 12 + dy);
-      g.closePath();
-      g.fill();
-    };
-    arrow('#000', 1, 1);
-    arrow('rgb(40, 200, 40)', 0, 0);
+    const img = pic('deposit');
+    if (img) g.drawImage(img, 0, 0);
   }
 
   function blockGame(el, onClick = toggle) {
@@ -316,7 +230,6 @@ module.exports = function bankSearch(ctx) {
           saveLayout(data);
         } else if (type === 'bank-open') {
           open = !!data;
-          art = null; // re-cut the artwork each time the bank opens
           if (!open) {
             query = '';
             found = -1;
