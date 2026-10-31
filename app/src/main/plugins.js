@@ -11,6 +11,7 @@ const CHECKED_2006 = new Set([
   'barrows', // made for EASCape's 2006 Barrows (17 Oct 2026)
   'xptracker', // rebuilt for the 2006 skills (20 Oct 2026)
   'slayer', // made for EASCape's 2006 Slayer (20 Oct 2026)
+  'kingdom', // made for EASCape's 2006 Miscellania (31 Oct 2026)
 ]);
 
 function notChecked(d) {
