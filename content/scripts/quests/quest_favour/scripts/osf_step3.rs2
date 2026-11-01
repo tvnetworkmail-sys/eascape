@@ -181,8 +181,8 @@ return(add(inv_total(inv, pigeons), inv_total(inv, pigeoncage)));
 
 [proc,osf_take_pigeon_cages](int $n)
 def_int $a = min($n, inv_total(inv, pigeons));
-inv_del(inv, pigeons, $a);
-inv_del(inv, pigeoncage, sub($n, $a));
+if ($a > 0) inv_del(inv, pigeons, $a);
+if ($n > $a) inv_del(inv, pigeoncage, sub($n, $a));
 
 [proc,osf_horvik_step3]()(boolean)
 if (%onesmallfavour = 205) {
