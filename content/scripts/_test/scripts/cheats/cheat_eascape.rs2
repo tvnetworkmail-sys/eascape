@@ -1745,7 +1745,9 @@ p_telejump(0_49_50_29_51);
 
 // ::onesmallfavourpack - what One Small Favour's favours need so far (OSRS wiki's quick guide):
 // 3 steel bars for Horvik, a bowl of water and an empty cup for the hot water, 1 harralander,
-// 2 guam leaves and 1 marrentill for Guthix rest, and 1,000 coins
+// 2 guam leaves and 1 marrentill for Guthix rest, 3,000 coins (gems, mattress, scroll), a chisel
+// for the landing lights' gems, a hammer and a bronze, iron and steel bar for the weather vane,
+// and a rune pickaxe to wield against the Slagilith
 [debugproc,onesmallfavourpack]
 if (p_finduid(uid) = false) {
     return;
@@ -1757,7 +1759,13 @@ $banked = calc($banked + ~questpack_give(cup_empty, 1));
 $banked = calc($banked + ~questpack_give(harralander, 1));
 $banked = calc($banked + ~questpack_give(guam_leaf, 2));
 $banked = calc($banked + ~questpack_give(marentill, 1));
-$banked = calc($banked + ~questpack_give(coins, 1000));
+$banked = calc($banked + ~questpack_give(coins, 3000));
+$banked = calc($banked + ~questpack_give(chisel, 1));
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(bronze_bar, 1));
+$banked = calc($banked + ~questpack_give(iron_bar, 1));
+$banked = calc($banked + ~questpack_give(steel_bar, 1));
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
 ~questpack_done("One Small Favour", $banked);
 
 // ::osfstage <n> - sets One Small Favour's stage (%onesmallfavour: the OSRS wiki transcript's

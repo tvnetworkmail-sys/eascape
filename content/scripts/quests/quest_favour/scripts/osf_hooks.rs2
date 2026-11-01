@@ -825,6 +825,7 @@ switch_int (~p_choice2("No way...I've had enough of this wild goose chase.", 1, 
 
 // ---------------------------------------------------------------- Phantuwti Fanstuwi Farsight (Seers' Village)
 [opnpc1,favour_phantuwti_farsight]
+if (~osf_farsight_step2 = true) return; // step 2 (osf_petra.rs2)
 if (%onesmallfavour = 90) {
     if (~p_choice2("Hi, can you give me a weather forecast?", 1, "Nothing, thanks.", 2) = 2) return; // ours: "Nothing, thanks."
     ~chatplayer("<p,quiz>Hi, can you give me a weather forecast?");
@@ -898,9 +899,13 @@ if (%onesmallfavour = 95) %onesmallfavour = 100;
 
 // ---------------------------------------------------------------- Wizard Cromperty (East Ardougne)
 [label,osf_hook_ardounge_wizard]
-if (~osf_stage_between(100, 109) = false) @osf_orig_ardounge_wizard;
+if (~osf_stage_between(100, 109) = false & ~osf_stage_between(140, 152) = false) @osf_orig_ardounge_wizard;
 ~chatnpc("<p,neutral>Hello there. My name is Cromperty. I am a wizard, and an inventor.");
 ~chatnpc("<p,neutral>You must be <displayname>. My good friend Sedridor has told me about you. As both wizard and inventor, he has aided me in my great invention!");
+if (%onesmallfavour >= 140) {
+    if (~osf_cromperty_step2 = false) @osf_orig_ardounge_wizard; // step 2 (osf_step2.rs2)
+    return;
+}
 if (%onesmallfavour = 100) {
     if (~p_choice2("I need to talk to you about a girl stuck in some rock!", 1, "Something else.", 2) = 2) @osf_orig_ardounge_wizard;
     ~chatplayer("<p,neutral>I need to talk to you about a girl stuck in some rock!");
@@ -935,6 +940,7 @@ if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2
 // ---------------------------------------------------------------- Tindel Marchant (Port Khazard)
 [opnpc1,tindel_marchant]
 ~chatnpc("<p,happy>Hello there! Welcome to my special antiques boutique.");
+if (~osf_tindel_step2 = true) return; // step 2 (osf_step2.rs2)
 if (%onesmallfavour = 105) {
     if (~p_choice2("Wizard Cromperty sent me to get some iron oxide.", 1, "Nothing, thanks.", 2) = 2) return; // ours: "Nothing, thanks."
     ~chatplayer("<p,neutral>Wizard Cromperty sent me to get some iron oxide. Do you have some?");
@@ -997,6 +1003,7 @@ if (~osf_stage_between(110, 129) = true) {
 
 // ---------------------------------------------------------------- Rantz (Feldip Hills)
 [label,osf_hook_rantz]
+if (~osf_rantz_step2 = true) return; // step 2 (osf_step2.rs2)
 if (~osf_stage_between(110, 129) = false) @osf_orig_rantz;
 if (%onesmallfavour = 110) {
     if (~p_choice2("I need to talk to you about a mattress.", 1, "Something else.", 2) = 2) @osf_orig_rantz;
@@ -1034,6 +1041,7 @@ switch_int (~p_choice5("Can you fill this mattress with feathers?", 1, "What's g
 // ---------------------------------------------------------------- Gnormadium Avlafrim (Feldip Hills)
 [opnpc1,gnormadium_avlafrim]
 ~chatnpc("<p,neutral>Hello! Don't get in the way around here, we've got a lot of work to do!");
+if (~osf_gnormadium_step2 = true) return; // step 2 (osf_step2.rs2)
 @osf_gnormadium_options;
 
 [label,osf_gnormadium_options]

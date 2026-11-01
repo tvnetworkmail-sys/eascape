@@ -1,0 +1,341 @@
+// EASCape: One Small Favour, step 2 (continued): the animate rock scroll, the Slagilith, Petra
+// and Farsight's weather vane. Words from the OSRS wiki's quest transcript; the rest from its
+// pages (One Small Favour, Slagilith, Broken vane part). Stages: see osf_step2.rs2.
+
+// the sculpture is at 2621,9835 in the Goblin Cave; the rock piles at 2620,9833 and 2620,9836
+[opheld1,favour_animate_rock]
+// ours: "in range" is within 5 squares of the sculpture
+if (distance(coord, 0_40_153_61_43) > 5) {
+    mes("The spell doesn't seem to be working here.");
+    return;
+}
+if (%onesmallfavour = 145 | (%onesmallfavour = 150 & npc_find(coord, slagilith, 10, 0) = false)) {
+    // ours: the Slagilith leaves after 5 minutes (OSRS wiki); reading again before it's beaten
+    // calls it back
+    say("Um nahi listic durooo-rah!");
+    if (%onesmallfavour = 145) {
+        %onesmallfavour = 150;
+        ~chatplayer("<p,shock>Whoooah! That was a bit of a misfire.");
+        ~chatplayer("<p,scared>And this doesn't look good!");
+    }
+    npc_add(0_40_153_60_41, slagilith, 500);
+    npc_setmode(opplayer2);
+    return;
+}
+if (%onesmallfavour = 150) {
+    mes("You'd better deal with that Slagilith first!"); // ours
+    return;
+}
+if (%onesmallfavour ! 152) {
+    mes("Nothing interesting happens."); // ours: Petra is already free
+    return;
+}
+say("Um nahi listic durooo-rah!");
+npc_add(map_findsquare(0_40_153_61_42, 1, 2, ^map_findsquare_lineofwalk), favour_petra, 100);
+npc_facesquare(coord);
+~chatnpc("<p,happy>Oh thank goodness you released me...how long have I been stuck in that gloomy wall?");
+~chatplayer("<p,neutral>Oh, not so long...I don't think...");
+~chatplayer("<p,confused>I mean...that is... I'm not so sure...at all...in fact.");
+~chatnpc("<p,neutral>Well, at least I'm ok...thanks to you! Last time I get involved with that Cromperty lunatic...in fact I have some words to say to that man!");
+~chatplayer("<p,neutral>Well actually, I think that some of the people at the Seers Village are worried about you. That's how I came to find you here, Phantuwti sent me.");
+~chatnpc("<p,neutral>Oh, right, yes, well I guess I'd better go back there and let them all know that I'm safe then..Ok, thanks...I'll be off now and once again thanks for your help.");
+~chatplayer("<p,happy>No problem...I'll probably see you back at the Seers Village.");
+%onesmallfavour = 155;
+npc_del;
+
+// the Slagilith beaten: on to Petra
+[ai_queue3,slagilith]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(osf_slagilith_beaten, 0, 0);
+}
+
+[queue,osf_slagilith_beaten]
+if (%onesmallfavour = 150) %onesmallfavour = 152;
+
+// player_melee.rs2: a third of the damage without a pickaxe wielded (OSRS wiki: "just reduces
+// the damage to 33% if the attacker isn't wielding a pickaxe")
+[proc,osf_slagilith_maxhit](int $maxhit)(int)
+def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+if ($weapon ! null) {
+    if (oc_category($weapon) = weapon_pickaxe) return($maxhit);
+}
+return(scale(33, 100, $maxhit));
+
+// ---------------------------------------------------------------- Farsight after Petra (osf_hooks.rs2 asks here first)
+[proc,osf_farsight_step2]()(boolean)
+if (%onesmallfavour = 155) {
+    if (~p_choice2("I've released Petra, she should have returned.", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~chatplayer("<p,happy>I've released Petra, she should have returned.");
+    ~chatnpc("<p,happy>Hi there, yes she has actually! Well done, you're a true hero!");
+    ~chatplayer("<p,quiz>So, can I have the weather report now please?");
+    ~chatnpc("<p,neutral>I wish I could but it's just been so difficult to get a clear image of the future at the moment. You know...we're all so relieved that Petra has returned and all that.");
+    ~osf_farsight_report_options;
+    return(true);
+}
+if (~osf_stage_between(160, 164) = true) {
+    if (%osf_vane = 2) {
+        if (~obj_gettotal(favour_ornament_broken) = 0 & ~obj_gettotal(favour_ornament_fixed) = 0 & %ornamentfixed = 0
+            | ~obj_gettotal(favour_directionals_broken) = 0 & ~obj_gettotal(favour_directionals_fixed) = 0 & %directionalsfixed = 0
+            | ~obj_gettotal(favour_pillar_broken) = 0 & ~obj_gettotal(favour_pillar_fixed) = 0 & %rotatingpillarfixed = 0) {
+            // ours: the wiki says lost parts cost 1,000 coins from Phantuwti; the words are ours
+            if (~p_choice2("I've lost some of the weather vane parts.", 1, "Nothing, thanks.", 2) = 2) return(true);
+            ~chatplayer("<p,sad>I've lost some of the weather vane parts.");
+            ~chatnpc("<p,neutral>I have spares, but they'll cost you 1,000 coins.");
+            if (inv_total(inv, coins) < 1000 | inv_freespace(inv) < 3) {
+                ~chatplayer("<p,sad>I can't manage that right now.");
+                return(true);
+            }
+            inv_del(inv, coins, 1000);
+            if (~obj_gettotal(favour_ornament_broken) = 0 & ~obj_gettotal(favour_ornament_fixed) = 0 & %ornamentfixed = 0) inv_add(inv, favour_ornament_broken, 1);
+            if (~obj_gettotal(favour_directionals_broken) = 0 & ~obj_gettotal(favour_directionals_fixed) = 0 & %directionalsfixed = 0) inv_add(inv, favour_directionals_broken, 1);
+            if (~obj_gettotal(favour_pillar_broken) = 0 & ~obj_gettotal(favour_pillar_fixed) = 0 & %rotatingpillarfixed = 0) inv_add(inv, favour_pillar_broken, 1);
+            return(true);
+        }
+        if (~p_choice2("I'm fixing the weather vane.", 1, "Nothing, thanks.", 2) = 2) return(true);
+        ~chatplayer("<p,neutral>Hey, I'm fixing the weather vane!");
+        ~chatnpc("<p,happy>Fantastic, come and let me know when you've finished.");
+        return(true);
+    }
+    if (~p_choice2("Ok, show me where this weather vane is...I want to look at it.", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~osf_farsight_show_vane;
+    return(true);
+}
+if (%onesmallfavour = 165) {
+    if (~p_choice2("I've fixed the weather vane!", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~chatplayer("<p,happy>I've fixed the weather vane!");
+    ~chatnpc("<p,happy>Oh, thanks so much...you can't believe how helpful it is to get accurate predictions on the weather...we Seers are almost blind without it.");
+    ~mesbox("Phantuwti starts compiling a weather report for you.");
+    ~osf_give(favour_weather_report);
+    %onesmallfavour = 170;
+    ~chatnpc("<p,happy>There you go...a weather report as asked for...I hope it helps you!");
+    return(true);
+}
+if (%onesmallfavour = 170) {
+    if (~obj_gettotal(favour_weather_report) > 0) {
+        if (~p_choice2("Hi again, what should I do now?", 1, "Nothing, thanks.", 2) = 2) return(true);
+        ~chatplayer("<p,quiz>Hi again, what should I do now?");
+        ~chatnpc("<p,neutral>I've no clue my friend, you mentioned something about Arhein, but your plans might have changed in the meantime.");
+        return(true);
+    }
+    if (~p_choice2("I've lost the weather report.", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~chatplayer("<p,sad>I've lost the weather report.");
+    ~chatnpc("<p,neutral>Well, I knew you were going to say that! Here you go...have another one!");
+    ~osf_give(favour_weather_report);
+    ~chatplayer("<p,happy>Thanks!");
+    return(true);
+}
+return(false);
+
+[proc,osf_farsight_report_options]
+switch_int (~p_choice5("Listen you...just give me the blooming weather report!", 1, "Why can't you get a clear picture?", 2, "I've done my part of the deal, now hand over that weather report.", 3, "I'll run you through if you don't give me that weather report.", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,angry>Listen you...just give me the blooming weather report!");
+        ~chatnpc("<p,neutral>Er...no. I can't, I told you, I can't get a clear picture. Nope, sorry, the conditions are just not quite right.");
+        ~osf_farsight_report_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Why can't you get a clear picture?");
+        ~chatnpc("<p,neutral>Well, it's just like that Ok, I just can't get a clear picture...and that's it.");
+        ~osf_farsight_report_options;
+    case 3 :
+        ~chatplayer("<p,angry>I've done my part of the deal, now hand over that weather report.");
+        ~chatnpc("<p,sad>I would really like to, please believe me, I would, but I just can't.");
+        ~osf_farsight_report_options;
+    case 4 :
+        ~chatplayer("<p,angry>I'll run you through if you don't give me that weather report.");
+        ~chatnpc("<p,sad>Well, that's not very nice...I mean, I'm a nice guy and I thought you were nice too! Why would you want to run me through? I mean, it's only a weather report.");
+        ~chatnpc("<p,neutral>It doesn't make sense to get angry about something so trivial.");
+        ~osf_farsight_angry_options;
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[proc,osf_farsight_angry_options]
+switch_int (~p_choice5("You're making me angry! I did you a favour, now pay up!", 1, "Why can't you get a clear picture?", 2, "You're just a fake...you can't predict the weather!", 3, "What's it going to take for you to give me that weather report?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,angry>You're making me angry! I did you a favour, now pay up!");
+        ~chatnpc("<p,neutral>I'm not making you angry, you're doing all that on your own! I just don't have a weather report to give you!");
+        ~chatnpc("<p,neutral>I can't help that, you should be more understanding and less forceful, then I might be persuaded to give you the weather report.");
+        ~osf_farsight_angry_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Why can't you get a clear picture?");
+        ~chatnpc("<p,neutral>Well, it's complicated, the special Seers tools that help us predict the weather are not aligned properly...");
+        ~osf_farsight_tools_options;
+    case 3 :
+        ~chatplayer("<p,angry>You're just a fake...you can't predict the weather!");
+        ~chatnpc("<p,angry>Why...how dare you...I've never been so insulted in my life.");
+        ~chatplayer("<p,neutral>You should get out more!");
+    case 4 :
+        ~chatplayer("<p,quiz>What's it going to take for you to give me that weather report.");
+        ~chatnpc("<p,neutral>Well, nothing in fact, as I can't give you a weather report. I'm sorry, but that's just the way it is.");
+        ~osf_farsight_angry_options;
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[proc,osf_farsight_tools_options]
+switch_int (~p_choice5("You're making me angry! I did you a favour, now pay up!", 1, "Which special Seers tools do you mean?", 2, "You're just a fake...you can't predict the weather!", 3, "What's it going to take for you to give me that weather report?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,angry>You're making me angry! I did you a favour, now pay up!");
+        ~chatnpc("<p,neutral>I'm not making you angry, you're doing all that on your own! I just don't have a weather report to give you!");
+        ~osf_farsight_tools_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Which special Seers tools do you mean?");
+        ~chatnpc("<p,neutral>Well, we use a special combination of items which are used to gauge current weather movements and we're able to predict future weather patterns from these. Of course, it's strongly linked to the Seers' foresight ability.");
+        ~osf_farsight_items_options;
+    case 3 :
+        ~chatplayer("<p,angry>You're just a fake...you can't predict the weather!");
+        ~chatnpc("<p,angry>Why...how dare you...I've never been so insulted in my life.");
+        ~chatplayer("<p,neutral>You should get out more!");
+    case 4 :
+        ~chatplayer("<p,quiz>What's it going to take for you to give me that weather report.");
+        ~chatnpc("<p,neutral>Well, nothing in fact, as I can't give you a weather report. I'm sorry, but that's just the way it is.");
+        ~osf_farsight_tools_options;
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[proc,osf_farsight_items_options]
+switch_int (~p_choice5("What do you mean, 'special combination of items'?", 1, "You're talking in riddles, just give me a straight answer!", 2, "How hard can it be to predict the weather?", 3, "Ok, what's it going to take to get a weather report?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you mean, 'special combination of items'?");
+        ~chatnpc("<p,neutral>Well, let me think now...There's a copper eye, a rotating thing, and some pointy direction thingies. It's all highly scientific - and of course mystical - in a very magical 'foresight' sort of way.");
+        ~chatplayer("<p,quiz>You're talking about a weather vane aren't you?");
+        ~chatnpc("<p,shifty>Er...maybe...I may be talking about that...");
+        ~chatplayer("<p,angry>You can't predict the weather because your weather vane is broken...that's it isn't it? Holy Saradomin breath....you can't even predict the weather, you need a weather vane!");
+        ~chatnpc("<p,shifty>Erm, well....err....");
+        ~osf_farsight_show_vane;
+    case 2 :
+        ~chatplayer("<p,angry>You're talking in riddles, just give me a straight answer!");
+        ~chatnpc("<p,neutral>Since when has any Seer ever given you a straight answer...the power of knowing the future and the visions we see have to be wrapped in allegory so that the truth can slowly be accepted by the listener.");
+        ~chatplayer("<p,angry>This isn't allegory though, you're just avoiding my questions!");
+        ~chatnpc("<p,neutral>How can you be sure? Are you so sure of what you just asked me? And am I really avoiding your questions by asking you lots of other questions? Answer me that huh!");
+        ~chatnpc("<p,neutral>Anyway, we need a special combination of items before we can truly have foreknowledge of the weather.");
+        ~osf_farsight_items_options;
+    case 3 :
+        ~chatplayer("<p,quiz>How hard can it be to predict the weather?");
+        ~chatnpc("<p,neutral>Quite hard actually. I mean, you're still waiting for me to do it aren't you and I've told you time and again that I can't...right now...but that normally it's actually quite an easy thing for me to do.");
+        ~osf_farsight_items_options;
+    case 4 :
+        ~chatplayer("<p,quiz>Ok, what's it going to take to get a weather report?");
+        ~chatnpc("<p,neutral>Hmm, well, you can come back in several months and see if we can do one for you....does that help?");
+        ~chatplayer("<p,angry>No, sorry, it doesn't help at all, I need a weather report and I need it now...so hand it over!");
+        ~osf_farsight_items_options;
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[proc,osf_farsight_show_vane]
+~chatplayer("<p,neutral>Ok, show me where this weather vane is...I want to look at it.");
+~chatnpc("<p,quiz>What for?");
+~chatplayer("<p,neutral>I may be able to fix it and then you can give me a weather report...come on, let's go!");
+~chatnpc("<p,neutral>Oh, very well..but you'll need to be a specialist to fix this weather vane, it was made by some of the most experienced....");
+~chatplayer("<p,angry>Just show me it!");
+~chatnpc("<p,neutral>Ok, ok, it's up on the roof...");
+if (%onesmallfavour = 155) %onesmallfavour = 160;
+
+// ---------------------------------------------------------------- the weather vane (2702,3476, on the roof)
+[oploc1,osf_weathervane]
+if (%weathervanefixed = 1) return;
+mes("It looks pretty broken!");
+
+[oploc5,osf_weathervane]
+if (%weathervanefixed = 1) return;
+if (%osf_vane = 0 | ~osf_stage_between(160, 164) = false) {
+    ~mesbox("You search the weather vane... you find that the ornament is broken, as are the directionals and the rotating bar. You think you may be able to repair them if you can get them off. They look pretty rusted on, it might take quite a powerful force to loosen them.");
+    return;
+}
+if (%osf_vane = 2) {
+    ~mesbox("You can find nothing interesting here, all the parts seem to be missing.");
+    return;
+}
+if (inv_freespace(inv) < 3) {
+    ~mesbox("You see that there are three parts which you could replace, but you don't have enough inventory space to store them all.");
+    return;
+}
+%osf_vane = 2;
+inv_add(inv, favour_ornament_broken, 1);
+inv_add(inv, favour_directionals_broken, 1);
+inv_add(inv, favour_pillar_broken, 1);
+~objbox(favour_ornament_broken, "You find a broken ornament...", 250, 0, 0);
+~objbox(favour_directionals_broken, "broken directionals...", 250, 0, 0);
+~objbox(favour_pillar_broken, "and a broken rotating pillar.", 250, 0, 0);
+
+[oplocu,osf_weathervane]
+if (%weathervanefixed = 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_obj (last_useitem) {
+    case hammer :
+        // ours: only once Farsight has told you of it
+        if (~osf_stage_between(160, 164) = false | %osf_vane ! 0) {
+            ~displaymessage(^dm_default);
+            return;
+        }
+        anim(human_smithing, 0);
+        %osf_vane = 1;
+        ~mesbox("You give the structure a good solid whack...");
+    case favour_ornament_fixed :
+        inv_del(inv, favour_ornament_fixed, 1);
+        %ornamentfixed = 1;
+        @osf_vane_part("You fix the ornament into the weather vane.");
+    case favour_directionals_fixed :
+        inv_del(inv, favour_directionals_fixed, 1);
+        %directionalsfixed = 1;
+        @osf_vane_part("You fix the directionals into the weather vane.");
+    case favour_pillar_fixed :
+        inv_del(inv, favour_pillar_fixed, 1);
+        %rotatingpillarfixed = 1;
+        @osf_vane_part("You fix the Weathervane Pillar into the weather vane.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,osf_vane_part](string $text)
+if (%ornamentfixed = 1 & %directionalsfixed = 1 & %rotatingpillarfixed = 1) {
+    ~mesbox("You fix the last part of the weather vane into place.");
+    %weathervanefixed = 1;
+    if (%onesmallfavour < 165) %onesmallfavour = 165;
+    ~mesbox("The weather vane seems to be totally repaired.");
+    return;
+}
+~mesbox($text);
+
+// the broken parts on an anvil (smithing.rs2 sends them here): the ornament with a bronze bar,
+// the pillar an iron bar, the directionals a steel bar (OSRS wiki, Broken vane part), Smithing 30.
+// Ours: the bar is used up, a hammer is needed, and the Smithing xp is the bar's own smelting xp.
+[label,osf_anvil_part](obj $part)
+if (stat(smithing) < 30) {
+    mes("You need a Smithing level of 30 to fix this."); // ours
+    return;
+}
+if (inv_total(inv, hammer) = 0) {
+    mes("You need a hammer to work the metal with.");
+    return;
+}
+def_namedobj $bar = bronze_bar;
+def_namedobj $fixed = favour_ornament_fixed;
+def_string $text = "You fix the ornament.";
+def_int $xp = 62;
+if ($part = favour_pillar_broken) {
+    $bar = iron_bar;
+    $fixed = favour_pillar_fixed;
+    $text = "You fix the Weathervane Pillar.";
+    $xp = 125;
+} else if ($part = favour_directionals_broken) {
+    $bar = steel_bar;
+    $fixed = favour_directionals_fixed;
+    $text = "You fix the directionals.";
+    $xp = 175;
+}
+if (inv_total(inv, $bar) = 0) {
+    mes("You need a <lowercase(oc_name($bar))> to fix this."); // ours
+    return;
+}
+anim(human_smithing, 0);
+sound_synth(anvil, 1, 0);
+inv_del(inv, $bar, 1);
+inv_del(inv, $part, 1);
+inv_add(inv, $fixed, 1);
+stat_advance(smithing, $xp);
+~objbox($fixed, $text, 250, 0, 0);

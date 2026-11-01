@@ -1,0 +1,287 @@
+// EASCape: One Small Favour, step 2: the first favours done (%onesmallfavour 120 -> 170): the
+// glider's landing lights, Rantz's mattress, Tindel's iron oxide, Cromperty's scroll, the
+// Slagilith and Petra, and Farsight's weather vane. Words from the OSRS wiki's quest transcript;
+// the gem colours, bars and Slagilith damage from its pages (One Small Favour, Broken vane part,
+// Slagilith); the Slagilith's combat from Void. The transcript logs VarPlayer 416 up to 150; ours
+// after it: 152 Slagilith beaten, 155 Petra freed, 160 Farsight has told you of the vane, 165
+// the vane is mended, 170 you have the weather report.
+
+// ---------------------------------------------------------------- the landing lights (Feldip Hills)
+// 8 lights, in rows at z 2969 and 2974, x 2545 sapphire, 2548 opal, 2551 red topaz, 2554 jade.
+// %onesmallfavourmulti bits 1-8 (checklandinglights): its gem taken out; bits 9-16: fixed.
+// They show broken until all are fixed (all_lights_fixed, bit 25, once Gnormadium flicks the switch).
+[proc,osf_light_index](coord $c)(int)
+def_int $col = divide(sub(coordx($c), 2545), 3);
+def_int $row = 0;
+if (coordz($c) >= 2972) $row = 1;
+return(add(multiply($row, 4), $col));
+
+[proc,osf_light_gem](int $index, boolean $cut)(namedobj)
+switch_int (modulo($index, 4)) {
+    case 0 :
+        if ($cut = true) return(sapphire);
+        return(uncut_sapphire);
+    case 1 :
+        if ($cut = true) return(opal);
+        return(uncut_opal);
+    case 2 :
+        if ($cut = true) return(red_topaz);
+        return(uncut_red_topaz);
+}
+if ($cut = true) return(jade);
+return(uncut_jade);
+
+[proc,osf_lights_fixed]()(int)
+def_int $n = 0;
+def_int $i = 9;
+while ($i <= 16) {
+    if (testbit(%onesmallfavourmulti, $i) = ^true) $n = add($n, 1);
+    $i = add($i, 1);
+}
+return($n);
+
+[oploc1,osf_multi_landinglight_sapphire_1] mes("It's a gnome landing light."); // ours
+[oploc1,osf_multi_landinglight_opal_1] mes("It's a gnome landing light.");
+[oploc1,osf_multi_landinglight_redtopaz_1] mes("It's a gnome landing light.");
+[oploc1,osf_multi_landinglight_jade_1] mes("It's a gnome landing light.");
+
+[oploc5,osf_multi_landinglight_sapphire_1] @osf_light_search;
+[oploc5,osf_multi_landinglight_opal_1] @osf_light_search;
+[oploc5,osf_multi_landinglight_redtopaz_1] @osf_light_search;
+[oploc5,osf_multi_landinglight_jade_1] @osf_light_search;
+[oplocu,osf_multi_landinglight_sapphire_1] @osf_light_search;
+[oplocu,osf_multi_landinglight_opal_1] @osf_light_search;
+[oplocu,osf_multi_landinglight_redtopaz_1] @osf_light_search;
+[oplocu,osf_multi_landinglight_jade_1] @osf_light_search;
+
+[label,osf_light_search]
+if (~osf_stage_between(120, 124) = false) {
+    mes("Nothing interesting happens."); // ours: before Gnormadium asks, or once they're fixed
+    return;
+}
+def_int $i = ~osf_light_index(loc_coord);
+def_namedobj $cut = ~osf_light_gem($i, true);
+def_namedobj $uncut = ~osf_light_gem($i, false);
+def_string $name = lowercase(oc_name($cut));
+if (testbit(%onesmallfavourmulti, add($i, 1)) = ^false) {
+    %onesmallfavourmulti = setbit(%onesmallfavourmulti, add($i, 1));
+    ~osf_give($uncut);
+    ~objbox($uncut, "You find an uncut <$name> in the landing light.", 250, 0, 0);
+    return;
+}
+if (testbit(%onesmallfavourmulti, add($i, 9)) = ^true) {
+    mes("This landing light is already fixed."); // ours
+    return;
+}
+if (inv_total(inv, $cut) = 0) {
+    mes("The landing light needs a cut <$name>."); // ours
+    return;
+}
+inv_del(inv, $cut, 1);
+%onesmallfavourmulti = setbit(%onesmallfavourmulti, add($i, 9));
+~objbox($cut, "You place the <$name> in the landing light. It seems to look right.", 250, 0, 0);
+def_int $fixed = ~osf_lights_fixed;
+if ($fixed = 8) {
+    %onesmallfavour = 125;
+    ~mesbox("You've fixed all the landing lights!");
+} else if ($fixed = 1) {
+    ~mesbox("You've fixed one landing light so far...");
+} else {
+    ~mesbox("You've fixed <tostring($fixed)> landing lights so far...");
+}
+
+// Gnormadium's step 2 lines (osf_hooks.rs2 asks here first): a chisel, a spare gem, the switch
+[proc,osf_gnormadium_step2]()(boolean)
+if (~osf_stage_between(120, 125) = false) return(false);
+def_string $last = "I need a new gem to fix the lights."; // ours: one line for the three gems
+if (%onesmallfavour = 125) $last = "I've fixed all the lights!";
+switch_int (~p_choice3("I need a chisel to fix these crystals.", 1, $last, 2, "Something else.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I need a chisel to fix these crystals.");
+        ~chatnpc("<p,neutral>Okay, I can sell you one for 10 coins.");
+        if (inv_total(inv, coins) < 10) {
+            ~chatplayer("<p,sad>But I don't have 10 coins.");
+            ~chatnpc("<p,neutral>So I can't sell you one then!");
+            return(true);
+        }
+        if (~p_choice2("Okay, I'll buy a chisel for 10 coins.", 1, "No, I won't buy the chisel.", 2) = 1) {
+            ~chatplayer("<p,neutral>Okay, I'll buy a chisel for 10 coins.");
+            inv_del(inv, coins, 10);
+            ~osf_give(chisel);
+            ~objbox(chisel, "You pay ten coins for the chisel.", 250, 0, 0);
+            ~chatnpc("<p,happy>Okay, many thanks for your custom.");
+        } else {
+            ~chatplayer("<p,neutral>No, I won't buy the chisel.");
+            ~chatnpc("<p,neutral>Fair enough, come back if you change your mind.");
+        }
+        return(true);
+    case 2 :
+        if (%onesmallfavour = 125) {
+            ~chatplayer("<p,happy>I've fixed all the lights!");
+            ~chatnpc("<p,neutral>Hmm. That seems a tad unlikely to me, but let's flick the switch here and see, shall we?!");
+            %all_lights_fixed = 1;
+            %onesmallfavour = 130;
+            ~chatnpc("<p,shock>I don't believe it - you fixed it! Well done, well done... We can pack up now and leave these ogres in peace.");
+            ~chatplayer("<p,happy>I know one ogre who'll be very pleased about that!");
+            return(true);
+        }
+        // ours: the wiki has one line per gem; you choose the gem here
+        def_namedobj $gem;
+        switch_int (~p_choice3("Opal.", 1, "Jade.", 2, "Red topaz.", 3)) {
+            case 1 : $gem = uncut_opal;
+            case 2 : $gem = uncut_jade;
+            case 3 : $gem = uncut_red_topaz;
+        }
+        def_string $name = "opal";
+        if ($gem = uncut_jade) $name = "jade";
+        if ($gem = uncut_red_topaz) $name = "red topaz";
+        ~chatplayer("<p,neutral>I need a new <$name> to fix the lights.");
+        ~chatnpc("<p,neutral>Broken something, have you? I'll want 500 coins for a new one. Be careful - my supplies are limited, and if I run out, you'll have to find your own materials elsewhere.");
+        if (inv_total(inv, coins) < 500) {
+            ~chatplayer("<p,sad>But I don't have 500 coins!");
+            ~chatnpc("<p,neutral>I can't give you one then.");
+            return(true);
+        }
+        if (~p_choice2("Okay, here's 500 coins, I'll buy one.", 1, "No way am I paying that much.", 2) = 1) {
+            ~chatplayer("<p,neutral>Okay, here's 500 coins, I'll buy one.");
+            inv_del(inv, coins, 500);
+            ~osf_give($gem);
+            mes("You hand over 500 coins for the <$name>.");
+        } else {
+            ~chatplayer("<p,angry>No way am I paying that much.");
+        }
+        return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- Rantz, Tindel, Cromperty on the way back
+[proc,osf_rantz_step2]()(boolean)
+if (%onesmallfavour = 130) {
+    if (~p_choice2("Ok, I've helped that Gnome, he shouldn't bother you anymore.", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>Ok, I've helped that Gnome, he shouldn't bother you anymore.");
+    ~chatnpc("<p,happy>Yous creature dun a gud fing...Rantz give yous creature da fluffsies sack now...");
+    if (inv_total(inv, favour_matress_stodgy) = 0) {
+        ~chatplayer("<p,sad>But I don't have the stodgy mattress anymore...I'll have to get another one.");
+        return(true);
+    }
+    inv_del(inv, favour_matress_stodgy, 1);
+    ~osf_give(favour_matress_comfy);
+    %onesmallfavour = 135;
+    ~objbox(favour_matress_comfy, "Rantz gives you a filled comfy mattress.", 250, 0, 0);
+    ~chatnpc("<p,happy>De're yous goes creature...da fluffsies sack is full now.");
+    ~chatplayer("<p,happy>Great, I think Tindel will get a good night's rest on this.");
+    return(true);
+}
+if (%onesmallfavour ! 135) return(false);
+if (~obj_gettotal(favour_matress_comfy) > 0) {
+    if (~p_choice2("Hello again, what should I do now?", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,quiz>Hello again, what should I do now?");
+    ~chatnpc("<p,neutral>Yous do somefing wiv da fluffsies sack...Rantz not care...!");
+    return(true);
+}
+if (~p_choice2("I've lost that filled mattress you gave me!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,sad>I've lost that filled mattress you gave me!");
+if (inv_total(inv, favour_matress_stodgy) = 0) {
+    ~chatnpc("<p,neutral>Yous creature needs to bring me da saggy fluffsies sack to full wiv da chompy flufsies!");
+    return(true);
+}
+~chatnpc("<p,neutral>It cost you dis many bright pretties to do dis again, yous den be more careful wiv my work next time round.");
+~mesbox("@blu@Rantz flashes his fingers at you many times, you think he wants about 200 gold. ~");
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>But I don't have that many bright pretties!");
+    ~chatnpc("<p,neutral>Den yous no get da fluffsies sack...");
+    return(true);
+}
+if (~p_choice2("Ok, I'll give you 200 bright pretties.", 1, "No way am I giving you 200 bright pretties.", 2) = 1) {
+    ~chatplayer("<p,neutral>Ok, I'll give you 200 bright pretties.");
+    inv_del(inv, coins, 200);
+    inv_del(inv, favour_matress_stodgy, 1);
+    ~osf_give(favour_matress_comfy);
+    ~objbox(favour_matress_comfy, "Rantz gives you a new comfy mattress.", 250, 0, 0);
+    ~chatnpc("<p,happy>De're yous goes creatures...dere's yous comfy fluffsies sack.");
+} else {
+    ~chatplayer("<p,angry>No way am I giving you 200 bright pretties.");
+    ~chatnpc("<p,neutral>Den yous no get da fluffsies sack...");
+}
+return(true);
+
+// Tindel's greeting is already said (osf_hooks.rs2)
+[proc,osf_tindel_step2]()(boolean)
+if (%onesmallfavour = 135 & inv_total(inv, favour_matress_comfy) > 0) {
+    if (~p_choice2("I have the mattress.", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~chatplayer("<p,happy>I have the mattress!");
+    ~chatnpc("<p,happy>Great! Let's have a look then.");
+    inv_del(inv, favour_matress_comfy, 1);
+    ~osf_give(favour_iron_oxide);
+    %onesmallfavour = 140;
+    ~objbox(favour_iron_oxide, "You hand Tindel the comfy mattress. Tindel gives you the iron oxide.", 250, 0, 0);
+    ~chatnpc("<p,happy>Great! Here's the iron oxide I promised you!");
+    return(true);
+}
+if (%onesmallfavour ! 140) return(false);
+if (~obj_gettotal(favour_iron_oxide) > 0) {
+    if (~p_choice2("What should I do now?", 1, "Nothing, thanks.", 2) = 2) return(true);
+    ~chatplayer("<p,quiz>What should I do now?");
+    ~chatnpc("<p,neutral>Didn't you need to take that bottle of rust to someone?");
+    return(true);
+}
+if (~p_choice2("I've lost the iron oxide, can I have some more?", 1, "Nothing, thanks.", 2) = 2) return(true);
+~chatplayer("<p,sad>I've lost the iron oxide, can I have some more?");
+~chatnpc("<p,neutral>Okay, but I'm going to have to charge you I'm afraid. 200 coins.");
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>But I haven't got 200 coins!");
+    ~chatnpc("<p,neutral>Sorry, but I have to make a living.");
+    return(true);
+}
+if (~p_choice2("Okay, I'll buy it.", 1, "No way am I paying 200 coins for a bottle of rust!", 2) = 1) {
+    ~chatplayer("<p,neutral>Okay, I'll buy it.");
+    inv_del(inv, coins, 200);
+    ~osf_give(favour_iron_oxide);
+    ~objbox(favour_iron_oxide, "You pay 200 coins for another bottle of rust.", 250, 0, 0);
+} else {
+    ~chatplayer("<p,angry>No way am I paying 200 coins for a bottle of rust!");
+    ~chatnpc("<p,neutral>Suit yourself... I have plenty of other customers.");
+}
+return(true);
+
+// Cromperty's greeting lines are already said (osf_hooks.rs2)
+[proc,osf_cromperty_step2]()(boolean)
+if (%onesmallfavour = 140) {
+    if (inv_total(inv, favour_iron_oxide) = 0) return(false);
+    if (~p_choice2("I have that iron oxide you asked for!", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>I have that iron oxide you asked for!");
+    ~chatnpc("<p,happy>Great! Just what I needed! Now I need to give you a spell scroll to help bring Petra back again.");
+    inv_del(inv, favour_iron_oxide, 1);
+    ~mesbox("Cromperty takes the iron oxide and starts preparing a spell.");
+    ~osf_give(favour_animate_rock);
+    ~objbox(favour_animate_rock, "After some time, he comes back and gives you an animate rock spell.", 250, 0, 0);
+    %onesmallfavour = 145;
+    ~chatnpc("<p,neutral>Just cast this in the room, it should have her out of that rock in a jiffy! Good luck with your exploits...now, where was I with that wranklin severance device...");
+    return(true);
+}
+if (~osf_stage_between(145, 152) = false) return(false);
+if (~obj_gettotal(favour_animate_rock) > 0) {
+    if (~p_choice2("What should I do now?", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,quiz>What should I do now?");
+    ~chatnpc("<p,neutral>Well, I thought you were going to use that spell I gave you to free Petra from the rock face?");
+    return(true);
+}
+if (~p_choice2("I need another animate rock spell.", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,sad>I need another animate rock spell.");
+~chatnpc("<p,neutral>I suspected that you might...you can have one, but it will cost you 100 gold pieces.");
+if (inv_total(inv, coins) < 100) {
+    ~chatplayer("<p,sad>But I don't have 100 coins!");
+    ~chatnpc("<p,neutral>So you can't have the spell then can you!");
+    return(true);
+}
+if (~p_choice2("No way...I'm cleaning up your mess, you should be grateful!", 1, "Ok, here you go!", 2) = 1) {
+    ~chatplayer("<p,angry>No way...I'm cleaning up your mess, you should be grateful!");
+    ~chatnpc("<p,angry>Well, I did give you the last one for free...you're not getting another one for free, even if it is my mess that you're trying to clear up! You shouldn't be so careless to leave things lying around!");
+    return(true);
+}
+~chatplayer("<p,neutral>Ok, here you go!");
+inv_del(inv, coins, 100);
+~osf_give(favour_animate_rock);
+~chatnpc("<p,neutral>Thanks...try not to lose it this time.");
+~chatplayer("<p,angry>Grrrrr!");
+return(true);
