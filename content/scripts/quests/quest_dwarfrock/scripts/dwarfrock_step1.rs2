@@ -358,16 +358,18 @@ split_init(append("... in such a way that the miners could no longer safely go d
 return(split_pagecount);
 
 [proc,bar_lore_book]
-// the transcript's text runs on across the pages; after it, the spread with the book's picture (our
-// cache has no picture for it, so that spread is left empty)
+// the transcript's text runs on across the pages; after it, the spread with the book's picture (from
+// the 2007 cache)
 def_string $title = "The Arzinian Being of Bordanzan";
 ~bar_lore_split;
 if (%book_page < split_pagecount) {
     ~book_page($title, %book_page);
+    if_sethide(book:dwarf_lore_picture, true);
     return;
 }
 split_init(" ", 175, 22, q8_full);
 ~book_page($title, 0);
+if_sethide(book:dwarf_lore_picture, false); // the 2007 picture (tools/dwarfrock/lore_picture.py)
 // the last pages read: the book is done (the wiki shows this in a box; ours a message)
 if (%dwarfrock_quest = ^bar_have_book) {
     %dwarfrock_quest = ^bar_read_book;
