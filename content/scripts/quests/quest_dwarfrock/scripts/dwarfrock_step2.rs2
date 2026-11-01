@@ -363,7 +363,8 @@ if (inv_total(worn, dwarf_goldrock_helmet) = 0) {
 // ---------------------------------------------------------------- the golden cannonball (a furnace)
 // hooked in smelting.rs2: a gold bar on a furnace with an ammo mould, once Dondakan asked for it
 [proc,bar_furnace_gold_wanted]()(boolean)
-if (%dwarfrock_gold_cannonball = 0 | %dwarfrock_quest ! ^bar_need_material) return(false);
+// ours: from the stage where he needs a new material, whether or not you have shown him gold yet
+if (%dwarfrock_quest ! ^bar_need_material) return(false);
 if (inv_total(inv, ammo_mould) = 0) return(false);
 return(true);
 
