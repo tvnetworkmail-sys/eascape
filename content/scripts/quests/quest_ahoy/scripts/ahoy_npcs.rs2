@@ -1,0 +1,943 @@
+// EASCape: Ghosts Ahoy, its people. Ported from Void (GregHib/void: content/quest/member/
+// ghosts_ahoy: Velorina.kt, Necrovarus.kt, OldCrone.kt, OldCroneSon.kt, Gravingas.kt,
+// GhostVillager.kt, AkHaranu.kt, GhostInnKeeper.kt, GhostCaptain.kt and GhostsAhoy.kt), their
+// words and order. Our choices are marked "ours". Ghosts need the Amulet of Ghostspeak
+// (~ahoy_ghostspeak, areas/area_port_phasmatys/scripts/port_phasmatys.rs2).
+
+[proc,ahoy_give](namedobj $obj)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, 1);
+    return;
+}
+obj_add(coord, $obj, 1, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+[proc,ahoy_carries](obj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+[proc,ahoy_flag_colour](int $value)(string)
+switch_int ($value) {
+    case 0 : return("white");
+    case 1 : return("red");
+    case 2 : return("yellow");
+    case 3 : return("blue");
+    case 4 : return("orange");
+    case 5 : return("green");
+    case 6 : return("purple");
+}
+return("");
+
+// the reward (Void sendGhostsAhoyReward)
+[proc,ahoy_complete]
+~ahoy_give(ectophial);
+%ahoy_questvar = ^ahoy_complete;
+%ahoy_given_manual = 1;
+%ahoy_given_robes = 1;
+%ahoy_given_book = 1;
+%ahoy_signaturecounter = ^ahoy_petition_burned;
+%ahoy_subquest_nettletea = 3;
+%ahoy_subquest_bow = 8;
+%ahoy_templedoor_unlocked = 1;
+%ahoy_subquest_toyboat = 3;
+%ahoy_killed_lobster = 1;
+%ahoy_toy_top = 0;
+%ahoy_toy_skull = 0;
+%ahoy_toy_bottom = 0;
+%ahoy_mast_top = add(random(6), 1);
+%ahoy_mast_skull = add(random(6), 1);
+%ahoy_mast_bottom = add(random(6), 1);
+stat_advance(prayer, 24000);
+session_log(^log_adventure, "Quest complete: Ghosts Ahoy");
+~send_quest_complete(questlist:ahoy, ectophial, 250, ^ahoy_questpoints, "You have completed\\nGhosts Ahoy!", "2 Quest Points|2400 Prayer XP|An Ectophial|Free Port Phasmatys entry");
+
+// ---------------------------------------------------------------- Velorina
+[opnpc1,ahoy_velorina]
+if (~ahoy_ghostspeak = false) return;
+switch_int (%ahoy_questvar) {
+    case ^ahoy_unstarted : @ahoy_velorina_intro;
+    case ^ahoy_ask_necrovarus :
+        ~chatnpc("<p,neutral>I sense that you have not yet spoken to Necrovarus.");
+        ~chatplayer("<p,neutral>No, I was just getting to that.");
+        ~chatnpc("<p,neutral>Well, I suppose we do have all the time in the world...");
+    case ^ahoy_pleaded :
+        ~chatplayer("<p,sad>I'm sorry, but Necrovarus will not let you go.");
+        ~chatnpc("<p,neutral>I feared as much. His spirit is a thing of fire and wrath.");
+        ~chatplayer("<p,quiz>You spoke of another way.");
+        ~chatnpc("<p,neutral>It is only a small chance. During the building of the Ectofuntus one of Necrovarus's disciples spoke out against him. It is such a long time ago I cannot remember her name, although I knew her as a friend.");
+        ~chatnpc("<p,neutral>She fled before the Ectofuntus took control over us, but being a disciple of Necrovarus she would have been privy to many of his darkest secrets. She may know of a way to aid us without Necrovarus.");
+        %ahoy_questvar = ^ahoy_old_crone;
+        @ahoy_velorina_crone_options;
+    case ^ahoy_old_crone : @ahoy_velorina_crone_options;
+    case ^ahoy_crone_help : @ahoy_velorina_item_options;
+    case ^ahoy_crone_ritual :
+        ~chatnpc("<p,neutral>How is it going?");
+        ~chatplayer("<p,neutral>I found your old friend. She still lives, and has agreed to perform an enchantment for me that will enable me to command Necrovarus to set you free.");
+        ~chatnpc("<p,neutral>Oh, kind <text_gender("sir", "lady")> - you are the answer to all our prayers!");
+    case ^ahoy_enchanted :
+        ~chatnpc("<p,neutral>How is it going?");
+        if (~obj_gettotal(amulet_of_ghostspeak_enchanted) > 0) {
+            ~chatplayer("<p,neutral>I have had the Amulet of Ghostspeak enchanted, which I shall use to command Necrovarus to set you free.");
+        } else {
+            ~chatplayer("<p,neutral>I have had the Amulet of Ghostspeak enchanted, but I used it foolishly. I shall return to the old crone to have it enchanted again - then I shall command Necrovarus to set you free.");
+        }
+        ~chatnpc("<p,neutral>Oh, kind <text_gender("sir", "lady")> - you are the answer to all our prayers!");
+    case ^ahoy_commanded :
+        ~chatnpc("<p,neutral>You don't need to tell me <displayname>- I sensed the removal of Necrovarus's psychic barrier!");
+        ~chatplayer("<p,neutral>Only happy to help out.");
+        ~chatnpc("<p,neutral>Here, take this as a thank you for the service that you have given us.");
+        ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, 0);
+        ~chatnpc("<p,neutral>This is an Ectophial. If you ever want to come back to Port Phasmatys, empty this on the floor beneath your feet, and you will be instantly teleported to the temple - the source of its power.");
+        ~chatnpc("<p,neutral>Remember that once the Ectophial has been used you need to refill it from the Ectofuntus.");
+        ~ahoy_complete;
+    case default : @ahoy_velorina_after;
+}
+
+[label,ahoy_velorina_intro]
+~chatnpc("<p,neutral>Take pity on me, please - eternity stretches out before me and I am helpless in its grasp.");
+switch_int (~p_choice2("Why, what is the matter?", 1, "Sorry, I'm scared of ghosts.", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why, what is the matter?");
+        ~chatnpc("<p,neutral>Oh, I'm sorry - I was just wailing out loud. I didn't mean to scare you.");
+        ~chatplayer("<p,neutral>No, that's okay - it takes more than a ghost to scare me. What is wrong?");
+        ~chatnpc("<p,neutral>Do you know the history of our town?");
+        switch_int (~p_choice2("Yes, I do. It is a very sad story.", 1, "No - could you tell me?", 2)) {
+            case 1 :
+                ~chatplayer("<p,neutral>Yes, I do. It is a very sad story.");
+            case 2 :
+                ~chatplayer("<p,neutral>No - could you tell me?");
+                ~ahoy_velorina_history;
+        }
+        @ahoy_velorina_hook;
+    case 2 :
+        ~chatplayer("<p,scared>Leave me alone - I'm scared of ghosts!!!");
+}
+
+[proc,ahoy_velorina_history]
+~chatnpc("<p,neutral>Do you know why ghosts exist?");
+~chatplayer("<p,neutral>A ghost is a soul left in limbo, unable to pass over to the next world; they might have something left to do in this world that torments them, or they might just have died in a state of confusion.");
+~chatnpc("<p,neutral>Yes, that is normally the case. But here in Port Phasmatys, we of this town once chose freely to become ghosts!");
+~chatplayer("<p,shock>Why on earth would you do such a thing?");
+~chatnpc("<p,neutral>It is a long story. Many years ago, this was a thriving port, a trading centre to the eastern lands of Gielinor. We became rich on the profits made from the traders that came across the eastern seas.");
+~chatnpc("<p,neutral>We were very happy... until Lord Drakan noticed us.");
+~chatnpc("<p,neutral>He sent unholy creatures to demand that a blood-tithe be paid to the Lord Vampyre, as is required from all in the domain of Morytania. We had no choice but to agree to his demands.");
+~chatnpc("<p,neutral>As the years went by, our numbers dwindled and many spoke of abandoning the town for safer lands. Then, Necrovarus came to us.");
+~chatnpc("<p,neutral>He came from the eastern lands, but of more than that, little is known. Some say he was once a mage, some say a priest. Either way, he was in possession of knowledge totally unknown to even the most learned among us.");
+~chatnpc("<p,neutral>Necrovarus told us that he had been brought by a vision he'd had of an underground source of power. He inspired us to delve beneath the town, promising us the power to repel the vampyres.");
+~chatnpc("<p,neutral>Deep underneath Phasmatys, we found a pool of green slime that Necrovarus called ectoplasm. He showed us how to build the Ectofuntus, which would turn the ectoplasm into the power he had promised us.");
+~chatnpc("<p,neutral>Indeed, this Ectopower did repel the vampyres; they would not enter Phasmatys once the Ectofuntus began working. But little did we know that we had exchanged one evil for yet another - Ectopower.");
+~chatnpc("<p,neutral>Little by little, we began to lose any desire for food or water, and our desire for the Ectopower grew until it dominated our thoughts entirely. Our bodies shrivelled and, one by one, we died.");
+~chatnpc("<p,neutral>The Ectofuntus and the power it emanates keeps us here as ghosts - some, like myself, content to remain in this world; some becoming tortured souls who we do not allow to pass our gates.");
+~chatnpc("<p,neutral>We would be able to pass over into the next world but Necrovarus has used his power to create a psychic barrier, preventing us.");
+~chatnpc("<p,neutral>We must remain here for all eternity, even unto the very end of the world.");
+~chatplayer("<p,sad>That's a very sad story.");
+
+[label,ahoy_velorina_hook]
+~chatnpc("<p,neutral>Would you help us obtain our release into the next world?");
+switch_int (~p_choice2("Yes.", 1, "No.", 2)) {
+    case 1 :
+        %ahoy_questvar = ^ahoy_ask_necrovarus;
+        ~update_questlist;
+        ~chatplayer("<p,neutral>Yes, of course I will. Tell me what you want me to do.");
+        ~chatnpc("<p,neutral>Oh, thank you!");
+        ~chatnpc("<p,neutral>Necrovarus will not listen to those of us who are already dead. He might rethink his position if someone with a mortal soul pleaded our cause.");
+        ~chatnpc("<p,neutral>If he declines, there may yet be another way.");
+    case 2 :
+        ~chatplayer("<p,neutral>I'm sorry, but it isn't really my problem.");
+        ~chatnpc("<p,neutral>No, you're right - it's our own fault. If you do change your mind though, please come back and help us. We will be here ... forever.");
+}
+
+[label,ahoy_velorina_crone_options]
+switch_int (~p_choice2("Do you know where this woman can be found?", 1, "If it was such a long time ago, won't she be dead already?", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Do you know where this woman can be found?");
+        ~chatnpc("<p,neutral>I have a vision of a small wooden shack, the land it was built on the unholy soil of Morytania. I sense the sea is very close, and that there looms castles to the west and the east.");
+    case 2 :
+        ~chatplayer("<p,quiz>If it was such a long time ago, won't she be dead already?");
+        ~chatnpc("<p,neutral>She was a friend of mine. Had she died, I would have felt her spirit pass over to the next world, though I may not follow.");
+}
+
+[label,ahoy_velorina_item_options]
+switch_int (~p_choice3("Do you know where I can find the Book of Haricanto?", 1, "Do you know where I can find the Robes of Necrovarus?", 2, "I need something to translate the Book of Haricanto.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Do you know where I can find the Book of Haricanto?");
+        ~chatnpc("<p,neutral>Nobody knows what has happened to the Book. It was stolen when our port was raided by pirates many years ago, and never seen since.");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you know where I can find the Robes of Necrovarus?");
+        ~chatnpc("<p,neutral>I imagine they are still worn by his mortal body, which now lies in a coffin inside the Temple.");
+    case 3 :
+        ~chatplayer("<p,quiz>I need something to translate the Book of Haricanto.");
+        ~chatnpc("<p,neutral>I don't really know. You could try asking some of the traders from the East - they might be able to help you.");
+}
+
+[label,ahoy_velorina_after]
+switch_int (~p_choice2("I thought you were going to pass over to the next world.", 1, "Can I have another Ectophial?", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I thought you were going to pass over to the next world.");
+        ~chatnpc("<p,neutral>All in good time, <displayname>. We stand forever in your debt, and will certainly put in a good word for you when we pass over.");
+    case 2 :
+        ~chatplayer("<p,neutral>Can I have another Ectophial?");
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,sad>No, you've got nowhere to hold it.");
+        } else if (~obj_gettotal(ectophial) > 0 | ~obj_gettotal(ectophial_empty) > 0) {
+            ~chatnpc("<p,neutral>Really? You've already got an Ectophial.");
+        } else {
+            ~chatnpc("<p,neutral>Of course you can, you have helped us more than we could ever have hoped.");
+            ~ahoy_give(ectophial);
+            ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, 0);
+        }
+}
+
+// ---------------------------------------------------------------- Necrovarus
+[opnpc1,ahoy_necrovarus]
+if (~ahoy_ghostspeak = false) return;
+switch_int (%ahoy_questvar) {
+    case ^ahoy_unstarted :
+        def_int $q = ~p_choice3("What is this place?", 1, "What happened to everyone here?", 2, "How do I get into the town?", 3);
+        if ($q = 1) ~chatplayer("<p,quiz>What is this place?");
+        if ($q = 2) ~chatplayer("<p,quiz>What happened to everyone here?");
+        if ($q = 3) ~chatplayer("<p,quiz>How do I get into the town?");
+        switch_int (random(4)) {
+            case 0 : ~chatnpc("<p,neutral>Speak to me again and I will rend the soul from your flesh.");
+            case 1 : ~chatnpc("<p,neutral>I will answer questions when you are dead!!");
+            case 2 : ~chatnpc("<p,neutral>You dare to speak to me??? Have you lost your wits????");
+            case default : ~chatnpc("<p,neutral>I do not answer questions, mortal fool!!");
+        }
+    case ^ahoy_ask_necrovarus :
+        ~chatplayer("<p,neutral>I must speak with you on behalf of Velorina.");
+        ~chatnpc("<p,neutral>You dare to speak that name in this place?????");
+        ~chatplayer("<p,scared>She wants to pass-");
+        ~chatnpc("<p,neutral>Silence!! Or I will incinerate the flesh from your bones!!!");
+        ~chatplayer("<p,scared>But she-");
+        %ahoy_questvar = ^ahoy_pleaded;
+        ~chatnpc("<p,neutral>Get out of my sight!! Or I promise you that you will regret your insolence for the rest of eternity!!!");
+    case ^ahoy_pleaded, ^ahoy_old_crone :
+        ~chatplayer("<p,neutral>Please, listen to me-");
+        ~chatnpc("<p,neutral>No - listen to me. Go from this place and do not return, or I will remove your head.");
+    case ^ahoy_crone_help : @ahoy_necrovarus_petition;
+    case ^ahoy_enchanted : @ahoy_necrovarus_command;
+    case ^ahoy_commanded, ^ahoy_complete :
+        ~chatplayer("<p,neutral>Told you I'd defeat you, Necrovarus. My advice to you is to pass over to the next world yourself with everybody else.");
+        ~chatnpc("<p,neutral>I should fry you for what you have done...");
+        ~chatplayer("<p,neutral>Quiet, evil priest!! If you try anything I will command you again, but this time it will be to throw yourself into the Endless Void for the rest of eternity.");
+        ~chatnpc("<p,neutral>Please no! I will do whatever you say!!");
+}
+
+[label,ahoy_necrovarus_petition]
+def_int $petition = %ahoy_signaturecounter;
+if (($petition >= 1 & $petition <= 11 & inv_total(inv, ahoy_petition) = 0) | %ahoy_templedoor_unlocked = 1) {
+    ~chatplayer("<p,neutral>It matters not that you ignore your citizens' wishes, Necrovarus. Wheels have been set in motion, wheels that will set them free.");
+    ~chatnpc("<p,neutral>I have almost completely lost patience with you, mortal. Another word, and every threat I have uttered will be made real for you.");
+    return;
+}
+if ($petition = ^ahoy_petition_burned) {
+    ~chatplayer("<p,neutral>So, have you changed your mind yet?");
+    ~chatnpc("<p,neutral>NEVER!!!!!");
+    if (~obj_gettotal(ahoy_bone_key) > 0) {
+        ~chatnpc("<p,neutral>WHICH IS A VERY LONG TIME!!!!!!");
+    } else {
+        ~mesbox("In his rage, Necrovarus drops a key on the floor.");
+        obj_add(npc_coord, ahoy_bone_key, 1, 300);
+    }
+    return;
+}
+if ($petition = 11) {
+    ~chatplayer("<p,neutral>Necrovarus, I am presenting you with a petition form that has been signed by 10 citizens of Port Phasmatys.");
+    ~chatnpc("<p,neutral>A petition you say? Continue, mortal.");
+    ~chatplayer("<p,neutral>It says that the citizens of Port Phasmatys should have the right to choose whether they pass over into the next world or not, and not have this decided by the powers that be on their behalf.");
+    ~chatnpc("<p,neutral>I see.");
+    ~chatplayer("<p,neutral>So you will let them pass over if they wish?");
+    ~chatnpc("<p,neutral>Oh yes.");
+    ~chatplayer("<p,shifty>Really?");
+    ~chatnpc("<p,neutral>NO!!!!! Get out of my sight before I burn every ounce of flesh from your bones!!!!!");
+    %ahoy_signaturecounter = ^ahoy_petition_burned;
+    inv_del(inv, ahoy_petition, 1);
+    inv_add(inv, ashes, 1);
+    ~mesbox("The petition form turns to ashes in your hand.");
+    ~mesbox("In his rage, Necrovarus drops a key on the floor.");
+    obj_add(npc_coord, ahoy_bone_key, 1, 300);
+    return;
+}
+if ($petition >= 1) {
+    ~chatplayer("<p,neutral>I must let you know, Necrovarus, that I am collecting signatures from the citizens of Port Phasmatys.");
+    ~chatnpc("<p,neutral>Oh, I do admire an activist. Do let me know when you're finished, and I'll give it my fullest consideration.");
+    return;
+}
+~chatplayer("<p,neutral>Wheels have been set in motion, Necrovarus; wheels that will set the citizens of Port Phasmatys free.");
+~chatnpc("<p,neutral>Oh goody goody. I just can't wait.");
+
+[label,ahoy_necrovarus_command]
+~chatnpc("<p,neutral>You dare to face me again - you must be truly insane!!!!");
+if (inv_getobj(worn, ^wearpos_front) ! amulet_of_ghostspeak_enchanted) return;
+~chatplayer("<p,neutral>No, Necrovarus, I am not insane. With this enchanted amulet of ghostspeak I have the power to command you to do my will!");
+@ahoy_necrovarus_command_choice;
+
+[label,ahoy_necrovarus_command_choice]
+def_int $c = ~p_choice3_header("Let any ghost who so wishes pass on into the next world.", 1, "Tell me a joke.", 2, "Do a chicken impression.", 3, "What do you want to command Necrovarus to do?");
+~objbox(amulet_of_ghostspeak_enchanted, "A beam of intense green light radiates out from the amulet of ghostspeak, enveloping Necrovarus in its power. His eyes become softer, and appear to stare into nothingness.", 250, 0, 0);
+if ($c = 1) {
+    %ahoy_questvar = ^ahoy_commanded;
+    inv_setslot(worn, ^wearpos_front, amulet_of_ghostspeak, 1);
+    %ahoy_templedoor_unlocked = 1;
+    ~chatnpc("<p,neutral>I - will - let ...");
+    ~chatplayer("<p,neutral>Carry on...");
+    ~chatnpc("<p,neutral> ... any ... ");
+    ~chatplayer("<p,neutral>Yes?");
+    ~chatnpc("<p,neutral>... ghost who so wishes ... ");
+    ~chatplayer("<p,neutral>I think we're almost getting there...");
+    ~chatnpc("<p,neutral>... pass into the next world.");
+    return;
+}
+if ($c = 2) {
+    ~chatnpc("<p,neutral>Knock knock");
+    ~chatplayer("<p,neutral>Who's there?");
+    ~chatnpc("<p,neutral>Egbert.");
+    ~chatplayer("<p,neutral>Egbert who?");
+    ~chatnpc("<p,neutral>Egbert no bacon.");
+} else {
+    ~chatnpc("<p,neutral>Cluck cluck squuuaaaakkkk cluck cluck");
+    ~chatnpc("<p,neutral>I think I've laid an egg...");
+}
+~objbox(amulet_of_ghostspeak_enchanted, "Luckily the amulet of ghostspeak does not seem to have fully discharged.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the old crone
+[opnpc1,ahoy_crone]
+// ours: Void also offers "I'm here about the farmers east of here." (Animal Magnetism, which
+// isn't in the game) at stages 1-2, and "I'm here about Necrovarus." then says nothing more
+if (%ahoy_questvar < ^ahoy_old_crone) {
+    ~chatplayer("<p,neutral>Hello, old woman.");
+    switch_int (random(3)) {
+        case 0 : ~chatnpc("<p,neutral>When 100 years old you reach, look like a prune you will.");
+        case 1 : ~chatnpc("<p,neutral>I lived here when this was all just fields, you know.");
+        case default : ~chatnpc("<p,neutral>I'm over 100 years old, you know.");
+    }
+    return;
+}
+~chatplayer("<p,quiz>I'm here about Necrovarus.");
+switch_int (%ahoy_questvar) {
+    case ^ahoy_commanded, ^ahoy_complete :
+        ~chatplayer("<p,neutral>Good news - the enchantment worked!");
+        ~chatnpc("<p,neutral>So Necrovarus has let the ghosts go free.... You have achieved many wonderful things, my young friend.");
+    case ^ahoy_enchanted : @ahoy_crone_again;
+    case ^ahoy_crone_ritual : ~ahoy_crone_enchant;
+    case ^ahoy_crone_help : @ahoy_crone_items;
+    case ^ahoy_old_crone :
+        ~chatplayer("<p,quiz>Were you once a disciple of Necrovarus in the Temple of Phasmatys, old woman?");
+        ~chatnpc("<p,neutral>I don't remember; I am so old and my memory goes back only so far...");
+        ~chatplayer("<p,quiz>Is there anything that can help to refresh your memory?");
+        if (%ahoy_subquest_nettletea < 1) %ahoy_subquest_nettletea = 1;
+        ~chatnpc("<p,neutral>Yes, I would love a nice hot cup of nettle tea.");
+        def_obj $tea = ~ahoy_first_tea;
+        if ($tea ! null) {
+            @ahoy_crone_tea($tea);
+        }
+        ~chatplayer("<p,quiz>Do you know where I can find nettles around here?");
+        ~chatnpc("<p,neutral>I believe they grow wild in the Haunted Forest.");
+}
+
+[proc,ahoy_first_tea]()(obj)
+if (inv_total(inv, chinacup_of_nettletea_milky) > 0) return(chinacup_of_nettletea_milky);
+if (inv_total(inv, chinacup_of_nettletea) > 0) return(chinacup_of_nettletea);
+if (inv_total(inv, cup_of_nettletea_milky) > 0) return(cup_of_nettletea_milky);
+if (inv_total(inv, cup_of_nettletea) > 0) return(cup_of_nettletea);
+if (inv_total(inv, bowl_nettletea_milky) > 0) return(bowl_nettletea_milky);
+if (inv_total(inv, bowl_nettletea) > 0) return(bowl_nettletea);
+return(null);
+
+[opnpcu,ahoy_crone]
+switch_obj (last_useitem) {
+    case chinacup_of_nettletea_milky, chinacup_of_nettletea, cup_of_nettletea_milky, cup_of_nettletea, bowl_nettletea_milky, bowl_nettletea :
+        @ahoy_crone_tea(last_useitem);
+    case ahoy_translation_manual, ahoy_robes_of_necrovarus, ahoy_book_of_haricanto :
+        if (%ahoy_questvar = ^ahoy_crone_help) @ahoy_crone_items; // ours: Void's other stages give the same menu
+        ~displaymessage(^dm_default);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,ahoy_crone_tea](obj $tea)
+if (%ahoy_questvar >= ^ahoy_crone_help) {
+    ~chatnpc("<p,neutral>Oh, no thanks; I'm not thirsty anymore.");
+    return;
+}
+if ($tea = chinacup_of_nettletea) {
+    ~chatplayer("<p,neutral>Here's a lovely cup of tea for you, in your own special cup.");
+    ~chatnpc("<p,neutral>Oh no, it hasn't got milk in it. I only drink tea with milk, I'm afraid.");
+    return;
+}
+if ($tea ! chinacup_of_nettletea_milky) {
+    ~chatplayer("<p,neutral>Here's some tea for you, like you asked.");
+    ~chatnpc("<p,neutral>Yes, but it's not in my special cup! I only ever drink from my special cup!!");
+    ~chatplayer("<p,neutral>I see. Can I have this special cup, then?");
+    if (~obj_gettotal(chinacup_empty) > 0) {
+        ~chatnpc("<p,neutral>I already gave you a cup - what did you do with it?");
+    } else {
+        %ahoy_subquest_nettletea = 2;
+        ~ahoy_give(chinacup_empty);
+        ~objbox(chinacup_empty, "The old crone gives you her special cup.", 250, 0, 0);
+    }
+    return;
+}
+%ahoy_subquest_nettletea = 3;
+%ahoy_questvar = ^ahoy_crone_help;
+inv_del(inv, chinacup_of_nettletea_milky, 1);
+~chatplayer("<p,neutral>Here's a lovely cup of milky tea for you, in your own special cup.");
+~mesbox("As the old woman drinks the cup of milky tea, enlightenment glows from within her eyes.");
+~chatnpc("<p,neutral>Ah, that's better. Now, let me see... Yes, I was once a disciple of Necrovarus.");
+~chatplayer("<p,neutral>I have come from Velorina. She needs your help.");
+~chatnpc("<p,neutral>Velorina? That name sounds familiar...");
+~chatnpc("<p,neutral>Yes, Velorina was once a very good friend! It has been many years since we spoke last. How is she?");
+~chatplayer("<p,neutral>She's a ghost, I'm afraid.");
+~chatnpc("<p,neutral>They are all dead, then. Even Velorina. I should have done something to stop what was happening, instead of running away.");
+~chatplayer("<p,neutral>She and many others want to pass on into the next world, but Necrovarus will not let them. Do you know of any way to help them?");
+~chatnpc("<p,neutral>There might be one way...");
+~chatnpc("<p,neutral>Do you have such a thing as a ghostspeak amulet?");
+if (inv_total(worn, amulet_of_ghostspeak) > 0) {
+    ~chatplayer("<p,neutral>Yes, I'm wearing one right now.");
+    ~chatnpc("<p,neutral>Well, that's a stroke of luck.");
+} else if (inv_total(inv, amulet_of_ghostspeak) > 0) {
+    ~chatplayer("<p,neutral>Yes, I'm carrying one in my bag.");
+    ~chatnpc("<p,neutral>Well, that's a stroke of luck.");
+} else {
+    ~chatplayer("<p,neutral>No I don't, I'm afraid.");
+    ~chatnpc("<p,neutral>Well, you'll need to find one.");
+}
+@ahoy_crone_needs;
+
+[label,ahoy_crone_needs]
+~chatnpc("<p,neutral>There is an enchantment that I can perform on such an amulet that will give it the power of command over ghosts. It will work only once, but it will enable you to command Necrovarus to let the ghosts pass on.");
+~chatplayer("<p,neutral>What do you need to perform the enchantment?");
+if (%ahoy_given_robes = 1) {
+    ~chatnpc("<p,neutral>You have already given me robes of Necrovarus.");
+} else {
+    ~chatnpc("<p,neutral>Necrovarus had a magical robe for which he must have no more use. Only these robes hold the power needed to perform the enchantment.");
+}
+if (%ahoy_given_book = 1) {
+    ~chatnpc("<p,neutral>You have given me the Book of Haricanto.");
+} else {
+    ~chatnpc("<p,neutral>All his rituals came from a book written by an ancient sorcerer from the East called Haricanto. Bring me this strange book.");
+}
+if (%ahoy_given_manual = 1) {
+    ~chatnpc("<p,neutral>You have given me a translation manual.");
+} else {
+    ~chatnpc("<p,neutral>I cannot read the strange letters of the eastern lands. I will need something to help me translate the book.");
+}
+@ahoy_crone_menu;
+
+[label,ahoy_crone_items]
+def_boolean $manual = false;
+def_boolean $robes = false;
+def_boolean $book = false;
+if (inv_total(inv, ahoy_translation_manual) > 0 & %ahoy_given_manual = 0) $manual = true;
+if (inv_total(inv, ahoy_robes_of_necrovarus) > 0 & %ahoy_given_robes = 0) $robes = true;
+if (inv_total(inv, ahoy_book_of_haricanto) > 0 & %ahoy_given_book = 0) $book = true;
+if ($manual = true | $robes = true | $book = true) {
+    ~chatplayer("<p,neutral>I have something for you.");
+}
+if ($manual = true) {
+    inv_del(inv, ahoy_translation_manual, 1);
+    %ahoy_given_manual = 1;
+    ~chatnpc("<p,neutral>A translation manual - yes, this should do the job.");
+}
+if ($robes = true) {
+    inv_del(inv, ahoy_robes_of_necrovarus, 1);
+    %ahoy_given_robes = 1;
+    ~chatnpc("<p,neutral>Good - the robes of Necrovarus.");
+}
+if ($book = true) {
+    inv_del(inv, ahoy_book_of_haricanto, 1);
+    %ahoy_given_book = 1;
+    ~chatnpc("<p,neutral>The Book of Haricanto! I have no idea how you came by this, but well done!!");
+}
+if (%ahoy_given_manual = 1 & %ahoy_given_robes = 1 & %ahoy_given_book = 1) {
+    ~chatnpc("<p,neutral>Wonderful; that's everything I need.");
+    %ahoy_questvar = ^ahoy_crone_ritual;
+    ~chatnpc("<p,neutral>I will now perform the ritual of enchantment.");
+    ~ahoy_crone_enchant;
+}
+@ahoy_crone_menu;
+
+[label,ahoy_crone_menu]
+def_int $toy = %ahoy_subquest_toyboat;
+def_string $first = "You are doing so much for me - is there anything I can do for you?";
+if ($toy >= 2) {
+    $first = "Good news! I have found your son!";
+} else if ($toy = 1) {
+    if (inv_total(inv, ahoy_toy_boat) > 0 | inv_total(inv, ahoy_toy_boat_repaired) > 0) {
+        $first = "I am afraid I have not found your son yet.";
+    } else {
+        $first = "I am afraid I have lost the boat you gave to me.";
+    }
+}
+switch_int (~p_choice4($first, 1, "Remind me - what can I do about Necrovarus?", 2, "What did you want me to get for you?", 3, "I'll go and search for those items you need.", 4)) {
+    case 1 :
+        if ($toy >= 2) {
+            ~chatplayer("<p,neutral>Good news! I have found your son!");
+            ~chatnpc("<p,neutral>Goodness! Where is he?");
+            ~chatplayer("<p,neutral>He lives on a shipwreck to the east of here. He remembers you and wishes you well.");
+            ~chatnpc("<p,neutral>Oh thank you!! I will travel to see him as soon as I am able!!");
+        } else if ($toy = 1) {
+            if (inv_total(inv, ahoy_toy_boat) > 0 | inv_total(inv, ahoy_toy_boat_repaired) > 0) {
+                ~chatplayer("<p,sad>I am afraid I have not found your son yet.");
+                ~chatnpc("<p,neutral>I never expected that you would find him - although if you do, please let me know.");
+            } else {
+                ~chatplayer("<p,sad>I am afraid I have lost the boat you gave to me.");
+                ~chatnpc("<p,neutral>No, I've found it - here you go.");
+                ~ahoy_give(ahoy_toy_boat);
+                ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 0);
+            }
+        } else {
+            ~chatplayer("<p,quiz>You are doing so much for me - is there anything I can do for you?");
+            ~chatnpc("<p,neutral>I have lived here on my own for many years, but not always. When I left Port Phasmatys, I took my son with me. He grew up to be a fine boy, always in love with the sea.");
+            ~chatnpc("<p,neutral>He was about twelve years old when he ran away with some pirates to be a cabin boy. I never saw him again.");
+            ~chatplayer("<p,sad>That's the second saddest story I have heard today.");
+            ~chatnpc("<p,neutral>If you ever see him, please give him this...and tell him that his mother still loves him.");
+            %ahoy_subquest_toyboat = 1;
+            %ahoy_mast_top = add(random(6), 1);
+            %ahoy_mast_bottom = add(random(6), 1);
+            %ahoy_mast_skull = add(random(6), 1);
+            ~ahoy_give(ahoy_toy_boat);
+            ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 0);
+            ~chatplayer("<p,neutral>Was this his boat?");
+            ~chatnpc("<p,neutral>Yes, he made it himself. It is a model of the very ship in which he sailed away. The paint has peeled off and it has lost its flag, but I could never throw it away.");
+            ~chatplayer("<p,neutral>If I find him, I will pass it on.");
+        }
+    case 2 :
+        ~chatplayer("<p,quiz>Remind me - what can I do about Necrovarus?");
+        @ahoy_crone_needs;
+    case 3 :
+        ~chatplayer("<p,quiz>What did you want me to get for you?");
+        ~chatnpc("<p,neutral>Necrovarus had a magical robe for which he must have no more use. Only these robes hold the power needed to perform the enchantment.");
+    case 4 :
+        ~chatplayer("<p,neutral>I'll go and search for those items you need.");
+}
+
+[proc,ahoy_crone_enchant]
+if (~ahoy_carries(amulet_of_ghostspeak) = false) {
+    ~chatnpc("<p,neutral>You don't have a ghostspeak amulet for me to enchant.");
+    return;
+}
+npc_anim(human_dancing, 0);
+p_delay(2);
+if (inv_getobj(worn, ^wearpos_front) = amulet_of_ghostspeak) {
+    inv_setslot(worn, ^wearpos_front, amulet_of_ghostspeak_enchanted, 1);
+} else if (inv_total(inv, amulet_of_ghostspeak) > 0) {
+    inv_del(inv, amulet_of_ghostspeak, 1);
+    inv_add(inv, amulet_of_ghostspeak_enchanted, 1);
+} else {
+    ~chatnpc("<p,neutral>You don't have a ghostspeak amulet for me to enchant.");
+    return;
+}
+%ahoy_questvar = ^ahoy_enchanted;
+~objbox(amulet_of_ghostspeak_enchanted, "The ghostspeak amulet emits a green glow from its gem.", 250, 0, 0);
+
+[label,ahoy_crone_again]
+if (~obj_gettotal(amulet_of_ghostspeak_enchanted) > 0) {
+    ~chatnpc("<p,neutral>Did it work?");
+    ~chatplayer("<p,neutral>Actually, I haven't tried it yet.");
+    return;
+}
+if (~ahoy_carries(amulet_of_ghostspeak) = true) {
+    ~chatplayer("<p,neutral>Could you enchant the amulet for me again?");
+    ~chatnpc("<p,neutral>I didn't hear the magic word...");
+    ~chatplayer("<p,neutral>Please?");
+    ~chatnpc("<p,neutral>Sorry, didn't quite catch that...");
+    ~chatplayer("<p,neutral>Pretty please???");
+    ~chatnpc("<p,neutral>Oh, alright; come here, then.");
+    ~chatnpc("<p,neutral>I will now perform the ritual of enchantment.");
+    ~ahoy_crone_enchant;
+} else {
+    ~chatplayer("<p,neutral>I seem to have lost my ghostspeak amulet.");
+    ~chatnpc("<p,neutral>Oh dear, that's unfortunate. You'll have to go and find another one, then.");
+}
+
+// ---------------------------------------------------------------- the old man (the crone's son)
+[opnpc1,ahoy_oldman]
+switch_int (%ahoy_subquest_toyboat) {
+    case 0 :
+        ~chatplayer("<p,neutral>What are you doing on this shipwreck?");
+        ~chatnpc("<p,neutral>Shipwreck?!? Not shipwreck, surely not! Just in port, that's all!");
+        ~chatplayer("<p,neutral>Don't be silly - half the ship's missing!");
+        ~chatnpc("<p,neutral>No no no - the captain's just waiting for the wind to change, then we're off!");
+        ~chatplayer("<p,neutral>You mean this skeleton sitting here in this chair?");
+        ~chatnpc("<p,neutral>You must show more respect to the Captain.");
+    case 1 : @ahoy_oldman_boat;
+    case default :
+        if (~obj_gettotal(ahoy_chest_key) > 0 | %ahoy_subquest_toyboat = 3) {
+            ~chatplayer("<p,neutral>How is it going?");
+            ~chatnpc("<p,neutral>Wonderful, wonderful! Mother's coming to get me!");
+        } else {
+            ~chatplayer("<p,quiz>I've lost my key to the chest - do you have another one?");
+            ~chatnpc("<p,neutral>What? But the chest is only just over there! How on RuneScape did you lose it in that short distance?");
+            ~chatplayer("<p,sad>Sorry, I won't do it again...");
+            ~ahoy_give(ahoy_chest_key);
+            ~objbox(ahoy_chest_key, "The old man grudgingly gives you another chest key.", 250, 0, 0);
+        }
+}
+
+[label,ahoy_oldman_boat]
+def_int $c;
+if (inv_total(inv, ahoy_toy_boat_repaired) > 0) {
+    $c = ~p_choice3("What is your name?", 1, "Can I have the key to the chest?", 2, "Is this your toy boat?", 3);
+} else {
+    $c = ~p_choice2("What is your name?", 1, "Can I have the key to the chest?", 2);
+}
+if ($c = 1) {
+    ~chatplayer("<p,neutral>What is your name?");
+    ~chatnpc("<p,neutral>I don't remember. Everyone around here just calls me 'boy'.");
+    ~chatplayer("<p,neutral>You're the cabin boy?!?");
+    ~chatnpc("<p,neutral>Yes, and proud of it.");
+    return;
+}
+if ($c = 2) {
+    ~chatplayer("<p,neutral>Can I have the key to the chest?");
+    ~chatnpc("<p,neutral>Hang on, let me ask the Captain ...");
+    ~mesbox("The old man cocks an ear towards the Pirate Captain's skeleton.");
+    if (~ahoy_correct_boat = true) {
+        ~ahoy_oldman_key;
+    } else {
+        ~chatnpc("<p,neutral>The Captain says no.");
+    }
+    return;
+}
+~chatplayer("<p,neutral>Is this your toy boat?");
+~objbox(ahoy_toy_boat_repaired, "The old man inspects the toy boat.", 250, 0, 0);
+if (~ahoy_correct_boat = true) {
+    ~chatnpc("<p,neutral>My word - so it is!!! I never thought I would see it again!! Where did you get it from?");
+    ~chatplayer("<p,neutral>Your mother gave it to me to pass on to you.");
+    ~chatnpc("<p,neutral>My mother? She still lives?");
+    ~chatplayer("<p,neutral>Yes, in a shack to the west of here.");
+    ~chatnpc("<p,neutral>After all these years ...");
+    ~chatplayer("<p,neutral>Can I have the key to the chest, then?");
+    ~chatnpc("<p,neutral>Hang on, let me ask the Captain ...");
+    ~mesbox("The old man cocks an ear towards the Pirate Captain's skeleton.");
+    ~ahoy_oldman_key;
+} else if (inv_total(inv, ahoy_toy_boat) > 0) {
+    ~chatnpc("<p,neutral>No - I made a toy boat a long while ago, but that one had a flag.");
+} else {
+    ~chatnpc("<p,neutral>No - I made a toy boat a long while ago, but the colours on the flag were different.");
+}
+
+[proc,ahoy_correct_boat]()(boolean)
+if (%ahoy_mast_top = %ahoy_toy_top & %ahoy_mast_skull = %ahoy_toy_skull & %ahoy_mast_bottom = %ahoy_toy_bottom) {
+    return(true);
+}
+return(false);
+
+[proc,ahoy_oldman_key]
+%ahoy_subquest_toyboat = 2;
+inv_del(inv, ahoy_toy_boat, 1);
+inv_del(inv, ahoy_toy_boat_repaired, 1);
+~ahoy_give(ahoy_chest_key);
+~chatnpc("<p,neutral>The Captain says yes.");
+~objbox(ahoy_chest_key, "The old man gives you the chest key.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Gravingas and the petition
+// ours: Void's Gravingas shouts slogans every 14 ticks in ghost or plain speech by who is
+// looking; one npc can't say both, so he is silent here
+[opnpc1,ahoy_ghost_protestor]
+if (~ahoy_ghostspeak = false) return;
+def_int $petition = %ahoy_signaturecounter;
+if (%ahoy_questvar = ^ahoy_commanded) {
+    ~chatplayer("<p,neutral>Why are you still protesting? I have commanded Necrovarus to let you and your friends do as you like! There's no need for this anymore!");
+    ~chatnpc("<p,neutral>There's always a need for a healthy interest in politics.");
+    return;
+}
+if (%ahoy_questvar < ^ahoy_crone_help) {
+    ~chatnpc("<p,neutral>Will you join with me and protest against the evil ban of Necrovarus and his disciples?");
+    if (%ahoy_questvar = ^ahoy_unstarted) {
+        ~chatplayer("<p,neutral>I'm sorry, I don't really think I should get involved.");
+        ~chatnpc("<p,neutral>Ah, the youth of today - so apathetic to politics.");
+        return;
+    }
+    @ahoy_gravingas_join;
+}
+if ($petition = ^ahoy_petition_burned | %ahoy_questvar > ^ahoy_crone_help) {
+    ~chatnpc("<p,neutral>So have you presented the petition to Necrovarus?");
+    ~chatplayer("<p,sad>Yes. He burned it.");
+    ~chatnpc("<p,neutral>That's exactly what I thought he would do.");
+    ~chatplayer("<p,quiz>Well, if you knew that he would do that, why have I been wasting my time running around after ghosts for signatures?");
+    ~chatnpc("<p,neutral>It never hurts to get involved in politics.");
+    return;
+}
+if ($petition > 0) {
+    @ahoy_gravingas_status($petition);
+}
+~chatnpc("<p,neutral>Will you join with me and protest against the evil desires of Necrovarus and his disciples?");
+@ahoy_gravingas_join;
+
+[label,ahoy_gravingas_join]
+switch_int (~p_choice2("After hearing Velorina's story I will be happy to help out.", 1, "I'm sorry, I don't really think I should get involved.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>After hearing Velorina's story I will be happy to help out.");
+        ~ahoy_give(ahoy_petition);
+        %ahoy_signaturecounter = 1;
+        ~chatnpc("<p,neutral>Excellent, excellent!! Here - take this petition form, and try and get 10 signatures from the townsfolk.");
+    case 2 :
+        ~chatplayer("<p,neutral>I'm sorry, I don't really think I should get involved.");
+}
+
+[label,ahoy_gravingas_status](int $petition)
+if (inv_total(inv, ahoy_petition) = 0) {
+    ~chatplayer("<p,neutral>I'm sorry, I seem to have lost my petition form.");
+    if (~obj_gettotal(ahoy_petition) > 0) {
+        ~chatnpc("<p,neutral>Are you sure? Have another look in the bank - you might be mistaken.");
+    } else if (inv_freespace(inv) = 0) {
+        ~chatnpc("<p,neutral>Blown away in the sea breeze, hey? Oh well, can't be helped. I'd give you another one, but you look like you're carrying too much already.");
+    } else {
+        %ahoy_signaturecounter = 1;
+        ~ahoy_give(ahoy_petition);
+        ~chatnpc("<p,neutral>Blown away in the sea breeze, hey? Oh well, can't be helped. Here's another one, but you'll have to start from scratch again.");
+    }
+    return;
+}
+if ($petition = 11) {
+    ~chatnpc("<p,neutral>You've got them all! Now go and present it to Necrovarus!!");
+} else if ($petition = 10) {
+    ~chatnpc("<p,neutral>Very nearly there!! Only 1 more signature to go.");
+} else if ($petition = 1) {
+    ~chatnpc("<p,neutral>Come on - you haven't even started yet! You need 10 more signatures.");
+} else {
+    ~chatnpc("<p,neutral>Not doing bad I see! You need <tostring(sub(11, $petition))> more signatures.");
+}
+
+[opheld1,ahoy_petition]
+def_int $signed = max(0, sub(%ahoy_signaturecounter, 1));
+if (%ahoy_signaturecounter = ^ahoy_petition_burned) $signed = 0;
+if ($signed = 0) {
+    mes("You haven't got any signatures yet.");
+} else if ($signed = 1) {
+    mes("You have obtained 1 signature.");
+} else {
+    mes("You have obtained <tostring($signed)> signatures.");
+}
+
+[opnpc1,ahoy_ghost_villager]
+if (~ahoy_ghostspeak = false) return;
+def_int $petition = %ahoy_signaturecounter;
+if ($petition < 1 | $petition > 11 | inv_total(inv, ahoy_petition) = 0) {
+    switch_int (random(4)) {
+        case 0 : ~chatnpc("<p,neutral>This cold wind blows right through you, doesn't it?");
+        case 1 : ~chatnpc("<p,neutral>Worship the Ectofuntus all you want, but don't bother us, human.");
+        case 2 : ~chatnpc("<p,neutral>Why did we have to listen to that maniacal priest?");
+        case default : ~chatnpc("<p,neutral>We do not talk to the warm-bloods.");
+    }
+    return;
+}
+if ($petition = 11) {
+    ~chatplayer("<p,neutral>Thank you for your kind support.");
+    return;
+}
+~chatplayer("<p,quiz>Would you sign this petition form, please?");
+def_obj $hat = inv_getobj(worn, ^wearpos_hat);
+if ($hat = ahoy_bedsheet) {
+    ~chatnpc("<p,neutral>Why are you wearing that bedsheet? If you're trying to pretend to be one of us, you're not fooling anybody - you're not even green!!");
+    return;
+}
+if ($hat ! ahoy_bedsheetgreen) {
+    ~chatnpc("<p,neutral>I'm sorry, but it's hard to believe that a mortal could be interested in helping us.");
+    return;
+}
+if (%ahoy_last_villager = npc_uid) {
+    ~chatnpc("<p,neutral>You only just asked me the same thing! Leave me alone - I've had my say!");
+    return;
+}
+%ahoy_last_villager = npc_uid;
+switch_int (random(3)) {
+    case 0 :
+        switch_int (random(5)) {
+            case 0 : ~chatnpc("<p,quiz>I don't have time for this nonsense.");
+            case 1 : ~chatnpc("<p,quiz>How dare you accost me in the street?");
+            case 2 : ~chatnpc("<p,quiz>Get lost.");
+            case 3 : ~chatnpc("<p,quiz>My answer is no.");
+            case default : ~chatnpc("<p,quiz>I will have you know that I am a fervent supporter of Necrovarus.");
+        }
+    case 1 :
+        switch_int (random(4)) {
+            case 0 : ~chatnpc("<p,neutral>Most certainly, I will.");
+            case 1 : ~chatnpc("<p,neutral>Yes, of course.");
+            case 2 : ~chatnpc("<p,neutral>Yes! It's about time somebody did something about Necrovarus.");
+            case default : ~chatnpc("<p,neutral>I'll do anything that annoys Necrovarus.");
+        }
+        ~ahoy_signed;
+    case default :
+        switch_int (random(3)) {
+            case 0 : ~chatnpc("<p,neutral>I will if you make it worth my while...");
+            case 1 : ~chatnpc("<p,neutral>You scratch my back and I'll scratch yours...");
+            case default : ~chatnpc("<p,neutral>It'll cost you...");
+        }
+        ~chatplayer("<p,shock>How much?");
+        def_int $cost = add(random(5), 1);
+        ~chatnpc("<p,neutral>Oh, it'll cost you <tostring($cost)> ecto-tokens.");
+        if (inv_total(inv, ectotoken) < $cost) {
+            ~chatplayer("<p,neutral>I don't have that many on me.");
+            ~chatnpc("<p,neutral>No tokens, no signature.");
+            return;
+        }
+        switch_int (~p_choice2("Okay, if you insist.", 1, "There's no way I'm giving in to corruption.", 2)) {
+            case 1 :
+                ~chatplayer("<p,bored>Okay, if you insist.");
+                inv_del(inv, ectotoken, $cost);
+                ~ahoy_signed;
+            case 2 :
+                ~chatplayer("<p,angry>There's no way I'm giving in to corruption.");
+                ~chatnpc("<p,neutral>Suit yourself.");
+        }
+}
+
+[proc,ahoy_signed]
+%ahoy_signaturecounter = add(%ahoy_signaturecounter, 1);
+def_int $total = sub(%ahoy_signaturecounter, 1);
+if ($total = 10) {
+    ~objbox(ahoy_petition, "You have succeeded in obtaining 10 signatures on the petition form!", 250, 0, 0);
+} else if ($total = 1) {
+    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained 1 signature so far.", 250, 0, 0);
+} else {
+    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained <tostring($total)> signatures so far.", 250, 0, 0);
+}
+
+// ---------------------------------------------------------------- Ak-Haranu
+[opnpc1,ahoy_akharanu_multi]
+def_int $bow = %ahoy_subquest_bow;
+if ($bow = 8) {
+    if (~obj_gettotal(ahoy_translation_manual) > 0 | %ahoy_given_manual = 1) {
+        ~chatplayer("<p,neutral>Thank you for the translation manual, Ak-Haranu - it may save many souls before long.");
+        ~chatnpc("<p,neutral>And Ak-Haranu thanks you for kind gift of longbow.");
+    } else {
+        ~chatplayer("<p,neutral>I'm sorry, I seem to have lost the translation manual you gave me.");
+        ~chatnpc("<p,neutral>Ah, no worry, my friend. For the gift of longbow Ak-Haranu would give a thousand books.");
+        ~ahoy_give(ahoy_translation_manual);
+        ~objbox(ahoy_translation_manual, "Ak-Haranu gives you another translation manual.", 250, 0, 0);
+    }
+    return;
+}
+if ($bow >= 1) {
+    if (inv_total(inv, oak_longbow_signed) > 0) {
+        ~chatplayer("<p,neutral>I have your signed longbow for you.");
+        ~chatnpc("<p,neutral>Ah, can it be true? You have obtained bow from Master Bowman?");
+        ~chatplayer("<p,neutral>He was more than happy to oblige (cough). Here you are.");
+        inv_del(inv, oak_longbow_signed, 1);
+        inv_add(inv, ahoy_translation_manual, 1);
+        %ahoy_subquest_bow = 8;
+        ~objbox(oak_longbow_signed, "Ak-Haranu gives you a translation manual in return for the signed oak longbow.", 250, 0, 0);
+        ~chatnpc("<p,neutral>May honour be bestowed upon you and your family!");
+    } else if (inv_total(inv, oak_longbow) > 0) {
+        ~chatnpc("<p,neutral>How is <text_gender("Master", "Mistress")> <displayname> getting on with longbow?");
+        ~chatplayer("<p,neutral>I'll let you know.");
+    } else {
+        ~chatplayer("<p,neutral>Have you got an oak longbow that I can get Robin to sign for you?");
+        ~chatnpc("<p,neutral>No, Ak-Haranu afraid that no longbow in supply at moment. You must make one or buy one.");
+    }
+    return;
+}
+~chatplayer("<p,neutral>It's nice to see a human face around here.");
+~chatnpc("<p,neutral>My name Ak-Haranu. I am trader, come from many far across sea in east.");
+~chatplayer("<p,neutral>You come from the lands of the East? Do you have anything that can help me translate a book that is scribed in your language?");
+~chatnpc("<p,neutral>Ak-Haranu may help you. A translation manual I have, much good for reading Eastern language.");
+~chatplayer("<p,neutral>How much do you want for it?");
+~chatnpc("<p,neutral>Ak-Haranu not want money for this book, as is such small thing. But there may be something you could do for me. I am big admirer of Robin, Master Bowman. He staying in village inn.");
+~chatplayer("<p,neutral>What would you like me to do?");
+~chatnpc("<p,neutral>Please get Master Bowman sign an oak longbow for me, so Ak-Haranu can show family and friends when returning home and become much admired. Then I give you book in exchange.");
+switch_int (~p_choice2("Okay, wait here - I'll get you your bow.", 1, "Sorry, I have too much to do at the moment.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Okay, wait here - I'll get you your bow.");
+        %ahoy_subquest_bow = 1;
+    case 2 :
+        ~chatplayer("<p,neutral>Sorry, I have too much to do at the moment.");
+}
+
+// ---------------------------------------------------------------- the Ghost Innkeeper
+[opnpc1,ahoy_ghost_innkeeper]
+if (~ahoy_ghostspeak = false) return;
+~chatplayer("<p,happy>Hello there!");
+~chatnpc("<p,neutral>Greetings, traveller. Welcome to 'The Green Ghost' Tavern. What can I do you for?");
+switch_int (~p_choice4("Can I buy a beer?", 1, "Can I hear some gossip?", 2, "Do you have any jobs I can do?", 3, "Nothing, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can I buy a beer?");
+        ~chatnpc("<p,neutral>Sorry, but our pumps dried up over half a century ago. We of this village do not have much of a thirst these days.");
+    case 2 :
+        ~chatplayer("<p,quiz>Can I hear some gossip?");
+        ~chatnpc("<p,neutral>I suppose, as long as you keep it to yourself...");
+        ~chatnpc("<p,neutral>You see Gravingas out there in the marketplace? He speaks for the silent majority of Port Phasmatys, for those of us who would prefer to pass over into the next world.");
+        if (%ahoy_questvar = ^ahoy_unstarted) {
+            ~chatnpc("<p,neutral>But old Gravingas is far too obvious in his methods. Now Velorina, she's a ghost of a different colour altogether. If you feel like helping our cause at all, go speak to Velorina.");
+        }
+    case 3 :
+        ~chatplayer("<p,neutral>Do you have any jobs I can do?");
+        if (~obj_gettotal(ahoy_bedsheet) > 0) {
+            ~chatnpc("<p,neutral>Well, you could take that bedsheet through to Robin like I asked.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Yes, actually, I do. We have a very famous Master Bowman named Robin staying with us at the moment. Could you take him some clean bed linen for me?");
+        switch_int (~p_choice2("Yes, I'd be delighted.", 1, "No, I didn't mean a job like that.", 2)) {
+            case 1 :
+                ~chatplayer("<p,happy>Yes, I'd be delighted.");
+                ~ahoy_give(ahoy_bedsheet);
+                ~chatnpc("<p,neutral>Oh, thank you. Be careful with that Robin, though - he's far too full of himself, that one.");
+            case 2 :
+                ~chatplayer("<p,neutral>No, I didn't mean a job like that.");
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>Nothing, thanks.");
+}
+
+// ---------------------------------------------------------------- the Ghost Captains
+// ours: 2006's captains have only Talk-To (Void also has Travel); and our map has
+// ahoy_ghost_captain_1 on Dragontooth Island too, so which way he sails is by where you are
+[opnpc1,ahoy_ghost_captain_1] @ahoy_captain;
+[opnpc1,ahoy_ghost_captain_2] @ahoy_captain;
+
+[label,ahoy_captain]
+if (~ahoy_ghostspeak = false) return;
+def_obj $hat = inv_getobj(worn, ^wearpos_hat);
+if ($hat = ahoy_bedsheetgreen) {
+    ~chatnpc("<p,neutral>Is that your bedsheet covered in filthy slime?");
+    ~chatplayer("<p,neutral>I can say in all honesty that it is not.");
+    ~chatnpc("<p,neutral>Well, whoever it belongs to, it's not coming on this ship!");
+    return;
+}
+if ($hat = ahoy_bedsheet) {
+    ~chatnpc("<p,neutral>Would you like to visit Dragontooth Island? If so, I recommend you take off that sheet first. The winds are very strong out at sea.");
+    return;
+}
+if (coordx(coord) < 3750) {
+    ~chatnpc("<p,neutral>Would you like to visit Dragontooth Island? It is a most pleasant island in the sea between Morytania and the lands of the east. It'll cost you 25 ectotokens for the return trip.");
+    if (inv_total(inv, ectotoken) < 25) {
+        ~chatplayer("<p,neutral>Not now, thanks.");
+        return;
+    }
+    switch_int (~p_choice2("Okay, here's 25 ectotokens. Let's go.", 1, "Not now, thanks.", 2)) {
+        case 1 :
+            ~chatplayer("<p,happy>Okay, here's 25 ectotokens. Let's go.");
+            inv_del(inv, ectotoken, 25);
+            ~ahoy_sail(0_59_55_16_39, "After a long boat trip you arrive at Dragontooth Island.");
+        case 2 :
+            ~chatplayer("<p,bored>Not now, thanks.");
+    }
+    return;
+}
+@ahoy_captain_return;
+
+[label,ahoy_captain_return]
+switch_int (~p_choice3("Can you take me back to Phasmatys, now?", 1, "There isn't much on this island, is there?", 2, "Actually, I don't want anything.", 3)) {
+    case 1 :
+        ~chatplayer("<p,bored>Can you take me back to Phasmatys, now?");
+        ~chatnpc("<p,neutral>Yes, climb in.");
+        ~ahoy_sail(0_57_54_54_31, "After a long boat trip you return to Port Phasmatys.");
+    case 2 :
+        ~chatplayer("<p,quiz>There isn't much on this island, is there?");
+        ~chatnpc("<p,neutral>Beautiful isn't it?");
+        ~chatplayer("<p,neutral>But it cost me a lot of ectotokens to get here!");
+        ~chatnpc("<p,neutral>Worth every token, if you ask me.");
+        @ahoy_captain_return;
+    case 3 :
+        ~chatplayer("<p,confused>Actually, I don't want anything.");
+}
+
+// Void: Dragontooth Island 3792,3559 and Port Phasmatys 3702,3487; the fade is ahoy_blackout
+[proc,ahoy_sail](coord $dest, string $text)
+if_openmain(ahoy_blackout);
+if_settext(ahoy_blackout:com_1, $text);
+p_delay(4);
+p_telejump($dest);
+p_delay(1);
+if_close;

@@ -115,6 +115,11 @@ if(inv_total(inv, mm_monkey_in_backpack) > 0) {
 ~hauntedmine_fungus_crumble;
 
 [proc,pre_tele_checks](coord $coord)(boolean)
+// EASCape: Ghosts Ahoy's ghost disguise (Void GhostsAhoy.kt blockTeleports)
+if (inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheet | inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheetgreen) {
+    mes("Please remove your ghost disguise before teleporting.");
+    return(false);
+}
 // EASCape: Tele Block (teleother.rs2; 2006Scape's message)
 if (%teleblock > 0) {
     mes("You are teleblocked and can't teleport.");

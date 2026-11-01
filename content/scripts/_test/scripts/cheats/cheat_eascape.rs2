@@ -681,6 +681,12 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~roving_complete(roving_crystal_bow_200); // the bow (Islwyn offers bow or shield), XP and scroll
+} else if (compare($name, "ghostsahoy") = 0) {
+    if (%ahoy_questvar >= ^ahoy_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~ahoy_complete; // the Ectophial, experience and quest complete scroll (quest_ahoy/ahoy_npcs.rs2)
 } else if (compare($name, "fenkenstrain") = 0) {
     if (%fenk_quest >= ^fenk_complete) {
         mes("You've already done that quest.");
@@ -766,7 +772,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1630,6 +1636,37 @@ $banked = calc($banked + ~questpack_give(thread, 5));
 $banked = calc($banked + ~questpack_give(spade, 1));
 $banked = calc($banked + ~questpack_give(coins, 50));
 ~questpack_done("Creature of Fenkenstrain", $banked);
+
+// ::ghostsahoypack - what Ghosts Ahoy needs you to bring (OSRS wiki's item list): a ghostspeak
+// amulet, gloves for the nettles, a bowl of water and a bucket of milk for the tea, silk, needle,
+// thread and a knife for the toy boat and a dye of each colour for its flag (ours: one of each, as
+// the mast's colours are random), an oak longbow, a spade, a bucket of ectoplasm for the bedsheet,
+// ectotokens for the toll, the boat and bribes, and coins for Runedraw
+[debugproc,ghostsahoypack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
+$banked = calc($banked + ~questpack_give(leather_gloves, 1));
+$banked = calc($banked + ~questpack_give(bowl_water, 1));
+$banked = calc($banked + ~questpack_give(bucket_milk, 1));
+$banked = calc($banked + ~questpack_give(silk, 1));
+$banked = calc($banked + ~questpack_give(needle, 1));
+$banked = calc($banked + ~questpack_give(thread, 5));
+$banked = calc($banked + ~questpack_give(knife, 1));
+$banked = calc($banked + ~questpack_give(reddye, 1));
+$banked = calc($banked + ~questpack_give(yellowdye, 1));
+$banked = calc($banked + ~questpack_give(bluedye, 1));
+$banked = calc($banked + ~questpack_give(orangedye, 1));
+$banked = calc($banked + ~questpack_give(greendye, 1));
+$banked = calc($banked + ~questpack_give(purpledye, 1));
+$banked = calc($banked + ~questpack_give(oak_longbow, 1));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(bucket_ectoplasm, 1));
+$banked = calc($banked + ~questpack_give(ectotoken, 100));
+$banked = calc($banked + ~questpack_give(coins, 500));
+~questpack_done("Ghosts Ahoy", $banked);
 
 // ::rovingpack - what Roving Elves needs you to bring (OSRS wiki's item list): Glarial's pebble and
 // amulet, a rope and a spade (the waterfall dungeon's key is found there again)

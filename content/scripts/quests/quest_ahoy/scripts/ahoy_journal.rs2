@@ -1,0 +1,86 @@
+// EASCape: Ghosts Ahoy's journal, Void's lines (GhostsAhoy.kt questJournalOpen)
+[if_button,questlist:ahoy]
+def_int $s = %ahoy_questvar;
+def_string $t;
+if ($s = ^ahoy_unstarted) {
+    $t = "@dbl@To start this quest I need to speak to @dre@Velorina@dbl@,|@dbl@a ghost of @dre@Port Phasmatys@dbl@.|@dbl@I must have at least:|";
+    $t = append($t, ~fenk_journal_line(stat_base(agility), 25, "level 25 agility", "@dre@level 25 agility"));
+    $t = append($t, ~fenk_journal_line(stat_base(cooking), 20, "level 20 cooking.", "@dre@level 20 cooking."));
+    $t = append($t, "@dbl@I must also be able to defeat a @dre@level 32 monster@dbl@.|@dbl@I must also have completed the following quests:|");
+    $t = append($t, ~fenk_journal_line(%priestperil, ^priestperil_complete, "Priest in Peril", "@dre@Priest in Peril"));
+    $t = append($t, ~fenk_journal_line(%haunted, ^haunted_complete, "Restless Ghost", "@dre@Restless Ghost"));
+    ~quest_journal("Ghosts Ahoy", $t);
+    return;
+}
+$t = "@str@I have spoken with Velorina, who has told me the sad|@str@history of the ghosts of Port Phasmatys. She has asked|@str@me to plead with Necrovarus in the Phasmatyan Temple to|@str@let any ghost who so wishes pass over into the next world.|";
+if ($s = ^ahoy_ask_necrovarus) {
+    $t = append($t, "|@dbl@I should speak to @dre@Necrovarus@dbl@ in the @dre@Temple@dbl@.|");
+}
+if ($s >= ^ahoy_pleaded) $t = append($t, "@str@I pleaded with Necrovarus, to no avail.|");
+if ($s = ^ahoy_pleaded) {
+    $t = append($t, "|@dbl@I should tell @dre@Velorina@dbl@ that @dre@Necrovarus@dbl@ will not listen to|@dbl@reason.|");
+}
+if ($s >= ^ahoy_old_crone) {
+    $t = append($t, "@str@Velorina was crestfallen at Necrovarus' refusal to lift his|@str@ban, and she told me of a woman who fled Port Phasmatys|@str@before the townsfolk died, and to seek her out, as she|@str@may know of a way around Necrovarus' stubbornness.|");
+}
+if ($s = ^ahoy_old_crone) {
+    $t = append($t, "|@dbl@I should find the @dre@old woman@dbl@ that @dre@Velorina@dbl@ speaks of.|");
+}
+if ($s >= ^ahoy_crone_help) {
+    $t = append($t, "@str@I found the old woman, who told me of an enchantment she|@str@can perform on the Amulet of Ghostspeak, which will then|@str@let me command Necrovarus to do my bidding|");
+}
+if ($s = ^ahoy_crone_help) {
+    $t = append($t, "|@dbl@I need to bring the @dre@old woman@dbl@ the following items:|");
+    $t = append($t, ~ahoy_journal_have(%ahoy_given_book, ahoy_book_of_haricanto, "The Book of Haricanto"));
+    $t = append($t, ~ahoy_journal_have(%ahoy_given_robes, ahoy_robes_of_necrovarus, "The Robes of Necrovarus"));
+    $t = append($t, ~ahoy_journal_have(%ahoy_given_manual, ahoy_translation_manual, "Something to translate the Book of Haricanto"));
+    def_int $toy = %ahoy_subquest_toyboat;
+    if ($toy = 3) {
+        $t = append($t, "|@str@The old woman gave me a toy boat to give to her son, if I|@str@came across him. I found him and gave him the boat.|");
+    } else if ($toy >= 1) {
+        $t = append($t, "|@dbl@The @dre@old woman@dbl@ has given me a @dre@toy boat@dbl@ which was made by|@dbl@her son when he was a young boy. It is a model of the same|@dbl@pirate-ship that he sailed away in when he later ran away.|");
+    }
+    def_int $bow = %ahoy_subquest_bow;
+    if ($bow = 8) {
+        $t = append($t, "|@str@I brought Ak-Haranu an oak longbow signed by Robin,|@str@Master Bowman, and in exchange he gave me a translation|@str@manual for the Eastern language.|");
+    } else if ($bow >= 1) {
+        $t = append($t, "|@dbl@I have agreed to bring @dre@Ak-Haranu@dbl@ (a trader from the East)|@dbl@an oak longbow, signed by @dre@Robin, Master Bowman@dbl@. @dre@Ak-|@dre@Haranu@dbl@ will give me a @dre@translation manual@dbl@ for the Eastern|@dbl@language in exchange.|@dre@Robin@dbl@ is staying at the inn in @dre@Port Phasmatys@dbl@.|");
+    }
+    def_int $petition = %ahoy_signaturecounter;
+    if ($petition = ^ahoy_petition_burned) {
+        $t = append($t, "|@str@Gravingas, a ghost protestor, asked me to help him with a|@str@petition to free the ghosts of Phasmatys. I collected 10|@str@signatures and presented the petition to Necrovarus, but|@str@he burned it to ashes in my hands.|");
+    } else if ($petition >= 1) {
+        $t = append($t, "|@dre@Gravingas@dbl@, a ghost protestor, has asked me to help with a|@dbl@petition to free the ghosts of @dre@Phasmatys@dbl@, and wants me|@dbl@to collect 10 signatures.|");
+        if ($petition = 1) {
+            $t = append($t, "@dbl@I haven't got any signatures yet.|");
+        } else if ($petition = 11) {
+            $t = append($t, "@dbl@I have obtained all the signatures.|@dbl@I need to present the petition to @dre@Necrovarus@dbl@.|");
+        } else {
+            $t = append($t, "@dbl@I have obtained @dre@<tostring(sub($petition, 1))>@dbl@ signatures.|");
+        }
+    }
+}
+if ($s >= ^ahoy_crone_ritual) {
+    $t = append($t, "@str@I brought the old woman the Book of Haricanto, the Robes|@str@of Necrovarus, and a translation manual.|");
+}
+if ($s = ^ahoy_crone_ritual) {
+    $t = append($t, "|@dbl@I need to bring the @dre@Amulet of Ghostspeak@dbl@ to the old woman|@dbl@so that she can perform the enchantment.|");
+}
+if ($s >= ^ahoy_enchanted) {
+    $t = append($t, "@str@The old woman used the items I brought her to perform the|@str@enchantment on the Amulet of Ghostspeak.|");
+}
+if ($s = ^ahoy_enchanted) {
+    $t = append($t, "|@dbl@I need to return to the @dre@Temple of Phasmatys@dbl@ and use the|@dbl@enchanted @dre@Amulet of Ghostspeak@dbl@ to command @dre@Necrovarus@dbl@.|");
+}
+if ($s >= ^ahoy_commanded) $t = append($t, "@str@I have commanded Necrovarus to remove his ban.|");
+if ($s = ^ahoy_commanded) {
+    $t = append($t, "|@dbl@I need to tell @dre@Velorina@dbl@ that I have successfully commanded|@dre@Necrovarus@dbl@ to lift his ban.|");
+}
+if ($s >= ^ahoy_complete) {
+    $t = append($t, "@str@I have told Velorina that Necrovarus has been commanded|@str@to remove his ban, and to allow any ghost who so desires|@str@to pass over into the next plane of existence. Velorina|@str@gave me the Ectophial in return, which I can use to teleport|@str@to the Temple of Phasmatys.||@red@QUEST COMPLETE!");
+}
+~quest_journal("Ghosts Ahoy", $t);
+
+[proc,ahoy_journal_have](int $given, obj $obj, string $text)(string)
+if ($given = 1 | ~obj_gettotal($obj) > 0) return("@str@<$text>|");
+return("@dre@<$text>|");

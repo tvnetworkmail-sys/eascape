@@ -42,6 +42,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::questhelper cook` | Quest Helper: follow that quest (chat line on each new step, the yellow arrow, the step in its journal). `::questhelper off` stops, `::questhelper list` shows the keys of all 70 guides (one for every quest in the game). Opening a quest's journal starts its guide too. Works for every player, not just in test mode |
 | `::questpacks` | Lists every quest pack command |
 | `::demonpack` (and so on) | The items one quest needs (the wiki's "Items required", as our items). One for each of the 69 quests built (Desert Treasure keeps its own `::dtpack`; quests that need no items just say so): the name is the quest's key, the same one `::questhelper` uses, plus `pack`. What doesn't fit in your pack goes to your bank. Skills and the quests it needs first: `::maxstats` and `::questdone` |
+| `::ghostsahoypack` | The items Ghosts Ahoy needs: a ghostspeak amulet, leather gloves, a bowl of water, a bucket of milk, silk, a needle, 5 thread, a knife, one dye of each colour, an oak longbow, a spade, a bucket of ectoplasm, 100 ectotokens and 500 coins. `::questdone ghostsahoy` marks it done |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

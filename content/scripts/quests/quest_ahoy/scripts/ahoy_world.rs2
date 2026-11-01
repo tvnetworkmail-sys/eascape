@@ -1,0 +1,379 @@
+// EASCape: Ghosts Ahoy, its places and things. Ported from Void (GregHib/void:
+// content/area/morytania/port_phasmatys/NecrovarusTemple.kt and WreckedGhostShip.kt;
+// content/quest/member/ghosts_ahoy/GhostsAhoy.kt, Bedsheet.kt, Ectophial.kt, ModelShip.kt and
+// TreasureMap.kt), their words and order. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- the temple
+// the door to Necrovarus's coffin (3656,3514 level 1); every other ahoy_harbour_door just opens
+[oploc1,ahoy_harbour_door]
+if (loc_coord ! 1_57_54_8_58) {
+    ~eascape_door_walk;
+    return;
+}
+if (%ahoy_templedoor_unlocked = 1) {
+    ~eascape_door_walk;
+    return;
+}
+// ours: Void has the disciple at 3653,3518 say this; we say it as him wherever he is
+~chatnpc_specific("Ghost disciple", ahoy_disciple, "<p,neutral>What are you doing going in there?");
+~chatplayer("<p,scared>Err, I was just curious...");
+~chatnpc_specific("Ghost disciple", ahoy_disciple, "<p,neutral>Inside that room is a coffin, inside which lie the mortal remains of our most glorious master, Necrovarus. None may enter.");
+
+[oplocu,ahoy_harbour_door]
+if (last_useitem ! ahoy_bone_key | loc_coord ! 1_57_54_8_58) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%ahoy_templedoor_unlocked = 1) {
+    mes("The door is already unlocked.");
+    return;
+}
+sound_synth(locked, 1, 0);
+%ahoy_templedoor_unlocked = 1;
+inv_del(inv, ahoy_bone_key, 1);
+mes("You unlock the door.");
+
+[oploc1,ahoy_coffin]
+mes("The coffin creaks open...");
+loc_change(ahoy_coffin_open, 100);
+
+[oploc1,ahoy_coffin_open]
+if (%ahoy_given_robes = 1 | ~obj_gettotal(ahoy_robes_of_necrovarus) > 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~objbox(ahoy_robes_of_necrovarus, "You take the Robes of Necrovarus from the remains of his mortal body.", 250, 0, 0);
+~ahoy_give(ahoy_robes_of_necrovarus);
+
+[oploc2,ahoy_coffin_open]
+mes("You close the coffin.");
+loc_change(ahoy_coffin, 3);
+
+// ---------------------------------------------------------------- the Ectophial
+[opheld1,ectophial]
+def_int $slot = last_slot;
+if (~wilderness_level(coord) > 20) {
+    mes("A mysterious force blocks your teleport.");
+    mes("You can't use this teleport after level 20 wilderness.");
+    return;
+}
+if (~pre_tele_checks(coord) = false) return;
+if (inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheet | inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheetgreen) {
+    mes("Please remove your ghost disguise before teleporting.");
+    return;
+}
+if_close;
+p_stopaction;
+mes("You empty the ectoplasm onto the ground around your feet...");
+anim(ahoy_ecto_teleport, 0);
+inv_setslot(inv, $slot, ectophial_empty, 1);
+p_delay(3);
+// Void's ectophial_teleport area: 3654-3665, 3521-3524
+~p_telejump_safe(movecoord(0_57_55_6_1, random(12), 0, random(4)));
+mes("... and the world changes around you.");
+// ours: Void then walks you to the Ectofuntus to refill it; here you use it on the Ectofuntus
+
+[oplocu,ahoy_ectofunctus]
+if (last_useitem ! ectophial_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(human_pickuptable, 0);
+inv_setslot(inv, last_useslot, ectophial, 1);
+mes("You refill the ectophial from the Ectofuntus.");
+
+// ---------------------------------------------------------------- the bedsheet ghost disguise
+// worn, it makes you look like a ghost (Void Bedsheet.kt); equip.rs2 / appearance.rs2 call these
+[proc,ahoy_bedsheet_transmog](obj $hat)
+if ($hat = ahoy_bedsheet) {
+    p_transmogrify(ahoy_ghost_disguise);
+} else if ($hat = ahoy_bedsheetgreen) {
+    p_transmogrify(ahoy_ghost_disguise_green);
+}
+
+[proc,ahoy_bedsheet_off](obj $obj)
+if ($obj = ahoy_bedsheet | $obj = ahoy_bedsheetgreen) {
+    p_transmogrify(null);
+}
+
+// ours: Void takes the sheet off when you leave Port Phasmatys; here it stays on
+
+[opheldu,ahoy_bedsheet]
+if (last_useitem ! bucket_ectoplasm) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, ahoy_bedsheet, 1);
+inv_del(inv, bucket_ectoplasm, 1);
+inv_add(inv, ahoy_bedsheetgreen, 1);
+inv_add(inv, bucket_empty, 1);
+mes("You dip the bedsheet in the bucket of ectoplasm.");
+
+// ---------------------------------------------------------------- the toy boat
+[opheld1,ahoy_toy_boat]
+if (inv_total(inv, needle) > 0 & inv_total(inv, knife) > 0 & inv_total(inv, silk) > 0 & inv_total(inv, thread) > 0) {
+    inv_del(inv, silk, 1);
+    inv_del(inv, thread, 1);
+    inv_setslot(inv, last_slot, ahoy_toy_boat_repaired, 1);
+    ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, 0);
+    return;
+}
+~mesbox("You need some silk to replace the flag, something to sew it to the boat, and something to cut the flag to the right size.");
+
+[opheld1,ahoy_toy_boat_repaired]
+~objbox(ahoy_toy_boat_repaired, "The top of the flag is <~ahoy_flag_colour(%ahoy_toy_top)>.|The skull emblem is <~ahoy_flag_colour(%ahoy_toy_skull)>.|The bottom of the flag is <~ahoy_flag_colour(%ahoy_toy_bottom)>.", 250, 0, 0);
+
+// a dye used on the repaired boat (skill_crafting/scripts/dye_cape/dye_cape.rs2 sends it here)
+[label,ahoy_dye_boat](namedobj $dye, int $colour)
+def_string $name = ~ahoy_flag_colour($colour);
+switch_int (~p_choice3_header("Top half", 1, "Bottom half", 2, "Skull emblem", 3, "Which part of the flag do you want to dye?")) {
+    case 1 :
+        inv_del(inv, $dye, 1);
+        %ahoy_toy_top = $colour;
+        ~objbox(ahoy_toy_boat_repaired, "You dye the top of the flag <$name>.", 250, 0, 0);
+    case 2 :
+        inv_del(inv, $dye, 1);
+        %ahoy_toy_bottom = $colour;
+        ~objbox(ahoy_toy_boat_repaired, "You dye the bottom of the flag <$name>.", 250, 0, 0);
+    case 3 :
+        inv_del(inv, $dye, 1);
+        %ahoy_toy_skull = $colour;
+        ~objbox(ahoy_toy_boat_repaired, "You dye the skull emblem <$name>.", 250, 0, 0);
+}
+
+// ---------------------------------------------------------------- the wrecked ship
+[oploc1,ahoy_gangplank_shipwreck_on]
+p_telejump(0_56_55_21_28);
+mes("You cross the gangplank.");
+
+[oploc1,ahoy_gangplank_shipwreck_off]
+p_telejump(1_56_55_21_25);
+mes("You cross the gangplank.");
+
+[oploc1,ahoy_skull_captain]
+~mesbox("The pirate captain ignores you and continues to stare lifelessly at nothing, as he has clearly been dead for some time.");
+
+// the stepping rocks to the north-west, Agility 25 (Void: each jumps two squares one way)
+[oploc1,ahoy_rock_invisible]
+def_int $dx = 0;
+def_int $dz = 0;
+switch_int (calc(coordx(loc_coord) * 10000 + coordz(loc_coord))) {
+    case 36043550, 35993552 : $dx = -1;
+    case 36023550, 35973552, 35993564 : $dx = 1;
+    case 35953554, 35973559 : $dz = 1;
+    case 35953556, 35973561 : $dz = -1;
+    case 36013564 : $dx = -1;
+}
+if ($dx = 0 & $dz = 0) return;
+def_int $lx = coordx(loc_coord);
+def_int $lz = coordz(loc_coord);
+def_int $px = coordx(coord);
+def_int $pz = coordz(coord);
+// which side you're on: on the near side you jump over it, else you jump back onto it
+def_boolean $near = false;
+if ($dx = 1 & $px <= $lx) $near = true;
+if ($dx = -1 & $px >= $lx) $near = true;
+if ($dz = 1 & $pz <= $lz) $near = true;
+if ($dz = -1 & $pz >= $lz) $near = true;
+def_coord $dest = movecoord(coord, sub($lx, $px), 0, sub($lz, $pz));
+if ($near = true) $dest = movecoord($dest, multiply($dx, 2), 0, multiply($dz, 2));
+if (stat(agility) < 25) {
+    mes("You need level 25 agility to make that jump.");
+    ~mesbox("You need level 25 agility to make that jump.");
+    return;
+}
+if (runenergy < 500) {
+    mes("You don't have enough energy to make that jump");
+    return;
+}
+anim(human_jump_stones, 0);
+sound_synth(jump, 1, 0);
+p_delay(1);
+p_telejump($dest);
+healenergy(-500);
+// Void: "Success rate is unknown"
+if (stat_random(agility, 5, 255) = true) {
+    stat_advance(agility, 100);
+} else {
+    anim(human_falling_end, 0);
+    ~damage_self(1);
+}
+
+// the ladders up to the top deck, where the mast's flag can be seen when the wind drops
+[oploc1,ahoy_ghostship_ladder]
+~eascape_link(1);
+if (coordy(coord) = 2 & coordx(coord) >= 3615 & coordx(coord) <= 3622) {
+    ~ahoy_windspeed_start;
+}
+
+[oploc1,ahoy_ghostship_laddertop]
+if (coordx(loc_coord) = 3615 & coordz(loc_coord) = 3545 & coordy(loc_coord) = 2) {
+    mes("That ladder doesn't go anywhere very safe.");
+    return;
+}
+~eascape_link(1);
+
+[proc,ahoy_windspeed_start]
+%ahoy_windspeed = 0;
+if_openoverlay(ahoy_windspeed);
+if_settext(ahoy_windspeed:com_2, "high");
+settimer(ahoy_windspeed_timer, add(random(17), 2));
+
+// Void's ahoy_shipwreck_top: 3616-3622, 3541-3545, level 2
+[timer,ahoy_windspeed_timer]
+if (coordy(coord) ! 2 | coordx(coord) < 3616 | coordx(coord) > 3622 | coordz(coord) < 3541 | coordz(coord) > 3545) {
+    if_openoverlay(null);
+    cleartimer(ahoy_windspeed_timer);
+    return;
+}
+if (%ahoy_windspeed = 1) {
+    %ahoy_windspeed = 0;
+    if_settext(ahoy_windspeed:com_2, "high");
+} else {
+    %ahoy_windspeed = 1;
+    if_settext(ahoy_windspeed:com_2, "low");
+}
+settimer(ahoy_windspeed_timer, add(random(17), 2));
+
+[oploc1,ahoy_mast]
+if (%ahoy_windspeed = 0) {
+    ~mesbox("You can see a tattered flag blowing in the wind.|The wind is blowing too hard to make out any details.");
+    return;
+}
+switch_int (random(3)) {
+    case 0 : ~mesbox("You can see a tattered flag blowing in the wind.|The top half of the flag is coloured <~ahoy_flag_colour(%ahoy_mast_top)>.");
+    case 1 : ~mesbox("You can see a tattered flag blowing in the wind.|The bottom half of the flag is coloured <~ahoy_flag_colour(%ahoy_mast_bottom)>.");
+    case default : ~mesbox("You can see a tattered flag blowing in the wind.|The skull emblem is coloured <~ahoy_flag_colour(%ahoy_mast_skull)>.");
+}
+
+// ---------------------------------------------------------------- the chests
+[oploc1,ahoy_chest_locked]
+if (coordx(loc_coord) = 3619 & coordz(loc_coord) = 3545 & %ahoy_subquest_toyboat = 3) {
+    sound_synth(chest_open, 1, 0);
+    loc_change(ahoy_chest_locked_active, 3);
+    if (~ahoy_has_map_piece(ahoy_map_scrap_1) = false) {
+        ~ahoy_give(ahoy_map_scrap_1);
+        ~objbox(ahoy_map_scrap_1, "You find a piece of a map inside the chest.", 250, 0, 0);
+    } else {
+        mes("You search the chest but find nothing.");
+    }
+    return;
+}
+sound_synth(locked, 1, 0);
+mes("The chest is locked.");
+
+[oplocu,ahoy_chest_locked]
+if (last_useitem ! ahoy_chest_key | coordx(loc_coord) ! 3619 | coordz(loc_coord) ! 3545) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%ahoy_subquest_toyboat = 3) {
+    mes("The chest is already unlocked.");
+    return;
+}
+inv_del(inv, ahoy_chest_key, 1);
+sound_synth(locked, 1, 0);
+%ahoy_subquest_toyboat = 3;
+~objbox(ahoy_chest_key, "You unlock the chest.", 250, 0, 0);
+
+// true if you have this piece, or what it became, or have given the book away
+[proc,ahoy_has_map_piece](obj $piece)(boolean)
+if (%ahoy_given_book = 1 | ~obj_gettotal($piece) > 0 | ~obj_gettotal(ahoy_book_of_haricanto) > 0 | ~obj_gettotal(ahoy_map_complete) > 0) {
+    return(true);
+}
+return(false);
+
+[oploc1,ahoy_chest_closed]
+anim(human_openchest, 0);
+sound_synth(chest_open, 1, 0);
+loc_change(ahoy_chest_open, 500);
+
+[oploc2,ahoy_chest_open]
+anim(human_closechest, 0);
+sound_synth(chest_close, 1, 0);
+loc_change(ahoy_chest_closed, 500);
+
+[oploc1,ahoy_chest_open]
+def_int $x = coordx(loc_coord);
+def_int $z = coordz(loc_coord);
+// the chest on the rocks north-west of the wreck
+if ($x = 3606 & $z = 3564) {
+    if (%ahoy_questvar ! ^ahoy_crone_help | ~ahoy_has_map_piece(ahoy_map_scrap_2) = true) {
+        mes("You search the chest but find nothing.");
+    } else {
+        ~ahoy_give(ahoy_map_scrap_2);
+        ~objbox(ahoy_map_scrap_2, "You find a piece of a map inside the chest.", 250, 0, 0);
+    }
+    return;
+}
+// the chest below deck, guarded by the giant lobster
+if ($x = 3618 & $z = 3542) {
+    if (%ahoy_killed_lobster = 1 | %ahoy_questvar ! ^ahoy_crone_help) {
+        if (%ahoy_questvar ! ^ahoy_crone_help | ~ahoy_has_map_piece(ahoy_map_scrap_3) = true) {
+            mes("You search the chest but find nothing.");
+        } else {
+            ~ahoy_give(ahoy_map_scrap_3);
+            ~objbox(ahoy_map_scrap_3, "You find a piece of a map inside the chest.", 250, 0, 0);
+        }
+        return;
+    }
+    // ours: Void spawns one lobster per player; we spawn one if there is none nearby
+    if (npc_find(coord, giant_lobster, 8, 0) = true) return;
+    mes("You are attacked by a giant lobster!!");
+    npc_add(0_56_55_32_23, giant_lobster, 800);
+    npc_setmode(opplayer2);
+    return;
+}
+mes("You search the chest but find nothing.");
+
+[ai_queue3,giant_lobster]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(ahoy_lobster_killed, 0, 0);
+}
+
+[queue,ahoy_lobster_killed]
+%ahoy_killed_lobster = 1;
+
+// ---------------------------------------------------------------- the treasure map
+// ours: Void's map scraps are named 1-3 by where they're found; the cache's names differ, so the
+// rocks' chest gives ahoy_map_scrap_2 and the lobster's chest ahoy_map_scrap_3 (Void ids 4275/4276)
+[opheldu,ahoy_map_scrap_1] @ahoy_map_merge;
+[opheldu,ahoy_map_scrap_2] @ahoy_map_merge;
+[opheldu,ahoy_map_scrap_3] @ahoy_map_merge;
+
+[label,ahoy_map_merge]
+if (inv_total(inv, ahoy_map_scrap_1) > 0 & inv_total(inv, ahoy_map_scrap_2) > 0 & inv_total(inv, ahoy_map_scrap_3) > 0) {
+    inv_del(inv, ahoy_map_scrap_1, 1);
+    inv_del(inv, ahoy_map_scrap_2, 1);
+    inv_del(inv, ahoy_map_scrap_3, 1);
+    inv_add(inv, ahoy_map_complete, 1);
+    ~objbox(ahoy_map_complete, "You piece the three map scraps together to form a complete map.", 250, 0, 0);
+    return;
+}
+~mesbox("You don't have all the pieces of the map yet.");
+
+[opheld1,ahoy_map_complete]
+if_openmain(ahoy_islandmap);
+
+// Void: walk a chosen number of paces on Dragontooth Island (region 15159)
+[opheld2,ahoy_map_complete]
+if (coordx(coord) < 3776 | coordx(coord) > 3839 | coordz(coord) < 3520 | coordz(coord) > 3583) {
+    ~mesbox("The map is for use elsewhere.");
+    return;
+}
+def_int $dir = ~p_choice4_header("North", 1, "East", 2, "South", 3, "West", 4, "Which direction do you wish to walk?");
+def_int $steps = ~p_choice4_header("1 pace", 1, "2 paces", 2, "4 paces", 4, "10 paces", 10, "How far do you wish to walk?");
+switch_int ($dir) {
+    case 1 : p_walk(movecoord(coord, 0, 0, $steps));
+    case 2 : p_walk(movecoord(coord, $steps, 0, 0));
+    case 3 : p_walk(movecoord(coord, 0, 0, sub(0, $steps)));
+    case 4 : p_walk(movecoord(coord, sub(0, $steps), 0, 0));
+}
+
+// the spade at 3803,3530 with the map (general_use/scripts/spade.rs2)
+[label,ahoy_dig_book]
+anim(human_dig, 0);
+p_delay(2);
+~ahoy_give(ahoy_book_of_haricanto);
+~objbox(ahoy_book_of_haricanto, "You unearth the Book of Haricanto.", 250, 0, 0);
