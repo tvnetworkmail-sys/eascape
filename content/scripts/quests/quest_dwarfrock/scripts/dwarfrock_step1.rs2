@@ -347,18 +347,20 @@ if (~bar_page_wanted(2) = false) return;
 if (~bar_book_schematic = true) return; // the base schematics on its last page (dwarfrock_step2.rs2)
 %book_page = 0;
 %open_book = dwarf_rock_book;
-@book_flip_page(0, 0, 2, bar_lore_book);
+@book_flip_page(0, 0, 4, bar_lore_book);
 
 [proc,bar_lore_book]
+// one spread per case: each must fit the book's 22 lines, or ~book shows only its overflow
 switch_int (%book_page) {
-    case 0 : ~book("Dwarven lore", "... in such a way that the miners could no longer safely go down into the mines that were so important to them.||Thus the Elders, in their great wisdom, decided to harness the great power of the yellow stones and drive the spirit out of the area.||They knew that without the power of the stones, they would face a foe too powerful to beat.");
-    case 1 : ~book("Dwarven lore", "So for three days and three nights the Arzinian was chased through the twisty passages, always eluding its hunters, until finally it was cornered inside a small tunnel.||On either side the brethren approached, their hands sparkling with yellow light, so attempting to banish the spirit back to Bordanzan from whence it came.||But lo! The roof did shake and the walls did crumble and the tunnel did collapse.");
-    case 2 :
-        ~book("Dwarven lore", "And all who were standing outside rushed inward to aid their fallen brothers, their yellow stones in hand. Their combined power proved too much for the Arzinian Being and so it collapsed into itself as the tunnel had collapsed onto its hunters.||But instead of being driven out, the monstrous creature tapped into its Bordanzian essence, so that all stone and debris coalesced into a single rock.||Thus, trapped but not banished to the nightmare of Bordanzan, set inside a rock filled with the yellow power stones, the Arzinian...");
+    case 0 : ~book("Dwarven lore", "... in such a way that the miners could no longer safely go down into the mines that were so important to them.||Thus the Elders, in their great wisdom, decided to harness the great power of the yellow stones and drive the spirit out of the area.");
+    case 1 : ~book("Dwarven lore", "They knew that without the power of the stones, they would face a foe too powerful to beat.||So for three days and three nights the Arzinian was chased through the twisty passages, always eluding its hunters, until finally it was cornered inside a small tunnel.");
+    case 2 : ~book("Dwarven lore", "On either side the brethren approached, their hands sparkling with yellow light, so attempting to banish the spirit back to Bordanzan from whence it came.||But lo! The roof did shake and the walls did crumble and the tunnel did collapse.");
+    case 3 : ~book("Dwarven lore", "And all who were standing outside rushed inward to aid their fallen brothers, their yellow stones in hand. Their combined power proved too much for the Arzinian Being and so it collapsed into itself as the tunnel had collapsed onto its hunters.");
+    case 4 :
+        ~book("Dwarven lore", "But instead of being driven out, the monstrous creature tapped into its Bordanzian essence, so that all stone and debris coalesced into a single rock.||Thus, trapped but not banished to the nightmare of Bordanzan, set inside a rock filled with the yellow power stones, the Arzinian...");
         // the last pages read: the book is done (the wiki shows this in a box; ours a message)
         if (%dwarfrock_quest = ^bar_have_book) {
             %dwarfrock_quest = ^bar_read_book;
             mes("That certainly was an interesting read! You now have enough info for Dondakan. You should go back to him.");
         }
 }
-
