@@ -286,7 +286,11 @@ mes("...and jump down to the little island!");
 // ---------------------------------------------------------------- the clump of rocks
 // a pole or a staff vaults you across (the wiki); 20 Agility is the quest's requirement (where it
 // is tested is ours)
-[oplocu,mdaughter_polerocks]
+[aplocu,mdaughter_polerocks]
+if (distance(loc_coord, coord) > 4) {
+    p_aprange(4);
+    return;
+}
 if (last_useitem = mdaughter_broken_stick) {
     mes("That would be a good idea... if the pole wasn't broken, that is.");
     return;
@@ -308,7 +312,12 @@ if (coordz(coord) >= 3689) {
 }
 mes("...then successfully jump across!");
 
-[oploc1,mdaughter_polerocks] @md_fall_in(0_43_57_19_29);
+[aploc1,mdaughter_polerocks]
+if (distance(loc_coord, coord) > 4) {
+    p_aprange(4);
+    return;
+}
+@md_fall_in(0_43_57_19_29);
 
 [label,md_fall_in](coord $shore)
 mes("You slip and fall into the water!");
@@ -318,8 +327,18 @@ mes("You only just manage to get to shore!");
 
 // ---------------------------------------------------------------- the flat stones
 // the plank across (you keep it); on the island, the plank takes you back to shore
-[oplocu,mdaughter_flatstone1] @md_plank;
-[oplocu,mdaughter_flatstone2] @md_plank;
+[aplocu,mdaughter_flatstone1]
+if (distance(loc_coord, coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@md_plank;
+[aplocu,mdaughter_flatstone2]
+if (distance(loc_coord, coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@md_plank;
 
 [label,md_plank]
 if (last_useitem ! woodplank) {
@@ -338,15 +357,29 @@ p_telejump(0_43_57_26_43);
 mes("...then successfully walk across!");
 
 // without the plank you fall in; from the island you come out on the north shore (the wiki)
-[oploc1,mdaughter_flatstone1] @md_flatstone_jump;
-[oploc1,mdaughter_flatstone2] @md_flatstone_jump;
+[aploc1,mdaughter_flatstone1]
+if (distance(loc_coord, coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@md_flatstone_jump;
+[aploc1,mdaughter_flatstone2]
+if (distance(loc_coord, coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@md_flatstone_jump;
 
 [label,md_flatstone_jump]
 if (~md_on_centre_island = true) @md_fall_in(0_43_57_23_51);
 @md_fall_in(0_43_57_19_29);
 
 // ---------------------------------------------------------------- the shining pool
-[oploc1,mdaughter_sulphar_gas]
+[aploc1,mdaughter_sulphar_gas]
+if (distance(loc_coord, coord) > 3) {
+    p_aprange(3);
+    return;
+}
 if (~md_on_centre_island = false | %mdaughter_quest_var < ^md_started) {
     mes("You think you can hear soft singing!");
     mes("The sound seems to be coming from the center of the pool.");
