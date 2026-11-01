@@ -144,6 +144,10 @@ switch_category(oc_category($rhand)) {
 return($delay);
 
 [proc,ranged_dropammo_npc](obj $ammo, int $delay)
+if ($ammo = barrows_karil_ammo) { // EASCape: bolt racks break on use, none fall to the floor
+    inv_del(worn, $ammo, 1);
+    return;
+}
 if (~crystal_bow($ammo) = true) { // EASCape: a shot from the crystal bow uses a charge
     ~crystal_bow_shot;
     return;
