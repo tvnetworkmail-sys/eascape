@@ -154,6 +154,11 @@ return (calc($diff - $base));
 
 // Purchase cost at a specifc stack count
 [proc,adjusted_item_cost_buying](obj $obj, int $diff)(int)
+// EASCape: Ak-Haranu's bolt racks are 420 each, 1% more for every 10 below his full stock (ours)
+if (%shop = ahoy_akharanu_shop & $obj = barrows_karil_ammo) {
+    def_int $sold = max(0, sub(0, ~price_mod(%shop, $diff, $obj)));
+    return(scale(add(100, divide($sold, 10)), 100, 420));
+}
 def_int $cost = oc_cost($obj);
 def_int $value = ~calc_shop_value($cost, %shop_haggle, %shop_sell, ~price_mod(%shop, $diff, $obj));
 // Unlike sell values, shop purchase values can't be 0 (I believe...), not entirely sure if this is how
