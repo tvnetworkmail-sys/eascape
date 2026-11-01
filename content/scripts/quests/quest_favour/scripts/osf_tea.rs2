@@ -1,0 +1,106 @@
+// EASCape: One Small Favour's Guthix rest (Sanfew's recipe: hot water in a teacup, then 1
+// harralander, 2 guam and 1 marrentill). From the OSRS wiki (Guthix rest): Herblore 18, once
+// Sanfew has told you how (%onesmallfavour 80+); 14, 14.5, 15 and 15.5 xp for the 1st-4th herb;
+// the finished tea is Guthix rest(3); a wrong herb makes ruined herb tea. Ours: heating water
+// never fails and gives no xp; pouring, the messages and the wrong-herb question are ours.
+
+// a bowl or cup of water heated on a fire or range (cooking_generic.dbrow)
+
+// hot water from the bowl into a teacup
+[opheldu,bowl_hot_water]
+if (last_useitem ! cup_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, bowl_hot_water, 1);
+inv_del(inv, cup_empty, 1);
+inv_add(inv, cup_hot_water, 1);
+inv_add(inv, bowl_empty, 1);
+mes("You pour the hot water into the cup.");
+
+[proc,osf_tea_code](obj $cup)(int)
+switch_obj ($cup) {
+    case cup_hot_water : return(0);
+    case favour_cup_harralander : return(100);
+    case favour_cup_guam : return(10);
+    case favour_cup_marrentill : return(1);
+    case favour_cup_harralander_marrentill : return(101);
+    case favour_cup_harralander_guam : return(110);
+    case favour_cup_guam_guam : return(20);
+    case favour_cup_guam_marrentill : return(11);
+    case favour_cup_harralander_marrentill_guam : return(111);
+    case favour_cup_guam_guam_marrentill : return(21);
+    case favour_cup_guam_guam_harralander : return(120);
+}
+return(-1);
+
+[proc,osf_tea_cup](int $code)(namedobj)
+switch_int ($code) {
+    case 0 : return(cup_hot_water);
+    case 100 : return(favour_cup_harralander);
+    case 10 : return(favour_cup_guam);
+    case 1 : return(favour_cup_marrentill);
+    case 101 : return(favour_cup_harralander_marrentill);
+    case 110 : return(favour_cup_harralander_guam);
+    case 20 : return(favour_cup_guam_guam);
+    case 11 : return(favour_cup_guam_marrentill);
+    case 111 : return(favour_cup_harralander_marrentill_guam);
+    case 21 : return(favour_cup_guam_guam_marrentill);
+    case 120 : return(favour_cup_guam_guam_harralander);
+    case 121 : return(cup_guthix_rest_3);
+}
+return(null);
+
+[opheldu,cup_hot_water] @osf_tea_add(cup_hot_water);
+[opheldu,favour_cup_harralander] @osf_tea_add(favour_cup_harralander);
+[opheldu,favour_cup_guam] @osf_tea_add(favour_cup_guam);
+[opheldu,favour_cup_marrentill] @osf_tea_add(favour_cup_marrentill);
+[opheldu,favour_cup_harralander_marrentill] @osf_tea_add(favour_cup_harralander_marrentill);
+[opheldu,favour_cup_harralander_guam] @osf_tea_add(favour_cup_harralander_guam);
+[opheldu,favour_cup_guam_guam] @osf_tea_add(favour_cup_guam_guam);
+[opheldu,favour_cup_guam_marrentill] @osf_tea_add(favour_cup_guam_marrentill);
+[opheldu,favour_cup_harralander_marrentill_guam] @osf_tea_add(favour_cup_harralander_marrentill_guam);
+[opheldu,favour_cup_guam_guam_marrentill] @osf_tea_add(favour_cup_guam_guam_marrentill);
+[opheldu,favour_cup_guam_guam_harralander] @osf_tea_add(favour_cup_guam_guam_harralander);
+
+[label,osf_tea_add](obj $cup)
+def_int $add = 0;
+switch_obj (last_useitem) {
+    case harralander : $add = 100;
+    case guam_leaf : $add = 10;
+    case marentill : $add = 1;
+    case default :
+        ~displaymessage(^dm_default);
+        return;
+}
+if (%onesmallfavour < 80) {
+    ~displaymessage(^dm_default); // ours: until Sanfew tells you the recipe
+    return;
+}
+if (stat(herblore) < 18) {
+    mes("You need a Herblore level of at least 18 to make this tea."); // ours
+    return;
+}
+def_int $code = ~osf_tea_code($cup);
+def_int $next = add($code, $add);
+def_obj $herb = last_useitem;
+def_namedobj $result = ~osf_tea_cup($next);
+if ($result = null) {
+    if (~p_choice2_header("Yes.", 1, "No.", 2, "This herb will ruin the tea. Add it anyway?") = 2) return;
+    inv_del(inv, $herb, 1);
+    inv_del(inv, $cup, 1);
+    inv_add(inv, favour_herbtea_ruined, 1);
+    mes("You ruin the herb tea.");
+    return;
+}
+// the herbs in it so far: 1st 14, 2nd 14.5, 3rd 15, 4th 15.5 xp
+def_int $count = add(add(divide($next, 100), divide(modulo($next, 100), 10)), modulo($next, 10));
+inv_del(inv, $herb, 1);
+inv_del(inv, $cup, 1);
+inv_add(inv, $result, 1);
+stat_advance(herblore, add(135, multiply($count, 5)));
+if ($result = cup_guthix_rest_3) {
+    mes("You make a Guthix rest tea.");
+} else {
+    mes("You add the <lowercase(oc_name($herb))> to the tea.");
+}

@@ -45,6 +45,8 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::ghostsahoypack` | The items Ghosts Ahoy needs: a ghostspeak amulet, leather gloves, a bowl of water, a bucket of milk, silk, a needle, 5 thread, a knife, one dye of each colour, an oak longbow, a spade, a bucket of ectoplasm, 100 ectotokens and 500 coins. `::questdone ghostsahoy` marks it done |
 | `::ectopack` | A start at the Ectofuntus: 7 empty pots, 7 bones and 6 empty buckets (anything that doesn't fit goes to your bank) |
 | `::hampack` | A lockpick, and puts you by the H.A.M. Hideout's trapdoor between Lumbridge and Draynor |
+| `::onesmallfavourpack` | The items One Small Favour's favours need so far: 3 steel bars, a bowl of water, an empty cup, a harralander, 2 guam leaves, a marrentill and 1,000 coins |
+| `::osfstage <n>` | Sets One Small Favour's stage to test one favour (the OSRS values: 5 forester, 10 Shanks, 15 Brian, 20 Aggie, 25 Johanhus, 45 Fred, 50 Seth, 55 Horvik, 60 Apothecary, 65 Tassie, 70 Hammerspike, 75 Sanfew, 80 tea for Bleemadge, 88 Arhein, 90 Farsight, 95 sculpture, 100 Cromperty, 105 Tindel, 110 Rantz, 115 Gnormadium, 120 landing lights) |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

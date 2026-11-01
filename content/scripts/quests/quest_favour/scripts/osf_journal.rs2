@@ -1,0 +1,36 @@
+// EASCape: One Small Favour's journal. Ours: no source has its journal text, so these lines say
+// what the OSRS wiki's quick guide has you do next.
+[if_button,questlist:onesmallfavour]
+def_int $s = %onesmallfavour;
+if ($s = 0) {
+    ~quest_journal("One Small Favour", "@dbl@I can start this quest by talking to @dre@Yanni Salika@dbl@ in|@dre@Shilo Village@dbl@.|@dbl@I will need to have completed @dre@Rune Mysteries@dbl@, @dre@Shilo Village@dbl@|@dbl@and @dre@Druidic Ritual@dbl@, and have level @dre@36 Agility@dbl@, @dre@25 Crafting@dbl@,|@dre@18 Herblore@dbl@ and @dre@30 Smithing@dbl@.");
+    return;
+}
+def_string $t = "@str@Yanni Salika asked me to get some red mahogany from the|@str@jungle forester, who wanted something in return...||";
+def_string $next;
+switch_int ($s) {
+    case 5 : $next = "@dbl@I should talk to the @dre@jungle forester@dbl@ south of Shilo Village.";
+    case 10 : $next = "@dbl@I should take the blunt axe to @dre@Captain Shanks@dbl@ at his ship.";
+    case 15 : $next = "@dbl@I should take the blunt axe to @dre@Brian@dbl@ in Port Sarim myself.";
+    case 20 : $next = "@dbl@I should ask @dre@Aggie@dbl@ in Draynor Village to be a character witness.";
+    case 25 : $next = "@dbl@I should look for @dre@Jimmy the Chisel@dbl@ in the ruined building|@dbl@between Draynor and Lumbridge.";
+    case 45 : $next = "@dbl@I should talk to @dre@Fred the Farmer@dbl@ about Jimmy.";
+    case 50 : $next = "@dbl@I should ask @dre@Seth Groats@dbl@ at the farm east of the River Lum|@dbl@for chickens.";
+    case 55 : $next = "@dbl@I should take @dre@3 steel bars@dbl@ to @dre@Horvik@dbl@ in Varrock.";
+    case 60, 62, 63 : $next = "@dbl@I should get medicine for Horvik from the @dre@Apothecary@dbl@ in Varrock.";
+    case 65 : $next = "@dbl@I should ask @dre@Tassie Slipcast@dbl@ in Barbarian Village for an|@dbl@airtight pot.";
+    case 70 : $next = "@dbl@I should talk to @dre@Hammerspike Stoutbeard@dbl@ in the Dwarven Mine.";
+    case 75 : $next = "@dbl@I should ask @dre@Sanfew@dbl@ in Taverley to take Hammerspike as an|@dbl@initiate.";
+    case 80, 84 : $next = "@dbl@I should make a @dre@Guthix rest@dbl@ tea and take it to @dre@Captain|@dre@Bleemadge@dbl@ on White Wolf Mountain.";
+    case 86 : $next = "@dbl@I should talk to @dre@Captain Bleemadge@dbl@ again.";
+    case 88 : $next = "@dbl@I should ask @dre@Arhein@dbl@ in Catherby for some T.R.A.S.H.";
+    case 90 : $next = "@dbl@I should ask @dre@Phantuwti Fanstuwi Farsight@dbl@ in Seers' Village for|@dbl@a weather forecast.";
+    case 95 : $next = "@dbl@I should search the caves south-west of Seers' Village for @dre@Petra@dbl@.";
+    case 100 : $next = "@dbl@I should talk to @dre@Wizard Cromperty@dbl@ in East Ardougne.";
+    case 105 : $next = "@dbl@I should get some iron oxide from @dre@Tindel Marchant@dbl@ in Port|@dbl@Khazard.";
+    case 110 : $next = "@dbl@I should take the mattress to @dre@Rantz@dbl@ in the Feldip Hills.";
+    case 115 : $next = "@dbl@I should help @dre@Gnormadium Avlafrim@dbl@ with the glider.";
+    case 120 : $next = "@dbl@I should fix the @dre@landing lights@dbl@ for Gnormadium Avlafrim.";
+    case default : $next = "@dbl@I should keep working through the favours.";
+}
+~quest_journal("One Small Favour", append($t, $next));

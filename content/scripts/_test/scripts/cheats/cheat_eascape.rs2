@@ -1742,3 +1742,27 @@ def_int $banked = 0;
 $banked = calc($banked + ~questpack_give(lockpick, 1));
 ~questpack_done("H.A.M. Hideout", $banked);
 p_telejump(0_49_50_29_51);
+
+// ::onesmallfavourpack - what One Small Favour's favours need so far (OSRS wiki's quick guide):
+// 3 steel bars for Horvik, a bowl of water and an empty cup for the hot water, 1 harralander,
+// 2 guam leaves and 1 marrentill for Guthix rest, and 1,000 coins
+[debugproc,onesmallfavourpack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(steel_bar, 3));
+$banked = calc($banked + ~questpack_give(bowl_water, 1));
+$banked = calc($banked + ~questpack_give(cup_empty, 1));
+$banked = calc($banked + ~questpack_give(harralander, 1));
+$banked = calc($banked + ~questpack_give(guam_leaf, 2));
+$banked = calc($banked + ~questpack_give(marentill, 1));
+$banked = calc($banked + ~questpack_give(coins, 1000));
+~questpack_done("One Small Favour", $banked);
+
+// ::osfstage <n> - sets One Small Favour's stage (%onesmallfavour: the OSRS wiki transcript's
+// VarPlayer 416 values, e.g. 80 = Sanfew's tea, 120 = the landing lights), to test one favour
+[debugproc,osfstage](int $n)
+if (p_finduid(uid) = false) return;
+%onesmallfavour = $n;
+mes("One Small Favour stage: <tostring($n)>");

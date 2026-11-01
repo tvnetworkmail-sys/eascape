@@ -1,0 +1,1082 @@
+// EASCape: One Small Favour, step 1: asking the favours (%onesmallfavour 0 -> 120). The words are
+// the OSRS wiki's quest transcript (Transcript:One Small Favour); the stage values are the
+// VarPlayer 416 changes it logs. People who already talk (Yanni, the jungle forester, Shanks,
+// Brian, Aggie, Fred, Horvik, the Apothecary, Sanfew, Arhein, Rantz, Cromperty, Bleemadge) come
+// here first (their [opnpc1] now jumps to osf_hook_<npc>) and fall back to their own talk
+// (osf_orig_<npc>). Ours: where the wiki merges the quest line into their usual options, we ask
+// first between the quest line and "Something else.".
+
+[proc,osf_stage_between](int $low, int $high)(boolean)
+if (%onesmallfavour >= $low & %onesmallfavour <= $high) return(true);
+return(false);
+
+[proc,osf_give](namedobj $obj)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, 1);
+    return;
+}
+obj_add(coord, $obj, 1, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+// ---------------------------------------------------------------- Yanni Salika (Shilo Village)
+[label,osf_hook_shiloantiques]
+if (%onesmallfavour = 0) {
+    switch_int (~p_choice2("Is there anything else interesting to do around here?", 1, "Tell me about this antiques business.", 2)) {
+        case 1 : @osf_yanni_start;
+        case 2 : @osf_orig_shiloantiques;
+    }
+}
+if (~osf_stage_between(5, 149) = true) {
+    switch_int (~p_choice2("What was I supposed to do again?", 1, "Tell me about this antiques business.", 2)) {
+        case 1 :
+            ~chatplayer("<p,quiz>What was I supposed to do again?");
+            ~chatnpc("<p,quiz>What do you mean?");
+            @osf_yanni_remind;
+        case 2 : @osf_orig_shiloantiques;
+    }
+}
+@osf_orig_shiloantiques;
+
+[label,osf_yanni_start]
+~chatplayer("<p,quiz>Is there anything else interesting to do around here?");
+~chatnpc("<p,quiz>You sound a bit bored of Shilo Village...what's wrong?");
+~chatplayer("<p,neutral>Nothing, I was just wondering if there was anything else to do?");
+~chatnpc("<p,neutral>Well, if you're bored, you could do me a small favour and nip to see the jungle forester. I need a piece of red mahogany to resurface an antique wardrobe.");
+// ours: the wiki's requirements (Rune Mysteries, Shilo Village, Druidic Ritual; Agility 36,
+// Crafting 25, Herblore 18, Smithing 30) are checked before the quest can start
+if (%runemysteries < ^runemysteries_complete | %zombiequeen < ^zombiequeen_complete | %druidquest < ^druid_complete
+    | stat_base(agility) < 36 | stat_base(crafting) < 25 | stat_base(herblore) < 18 | stat_base(smithing) < 30) {
+    ~mesbox("You need to have completed Rune Mysteries, Shilo Village and Druidic Ritual, and have level 36 Agility, 25 Crafting, 18 Herblore and 30 Smithing, to start this quest.");
+    return;
+}
+if (~player_combat_level < 45) {
+    ~mesbox("Before starting this quest, be aware that your combat level is lower than the recommended level of 45.");
+}
+switch_int (~p_choice2_header("Yes.", 1, "No.", 2, "Start the One Small Favour quest?")) {
+    case 1 :
+        %onesmallfavour = 5;
+        ~update_questlist;
+        ~chatplayer("<p,happy>Ok, see you in a tick!");
+        ~chatnpc("<p,happy>Great, nice of you to do it for me.");
+        switch_int (~p_choice2("I'll get going then!", 1, "Where do I meet this jungle forester?", 2)) {
+            case 1 :
+                ~chatplayer("<p,neutral>I'll get going then!");
+                ~chatnpc("<p,neutral>That'd be helpful!");
+            case 2 :
+                ~chatplayer("<p,quiz>Where do I meet this jungle forester?");
+                ~chatnpc("<p,neutral>Oh, sorry, I thought you knew the area. You'll find a jungle forester in between the southern edge of Shilo Village and the Kharazi Jungle.");
+                ~chatnpc("<p,neutral>They're always trying to find ways into that place.");
+                ~chatnpc("<p,neutral>I hear that some old timer from the Legends Guild keeps sending new recruits down there..only Zamorak knows why.");
+        }
+    case 2 :
+        ~chatplayer("<p,neutral>Nah thanks, I've got bigger fish to fry.");
+        ~chatnpc("<p,neutral>Fair enough! Hope it all goes well...but, you know, you looked bored so I just thought I'd suggest it.");
+}
+
+[label,osf_yanni_remind]
+switch_int (~p_choice4("I've forgotten what to do, can you remind me?", 1, "This is taking longer than I expected!", 2, "Is there an easier way of getting this exotic wood?", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>I've forgotten what to do, can you remind me?");
+        ~chatnpc("<p,angry>Tsk....It's only a little job bwana, I ask you to do me one small favour! Go to the jungle forester and get me a piece of red mahogany. It can't be that difficult can it?");
+        @osf_yanni_remind;
+    case 2 :
+        ~chatplayer("<p,sad>This is taking longer than I expected!");
+        ~chatnpc("<p,angry>You're telling me bwana, I was supposed to have this wardrobe finished before now! Hurry it up will you, I don't have all day!");
+        @osf_yanni_remind;
+    case 3 :
+        ~chatplayer("<p,quiz>Is there an easier way of getting this exotic wood?");
+        ~chatnpc("<p,angry>Huh! You make it sound like a major undertaking! I should have just done it myself!");
+        ~chatplayer("<p,sad>Everyone is asking me to do them favours now! It seems like I've opened the floodgates!");
+        ~chatnpc("<p,neutral>Well, can't you just do my favour and forget about theirs?");
+        @osf_yanni_remind;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- the jungle forester
+[label,osf_hook_jungleforester_m] @osf_forester(true);
+[label,osf_hook_jungleforester_f] @osf_forester(false);
+
+[label,osf_forester](boolean $male)
+if (~osf_stage_between(5, 149) = false) {
+    if ($male = true) @osf_orig_jungleforester_m;
+    @osf_orig_jungleforester_f;
+}
+~chatnpc("<p,neutral>Hello friend. You're a long way from Lumbridge!");
+def_string $line = "What did you want me to do again?";
+if (%onesmallfavour = 5) {
+    $line = "I need to talk to you about red mahogany.";
+} else if (%onesmallfavour < 20 & ~obj_gettotal(favour_jungleforesteraxe_blunt) = 0) {
+    $line = "I've lost your unsharpened axe, I need a new one.";
+}
+if (~p_choice2($line, 1, "Something else.", 2) = 2) {
+    if ($male = true) @osf_orig_jungleforester_m;
+    @osf_orig_jungleforester_f;
+}
+if (%onesmallfavour = 5) @osf_forester_ask;
+if (%onesmallfavour < 20 & ~obj_gettotal(favour_jungleforesteraxe_blunt) = 0) {
+    ~chatplayer("<p,sad>I've lost your unsharpened axe, I need a new one.");
+    ~chatnpc("<p,neutral>I know. Another jungle forester found it and returned it to me. Here, take it again and this time don't lose it!");
+    ~osf_give(favour_jungleforesteraxe_blunt);
+    ~chatplayer("<p,neutral>Okay, I promise to be more careful.");
+    return;
+}
+~chatplayer("<p,quiz>What did you want me to do again?");
+~chatnpc("<p,neutral>I gave you my blunt axe to give to Captain Shanks. I was hoping that he would be able to pop it into Brian's Axes in Port Sarim to get it sharpened. I do hope nothing bad has happened to my axe, I am very partial to it!");
+~chatplayer("<p,neutral>Oh, yes... okay! No, I'm sure that nothing bad has happened to it. I mean, you gave it to me, I'm really dependable!");
+@osf_forester_remind;
+
+[label,osf_forester_remind]
+switch_int (~p_choice4("What am I supposed to do again?", 1, "Who is it that I'm supposed to meet?", 2, "Do you really actually need that axe?", 3, "Okay, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What am I supposed to do again?");
+        ~chatnpc("<p,neutral>Take the blunt axe to Captain Shanks and ask him to take it to Brian's Axes.");
+        @osf_forester_remind;
+    case 2 :
+        ~chatplayer("<p,quiz>Who is it that I'm supposed to meet?");
+        ~chatnpc("<p,neutral>You're supposed to take the axe to Captain Shanks and ask him to take it Brian's Axes in Port Sarim. I'm sure he won't mind.");
+        @osf_forester_remind;
+    case 3 :
+        ~chatplayer("<p,quiz>Do you really actually need that axe?");
+        ~chatnpc("<p,neutral>Well, yes, actually. It's my favourite! I've been training with that axe since I started my profession as a jungle forester.");
+        @osf_forester_remind;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[label,osf_forester_ask]
+~chatplayer("<p,neutral>I need to talk to you about red mahogany.");
+~chatnpc("<p,neutral>Oh, yes, well I can get you a piece but I need my axe sharpening... Do me a small favour would you? Take it to Captain Shanks for me.");
+@osf_forester_ask_options;
+
+[label,osf_forester_ask_options]
+switch_int (~p_choice4("Okay, I'll take your axe to get it sharpened.", 1, "Why should I take it to Captain Shanks?", 2, "Where is Captain Shanks?", 3, "Okay, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Okay, I'll take your axe to get it sharpened.");
+        ~osf_give(favour_jungleforesteraxe_blunt);
+        ~objbox(favour_jungleforesteraxe_blunt, "The Jungle Forester hands you the blunt axe.", 250, 0, 0);
+        %onesmallfavour = 10;
+        ~chatnpc("<p,happy>Great, here you go! If you could ask the Captain to pop it into Brian's Axes for resharpening when he's next in Port Sarim, that would be really helpful.");
+    case 2 :
+        ~chatplayer("<p,quiz>Why should I take it to Captain Shanks?");
+        ~chatnpc("<p,neutral>He's the Captain of the 'Lady of the Waves', he goes to Port Sarim quite often. Could you ask the Captain to drop the axe in at Brian's Axes the next time he's in Port Sarim? I'm sure he won't mind!");
+        @osf_forester_ask_options;
+    case 3 :
+        ~chatplayer("<p,quiz>Where is Captain Shanks?");
+        ~chatnpc("<p,neutral>Wow, you're really not from around here are you? The Captain is to the west of here, follow the northern edge of the Kharazi Jungle, he's usually on board his ship!");
+        @osf_forester_ask_options;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Captain Shanks
+[label,osf_hook_captain_shanks]
+if (~osf_stage_between(10, 149) = false) @osf_orig_captain_shanks;
+~chatnpc("<p,happy>Hello there shipmate! I sail to Khazard Port and to Port Sarim. Where are you bound?");
+if (~p_choice2("Actually I have a favour to ask.", 1, "Something else.", 2) = 2) @osf_orig_captain_shanks;
+~chatplayer("<p,neutral>Actually I have a favour to ask.");
+if (%onesmallfavour > 10) {
+    ~chatnpc("<p,angry>I've said no already...now move along...I have a tight ship to run.");
+    return;
+}
+~chatnpc("<p,quiz>A favour you say...hmmm. What is it?");
+~chatplayer("<p,neutral>I have an axe from the jungle forester, I wonder if you could nip into Brian's Axes in Port Sarim and get it sharpened for the jungle forester.");
+%onesmallfavour = 15;
+~chatnpc("<p,angry>Darned cheek! I have a tight ship to run, my friend, and I'll thank you to not take advantage of my good generosity. I have a far superior solution to your problem.");
+~chatnpc("<p,neutral>Take a ride with me to Port Sarim and take the axe to Brian yourself!");
+~chatplayer("<p,sad>But...I was only meant to do a small favour for Yanni Salika...I don't want to go to Port Sarim!");
+~chatnpc("<p,neutral>Well...the choice is yours! Do like me and never do favours...you'll find yourself in a lot less bother I can assure you!");
+
+// ---------------------------------------------------------------- Brian (Port Sarim)
+[label,osf_hook_brian]
+if (~osf_stage_between(15, 149) = false) @osf_orig_brian;
+if (%onesmallfavour > 15) {
+    if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) @osf_orig_brian;
+    ~chatplayer("<p,quiz>What did you want me to do again?");
+    ~chatnpc("<p,neutral>Go talk to Aggie and ask her if she'll be a character witness for my friend before he finds himself in jail with less than savoury people...or worse, he runs off to the wilderness!");
+    ~chatplayer("<p,sad>Oh, right, yes, sorry, I forgot..");
+    ~chatnpc("<p,neutral>So it seems!");
+    return;
+}
+if (~p_choice2("Do you sharpen axes?", 1, "Something else.", 2) = 2) @osf_orig_brian;
+~chatplayer("<p,quiz>Do you sharpen axes?");
+if (inv_total(inv, favour_jungleforesteraxe_blunt) = 0) {
+    ~chatnpc("<p,neutral>You don't have any blunt axes on you!");
+    ~chatplayer("<p,sad>You know what! You're absolutely right! I must have dropped it or left it somewhere.");
+    ~chatnpc("<p,neutral>Well, come back if you need any help with it, we may be able to work something out.");
+    return;
+}
+~chatnpc("<p,neutral>You know what, normally I do...but...");
+@osf_brian_options;
+
+[label,osf_brian_options]
+switch_int (~p_choice5("But...what?", 1, "Look, can you sharpen this cursed axe or what?", 2, "Is there anyone else who can sharpen this axe?", 3, "Ok, ok, I'll do it! I'll go and see Aggie.", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>But... what?");
+        ~chatnpc("<p,sad>But I'm a bit preoccupied at the moment. I'm worried that my friend is going to spend the rest of the year behind bars!");
+        ~chatplayer("<p,shock>It sounds serious!");
+        ~chatnpc("<p,sad>Yeah, it is, but it shouldn't be. It was only a harmless pub brawl but he got caught up in it and they just jailed everyone.");
+        ~chatnpc("<p,sad>Except he says he's going to run away to the wilderness if he's found guilty and you know what blood-hungry scum inhabit those realms.");
+        @osf_brian_options;
+    case 2 :
+        ~chatplayer("<p,angry>Look, can you sharpen this cursed axe or what?");
+        ~chatnpc("<p,neutral>Well, I'd like to. I really would, but I wouldn't be able to concentrate while worrying about my friend so much. I tell you what. If you could do me just one small favour, I promise to help you!");
+        ~chatplayer("<p,quiz>Oh, so you want a favour doing as well?");
+        ~chatnpc("<p,neutral>Well, yes, if you wouldn't mind? Aggie the witch is a family friend and she's a pillar of the local community.");
+        ~chatnpc("<p,neutral>I know you wouldn't think it would you! Could you ask her if she'll act as a character witness for my friend?");
+        ~chatplayer("<p,confused>What?");
+        ~chatnpc("<p,neutral>Oh, please. It would mean such a lot to me! Just ask Aggie if she'll be a character witness for my friend. She only lives in Draynor Village. It'll only take you a few minutes!");
+        @osf_brian_options;
+    case 3 :
+        ~chatplayer("<p,quiz>Is there anyone else who can sharpen this axe?");
+        ~chatnpc("<p,neutral>Hmm, well you could try your luck in Lumbridge at Bob's Axes, though I've no clue if he offers this kind of service.");
+        ~chatnpc("<p,neutral>He always seemed very focused on selling axes to blood-hungry killers keen to explore the wilderness.");
+        @osf_brian_options;
+    case 4 :
+        ~chatplayer("<p,neutral>Ok, ok, I'll do it! I'll go and see Aggie.");
+        inv_del(inv, favour_jungleforesteraxe_blunt, 1);
+        %onesmallfavour = 20;
+        ~chatnpc("<p,happy>Oh, great, that would be really helpful! Here, give me the axe for safe keeping and I'll get it sharpened as soon as she agrees to help.");
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Aggie (Draynor)
+[label,osf_hook_aggie]
+if (~osf_stage_between(20, 44) = false) @osf_orig_aggie;
+~chatnpc("<p,happy>What can I help you with?");
+if (%onesmallfavour = 20) {
+    if (~p_choice2("Could I ask you about being a character witness?", 1, "Something else.", 2) = 2) @osf_orig_aggie;
+    ~chatplayer("<p,quiz>Could I ask you about being a character witness?");
+    ~chatnpc("<p,sad>Not at the minute I'm afraid...I'm really worried! My new apprentice 'Jimmy the Chisel' has gone missing!");
+    @osf_aggie_options;
+}
+if (~p_choice2("What am I supposed to be doing?", 1, "Something else.", 2) = 2) @osf_orig_aggie;
+~chatplayer("<p,quiz>What am I supposed to be doing?");
+~chatnpc("<p,angry>Well, I had hoped that you would go and look for 'Jimmy the Chisel'...but it looks like you've had other 'more important' things to do!");
+@osf_aggie_return;
+
+[label,osf_aggie_options]
+switch_int (~p_choice4("'Jimmy the Chisel' - what kind of name is that?", 1, "What do you mean missing?", 2, "Let me guess, you're going to ask me to do you a favour?", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>'Jimmy the Chisel' - what kind of name is that?");
+        ~chatnpc("<p,neutral>It's sort of like a 'street name'...it's a new fad <displayname>...perhaps you've seen it around? Anyway, it's not his name I'm concerned with, it's his whereabouts that worries me!");
+        @osf_aggie_options;
+    case 2 :
+        ~chatplayer("<p,quiz>What do you mean missing?");
+        ~chatnpc("<p,sad>Well, I sent him to Lumbridge to get some supplies and he hasn't come back! He left about two days ago and I've seen neither hide nor hair of him all that time.");
+        ~chatplayer("<p,quiz>Do you have any idea where he might be?");
+        ~chatnpc("<p,neutral>Not really, I mean, not for definite. But I did hear old Ned talking about some strange activity in that ruined building infested with goblins and spiders in between here and Lumbridge.");
+        ~chatnpc("<p,sad>It's probably nothing...but it would aid my mind a lot to know he was safe. I can't leave here until he returns. What if he's had an accident and needs some emergency magical attention?");
+        @osf_aggie_options;
+    case 3 :
+        ~chatplayer("<p,quiz>Let me guess, you're going to ask me to do you a favour?");
+        ~chatnpc("<p,neutral>Would you my dear, it would only be a small favour...one small favour, that's all I ask.");
+        ~chatplayer("<p,neutral>Hmm, I seem to have heard that one before. Go on then, what do you want me to do?");
+        ~chatnpc("<p,neutral>Could you go on and check out that abandoned building and see if there's anything odd going on. Just check to see if there's any sign of young Jimmy.");
+        switch_int (~p_choice2("No way...I've had enough of doing favours for people.", 1, "Oh, Ok, I'll see if I can find Jimmy.", 2)) {
+            case 1 :
+                ~chatplayer("<p,angry>No way...I've had enough of doing favours for people.");
+                ~chatnpc("<p,angry>Why you big meanie! He could be dead for all you know!");
+            case 2 :
+                ~chatplayer("<p,neutral>Oh, Ok, I'll see if I can find Jimmy.");
+                %onesmallfavour = 25;
+                ~chatnpc("<p,happy>Oh, thanks ever so much...I do appreciate it! Good Luck!");
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[label,osf_aggie_return]
+switch_int (~p_choice3("Where am I supposed to look?", 1, "What am I doing this for?", 2, "Ok, thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Where am I supposed to look?");
+        ~chatnpc("<p,neutral>I don't know where he is! But I suggest that you check out that ruined building to the east, you know, the one with all the spiders in it! Doesn't look like anyone's been living in there for years!");
+        @osf_aggie_return;
+    case 2 :
+        ~chatplayer("<p,quiz>What am I doing this for?");
+        ~chatnpc("<p,sad>Oh, I don't know, you mumbled something about 'witnesses', I just can't think straight worrying so much about that poor little Jimmy.");
+        ~chatnpc("<p,sad>He could be lying somewhere in a pool of his blood, crying out for help...oooh, it's too much for me to bear.");
+        @osf_aggie_return;
+    case 3 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Johanhus (H.A.M. Hideout)
+// (area_ham_hideout/ham_hideout.rs2's Talk-to comes here first)
+[proc,osf_johanhus]()(boolean)
+if (%onesmallfavour = 25) {
+    ~chatnpc("<p,neutral>Welcome <text_gender("Brother", "Sister")>...to our organisation...ours is a fight for humanity in all its shapes and forms...and to rid mankind of the monsters that exist in our world. We have no quarrel with a fellow <text_gender("brother", "sister")>.");
+    if (~p_choice2("I'm looking for Jimmy the Chisel.", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,quiz>I'm looking for Jimmy the Chisel.");
+    ~chatnpc("<p,neutral>Ah yes, he'll be joining our ranks very soon, I feel. He's still quite young and strong, but he will see the error of his ways before too long.");
+    ~chatplayer("<p,quiz>Huh, it sounds like you're forcing him to join you");
+    ~chatnpc("<p,neutral>Not at all...he just needs some time to think about things...we've given him all the time he needs in the cage back there.");
+    ~chatplayer("<p,neutral>Well, I have to return him to his employer, she's very worried about him, so if you could just hand him over...I'll be getting out of your way.");
+    ~chatnpc("<p,neutral>I'm afraid I can't do that...he has value to us...he's related to a farmer named Fred who lives near here. We need to arrange some things with this 'Brother Fred' so that my people down here can eat.");
+    if (~p_choice2("And I suppose you need me to do you a favour?", 1, "Ok, thanks.", 2) = 2) {
+        ~chatplayer("<p,neutral>Okay, thanks.");
+        return(true);
+    }
+    ~chatplayer("<p,quiz>And I suppose you need me to do you a favour?");
+    ~chatnpc("<p,neutral>Well, actually, now that you mention it...it would be a real help to us if you could organise some chickens in exchange for young Jimmy's release.");
+    ~chatplayer("<p,quiz>Ok, just exactly what is it that you want me to do?");
+    ~chatnpc("<p,neutral>Go to Brother Fred the farmer and tell him that we have young Brother Jimmy. Tell him that we're not going to let him free until he agrees to send us a month's supply of chickens.");
+    switch_int (~p_choice2("No way...go do your own dirty work!", 1, "Ok, Jimmy has to be worth more than a few scrawny chickens!", 2)) {
+        case 1 :
+            ~chatplayer("<p,angry>No way...go do your own dirty work!");
+            ~chatnpc("<p,neutral>Now, now <displayname>, I'm a little disappointed in you! Can't you see that this is merely a business transaction?");
+            ~chatnpc("<p,neutral>Come back and see me when you change your mind!");
+        case 2 :
+            ~chatplayer("<p,neutral>Ok, Jimmy has to be worth more than a few scrawny chickens!");
+            %onesmallfavour = 45;
+            ~chatnpc("<p,happy>That's exactly right! Do this for us and we'll let Brother Jimmy go!");
+    }
+    return(true);
+}
+if (~osf_stage_between(45, 149) = false) return(false);
+~chatnpc("<p,neutral>Welcome <text_gender("Brother", "Sister")>...to our organisation...ours is a fight for humanity in all its shapes and forms...and to rid mankind of the monsters that exist in our world. We have no quarrel with a fellow <text_gender("brother", "sister")>.");
+if (~p_choice2("I'm back!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,neutral>I'm back.");
+~chatnpc("<p,neutral>Welcome back <text_gender("Brother", "Sister")> <displayname>, how are your negotiations going with Brother Fred?");
+~osf_johanhus_return;
+return(true);
+
+[proc,osf_johanhus_return]
+switch_int (~p_choice4("What did you want me to do again?", 1, "Can't you just release Jimmy the Chisel?", 2, "I don't think I can do this.", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What did you want me to do again?");
+        ~chatnpc("<p,angry>Oh for the love of Saradomin...it's not too difficult! Go to Brother Fred and ask him to supply a month's worth of chickens in return for Brother Jimmy's freedom!");
+        ~osf_johanhus_return;
+    case 2 :
+        ~chatplayer("<p,quiz>Can't you just release Jimmy the Chisel?");
+        ~chatnpc("<p,neutral>Yes, of course....why didn't you ask earlier? Is that all you wanted? Huh!");
+        ~chatnpc("<p,neutral>Of course, you do have the chickens don't you?");
+        ~chatplayer("<p,shifty>Er...not exactly!");
+        ~chatnpc("<p,angry>Go get them then!");
+        ~osf_johanhus_return;
+    case 3 :
+        ~chatplayer("<p,sad>I don't think I can do this.");
+        ~chatnpc("<p,neutral>That's a shame, because Brother Jimmy is getting older every day! His employer isn't going to be too pleased if you don't do something soon.");
+        ~osf_johanhus_return;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Fred the Farmer
+[label,osf_hook_fred_the_farmer]
+if (~osf_stage_between(45, 54) = false) @osf_orig_fred_the_farmer;
+~chatnpc("<p,angry>What are you doing on my land?");
+if (%onesmallfavour = 45) {
+    if (~p_choice2("I need to talk to you about Jimmy.", 1, "Something else.", 2) = 2) @osf_orig_fred_the_farmer;
+    ~chatplayer("<p,neutral>I need to talk to you about Jimmy.");
+    ~chatnpc("<p,quiz>What's the problem with Jimmy?");
+    ~chatplayer("<p,neutral>He's being kept prisoner by a bunch of fanatics and I need to organise a delivery of a month's supply of chickens to secure his release.");
+    ~chatnpc("<p,shock>Oh dear, oh dear, this is terrible. Terrible!");
+    ~chatplayer("<p,neutral>Yes, it's pretty bad...but keep calm, I'm going to help.");
+    ~chatnpc("<p,sad>I've no idea what to do!");
+    ~chatplayer("<p,quiz>None at all?");
+    ~chatnpc("<p,sad>Well, no actually. I'm just a farmer. I've no idea how to deal with fanatics!");
+    ~chatplayer("<p,quiz>Well, can't you just give me some chickens?");
+    ~chatnpc("<p,neutral>Normally I'd say yes, but I just don't have enough for a month's supply.");
+    ~chatplayer("<p,quiz>Well, do you know someone who does have a month's supply?");
+    %onesmallfavour = 50;
+    ~chatnpc("<p,neutral>Seth does, Seth Groats. He's another farmer over yonder at the other farm. Over the river and on the way to Varrock, he has loads of chickens.");
+    return;
+}
+if (~p_choice2("What did you suggest I do again?", 1, "Something else.", 2) = 2) @osf_orig_fred_the_farmer;
+~chatplayer("<p,quiz>What did you suggest I do again?");
+~chatnpc("<p,neutral>Have you been to Seth Groats yet? He's over at the other farm on the way to Varrock!");
+~chatplayer("<p,neutral>Ok, I'll go and see him then.");
+
+// ---------------------------------------------------------------- Seth Groats
+[opnpc1,favour_seth_groats]
+if (%onesmallfavour = 50) {
+    ~chatnpc("<p,angry>Hello there stranger, what's the meaning of this intrusion? A farmer's hovel is his castle!");
+    ~chatplayer("<p,neutral>Sorry for the intrusion, but this is quite urgent. Jimmy the Chisel is being held by fanatics. They won't release him until they get a month's supply of chickens.");
+    ~chatplayer("<p,neutral>I've already talked to Fred but he says he doesn't have a month's supply of chickens. Is there any way that you could help?");
+    ~chatnpc("<p,neutral>A month's supply eh! Well, I was going to take them to market and just concentrate on the cows, but I reckon that little Jimmy's neck is worth a few scrawny chickens, don't you?");
+    ~chatplayer("<p,neutral>That's exactly what I said...");
+    ~chatnpc("<p,neutral>Well, Ok then. We need to get this organised. First off, we need to get some proper cages to get them chickens transported. I've never normally transported chickens in such large quantities before.");
+    ~chatplayer("<p,quiz>What do you propose?");
+    ~chatnpc("<p,neutral>We'll need to get some proper cages, but I have nothing like that here. You'll have to go and see my friend Horvik in Varrock. He's a pretty well known metal-smith and he's done me a few favours in the past.");
+    ~chatnpc("<p,neutral>I'm afraid that I'll have to ask a small favour of you as well, my friend.");
+    ~chatplayer("<p,neutral>I had a feeling you might!");
+    ~chatnpc("<p,neutral>Could you get three bars of steel and take them to Horvik, that's what I owe him for a previous job that he did for me.");
+    switch_int (~p_choice2("No way, I'm fed up with this wild goose chase!", 1, "Oh, ok! I guess it's not that much further to Varrock!", 2)) {
+        case 1 :
+            ~chatplayer("<p,angry>No way, I'm fed up with this wild goose chase!");
+            ~chatnpc("<p,neutral>I understand...");
+            ~chatnpc("<p,sad>Poor old Jimmy, locked in that cage...");
+            ~chatnpc("<p,sad>Forever!");
+        case 2 :
+            %onesmallfavour = 55;
+            ~chatplayer("<p,neutral>Oh, ok! I guess it's not that much further to Varrock!");
+            ~chatnpc("<p,happy>Many thanks! Remember, you need to take him three steel bars.");
+    }
+    return;
+}
+if (~osf_stage_between(55, 59) = true) {
+    ~chatplayer("<p,quiz>What am I meant to be doing again?");
+    ~chatnpc("<p,neutral>You need to get three bars of steel and take them to Horvik in Varrock, ask him if he can make some chicken cages so that we can transport these chickens to those fanatics and release poor Jimmy.");
+    ~chatplayer("<p,neutral>Ah yes...I remember now.");
+    return;
+}
+if (~osf_stage_between(60, 149) = true) {
+    ~chatnpc("<p,quiz>How are those chicken cages coming along?");
+    ~chatplayer("<p,sad>Sorry, but I don't have any yet.");
+    return;
+}
+// ours: before the quest, his greeting alone
+~chatnpc("<p,angry>Hello there stranger, what's the meaning of this intrusion? A farmer's hovel is his castle!");
+
+// ---------------------------------------------------------------- Horvik (Varrock)
+[label,osf_hook_horvik_the_armourer]
+if (~osf_stage_between(55, 149) = false) @osf_orig_horvik_the_armourer;
+~chatnpc("<p,quiz>Hello, do you need any help?");
+if (%onesmallfavour = 55) {
+    if (~p_choice2("Hi, I need to talk to you about chicken cages!", 1, "Something else.", 2) = 2) @osf_orig_horvik_the_armourer;
+    ~chatplayer("<p,neutral>Hi, I need to talk to you about chicken cages! Seth Groats has asked me to come and see you!");
+    ~chatnpc("<p,neutral>Hmm, Seth eh! He's a good friend, but he still owes me three steel bars for a plough I fixed. I'm sorry but I need to have that paid off first before I can do any more work for him.");
+    if (inv_total(inv, steel_bar) < 3) {
+        ~chatplayer("<p,sad>But I don't have three steel bars at the moment!");
+        ~chatnpc("<p,neutral>I'm sorry to be so harsh, but I have to ensure the debt is paid before I do any more work for Seth.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Ok, well I have three steel bars here, you can have these.");
+    ~chatnpc("<p,happy>Ok then! Great...tell me a little more about these chicken cages... Cough Cough Cough!");
+    ~chatplayer("<p,quiz>Oh dear, you don't sound too well?");
+    ~chatnpc("<p,sad>No, I'm not actually, I'm quite ill!");
+    ~chatplayer("<p,sad>Well that's a shame because I really need your help to make some chicken cages!");
+    ~chatnpc("<p,neutral>I'm sorry, but the most I can manage today is simple trading...however, if I was to get some medicine say, I could be persuaded to do you a small favour!");
+    ~chatplayer("<p,quiz>Oh I see, you need me to do you a favour?");
+    ~chatnpc("<p,neutral>Well, just one small favour...and then I'll do you a small favour.");
+    switch_int (~p_choice2("Oh, no not another favour...I just can't do another one!", 1, "Ok, I guess one good turn deserves another.", 2)) {
+        case 1 :
+            ~chatplayer("<p,angry>Oh, no not another favour...I just can't do another one!");
+            ~chatnpc("<p,sad>Well, I'm sorry about that...but I just can't work when I'm feeling so ill.");
+        case 2 :
+            inv_del(inv, steel_bar, 3);
+            %onesmallfavour = 60;
+            mes("Horvik takes the steel bars.");
+            ~chatplayer("<p,neutral>Ok, I guess one good turn deserves another.");
+            ~chatnpc("<p,happy>Well that's jolly decent of you my friend. I need some medicine, could you get me some herbal tincture and breathing salts, that should solve my ailments!");
+            ~chatplayer("<p,neutral>Well, hopefully, I'll be right back, but you never know, it might take longer!");
+            ~chatnpc("<p,neutral>That's great! However, I must warn you, it'll be a lot easier for me to simply adjust some existing pigeon cages. If you could get me five or so of those, that would help a lot.");
+            ~chatnpc("<p,neutral>But first things first, bring me the medicine!");
+    }
+    return;
+}
+if (~p_choice2("What was I supposed to be doing?", 1, "Something else.", 2) = 2) @osf_orig_horvik_the_armourer;
+~chatplayer("<p,quiz>What was I supposed to be doing?");
+~chatnpc("<p,neutral>Please can you get me some medicine? I need herbal tincture and a pot of breathing salts. Also, get me five or so of those pigeon cages that they have over in Ardougne so that I can convert them into chicken cages.");
+
+// ---------------------------------------------------------------- the Apothecary (Varrock)
+[label,osf_hook_apothecary]
+if (~osf_stage_between(60, 149) = false) @osf_orig_apothecary;
+if (~p_choice2("Talk about One Small Favour.", 1, "Something else.", 2) = 2) @osf_orig_apothecary;
+if (%onesmallfavour = 60 | %onesmallfavour = 62) {
+    ~chatplayer("<p,neutral>Horvik is ill, I need breathing salts and herbal tincture.");
+    ~chatnpc("<p,happy>No problem!");
+    ~osf_give(favour_herbal_tincture);
+    ~objbox(favour_herbal_tincture, "The Apothecary shows you the herbal tincture.", 250, 0, 0);
+    %onesmallfavour = 62;
+    ~chatnpc("<p,happy>There you do! There's your herbal tincture!");
+    ~chatplayer("<p,happy>Wow, that was surprisingly easy! Fantastic, thanks very much.");
+    ~chatnpc("<p,happy>No problem, pleased to help.");
+    ~chatplayer("<p,quiz>Oh...but...what about the breathing salts...");
+    ~chatnpc("<p,neutral>Oh, yes, breathing salts...erm, just let me look around. I'm sure I have some around here somewhere.");
+    ~chatplayer("<p,neutral>Ok...");
+    ~chatnpc("<p,happy>Yep, here they are....");
+    ~mesbox("The Apothecary gets out a jar of breathing salts.");
+    %onesmallfavour = 63;
+    ~chatnpc("<p,shock>Oh blimey...I've dropped the pot and smashed it!");
+    @osf_apothecary_pot;
+}
+if (%onesmallfavour = 63) {
+    ~chatplayer("<p,quiz>What about the breathing salts?");
+    ~chatnpc("<p,sad>I smashed the pot which held them, remember?");
+    ~chatplayer("<p,quiz>Oh yes...where am I going to get a new pot?");
+    @osf_apothecary_pot2;
+}
+if (~obj_gettotal(favour_herbal_tincture) = 0) {
+    ~chatplayer("<p,sad>I've lost that herbal tincture you gave me!");
+    ~chatnpc("<p,neutral>No problem, I'll just rustle up another one for you.");
+    ~osf_give(favour_herbal_tincture);
+}
+~chatplayer("<p,quiz>What was I supposed to be doing again?");
+~chatnpc("<p,neutral>Go and see Tassie in the Barbarian Village about making an airtight pot for me to store my breathing salts in, then you can take some for Horvik.");
+~chatplayer("<p,neutral>Oh, yes right!");
+
+[label,osf_apothecary_pot]
+~chatplayer("<p,neutral>That's ok, just hand over the breathing salts.");
+~chatnpc("<p,sad>Oh no, you don't understand. They're ruined. They're supposed to be kept in an airtight container and this was my last one.");
+~chatnpc("<p,sad>I can't order any more in until I have a new airtight container. And they were a top selling item as well.");
+~chatplayer("<p,sad>I just knew this wasn't going to be easy! So you can't get any more breathing salts?");
+~chatnpc("<p,neutral>No, I can..I can order plenty, but they'll lose their effectiveness. I need an airtight pot to keep them in.");
+~chatplayer("<p,quiz>Where would you get one of those from?");
+~chatnpc("<p,neutral>I've no idea really, this pot was a family heirloom. I guess you'd have to get a new one made?");
+@osf_apothecary_pot2;
+
+[label,osf_apothecary_pot2]
+~chatplayer("<p,quiz>Where could I do that?");
+~chatnpc("<p,neutral>You could try Tassie Slipcast over at the Barbarian Village. She's a potter there and may be able to make one. But mind, it has to be air tight.");
+switch_int (~p_choice2("Oh, no way am I going to the Barbarian Village.", 1, "I guess I can go to the Barbarian Village.", 2)) {
+    case 1 :
+        ~chatplayer("<p,angry>Oh, no way am I going to the Barbarian Village.");
+        ~chatnpc("<p,neutral>I understand...they're all barbarians over there.");
+    case 2 :
+        %onesmallfavour = 65;
+        ~chatplayer("<p,neutral>I guess I can go to the Barbarian Village.");
+        ~chatnpc("<p,happy>Wonderful, I'd really appreciate it!");
+}
+
+// ---------------------------------------------------------------- Tassie Slipcast (Barbarian Village)
+[opnpc1,favour_tassie_slipcast]
+if (%onesmallfavour = 65) {
+    ~chatplayer("<p,neutral>Hey there...I need an airtight pot just as soon as you can make one!");
+    ~chatnpc("<p,angry>I beg your pardon!");
+    ~chatplayer("<p,neutral>It's a matter of some urgency that I have an airtight container as soon as possible!");
+    ~chatnpc("<p,angry>Who on earth do you think you are coming in here demanding an airtight pot...Can't you see that I have my own worries to think about?");
+    ~chatplayer("<p,sad>Oh, sorry, I didn't think...what's the problem?");
+    ~chatnpc("<p,sad>Well, if you must know, I'm working all the hours that Saradomin sends, I have to in order to make enough money to pay that loan shark Hammerspike!");
+    ~chatplayer("<p,quiz>Loan shark? Hammerspike? What are you talking about?");
+    ~chatnpc("<p,sad>I took over this abandoned pottery place with a loan from Hammerspike. He's demanding payment and I can barely just make the interest payments.");
+    ~chatnpc("<p,sad>I'm working as hard as I can but I'll never pay the loan off at this rate!");
+    ~chatplayer("<p,neutral>But I need an airtight pot...to store breathing salts in.");
+    ~chatnpc("<p,neutral>Well, that may be, but I have a rush order for a top paying customer that's going to keep Hammerspike off my back for a bit.");
+    ~chatnpc("<p,neutral>If you really want that pot, you're going to have to deal with Hammerspike in the dwarven mines!");
+    switch_int (~p_choice2("Ok, I'll deal with Hammerspike!", 1, "No, sorry, no more blooming favours for anyone!", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Ok, I'll deal with Hammerspike!");
+            %onesmallfavour = 70;
+            ~chatnpc("<p,quiz>Really, you will?");
+            ~chatplayer("<p,neutral>Yes, I'll go and have a chat with him, perhaps we can sort something out.");
+            ~chatnpc("<p,neutral>Well, that would be really great...I just hope he doesn't grind you into flour to make his bread, he's one of the most ruthless gangsters in the area.");
+            ~chatnpc("<p,neutral>Beware, his guards are incredibly loyal, they'll slit their own throats to protect him!");
+            ~chatplayer("<p,neutral>That's not a pretty picture you're painting, but don't worry, I'll be careful. Now, where do I find this Hammerspike?");
+            ~chatnpc("<p,neutral>He's in the dwarven mines somewhere, not sure exactly where though.");
+        case 2 :
+            ~chatplayer("<p,angry>No, sorry, no more blooming favours for anyone!");
+            ~chatnpc("<p,sad>Oh, well that's a real shame, I was hoping you could have sorted out that Hammerspike for me once and for all!");
+    }
+    return;
+}
+if (~osf_stage_between(70, 149) = true) {
+    ~chatplayer("<p,neutral>Hey there...I'm back...");
+    ~chatnpc("<p,quiz>So I see. What's the problem? Did you sort out Hammerspike?");
+    ~chatplayer("<p,sad>Not exactly, can you tell me what I'm supposed to do again?");
+    ~chatnpc("<p,neutral>Go talk to Hammerspike in the Dwarven mines and see if you can get him to leave me alone...I won't be able to make you the airtight pot else.");
+    return;
+}
+// ours: before the quest, she's too busy
+~chatnpc("<p,neutral>Can't you see that I have my own worries to think about?");
+
+// ---------------------------------------------------------------- Hammerspike and his gang (Dwarven Mine)
+[opnpc1,favour_gangster_dwarf] @osf_gang_talk;
+[opnpc1,favour_gangster_dwarf_2] @osf_gang_talk;
+[opnpc1,favour_gangster_dwarf_3] @osf_gang_talk;
+
+[label,osf_gang_talk]
+~chatnpc("<p,angry>Yeah...whada you want?");
+if (~p_choice2("I'm looking for Hammerspike.", 1, "Nothing.", 2) = 2) return; // ours: "Nothing."
+~chatplayer("<p,quiz>I'm looking for Hammerspike.");
+~chatnpc("<p,neutral>Well, he's around here somewhere, just use your eyes, I'm sure you'll get there one day.");
+
+[opnpc1,favour_hammerspike_stoutbeard]
+if (%onesmallfavour = 70) {
+    ~chatnpc("<p,angry>And who da heck are you?");
+    ~chatplayer("<p,neutral>I'm <displayname> and I want to talk to you about a friend of mine, Tassie Slipcast. She says you're putting the screws on her for some loan she had from you. Is this true?");
+    ~chatnpc("<p,neutral>And what if it is? Tassie got into an arrangement that is mutually beneficial, as far as I understood it, she was happy with the deal.");
+    @osf_hammerspike_options;
+}
+if (~osf_stage_between(75, 149) = true) {
+    ~chatnpc("<p,angry>And what's wrong now?");
+    ~chatplayer("<p,quiz>What was it that I was supposed to do for you?");
+    ~chatnpc("<p,angry>Go and talk to Sanfew and get him to accept me as a druid initiate!");
+    return;
+}
+~chatnpc("<p,angry>And who da heck are you?"); // ours: before the quest
+
+[label,osf_hammerspike_options]
+switch_int (~p_choice5("Well, I've come to change the deal!", 1, "Can't you just leave Tassie alone?", 2, "Oh, come on...do something nice for Tassie.", 3, "Have you always been a gangster?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Well, I've come to change the deal!");
+        ~chatnpc("<p,quiz>Oh, so you wanna give me something for leaving Tassie alone?");
+        ~chatplayer("<p,shifty>Er...er...not exactly...why can't you just leave her alone? I mean, make a nice gesture, I'm asking out as a favour...please?");
+        @osf_hammerspike_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Can't you just leave Tassie alone?");
+        ~chatnpc("<p,neutral>Where would I be if I just left all of my 'customers' alone? Some people just need an extra 'encouragement' to make the best out of life...I'm just helping them along.");
+        @osf_hammerspike_options;
+    case 3 :
+        ~chatplayer("<p,neutral>Oh, come on...do something nice for a Tassie. Think about how hard she's working!");
+        ~chatnpc("<p,neutral>Well...now that you come to mention it, I guess I have been a little hard on the girl.");
+        ~chatplayer("<p,neutral>Yeah, come on give her a break.");
+        ~chatnpc("<p,neutral>And I guess I am quite stressed about things, what with so much to think about recently.");
+        ~chatplayer("<p,neutral>I can understand that...you have a lot on your mind. Go on, make a change...it'll do you good! There must be something else that you wanted to do at least once in your life.");
+        ~chatnpc("<p,neutral>Hmm, yes, yes you're right...I did want to do something, something I noticed recently, but you'll laugh if I tell you...nah, it's silly.");
+        @osf_hammerspike_options;
+    case 4 :
+        ~chatplayer("<p,quiz>Have you always been a gangster? Wasn't there anything else that you wanted to do instead? Come on, tell me what you want to do...I'm listening.");
+        ~chatnpc("<p,neutral>Well, I was just thinking the other day that I'm feeling sort of unfulfilled in my life.");
+        ~chatnpc("<p,neutral>I'd like to get rid of all this anger and frustration that my current lifestyle brings and do something relaxing...like those druids, I mean, all day sitting around, looking at herbs and wearing robes and stuff.");
+        ~chatplayer("<p,neutral>Ok, that sounds good.");
+        ~chatnpc("<p,neutral>Yeah, yeah, I really want to be a druid...so...go and see the druid leader, I think Sanfew is his name, and persuade him to take me as an initiate. Do me this one small favour and I'll leave Tassie alone.");
+        switch_int (~p_choice2("I don't think they take dwarven gangsters as initiates.", 1, "Ok, another favour...I think I can manage that.", 2)) {
+            case 1 :
+                ~chatplayer("<p,neutral>I don't think they take dwarven gangsters as initiates.");
+                ~chatnpc("<p,neutral>Whatever...I guess Tassie's gonna be working hard for a bit longer yet then!");
+                @osf_hammerspike_options;
+            case 2 :
+                %onesmallfavour = 75;
+                ~chatplayer("<p,neutral>Ok, another favour...I think I can manage that.");
+                ~chatnpc("<p,happy>Good...I mean great! Come back when Sanfew has agreed to take me as an initiate!");
+                if (npc_find(coord, favour_gangster_dwarf, 10, 0) = true) {
+                    npc_say("Ha ha ha ha! Good one boss, I can't believe <text_gender("he", "she")> fell for that, boss!");
+                }
+        }
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Sanfew (Taverley)
+[label,osf_hook_sanfew]
+if (~osf_stage_between(75, 149) = false) @osf_orig_sanfew;
+if (%onesmallfavour = 75) {
+    if (~p_choice2("Are you taking any new initiates?", 1, "Something else.", 2) = 2) @osf_orig_sanfew;
+    ~chatplayer("<p,quiz>Are you taking any new initates?");
+    ~chatnpc("<p,quiz>Hmmm, are you considering yourself?");
+    @osf_sanfew_options;
+}
+@osf_sanfew_return;
+
+[label,osf_sanfew_options]
+switch_int (~p_choice4("How does someone become an initate?", 1, "Do you accept dwarves?", 2, "A dwarf I know wants to become an initiate.", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>How does someone become an initate?");
+        ~chatnpc("<p,neutral>Hmm, it's quite a straight-forward process. A person, perhaps like yourself, comes along to me and asks.");
+        ~chatnpc("<p,neutral>We test your knowledge of Herblore and see if you can fit in with the rest of us. If you pass, then we let you become an initiate.");
+        ~chatplayer("<p,neutral>Seems pretty straight forward!");
+        @osf_sanfew_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Do you accept dwarves?");
+        ~chatnpc("<p,neutral>Dwarves? Well now, that's a mighty interesting question... Just because we haven't before, doesn't mean to say that we shouldn't.");
+        @osf_sanfew_options;
+    case 3 :
+        ~chatplayer("<p,neutral>A dwarf I know wants to become an initiate.");
+        ~chatnpc("<p,neutral>Oh yes? Well, that's interesting. Let me think for a moment. Hmmm... yes, actually, I don't mind taking him on, so long as you can do me just one small favour. Well, two actually.");
+        ~chatplayer("<p,sad>Not you as well?");
+        ~chatnpc("<p,angry>Stop interrupting me. I haven't told you about these favours!");
+        ~chatnpc("<p,neutral>There's a poor little gnome up on White Wolf mountain. I wondered if you could take him a warming herbal brew. I have the recipe here!");
+        ~chatplayer("<p,neutral>Well, that seems simple enough.");
+        ~chatnpc("<p,neutral>In addition...");
+        ~chatnpc("<p,neutral>I've long wished to take a trip down to see those ogres to the south of Yanille, and bring the word of Guthix to them. I was hoping you might organise this trip with the gnome pilot up there on White Wolf mountain.");
+        ~chatplayer("<p,shock>Are you mad?");
+        ~chatnpc("<p,neutral>Well, perhaps a bit... but it's never stopped you doing things for me before.");
+        ~chatplayer("<p,sad>I've been asked to do a lot of favours recently.");
+        ~chatnpc("<p,neutral>Well, that's the life of an adventurer. Is it a deal, or not?");
+        switch_int (~p_choice2("Yep, it's a deal.", 1, "Nope, it's not a deal!", 2)) {
+            case 1 :
+                %onesmallfavour = 80;
+                ~chatplayer("<p,neutral>Yep, it's a deal. Tell me the recipe for this herbal tea.");
+                ~chatnpc("<p,neutral>Ok, you need to heat some water up in a bowl, then pour it into an empty teacup. Add 1 harralander, 2 guam and 1 marrentill...it'll warm that poor fellow up a treat!");
+                ~chatplayer("<p,happy>Mmm, sounds delicious! What's it called?");
+                ~chatnpc("<p,neutral>We call it 'Guthix's rest'.");
+                ~chatplayer("<p,quiz>Can I drink it?");
+                ~chatnpc("<p,neutral>If you want!");
+                ~chatplayer("<p,happy>Great! And thanks.");
+                ~chatnpc("<p,neutral>But you'll have to make another one for the gnome.");
+                ~chatplayer("<p,neutral>But I can drink it though.");
+                ~chatnpc("<p,neutral>Yes, but you'll have to make another one for the gnome.");
+                ~chatplayer("<p,neutral>Ok, I think I understand.");
+            case 2 :
+                ~chatplayer("<p,neutral>Nope, it's not a deal!");
+                ~chatnpc("<p,sad>Well, that's a shame. I was looking forward to visiting the ogres... Perhaps someday I will.");
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[label,osf_sanfew_return]
+switch_int (~p_choice4("What did you need me to do again?", 1, "How do I make the tea again?", 2, "Something else.", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What did you need me to do again?");
+        ~chatnpc("<p,neutral>Make a herbal tea for the gnome and persuade him to take me to the ogre area, down to the south!");
+        ~chatplayer("<p,neutral>Oh yes, right, thanks!");
+        @osf_sanfew_return;
+    case 2 :
+        ~chatplayer("<p,quiz>How do I make the tea again?");
+        ~chatnpc("<p,neutral>Ok, you need to heat some water up in a bowl, then pour it into an empty teacup. Add 1 harralander, 2 guam and 1 marrentill...it'll warm that poor fellow up a treat!");
+        ~chatplayer("<p,neutral>Oh yes, right, thanks!");
+        @osf_sanfew_return;
+    case 3 : @osf_orig_sanfew;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Captain Bleemadge (White Wolf Mountain)
+[label,osf_hook_pilot_white_wolf]
+if (~osf_stage_between(80, 149) = false) @osf_orig_pilot_white_wolf;
+if (%onesmallfavour <= 84) {
+    def_obj $tea = ~osf_guthix_rest_held;
+    def_string $line = "Sanfew asked me to come and talk to you.";
+    if ($tea ! null) $line = "I have a special tea here for you from Sanfew!";
+    if (~p_choice2($line, 1, "Something else.", 2) = 2) @osf_orig_pilot_white_wolf;
+    if ($tea = null) {
+        ~chatplayer("<p,neutral>Sanfew asked me to come and talk to you.");
+        ~chatnpc("<p,sad>Brrr, blimey it's cold up here! Wish I had something nice to drink to chase away these chills!");
+        return;
+    }
+    ~chatplayer("<p,happy>I have a special tea here for you from Sanfew!");
+    ~chatnpc("<p,happy>Ohhh! Many thanks! Brrr, blimey it's cold up here!");
+    mes("You hand over the cup of herbal tea.");
+    inv_del(inv, $tea, 1);
+    %onesmallfavour = 86;
+    @osf_bleemadge_tea;
+}
+if (%onesmallfavour = 86) {
+    if (~p_choice2("How was that tea?", 1, "Something else.", 2) = 2) @osf_orig_pilot_white_wolf;
+    ~chatplayer("<p,quiz>How was that tea?");
+    ~chatnpc("<p,happy>It was delicious thanks!");
+    @osf_bleemadge_tea;
+}
+if (~p_choice2("What am I supposed to be doing again?", 1, "Something else.", 2) = 2) @osf_orig_pilot_white_wolf;
+~chatplayer("<p,quiz>What am I supposed to be doing again?");
+~chatnpc("<p,neutral>Go to Arhein in Catherby and get some T.R.A.S.H! That's a short name for Triple Redundant Aero Super Hawser and then bring it back to me! I mean, it's not difficult is it?");
+
+// a Guthix rest of any strength (osf_tea.rs2)
+[proc,osf_guthix_rest_held]()(obj)
+if (inv_total(inv, cup_guthix_rest_4) > 0) return(cup_guthix_rest_4);
+if (inv_total(inv, cup_guthix_rest_3) > 0) return(cup_guthix_rest_3);
+if (inv_total(inv, cup_guthix_rest_2) > 0) return(cup_guthix_rest_2);
+if (inv_total(inv, cup_guthix_rest_1) > 0) return(cup_guthix_rest_1);
+return(null);
+
+[label,osf_bleemadge_tea]
+~chatnpc("<p,happy>Blimey, it was certainly jolly decent of that old stick Sanfew to get you to make me a cup of herbal tea. Wow! It really does chase away the chills!");
+~chatplayer("<p,neutral>Yes, he's quite considerate that way...you know, thinking of people. In fact, he was thinking that you may be able to help him with another little 'helping' situation that involves ogres.");
+~chatnpc("<p,shock>Ogres!");
+~chatnpc("<p,neutral>Hmmm, well I guess they're just like overgrown gnomes when you think about it!");
+~chatplayer("<p,neutral>More like 'super-over-grown-gnomes' if you ask me! Or 'overgrown humans'!");
+~chatnpc("<p,neutral>Quite! Anyway, go on! What was Sanfew after?");
+~chatplayer("<p,neutral>Sanfew wants to bring the word of Guthix to those ogres, though I've no idea if ogres have the mental ability to grasp druidic concepts.");
+~chatnpc("<p,neutral>Yes, quite, but who amongst us does? I know I'm often confused by that beardy bunch of yakking druids.");
+~chatplayer("<p,neutral>Well, he wants to know if he can organise a glider ride down there.");
+~chatnpc("<p,neutral>Hmm, interesting! I know that the elders want to extend the network of glider routes, and I did hear that the Feldip Hills were being considered. I don't know why it hasn't opened up yet though.");
+~chatnpc("<p,neutral>If I'm going to transport that yakking druid down to the ogres I'll want to make it in record time so I'll need some lighter kit.");
+~chatplayer("<p,neutral>Ok, good luck with that.");
+~chatnpc("<p,neutral>There's a chap called Arhein in Catherby and I've heard that his special interest in ships has helped him to produce lightweight but strengthened ropes. I'm in need of some T.R.A.S.H.! And I need you to get it for me.");
+~chatplayer("<p,confused>TRASH? What the demonikin are you talking about? Why do I have to get it?");
+~chatnpc("<p,neutral>I'm talking about the next generation of lightweight ropes. Triple Redundant Aero Super Hawser...T.R.A.S.H.! I'll transport your yakking druid if you can get me some T.R.A.S.H!");
+~chatnpc("<p,neutral>And you have to get it because I have to stay here with this glider. Is it a deal?");
+@osf_bleemadge_options;
+
+[label,osf_bleemadge_options]
+switch_int (~p_choice5("What do you want me to do?", 1, "What is T.R.A.S.H?", 2, "Where can I get this from?", 3, "Ok, I'll go and get you some T.R.A.S.H.", 4, "No, sorry, I can't do it right now.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you want me to do?");
+        ~chatnpc("<p,neutral>Go to Arhein and ask him for some T.R.A.S.H....");
+        @osf_bleemadge_options;
+    case 2 :
+        ~chatplayer("<p,quiz>What is T.R.A.S.H?");
+        ~chatnpc("<p,neutral>T.R.A.S.H. is a short way of saying, 'Triple Redundant Aero Super Hawser', it's a technical term that we gnomes like to use when specifying lightweight rope.");
+        @osf_bleemadge_options;
+    case 3 :
+        ~chatplayer("<p,quiz>Where can I get this from?");
+        ~chatnpc("<p,neutral>Go and talk to a chap called Arhein in Catherby, he's developed it so he'll know exactly what you're talking about.");
+        ~chatplayer("<p,happy>Great! So I get to talk T.R.A.S.H with shopkeepers!");
+        @osf_bleemadge_options;
+    case 4 :
+        %onesmallfavour = 88;
+        ~chatplayer("<p,neutral>Ok, I'll go and get you some T.R.A.S.H.");
+        ~chatnpc("<p,happy>Wonderful my friend, wonderful!");
+    case 5 :
+        ~chatplayer("<p,neutral>No, sorry, I can't do it right now.");
+        ~chatnpc("<p,sad>Well, that's a bit of a shame...I was looking forward to upgrading my glider!");
+}
+
+// ---------------------------------------------------------------- Arhein (Catherby)
+[label,osf_hook_arhein]
+if (%onesmallfavour ! 88) @osf_orig_arhein;
+~chatnpc("<p,happy>Hello! Would you like to trade?");
+if (~p_choice2("I need to talk T.R.A.S.H. to you.", 1, "Something else.", 2) = 2) @osf_orig_arhein;
+~chatplayer("<p,neutral>I need to talk T.R.A.S.H. to you.");
+~chatnpc("<p,neutral>Oh yes, well it won't be the first time...but just so I'm sure can you explain what you mean?");
+~chatplayer("<p,neutral>Yes, of course. There's a Gnome on White Wolf mountain who needs some T.R.A.S.H...for his glider...do you have some?");
+~chatnpc("<p,neutral>Well, I've done a lot of research into Triple Redundant Aero Super Hawsers and it seems to have paid off, but answer me this one question. Why are you asking me this rather than the Gnome?");
+~chatplayer("<p,neutral>Well, I'm sort of doing him a favour.");
+~chatnpc("<p,neutral>Hmm, really, is that so? Well, I do have some Triple Redundant Aero Super Hawser and I'll let you have some if you do me just one small favour.");
+~chatplayer("<p,angry>How totally unpredictable!");
+~chatnpc("<p,neutral>No, this is a really quick thing and shouldn't take you longer than a few minutes.");
+~chatplayer("<p,neutral>Yeah, I've heard that before! Go on...tell me anyway.");
+~chatnpc("<p,neutral>I'm funding a rather expensive trade run to Brimhaven soon and I want to be sure that the weather isn't going to change and cause my ships any trouble.");
+~chatnpc("<p,neutral>The last thing I need is a load of goods going straight to the bottom of the ocean.");
+~chatplayer("<p,neutral>Well, I can understand that.");
+~chatnpc("<p,neutral>I just need you to pop along to Seers Village and ask those philosophers of foresight for a weather report. I believe a new seer there called Phantuwti can help you.");
+switch_int (~p_choice2("No way...I've had enough of this wild goose chase.", 1, "Yes, Ok, I'll do it!", 2)) {
+    case 1 :
+        ~chatplayer("<p,angry>No way...I've had enough of this wild goose chase.");
+    case 2 :
+        %onesmallfavour = 90;
+        ~chatplayer("<p,neutral>Yes, Ok, I'll do it!");
+        ~chatnpc("<p,happy>That's great, many thanks.");
+}
+
+// ---------------------------------------------------------------- Phantuwti Fanstuwi Farsight (Seers' Village)
+[opnpc1,favour_phantuwti_farsight]
+if (%onesmallfavour = 90) {
+    if (~p_choice2("Hi, can you give me a weather forecast?", 1, "Nothing, thanks.", 2) = 2) return; // ours: "Nothing, thanks."
+    ~chatplayer("<p,quiz>Hi, can you give me a weather forecast?");
+    ~chatnpc("<p,neutral>Hmm, somehow I knew you were going to ask me that...strange...life is so predictable when you have the power of foresight.");
+    ~chatplayer("<p,quiz>Great! So I can assume you've been really pro-active and compiled an up-to-date one for me?");
+    ~chatnpc("<p,neutral>Alas my presumptuous friend, the power of foresight and the impulse to act is quite similar to the interplay between intelligence and wisdom.");
+    ~chatnpc("<p,neutral>One might have intelligence enough to realise that cakes are bad for us, but we may not have the wisdom to stop cramming that delicious-looking fatty cream cake into our salivating mouth.");
+    ~chatplayer("<p,quiz>So, in your case, you have the power of foresight, but you're too lazy to act on it?");
+    ~chatnpc("<p,neutral>Not exactly lazy...but unable. My abilities and concern have been focused on the fate of a local girl whose association with a certain wizard has landed her between a rock and hard place.");
+    @osf_farsight_options;
+}
+if (~osf_stage_between(95, 99) = true) {
+    ~chatplayer("<p,quiz>What did you need me to do again?");
+    ~chatnpc("<p,neutral>I need you to start checking nearby caves looking for our missing Petra. The caves are probably home to some creature or creatures. Check around the vicincity.");
+    ~chatnpc("<p,neutral>The impressions are coming from a south westerly direction. Don't go further east than you are already, no further south than Ardougne and no further west than the combat training camp.");
+    return;
+}
+~chatnpc("<p,neutral>Hmm, somehow I knew you were going to talk to me...life is so predictable when you have the power of foresight."); // ours: other times
+
+[label,osf_farsight_options]
+switch_int (~p_choice5("Who is this girl that you're concerned about?", 1, "Where is this girl?", 2, "What do you think needs to be done?", 3, "I'm sorry but I can't help.", 4, "What can I do to help?", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who is this girl that you're concerned about?");
+        ~chatnpc("<p,neutral>The girl's name is Petra, she's a very ...energetic youngster, always wanted to travel and have adventures. When she turned seventeen she set off to earn herself fame and fortune.");
+        ~chatnpc("<p,sad>It looks like she's ended up in a bit of a dead end position...");
+        @osf_farsight_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Where is this girl?");
+        ~chatnpc("<p,neutral>It's quite difficult to pinpoint exactly where she is, but apparently she's in some sort of cavern structure.");
+        ~chatnpc("<p,neutral>We sense that there are other beings around her, smelly creatures, and some sort of presence is watching over her.");
+        ~chatplayer("<p,quiz>Do you have any ideas where that might be? I mean, it's pretty vague isn't it?");
+        ~chatnpc("<p,neutral>Well, we believe it may be some sort of nearby cave, it can't be very far away as the impressions we get are quite strong. We believe the cave is a home for some sort of creature or creatures.");
+        @osf_farsight_options;
+    case 3 :
+        ~chatplayer("<p,quiz>What do you think needs to be done?");
+        ~chatnpc("<p,neutral>Well, it would be nice to locate her...if possible. Then we may be able to work out what to do when we can see what sort of state she's in.");
+        @osf_farsight_options;
+    case 4 :
+        ~chatplayer("<p,sad>I'm sorry but I can't help.");
+        ~chatnpc("<p,sad>Well, that's a bit of a shame, I have to say...we all miss our Petra!");
+    case 5 :
+        ~chatplayer("<p,quiz>What can I do to help?");
+        ~chatnpc("<p,neutral>Do you think you could do me a small favour? Check around the vicinity. The impressions are coming from a south westerly direction.");
+        ~chatnpc("<p,neutral>Don't go further east than you are already, no further south than Ardougne and no further west than the combat training camp.");
+        ~chatplayer("<p,quiz>So, let me get this right. You want me to start poking my nose into a lot of caves where some creatures might be?");
+        ~chatplayer("<p,angry>Risking my neck for some tomboy who thinks she's got what it takes to be a real adventurer?");
+        ~chatnpc("<p,neutral>Well, I wouldn't have put it quite that way...");
+        switch_int (~p_choice2("Yes, Ok, I'll do it.", 1, "No, sorry, I can't do it right now. Or maybe ever!", 2)) {
+            case 1 :
+                %onesmallfavour = 95;
+                ~chatplayer("<p,neutral>Yes, Ok, I'll do it.");
+                ~chatnpc("<p,happy>Great! I just knew you'd agree to help!");
+            case 2 :
+                ~chatplayer("<p,neutral>No, sorry, I can't do it right now. Or maybe ever!");
+                ~chatnpc("<p,sad>I knew you wouldn't help...oh well, perhaps someday you'll surprise me.");
+        }
+}
+
+// ---------------------------------------------------------------- the sculpture (Goblin Cave)
+[oploc1,favour_lady_in_wall]
+mes("It looks like a very well carved statue of a young girl.");
+mes("The expression is incredibly life-like.");
+
+[oploc5,favour_lady_in_wall]
+if (%onesmallfavour < 95) {
+    mes("You search the sculpture but find nothing."); // ours
+    return;
+}
+if (%onesmallfavour = 95) %onesmallfavour = 100;
+~mesbox("You search the life-like sculpture and see what looks like a message sticking out of the girl's belt. It reads,|@blu@'...problems report to Wizard Cromp...|@blu@..rently in residence in East Ardoug...");
+
+// ---------------------------------------------------------------- Wizard Cromperty (East Ardougne)
+[label,osf_hook_ardounge_wizard]
+if (~osf_stage_between(100, 109) = false) @osf_orig_ardounge_wizard;
+~chatnpc("<p,neutral>Hello there. My name is Cromperty. I am a wizard, and an inventor.");
+~chatnpc("<p,neutral>You must be <displayname>. My good friend Sedridor has told me about you. As both wizard and inventor, he has aided me in my great invention!");
+if (%onesmallfavour = 100) {
+    if (~p_choice2("I need to talk to you about a girl stuck in some rock!", 1, "Something else.", 2) = 2) @osf_orig_ardounge_wizard;
+    ~chatplayer("<p,neutral>I need to talk to you about a girl stuck in some rock!");
+    ~chatnpc("<p,confused>Eh!");
+    ~chatnpc("<p,angry>What? I have no clue what you're talking about! Now, please excuse me! I need to get back to my experiments!");
+    ~chatplayer("<p,angry>Hey! Not so fast! I've seen a young girl encased in rock, a note in her belt led me to you.");
+    ~chatnpc("<p,sad>Oh dear, it's such a bother getting them back out of the rock walls and I do loathe the trip to Port Khazard for the components.");
+    ~chatplayer("<p,confused>What the demonikin are you talking about?");
+    ~chatnpc("<p,neutral>Well, it's not the first time someone's been teleported into a rock face, just the slightest miscalculation and bang...they're in the wall!");
+    ~chatnpc("<p,neutral>It's fairly straightforward to cast a spell and fish them out again - but it requires a spell component from a chap in Port Khazard.");
+    ~chatnpc("<p,neutral>I don't suppose you could do me a small favour could you?");
+    ~chatnpc("<p,neutral>Just one small favour? Pop along to Port Khazard and get some iron oxide, it's a component of the spell.");
+    switch_int (~p_choice2("No way am I going to Port Khazard for you!", 1, "Oh! Ok, one more 'small favour' isn't going to kill me...I hope!", 2)) {
+        case 1 :
+            ~chatplayer("<p,angry>No way am I going to Port Khazard for you!");
+            ~chatnpc("<p,sad>Oh dear, what a shame...I just don't have time to deal with this now...she's safe where she is for now, and I'm sure I'll get to it sooner or later.");
+        case 2 :
+            %onesmallfavour = 105;
+            ~chatplayer("<p,neutral>Oh! Ok, one more 'small favour' isn't going to kill me...I hope!");
+            ~chatnpc("<p,happy>Waaahaaay! Great! I'd never suspect you'd be so helpful!");
+            ~chatnpc("<p,neutral>You need to talk to a chap called Tindel Marchant in Port Khazard, he's sort of like an antiques dealer.");
+            ~chatnpc("<p,neutral>Well, off you go then! A journey of a thousand miles starts with the first step and all that!");
+            ~chatplayer("<p,confused>What? Are you saying I have to travel a thousand miles?");
+            ~chatnpc("<p,neutral>Of course not...you silly...just...you know...the sooner you start the sooner you can get back...that's all I was saying.");
+    }
+    return;
+}
+if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) @osf_orig_ardounge_wizard;
+~chatplayer("<p,quiz>What did you want me to do again?");
+~chatnpc("<p,neutral>Go to Port Khazard and get me some iron oxide from Tindel Marchant.");
+
+// ---------------------------------------------------------------- Tindel Marchant (Port Khazard)
+[opnpc1,tindel_marchant]
+~chatnpc("<p,happy>Hello there! Welcome to my special antiques boutique.");
+if (%onesmallfavour = 105) {
+    if (~p_choice2("Wizard Cromperty sent me to get some iron oxide.", 1, "Nothing, thanks.", 2) = 2) return; // ours: "Nothing, thanks."
+    ~chatplayer("<p,neutral>Wizard Cromperty sent me to get some iron oxide. Do you have some?");
+    ~chatnpc("<p,neutral>As a matter of fact, I do! However, it's the last in stock and I'm not likely to get more for a while so it's highly prized amongst the wizards at the moment.");
+    ~chatnpc("<p,neutral>It's not easy to get so much rust together, even if I do come across it more often than most people with cleaning these rusty swords up!");
+    ~chatplayer("<p,quiz>Rust? What do you mean? How much does it cost?");
+    ~chatnpc("<p,neutral>Yes, iron oxide is more commonly referred to as rust. As for a price, hmmm...well...let me think now...I could give it to you for the price of...");
+    ~chatnpc("<p,happy>One small favour!");
+    ~chatplayer("<p,angry>Groan!!!");
+    ~chatnpc("<p,neutral>I need a nice mattress to sleep on! I haven't had a decent night's sleep in an ice-age...could you take this stodgy mattress down to Rantz in the ogre area and ask him to fill it with prime chompy bird feathers please?");
+    ~chatplayer("<p,neutral>So, let me get this straight.");
+    ~chatplayer("<p,angry>You want me to traipse ALL the way down past the ogre city with some flea infested mattress, to some hermit ogre, who can't shoot a chompy bird to save his life, so that you'll give me a pot of rust?");
+    ~chatnpc("<p,neutral>Well, er, I wouldn't have said it quite that way...");
+    switch_int (~p_choice2("Okay, I'll do it!", 1, "Sorry, I just don't want to do it.", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Okay, I'll do it!");
+            ~chatnpc("<p,happy>Great, many thanks indeed! Here's the mattress!");
+            %onesmallfavour = 110;
+            ~osf_give(favour_matress_stodgy);
+            ~objbox(favour_matress_stodgy, "Tindel gives you a worn out, very poor-looking mattress.", 250, 0, 0);
+        case 2 :
+            ~chatplayer("<p,neutral>Sorry, I just don't want to do it.");
+            ~chatnpc("<p,neutral>Well, that's a shame, but come back and see me if you change your mind.");
+    }
+    return;
+}
+if (~osf_stage_between(110, 129) = true & ~obj_gettotal(favour_matress_stodgy) = 0 & ~obj_gettotal(favour_matress_comfy) = 0) {
+    if (~p_choice2("Erm, I've lost the mattress...", 1, "Nothing, thanks.", 2) = 2) return;
+    ~chatplayer("<p,sad>Erm, I've lost the mattress... do you have another one I can get refilled?");
+    ~chatnpc("<p,angry>Yes, but I had to pay for this myself so you'd better pay me for losing my last one...it cost 100 gold!");
+    switch_int (~p_choice2("Okay, here's 100 coins for another mattress...", 1, "I'm not paying you 100 coins for that stinky mattress.", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Okay, here's 100 coins for another mattress...");
+            if (inv_total(inv, coins) < 100) {
+                mes("You don't have enough coins."); // ours
+                return;
+            }
+            inv_del(inv, coins, 100);
+            ~chatnpc("<p,happy>Okay, thanks a lot, here's the mattress!");
+            ~osf_give(favour_matress_stodgy);
+            ~objbox(favour_matress_stodgy, "Tindel gives you a new, old mattress!", 250, 0, 0);
+        case 2 :
+            ~chatplayer("<p,angry>I'm not paying you 100 coins for that stinky mattress.");
+            ~chatnpc("<p,angry>Well, don't expect your iron oxide any time soon then!");
+            ~chatplayer("<p,angry>Okay, then I won't.");
+            ~chatnpc("<p,angry>Good!");
+            ~chatplayer("<p,angry>Great!");
+            ~chatnpc("<p,angry>Get out!");
+            ~chatplayer("<p,angry>GLADLY!");
+            ~chatnpc("<p,angry>Grrrr!");
+    }
+    return;
+}
+if (~osf_stage_between(110, 129) = true) {
+    if (~p_choice2("What did you want me to do again?", 1, "Nothing, thanks.", 2) = 2) return;
+    ~chatplayer("<p,quiz>What did you want me to do again?");
+    ~chatnpc("<p,neutral>You need to take that stodgy mattress I gave you to Rantz and ask him to fill it with feathers! Then, bring it back to me and I'll give you some iron oxide.");
+    ~chatplayer("<p,neutral>Oh, okay then!");
+}
+
+// ---------------------------------------------------------------- Rantz (Feldip Hills)
+[label,osf_hook_rantz]
+if (~osf_stage_between(110, 129) = false) @osf_orig_rantz;
+if (%onesmallfavour = 110) {
+    if (~p_choice2("I need to talk to you about a mattress.", 1, "Something else.", 2) = 2) @osf_orig_rantz;
+    ~chatplayer("<p,neutral>I need to talk to you about a mattress!");
+    ~chatnpc("<p,angry>You's creature shuvs flapper sack in rantz face, making rantz very upset");
+    @osf_rantz_options;
+}
+if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) @osf_orig_rantz;
+~chatplayer("<p,quiz>What did you want me to do again?");
+~chatnpc("<p,neutral>Yous creature, go see little guy and help wiv da man flapper 'come-down-place'...den Rantz helps yous creature wiv da fluffsies sack.");
+
+[label,osf_rantz_options]
+switch_int (~p_choice5("Can you fill this mattress with feathers?", 1, "What's going on around here?", 2, "What can I do about that?", 3, "Ok, I'll see what I can do.", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can you fill this mattress with feathers?");
+        ~chatnpc("<p,neutral>Der's no flappers to get cos da little guy scares dem away wiv his banging. He's making da man flapper 'come-down-place' and it's takin' ages and ages.");
+        ~chatnpc("<p,neutral>Da chompies don't come no more since he's banging all da time.");
+        @osf_rantz_options;
+    case 2 :
+        ~chatplayer("<p,quiz>What's going on around here?");
+        ~chatnpc("<p,neutral>Da little guy, he's making da man flapper 'come-down-place'...so deyz more of yous creatures coming to see Rantz...but he's takin ages to do it.");
+        @osf_rantz_options;
+    case 3 :
+        ~chatplayer("<p,quiz>What can I do about that?");
+        ~chatnpc("<p,neutral>You's can help da little guy, he's over der near da ogre city...he's stuck wiv sumfing, making da man flapper 'come-down-place'. Me's not doin' no chompy hunting wiv dat noise going on.");
+        @osf_rantz_options;
+    case 4 :
+        %onesmallfavour = 115;
+        ~chatplayer("<p,neutral>Ok, I'll see what I can do.");
+        ~chatnpc("<p,happy>Dat would be da good find...den me's help wiv da flufsies sack.");
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+// ---------------------------------------------------------------- Gnormadium Avlafrim (Feldip Hills)
+[opnpc1,gnormadium_avlafrim]
+~chatnpc("<p,neutral>Hello! Don't get in the way around here, we've got a lot of work to do!");
+@osf_gnormadium_options;
+
+[label,osf_gnormadium_options]
+def_int $c;
+if (%onesmallfavour = 115) {
+    $c = ~p_choice5("Hello there, what are you working on?", 1, "What are you working on?", 2, "Is there anything that I can do?", 3, "Rantz said I should help you finish this project.", 4, "Okay, thanks.", 5);
+} else if (~osf_stage_between(120, 124) = true) {
+    $c = ~p_choice5("Hello there, what are you working on?", 1, "What are you working on?", 2, "Is there anything that I can do?", 3, "What was it you wanted me to do again?", 6, "Okay, thanks.", 5);
+} else {
+    $c = ~p_choice4("Hello there, what are you working on?", 1, "What are you working on?", 2, "Is there anything that I can do?", 3, "Okay, thanks.", 5);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,quiz>Hello there, what are you working on?");
+        ~chatnpc("<p,happy>Well, it's quite exciting... we're extending the glider network to include the Feldip Hills so that people can come and look at these curious ogres.");
+        ~chatnpc("<p,happy>They are impressive creatures aren't they - quite mystified they are by the technology we gnomes have invented.");
+        @osf_gnormadium_options;
+    case 2 :
+        ~chatplayer("<p,quiz>What are you working on?");
+        ~chatnpc("<p,happy>Well, people will be able to visit this area, once construction has finished, by using the most advanced network of glider routes in the whole of Gielinor... in fact, the only network of glider routes!");
+        @osf_gnormadium_options;
+    case 3 :
+        ~chatplayer("<p,quiz>Is there anything that I can do?");
+        ~chatnpc("<p,neutral>Not really, I'm afraid, it's probably all far too technical for someone like you.");
+        @osf_gnormadium_options;
+    case 4 :
+        ~chatplayer("<p,neutral>Rantz said I should help you finish this project.");
+        ~chatnpc("<p,shock>Rantz? *gulp* Well, that would be nice actually! We are having some problems with getting the landing lights to work... do you think you could take a look at them?");
+        ~chatnpc("<p,neutral>I expect that it's far too complex for you, but hey, you may be able to do something!");
+        switch_int (~p_choice2("Yes, I'll take a look at them.", 1, "Sorry, but I've got other things to attend to.", 2)) {
+            case 1 :
+                %onesmallfavour = 120;
+                ~chatplayer("<p,neutral>Yes, I'll take a look at them.");
+                ~chatnpc("<p,neutral>Ok then, just pop over and let me know if you're not sure what you're doing... I'm sure I'll just have to fix it myself anyway. If you need any materials, just pop over.");
+                ~chatplayer("<p,neutral>We'll see!");
+            case 2 :
+                ~chatplayer("<p,neutral>Sorry, but I've got other things to attend to.");
+                ~chatnpc("<p,neutral>Yes, I expected it might be a bit too complex for you. We Gnomes lead the way with technical things like this - world leaders, you might say.");
+        }
+    case 5 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+    case 6 :
+        ~chatplayer("<p,quiz>What was it you wanted me to do again?");
+        ~chatnpc("<p,neutral>Go and take a look at those landing lights and see if you can get them to work, would you? They've been as dull as an ogre conversation since we started working here.");
+        ~chatnpc("<p,neutral>Come back and tell me if you actually manage to get them fixed.");
+}
