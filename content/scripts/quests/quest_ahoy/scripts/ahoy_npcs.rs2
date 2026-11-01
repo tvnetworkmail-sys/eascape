@@ -137,6 +137,7 @@ switch_int (~p_choice2("Why, what is the matter?", 1, "Sorry, I'm scared of ghos
 switch_int (~p_choice2("Yes.", 1, "No.", 2)) {
     case 1 :
         %ahoy_questvar = ^ahoy_ask_necrovarus;
+        ~send_quest_progress(questlist:ahoy, %ahoy_questvar, ^ahoy_complete);
         ~update_questlist;
         ~chatplayer("<p,neutral>Yes, of course I will. Tell me what you want me to do.");
         ~chatnpc("<p,neutral>Oh, thank you!");

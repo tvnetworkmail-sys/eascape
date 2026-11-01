@@ -48,6 +48,10 @@ if (%mdaughter_quest_var < ^md_started) {
     mes("The guard on the other side won't let you climb over."); // ours
     return;
 }
+if (npc_find(coord, mdaughter_rockslide_guard, 6, 0) = true) {
+    ~chatnpc("<p,neutral>I suppose I might as well let you pass now, since I can't seem to stop you anyway.");
+    ~chatnpc("<p,angry>Just remember that I'm watching you.");
+}
 mes("You climb onto the rock...");
 p_delay(1);
 p_telejump(0_43_57_9_12);
@@ -151,6 +155,7 @@ switch_int (~p_choice3("I will search for her!", 1, "I'm sorry to hear that.", 2
 ~chatnpc("<p,neutral>Hmmm.");
 ~chatnpc("<p,neutral>That seems acceptable to me. Very well, I will allow you to look for her.");
 %mdaughter_quest_var = ^md_started;
+~send_quest_progress(questlist:mdaughter, %mdaughter_quest_var, ^md_complete);
 ~chatnpc("<p,neutral>I will instruct my people to let you roam about the area freely, and give limited consent to them to talk to you.");
 ~chatplayer("<p,happy>Great! I'll be back with her soon. Just wait here.");
 ~chatnpc("<p,neutral>Oh, I'll be waiting here alright.");
@@ -416,10 +421,7 @@ if (~md_cave_step3 = true) return; // step 3
 mes("What a terrible stench! No one can live there, so you decide not to go either.");
 
 // ---------------------------------------------------------------- hooks the next steps fill in
-[proc,md_hamal_step2]()(boolean)
-return(false);
-
-[proc,md_jokul_step2]()(boolean)
+[proc,md_hamal_step3]()(boolean)
 return(false);
 
 [proc,md_ragnar_step3]()(boolean)

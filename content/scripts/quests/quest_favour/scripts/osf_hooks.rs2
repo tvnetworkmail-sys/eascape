@@ -56,6 +56,7 @@ if (~player_combat_level < 45) {
 switch_int (~p_choice2_header("Yes.", 1, "No.", 2, "Start the One Small Favour quest?")) {
     case 1 :
         %onesmallfavour = 5;
+        ~send_quest_progress(questlist:onesmallfavour, %onesmallfavour, ^osf_complete);
         ~update_questlist;
         ~chatplayer("<p,happy>Ok, see you in a tick!");
         ~chatnpc("<p,happy>Great, nice of you to do it for me.");

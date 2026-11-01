@@ -1,0 +1,400 @@
+// EASCape: Mountain Daughter, step 2: peace with Rellekka and the White Pearl (%mdaughter_quest_var
+// 20 -> 30). Words from the OSRS wiki's transcript, the order from its walkthrough. The values of the
+// two sub-task varbits are ours:
+// %mdaughter_relations_var: 10 Hamal told you of Svidi, 20 Svidi wants a guarantee, 30 Brundt wants
+//     the rock, 50 Svidi has the guarantee; %mdaughter_brundt_done = Brundt has half the rock;
+//     %mdaughter_hamal_relations_done = you told Hamal
+// %mdaughter_food_var: 1 Hamal heard you out, 2 Jokul told you of the White Pearl, 3 Hamal has the seed
+
+[proc,md_tasks_check]
+if (%mdaughter_quest_var = ^md_asleif_tasks & %mdaughter_hamal_relations_done = 1 & %mdaughter_food_var >= 3) {
+    %mdaughter_quest_var = ^md_tasks_done;
+}
+
+// ---------------------------------------------------------------- Hamal
+[proc,md_hamal_step2]()(boolean)
+if (%mdaughter_quest_var < ^md_asleif_tasks) return(false);
+if (%mdaughter_quest_var = ^md_asleif_tasks & %mdaughter_hamal_heardofdeath = 0) {
+    ~chatplayer("<p,happy>I have found your daughter!");
+    ~chatnpc("<p,quiz>Where is she? Tell me, outerlander!");
+    ~chatplayer("<p,sad>Well, er, she is dead.");
+    ~chatnpc("<p,angry>Do not play games with me. I gave you leave to walk about our camp, not to trick us.");
+    %mdaughter_hamal_heardofdeath = 1;
+} else {
+    if (~md_hamal_step3 = true) return(true); // step 3
+    ~chatnpc("<p,neutral>What is it, outerlander?");
+}
+switch_int (~p_choice3("Never mind.", 1, "About the people of Rellekka...", 2, "About your food supplies...", 3)) {
+    case 1 : ~chatplayer("<p,neutral>Never mind.");
+    case 2 : ~md_hamal_relations;
+    case 3 : ~md_hamal_food;
+}
+return(true);
+
+[proc,md_hamal_relations]
+if (%mdaughter_brundt_done = 1) {
+    ~chatplayer("<p,happy>I did it, I persuaded Brundt to speak to your representative!");
+    ~chatnpc("<p,quiz>Indeed, outerlander, and how did you accomplish that without giving him our rock?");
+    ~chatplayer("<p,neutral>Well, yeah, I need to talk to you about that...");
+    ~chatnpc("<p,neutral>Worry not, you made a wise decision and your boldness is impressive.");
+    ~chatnpc("<p,neutral>It does not matter, after all, how large the rock is, or what its shape is. And perhaps the two halves of the rock will have extra symbolism now, representing the two halves of the Fremennik culture.");
+    if (%mdaughter_relations_var < 50) {
+        ~chatnpc("<p,quiz>But first things first. Did Svidi go into Rellekka yet, to speak to Brundt on behalf of our tribe?");
+        ~chatplayer("<p,neutral>Oops, I completely forgot about that. I'd better hurry back to him.");
+        return;
+    }
+    ~chatnpc("<p,happy>I understand that Svidi's meeting with Brundt went quite well. I must thank you for your assistance, outerlander.");
+    %mdaughter_hamal_relations_done = 1;
+    ~md_tasks_check;
+    return;
+}
+~chatplayer("<p,neutral>About the people of Rellekka...");
+if (%mdaughter_relations_var >= 30) {
+    ~chatplayer("<p,neutral>Chieftain Brundt says that he won't meet with Svidi unless you give him back some rock or other.");
+    ~chatnpc("<p,quiz>What, do you mean our ancient rock that our fathers took with them when they left the ignorants of Rellekka?");
+    ~chatplayer("<p,neutral>Yes, that's the one.");
+    ~chatnpc("<p,angry>Out of the question. That rock belongs to us. It symbolises what we stand for. What would Brundt want with it anyway?");
+    ~chatplayer("<p,quiz>So I can't persuade you to part with the rock?");
+    ~chatnpc("<p,angry>Did you not hear me the first time, outerlander? It belongs to us, we will not part with it.");
+    return;
+}
+def_int $c;
+if (%misc_quest >= ^misc_complete) {
+    $c = ~p_choice2("Why do you hate them so much?", 1, "You're all such a group of petty bickerers!", 2);
+} else {
+    $c = 1; // ours: one option, so no menu
+}
+if ($c = 2) {
+    ~chatplayer("<p,angry>You're all such a group of petty bickerers! I've only just gone and made peace between Miscellania and Etceteria!");
+    ~chatnpc("<p,quiz>Miscellania? So that group survived?");
+    ~chatplayer("<p,quiz>Why, do you know them?");
+    ~chatnpc("<p,neutral>Oh yes... that group left the mainland a long time ago. And good riddance to them, I say.");
+    ~chatplayer("<p,neutral>Don't tell me you're fighting them as well.");
+    ~chatnpc("<p,neutral>Oh, we're not fighting anyone. But we cannot forgive them for their insulting behaviour before they left.");
+    ~chatnpc("<p,angry>It is quite inappropriate to pray to the gods when the moon is half full. Yet it is almost as if they wanted to make a point of it, holding parties in honour of gods almost every night.");
+    ~chatnpc("<p,neutral>That, and they like to dress up in fancy clothes a bit too much to our tastes.");
+    ~chatplayer("<p,angry>Go on then, go on, tell me, who else split off from your little group of infighting barbarians?");
+    ~chatnpc("<p,quiz>How do you mean? There is no one else. Well, there's the Gunnarian people who left this area over a century ago, but they don't really count, do they?");
+    ~chatnpc("<p,neutral>And I suppose that the people of-");
+    ~chatplayer("<p,angry>No! Forget it! I didn't really want to hear all that!");
+    return;
+}
+~chatplayer("<p,quiz>Why do you hate them so much?");
+~chatnpc("<p,neutral>We do not hate them, outerlander, but we do not approve of their ways either.");
+~chatplayer("<p,quiz>But don't you basically believe in the same things?");
+~chatnpc("<p,neutral>It is true that our beliefs are not all that different, but we have a different way of applying them, a stricter way.");
+~chatplayer("<p,quiz>So you've never considered, say, making peace with them?");
+~chatnpc("<p,neutral>We are not at war with them, outerlander, but we try to ignore each other.");
+~chatnpc("<p,neutral>But I must admit that I have, in fact, sent out a representative to Rellekka to talk about improving relations and perhaps setting up a basic trade route.");
+~chatplayer("<p,happy>Great! Well, that was easy.");
+~chatnpc("<p,sad>Unfortunately we have not heard from Svidi, our representative, for a few days.");
+~chatplayer("<p,quiz>Shall I go looking for him as well then?");
+~chatnpc("<p,neutral>Do as you wish, outerlander.");
+if (%mdaughter_relations_var < 10) %mdaughter_relations_var = 10;
+
+[proc,md_hamal_food]
+~chatplayer("<p,neutral>About your food supplies...");
+if (%mdaughter_food_var >= 3) {
+    ~chatnpc("<p,happy>The White Pearl grows well, outerlander. We have you to thank for it."); // ours
+    return;
+}
+if (inv_total(inv, mdaughter_white_pearl_seed) > 0) {
+    ~chatplayer("<p,happy>I've found this seed that may be of interest to you.");
+    ~chatnpc("<p,quiz>Interesting, what is it?");
+    ~chatplayer("<p,neutral>It's the seed of the White Pearl fruit. It grows on White Wolf mountain, even in the snow.");
+    ~chatplayer("<p,neutral>With luck, you'll be able to grow it here as well.");
+    ~chatnpc("<p,happy>This is a great gift, <~md_name>, which I humbly accept.");
+    inv_del(inv, mdaughter_white_pearl_seed, 1);
+    %mdaughter_food_var = 3;
+    ~objbox(mdaughter_white_pearl_seed, "You give the White Pearl seed to Hamal.", 250, 0, 0); // ours
+    ~md_tasks_check;
+    return;
+}
+if (inv_total(inv, mdaughter_white_pearl_fruit) > 0) {
+    ~chatplayer("<p,happy>Here, I have something that might interest you.");
+    ~chatplayer("<p,neutral>It's White Pearl fruit, which grows in even the hardiest circumstances. I found this growing on White Wolf Mountain.");
+    ~chatnpc("<p,neutral>And what use is one piece of fruit to us, outerlander? It won't feed our tribe for even a day.");
+    ~chatplayer("<p,sad>Oops, I hadn't thought of that.");
+    return;
+}
+if (%mdaughter_food_var >= 1) {
+    ~chatplayer("<p,quiz>I'm looking for some bushes that carry White Pearl fruit. Do you know where I can find any?");
+    ~chatnpc("<p,neutral>Weren't you the one who was supposed to be looking for it for me?");
+    ~chatplayer("<p,neutral>Oh yes, good point.");
+    return;
+}
+~chatplayer("<p,neutral>From what I understand you're starting to run out?");
+~chatnpc("<p,quiz>Where did you get that idea from, outerlander?");
+~chatplayer("<p,neutral>Er, I just happened to overhear it.");
+~chatnpc("<p,sad>There is some truth to it, yes. If it were not for my missing daughter, we would have moved on already, and finding food would be easier again for a while.");
+~chatplayer("<p,quiz>Can I help you with finding a new supply of food?");
+~chatnpc("<p,neutral>I would be interested to see how you would manage that, outerlander. But if you insist on trying, go ahead.");
+%mdaughter_food_var = 1;
+
+// ---------------------------------------------------------------- Jokul
+[proc,md_jokul_step2]()(boolean)
+if (%mdaughter_quest_var < ^md_asleif_tasks) return(false);
+if (%mdaughter_food_var >= 3) {
+    ~chatnpc("<p,happy>I must thank you for your generous gift, outerlander.");
+    ~chatplayer("<p,quiz>Gift?");
+    ~chatnpc("<p,happy>Yes, the seed of the White Pearl. It grows remarkably well.");
+    ~chatplayer("<p,neutral>Ah... well, glad to be of help.");
+    return(true);
+}
+if (%mdaughter_food_var = 2 & (inv_total(inv, mdaughter_white_pearl_fruit) > 0 | inv_total(inv, mdaughter_white_pearl_seed) > 0)) {
+    ~chatplayer("<p,happy>Look, I found the White Pearl fruit!");
+    ~chatnpc("<p,neutral>You seem to be quite resourceful, outerlander. Go and show it to the chieftain.");
+    return(true);
+}
+if (%mdaughter_food_var = 2) {
+    ~chatplayer("<p,quiz>Where could I find that fruit again?");
+    ~chatnpc("<p,quiz>You mean the White Pearl?");
+    ~chatnpc("<p,neutral>I do not know, outerlander, but you might want to try looking on mountains.");
+    ~chatplayer("<p,quiz>What about this one?");
+    ~chatnpc("<p,neutral>No, if it grew on here I would have known.");
+    return(true);
+}
+~chatplayer("<p,quiz>How goes the goat herding?");
+~chatnpc("<p,neutral>It goes, outerlander...");
+~chatnpc("<p,sad>Times are hard here at the moment. We've been here for too long and there is not much food left, or places where I can take my goats.");
+~chatplayer("<p,neutral>Well, I'm trying to find a new supply of food for your people. Any ideas on where to start?");
+~chatnpc("<p,neutral>If only it were so easy!");
+~chatnpc("<p,neutral>That being said...");
+~chatplayer("<p,quiz>Yes..?");
+~chatnpc("<p,neutral>I have heard there is a certain kind of fruit... that will grow even here, in the mountains.");
+~chatplayer("<p,quiz>What's the name of the fruit?");
+~chatnpc("<p,neutral>It is called White Pearl, named after its white appearance.");
+~chatplayer("<p,quiz>Any ideas on where to find some?");
+~chatnpc("<p,neutral>I do not know. I believe it grows mainly in the mountains, and it can grow in even the most difficult circumstances.");
+~chatnpc("<p,neutral>We cannot move on until we find the chieftain's daughter, and we do not generally move far inland. But perhaps you can search for it.");
+~chatplayer("<p,neutral>I'll see what I can find.");
+%mdaughter_food_var = 2;
+return(true);
+
+// ---------------------------------------------------------------- the White Pearl (White Wolf Mountain)
+// gloves keep the thorns off, but not slayer, ranger, moonclan or lunar gloves, vambraces or mystic
+// gloves (the wiki); without them the thorns hit 4 (the wiki)
+[proc,md_gloves_ok]()(boolean)
+def_obj $g = inv_getobj(worn, ^wearpos_hands);
+if ($g = null) return(false);
+def_string $n = lowercase(oc_name($g));
+if (string_indexof_string("vambraces", $n) ! -1 | string_indexof_string("slayer", $n) ! -1 | string_indexof_string("ranger", $n) ! -1
+    | string_indexof_string("moonclan", $n) ! -1 | string_indexof_string("lunar", $n) ! -1 | string_indexof_string("mystic", $n) ! -1) {
+    return(false);
+}
+return(true);
+
+[oploc3,mdaughter_white_pearl_bush]
+if (%mdaughter_food_var < 2 | %mdaughter_food_var >= 3) {
+    mes("You see nothing of interest on the bushes."); // ours: before Jokul tells you of it
+    return;
+}
+if (inv_total(inv, mdaughter_white_pearl_seed) > 0) {
+    mes("You're content with having the seed of the fruit.");
+    return;
+}
+if (inv_total(inv, mdaughter_white_pearl_fruit) > 0) {
+    mes("No need, you already have one of these.");
+    return;
+}
+if (~md_gloves_ok = false) {
+    anim(human_pickupfloor, 0);
+    mes("Ouch! You just stuck your hand into some very sharp thorns.");
+    ~damage_self(4);
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_add(inv, mdaughter_white_pearl_fruit, 1);
+~objbox(mdaughter_white_pearl_fruit, "Your gloves protect you from the thorns as you pick the White Pearl fruit.", 250, 0, 0);
+
+// eating it: Void's item data (heals 20, the seed is left over) and its message
+[opheld3,mdaughter_white_pearl_fruit]
+def_int $slot = last_slot;
+anim(human_eat, 0);
+inv_delslot(inv, $slot);
+inv_setslot(inv, $slot, mdaughter_white_pearl_seed, 1);
+stat_heal(hitpoints, 20, 0);
+mes("You eat the White Pearl and spit out the seed when you're done. Mmm, tasty.");
+
+// ---------------------------------------------------------------- Svidi
+[opnpc1,mdaughter_svidi]
+if (%mdaughter_relations_var < 10) {
+    ~chatnpc("<p,angry>Who is asking? You're an outerlander, aren't you?"); // ours: before Hamal sends you
+    return;
+}
+if (inv_total(inv, mdaughter_safety_guarantee) > 0 & %mdaughter_relations_var < 50) {
+    ~chatplayer("<p,happy>Brundt gave me the guarantee of safe passage to give to you!");
+    ~chatnpc("<p,neutral>Let me see that, I want to be sure it's authentic.");
+    ~chatplayer("<p,neutral>Here you go.");
+    inv_del(inv, mdaughter_safety_guarantee, 1);
+    ~chatnpc("<p,neutral>Hmmm...");
+    ~chatnpc("<p,happy>Okay, this looks valid enough. I'll go and talk to Brundt.");
+    ~chatplayer("<p,happy>Great!");
+    %mdaughter_relations_var = 50;
+    return;
+}
+if (%mdaughter_relations_var >= 50) {
+    ~chatnpc("<p,happy>Okay, this looks valid enough. I'll go and talk to Brundt."); // ours: his last words again
+    return;
+}
+if (%mdaughter_relations_var >= 20) {
+    ~chatplayer("<p,quiz>Weren't you on your way to Rellekka?");
+    ~chatnpc("<p,quiz>Weren't you on your way to get me a guarantee of safe passage into Rellekka?");
+    if (%mdaughter_relations_var < 30) {
+        ~chatplayer("<p,neutral>Oh yes, I almost forgot.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Brundt doesn't want to talk to any representative until your tribe gives back some rock or other.");
+    ~chatnpc("<p,neutral>In that case I'm staying right here. I don't have the authority to trade away our rock.");
+    ~chatnpc("<p,angry>Besides, it's ours and he can't have it.");
+    return;
+}
+~chatplayer("<p,quiz>Are you, by any chance, Svidi? Sent by Hamal to talk to Brundt and the council of Rellekka?");
+~chatnpc("<p,quiz>Maybe... who is asking? You're an outerlander, aren't you?");
+~chatplayer("<p,neutral>Yes, but Hamal asked me to rescue you from a Rellekka prison. What are you doing here?");
+~chatnpc("<p,sad>I haven't actually been in Rellekka yet...");
+~chatplayer("<p,quiz>Why, can't you find the way?");
+~chatnpc("<p,sad>Well, I'm not actually sure if I should go in there, you see.");
+~chatplayer("<p,quiz>Why not?");
+~chatnpc("<p,sad>I've always been told that the people of Rellekka are ignorants, almost as bad as other outerlanders. I think they might kill me if I go there.");
+~chatplayer("<p,neutral>Nonsense. I'm an outerlander and I haven't killed you either!");
+~chatnpc("<p,neutral>Yes, but you're on your own, they have a whole village.");
+~chatnpc("<p,sad>So I don't want to go in there, but I don't want to go back to the camp and tell Hamal that I didn't dare to go to Rellekka either.");
+if (~p_choice2("Aren't you supposed to be a ferocious warrior?", 1, "Can't I persuade you to go in there somehow?", 2) = 1) {
+    ~chatplayer("<p,quiz>Aren't you supposed to be a ferocious warrior?");
+    ~chatnpc("<p,neutral>Not all of us are warriors.");
+    ~chatnpc("<p,neutral>Some of us are schooled in the fine art of diplomacy.");
+    return;
+}
+~chatplayer("<p,quiz>Can't I persuade you to go in there somehow?");
+~chatnpc("<p,neutral>I won't go in there unless I know it's safe.");
+~chatplayer("<p,quiz>Do you want me to go with you as your bodyguard?");
+~chatnpc("<p,angry>You? But you're an outerlander! You'd probably lead me to a cave to kill me yourself!");
+~chatplayer("<p,quiz>What if I get you some kind of guarantee of safe passage from the village? Will that do?");
+~chatnpc("<p,neutral>Hmmmm...");
+~chatnpc("<p,neutral>Yes, that will do.");
+%mdaughter_relations_var = 20;
+
+// ---------------------------------------------------------------- Brundt (hooked in viking_brundt.rs2)
+[proc,md_brundt]()(boolean)
+if (%mdaughter_quest_var < ^md_asleif_tasks | %mdaughter_relations_var < 10 | %mdaughter_relations_var >= 50) return(false);
+if (%mdaughter_brundt_done = 1 & inv_total(inv, mdaughter_safety_guarantee) > 0) return(false);
+if (~p_choice2("Ask about the mountain camp.", 1, "Ask about anything else.", 2) = 2) return(false);
+if (%mdaughter_brundt_done = 1) {
+    // ours: the guarantee again, if it was lost before Svidi had it
+    ~chatplayer("<p,quiz>Can I have that guarantee of safe passage, then, to give to the representative?");
+    ~chatnpc("<p,neutral>Oh yes, here it is.");
+    ~md_give_guarantee;
+    return(true);
+}
+if (inv_total(inv, mdaughter_half_rock) > 0) {
+    ~chatplayer("<p,happy>I've brought you back your rock!");
+    ~chatnpc("<p,quiz>Really? Let me see!");
+    inv_del(inv, mdaughter_half_rock, 1);
+    %mdaughter_brundt_done = 1;
+    ~chatnpc("<p,confused>This rock seems a lot smaller than our bard made it out to be.");
+    ~chatplayer("<p,neutral>Well, it's not the whole rock, it's part of the rock...");
+    ~chatplayer("<p,neutral>I split it in two.");
+    if (%viking >= ^viking_complete) {
+        ~chatnpc("<p,happy>You truly have the Fremennik spirit in you, <~md_name>.");
+    } else {
+        ~chatnpc("<p,happy>You are unusually insightful for an outerlander!");
+    }
+    ~chatnpc("<p,neutral>Yes, we are satisfied with sharing the rock. I'll meet with this representative and will inform the council to join us here in the longhall.");
+    if (%viking >= ^viking_complete) ~chatnpc("<p,neutral>Although I see that Manni is already here.");
+    ~chatplayer("<p,quiz>Can I have that guarantee of safe passage, then, to give to the representative?");
+    ~chatnpc("<p,neutral>Oh yes, here it is.");
+    ~md_give_guarantee;
+    return(true);
+}
+if (%mdaughter_relations_var >= 30) {
+    ~chatplayer("<p,quiz>Why won't you meet with the representative of the mountain camp?");
+    ~chatnpc("<p,neutral>Like I said, we don't want anything to do with them until they give back our ancient rock.");
+    return(true);
+}
+~chatplayer("<p,neutral>The chieftain from the mountain camp has sent a representative to Rellekka!");
+if (%viking >= ^viking_complete) {
+    ~chatnpc("<p,neutral>That is intriguing news, <~md_name>, but we have not seen him yet.");
+} else {
+    ~chatnpc("<p,neutral>Very unusual, outerlander, but we have not seen him yet.");
+}
+~chatplayer("<p,neutral>Well, that's the problem, he doesn't dare to come into Rellekka. He's afraid he's going to get hurt.");
+~chatnpc("<p,laugh>What? He's not much of a warrior, is he?");
+~chatplayer("<p,neutral>That's what I thought. He says he wants a guarantee of safety.");
+~chatnpc("<p,neutral>I will meet with this man on one condition, outerlander.");
+~chatnpc("<p,angry>When their group split off from Rellekka, they stole one of the ancient relics of the Fremennik. Our ancient rock.");
+~chatplayer("<p,quiz>Ancient rock? What did it do?");
+~chatnpc("<p,confused>Do?");
+def_int $c = ~p_choice4("Did it contain vast magical powers?", 1, "Did it give the owner unimaginable strength?", 2, "Was it the eternal prison of an immortal demon?", 3, "Did it look pretty?", 4);
+switch_int ($c) {
+    case 1 : ~chatplayer("<p,quiz>Did it contain vast magical powers?");
+    case 2 : ~chatplayer("<p,quiz>Did it give the owner unimaginable strength?");
+    case 3 : ~chatplayer("<p,quiz>Was it the eternal prison of an immortal demon?");
+    case 4 :
+        ~chatplayer("<p,quiz>Did it look pretty?");
+        ~chatnpc("<p,neutral>Hmm, not especially I think...");
+}
+if (%viking >= ^viking_complete) {
+    ~chatnpc("<p,laugh>Amusing, <~md_name>, but as a Fremennik yourself you know better than that.");
+} else {
+    ~chatnpc("<p,neutral>No, no, no. Little do you understand our ways, outerlander.");
+}
+~chatnpc("<p,neutral>The rock was just that, a rock. It had no special properties and was in essence no different from any other rock.");
+~chatplayer("<p,quiz>So what did it mean?");
+~chatnpc("<p,neutral>It symbolised our refusal to use the runestones for ourselves, instead relying on our own abilities.");
+~chatnpc("<p,neutral>The people you speak of took the stone with them when they left for the mountains. They claimed their way of living was more pure and closer to nature.");
+~chatplayer("<p,quiz>And is that true?");
+~chatnpc("<p,laugh>Maybe, but where's the harm in a bit of feasting from time to time?");
+~chatnpc("<p,neutral>In any case, before the council and I meet with anyone from their camp, they will have to give our rock back.");
+%mdaughter_relations_var = 30;
+return(true);
+
+[proc,md_give_guarantee]
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, mdaughter_safety_guarantee, 1, 200);
+} else {
+    inv_add(inv, mdaughter_safety_guarantee, 1);
+}
+~objbox(mdaughter_safety_guarantee, "Brundt gives you a guarantee of safe passage.", 250, 0, 0); // ours
+
+// ---------------------------------------------------------------- the Ancient Rock
+// a pickaxe on it (the wiki: use, not click), once Brundt has asked for the rock (ours)
+[oplocu,mdaughter_ancient_rock]
+if (string_indexof_string("pickaxe", lowercase(oc_name(last_useitem))) = -1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%mdaughter_relations_var < 30 | %mdaughter_brundt_done = 1) {
+    mes("You have no reason to do that."); // ours
+    return;
+}
+if (inv_total(inv, mdaughter_half_rock) > 0) {
+    mes("While two halves make one whole, it's better to just have half a rock.");
+    return;
+}
+~mesbox("You take a look around and see none of the camp dwellers about...");
+anim(human_mining_bronze_pickaxe, 0);
+p_delay(2);
+loc_change(mdaughter_ancient_rock_splitting, 10);
+inv_add(inv, mdaughter_half_rock, 1);
+~objbox(mdaughter_half_rock, "With a few swings of your pick, you split off a part of the rock and sneakily put it in your pocket.", 250, 0, 0);
+
+[oplocu,mdaughter_ancient_rock_splitting]
+mes("Someone else just had the same idea!");
+
+// the tent door: the guard stops you on the way out with half a rock
+[oploc1,mdaughter_rocktent_door] @md_rocktent_door;
+[oploc1,mdaughter_rocktent_doorl] @md_rocktent_door;
+
+[label,md_rocktent_door]
+if (coordz(coord) < 3665 & inv_total(inv, mdaughter_half_rock) > 0 & npc_find(coord, mdaughter_ancientrock_guard, 8, 0) = true) {
+    ~chatnpc("<p,angry>What do you have there, outerlander? It's not our rock, is it?");
+    ~chatplayer("<p,neutral>No, of course not! See? It's a completely different rock, it's much smaller.");
+    ~chatnpc("<p,neutral>Alright, you be on your way then.");
+}
+if (coordz(coord) >= 3665) mes("You go into the peculiar looking tent.");
+~eascape_door_walk;

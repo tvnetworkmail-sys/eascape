@@ -12,6 +12,35 @@ if ($s = ^md_started) {
     $next = "@dbl@I should look for her by the @dre@pool@dbl@ beyond the camp, where @dre@Ragnar@dbl@,|@dbl@her fiance, waits. Mud from the pond south of Hamal's tent|@dbl@might help me climb the @dre@tall tree@dbl@, and a @dre@pole@dbl@ and a @dre@plank@dbl@|@dbl@get me across the water.";
 } else {
     $t = append($t, "@str@I heard the voice of his daughter Asleif at the shining|@str@pool. She is dead.||");
-    $next = "@dbl@Asleif asked me to bring her people and @dre@Rellekka@dbl@ closer|@dbl@together, and to find them a new supply of @dre@food@dbl@.";
+    if ($s >= ^md_tasks_done) {
+        $t = append($t, "@str@I brought her people and Rellekka closer together, and|@str@found them a new supply of food.||");
+        $next = "@dbl@I should tell @dre@Asleif@dbl@ at the shining pool.";
+    } else {
+        $next = "@dbl@Asleif asked me to bring her people and @dre@Rellekka@dbl@ closer|@dbl@together, and to find them a new supply of @dre@food@dbl@.||";
+        def_int $r = %mdaughter_relations_var;
+        if (%mdaughter_hamal_relations_done = 1) {
+            $next = append($next, "@str@Svidi has spoken to Brundt, and Hamal is pleased.|");
+        } else if (%mdaughter_brundt_done = 1 & $r >= 50) {
+            $next = append($next, "@dbl@Svidi has gone to Rellekka. I should tell @dre@Hamal@dbl@.|");
+        } else if (%mdaughter_brundt_done = 1) {
+            $next = append($next, "@dbl@I should take Brundt's @dre@safety guarantee@dbl@ to @dre@Svidi@dbl@.|");
+        } else if ($r >= 30) {
+            $next = append($next, "@dbl@Brundt wants the mountain tribe's @dre@ancient rock@dbl@ back.|");
+        } else if ($r >= 20) {
+            $next = append($next, "@dbl@Svidi wants a guarantee of safe passage from @dre@Brundt@dbl@.|");
+        } else if ($r >= 10) {
+            $next = append($next, "@dbl@Hamal's representative @dre@Svidi@dbl@ is somewhere between|@dbl@Rellekka and Keldagrim.|");
+        } else {
+            $next = append($next, "@dbl@I should ask @dre@Hamal@dbl@ about the people of Rellekka.|");
+        }
+        def_int $f = %mdaughter_food_var;
+        if ($f >= 3) {
+            $next = append($next, "@str@Hamal has the seed of the White Pearl.");
+        } else if ($f = 2) {
+            $next = append($next, "@dbl@Jokul spoke of the @dre@White Pearl@dbl@, a fruit that grows in the|@dbl@mountains. I'll need gloves for its thorns.");
+        } else {
+            $next = append($next, "@dbl@I should ask @dre@Hamal@dbl@ and @dre@Jokul@dbl@ about food.");
+        }
+    }
 }
 ~quest_journal("Mountain Daughter", append($t, $next));
