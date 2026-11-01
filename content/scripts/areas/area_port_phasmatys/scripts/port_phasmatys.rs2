@@ -371,3 +371,21 @@ if ($energy > 0) healenergy($energy);
 [label,ahoy_empty_cup](namedobj $empty)
 inv_setslot(inv, last_slot, $empty, 1);
 mes("You empty the cup.");
+
+// ---------------------------------------------------------------- the townsfolk
+// the Ghost Shopkeeper (2009scape GhostShopKeeperDialogue.java); Trade is the shop_keeper category
+[opnpc1,ahoy_ghost_shopkeeper]
+if (~ahoy_ghostspeak = false) return;
+~chatnpc("<p,happy>Can I help you at all?");
+switch_int (~p_choice3("Yes, please. What are you selling?", 1, "How should I use your shop?", 2, "No, thanks.", 3)) {
+    case 1 : ~openshop_activenpc;
+    case 2 : ~chatnpc("<p,happy>I'm glad you ask! You can buy as many of the items stocked as you wish. You can also sell most items to the shop.");
+}
+
+// a Ghost Sailor (2009scape GhostSailorDialogue.java)
+[opnpc1,ahoy_ghost_sailor]
+if (~ahoy_ghostspeak = false) return;
+~chatplayer("<p,quiz>Hi there. Why do you still bother having ships here? I mean - you're dead, what use are they to you?");
+~chatnpc("<p,neutral>We keep ships because we still need trade in Phasmatys. Every trader that comes to Phastmatys is made to worship the Ectofuntus, so that the Ectopower doesn't run out.");
+~chatplayer("<p,quiz>So, without traders to worship in the Temple you're history right?");
+~chatnpc("<p,neutral>Aye, matey.");
