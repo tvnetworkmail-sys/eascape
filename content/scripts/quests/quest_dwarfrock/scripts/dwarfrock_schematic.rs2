@@ -139,7 +139,11 @@ while ($i < 3) {
     if (~bar_schem_flag($i) = true) {
         def_int $x = max(-7, min(7, add(~bar_schem_dx($i), $dx)));
         def_int $y = max(-7, min(7, add(~bar_schem_dy($i), $dy)));
-        ~bar_schem_set($i, modulo(add(~bar_schem_rot($i), $rot), 4), $x, $y);
+        def_int $r = modulo(add(~bar_schem_rot($i), $rot), 4);
+        ~bar_schem_set($i, $r, $x, $y);
+        if ($r = 0 & $x = 0 & $y = 0) {
+            mes("Schematic <tostring(add($i, 1))> looks like it lines up now."); // ours: the overlays don't sit exactly on the base on our screen, so say when one is in place
+        }
     }
     $i = add($i, 1);
 }
@@ -167,3 +171,5 @@ inv_del(inv, dwarf_rock_schematic3, 1);
 inv_add(inv, dwarf_rock_schematic_assembled, 1);
 %dwarfrock_schematics_solved = 1;
 %bar_schem_flags = 0;
+mes("That's it, it all makes sense now! If you were a dwarf, that is..."); // 2007 interface 113's words
+mes("You have assembled the schematic."); // ours
