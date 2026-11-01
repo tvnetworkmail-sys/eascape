@@ -112,6 +112,23 @@ if (map_members = ^false & ~stat_members($stat) = ^true) {
 
 // EASCape: the antique lamp (Fairytale II's reward): 2,500 experience in a skill of level 30 or
 // more (the OSRS wiki); the messages are ours
+// EASCape: One Small Favour's antique lamps: 10,000 experience in a skill of level 30 or more
+// (the OSRS wiki); the messages are ours
+if (%xplamp_kind = 2) {
+    if (stat_base($stat) < 30) {
+        mes("You need at least level 30 in that skill to use this lamp.");
+        return;
+    }
+    if_close;
+    if (inv_total(inv, thosf_reward_lamp) = 0) return;
+    inv_del(inv, thosf_reward_lamp, 1);
+    %xplamp = ^xplamp_none;
+    %xplamp_kind = 0;
+    stat_advance($stat, 100000);
+    sound_synth(found_gem, 1, 0);
+    ~mesbox("You have been awarded 10,000 <enum(stat, string, stat_names, $stat)> experience!");
+    return;
+}
 if (%xplamp_kind = 1) {
     if (stat_base($stat) < 30) {
         mes("You need at least level 30 in that skill to use this lamp.");

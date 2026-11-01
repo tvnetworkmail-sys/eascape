@@ -20,13 +20,14 @@ mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
 
 // ---------------------------------------------------------------- Yanni Salika (Shilo Village)
 [label,osf_hook_shiloantiques]
+if (~osf_yanni_step3 = true) return;
 if (%onesmallfavour = 0) {
     switch_int (~p_choice2("Is there anything else interesting to do around here?", 1, "Tell me about this antiques business.", 2)) {
         case 1 : @osf_yanni_start;
         case 2 : @osf_orig_shiloantiques;
     }
 }
-if (~osf_stage_between(5, 149) = true) {
+if (~osf_stage_between(5, 249) = true) {
     switch_int (~p_choice2("What was I supposed to do again?", 1, "Tell me about this antiques business.", 2)) {
         case 1 :
             ~chatplayer("<p,quiz>What was I supposed to do again?");
@@ -98,6 +99,12 @@ switch_int (~p_choice4("I've forgotten what to do, can you remind me?", 1, "This
 [label,osf_hook_jungleforester_f] @osf_forester(false);
 
 [label,osf_forester](boolean $male)
+if (~osf_stage_between(235, 240) = true) {
+    ~chatnpc("<p,neutral>Hello friend. You're a long way from Lumbridge!");
+    if (~osf_forester_step3 = true) return;
+    if ($male = true) @osf_orig_jungleforester_m;
+    @osf_orig_jungleforester_f;
+}
 if (~osf_stage_between(5, 149) = false) {
     if ($male = true) @osf_orig_jungleforester_m;
     @osf_orig_jungleforester_f;
@@ -189,6 +196,7 @@ if (%onesmallfavour > 10) {
 
 // ---------------------------------------------------------------- Brian (Port Sarim)
 [label,osf_hook_brian]
+if (~osf_brian_step3 = true) return;
 if (~osf_stage_between(15, 149) = false) @osf_orig_brian;
 if (%onesmallfavour > 15) {
     if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) @osf_orig_brian;
@@ -243,6 +251,7 @@ switch_int (~p_choice5("But...what?", 1, "Look, can you sharpen this cursed axe 
 
 // ---------------------------------------------------------------- Aggie (Draynor)
 [label,osf_hook_aggie]
+if (~osf_aggie_step3 = true) return;
 if (~osf_stage_between(20, 44) = false) @osf_orig_aggie;
 ~chatnpc("<p,happy>What can I help you with?");
 if (%onesmallfavour = 20) {
@@ -305,6 +314,7 @@ switch_int (~p_choice3("Where am I supposed to look?", 1, "What am I doing this 
 // ---------------------------------------------------------------- Johanhus (H.A.M. Hideout)
 // (area_ham_hideout/ham_hideout.rs2's Talk-to comes here first)
 [proc,osf_johanhus]()(boolean)
+if (~osf_johanhus_step3 = true) return(true);
 if (%onesmallfavour = 25) {
     ~chatnpc("<p,neutral>Welcome <text_gender("Brother", "Sister")>...to our organisation...ours is a fight for humanity in all its shapes and forms...and to rid mankind of the monsters that exist in our world. We have no quarrel with a fellow <text_gender("brother", "sister")>.");
     if (~p_choice2("I'm looking for Jimmy the Chisel.", 1, "Something else.", 2) = 2) return(false);
@@ -365,6 +375,7 @@ switch_int (~p_choice4("What did you want me to do again?", 1, "Can't you just r
 
 // ---------------------------------------------------------------- Fred the Farmer
 [label,osf_hook_fred_the_farmer]
+if (~osf_fred_step3 = true) return;
 if (~osf_stage_between(45, 54) = false) @osf_orig_fred_the_farmer;
 ~chatnpc("<p,angry>What are you doing on my land?");
 if (%onesmallfavour = 45) {
@@ -391,6 +402,7 @@ if (~p_choice2("What did you suggest I do again?", 1, "Something else.", 2) = 2)
 
 // ---------------------------------------------------------------- Seth Groats
 [opnpc1,favour_seth_groats]
+if (~osf_seth_step3 = true) return;
 if (%onesmallfavour = 50) {
     ~chatnpc("<p,angry>Hello there stranger, what's the meaning of this intrusion? A farmer's hovel is his castle!");
     ~chatplayer("<p,neutral>Sorry for the intrusion, but this is quite urgent. Jimmy the Chisel is being held by fanatics. They won't release him until they get a month's supply of chickens.");
@@ -422,7 +434,7 @@ if (~osf_stage_between(55, 59) = true) {
     ~chatplayer("<p,neutral>Ah yes...I remember now.");
     return;
 }
-if (~osf_stage_between(60, 149) = true) {
+if (~osf_stage_between(60, 214) = true) {
     ~chatnpc("<p,quiz>How are those chicken cages coming along?");
     ~chatplayer("<p,sad>Sorry, but I don't have any yet.");
     return;
@@ -432,8 +444,12 @@ if (~osf_stage_between(60, 149) = true) {
 
 // ---------------------------------------------------------------- Horvik (Varrock)
 [label,osf_hook_horvik_the_armourer]
-if (~osf_stage_between(55, 149) = false) @osf_orig_horvik_the_armourer;
+if (~osf_stage_between(55, 149) = false & ~osf_stage_between(205, 215) = false) @osf_orig_horvik_the_armourer;
 ~chatnpc("<p,quiz>Hello, do you need any help?");
+if (%onesmallfavour >= 205) {
+    if (~osf_horvik_step3 = true) return;
+    @osf_orig_horvik_the_armourer;
+}
 if (%onesmallfavour = 55) {
     if (~p_choice2("Hi, I need to talk to you about chicken cages!", 1, "Something else.", 2) = 2) @osf_orig_horvik_the_armourer;
     ~chatplayer("<p,neutral>Hi, I need to talk to you about chicken cages! Seth Groats has asked me to come and see you!");
@@ -473,8 +489,14 @@ if (~p_choice2("What was I supposed to be doing?", 1, "Something else.", 2) = 2)
 
 // ---------------------------------------------------------------- the Apothecary (Varrock)
 [label,osf_hook_apothecary]
-if (~osf_stage_between(60, 149) = false) @osf_orig_apothecary;
+if (~osf_stage_between(60, 149) = false & ~osf_stage_between(200, 205) = false) @osf_orig_apothecary;
 if (~p_choice2("Talk about One Small Favour.", 1, "Something else.", 2) = 2) @osf_orig_apothecary;
+if (~osf_apothecary_step3 = true) return;
+if (%onesmallfavour >= 200) {
+    ~chatplayer("<p,quiz>What should I do now?"); // ours
+    ~chatnpc("<p,neutral>Bring me an airtight pot and I'll fill it with breathing salts.");
+    return;
+}
 if (%onesmallfavour = 60 | %onesmallfavour = 62) {
     ~chatplayer("<p,neutral>Horvik is ill, I need breathing salts and herbal tincture.");
     ~chatnpc("<p,happy>No problem!");
@@ -533,6 +555,7 @@ switch_int (~p_choice2("Oh, no way am I going to the Barbarian Village.", 1, "I 
 
 // ---------------------------------------------------------------- Tassie Slipcast (Barbarian Village)
 [opnpc1,favour_tassie_slipcast]
+if (~osf_tassie_step3 = true) return;
 if (%onesmallfavour = 65) {
     ~chatplayer("<p,neutral>Hey there...I need an airtight pot just as soon as you can make one!");
     ~chatnpc("<p,angry>I beg your pardon!");
@@ -562,7 +585,7 @@ if (%onesmallfavour = 65) {
     }
     return;
 }
-if (~osf_stage_between(70, 149) = true) {
+if (~osf_stage_between(70, 194) = true) {
     ~chatplayer("<p,neutral>Hey there...I'm back...");
     ~chatnpc("<p,quiz>So I see. What's the problem? Did you sort out Hammerspike?");
     ~chatplayer("<p,sad>Not exactly, can you tell me what I'm supposed to do again?");
@@ -584,13 +607,14 @@ if (~p_choice2("I'm looking for Hammerspike.", 1, "Nothing.", 2) = 2) return; //
 ~chatnpc("<p,neutral>Well, he's around here somewhere, just use your eyes, I'm sure you'll get there one day.");
 
 [opnpc1,favour_hammerspike_stoutbeard]
+if (~osf_hammerspike_step3 = true) return;
 if (%onesmallfavour = 70) {
     ~chatnpc("<p,angry>And who da heck are you?");
     ~chatplayer("<p,neutral>I'm <displayname> and I want to talk to you about a friend of mine, Tassie Slipcast. She says you're putting the screws on her for some loan she had from you. Is this true?");
     ~chatnpc("<p,neutral>And what if it is? Tassie got into an arrangement that is mutually beneficial, as far as I understood it, she was happy with the deal.");
     @osf_hammerspike_options;
 }
-if (~osf_stage_between(75, 149) = true) {
+if (~osf_stage_between(75, 184) = true) {
     ~chatnpc("<p,angry>And what's wrong now?");
     ~chatplayer("<p,quiz>What was it that I was supposed to do for you?");
     ~chatnpc("<p,angry>Go and talk to Sanfew and get him to accept me as a druid initiate!");
@@ -642,6 +666,7 @@ switch_int (~p_choice5("Well, I've come to change the deal!", 1, "Can't you just
 
 // ---------------------------------------------------------------- Sanfew (Taverley)
 [label,osf_hook_sanfew]
+if (~osf_sanfew_step3 = true) return;
 if (~osf_stage_between(75, 149) = false) @osf_orig_sanfew;
 if (%onesmallfavour = 75) {
     if (~p_choice2("Are you taking any new initiates?", 1, "Something else.", 2) = 2) @osf_orig_sanfew;
@@ -717,6 +742,7 @@ switch_int (~p_choice4("What did you need me to do again?", 1, "How do I make th
 
 // ---------------------------------------------------------------- Captain Bleemadge (White Wolf Mountain)
 [label,osf_hook_pilot_white_wolf]
+if (~osf_bleemadge_step3 = true) return;
 if (~osf_stage_between(80, 149) = false) @osf_orig_pilot_white_wolf;
 if (%onesmallfavour <= 84) {
     def_obj $tea = ~osf_guthix_rest_held;
@@ -798,6 +824,7 @@ switch_int (~p_choice5("What do you want me to do?", 1, "What is T.R.A.S.H?", 2,
 
 // ---------------------------------------------------------------- Arhein (Catherby)
 [label,osf_hook_arhein]
+if (~osf_arhein_step3 = true) return;
 if (%onesmallfavour ! 88) @osf_orig_arhein;
 ~chatnpc("<p,happy>Hello! Would you like to trade?");
 if (~p_choice2("I need to talk T.R.A.S.H. to you.", 1, "Something else.", 2) = 2) @osf_orig_arhein;

@@ -15,7 +15,7 @@ switch_obj (last_useitem)
 [label,use_pottery_oven](obj $item)
 switch_obj ($item)
 {
-    case bowl_unfired, piedish_unfired, pot_unfired, plantpot_unfired : @fire_pottery(last_useslot);
+    case bowl_unfired, piedish_unfired, pot_unfired, plantpot_unfired, potlid_unfired : @fire_pottery(last_useslot);
     case default : ~displaymessage(^dm_default);
 };
 
@@ -46,7 +46,12 @@ mes("You now have some soft workable clay.");
 // EASCape: the wheel's picture menu (multiobj3) isn't in our cache, so it's a list; the plant pot
 // (Crafting 19, for Farming's saplings: pottery.struct plantpot_unfired) is on it too (ours)
 def_namedobj $choice = null;
-switch_int (~p_choice5("Pot", 1, "Pie Dish", 2, "Bowl", 3, "Plant pot", 4, "Nothing", 5)) {
+// EASCape: pot lids once Tassie has shown you how (One Small Favour, quest_favour/osf_step3.rs2)
+def_string $last = "Nothing";
+if (%onesmallfavour >= 200) $last = "Pot lid";
+switch_int (~p_choice5("Pot", 1, "Pie Dish", 2, "Bowl", 3, "Plant pot", 4, $last, 5)) {
+    case 5 :
+        if (%onesmallfavour >= 200) $choice = potlid_unfired;
     case 1 : $choice = pot_unfired;
     case 2 : $choice = piedish_unfired;
     case 3 : $choice = bowl_unfired;

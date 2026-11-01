@@ -687,6 +687,12 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~ahoy_complete; // the Ectophial, experience and quest complete scroll (quest_ahoy/ahoy_npcs.rs2)
+} else if (compare($name, "onesmallfavour") = 0) {
+    if (%onesmallfavour >= ^osf_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~osf_complete; // the key ring, two lamps and quest complete scroll (quest_favour/osf_step3.rs2)
 } else if (compare($name, "fenkenstrain") = 0) {
     if (%fenk_quest >= ^fenk_complete) {
         mes("You've already done that quest.");
@@ -772,7 +778,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1747,7 +1753,8 @@ p_telejump(0_49_50_29_51);
 // 3 steel bars for Horvik, a bowl of water and an empty cup for the hot water, 1 harralander,
 // 2 guam leaves and 1 marrentill for Guthix rest, 3,000 coins (gems, mattress, scroll), a chisel
 // for the landing lights' gems, a hammer and a bronze, iron and steel bar for the weather vane,
-// and a rune pickaxe to wield against the Slagilith
+// a rune pickaxe to wield against the Slagilith, 5 pigeon cages for Horvik and an empty pot for
+// the airtight pot (Tassie gives the clay for its lid)
 [debugproc,onesmallfavourpack]
 if (p_finduid(uid) = false) {
     return;
@@ -1766,6 +1773,8 @@ $banked = calc($banked + ~questpack_give(bronze_bar, 1));
 $banked = calc($banked + ~questpack_give(iron_bar, 1));
 $banked = calc($banked + ~questpack_give(steel_bar, 1));
 $banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(pigeons, 5));
+$banked = calc($banked + ~questpack_give(pot_empty, 1));
 ~questpack_done("One Small Favour", $banked);
 
 // ::osfstage <n> - sets One Small Favour's stage (%onesmallfavour: the OSRS wiki transcript's

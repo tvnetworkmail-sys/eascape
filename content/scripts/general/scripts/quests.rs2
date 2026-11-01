@@ -283,6 +283,9 @@ if (%roving_elves_quest >= ^roving_complete) {
 if (%ahoy_questvar >= ^ahoy_complete) {
     $questpoints = add($questpoints, ^ahoy_questpoints);
 }
+if (%onesmallfavour >= ^osf_complete) {
+    $questpoints = add($questpoints, ^osf_questpoints);
+}
 if (%mm_main >= ^mm_complete) {
     $questpoints = add($questpoints, ^mm_questpoints);
 }
@@ -383,7 +386,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:creatureoffenkenstrain, %fenk_quest, ^fenk_complete);
 ~send_quest_progress_colour(questlist:roving_elves, %roving_elves_quest, ^roving_complete);
 ~send_quest_progress_colour(questlist:ahoy, %ahoy_questvar, ^ahoy_complete);
-~send_quest_progress_colour(questlist:onesmallfavour, %onesmallfavour, 1000); // EASCape: its completion value comes with the last step
+~send_quest_progress_colour(questlist:onesmallfavour, %onesmallfavour, ^osf_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);
 ~send_quest_progress_colour(questlist:regicide, %regicide_quest, ^regicide_complete);

@@ -7,6 +7,10 @@ if ($s = 0) {
     return;
 }
 def_string $t = "@str@Yanni Salika asked me to get some red mahogany from the|@str@jungle forester, who wanted something in return...||";
+if ($s >= ^osf_complete) {
+    ~quest_journal("One Small Favour", append($t, "@str@...and a great many other favours besides.||@red@QUEST COMPLETE!"));
+    return;
+}
 def_string $next;
 switch_int ($s) {
     case 5 : $next = "@dbl@I should talk to the @dre@jungle forester@dbl@ south of Shilo Village.";
@@ -42,6 +46,21 @@ switch_int ($s) {
     case 160, 164 : $next = "@dbl@I should repair the @dre@weather vane@dbl@ on Phantuwti's roof:|@dbl@a bronze, an iron and a steel bar, and an anvil.";
     case 165 : $next = "@dbl@I should tell @dre@Phantuwti@dbl@ I've fixed the weather vane.";
     case 170 : $next = "@dbl@I should take the weather report to @dre@Arhein@dbl@ in Catherby.";
+    case 175 : $next = "@dbl@I should ask @dre@Captain Bleemadge@dbl@ if he got his T.R.A.S.H.";
+    case 180 : $next = "@dbl@I should tell @dre@Sanfew@dbl@ that the pilot will take him to the ogres.";
+    case 185 : $next = "@dbl@I should tell @dre@Hammerspike Stoutbeard@dbl@ that Sanfew will take him.";
+    case 188 : $next = "@dbl@I should defeat @dre@Hammerspike's men@dbl@.";
+    case 190 : $next = "@dbl@I should talk to @dre@Hammerspike Stoutbeard@dbl@ again.";
+    case 195 : $next = "@dbl@I should tell @dre@Tassie Slipcast@dbl@ that Hammerspike won't bother her.";
+    case 200 : $next = "@dbl@I should make a pot lid on the wheel, fire it and put it on an|@dbl@empty pot, then take the airtight pot to the @dre@Apothecary@dbl@.";
+    case 205 : $next = "@dbl@I should take the breathing salts and herbal tincture to @dre@Horvik@dbl@.";
+    case 210 : $next = "@dbl@I should take @dre@5 pigeon cages@dbl@ to @dre@Horvik@dbl@.";
+    case 215 : $next = "@dbl@I should take the chicken cages to @dre@Seth Groats@dbl@.";
+    case 220 : $next = "@dbl@I should tell @dre@Johanhus Ulsbrecht@dbl@ the chickens are coming.";
+    case 225 : $next = "@dbl@I should tell @dre@Aggie@dbl@ that Jimmy has been released.";
+    case 230 : $next = "@dbl@I should tell @dre@Brian@dbl@ that Aggie will be his character witness.";
+    case 235 : $next = "@dbl@I should take the sharpened axe to the @dre@jungle forester@dbl@.";
+    case 240 : $next = "@dbl@I should take the red mahogany to @dre@Yanni Salika@dbl@.";
     case default : $next = "@dbl@I should keep working through the favours.";
 }
 ~quest_journal("One Small Favour", append($t, $next));

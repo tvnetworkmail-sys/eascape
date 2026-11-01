@@ -1,0 +1,476 @@
+// EASCape: One Small Favour, step 3: the favours done in turn back to Yanni, and the reward
+// (%onesmallfavour 170 -> 250). Words from the OSRS wiki's quest transcript; the reward from its
+// quest page. The transcript logs no stage values after 150, so these are ours: 175 T.R.A.S.H.
+// sent, 180 Bleemadge agrees, 185 Sanfew agrees, 188 Hammerspike's men set on you, 190 his men
+// beaten, 195 Hammerspike gives in, 200 Tassie shows you pot lids, 205 the breathing salts, 210
+// Horvik has his medicine, 215 the chicken cages, 220 Seth has them, 225 Jimmy released, 230
+// Aggie agrees, 235 the sharpened axe, 240 the red mahogany, 250 complete.
+
+// ---------------------------------------------------------------- Arhein
+[proc,osf_arhein_step3]()(boolean)
+if (~osf_stage_between(170, 249) = false) return(false);
+~chatnpc("<p,happy>Hello again!");
+if (%onesmallfavour = 170) {
+    if (inv_total(inv, favour_weather_report) = 0) return(false);
+    if (~p_choice2("I have the weather report for you.", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>I have the weather report for you.");
+    ~chatnpc("<p,happy>Fantastic...let's see it!");
+    ~mesbox("You show the weather report to Arhein.");
+    inv_del(inv, favour_weather_report, 1);
+    %onesmallfavour = 175;
+    ~chatnpc("<p,neutral>Wonderful...well the weather report is slightly unspecific, but I feel much better anyway for getting it. Hopefully now the Seers will take some responsibility if my ships go down to the bottom of the ocean.");
+    ~chatnpc("<p,neutral>I'll get one of my associates to take some T.R.A.S.H to your Gnome Glider Pilot friend on White Wolf mountain. Once again, many thanks for your help.");
+    ~chatplayer("<p,happy>Thanks!");
+    return(true);
+}
+if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>Is that T.R.A.S.H. all sorted?");
+~chatnpc("<p,neutral>Indeed it is. One of my associates has taken some to your Gnome Glider Pilot friend on White Wolf mountain. Once again, many thanks for your help.");
+~chatplayer("<p,happy>Thanks!");
+return(true);
+
+// ---------------------------------------------------------------- Captain Bleemadge
+[proc,osf_bleemadge_step3]()(boolean)
+if (%onesmallfavour ! 175) return(false);
+if (~p_choice2("Hey there, did you get your T.R.A.S.H?", 1, "Chat about Gliders", 2) = 2) return(false);
+~chatplayer("<p,quiz>Hey there, did you get your T.R.A.S.H? Arhein said that he'd send one of this associates up with it.");
+%onesmallfavour = 180;
+~chatnpc("<p,happy>Oh, yes, thanks...I've already installed it. I should go like the wind now! Tell Sanfew, that yakking old druid, I'll be happy to take him to the ogre area now...and yourself of course if you should like to go.");
+~chatplayer("<p,happy>Ok then...thanks I will!");
+return(true);
+
+// ---------------------------------------------------------------- Sanfew
+[proc,osf_sanfew_step3]()(boolean)
+if (%onesmallfavour ! 180) return(false);
+~chatnpc("<p,quiz>What can I do for you young 'un?");
+if (~p_choice2("Hi there, the Gnome Pilot has agreed to take you to see the ogres!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,happy>Hi there, the gnome Pilot has agreed to take you to see the ogres!");
+%onesmallfavour = 185;
+~chatnpc("<p,happy>What's that? He's agreed to take me...well that's wonderful! Many thanks.");
+~chatnpc("<p,neutral>Please tell that dwarf that he's welcome to come here and train to be an initiate.");
+return(true);
+
+// ---------------------------------------------------------------- Hammerspike and his men
+[proc,osf_hammerspike_step3]()(boolean)
+if (%onesmallfavour = 185 | %onesmallfavour = 188) {
+    ~chatnpc("<p,neutral>Oh, it's you! Back are you then?");
+    if (%onesmallfavour = 185) {
+        ~chatplayer("<p,happy>Yep and with good news...your life is about to change for the better. I've persuaded Sanfew to take you in as an initiate!");
+        ~chatnpc("<p,laugh>Ha, ha ha ha! How funny is that! I've gone and changed my mind now! I've decided that I make a far better gangster than I ever would a druid!");
+        %onesmallfavour = 188;
+        %osf_gang_kills = 0;
+    }
+    ~chatnpc("<p,angry>My men are going to deal with you!");
+    ~osf_gang_attack;
+    return(true);
+}
+if (%onesmallfavour = 190) {
+    ~chatnpc("<p,neutral>Well...sure if you're not full of surprises then...I guess I'll have to either hire more men to try and kill you or forget Tassie's loan.");
+    ~chatplayer("<p,neutral>Ok, you promise me that you won't bother Tassie anymore and I'll leave you alone.");
+    ~chatnpc("<p,angry>Ok then, fair enough....I'll leave her alone...but I'm going to deal with you personally one of these days!");
+    ~chatplayer("<p,angry>I'll be ready for you whenever you want to take a shot Hammerspike...I'm not afraid of you! You're just a bully who can't fight his own battles.");
+    %onesmallfavour = 195;
+    return(true);
+}
+return(false);
+
+// his three men come at you (ours: whichever are within 15 squares)
+[proc,osf_gang_attack]
+npc_findall(coord, favour_gangster_dwarf, 15, 0);
+while (npc_findnext = true) npc_setmode(opplayer2);
+npc_findall(coord, favour_gangster_dwarf_2, 15, 0);
+while (npc_findnext = true) npc_setmode(opplayer2);
+npc_findall(coord, favour_gangster_dwarf_3, 15, 0);
+while (npc_findnext = true) npc_setmode(opplayer2);
+
+[ai_queue3,favour_gangster_dwarf] @osf_gang_death;
+[ai_queue3,favour_gangster_dwarf_2] @osf_gang_death;
+[ai_queue3,favour_gangster_dwarf_3] @osf_gang_death;
+
+[label,osf_gang_death]
+gosub(npc_death);
+if (npc_findhero = ^true) {
+    queue(osf_gang_beaten, 0, 0);
+}
+
+[queue,osf_gang_beaten]
+if (%onesmallfavour ! 188) return;
+%osf_gang_kills = add(%osf_gang_kills, 1);
+if (%osf_gang_kills >= 3) {
+    %onesmallfavour = 190;
+    mes("You've beaten Hammerspike's men."); // ours
+}
+
+// ---------------------------------------------------------------- Tassie
+[proc,osf_tassie_step3]()(boolean)
+if (%onesmallfavour ! 195) return(false);
+~chatplayer("<p,happy>Hey there, Hammerspike won't be bothering you anymore!");
+~chatnpc("<p,happy>Really! Fantastic! Oh, I'm so grateful! Thanks so much! How ever can I repay you?");
+~chatplayer("<p,neutral>Well you could make me an airtight pot!");
+~chatnpc("<p,happy>I'll do better than that! I'll show you how to make an airtight pot! First of all, you'll need some clay...here's some I have spare!");
+~chatnpc("<p,neutral>Now, while pots are quite easy to make, lids are a bit different. They have to be quite precise to fit the pot exactly, which is why you have to be quite experienced to make them.");
+~osf_give(clay);
+~objbox(clay, "Tassie gives you some clay!", 250, 0, 0);
+~chatnpc("<p,neutral>Ok then, just use it on the wheel over there!");
+%onesmallfavour = 200;
+~mesbox("Tassie shows you how to make pot lids.");
+return(true);
+
+// a pot lid on an empty pot (pottery.rs2 makes the lids from 200 on)
+[opheldu,potlid]
+if (last_useitem ! pot_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, potlid, 1);
+inv_del(inv, pot_empty, 1);
+inv_add(inv, favour_airtight_pot, 1);
+mes("You put the lid on the pot."); // ours
+
+// ---------------------------------------------------------------- the Apothecary ("Talk about One Small Favour." is chosen)
+[proc,osf_apothecary_step3]()(boolean)
+if (%onesmallfavour = 200) {
+    if (inv_total(inv, favour_airtight_pot) = 0) return(false);
+    ~chatplayer("<p,happy>Hey there! I have an airtight pot for you!");
+    ~chatnpc("<p,happy>Wonderful, let me see!");
+    ~mesbox("You show the Apothecary the airtight pot.");
+    ~chatnpc("<p,happy>Huzzah! You have an airtight pot! Wonderful! Ok, let me get some breathing salts into this thing for you!");
+    ~mesbox("The Apothecary busily fills the airtight pot and then quickly seals the lid.");
+    inv_del(inv, favour_airtight_pot, 1);
+    ~osf_give(favour_breathing_salts);
+    %onesmallfavour = 205;
+    ~chatnpc("<p,happy>That's great! Many thanks friend...here's your breathing salts!");
+    ~objbox(favour_breathing_salts, "The Apothecary gives you a pot of breathing salts.", 250, 0, 0);
+    return(true);
+}
+if (%onesmallfavour ! 205) return(false);
+if (~obj_gettotal(favour_breathing_salts) > 0) {
+    ~chatplayer("<p,quiz>What should I do now?");
+    ~chatnpc("<p,neutral>You mentioned something about Horvik, weren't you supposed to take those breathing salts and that herbal tincture to him?");
+    ~chatplayer("<p,neutral>Oh yes, you're right!");
+    return(true);
+}
+~chatplayer("<p,sad>I've lost the breathing salts you gave me, can I have some more please?");
+~chatnpc("<p,angry>Hmmm, it'll cost you another airtight pot, plus 200 gold! I don't have time for people who don't look after stuff I give them.");
+if (inv_total(inv, favour_airtight_pot) = 0) {
+    ~chatplayer("<p,sad>But I don't have an airtight pot.");
+    ~chatnpc("<p,neutral>Well then, you can't have more breathing salts can you!");
+    return(true);
+}
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>But I don't have 200 coins.");
+    ~chatnpc("<p,neutral>Well then, you can't have more breathing salts can you!");
+    return(true);
+}
+if (~p_choice2("Ok, I'll buy it!", 1, "No way am I buying that!", 2) = 1) {
+    ~chatplayer("<p,neutral>Ok, I'll buy it!");
+    inv_del(inv, favour_airtight_pot, 1);
+    inv_del(inv, coins, 200);
+    ~osf_give(favour_breathing_salts);
+    ~objbox(favour_breathing_salts, "The Apothecary gives you the breathing salts.", 250, 0, 0);
+    ~chatnpc("<p,happy>Thanks for your custom!");
+} else {
+    ~chatplayer("<p,angry>No way am I buying that!");
+}
+return(true);
+
+// ---------------------------------------------------------------- Horvik (his greeting is already said)
+// pigeon cages: either kind the cache has (pigeons, with birds in, or the empty pigeoncage)
+[proc,osf_pigeon_cages]()(int)
+return(add(inv_total(inv, pigeons), inv_total(inv, pigeoncage)));
+
+[proc,osf_take_pigeon_cages](int $n)
+def_int $a = min($n, inv_total(inv, pigeons));
+inv_del(inv, pigeons, $a);
+inv_del(inv, pigeoncage, sub($n, $a));
+
+[proc,osf_horvik_step3]()(boolean)
+if (%onesmallfavour = 205) {
+    def_int $t = inv_total(inv, favour_herbal_tincture);
+    def_int $s = inv_total(inv, favour_breathing_salts);
+    if ($t = 0 & $s = 0) return(false);
+    if ($t > 0 & $s = 0) {
+        if (~p_choice2("I have the herbal tincture.", 1, "Something else.", 2) = 2) return(false);
+        ~chatplayer("<p,neutral>I have the herbal tincture.");
+        ~chatnpc("<p,neutral>Well that's no good, I need the breathing salts as well!");
+        return(true);
+    }
+    if ($t = 0) {
+        if (~p_choice2("I have the breathing salts.", 1, "Something else.", 2) = 2) return(false);
+        ~chatplayer("<p,neutral>I have the breathing salts.");
+        ~chatnpc("<p,neutral>Well that's no good, I need the tincture as well!");
+        return(true);
+    }
+    if (~p_choice2("I have the tincture and the breathing salts.", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>I have the tincture and the breathing salts.");
+    inv_del(inv, favour_herbal_tincture, 1);
+    inv_del(inv, favour_breathing_salts, 1);
+    %onesmallfavour = 210;
+    ~chatnpc("<p,happy>Wonderful! That's just great! I just need the pigeon cages now.");
+    return(true);
+}
+if (%onesmallfavour = 210) {
+    def_int $p = ~osf_pigeon_cages;
+    if ($p = 0) {
+        if (~p_choice2("What did you want me to do again?", 1, "Something else.", 2) = 2) return(false);
+        ~chatplayer("<p,quiz>What did you want me to do again?");
+        ~chatnpc("<p,neutral>I need you to get me five pigeon cages, apparently you can get them from Ardougne. When I have them, I can convert them into chicken cages for you.");
+        return(true);
+    }
+    if ($p < 5) {
+        def_string $line = "I only have <tostring($p)> pigeon cages.";
+        if ($p = 1) $line = "I only have a single pigeon cage.";
+        if (~p_choice2($line, 1, "Something else.", 2) = 2) return(false);
+        ~chatplayer("<p,neutral>I only have <tostring($p)> pigeon cages.");
+        ~chatnpc("<p,neutral>Well come back when you have 5, that should be enough for old Seth.");
+        return(true);
+    }
+    if (~p_choice2("I have the five pigeon cages you asked for!", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>I have the five pigeon cages you asked for!");
+    ~chatnpc("<p,happy>Great stuff...let's have them here then! Ah, I can turn my hand to a bit of woodworking on these, great, I do it as a hobby.");
+    ~mesbox("You hand over the pigeon cages.");
+    ~mesbox("Horvik works for sometime on the pigeon cages and makes several minor adjustments. Eventually, he comes back to you.");
+    ~osf_take_pigeon_cages(5);
+    inv_add(inv, favour_chicken_cage, 5);
+    %onesmallfavour = 215;
+    ~chatnpc("<p,happy>There you go then! There's your chicken cages!");
+    return(true);
+}
+if (%onesmallfavour ! 215) return(false);
+def_int $have = inv_total(inv, favour_chicken_cage);
+if ($have >= 5) return(false);
+def_int $lost = sub(5, $have);
+def_int $cost = multiply($lost, 100);
+def_string $line = "I've lost <tostring($lost)> of the chicken cages!";
+if ($lost = 1) $line = "I've lost a chicken cage!";
+if (~p_choice2($line, 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,sad><$line>");
+if ($lost = 1) {
+    ~chatnpc("<p,neutral>Well, Ok, I'm going to need a pigeon cage to convert it, plus some money for my time, say a 100 gold?");
+} else {
+    ~chatnpc("<p,neutral>Well, Ok, I'm going to need a pigeon cage to convert it, plus some money for my time, say 100 gold per cage?");
+}
+if (~osf_pigeon_cages < $lost) {
+    if ($lost = 1) {
+        ~chatplayer("<p,sad>But I don't have a pigeon cage.");
+        ~chatnpc("<p,neutral>Sorry, but you'll have to get one so that I can convert it.");
+    } else {
+        ~chatplayer("<p,sad>But I don't have <tostring($lost)> pigeon cages...");
+        ~chatnpc("<p,neutral>Sorry, but you'll have to get some so that I can convert them.");
+    }
+    return(true);
+}
+if (inv_total(inv, coins) < $cost) {
+    ~chatplayer("<p,sad>But I don't have <tostring($cost)> gold...");
+    ~chatnpc("<p,neutral>Sorry, but I have to charge for my time!");
+    return(true);
+}
+if (~p_choice2("Ok, I'll pay, here's the pigeon cages and the gold.", 1, "No way am I paying for that!", 2) = 2) {
+    ~chatplayer("<p,angry>No way am I paying for that!");
+    ~chatnpc("<p,neutral>Suit yourself then!");
+    return(true);
+}
+~chatplayer("<p,neutral>Ok, I'll pay, here's the pigeon cages and <tostring($cost)> gold.");
+~osf_take_pigeon_cages($lost);
+inv_del(inv, coins, $cost);
+inv_add(inv, favour_chicken_cage, $lost);
+~mesbox("You hand over the pigeon cages and <tostring($cost)> gold coins.");
+~objbox(favour_chicken_cage, "Horvik hands back the chicken cages.", 250, 0, 0);
+~chatnpc("<p,happy>There you go then!");
+~chatplayer("<p,happy>Many thanks.");
+return(true);
+
+// ---------------------------------------------------------------- Seth Groats
+[proc,osf_seth_step3]()(boolean)
+if (%onesmallfavour = 215) {
+    ~chatnpc("<p,quiz>How are those chicken cages coming along?");
+    def_int $have = inv_total(inv, favour_chicken_cage);
+    if ($have = 0) {
+        ~chatplayer("<p,sad>Sorry, but I don't have any yet.");
+        return(true);
+    }
+    if ($have < 5) {
+        ~chatplayer("<p,neutral>I have some chicken cages!");
+        ~chatnpc("<p,neutral>Well, I need at least five! Come back when you've got that many!");
+        return(true);
+    }
+    ~chatplayer("<p,happy>Here they are! I've got all five!");
+    ~mesbox("You show Seth the chicken cages.");
+    inv_del(inv, favour_chicken_cage, 5);
+    %onesmallfavour = 220;
+    ~chatnpc("<p,happy>Well that's great! Well done! You can go and talk to those fanatics now and tell them that they'll get their chickens and they can let little Jimmy the Chisel go! Once again, thanks for your help.");
+    return(true);
+}
+if (%onesmallfavour = 220) {
+    ~chatnpc("<p,neutral>Thanks for getting us those chicken cages...you can go and talk to those fanatics now and get Jimmy released.");
+    return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- Fred, Johanhus, Aggie
+[proc,osf_fred_step3]()(boolean)
+if (~osf_stage_between(220, 249) = false) return(false);
+~chatnpc("<p,angry>What are you doing on my land?");
+if (~p_choice2("Don't worry about Jimmy. His release is imminent!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,happy>Don't worry about Jimmy. His release is imminent!");
+~chatnpc("<p,happy>Oh, that's wonderful...many thanks for your help...just wonderful.");
+return(true);
+
+[proc,osf_johanhus_step3]()(boolean)
+if (%onesmallfavour ! 220) return(false);
+~chatnpc("<p,neutral>Welcome <text_gender("Brother", "Sister")>...to our organisation...ours is a fight for humanity in all its shapes and forms...and to rid mankind of the monsters that exist in our world. We have no quarrel with a fellow <text_gender("brother", "sister")>.");
+if (~p_choice2("You're in luck, I've managed to swing that chicken deal for you.", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,happy>You're in luck, I've managed to swing that chicken deal for you.");
+~chatnpc("<p,neutral>Hmmm. Congratulations on your achievement, your help will ensure the success of our venture and we can surely take our efforts forwards. Tell me, won't you consider joining our calling?");
+~chatplayer("<p,neutral>Thanks for the offer, but I'm sort of in the middle of something currently.");
+~chatnpc("<p,neutral>Right...well please consider it an open offer...Ok then...thanks and goodbye.");
+~chatplayer("<p,angry>Hold on! Aren't you forgetting something?");
+~chatnpc("<p,confused>What? Sorry? Please calm down!");
+~chatplayer("<p,angry>You said that you would release Jimmy! Are you going to keep to your word or am I going to have to get angry?");
+~chatnpc("<p,neutral>Oh my dear friend...please...there's no need to get so upset...of course we're going to release Jimmy. Oh dear, you do take things a bit seriously don't you?");
+~chatplayer("<p,angry>Good...I have things to do and I've had enough of people messing me about.");
+~chatnpc("<p,neutral>Ok, I understand...please don't worry. I'll release Brother Jimmy now! Tell his employer that he'll be there shortly.");
+%onesmallfavour = 225;
+~chatplayer("<p,angry>Very well...but if you're lying, I'll be back and I won't be happy!");
+return(true);
+
+[proc,osf_aggie_step3]()(boolean)
+if (%onesmallfavour ! 225) return(false);
+~chatnpc("<p,happy>What can I help you with?");
+if (~p_choice2("Good news! Jimmy has been released!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,happy>Good news! Jimmy has been released! Those fanatical HAM people said they'd let him go!");
+%onesmallfavour = 230;
+~chatnpc("<p,happy>Yes! He's just returned! I'll happily be a character witness for Brian now! Please let him know that I'll help his friend however I can.");
+return(true);
+
+// ---------------------------------------------------------------- Brian
+[proc,osf_brian_step3]()(boolean)
+if (%onesmallfavour = 230) {
+    if (~p_choice2("I've returned with good news.", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>I've returned with good news. Aggie has agreed to be your character witness!");
+    ~chatnpc("<p,sad>Well, I wish I could be more happy, but I've just had some bad news.");
+    ~chatplayer("<p,quiz>What's that?");
+    ~chatnpc("<p,sad>Well, it seems that my friend was even more desperate than I had originally realised. He's gone to hide away from the authorities in the wilderness...what a lunatic!");
+    ~chatnpc("<p,sad>I've heard that he's wandered into the lava maze in the most dangerous part of the wilderness!");
+    ~chatplayer("<p,quiz>Well...what's going to happen now?");
+    ~chatnpc("<p,neutral>Well, I was wondering if you could do me just one small favour? Please could you go and fetch him back again for me?");
+    ~chatplayer("<p,angry>You have got to be kidding!");
+    ~chatnpc("<p,laugh>Well....yes...I was....actually!");
+    ~osf_give(favour_jungleforesteraxe_sharp);
+    %onesmallfavour = 235;
+    ~objbox(favour_jungleforesteraxe_sharp, "Brian hands you the sharpened axe.", 250, 0, 0);
+    ~chatnpc("<p,laugh>Here you go, here's your axe! And very many thanks for your help and a good laugh! You should have seen your face! Oh what a picture!");
+    return(true);
+}
+if (~osf_stage_between(235, 249) = false) return(false);
+if (%onesmallfavour = 235 & ~obj_gettotal(favour_jungleforesteraxe_sharp) = 0) {
+    if (~p_choice2("I've lost that sharpened axe you gave me?", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,sad>I've lost that sharpened axe you gave me?");
+    ~chatplayer("<p,sad>Can I get another one please?");
+    ~chatnpc("<p,neutral>Sure, here, you go.");
+    ~osf_give(favour_jungleforesteraxe_sharp);
+    return(true);
+}
+if (~p_choice2("Hey, how's it going?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>Hey, how's it going?");
+~chatnpc("<p,happy>Ok thanks. My friend passes on his gratitude for asking Aggie to be a character witness.");
+return(true);
+
+// ---------------------------------------------------------------- the jungle forester (his greeting is already said)
+[proc,osf_forester_step3]()(boolean)
+if (%onesmallfavour = 235 & inv_total(inv, favour_jungleforesteraxe_sharp) > 0) {
+    if (~p_choice2("Good news, I have your sharpened axe!", 1, "Something else.", 2) = 2) return(false);
+    ~chatplayer("<p,happy>Good news, I have your sharpened axe!");
+    ~chatnpc("<p,happy>Ah, great!");
+    ~chatplayer("<p,neutral>Yep, here it is... at long last!");
+    ~chatnpc("<p,neutral>Yeah, you've been a while... I mean, I could have just gone and done it myself! It probably wouldn't have taken so long.");
+    ~chatplayer("<p,angry>Why you ungrateful...");
+    ~chatnpc("<p,neutral>Hang on a minute... there's no need to get so angry. Here's that red mahogany you wanted.");
+    inv_del(inv, favour_jungleforesteraxe_sharp, 1);
+    ~osf_give(favour_mahogany_log);
+    %onesmallfavour = 240;
+    ~objbox(favour_mahogany_log, "The jungle forester shows you the red mahogany log.", 250, 0, 0);
+    ~chatnpc("<p,happy>Okay, thanks for getting my axe sharpened for me!");
+    return(true);
+}
+if (%onesmallfavour ! 240 | ~obj_gettotal(favour_mahogany_log) > 0) return(false);
+if (~p_choice2("I've lost that red mahogany you gave me!", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,sad>I've lost that red mahogany you gave me!");
+~chatnpc("<p,neutral>Well, I can get you another piece but you're going to have to pay for my time... 200 coins I'll want.");
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>But I don't have 200 gold coins!");
+    ~chatnpc("<p,neutral>Sorry friend, I know you did me a small favour, but I have to earn a crust too!");
+    return(true);
+}
+if (~p_choice2("Okay, here's 200 coins for some red mahogany.", 1, "I won't pay you 200 coins for a piece of wood!", 2) = 1) {
+    ~chatplayer("<p,neutral>Okay, here's 200 coins for some red mahogany.");
+    inv_del(inv, coins, 200);
+    ~osf_give(favour_mahogany_log);
+    ~objbox(favour_mahogany_log, "The jungle forester gives you a red mahogany log.", 250, 0, 0);
+    ~chatnpc("<p,happy>Many thanks my friend!");
+} else {
+    ~chatplayer("<p,angry>I won't pay you 200 coins for a piece of wood!");
+    ~chatnpc("<p,neutral>Well, suit yourself, I can always find other customers.");
+}
+return(true);
+
+// ---------------------------------------------------------------- Yanni: the end
+[proc,osf_yanni_step3]()(boolean)
+if (%onesmallfavour ! 240 | inv_total(inv, favour_mahogany_log) = 0) return(false);
+if (~p_choice2("Here's the red mahogany you asked for.", 1, "Tell me about this antiques business.", 2) = 2) return(false);
+~chatplayer("<p,happy>Here's the red mahogany you asked for.");
+~chatnpc("<p,happy>Well, that's absolutely wonderful my friend! Many thanks!");
+~chatplayer("<p,confused>What, that's it?");
+~chatnpc("<p,neutral>Well...what were you expecting? I mean, it took you so long I could have gone and got it myself!");
+~chatplayer("<p,angry>What! I've traipsed halfway around Gielinor...");
+~chatplayer("<p,angry>I've negociated with fanatics, dwarven gangsters and arrogant gnomes.");
+~chatplayer("<p,angry>I've fixed ancient weather vanes and gnomish landing lights and fought supernatural rock monsters...");
+~chatplayer("<p,angry>I've filled stodgy mattresses with feathers, made pot lids to help cure an ailing metal-smith...and that's all the thanks I get? 'Thanks!'");
+~chatnpc("<p,neutral>Well, you didn't have to go to so much trouble...");
+~chatplayer("<p,angry>Raarrrhhhh!");
+~chatnpc("<p,neutral>Look, I can see that you're quite upset about this...so here, have this.");
+~mesbox("Yanni shows you a small metallic ring.");
+~chatplayer("<p,quiz>What is it?");
+~chatnpc("<p,neutral>It's a key ring, you can store some of your most valuable keys on it...helps to keep things organised!");
+~chatplayer("<p,confused>A key ring? That's it?");
+~chatnpc("<p,neutral>Well, I only asked you to do me one small favour...");
+~chatplayer("<p,sad>Groan! Yeah, so did everyone else!");
+~chatnpc("<p,neutral>Oh....ok, I guess I could offer you these lamps...I'm not sure what they're worth, but you can have them.");
+~objbox(thosf_reward_lamp, "Yanni offers you two unusual looking lamps.", 250, 0, 0);
+inv_del(inv, favour_mahogany_log, 1);
+~osf_complete;
+return(true);
+
+// the reward (OSRS wiki): 2 quest points, two lamps of 10,000 experience in a skill of level 30+,
+// the steel key ring. Guthix rest (Sanfew's recipe), pot lids (Tassie) and the Feldip Hills
+// glider (osf_glider below) came with the quest.
+[proc,osf_complete]
+%onesmallfavour = ^osf_complete;
+~osf_give(favour_key_ring);
+~osf_give(thosf_reward_lamp);
+~osf_give(thosf_reward_lamp);
+session_log(^log_adventure, "Quest complete: One Small Favour");
+~send_quest_complete(questlist:onesmallfavour, thosf_reward_lamp, 250, ^osf_questpoints, "You have completed\\nOne Small Favour!", "2 Quest Points|2 x 10,000 Experience lamps|A steel key ring|Guthix rest and pot lids|The Feldip Hills glider");
+
+[opheld1,thosf_reward_lamp]
+%xplamp_kind = 2;
+%xplamp = ^xplamp_none;
+if_openmain(xplamp);
+
+// ours: the key ring has no keys to hold here yet
+[opheld1,favour_key_ring]
+mes("There are no keys on your key ring.");
+
+// ---------------------------------------------------------------- the Feldip Hills glider
+// (glidermap com_31 under layer com_25: Lemantolly Undri) once the quest is done; Gnormadium
+// flies you back (ours); you land by his glider, 2544,2970 (ours)
+[proc,osf_glider_show]
+if (%onesmallfavour >= ^osf_complete) {
+    if_sethide(glidermap:com_25, false);
+} else {
+    if_sethide(glidermap:com_25, true);
+}
+
+[if_button,glidermap:com_31]
+if (%onesmallfavour < ^osf_complete) return;
+@gnomeglider_fly(0_39_46_48_26);
