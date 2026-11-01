@@ -1,0 +1,169 @@
+// EASCape: Between a Rock...'s schematic puzzle, on the 2007 screens (interfaces 113 and 114 of the
+// August 2007 cache, tools/dwarfrock/schematic_interfaces.py): the base schematics with the three
+// overlays on top, moved and turned from the side panel until they line up, then "That's it, it all
+// makes sense now! If you were a dwarf, that is...". The rotations are the cache's
+// dwarf_rock_schematicN_rot1-4 (rot1 is unturned, then a quarter turn each). Ours, as no source has
+// the puzzle's server side: each overlay starts turned and moved by a random amount, a move is 6
+// pixels, and it is solved when all three are unturned and back in place.
+
+[proc,bar_schem_rot](int $i)(int)
+def_int $b = multiply($i, 2);
+return(getbit_range(%bar_schem_rot, $b, add($b, 1)));
+
+[proc,bar_schem_dx](int $i)(int)
+def_int $b = multiply($i, 8);
+return(sub(getbit_range(%bar_schem_pos, $b, add($b, 3)), 7));
+
+[proc,bar_schem_dy](int $i)(int)
+def_int $b = add(multiply($i, 8), 4);
+return(sub(getbit_range(%bar_schem_pos, $b, add($b, 3)), 7));
+
+[proc,bar_schem_set](int $i, int $rot, int $dx, int $dy)
+def_int $r = multiply($i, 2);
+%bar_schem_rot = setbit_range_toint(%bar_schem_rot, $rot, $r, add($r, 1));
+def_int $p = multiply($i, 8);
+%bar_schem_pos = setbit_range_toint(%bar_schem_pos, add($dx, 7), $p, add($p, 3));
+%bar_schem_pos = setbit_range_toint(%bar_schem_pos, add($dy, 7), add($p, 4), add($p, 7));
+
+[proc,bar_schem_flag](int $bit)(boolean)
+if (testbit(%bar_schem_flags, $bit) = ^true) return(true);
+return(false);
+
+// the four parts in your pack: the puzzle; Assemble is on each part
+[opheld1,dwarf_rock_base_schematic] @bar_schem_open;
+[opheld1,dwarf_rock_schematic1] @bar_schem_open;
+[opheld1,dwarf_rock_schematic2] @bar_schem_open;
+[opheld1,dwarf_rock_schematic3] @bar_schem_open;
+
+[label,bar_schem_open]
+if (~bar_has_all_schematics = false) {
+    mes("These are only some of the parts. You need all four to put the schematic together."); // ours
+    return;
+}
+if (~bar_schem_flag(6) = false) {
+    // a fresh puzzle: all three shown and selected, each turned and moved at random (ours)
+    def_int $i = 0;
+    while ($i < 3) {
+        ~bar_schem_set($i, add(random(3), 1), sub(random(9), 4), sub(random(9), 4));
+        $i = add($i, 1);
+    }
+    %bar_schem_flags = 127;
+}
+if_openmain_side(bar_schematic, bar_schematic_side);
+~bar_schem_draw;
+
+[proc,bar_schem_draw]
+~bar_schem_draw_one(0, bar_schematic:layer1, bar_schematic:model1, bar_schematic_side:select1_on, bar_schematic_side:show1_on, 172);
+~bar_schem_draw_one(1, bar_schematic:layer2, bar_schematic:model2, bar_schematic_side:select2_on, bar_schematic_side:show2_on, 192);
+~bar_schem_draw_one(2, bar_schematic:layer3, bar_schematic:model3, bar_schematic_side:select3_on, bar_schematic_side:show3_on, 212);
+
+// the ticks: the ticked graphic (laid out at -100,-100) is moved onto the empty one (x 55 Select,
+// x 23 Show) or left off the panel; if_setposition moves a component by that much from its place
+[proc,bar_schem_draw_one](int $i, component $layer, component $model, component $select_on, component $show_on, int $y)
+if_setposition($layer, multiply(~bar_schem_dx($i), 6), multiply(~bar_schem_dy($i), 6));
+def_boolean $shown = ~bar_schem_flag(add($i, 3));
+def_boolean $selected = ~bar_schem_flag($i);
+if ($shown = true) {
+    if_sethide($layer, false);
+    if_setposition($show_on, 123, add($y, 100));
+} else {
+    if_sethide($layer, true);
+    if_setposition($show_on, 0, 0);
+}
+if ($selected = true) {
+    if_setposition($select_on, 155, add($y, 100));
+} else {
+    if_setposition($select_on, 0, 0);
+}
+def_seq $seq = ~bar_schem_seq($i, ~bar_schem_rot($i));
+if_setanim($model, $seq);
+
+[proc,bar_schem_seq](int $i, int $rot)(seq)
+if ($i = 0) {
+    switch_int ($rot) {
+        case 1 : return(dwarf_rock_schematic1_rot2);
+        case 2 : return(dwarf_rock_schematic1_rot3);
+        case 3 : return(dwarf_rock_schematic1_rot4);
+    }
+    return(dwarf_rock_schematic1_rot1);
+}
+if ($i = 1) {
+    switch_int ($rot) {
+        case 1 : return(dwarf_rock_schematic2_rot2);
+        case 2 : return(dwarf_rock_schematic2_rot3);
+        case 3 : return(dwarf_rock_schematic2_rot4);
+    }
+    return(dwarf_rock_schematic2_rot1);
+}
+switch_int ($rot) {
+    case 1 : return(dwarf_rock_schematic3_rot2);
+    case 2 : return(dwarf_rock_schematic3_rot3);
+    case 3 : return(dwarf_rock_schematic3_rot4);
+}
+return(dwarf_rock_schematic3_rot1);
+
+// the side panel
+[if_button,bar_schematic_side:select1_off] ~bar_schem_toggle(0);
+[if_button,bar_schematic_side:select1_on] ~bar_schem_toggle(0);
+[if_button,bar_schematic_side:select2_off] ~bar_schem_toggle(1);
+[if_button,bar_schematic_side:select2_on] ~bar_schem_toggle(1);
+[if_button,bar_schematic_side:select3_off] ~bar_schem_toggle(2);
+[if_button,bar_schematic_side:select3_on] ~bar_schem_toggle(2);
+[if_button,bar_schematic_side:show1_off] ~bar_schem_toggle(3);
+[if_button,bar_schematic_side:show1_on] ~bar_schem_toggle(3);
+[if_button,bar_schematic_side:show2_off] ~bar_schem_toggle(4);
+[if_button,bar_schematic_side:show2_on] ~bar_schem_toggle(4);
+[if_button,bar_schematic_side:show3_off] ~bar_schem_toggle(5);
+[if_button,bar_schematic_side:show3_on] ~bar_schem_toggle(5);
+
+[if_button,bar_schematic_side:up] ~bar_schem_move(0, -1, 0);
+[if_button,bar_schematic_side:down] ~bar_schem_move(0, 1, 0);
+[if_button,bar_schematic_side:left] ~bar_schem_move(-1, 0, 0);
+[if_button,bar_schematic_side:right] ~bar_schem_move(1, 0, 0);
+[if_button,bar_schematic_side:rotate] ~bar_schem_move(0, 0, 1);
+
+[proc,bar_schem_toggle](int $bit)
+if (%dwarfrock_schematics_solved = 1) return;
+if (~bar_schem_flag($bit) = true) {
+    %bar_schem_flags = clearbit(%bar_schem_flags, $bit);
+} else {
+    %bar_schem_flags = setbit(%bar_schem_flags, $bit);
+}
+~bar_schem_draw;
+
+// moves (dx, dy) or turns (rot) the selected overlays; up is -y on screen
+[proc,bar_schem_move](int $dx, int $dy, int $rot)
+if (%dwarfrock_schematics_solved = 1) return;
+def_int $i = 0;
+while ($i < 3) {
+    if (~bar_schem_flag($i) = true) {
+        def_int $x = max(-7, min(7, add(~bar_schem_dx($i), $dx)));
+        def_int $y = max(-7, min(7, add(~bar_schem_dy($i), $dy)));
+        ~bar_schem_set($i, modulo(add(~bar_schem_rot($i), $rot), 4), $x, $y);
+    }
+    $i = add($i, 1);
+}
+~bar_schem_draw;
+~bar_schem_check;
+
+[proc,bar_schem_check]
+def_int $i = 0;
+while ($i < 3) {
+    if (~bar_schem_rot($i) ! 0 | ~bar_schem_dx($i) ! 0 | ~bar_schem_dy($i) ! 0) return;
+    $i = add($i, 1);
+}
+// lined up: the 2007 screen's lined-up overlays and its words
+if_sethide(bar_schematic:layer1, true);
+if_sethide(bar_schematic:layer2, true);
+if_sethide(bar_schematic:layer3, true);
+if_sethide(bar_schematic:solved1, false);
+if_sethide(bar_schematic:solved2, false);
+if_sethide(bar_schematic:solved3, false);
+if_sethide(bar_schematic:done, false);
+inv_del(inv, dwarf_rock_base_schematic, 1);
+inv_del(inv, dwarf_rock_schematic1, 1);
+inv_del(inv, dwarf_rock_schematic2, 1);
+inv_del(inv, dwarf_rock_schematic3, 1);
+inv_add(inv, dwarf_rock_schematic_assembled, 1);
+%dwarfrock_schematics_solved = 1;
+%bar_schem_flags = 0;

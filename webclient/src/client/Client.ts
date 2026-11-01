@@ -6546,6 +6546,7 @@ export class Client extends GameShell {
                 const comId: number = this.in.g2();
 
                 IfType.list[comId].hide = hide;
+                this.redrawSide = true; // EASCape: a side panel shows the change at once (Between a Rock...'s schematic puzzle)
 
                 this.ptype = -1;
                 return true;
@@ -6574,6 +6575,7 @@ export class Client extends GameShell {
 
                 IfType.list[comId].model1Type = 1;
                 IfType.list[comId].model1Id = modelId;
+                this.redrawSide = true; // EASCape: a side panel shows the change at once (Between a Rock...'s schematic puzzle)
 
                 this.ptype = -1;
                 return true;
@@ -6643,6 +6645,7 @@ export class Client extends GameShell {
                 const com: IfType = IfType.list[comId];
                 com.x = x;
                 com.y = y;
+                this.redrawSide = true; // EASCape: a side panel shows the change at once (Between a Rock...'s schematic puzzle)
 
                 this.ptype = -1;
                 return true;

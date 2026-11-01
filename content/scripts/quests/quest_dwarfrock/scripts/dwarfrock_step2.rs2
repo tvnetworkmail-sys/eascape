@@ -3,8 +3,7 @@
 // Words from the OSRS wiki's quest transcript; the gold helmet (3 gold bars, 50 Smithing, 30
 // experience) from its item page; the reward from the quest page; the avatars' combat from Void.
 // Ours: the stage values (60 a new material, 70 the schematics, 80 been inside, 90 the avatar dead),
-// putting the schematics together by "Assemble" on any part when you hold all four (the cache has no
-// schematic puzzle screen), the cannon cutscene told as dialogue, where you land in the rock
+// the cannon cutscene told as dialogue, where you land in the rock
 // (2308,4952) and outside it (2826,10167), how the avatar is chosen when you have under 5 gold ore
 // (one that cannot be hurt), the gold boatman's banking words, and the lines marked "ours".
 
@@ -547,24 +546,7 @@ inv_add(inv, dwarf_rock_base_schematic, 1);
 ~objbox(dwarf_rock_base_schematic, "You tear out the page and find what appears to be one of the schematics you've been looking for! You throw away the ruined book and tuck the schematic safely away.", 250, 0, 0);
 return(true);
 
-// ---------------------------------------------------------------- putting the schematics together (ours)
-[opheld1,dwarf_rock_base_schematic] @bar_assemble;
-[opheld1,dwarf_rock_schematic1] @bar_assemble;
-[opheld1,dwarf_rock_schematic2] @bar_assemble;
-[opheld1,dwarf_rock_schematic3] @bar_assemble;
-
-[label,bar_assemble]
-if (~bar_has_all_schematics = false) {
-    mes("These are only some of the parts. You need all four to put the schematic together."); // ours
-    return;
-}
-inv_del(inv, dwarf_rock_base_schematic, 1);
-inv_del(inv, dwarf_rock_schematic1, 1);
-inv_del(inv, dwarf_rock_schematic2, 1);
-inv_del(inv, dwarf_rock_schematic3, 1);
-inv_add(inv, dwarf_rock_schematic_assembled, 1);
-%dwarfrock_schematics_solved = 1;
-~objbox(dwarf_rock_schematic_assembled, "You lay the transparent overlays on top of the base schematics until they line up. The schematic is complete!", 250, 0, 0); // ours
+// putting the schematics together: the puzzle (dwarfrock_schematic.rs2)
 
 // ---------------------------------------------------------------- inside the rock
 // the helmet's weight (the wiki's messages by tick)
