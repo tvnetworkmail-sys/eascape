@@ -1,0 +1,389 @@
+// EASCape: the H.A.M. Hideout (Wilderness Capes, and Changes, 22 February 2005), between Lumbridge
+// and Draynor. Sources: 2009scape HamHideoutPlugin.java (the trapdoor and its messages, the
+// ladder), Void (the members' pickpocketing and the guards, ham_hideout.*.toml), the OSRS wiki
+// (the lock's chances and xp, the concussions, the people's words). Our choices are marked "ours".
+
+// ---------------------------------------------------------------- the trapdoor (3166,3252)
+// ham_multi_trapdoor shows closed or open by %ham_thief (marketthief bits 14-15): 1 = unlocked
+[oploc1,ham_multi_trapdoor]
+if (%ham_thief = 0) {
+    mes("This trapdoor seems totally locked.");
+    return;
+}
+@ham_trapdoor_down;
+
+[oploc2,ham_multi_trapdoor]
+%ham_thief = 0;
+
+[oploc5,ham_multi_trapdoor]
+anim(human_pickupfloor, 0);
+mes("You attempt to pick the lock on the trap door.");
+p_delay(1);
+anim(human_pickupfloor, 0);
+mes("You attempt to pick the lock on the trap door.");
+// the OSRS wiki: 4% at level 1 to 98% at 99, or 24% to 99% with a lockpick; 4 xp (ours: the
+// lock's 2009scape messages with the wiki's chances)
+def_boolean $success;
+if (inv_total(inv, lockpick) > 0) {
+    $success = stat_random(thieving, 60, 254);
+} else {
+    $success = stat_random(thieving, 10, 250);
+}
+if ($success = false) {
+    mes("You fail to pick the lock - your fingers get numb from fumbling with the lock.");
+    stat_sub(thieving, 1, 0);
+    return;
+}
+mes("You pick the lock on the trap door.");
+stat_advance(thieving, 40);
+%ham_thief = 1;
+// 2009scape locks it again after 40 ticks
+settimer(ham_trapdoor_relock, 40);
+
+[timer,ham_trapdoor_relock]
+%ham_thief = 0;
+cleartimer(ham_trapdoor_relock);
+
+[label,ham_trapdoor_down]
+anim(human_pickupfloor, 0);
+p_delay(1);
+p_telejump(0_49_150_13_52);
+%ham_thief = 0;
+%ham_concussions = 0;
+cleartimer(ham_trapdoor_relock);
+
+// ---------------------------------------------------------------- caught pickpocketing
+// the OSRS wiki (H.A.M. Member): what they say, "slightly concussed" unless your Agility helps
+// you avoid the blow, and the third concussion bundles you out to one of five spots; each piece
+// of H.A.M. clothing worn makes being thrown out about 4% less likely. Ours: no jail cell (the
+// wiki's other outcome); when the clothing saves you, you stay at two concussions.
+[proc,ham_pickpocket_fail](int $stun_ticks, string $pocket)
+switch_int (random(4)) {
+    case 0 : npc_say("Keep thine hands to thineself.");
+    case 1 : npc_say("We deal harshly with thieves around here!");
+    case 2 : npc_say("What do you think you're doing?");
+    case default : npc_say("Stop! Thief!");
+}
+mes("You fail to pick the <$pocket>.");
+npc_setmode(playerface);
+p_delay(0);
+spotanim_pl(stunned_thieving, 124, 0);
+anim(%com_defendanim, 0);
+npc_anim(npc_param(attack_anim), 0);
+sound_synth(stunned, 1, 0);
+p_delay(0);
+// Void: 1-3 damage
+~damage_self(~random_range(1, 3));
+npc_setmode(null);
+mes("You've been stunned!");
+%action_delay = calc(map_clock + $stun_ticks);
+%stunned = calc(map_clock + $stun_ticks);
+walktrigger(stunned);
+if (stat_random(agility, 0, 254) = true) {
+    mes("Your agility helps you partially avoid the blow.");
+    return;
+}
+mes("You feel slightly concussed from the blow.");
+%ham_concussions = add(%ham_concussions, 1);
+if (%ham_concussions < 3) return;
+if (random(100) < multiply(~ham_pieces_worn, 4)) {
+    %ham_concussions = 2;
+    return;
+}
+%ham_concussions = 0;
+mes("You're beaten unconscious and bundled out of the HAM camp.");
+switch_int (random(5)) {
+    case 0 : p_telejump(0_49_50_50_11);
+    case 1 : p_telejump(0_49_50_12_16);
+    case 2 : p_telejump(0_49_50_3_60);
+    case 3 : p_telejump(0_49_50_28_38);
+    case default : p_telejump(0_49_50_3_28);
+}
+
+[proc,ham_pieces_worn]()(int)
+def_int $n = 0;
+if (inv_total(worn, ham_hood) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_shirt) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_robe) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_cloak) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_badge) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_boots) > 0) $n = add($n, 1);
+if (inv_total(worn, ham_gloves) > 0) $n = add($n, 1);
+return($n);
+
+// ---------------------------------------------------------------- the people (OSRS wiki transcripts)
+[opnpc1,favour_johanhus_ulsbrecht]
+~chatnpc("<p,neutral>Welcome <text_gender("brother", "sister")>... to our organisation... Ours is a fight for humanity in all its shapes and forms... and to rid mankind of the monsters that exist in our world.");
+@ham_johanhus_options;
+
+[label,ham_johanhus_options]
+switch_int (~p_choice3("What kind of organisation is this?", 1, "Who are you and what do you do here?", 2, "Ok, thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What kind of organisation is this?");
+        ~chatnpc("<p,neutral>We're a proactive organisation working towards the cessation of monsters in normal civilised human society. There seems to be no backbone in this land so we're stepping up to the challenge.");
+        ~chatplayer("<p,quiz>Hmm, how do you propose to do that? I mean, I see people everyday killing goblins around here!");
+        ~chatnpc("<p,neutral>We're mobilising people and we're starting our own society...cleaning out the caves once inhabited by these foul creatures and defending them so that they can never again shelter sub human species.");
+        ~chatplayer("<p,neutral>That sounds kind of strange, but hey it's your choice.");
+        @ham_johanhus_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Who are you and what do you do here?");
+        ~chatnpc("<p,neutral>My name is Johanhus and I lead these glorious people on a courageous mission called, 'Humans against Monsters', we mean to make this land free of monsters so we can all live in peace.");
+        @ham_johanhus_options;
+    case 3 :
+        ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[opnpc1,favour_jimmy]
+~chatnpc("<p,happy>Hello mate!");
+
+// the members and the guards say the same (the wiki's H.A.M. Guard and RS wiki's H.A.M. Member)
+[opnpc1,favour_male_ham_civilian] @ham_member_talk;
+[opnpc1,favour_female_ham_civilian] @ham_member_talk;
+[opnpc1,favour_npc_chair] @ham_member_talk;
+[opnpc1,favour_npc_floor] @ham_member_talk;
+[opnpc1,favour_guard_male_no_beard] @ham_member_talk;
+[opnpc1,favour_guard_male_bearded] @ham_member_talk;
+[opnpc1,favour_guard_long_beard] @ham_member_talk;
+
+[label,ham_member_talk]
+if (~ham_pieces_worn = 7) {
+    ~chatnpc("<p,happy>Hello, <text_gender("brother", "sister")>, you fit in much better now that you're correctly attired. Before you stuck out like a sore thumb! Keep your eyes peeled though; I've heard there are thieves amongst us!");
+}
+@ham_member_options;
+
+[label,ham_member_options]
+switch_int (~p_choice5("What are all you people doing here?", 1, "Who are you and what do you do here?", 2, "What do you think you're going to achieve?", 3, "Where did all you people come from?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What are all you people doing here?");
+        switch_int (random(3)) {
+            case 0 : ~chatnpc("<p,neutral>Many of us disagree with the king about what freedoms the local monster population should have. We're taking a stand and mobilising our forces against the monstrous hordes.");
+            case 1 : ~chatnpc("<p,neutral>I'm totally in awe of Johanhus, he really knows what's what. I know he keeps going on about monsters and it's clear there are too many of them, so hey, I agree with whatever Johanhus says.");
+            case default : ~chatnpc("<p,neutral>We're against the monsters..like Johanhus says...we don't like them...you know.");
+        }
+        @ham_member_options;
+    case 2 :
+        ~chatplayer("<p,quiz>Who are you and what do you do here?");
+        ~chatnpc("<p,neutral>I'm a strong believer in the non-monsters policy...we should really get rid of them...and if that means I have to live in a cave like a monster, so be it!");
+        @ham_member_options;
+    case 3 :
+        ~chatplayer("<p,quiz>What do you think you're going to achieve?");
+        ~chatnpc("<p,neutral>We want a world without monsters, to live in safety and without fear of being attacked by these ferocious beasts.");
+        ~chatplayer("<p,neutral>But there aren't that many ferocious beasts in the towns and cities.");
+        ~chatnpc("<p,neutral>That's not enough, we want to get rid of them totally, we want to enjoy the surrounding lands and not worry about our children playing in caves and so on.");
+        @ham_member_options;
+    case 4 :
+        ~chatplayer("<p,quiz>Where did all you people come from?");
+        ~chatnpc("<p,neutral>Most of us came from small towns that had been attacked by monsters. We all got fed up with it and so decided to join this movement. We're hoping to return to the towns and cities when we've cleaned up the areas that these monsters live in.");
+    case 5 :
+        ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+// ---------------------------------------------------------------- pickpocketing H.A.M. members
+// Void ham_member_pickpocket: 1/50 an easy clue scroll, else the secondary table (roll 561, the
+// 60 left over are nothing). Names are ours (ham_badge is Void's ham_logo, digsite* its buttons,
+// damaged armour and rusty sword).
+[proc,ham_pickpocket_loot]
+if (random(50) = 0) {
+    def_namedobj $clue = ~trail_geteasyclue;
+    if ($clue ! null) inv_add(inv, $clue, 1);
+    return;
+}
+def_int $r = random(561);
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_boots, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_cloak, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_gloves, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_hood, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_badge, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_robe, 1, 1);
+    return;
+}
+$r = sub($r, 5);
+if ($r < 0) {
+    ~ham_give(ham_shirt, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(bronze_arrow, 1, 13);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(bronze_axe, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(bronze_dagger, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(bronze_pickaxe, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(iron_axe, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(iron_dagger, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(iron_pickaxe, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(leather_armour, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(steel_arrow, 1, 13);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(steel_axe, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(steel_dagger, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(steel_pickaxe, 1, 1);
+    return;
+}
+$r = sub($r, 20);
+if ($r < 0) {
+    ~ham_give(digsitebuttons, 1, 1);
+    return;
+}
+$r = sub($r, 85);
+if ($r < 0) {
+    ~ham_give(coins, 2, 21);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(feather, 1, 7);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(knife, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(logs, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(needle, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(raw_anchovies, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(raw_chicken, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(thread, 1, 10);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(tinderbox, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(uncut_opal, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(coal, 1, 1);
+    return;
+}
+$r = sub($r, 15);
+if ($r < 0) {
+    ~ham_give(cow_hide, 1, 1);
+    return;
+}
+$r = sub($r, 20);
+if ($r < 0) {
+    ~ham_give(digsitearmour1, 1, 1);
+    return;
+}
+$r = sub($r, 6);
+if ($r < 0) {
+    ~ham_give(unidentified_guam, 1, 1);
+    return;
+}
+$r = sub($r, 3);
+if ($r < 0) {
+    ~ham_give(unidentified_marentill, 1, 1);
+    return;
+}
+$r = sub($r, 2);
+if ($r < 0) {
+    ~ham_give(unidentified_tarromin, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(iron_ore, 1, 1);
+    return;
+}
+$r = sub($r, 20);
+if ($r < 0) {
+    ~ham_give(digsitesword, 1, 1);
+    return;
+}
+$r = sub($r, 10);
+if ($r < 0) {
+    ~ham_give(uncut_jade, 1, 1);
+    return;
+}
+
+[proc,ham_give](namedobj $obj, int $min, int $max)
+inv_add(inv, $obj, ~random_range($min, $max));

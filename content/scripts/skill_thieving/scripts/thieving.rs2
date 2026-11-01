@@ -12,6 +12,10 @@ if(npc_stat(hitpoints) = 0) {
 if (~check_if_success_pick_pocket($data) = false) {
     def_int $stun_ticks = db_getfield($data, pickpocket:stun_ticks, 0);
     def_int $stun_damage = db_getfield($data, pickpocket:stun_damage, 0);
+    if ($data = pickpocket_ham_member) { // EASCape: H.A.M. members (area_ham_hideout/ham_hideout.rs2)
+        ~ham_pickpocket_fail($stun_ticks, $pocket);
+        return;
+    }
     ~fail_pick_pocket($stun_damage, $stun_ticks, $pocket);
     return;
 }
@@ -162,6 +166,10 @@ loc_change(loc_2572, $respawn_ticks); //looted chest
 
 
 [proc,pick_pocket_check_for_reward](dbrow $data)
+if ($data = pickpocket_ham_member) { // EASCape: H.A.M. members (area_ham_hideout/ham_hideout.rs2)
+    ~ham_pickpocket_loot;
+    return;
+}
 def_int $count = calc(db_getfieldcount($data, pickpocket:loot) - 1);
 def_int $reward_rarity_denominator = 128;
 while ($count >= 0) {

@@ -1731,3 +1731,14 @@ $shield = inv_getobj(worn, ^wearpos_lhand);
 if (~crystal_tenths($shield) > 0) {
     ~crystal_check($shield, %crystal_shield_hits);
 }
+
+// ::hampack - for the H.A.M. Hideout (area_ham_hideout/ham_hideout.rs2): a lockpick, then puts
+// you by the trapdoor between Lumbridge and Draynor (3165,3251)
+[debugproc,hampack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(lockpick, 1));
+~questpack_done("H.A.M. Hideout", $banked);
+p_telejump(0_49_50_29_51);
