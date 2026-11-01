@@ -110,11 +110,21 @@ inv_add(inv, bucket_empty, 1);
 mes("You dip the bedsheet in the bucket of ectoplasm.");
 
 // ---------------------------------------------------------------- the toy boat
-[opheld1,ahoy_toy_boat]
+[opheld1,ahoy_toy_boat] @ahoy_repair_boat(last_slot);
+
+// ours: using the silk, needle, thread or knife on the boat repairs it too
+[opheldu,ahoy_toy_boat]
+switch_obj (last_useitem) {
+    case silk, needle, thread, knife : @ahoy_repair_boat(last_slot);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,ahoy_repair_boat](int $slot)
 if (inv_total(inv, needle) > 0 & inv_total(inv, knife) > 0 & inv_total(inv, silk) > 0 & inv_total(inv, thread) > 0) {
     inv_del(inv, silk, 1);
     inv_del(inv, thread, 1);
-    inv_setslot(inv, last_slot, ahoy_toy_boat_repaired, 1);
+    inv_del(inv, ahoy_toy_boat, 1);
+    inv_add(inv, ahoy_toy_boat_repaired, 1);
     ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, 0);
     return;
 }

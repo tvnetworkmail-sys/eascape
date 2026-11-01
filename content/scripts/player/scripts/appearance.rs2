@@ -21,6 +21,17 @@ if ($weapon = null) {
     walkanim_r(oc_param($weapon, walk_r_baseanim));
     runanim(oc_param($weapon, running_baseanim));
 }
+// EASCape: Ghosts Ahoy's bedsheet ghost disguise floats with the ghost's own animations
+def_obj $hat = inv_getobj(worn, ^wearpos_hat);
+if ($hat = ahoy_bedsheet | $hat = ahoy_bedsheetgreen) {
+    readyanim(ahoy_ghost_disguise_ready);
+    turnanim(ahoy_ghost_disguise_walk);
+    walkanim(ahoy_ghost_disguise_walk);
+    walkanim_b(ahoy_ghost_disguise_walk);
+    walkanim_l(ahoy_ghost_disguise_walk);
+    walkanim_r(ahoy_ghost_disguise_walk);
+    runanim(ahoy_ghost_disguise_walk);
+}
 buildappearance(worn);
 
 [proc,.update_bas]

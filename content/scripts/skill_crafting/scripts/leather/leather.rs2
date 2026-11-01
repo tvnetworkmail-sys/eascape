@@ -10,6 +10,7 @@
 [opheldu,needle]
 switch_obj (last_useitem)
 {
+    case ahoy_toy_boat : @ahoy_repair_boat(last_useslot); // EASCape: Ghosts Ahoy (quest_ahoy/ahoy_world.rs2)
     case thread : ~chatplayer("<p,happy>Perhaps I should use a needle with a piece of leather instead.");
     case leather : @craft_leather_interface;
     case hard_leather : @craft_leather(hardleather_body);
@@ -44,6 +45,9 @@ if (last_useitem = needle) @craft_dhide_interface(last_slot);
 ~displaymessage(^dm_default);
 
 [opheldu,thread]
+if (last_useitem = ahoy_toy_boat) { // EASCape: Ghosts Ahoy (quest_ahoy/ahoy_world.rs2)
+    @ahoy_repair_boat(last_useslot);
+}
 if (last_useitem = needle) {
     ~chatplayer("<p,happy>Perhaps I should use a needle with a piece of leather instead.");
     return;
