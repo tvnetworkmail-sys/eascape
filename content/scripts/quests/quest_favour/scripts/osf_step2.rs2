@@ -93,6 +93,8 @@ if ($fixed = 8) {
 // Gnormadium's step 2 lines (osf_hooks.rs2 asks here first): a chisel, a spare gem, the switch
 [proc,osf_gnormadium_step2]()(boolean)
 if (~osf_stage_between(120, 125) = false) return(false);
+// all 8 lights fixed counts however the stage got here (ours)
+if (%onesmallfavour < 125 & ~osf_lights_fixed = 8) %onesmallfavour = 125;
 def_string $last = "I need a new gem to fix the lights."; // ours: one line for the three gems
 if (%onesmallfavour = 125) $last = "I've fixed all the lights!";
 switch_int (~p_choice3("I need a chisel to fix these crystals.", 1, $last, 2, "Something else.", 3)) {
