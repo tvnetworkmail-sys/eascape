@@ -65,13 +65,29 @@ if (inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheet | inv_getobj(worn, ^wearpos_h
 if_close;
 p_stopaction;
 mes("You empty the ectoplasm onto the ground around your feet...");
-anim(ahoy_ecto_teleport, 0);
+// the cache's own ectophial emptying animation, seq 1652 (it holds the ectophial; the 377 cache
+// names it abyssal_bludgeon_ready, and its ahoy_ecto_teleport holds an iron axe)
+anim(abyssal_bludgeon_ready, 0);
+sound_synth(fill_ectoplasm, 1, 0);
 inv_setslot(inv, $slot, ectophial_empty, 1);
-p_delay(3);
-// Void's ectophial_teleport area: 3654-3665, 3521-3524
-~p_telejump_safe(movecoord(0_57_55_6_1, random(12), 0, random(4)));
+p_delay(4);
+// 2009scape's landing square, 3658,3517, south of the Ectofuntus
+~p_telejump_safe(0_57_54_10_61);
 mes("... and the world changes around you.");
-// ours: Void then walks you to the Ectofuntus to refill it; here you use it on the Ectofuntus
+// then refill it from the Ectofuntus (Void and 2009scape do this for you)
+p_delay(2);
+facesquare(0_57_54_11_63);
+anim(human_pickuptable, 0);
+sound_synth(fill_ectoplasm, 1, 0);
+if (inv_getobj(inv, $slot) = ectophial_empty) {
+    inv_setslot(inv, $slot, ectophial, 1);
+} else if (inv_total(inv, ectophial_empty) > 0) {
+    inv_del(inv, ectophial_empty, 1);
+    inv_add(inv, ectophial, 1);
+} else {
+    return;
+}
+mes("You refill the ectophial from the Ectofuntus.");
 
 [oplocu,ahoy_ectofunctus]
 if (last_useitem ! ectophial_empty) {
