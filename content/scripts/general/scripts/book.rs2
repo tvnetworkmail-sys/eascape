@@ -19,7 +19,7 @@ switch_obj (%open_book) {
     case book_of_binding : @book_flip_page(^book_direction_backward, 0, 4, book_of_binding_page);
     case elemental_workshop_shield_book : @book_flip_page(^book_direction_backward, 0, 1, elemental_shield_book);
     case golem_notes : @book_flip_page(^book_direction_backward, 0, 9, golem_notes);
-    case dwarf_rock_book : @book_flip_page(^book_direction_backward, 0, 4, bar_lore_book);
+    case dwarf_rock_book : @book_flip_page(^book_direction_backward, 0, ~bar_lore_last, bar_lore_book);
     // from Lost City 289: quest books whose pages couldn't be turned here
     case serum_book : @book_flip_page(^book_direction_backward, 0, 12, serum_book);
     case misc_ghrimbook : @book_flip_page(^book_direction_backward, 0, 5, ghrims_book);
@@ -48,7 +48,7 @@ switch_obj (%open_book) {
     case book_of_binding : @book_flip_page(^book_direction_forward, 0, 4, book_of_binding_page);
     case elemental_workshop_shield_book : @book_flip_page(^book_direction_forward, 0, 1, elemental_shield_book);
     case golem_notes : @book_flip_page(^book_direction_forward, 0, 9, golem_notes);
-    case dwarf_rock_book : @book_flip_page(^book_direction_forward, 0, 4, bar_lore_book);
+    case dwarf_rock_book : @book_flip_page(^book_direction_forward, 0, ~bar_lore_last, bar_lore_book);
     // from Lost City 289: quest books whose pages couldn't be turned here
     case serum_book : @book_flip_page(^book_direction_forward, 0, 12, serum_book);
     case misc_ghrimbook : @book_flip_page(^book_direction_forward, 0, 5, ghrims_book);
@@ -539,7 +539,7 @@ if (%book_page = $max_page) {
     if_sethide(book:com_87, false);
 }
 
-//if_settext(book:com_110, "<tostring(add(multiply(%book_page, 2), 1))>"); // Update page number display (left side) - Not used until way past 377
-//if_settext(book:com_111, "<tostring(add(multiply(%book_page, 2), 2))>"); // Update page number display (right side) - Not used until way past 377
-
 gosub($proc);
+// EASCape: the page numbers (the interface's "Page%1" text has no client script to fill it here)
+if_settext(book:com_110, "<tostring(add(multiply(%book_page, 2), 1))>");
+if_settext(book:com_111, "<tostring(add(multiply(%book_page, 2), 2))>");
