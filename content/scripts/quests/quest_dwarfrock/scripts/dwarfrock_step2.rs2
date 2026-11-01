@@ -369,7 +369,7 @@ if (inv_total(inv, ammo_mould) = 0) return(false);
 return(true);
 
 [label,bar_furnace_gold]
-if (~p_choice2("Yes.", 1, "No.", 2) = 2) @craft_gold_interface; // "Do you wish to make a golden cannonball?"
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Do you wish to make a golden cannonball?") = 2) @craft_gold_interface;
 ~mesbox("You heat the gold bar");
 mes("...You heat the gold bar to a liquid state...");
 anim(human_furnace, 0);
@@ -540,7 +540,7 @@ return(true);
 [proc,bar_book_schematic]()(boolean)
 if (%dwarfrock_rolad_schematics_lookingfor = 0 | %dwarfrock_quest < ^bar_find_schematics) return(false);
 ~mesbox("As you finish reading the book, you notice the last page has a very peculiar picture drawn on it.");
-if (~p_choice2("Yes.", 1, "No.", 2) = 2) return(true); // "Tear out the page?"
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Tear out the page?") = 2) return(true);
 inv_del(inv, dwarf_rock_book, 1);
 inv_add(inv, dwarf_rock_base_schematic, 1);
 %dwarfrock_rolad_schematics_lookingfor = 0;
