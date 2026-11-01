@@ -1,0 +1,1436 @@
+// EASCape: Keldagrim's people. Their words are the OSRS wiki's transcripts (Transcript:<name>,
+// "Standard dialogue"), turned into script by our tool; where a transcript branches on a quest we
+// don't have, the first branch is kept (ours). The shops are the cache's (all.inv) with the wiki's prices.
+
+[opnpc1,dwarf_city_shop_weapons] @keldagrim_talk_santiri;
+[label,keldagrim_talk_santiri]
+// Transcript:Santiri
+~chatnpc("<p,neutral>Welcome, human, to the Quality Weapons Shop! Can I interest you in a purchase?");
+def_int $c1 = ~p_choice2("Yes, I'm looking for some weapons.", 1, "No thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Yes, I'm looking for some weapons.");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_armour] @keldagrim_talk_saro;
+[label,keldagrim_talk_saro]
+// Transcript:Saro
+~chatnpc("<p,neutral>Welcome to my store, human! Are you interested in buying anything?");
+def_int $c1 = ~p_choice2("Yes, I'm looking for some armour.", 1, "No thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Yes, I'm looking for some armour.");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_warhammer] @keldagrim_talk_vigr;
+[label,keldagrim_talk_vigr]
+// Transcript:Vigr
+~chatnpc("<p,neutral>What do you want, human?");
+~chatplayer("<p,neutral>Ehm, anything on offer?");
+~chatnpc("<p,neutral>Can you wield a warhammer? If not, then go away.");
+def_int $c1 = ~p_choice2("Of course I can.", 1, "I can, but I won't.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Of course I can.");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>I can, but I won't.");
+    ~chatnpc("<p,neutral>Yeah, right.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_silver] @keldagrim_talk_gulldamar;
+[label,keldagrim_talk_gulldamar]
+// Transcript:Gulldamar
+~chatnpc("<p,neutral>Finest silver in all of Keldagrim, come and see!");
+def_int $c1 = ~p_choice2("Right, what do you have?", 1, "Not interested, thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Right, what do you have?");
+    ~chatnpc("<p,neutral>Silver, what else!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_gems] @keldagrim_talk_hervi;
+[label,keldagrim_talk_hervi]
+// Transcript:Hervi
+~chatnpc("<p,neutral>Greetings, human... can I interest you in some fine gems?");
+def_int $c1 = ~p_choice2("Show me the wares!", 1, "No thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Show me the wares!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_bakery] @keldagrim_talk_randivor;
+[label,keldagrim_talk_randivor]
+// Transcript:Randivor
+~chatnpc("<p,neutral>Welcome to my stall! Come and buy some tasty bread, freshly baked just 2 months ago!");
+def_int $c1 = ~p_choice2("Sounds delicious!", 1, "I think I'll pass.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Sounds delicious!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>I think I'll pass.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_cloth_poor] @keldagrim_talk_vermundi;
+[label,keldagrim_talk_vermundi]
+// Transcript:Vermundi
+~chatnpc("<p,neutral>Welcome to my clothes stall, can I help you with anything?");
+def_int $c1 = ~p_choice2("Yes, what clothes do you have in stock?", 1, "No, I'm just browsing.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Yes, what clothes do you have in stock?");
+    ~chatnpc("<p,neutral>Not a lot, I'm afraid, most of what I produce goes to my sister. Her shop is in Keldagrim-West.");
+    ~chatplayer("<p,neutral>Well, show me what you do have then.");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No, I'm just browsing.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_cloth] @keldagrim_talk_agmundi;
+[label,keldagrim_talk_agmundi]
+// Transcript:Agmundi
+~chatnpc("<p,neutral>Oh no, not another human... what do you want then?");
+~chatplayer("<p,neutral>Oh, do you get humans here often?");
+~chatnpc("<p,neutral>Not that often, no, but sometimes.");
+~chatnpc("<p,neutral>Of course, since you people are too big for dwarven clothes, they typically don't stay very long.");
+~chatplayer("<p,neutral>Why don't you make bigger clothes then?");
+~chatnpc("<p,neutral>What'd be the point? Besides, I don't make these clothes myself.");
+def_int $c1 = ~p_choice3("Who makes these clothes then?", 1, "I still want to buy your clothes.", 2, "So do you have any quests for me?", 3);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who makes these clothes then?");
+    ~chatnpc("<p,neutral>Oh, my sister, she lives in Keldagrim-East. Has a little stall on the other side of the Kelda.");
+    ~chatnpc("<p,neutral>If she only worked a little harder, like me, she wouldn't have to live in the sewers of the city. Shame really.");
+    ~chatplayer("<p,neutral>The sewers? Your sister lives in the sewers?");
+    ~chatnpc("<p,neutral>Keldagrim-East, such a ghastly place. Not civil, polite and clean like we are in the West.");
+    ~chatplayer("<p,neutral>Uh-huh.");
+    return;
+} else if ($c1 = 2) {
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>So do you have any quests for me?");
+    ~chatnpc("<p,neutral>Quests? Why would I have any quests?");
+    ~chatplayer("<p,neutral>Oh, just anything to do would be fine.");
+    ~chatnpc("<p,neutral>No, not right now... maybe I'll have something for you to do later, but nothing at the moment.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_general_store] @keldagrim_talk_gunslik;
+[label,keldagrim_talk_gunslik]
+// Transcript:Gunslik
+~chatnpc("<p,neutral>What can I interest you in? We have something of everything here!");
+def_int $c1 = ~p_choice2("Oh good!", 1, "Nothing, thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Oh good!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Nothing, thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_craft] @keldagrim_talk_nolar;
+[label,keldagrim_talk_nolar]
+// Transcript:Nolar
+~chatnpc("<p,neutral>I have a wide variety of crafting tools on offer, care to take a look?");
+def_int $c1 = ~p_choice2("Yes please!", 1, "No thanks.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Yes please!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_pickaxe] @keldagrim_talk_tati;
+[label,keldagrim_talk_tati]
+// Transcript:Tati
+~chatnpc("<p,neutral>What'you want?");
+def_int $c1 = ~p_choice3("Do you have any pickaxes?", 1, "Do you have any quests?", 2, "Nothing really.", 3);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Do you-");
+    ~chatnpc("<p,neutral>What? Speak up, I can't hear you!");
+    ~chatplayer("<p,neutral>Uhm... I'm just looking for some pickaxes! Do you have any?");
+    ~chatnpc("<p,neutral>Do I have any pickaxes? Do I? Of course I do, this is a pickaxe shop, isn't it!");
+    ~openshop_activenpc;
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Do you-");
+    ~chatnpc("<p,neutral>What? Stop mumbling!");
+    ~chatplayer("<p,neutral>I want a quest!");
+    ~chatnpc("<p,neutral>I don't have any lousy quests... I've got someone who's helping me already!");
+    ~chatnpc("<p,neutral>Well, I say helping... he takes his merry time to do his chores, my son does.");
+    ~chatplayer("<p,neutral>Then perhaps I can help in some way?");
+    ~chatnpc("<p,neutral>Pfft, I doubt it... maybe when my son fouls up again, but not now.");
+    return;
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>Nothing really.");
+    ~chatnpc("<p,neutral>Then clear off!");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man1] @keldagrim_talk_sune;
+[label,keldagrim_talk_sune]
+// Transcript:Sune
+~chatnpc("<p,neutral>Can you leave me alone please? I'm trying to get a bit of rest.");
+return;
+
+[opnpc1,dwarf_city_excentric_dwarf] @keldagrim_talk_dromund;
+[label,keldagrim_talk_dromund]
+// Transcript:Dromund
+~chatnpc("<p,neutral>Get out of my house!");
+~chatplayer("<p,neutral>Alright, alright, I was just leaving!");
+return;
+
+[opnpc1,dwarf_city_guarding_cat] @keldagrim_talk_dromund_cat;
+[label,keldagrim_talk_dromund_cat]
+// Transcript:Dromund's cat ("Without wearing a catspeak amulet")
+~chatnpc("<p,neutral>Meow!");
+
+[opnpc1,dwarf_city_dwarf_man6] @keldagrim_talk_gauss;
+[label,keldagrim_talk_gauss]
+// Transcript:Gauss
+~chatnpc("<p,neutral>I say, I say, a toast to this fine human!");
+~chatplayer("<p,neutral>What? I mean, err... why?");
+~chatnpc("<p,neutral>Why not!");
+~chatplayer("<p,neutral>I don't have anything suitable to toast with.");
+~chatnpc("<p,neutral>Then go get something from the bar!");
+return;
+
+[opnpc1,dwarf_city_old_dwarf2] @keldagrim_talk_haera;
+[label,keldagrim_talk_haera]
+// Transcript:Haera
+~chatnpc("<p,neutral>What are you doing in our home?");
+~chatplayer("<p,neutral>I just came to ask you a question.");
+~chatnpc("<p,neutral>Hegir, why did you let this human into our home?");
+~chatnpc_specific("Hegir", dwarf_city_old_dwarf1, "<p,neutral>I didn't let him in, he let himself in!");
+~chatnpc("<p,neutral>Now what do you want, human? Speak up, speak up!");
+~chatplayer("<p,neutral>I ehm, just wanted some information.");
+~chatnpc("<p,neutral>Well go ask someone else instead of barging into people's homes!");
+~chatnpc_specific("Hegir", dwarf_city_old_dwarf1, "<p,neutral>There's no need to be rude to the human, Haera dear.");
+~chatnpc("<p,neutral>Now don't you dear me. I'll do whatever I please.");
+~chatplayer("<p,neutral>I think this is my cue to leave...");
+return;
+
+[opnpc1,dwarf_city_old_dwarf1] @keldagrim_talk_hegir;
+[label,keldagrim_talk_hegir]
+// Transcript:Hegir
+~chatplayer("<p,neutral>Hello, can I ask you a question?");
+~chatnpc("<p,neutral>Oh yes, young fellow? Yes, what do you want?");
+~chatnpc_specific("Haera", dwarf_city_old_dwarf2, "<p,neutral>Who's that you're talking to Hegir?");
+~chatnpc("<p,neutral>Let me see, he appears to be a human of some sort.");
+~chatnpc("<p,neutral>What was your name again, human?");
+~chatplayer("<p,neutral><displayname>.");
+~chatnpc("<p,neutral>It's <displayname>!");
+~chatnpc_specific("Haera", dwarf_city_old_dwarf2, "<p,neutral>Well ask him what he wants then!");
+~chatnpc("<p,neutral>What do you want, human?");
+~chatplayer("<p,neutral>Errr... I don't know... A quest, maybe?");
+~chatnpc("<p,neutral>He says he's looking for his quest!");
+~chatnpc_specific("Haera", dwarf_city_old_dwarf2, "<p,neutral>What makes him think he lost his quest in here?");
+~chatnpc("<p,neutral>What makes you think you lost your quest in here?");
+~chatplayer("<p,neutral>No no, I mean, do you have a task of some sort for me?");
+~chatnpc("<p,neutral>Now he says he wants a task!");
+~chatnpc_specific("Haera", dwarf_city_old_dwarf2, "<p,neutral>Stop talking to that human and get back in here before I have a task for you!");
+~chatnpc("<p,neutral>No need to talk to me like that, Haera.");
+~chatnpc_specific("Haera", dwarf_city_old_dwarf2, "<p,neutral>I'll talk to you in whatever way I like!");
+~chatplayer("<p,neutral>I think I hear someone calling my name in the distance...");
+return;
+
+[opnpc1,dwarf_city_gardener_dwarf] @keldagrim_talk_rind;
+[label,keldagrim_talk_rind]
+// Transcript:Rind the gardener
+~chatnpc("<p,neutral>Come to visit my garden then, have you, human?");
+def_int $c1 = ~p_choice2("This is your garden?", 1, "Not really, no.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>This is your garden?");
+    ~chatnpc("<p,neutral>No no, not quite. But I do look after it. It's the palace garden, you see. I keep it tidy, keep it living.");
+    ~chatnpc("<p,neutral>It's hard to grow much on these hard rocks deep beneath these mountains, you know.");
+    ~chatplayer("<p,neutral>I can imagine. Where do you get all your food from? Or even the soil for this garden?");
+    ~chatnpc("<p,neutral>We can grow a little food underground, but most of it comes from the extensive steamcart network that runs beneath the earth.");
+    ~chatnpc("<p,neutral>In the Era of Kings, many centuries ago, it was harder of course. Our steam technology was not developed as far yet and getting fresh supplies of food was always a problem.");
+    ~chatnpc("<p,neutral>Oh, I'm not boring you, am I?");
+    def_int $c2 = ~p_choice2("Not at all!", 1, "A little, yes.", 2);
+    if ($c2 = 1) {
+        ~chatplayer("<p,neutral>Not at all! Please, go on!");
+        ~chatnpc("<p,neutral>Oh yes, as I was saying, it was difficult to make a decent living here. I'm afraid this garden was rather neglected during that time.");
+        ~chatplayer("<p,neutral>Why did you dwarves stay so deep under ground, then? Why not simply go above ground?");
+        ~chatnpc("<p,neutral>What, with the wars raging up there?");
+        ~chatnpc("<p,neutral>We dwarves went underground a long time ago, see. For a while the city of Keldagrim was completely cut off from the rest of Gielinor simply waiting out the wars of the humans and the gods.");
+        ~chatnpc("<p,neutral>This made it hard, though, to determine when the wars above the ground were over. Perhaps Keldagrim had remained hidden for far too long.");
+        ~chatnpc("<p,neutral>Only when King Alvis heroically defended the city against an invasion of trolls did we dare to venture out and see how much the world had changed.");
+        ~chatnpc("<p,neutral>Of course, after that...");
+        ~chatnpc("<p,neutral>Ah well, enough history lessons I should say. I must really get back to my gardening.");
+        ~chatplayer("<p,neutral>Thanks for the info!");
+        return;
+    } else if ($c2 = 2) {
+        ~chatplayer("<p,neutral>A little, yes. I don't really know what all this has to do with anything.");
+        ~chatnpc("<p,neutral>I suppose it doesn't, really, it's just the mumblings of an old dwarf.");
+        return;
+    }
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Not really, no.");
+    ~chatnpc("<p,neutral>Oh, alright then.");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man9] @keldagrim_talk_tombar;
+[label,keldagrim_talk_tombar]
+// Transcript:Tombar
+~chatplayer("<p,neutral>Say, aren't you a bit tall for a dwarf?");
+~chatnpc("<p,neutral>Was there anything in particular you wanted?");
+def_int $c1 = ~p_choice2("I'd like a quest please.", 1, "No, I just like talking to strangers.", 2);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>I'd like a quest please.");
+    ~chatnpc("<p,neutral>I have nothing to do for you, I'm afraid. Ask around town, though, there are always people who need some work done around here.");
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>No, I just like talking to strangers.");
+    ~chatnpc("<p,neutral>Well I don't.");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man7] @keldagrim_talk_myndill;
+[label,keldagrim_talk_myndill]
+// Transcript:Myndill
+~chatnpc("<p,neutral>Hello there, human.");
+def_int $c1 = ~p_choice3("Do you have any news?", 1, "Do you have any quests?", 2, "See you later!", 3);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Do you have any news?");
+    ~chatnpc("<p,neutral>Well, I heard some human knocked over the statue of King Alvis recently. You know anything about that?");
+    ~chatplayer("<p,neutral>Hey, it wasn't my fault! I was just travelling on the boat!");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Do you have any quests?");
+    ~chatnpc("<p,neutral>Let me think for a moment...");
+    ~chatnpc("<p,neutral>No, I have nothing that I could possible want doing. Try the shops or the market instead.");
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>See you later!");
+    ~chatnpc("<p,neutral>Perhaps!");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man10] @keldagrim_talk_odmar;
+[label,keldagrim_talk_odmar]
+// Transcript:Odmar
+~chatnpc("<p,neutral>What to buy? What to buy?");
+~chatnpc("<p,neutral>Oh, hello human.");
+~chatplayer("<p,neutral>Anything I can help you with?");
+~chatnpc("<p,neutral>Only if you can help me make a suggestion on what to buy.");
+~chatplayer("<p,neutral>I smell a quest!");
+~chatnpc("<p,neutral>No, not really. I just need some advice on what to buy, that's all.");
+def_int $c1 = ~p_choice5("New clothes.", 1, "A warhammer.", 2, "A piece of rope.", 3, "An oversized hat.", 4, "Nothing.", 5);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>You should buy some new clothes. You can't go around town wearing what you're wearing.");
+    ~chatnpc("<p,neutral>You're right, this is a little drab. I shouldn't really go around Keldagrim-West wearing this, should I?");
+    ~chatnpc("<p,neutral>Of course I still don't know what colour I should get. I don't want to accidentally offend the wrong company of course.");
+    ~chatplayer("<p,neutral>Never mind.");
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>You should get yourself a big mighty warhammer.");
+    ~chatnpc("<p,neutral>I don't think so. The warhammer shop is run by the Red Axe. I'd rather stay out of there.");
+    ~chatplayer("<p,neutral>You don't like the Red Axe?");
+    ~chatnpc("<p,neutral>They're all a lot of bullies if you ask me.");
+    ~chatplayer("<p,neutral>But I thought they left the city?");
+    ~chatnpc("<p,neutral>They may have, but I still think that shopkeeper is in league with them, banners or no.");
+    return;
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>Get yourself a long piece of rope.");
+    ~chatnpc("<p,neutral>What would I do with a rope?");
+    ~chatplayer("<p,neutral>I don't know. I generally find a rope useful while adventuring.");
+    ~chatnpc("<p,neutral>I don't do a lot of adventuring to be honest.");
+    return;
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>An oversized hat. In a ridiculous colour.");
+    ~chatnpc("<p,neutral>No one is selling hats here, that's not a very helpful suggestion at all.");
+    return;
+} else if ($c1 = 5) {
+    ~chatplayer("<p,neutral>Nothing. You should buy absolutely nothing.");
+    ~chatnpc("<p,neutral>Now that's the best idea I've heard all day.");
+    ~chatplayer("<p,neutral>I thought so! Now why don't you give me some of the money I saved you?");
+    ~chatnpc("<p,neutral>No, I don't think so. I think I'd rather buy something with my money after all.");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man11] @keldagrim_talk_audmann;
+[label,keldagrim_talk_audmann]
+// Transcript:Audmann
+~chatnpc("<p,neutral>Oh, don't bother me human.");
+~chatplayer("<p,neutral>Why not? What's wrong?");
+~chatnpc("<p,neutral>You are wrong, human. Your attire is outrageous. Your presence is obnoxious.");
+~chatplayer("<p,neutral>What? What are you saying?");
+~chatnpc("<p,neutral>I'm saying you're in my way.");
+return;
+
+[opnpc1,dwarf_city_shop_ship_mechanic] @keldagrim_talk_wemund;
+[label,keldagrim_talk_wemund]
+// Transcript:Wemund
+~chatnpc("<p,neutral>What can I interest you in? Need any pipes? I make very sturdy pipes.");
+~chatplayer("<p,neutral>No, not really... what kind of shop is this anyway?");
+~chatnpc("<p,neutral>Why, it's Wemund's Wrench Warehouse. Wemund, that's me.");
+~chatnpc("<p,neutral>I don't really sell just wrenches, you know, I sell anything related to the maintenance of dwarven steam machines.");
+~chatnpc("<p,neutral>Sometimes I do repair work as well. Or I send my assistant.");
+~chatplayer("<p,neutral>Who's he then?");
+~chatnpc("<p,neutral>Oh, he's right over there... used to work in the mines to the south, poor lad. Made a bit of a mess of things I believe.");
+~chatnpc("<p,neutral>So what'll it be then? Got any ship engines to repair?");
+~chatplayer("<p,neutral>Thanks, but I don't think your services are required.");
+return;
+
+[opnpc1,dwarf_city_black_guard_supreme_leader] @keldagrim_talk_supreme;
+[label,keldagrim_talk_supreme]
+// Transcript:Supreme Commander
+~chatnpc("<p,neutral>I hear you are the human that Veldaban has employed to help rebuild the statue. How is that going?");
+~chatplayer("<p,neutral>How did you know about that?");
+~chatnpc("<p,neutral>Veldaban is in my employ.");
+def_int $c1 = ~p_choice3("Who are you?", 1, "What news have you?", 2, "I must go now.", 3);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am Bisi. I am the Supreme Commander of the Black Guard.");
+    ~chatplayer("<p,neutral>I thought Veldaban was in command?");
+    ~chatnpc("<p,neutral>Only of our regiment in Keldagrim, and a most honourable position it is as well.");
+    ~chatnpc("<p,neutral>But the Black Guard has many regiments across the dwarven realm. All the Commanders of those regiments report to me.");
+    ~chatplayer("<p,neutral>Oh yes, I helped Commander Lawgof once, in his fight against the goblins.");
+    ~chatnpc("<p,neutral>That's good to hear.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>What news have you?");
+    ~chatnpc("<p,neutral>Apart from the statue of King Alvis falling down, you mean? I don't know. There is something suspicious about the whole case.");
+    ~chatplayer("<p,neutral>How do you mean?");
+    ~chatnpc("<p,neutral>We've had several incidents recently. For a while we even closed off the city. And now this.");
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>I must go now.");
+    ~chatnpc("<p,neutral>Then I bid you farewell, human.");
+    return;
+}
+
+[opnpc1,dwarf_city_shop_sculpture] @keldagrim_talk_blasidar;
+[label,keldagrim_talk_blasidar]
+// Transcript:Blasidar the sculptor
+~chatnpc("<p,neutral>The new statue looks beautiful, don't you agree?");
+~chatplayer("<p,neutral>Oh yes, quite.");
+~chatnpc("<p,neutral>My finest piece of work, without a doubt.");
+~chatplayer("<p,neutral>Say, I was wondering, did you do the statues down in the mines as well?");
+~chatnpc("<p,neutral>What, out with the trolls?");
+~chatnpc("<p,neutral>If only! But no, they've been there for many thousands of years, actually. Been there before dwarven recorded history.");
+~chatplayer("<p,neutral>No no, I'm sure they weren't there before!");
+~chatnpc("<p,neutral>Of course they were, don't be silly!");
+~chatplayer("<p,neutral>Alright... my mistake then.");
+return;
+
+[opnpc1,dwarf_city_trader_referee] @keldagrim_talk_referee;
+[label,keldagrim_talk_referee]
+// Transcript:Trade Referee
+switch_int (random(5)) {
+    case 0 :
+        ~chatnpc("<p,neutral>Talk to the secretaries, not to me!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>Clear out!");
+        return;
+    case 2 :
+        ~chatnpc("<p,neutral>Stay out of the octagon center!");
+        return;
+    case 3 :
+        ~chatnpc("<p,neutral>I can't help you!");
+        return;
+    case 4 :
+        ~chatnpc("<p,neutral>Can't talk to you, too busy!");
+        return;
+}
+
+[opnpc1,vc_the_beast] @keldagrim_talk_beast;
+[label,keldagrim_talk_beast]
+// Transcript:The Beast
+~chatplayer("<p,neutral>Hello, The Beast! Why do they call you that?");
+~chatnpc("<p,neutral>...");
+~chatplayer("<p,neutral>Oh, I see.");
+return;
+
+[opnpc1,vc_smokin_joe] @keldagrim_talk_joe;
+[label,keldagrim_talk_joe]
+// Transcript:Smokin' Joe
+~chatplayer("<p,neutral>Hello!");
+~chatplayer("<p,neutral>Hello?");
+~chatplayer("<p,neutral>Hey!");
+~mesbox("Smokin' Joe ignores you.");
+return;
+
+[opnpc1,dwarf_city_barmaid_poor] @keldagrim_talk_barmaid;
+[label,keldagrim_talk_barmaid]
+// Transcript:Barmaid
+~chatnpc("<p,neutral>Welcome to the Laughing Miner pub, human traveller.");
+def_int $c1 = ~p_choice5("Who is that man walking around outside?", 1, "I'd like a beer please.", 2, "I'd like some food please.", 3, "I'd like a Kelda stout please.", 4, "I have to go.", 5);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who is that man walking around outside?");
+    ~chatnpc("<p,neutral>What man?");
+    ~chatplayer("<p,neutral>I mean the dwarf, the one with the sign.");
+    ~chatnpc("<p,neutral>Oh, him. Yes, we employ him to advertise our pub, he's the cheapest labour we could find. We don't have a lot of money to spare you know, we pay him in beer.");
+    ~chatplayer("<p,neutral>But what's wrong with him?");
+    ~chatnpc("<p,neutral>Well, he's drunk isn't he?");
+    ~chatnpc("<p,neutral>I told you, he's cheap. He couldn't get any other work since the Red Axe fired him. Been drinking ever since.");
+    ~chatplayer("<p,neutral>How did that happen?");
+    ~chatnpc("<p,neutral>I'm not quite sure, I think he kept wearing the wrong coloured cap all the time. They don't much like it if you don't wear your red uniform into work.");
+    ~chatplayer("<p,neutral>They fired him for that??");
+    ~chatnpc("<p,neutral>The Red Axe will fire you for just about anything if they want to.");
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>I'd like a beer please.");
+    ~chatnpc("<p,neutral>That'll be 2 gold coins.");
+    def_int $c2 = ~p_choice2("Pay.", 1, "Don't pay.", 2);
+    if ($c2 = 1) {
+        if (~keldagrim_buy(beer, 2) = false) {
+            ~chatplayer("<p,neutral>Sorry, I don't have 2 coins on me.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Thanks for your custom.");
+        return;
+    } else if ($c2 = 2) {
+        ~chatplayer("<p,neutral>Sorry, I changed my mind.");
+        return;
+    }
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>I'd like some food please.");
+    ~chatnpc("<p,neutral>I can make you a stew for 20 gold coins.");
+    def_int $c3 = ~p_choice2("Pay.", 1, "Don't pay.", 2);
+    if ($c3 = 1) {
+        if (~keldagrim_buy(stew, 20) = false) {
+            ~chatplayer("<p,neutral>Sorry, I don't have 20 coins on me.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Thanks for your custom.");
+        return;
+    } else if ($c3 = 2) {
+        ~chatplayer("<p,neutral>Sorry, I changed my mind.");
+        return;
+    }
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>I'd like a Kelda stout please.");
+    ~chatnpc("<p,neutral>Sorry, we've stopped serving those. The seeds were too hard to get.");
+    ~chatplayer("<p,neutral>Yeah, tell me about it.");
+    return;
+} else if ($c1 = 5) {
+    ~chatplayer("<p,neutral>I have to go.");
+    return;
+}
+
+[opnpc1,dwarf_city_inn_keeper_rich] @keldagrim_talk_innkeeper;
+[label,keldagrim_talk_innkeeper]
+// Transcript:Inn Keeper
+~chatnpc("<p,neutral>Welcome to the King's Axe inn! What can I help you with?");
+~chatplayer("<p,neutral>Can I have some beer please?");
+~chatnpc("<p,neutral>Go to the bar downstairs. I only deal with residents.");
+~chatplayer("<p,neutral>Residents? People live here?");
+~chatnpc("<p,neutral>No, just guests that stay the night.");
+return;
+
+[opnpc1,dwarf_city_black_guard1] @keldagrim_talk_blackguard;
+[opnpc1,dwarf_city_black_guard2] @keldagrim_talk_blackguard;
+[opnpc1,dwarf_city_black_guard3] @keldagrim_talk_blackguard;
+[opnpc1,dwarf_city_black_guard4] @keldagrim_talk_blackguard;
+[label,keldagrim_talk_blackguard]
+// Transcript:Black Guard
+switch_int (random(5)) {
+    case 0 :
+        ~chatnpc("<p,neutral>Obey the law!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>Stay out of trouble!");
+        return;
+    case 2 :
+        ~chatnpc("<p,neutral>Out of the way, human!");
+        return;
+    case 3 :
+        ~chatnpc("<p,neutral>I'm keeping an eye on you!");
+        return;
+    case 4 :
+        ~mesbox("The guard ignores you.");
+        return;
+}
+
+[opnpc1,dwarf_city_berserker1] @keldagrim_talk_berserker;
+[opnpc1,dwarf_city_berserker2] @keldagrim_talk_berserker;
+[opnpc1,dwarf_city_berserker3] @keldagrim_talk_berserker;
+[label,keldagrim_talk_berserker]
+// Transcript:Black Guard Berserker
+switch_int (random(5)) {
+    case 0 :
+        ~chatnpc("<p,neutral>Obey the law!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>Stay out of trouble!");
+        return;
+    case 2 :
+        ~chatnpc("<p,neutral>Out of the way, human!");
+        return;
+    case 3 :
+        ~chatnpc("<p,neutral>I'm keeping an eye on you!");
+        return;
+    case 4 :
+        ~mesbox("The guard ignores you.");
+        return;
+}
+
+[opnpc1,dwarf_city_library_customer] @keldagrim_talk_customer;
+[opnpc1,dwarf_city_library_customer_human] @keldagrim_talk_customer;
+[label,keldagrim_talk_customer]
+// Transcript:Customer
+~chatnpc("<p,neutral>Oh, that's nice, another human visitor to Keldagrim!");
+~chatplayer("<p,neutral>Indeed!");
+~chatnpc("<p,neutral>And what brings you to this city? Come to seek knowledge as well?");
+~chatplayer("<p,neutral>I think it's mostly fame and riches I'm after.");
+~chatnpc("<p,neutral>To each [his/her/their] own, I suppose.");
+return;
+
+[opnpc1,dwarf_city_factory_guard] @keldagrim_talk_factory_manager;
+[label,keldagrim_talk_factory_manager]
+// Transcript:Factory Manager
+~chatnpc("<p,neutral>Don't bother me, can't you see I'm busy?");
+~chatplayer("<p,neutral>No, I can't... can I go into the factory?");
+~chatnpc("<p,neutral>You can go in. The Consortium, in their infinite wisdom, has decided to open up the factory to all and sundry.");
+~chatplayer("<p,neutral>How come?");
+~chatnpc("<p,neutral>We've built a new blast furnace and always have a shortage of people to work on it.");
+~chatplayer("<p,neutral>I'll have a look, thanks.");
+~chatnpc("<p,neutral>Just don't go causing any trouble, I still run this factory!");
+return;
+
+[opnpc1,dwarf_city_factory_worker1] @keldagrim_talk_factory_worker;
+[opnpc1,dwarf_city_factory_worker2] @keldagrim_talk_factory_worker;
+[opnpc1,dwarf_city_factory_worker3] @keldagrim_talk_factory_worker;
+[opnpc1,dwarf_city_factory_worker4] @keldagrim_talk_factory_worker;
+[label,keldagrim_talk_factory_worker]
+// Transcript:Factory Worker
+~chatplayer("<p,neutral>I'm sorry, I'm looking for the blast furnace?");
+~chatnpc("<p,neutral>Do I look like a guide to you?");
+~chatplayer("<p,neutral>No, you look like a hard-working dwarf, but can you please tell me where the blast furnace is?");
+~chatnpc("<p,neutral>Alright, just head down the stairs, it's easy to find.");
+~chatplayer("<p,neutral>Thanks.");
+return;
+
+[opnpc1,dwarf_city_dwarf_man5] @keldagrim_talk_karl;
+[label,keldagrim_talk_karl]
+// Transcript:Karl
+~chatnpc("<p,neutral>Hello there, human! Come in, come in!");
+~chatplayer("<p,neutral>Hi, nice to see you!");
+~chatnpc("<p,neutral>Tell me, what brings you here?");
+~chatplayer("<p,neutral>Well, first I came to this city just for the adventure and excitement, but then I knocked over this statue, you see. Well, I didn't really knock it over myself, I was on this boat.");
+~chatnpc("<p,neutral>A boat! Fascinating, go on!");
+~chatplayer("<p,neutral>Yes, well, this boatman was a bit rubbish, or there was something wrong with the ship, I don't know. And then I got arrested by the Black Guard.");
+~chatnpc("<p,neutral>Not the Black Guard!");
+~chatplayer("<p,neutral>Yes, and they took me to this Veldaban person, who pretended to be really angry but actually he was really nice and he asked me for my help.");
+~chatplayer("<p,neutral>So here I am, helping to rebuild the statue.");
+~chatnpc("<p,neutral>Such an interesting tale!");
+~chatnpc("<p,neutral>Now how did you come to be in Keldagrim again?");
+~chatplayer("<p,neutral>Never mind.");
+return;
+
+[opnpc1,dwarf_city_dwarf_man3] @keldagrim_talk_ulifed;
+[label,keldagrim_talk_ulifed]
+// Transcript:Ulifed
+~chatnpc("<p,neutral>Say, aren't you the human who got arrested here the other day, by the boat?");
+~chatplayer("<p,neutral>Yes, but we cleared up the whole situation.");
+~chatnpc("<p,neutral>Right, right.");
+return;
+
+[opnpc1,dwarf_city_dwarf_man8] @keldagrim_talk_kjut;
+[label,keldagrim_talk_kjut]
+// Transcript:Kjut
+~chatnpc("<p,neutral>Kebabs! Get your kebabs here! One gold each!");
+def_int $c1 = ~p_choice3("Sure, one kebab please.", 1, "I'm looking for a drunken dwarf.", 2, "Do you have any quests?", 3);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Sure, one kebab please.");
+    if (~keldagrim_buy(kebab, 1) = false) {
+        ~chatnpc("<p,neutral>Yes? Are you going to give me that one gold coin then?");
+        ~chatplayer("<p,neutral>Sorry, I don't seem to have any money on me.");
+        ~chatnpc("<p,neutral>The bank is Keldagrim-West. Hurry back!");
+    }
+    return;
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>I'm looking for a drunken dwarf.");
+    ~chatnpc("<p,neutral>Just go out in the streets, they can't be hard to find!");
+    ~chatplayer("<p,neutral>No, a specific drunken dwarf, he keeps harassing me.");
+    ~chatnpc("<p,neutral>That's still not very helpful. But let me see. There is one particularly drunken dwarf just to the northeast of here.");
+    ~chatnpc("<p,neutral>He's scaring away my customers, he says there's something wrong with my kebabs. Quite annoying fellow.");
+    ~chatplayer("<p,neutral>I don't think that's who I mean.");
+    ~chatnpc("<p,neutral>Well, he does have a relative who wanders all over Gielinor. Comes back from time to time to buy more kebabs. Don't see him very often though.");
+    ~chatplayer("<p,neutral>Do you think I'll have any chance of catching him here?");
+    ~chatnpc("<p,neutral>I think he was back here quite recently, so I doubt he'll be back any time soon.");
+    return;
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>Do you have any quests?");
+    ~chatnpc("<p,neutral>Not really! I have a steady supply of meat coming in through the carts and I don't really need anything else!");
+    return;
+}
+
+[opnpc1,dwarf_city_dwarf_man4] @keldagrim_talk_reinald;
+[label,keldagrim_talk_reinald]
+// Transcript:Reinald
+~chatnpc("<p,neutral>Welcome to my home. Is there anything you wanted?");
+~chatplayer("<p,neutral>Nothing in particular. Got any sightseeing tips?");
+~chatnpc("<p,neutral>No, I'm just a factory worker. Don't do tours.");
+~chatplayer("<p,neutral>This doesn't look like a factory.");
+~chatnpc("<p,neutral>This is my home. I'm off-duty.");
+return;
+
+[opnpc1,dwarf_city_old_dwarf3] @keldagrim_talk_runvastr;
+[label,keldagrim_talk_runvastr]
+// Transcript:Runvastr
+~chatnpc("<p,neutral>Oh, leave an old dwarf in peace will you?");
+~chatplayer("<p,neutral>Why, what's wrong?");
+~chatnpc("<p,neutral>Ninenty years down in the mines, and this is all I got out of it. All my life wasted away.");
+~chatplayer("<p,neutral>You've still got a nice house, don't you?");
+~chatnpc("<p,neutral>A crummy old house in East, that's all my life amounts to.");
+~chatplayer("<p,neutral>I'll leave you alone then.");
+return;
+
+[opnpc1,dwarf_city_dwarf_man2] @keldagrim_talk_bentamir;
+[label,keldagrim_talk_bentamir]
+// Transcript:Bentamir
+~chatnpc("<p,neutral>Do you mind? You're in my home.");
+~chatplayer("<p,neutral>I'm sorry, should I have knocked?");
+~chatnpc("<p,neutral>Very funny, human.");
+~chatnpc("<p,neutral>We can't all live in plush houses, you know. But that doesn't mean us mining dwarves don't work hard.");
+~chatplayer("<p,neutral>Where do you do your mining?");
+~chatnpc("<p,neutral>Normally the coal mine to the north. We need a lot of coal to keep our steam engines going, you know.");
+~chatplayer("<p,neutral>Can I do a bit of mining there as well?");
+~chatnpc("<p,neutral>I'm not sure, but as long as no one notices I don't think anyone is going to care.");
+return;
+
+[opnpc1,dwarf_city_rowdy_dwarf] @keldagrim_talk_rowdy;
+[label,keldagrim_talk_rowdy]
+// Transcript:Rowdy dwarf
+~chatnpc("<p,neutral>Get OUT of my WAY!");
+return;
+
+[opnpc1,blandebir] @keldagrim_talk_blandebir;
+[label,keldagrim_talk_blandebir]
+// Transcript:Blandebir
+~chatplayer("<p,neutral>Hello, I wonder if you could help me on this whole brewing thing...");
+~chatnpc("<p,neutral>I might be able to - what do you need to know?");
+def_int $c1 = ~p_choice5("How do I brew ales?", 1, "How do I brew cider?", 2, "What do I do once my ale has matured?", 3, "Do you have any spare ale yeast?", 4, "That's all I need to know, thanks.", 5);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>How do I brew ales?");
+    ~chatnpc("<p,neutral>Well first off you need to fill the vat with water - two bucketfuls should do the trick. Then you'll need to put in two handfuls of barley malt - that's roasted barley by the way.");
+    ~chatnpc("<p,neutral>After that you'll be putting your main ingredient in - this will decide which ale it is you're brewing. There should be some good guides around with recipes in.");
+    ~chatnpc("<p,neutral>Lastly you pour a pot full of ale yeast in, which'll start it off fermenting. Then all you have to do is wait for the good stuff.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>How do I brew cider?");
+    ~chatnpc("<p,neutral>First you'll need some apples. You'll need to crush them using this cider-press - four apples should make a full bucket of apple-mush. Take four buckets of mush and fill up the vat.");
+    ~chatnpc("<p,neutral>After that you pour a pot full of ale yeast in, which'll start it off fermenting. Then all you have to do is wait for the good stuff.");
+} else if ($c1 = 3) {
+    ~chatplayer("<p,neutral>What do I do once my ale has matured?");
+    ~chatnpc("<p,neutral>Well, once you've got a full vat of the good stuff, just turn the valve and your barrel will fill up with eight pints of whatever your chosen tipple is. Mind it's an empty barrel, though.");
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>Do you have any spare ale yeast?");
+    ~chatnpc("<p,neutral>Well, as a matter of fact I do, although I wouldn't describe it as spare. This ale yeast I've got is the best money can buy, but if you've got a pot I'll fill it for you for 25GP - very cheap as it happens.");
+    if (inv_total(inv, pot_empty) = 0 | inv_total(inv, coins) < 25) {
+        ~chatplayer("<p,neutral>I don't have an empty pot, or enough money I'm afraid.");
+        return;
+    }
+    def_int $c9 = ~p_choice2("That's a good deal - please fill my pot with ale yeast for 25GP.", 1, "No, that's too much I'm afraid.", 2);
+    if ($c9 = 1) {
+        // 2009scape: as many pots as you have and can pay for
+        def_int $n = min(inv_total(inv, pot_empty), divide(inv_total(inv, coins), 25));
+        inv_del(inv, pot_empty, $n);
+        inv_del(inv, coins, multiply($n, 25));
+        inv_add(inv, ale_yeast, $n);
+    }
+} else if ($c1 = 5) {
+    ~chatplayer("<p,neutral>That's all I need to know, thanks.");
+    return;
+}
+
+[opnpc1,dwarf_city_director_blue_opal] @keldagrim_talk_blue_opal_director;
+[label,keldagrim_talk_blue_opal_director]
+// Transcript:Blue Opal Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Blue Opal.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_blue_opal] @keldagrim_talk_blue_opal_secretary;
+[label,keldagrim_talk_blue_opal_secretary]
+// Transcript:Blue Opal Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the Blue Opal?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the Blue Opal.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>We are the Blue Opal. We are part of the Consortium, rulers of Keldagrim and beyond.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>These are the offices of the Blue Opal.");
+        case 1 :
+            ~chatnpc("<p,neutral>This is the official residence of the Blue Opal.");
+        case 2 :
+            ~chatnpc("<p,neutral>Why, you are in the headquarters of the Blue Opal.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>I have to go!");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_purple_pewter] @keldagrim_talk_purple_pewter_director;
+[label,keldagrim_talk_purple_pewter_director]
+// Transcript:Purple Pewter Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Purple Pewter.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_purple_pewter] @keldagrim_talk_purple_pewter_secretary;
+[label,keldagrim_talk_purple_pewter_secretary]
+// Transcript:Purple Pewter Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the Purple Pewter?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+~chatnpc("<p,neutral>Oh, by the way, I really like that outfit of yours!");
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the Purple Pewter.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>I said, the Purple Pewter. Together with the other companies, we rule Keldagrim and the dwarven realm.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>These are the offices of the Purple Pewter.");
+        case 1 :
+            ~chatnpc("<p,neutral>This is the official residence of the Purple Pewter.");
+        case 2 :
+            ~chatnpc("<p,neutral>Why, you are in the headquarters of the Purple Pewter.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>I have to go!");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_yellow_fortune] @keldagrim_talk_yellow_fortune_director;
+[label,keldagrim_talk_yellow_fortune_director]
+// Transcript:Yellow Fortune Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Yellow Fortune.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_yellow_fortune] @keldagrim_talk_yellow_fortune_secretary;
+[label,keldagrim_talk_yellow_fortune_secretary]
+// Transcript:Yellow Fortune Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the Yellow Fortune?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the Yellow Fortune.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>The Yellow Fortune! We are the grandest of the mining companies that make up the Consortium!");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>These are the offices of the Yellow Fortune.");
+        case 1 :
+            ~chatnpc("<p,neutral>This is the official residence of the Yellow Fortune.");
+        case 2 :
+            ~chatnpc("<p,neutral>Why, you are in the headquarters of the Yellow Fortune.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>I have to go!");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_green_gemstone] @keldagrim_talk_green_gemstone_director;
+[label,keldagrim_talk_green_gemstone_director]
+// Transcript:Green Gemstone Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Green Gemstone.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_green_gemstone] @keldagrim_talk_green_gemstone_secretary;
+[label,keldagrim_talk_green_gemstone_secretary]
+// Transcript:Green Gemstone Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the Green Gemstone?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the Green Gemstone.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>The Green Gemstone. We are part of the Consortium of mining companies that rule the dwarven realm.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    def_int $c2 = ~p_choice3("Dialogue 1", 1, "Dialogue 2", 2, "Dialogue 3", 3);
+    if ($c2 = 1) {
+        ~chatnpc("<p,neutral>These are the offices of the Green Gemstone.");
+    } else if ($c2 = 2) {
+        ~chatnpc("<p,neutral>This is the official residence of the Green Gemstone.");
+    } else if ($c2 = 3) {
+        ~chatnpc("<p,neutral>Why, you are in the headquarters of the Green Gemstone.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    ~chatplayer("<p,neutral>I have to go!");
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_white_chisel] @keldagrim_talk_white_chisel_director;
+[label,keldagrim_talk_white_chisel_director]
+// Transcript:White Chisel Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the White Chisel.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_white_chisel] @keldagrim_talk_white_chisel_secretary;
+[label,keldagrim_talk_white_chisel_secretary]
+// Transcript:White Chisel Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the White Chisel?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the White Chisel.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>The White Chisel. We are one of the most powerful companies in the whole of the dwarven realm, we are. We have grown so powerful that we are now part of the Consortium.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    def_int $c2 = ~p_choice3("Dialogue 1", 1, "Dialogue 2", 2, "Dialogue 3", 3);
+    if ($c2 = 1) {
+        ~chatnpc("<p,neutral>These are the offices of the White Chisel.");
+    } else if ($c2 = 2) {
+        ~chatnpc("<p,neutral>This is the official residence of the White Chisel.");
+    } else if ($c2 = 3) {
+        ~chatnpc("<p,neutral>Why, you are in the headquarters of the White Chisel.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_silver_cog] @keldagrim_talk_silver_cog_director;
+[label,keldagrim_talk_silver_cog_director]
+// Transcript:Silver Cog Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Silver Cog.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_silver_cog] @keldagrim_talk_silver_cog_secretary;
+[label,keldagrim_talk_silver_cog_secretary]
+// Transcript:Silver Cog Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the White Chisel?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the White Chisel.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>The Silver Cog! A shining example of how a mining company should be run to join the Consortium.");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    def_int $c2 = ~p_choice3("Dialogue 1", 1, "Dialogue 2", 2, "Dialogue 3", 3);
+    if ($c2 = 1) {
+        ~chatnpc("<p,neutral>These are the offices of the Silver Cog.");
+    } else if ($c2 = 2) {
+        ~chatnpc("<p,neutral>This is the official residence of the Silver Cog.");
+    } else if ($c2 = 3) {
+        ~chatnpc("<p,neutral>Why, you are in the headquarters of the Silver Cog.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+[opnpc1,dwarf_city_director_brown_engine] @keldagrim_talk_brown_engine_director;
+[label,keldagrim_talk_brown_engine_director]
+// Transcript:Brown Engine Director
+switch_int (random(10)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I'm too important to talk to the likes of you, leave.");
+    case 1 :
+        ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the Brown Engine.");
+    case 2 :
+        ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+    case 3 :
+        ~chatnpc("<p,neutral>I'm busy, please leave.");
+    case 4 :
+        ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+    case 5 :
+        ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+    case 6 :
+        ~chatnpc("<p,neutral>Do you mind? You're blocking my view.");
+    case 7 :
+        ~chatnpc("<p,neutral>How did you get in here? I don't have time to talk to you!");
+    case 8 :
+        ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+    case 9 :
+        ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+}
+~chatplayer("<p,neutral>But...");
+switch_int (random(2)) {
+    case 0 :
+        ~chatnpc("<p,neutral>I said go!");
+        return;
+    case 1 :
+        ~chatnpc("<p,neutral>I told you to leave, human!");
+        return;
+}
+
+[opnpc1,dwarf_city_secretary_brown_engine] @keldagrim_talk_brown_engine_secretary;
+[label,keldagrim_talk_brown_engine_secretary]
+// Transcript:Brown Engine Secretary
+switch_int (random(6)) {
+    case 0 :
+        ~chatnpc("<p,neutral>What can I do for you, human?");
+    case 1 :
+        ~chatnpc("<p,neutral>Can I help you with anything?");
+    case 2 :
+        ~chatnpc("<p,neutral>Was there anything you wanted?");
+    case 3 :
+        ~chatnpc("<p,neutral>What did you need of the White Chisel?");
+    case 4 :
+        ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+    case 5 :
+        ~chatnpc("<p,neutral>And what can I do for you?");
+}
+def_int $c1 = ~p_choice4("Who are you?", 1, "Where am I?", 2, "Is there anything I can help you with?", 3, "I have to go!", 4);
+if ($c1 = 1) {
+    ~chatplayer("<p,neutral>Who are you?");
+    ~chatnpc("<p,neutral>I am the head secretary of the White Chisel.");
+    ~chatplayer("<p,neutral>The what?");
+    ~chatnpc("<p,neutral>The Brown Engine. We are one of the eight major mining companies, and one of the finest if I do say so myself!");
+} else if ($c1 = 2) {
+    ~chatplayer("<p,neutral>Where am I?");
+    def_int $c2 = ~p_choice3("Dialogue 1", 1, "Dialogue 2", 2, "Dialogue 3", 3);
+    if ($c2 = 1) {
+        ~chatnpc("<p,neutral>These are the offices of the Brown Engine.");
+    } else if ($c2 = 2) {
+        ~chatnpc("<p,neutral>This is the official residence of the Brown Engine.");
+    } else if ($c2 = 3) {
+        ~chatnpc("<p,neutral>Why, you are in the headquarters of the Brown Engine.");
+    }
+    ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+    ~chatplayer("<p,neutral>The Trade Octagon?");
+    ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+    ~chatplayer("<p,neutral>Anything else of interest in the palace?");
+    ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+} else if ($c1 = 3) {
+    // {{tact|The player is offered a task; see [[Transcript:The Giant Dwarf#Talking_to_a_company_secretary]]}}
+} else if ($c1 = 4) {
+    switch_int (random(3)) {
+        case 0 :
+            ~chatnpc("<p,neutral>Goodbye, human.");
+            return;
+        case 1 :
+            ~chatnpc("<p,neutral>See you later.");
+            return;
+        case 2 :
+            ~chatnpc("<p,neutral>Okay.");
+            return;
+    }
+}
+
+// the bankers: the usual bank teller talk
+[opnpc1,dwarf_city_banker1] @talk_to_banker;
+[opnpc3,dwarf_city_banker1] @openbank;
+[opnpc1,dwarf_city_banker2] @talk_to_banker;
+[opnpc3,dwarf_city_banker2] @openbank;
+
+// Miodvetnir, Derni and Dernu (Transcript:Miodvetnir, Derni, and Dernu, the opening)
+[opnpc1,dwarfrock_boatman_bruv1] @keldagrim_talk_brothers;
+[opnpc1,dwarfrock_boatman_bruv2] @keldagrim_talk_brothers;
+[opnpc1,dwarfrock_boatman_bruv3] @keldagrim_talk_brothers;
+[label,keldagrim_talk_brothers]
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Oh look, a human!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>A human? Can we eat it?");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>No, you rock brain! Humans are our friends!");
+~chatplayer("<p,neutral>Hello, excuse me...");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Not sure if I would call them our friends... Not enemies either, of course.");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>Not like the trolls. We hate trolls.");
+~chatplayer("<p,neutral>Excuse me, I just want to-");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>Nothing's worse than a troll.");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>Except discovering that your pickaxe's gone blunt just as you-");
+~chatplayer("<p,neutral>Excuse me!!!");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Why, hello, yes, what is it?");
+~chatplayer("<p,neutral>I er... well, who are you?");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>I'm Derni.");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>I'm Dernu.");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>And I'm Miodvetnir. These are my brothers. And who might you be?");
+~chatplayer("<p,neutral>My name is <displayname>.");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>Pleased to meet you, <displayname>!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>I say, we don't get to see a hummon down here very often!");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>It's a human, you metal head! You should pay more attention!");
+~chatplayer("<p,neutral>So, can I ask you dwarves a few questions?");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Of course, we love answering questions!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>We're very good at answering questions!");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>Fire away!");
+
+// no transcript in any source (ours)
+[opnpc1,dwarf_city_black_guard_leader] ~chatnpc("<p,neutral>I am busy, human. Move along.");
+[opnpc1,dwarf_city_barman_rich] ~chatnpc("<p,neutral>Welcome to the King's Axe. Have a seat, human.");
+[opnpc1,dwarf_city_library_assistant] ~chatnpc("<p,neutral>Please keep your voice down, this is a library.");
+
+[proc,keldagrim_buy](namedobj $obj, int $cost)(boolean)
+if (inv_total(inv, coins) < $cost) return(false);
+if (inv_freespace(inv) = 0 & inv_total(inv, coins) ! $cost) {
+    mes("You don't have enough inventory space."); // ours
+    return(false);
+}
+inv_del(inv, coins, $cost);
+inv_add(inv, $obj, 1);
+return(true);

@@ -1,0 +1,61 @@
+// EASCape: where Keldagrim's staircases put you: the free square beside the other end of the stairs
+// that opens onto the most floor (worked out from the map's collision, 1 Nov 2026), so you never land
+// in a pocket behind a wall (ours; the map gives which stairs pair up). The Blast Furnace stairs are
+// 2009scape's (BlastConsts.kt).
+
+[proc,keldagrim_stairs_dest](coord $from)(coord)
+switch_coord ($from) {
+    case 0_30_73_22_32 : return(1_30_73_21_33);
+    case 1_30_73_22_33 : return(0_30_73_21_32);
+    case 0_44_158_55_62 : return(1_44_158_54_63);
+    case 1_44_158_55_63 : return(0_44_158_55_61);
+    case 1_44_158_57_62 : return(2_44_158_58_62);
+    case 2_44_158_57_62 : return(1_44_158_58_63);
+    case 0_44_159_12_39 : return(1_44_159_11_39);
+    case 0_44_159_12_49 : return(1_44_159_11_50);
+    case 0_44_159_18_48 : return(1_44_159_18_48);
+    case 0_44_159_19_20 : return(1_44_159_19_20);
+    case 0_44_159_47_12 : return(1_44_159_46_12);
+    case 0_44_159_47_33 : return(1_44_159_46_33);
+    case 0_44_159_49_46 : return(1_44_159_49_46);
+    case 1_44_159_12_39 : return(0_44_159_11_39);
+    case 1_44_159_12_50 : return(0_44_159_12_48);
+    case 1_44_159_18_49 : return(0_44_159_17_48);
+    case 1_44_159_19_48 : return(2_44_159_18_48);
+    case 1_44_159_20_20 : return(0_44_159_19_19);
+    case 1_44_159_47_12 : return(0_44_159_46_12);
+    case 1_44_159_47_33 : return(0_44_159_48_32);
+    case 1_44_159_49_47 : return(0_44_159_50_47);
+    case 1_44_159_50_22 : return(2_44_159_49_22);
+    case 2_44_159_19_48 : return(1_44_159_18_48);
+    case 2_44_159_50_22 : return(1_44_159_49_22);
+    case 0_45_158_31_51 : return(1_45_158_32_50);
+    case 0_45_158_51_53 : return(1_45_158_51_53);
+    case 1_45_158_32_51 : return(0_45_158_30_51);
+    case 1_45_158_52_53 : return(0_45_158_50_53);
+    case 0_45_159_14_12 : return(1_45_159_15_11);
+    case 0_45_159_14_33 : return(1_45_159_15_32);
+    case 0_45_159_25_32 : return(1_45_159_25_32);
+    case 0_45_159_35_20 : return(1_45_159_34_20);
+    case 0_45_159_50_4 : return(1_45_159_49_4);
+    case 1_45_159_11_22 : return(2_45_159_12_21);
+    case 1_45_159_15_12 : return(0_45_159_13_12);
+    case 1_45_159_15_33 : return(0_45_159_13_33);
+    case 1_45_159_26_32 : return(0_45_159_25_33);
+    case 1_45_159_35_20 : return(0_45_159_34_20);
+    case 1_45_159_50_4 : return(0_45_159_49_4);
+    case 2_45_159_12_22 : return(1_45_159_10_22);
+    case 0_45_159_50_20 : return(0_30_77_20_30); // the factory stairs down: 1940,4958
+    case 0_30_77_19_28 : return(0_45_159_51_21); // up out of the Blast Furnace: 2931,10197
+}
+return(null);
+
+[label,keldagrim_stairs]
+def_coord $dest = ~keldagrim_stairs_dest(loc_coord);
+if ($dest = null) @unhandled_stairs(loc_coord);
+p_arrivedelay;
+p_telejump($dest);
+// EASCape: Keldagrim's other bits (ours unless said)
+[oploc1,dwarf_keldagrim_bookcase] mes("You search the bookcase but find nothing of interest.");
+[oploc2,dwarf_gold_mine] mes("This rock contains gold."); // the usual prospect words
+[oploc1,dwarf_rock_multicannon1] mes("The cannon isn't loaded.");

@@ -27,6 +27,17 @@ switch_obj (last_useitem)
         ~displaymessage(^dm_default);
 };
 
+// EASCape: the Keldagrim furnace's own Smelt option (the 2007 cache gives it one): smelt the first
+// ore you're carrying, as if you'd used it on the furnace (ours)
+[oploc2,dwarf_keldagrim_furnace]
+def_int $slot = 0;
+while ($slot < inv_size(inv)) {
+    def_obj $ore = inv_getobj(inv, $slot);
+    if ($ore ! null & oc_category($ore) = category_91) @smelt_ore($ore);
+    $slot = add($slot, 1);
+}
+mes("You don't have any ore to smelt."); // ours
+
 //--- this is the code that uses p_delays instead of weakqueues
 [label,smelt_ore](obj $last)
 p_arrivedelay();
