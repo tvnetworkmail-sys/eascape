@@ -64,7 +64,7 @@ if ($north = true) {
 
 // ---------------------------------------------------------------- Dondakan
 [opnpc1,dwarfrock_multi_dondakan]
-if (~bar_dondakan_step2 = true) return; // step 2 (dwarfrock_step2.rs2)
+if (%dwarfrock_quest >= ^bar_read_book) @bar_dondakan_step2; // the rest (dwarfrock_step2.rs2)
 if (%dwarfrock_quest = ^bar_not_started) @bar_dondakan_start;
 if (%dwarfrock_quest >= ^bar_find_pages & %dwarfrock_quest < ^bar_read_book) {
     ~chatplayer("<p,happy>Rolad has a book that might help us!");
@@ -344,6 +344,7 @@ if (~bar_page_wanted(2) = false) return;
 
 // ---------------------------------------------------------------- the dwarven lore book
 [opheld1,dwarf_rock_book]
+if (~bar_book_schematic = true) return; // the base schematics on its last page (dwarfrock_step2.rs2)
 %book_page = 0;
 %open_book = dwarf_rock_book;
 @book_flip_page(0, 0, 2, bar_lore_book);
@@ -361,12 +362,3 @@ switch_int (%book_page) {
         }
 }
 
-// ---------------------------------------------------------------- hooks the next steps fill in
-[proc,bar_dondakan_step2]()(boolean)
-return(false);
-
-[proc,bar_engineer_step2]()(boolean)
-return(false);
-
-[proc,bar_rolad_step2]()(boolean)
-return(false);

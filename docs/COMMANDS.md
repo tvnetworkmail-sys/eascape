@@ -50,7 +50,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::mountaindaughterpack` | The items Mountain Daughter needs: a rope, a pickaxe, an axe, a plank, a staff and leather gloves |
 | `::mdstage <n>` | Sets Mountain Daughter's stage (ours: 10 Hamal lets you search, 20 Asleif's two tasks, 30 both done, 40 find her killer, 50 the Kendal dead, 60 the burial). `::questdone mdaughter` finishes it |
 | `::betweenarockpack` | The items Between a Rock... needs: a rune pickaxe, 4 gold bars, a hammer, an ammo mould and 1,000 coins |
-| `::barstage <n>` | Sets Between a Rock...'s stage (ours: 10 Dondakan, 20 find Rolad, 30 find the pages, 40 the book, 50 read it) |
+| `::barstage <n>` | Sets Between a Rock...'s stage (ours: 10 Dondakan, 20 find Rolad, 30 find the pages, 40 the book, 50 read it, 60 a new material, 70 the schematics, 80 been inside the rock, 90 the avatar dead). `::questdone dwarfrock` finishes it |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

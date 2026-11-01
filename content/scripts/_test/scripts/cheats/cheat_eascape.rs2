@@ -687,6 +687,13 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~ahoy_complete; // the Ectophial, experience and quest complete scroll (quest_ahoy/ahoy_npcs.rs2)
+} else if (compare($name, "dwarfrock") = 0) {
+    if (%dwarfrock_quest >= ^bar_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    if (inv_freespace(inv) > 0) inv_add(inv, dwarf_goldrock_helmet, 1);
+    ~bar_complete; // the rune pickaxe, experience and quest complete scroll (quest_dwarfrock/dwarfrock_step2.rs2)
 } else if (compare($name, "mdaughter") = 0) {
     if (%mdaughter_quest_var >= ^md_complete) {
         mes("You've already done that quest.");
@@ -785,7 +792,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1824,7 +1831,8 @@ $banked = calc($banked + ~questpack_give(coins, 1000));
 ~questpack_done("Between a Rock...", $banked);
 
 // ::barstage <n> - sets Between a Rock...'s stage (%dwarfrock_quest, ours: 10 Dondakan, 20 find Rolad,
-// 30 find the pages, 40 the book, 50 read it)
+// 30 find the pages, 40 the book, 50 read it, 60 a new material, 70 the schematics, 80 been inside the
+// rock, 90 the avatar dead)
 [debugproc,barstage](int $n)
 if (p_finduid(uid) = false) return;
 %dwarfrock_quest = $n;

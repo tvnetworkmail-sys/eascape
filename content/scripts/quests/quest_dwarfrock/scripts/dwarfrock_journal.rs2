@@ -17,8 +17,25 @@ if ($s = ^bar_started) {
 } else if ($s = ^bar_have_book) {
     $t = append($t, "@str@Rolad put his book back together for me.||");
     $next = "@dbl@I should read the @dre@dwarven lore@dbl@ book.";
-} else {
+} else if ($s = ^bar_read_book) {
     $t = append($t, "@str@Rolad put his book back together for me, and I read it.||");
     $next = "@dbl@I should tell @dre@Dondakan@dbl@ what I've learned.";
+} else {
+    $t = append($t, "@str@Rolad's book told of a demonic spirit inside the rock, and|@str@that the rock is lined with gold.||");
+    if ($s >= ^bar_complete) {
+        $t = append($t, "@str@Dondakan fired me into the rock, where I defeated the avatar|@str@of the Arzinian Being of Bordanzan.||");
+        $next = "@red@QUEST COMPLETE!";
+    } else if ($s = ^bar_avatar_dead) {
+        $t = append($t, "@str@Inside the rock I defeated the Arzinian Avatar.||");
+        $next = "@dbl@I should tell @dre@Dondakan@dbl@.";
+    } else if ($s = ^bar_inside) {
+        $t = append($t, "@str@Dondakan fired me into the rock. It is full of gold, and a|@str@spirit lives there.||");
+        $next = "@dbl@I should go back in with my gold helmet on, mine some @dre@gold@dbl@|@dbl@(5 or more, better 15) and face the Being inside the flames|@dbl@at the centre before the helmet gets too heavy.";
+    } else if ($s = ^bar_find_schematics) {
+        $t = append($t, "@str@A golden cannonball passed right through the rock.||");
+        $next = "@dbl@Dondakan wants to fire me through it. I need the @dre@schematics@dbl@|@dbl@to change his cannon (dwarven engineers might have parts, and|@dre@Rolad@dbl@ once worked on the cannon) and a @dre@gold helmet@dbl@ made|@dbl@from 3 gold bars.";
+    } else {
+        $next = "@dbl@Dondakan needs a new material for his cannonballs. Perhaps|@dre@gold@dbl@ would work, since the rock is lined with it.";
+    }
 }
 ~quest_journal("Between a Rock...", append($t, $next));

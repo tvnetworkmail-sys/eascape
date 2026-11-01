@@ -1,0 +1,829 @@
+// EASCape: Between a Rock..., the rest: the golden cannonball, the four schematics and the gold
+// helmet, being fired into the rock, the Arzinian Avatar, and the end (%dwarfrock_quest 50 -> 110).
+// Words from the OSRS wiki's quest transcript; the gold helmet (3 gold bars, 50 Smithing, 30
+// experience) from its item page; the reward from the quest page; the avatars' combat from Void.
+// Ours: the stage values (60 a new material, 70 the schematics, 80 been inside, 90 the avatar dead),
+// putting the schematics together by "Assemble" on any part when you hold all four (the cache has no
+// schematic puzzle screen), the cannon cutscene told as dialogue, where you land in the rock
+// (2308,4952) and outside it (2826,10167), how the avatar is chosen when you have under 5 gold ore
+// (one that cannot be hurt), the gold boatman's banking words, and the lines marked "ours".
+
+[proc,bar_in_rock]()(boolean)
+if (inzone(0_36_77_0_0, 0_37_77_63_63, coord) = true) return(true);
+return(false);
+
+[proc,bar_has_all_schematics]()(boolean)
+if (inv_total(inv, dwarf_rock_base_schematic) > 0 & inv_total(inv, dwarf_rock_schematic1) > 0
+    & inv_total(inv, dwarf_rock_schematic2) > 0 & inv_total(inv, dwarf_rock_schematic3) > 0) {
+    return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- Dondakan
+[label,bar_dondakan_step2]
+def_int $s = %dwarfrock_quest;
+if ($s >= ^bar_complete) @bar_dondakan_after;
+if ($s = ^bar_avatar_dead) @bar_dondakan_finish;
+if ($s = ^bar_inside) @bar_dondakan_again;
+if ($s = ^bar_read_book) {
+    ~chatplayer("<p,happy>Rolad gave me a book that was quite interesting to read! I think I know what's inside it!");
+    ~chatnpc("<p,quiz>What? What? Tell me!");
+    ~chatplayer("<p,neutral>Ehm, well... a demonic spirit for one...");
+    ~chatnpc("<p,confused>A what?");
+    ~chatplayer("<p,neutral>A demonic spirit! And apparently the inside of the rock is lined with gold!");
+    ~chatnpc("<p,quiz>Gold? Did you say gold?");
+    ~chatplayer("<p,neutral>Yes... and a de-");
+    ~chatnpc("<p,happy>Gold! I knew it! I struck gold! I'm set for life!");
+    ~chatnpc("<p,neutral>What's left of it anyway...");
+    ~chatnpc("<p,quiz>Now tell me, how do I break open the rock?");
+    ~chatplayer("<p,neutral>Sorry, the book doesn't say... it doesn't seem to be particularly concerned with actually breaking open the rock. You see, the demonic spirit is being kept inside it.");
+    ~chatnpc("<p,neutral>Yes yes, I heard you the first time.");
+    %dwarfrock_quest = ^bar_need_material;
+    ~chatnpc("<p,sad>Well, we're not very much closer to a solution then, are we?");
+    @bar_dondakan_material;
+}
+if ($s = ^bar_need_material) @bar_dondakan_material;
+@bar_dondakan_schematics;
+
+[label,bar_dondakan_material]
+switch_int (~p_choice3("What have you tried so far?", 1, "Maybe we need to set up another cannon?", 2, "I'll be back later.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What have you tried so far?");
+        ~chatnpc("<p,neutral>Well, let's see...");
+        ~chatnpc("<p,neutral>At one time, we had a hundred dwarves in here, all picking away at the rock. Didn't do a thing.");
+        ~chatnpc("<p,neutral>Then there was the time when we set fire to this whole section of the cave. What a smell that made!");
+        ~chatplayer("<p,quiz>Any effect?");
+        ~chatnpc("<p,neutral>Apart from coating the rock with soot? Not really, no.");
+        ~chatnpc("<p,neutral>I was able to borrow a cannon from the Black Guard, my son was able to pull some strings you know.");
+        ~chatnpc("<p,neutral>Of course, steel cannonballs didn't make a dent. But then ol' Donnie had a clever idea.");
+        ~chatplayer("<p,quiz>Oh really?");
+        ~chatnpc("<p,happy>I made this adamantite cannonball, you see! Cost me quite a pile of coins too!");
+        ~chatplayer("<p,happy>Wow! That must have made quite an impact!");
+        ~chatnpc("<p,sad>Well, yes, it did... when it bounced back onto the ground it did.");
+        @bar_dondakan_tried;
+    case 2 :
+        ~chatplayer("<p,quiz>Maybe we should set up another cannon?");
+        ~chatnpc("<p,confused>Another cannon? How will that help?");
+        ~chatnpc("<p,neutral>No, no, what we need is a different material of cannonballs. The hardest, toughest you can find.");
+        ~chatplayer("<p,quiz>How do you mean, that I can find? What are you doing then?");
+        ~chatnpc("<p,neutral>I'm guarding the cannon. Won't do us much good if it were stolen, would it?");
+        @bar_dondakan_material;
+    case 3 : ~chatplayer("<p,neutral>I'll be back later.");
+}
+
+[label,bar_dondakan_tried]
+if (~p_choice2("What else did you try?", 1, "I'm tired of these stories.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'm tired of these stories.");
+    ~chatnpc("<p,neutral>Go on then... leave an old dwarf to his work.");
+    return;
+}
+~chatplayer("<p,quiz>What else did you try?");
+~chatnpc("<p,happy>Well, then I had an even more clever idea!");
+~chatnpc("<p,happy>I put an even bigger pile of coins together to get some rune cannonballs! Good idea, right?");
+~chatplayer("<p,happy>Yeah, great!");
+~chatnpc("<p,angry>No, it wasn't. Didn't do anything! Nothing at all!");
+~chatnpc("<p,neutral>Latest thing I've tried are these boots.");
+~chatplayer("<p,quiz>Nice boots... but what about them?");
+~chatnpc("<p,happy>They're made out of granite! I don't have enough money left to make granite cannonballs though. But see!");
+~mesbox("Dondakan walks up the passage, kicks it, and walks back.");
+~chatnpc("<p,happy>Did you see? Did you?");
+~chatplayer("<p,confused>I er... didn't see anything.");
+~chatnpc("<p,angry>That's because there wasn't anything to see! Even granite doesn't do anything to it!");
+~chatplayer("<p,quiz>And now I have to come up with a material that will affect it somehow?");
+~chatnpc("<p,happy>You got it!");
+~chatplayer("<p,neutral>Some kind of new material that no one has ever found before but which I am supposed to accidentally stumble upon, perhaps?");
+~chatnpc("<p,neutral>Don't be silly, I'm sure there must be some known material that will affect it.");
+@bar_dondakan_tried;
+
+// things used on Dondakan
+[opnpcu,dwarfrock_multi_dondakan]
+def_obj $obj = last_useitem;
+if (%dwarfrock_quest = ^bar_need_material) {
+    if ($obj = perfect_gold_bar | $obj = perfect_gold_ore) {
+        ~chatnpc("<p,neutral>Perfect gold? That's much too valuable to be used to make cannonballs!");
+        return;
+    }
+    if ($obj = gold_bar | $obj = gold_ore) {
+        if (%dwarfrock_gold_cannonball = 1) {
+            ~chatnpc("<p,neutral>Yes, you already showed me that. But I'm not going to waste my own gold on it, make a cannonball and bring it to me.");
+            return;
+        }
+        ~chatnpc("<p,laugh>Haha, you want me to make a golden cannonball?");
+        ~chatnpc("<p,neutral>You know that apart from being heavy it's also very soft, don't you? It'd be a pointless waste!");
+        ~chatplayer("<p,neutral>Well... the book does say that there's gold inside the rock, so I thought perhaps gold can damage it as well.");
+        ~chatnpc("<p,neutral>Hmm, I suppose you have a point there.");
+        ~chatnpc("<p,neutral>Tell you what, if you make a golden cannonball and give it to me, I'll fire it at the rock.");
+        %dwarfrock_gold_cannonball = 1;
+        return;
+    }
+    if ($obj = dwarf_rock_cannonball_gold) @bar_golden_cannonball;
+    def_string $n = lowercase(oc_name($obj));
+    if (string_indexof_string(" ore", $n) ! -1 | string_indexof_string(" bar", $n) ! -1 | $obj = mcannonball) {
+        ~chatnpc("<p,neutral>Tried that, didn't work.");
+        return;
+    }
+}
+~chatnpc("<p,confused>What am I supposed to do with that?");
+
+[label,bar_golden_cannonball]
+~chatplayer("<p,happy>I have that golden cannonball you asked me to make.");
+~chatnpc("<p,happy>That... that... that's an amazing looking cannonball!");
+~chatnpc("<p,quiz>Are you sure you want me to fire it at the rock? It's going to make a nasty dent in it. In the cannonball that is.");
+if (~p_choice2("Yes, I'm sure this will crack open the rock.", 1, "No, I'd rather sell it for a huge profit.", 2) = 2) {
+    ~chatplayer("<p,neutral>No, on second thought, I'd rather sell it for a huge profit.");
+    ~chatnpc("<p,laugh>Nice idea, <displayname>, but no one will buy a golden cannonball!");
+    ~chatnpc("<p,neutral>It looks nice, but it's not much use as a projectile.");
+    return;
+}
+~chatplayer("<p,neutral>Yes, I'm sure this will crack open the rock.");
+~chatnpc("<p,sad>It breaks my heart to ruin such a fine piece of crafting, but it's your gold... Alright, let's load it up then.");
+inv_del(inv, dwarf_rock_cannonball_gold, 1);
+%dwarfrock_fired_gold_cannonball = 1;
+%dwarfrock_quest = ^bar_find_schematics;
+~mesbox("The cannon fires the golden cannonball through the passage.");
+~chatnpc("<p,confused>Did... did... did you see that?");
+~chatplayer("<p,confused>The cannonball went right through it!");
+~chatnpc("<p,angry>I don't believe it! All this time, I've been spending all my gold on opening the rock... I could've just thrown it at it!");
+~chatplayer("<p,quiz>But... the rock didn't actually break, did it?");
+~chatnpc("<p,neutral>No, it seemed more like it... gave way for a second... That's interesting...");
+~chatplayer("<p,quiz>So how does this help us?");
+~chatnpc("<p,happy>Why, I'll just shoot you through it so you can have a look, won't I?");
+~chatplayer("<p,confused>Shoot me... through it? Errr... what exactly do you mean?");
+~chatnpc("<p,neutral>Very simple. I'll have to make a few modifications to my cannon so that it can fire a human, and you'll need a golden helmet of course.");
+~chatnpc("<p,neutral>Then I'll fire you at the rock so you can do a little reconnaissance. Don't worry, you should land safely on the other side of the rock.");
+~chatnpc("<p,neutral>Might want to pick up that cannonball again while you're at it!");
+~chatplayer("<p,quiz>But... what if I bump into that demon, the one from the book?");
+~chatnpc("<p,neutral>Don't be silly now. It's just a rock... just a rock with lots of gold in it!");
+@bar_fire_me_options;
+
+[label,bar_fire_me_options]
+if (~p_choice2("So you want to... fire me into the rock?", 1, "My head's spinning, I have to go for a bit.", 2) = 2) {
+    ~chatplayer("<p,confused>My head's spinning, I have to go for a bit.");
+    return;
+}
+~chatplayer("<p,quiz>So you want to... fire me into the rock?");
+~chatnpc("<p,neutral>Yes, just to see what's inside... to see if all that gold is really embedded inside it.");
+~chatplayer("<p,quiz>Are you sure that it's safe?");
+~chatnpc("<p,neutral>No, but then we'll never know until we've tried it, right?");
+if (~p_choice2("Find someone else for your bizarre experiment!", 1, "I can't argue with that, shoot me in!", 2) = 1) {
+    ~chatplayer("<p,angry>Find someone else for your bizarre experiment, I'm not going to crawl into that cannon of yours! Or have you shoot me at a solid rock!");
+    ~chatnpc("<p,sad>But we're so close to all that gold!");
+    ~chatplayer("<p,neutral>Forget it.");
+    return;
+}
+~chatplayer("<p,happy>I can't argue with that, shoot me in!");
+~chatnpc("<p,neutral>Well, it's not so simple... like I said, I need to make some modifications to my cannon. They're not really designed to fire humans, you know.");
+~chatplayer("<p,neutral>Okay, I'll just wait right here until you've made them.");
+~chatnpc("<p,neutral>I don't really know how, actually. Never been much of an engineer.");
+~chatnpc("<p,neutral>If I had the right schematics for it, I could probably work with that. But I don't.");
+~chatplayer("<p,quiz>Okay, so you want me to look for the schematics for you, is that it?");
+~chatnpc("<p,happy>That's it, yes! Here, I have one part of the schematics, sent to me by some prankster dwarf, I don't even remember his name. You'll have to find the rest on your own.");
+~chatnpc("<p,neutral>Oh, and you'll also need a golden helmet of course. Would hurt quite a bit otherwise.");
+~chatplayer("<p,quiz>Won't a gold plated helmet do?");
+~chatnpc("<p,neutral>No, it has to be a helmet made out of solid gold. Gold plated helmets contain so little actual gold, it'd be a bit dangerous.");
+~chatnpc("<p,neutral>Unless you want to die when I shoot you at the rock?");
+~chatplayer("<p,neutral>No no, I'll get you a helmet made out of solid gold.");
+~chatplayer("<p,neutral>Although that will be a horrendously heavy thing to actually wear.");
+~chatnpc("<p,neutral>Yes yes, well, get going now, why don't you? I'll guard the cannon while you're away.");
+~chatplayer("<p,neutral>That's what I thought you'd say.");
+~bar_give_schematic1;
+
+[proc,bar_give_schematic1]
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, dwarf_rock_schematic1, 1, 200);
+    mes("You have no space in your inventory and drop the schematic on the ground.");
+    return;
+}
+inv_add(inv, dwarf_rock_schematic1, 1);
+
+[label,bar_dondakan_schematics]
+def_boolean $helmet = false;
+if (~obj_gettotal(dwarf_goldrock_helmet) > 0) $helmet = true;
+def_boolean $worn = false;
+if (inv_total(worn, dwarf_goldrock_helmet) > 0) $worn = true;
+if (%dwarfrock_schematics_solved = 1 & inv_total(inv, dwarf_rock_schematic_assembled) > 0) {
+    if ($helmet = false) {
+        ~chatplayer("<p,neutral>I've got your schematics... what else was I supposed to do?");
+        ~chatnpc("<p,neutral>You'll need a golden helmet as well, if you want to survive the blast.");
+        ~chatplayer("<p,neutral>I would prefer that, yes.");
+        return;
+    }
+    ~chatplayer("<p,happy>I've got your schematics all assembled, and I have that golden helmet as well!");
+    if ($worn = false) {
+        ~chatnpc("<p,angry>Well, go ahead and wear your helmet! Won't protect your head if it's not on your head!");
+        return;
+    }
+    ~chatnpc("<p,happy>Wonderful! These schematics look simple enough... are you ready for your quick trip through the rock then?");
+    switch_int (~p_choice3("You may fire when ready!", 1, "Ready as I'll ever be.", 2, "Err... maybe another time.", 3)) {
+        case 1 :
+            ~chatplayer("<p,happy>You may fire when ready!");
+            ~chatnpc("<p,happy>Ah, such enthusiasm! Okay, here we go, let me have a look at those schematics and we'll get started.");
+        case 2 :
+            ~chatplayer("<p,neutral>Ready as I'll ever be...");
+            ~chatnpc("<p,neutral>Okay, here we go, let me have a look at those schematics and we'll get started.");
+        case 3 :
+            ~chatplayer("<p,neutral>Err, maybe another time, I have some important business to attend to.");
+            return;
+    }
+    @bar_first_shot;
+}
+if ($helmet = true) {
+    ~chatplayer("<p,neutral>I have that golden helmet you said I'd need, what else did you need again?");
+    ~chatnpc("<p,neutral>I still need those schematics to modify my cannon. It doesn't normally fire humans, you know.");
+} else if (~bar_has_all_schematics = false) {
+    ~chatplayer("<p,quiz>What did you want me to find again?");
+    ~chatnpc("<p,neutral>Schematics to modify my cannon, and a golden helmet for you to wear.");
+}
+if (~bar_has_all_schematics = true) {
+    ~chatplayer("<p,neutral>I think I have all the different parts of the schematics...");
+    ~chatnpc("<p,quiz>Let me have a look at that!");
+    ~chatnpc("<p,angry>This doesn't make any sense, it's all jumbled up! Sort it out, will you, don't torment an old dwarf with nonsensical drawings!");
+    return;
+}
+if (~obj_gettotal(dwarf_rock_schematic1) = 0 & %dwarfrock_schematics_solved = 0) {
+    ~chatplayer("<p,sad>I lost that schematic you gave me, actually.");
+    ~chatnpc("<p,angry>Oh, be more careful! Here, have a copy, but don't lose it again!");
+    ~bar_give_schematic1;
+    return;
+}
+~chatplayer("<p,quiz>Sounds simple enough. Any idea on where I can find those schematics?");
+~chatnpc("<p,neutral>Not a clue! I don't even know how many parts there are. It's probably best to ask any dwarven engineers that you might know.");
+~chatnpc("<p,neutral>And it could be that someone in the mines or the city here knows where this part came from. Didn't you talk to someone in Keldagrim already? Just ask around!");
+~chatplayer("<p,sad>Again...");
+~chatnpc("<p,angry>No complaining now, run along!");
+
+// the cannon cutscene, told as dialogue (ours)
+[label,bar_first_shot]
+inv_del(inv, dwarf_rock_schematic_assembled, 1);
+~mesbox("You climb into the cannon.");
+~chatnpc("<p,happy>Right, sitting comfortably?");
+~chatplayer("<p,sad>Er, not really, no...");
+~chatnpc("<p,happy>Excellent, excellent, I'll get the cannon ready to fire then!");
+~chatplayer("<p,confused>I'm starting to get second thoughts about this!");
+~chatnpc("<p,happy>Just think of all that gold!");
+~chatplayer("<p,sad>I'm thinking of that demon...");
+~chatnpc("<p,neutral>Don't worry, it'll all be over in a moment!");
+~chatplayer("<p,sad>That's what I'm afraid of.");
+%dwarfrock_quest = ^bar_inside;
+%dwarfrock_inside_visited = 1;
+~bar_shoot_in;
+~chatplayer("<p,confused>Where... where am I?");
+~chatplayer("<p,confused>What is this place?");
+~mesbox("You hear muffled sounds through the rock wall.");
+~chatplayer("<p,confused>Dondakan said there was supposed to be a river behind the rock... but I don't see a river here.");
+~mesbox("You start to feel a little claustrophobic in here...");
+~chatplayer("<p,confused>I think... I think... I think I may be...");
+~chatplayer("<p,shock>...inside the rock!");
+~mesbox("Arzinian Being of Bordanzan: You are in my domain now! Begone lest you wish to be destroyed!");
+~chatplayer("<p,confused>What? What was that?");
+~chatplayer("<p,sad>Ow, my poor head... this helmet seems heavier than ever!");
+~mesbox("Your helmet starts to feel heavier and heavier! While you have the feeling it somehow keeps you in the rock, you think you can only keep it on for about eight more minutes.");
+
+// into the rock: during the quest the helmet holds you there for 800 ticks (the wiki's timer)
+[proc,bar_shoot_in]
+p_delay(1);
+p_telejump(0_36_77_4_24);
+if (%dwarfrock_quest < ^bar_complete) {
+    %dwarfrock_inside_timeleft = 0;
+    softtimer(bar_helmet, 25);
+}
+
+[label,bar_dondakan_again]
+~chatnpc("<p,quiz>So, tell me! What did you see inside! Is there any gold in there?");
+~chatplayer("<p,neutral>Yes... gold, yes...");
+~chatnpc("<p,laugh>Haha, wonderful!");
+~chatplayer("<p,neutral>I ehm, also ran into this spirit thing. You remember, from the book?");
+~chatnpc("<p,quiz>Ran into him? How do you mean?");
+~chatplayer("<p,neutral>The rock... seems to be a lot larger than it appears on the outside. I was actually able to walk around in there. But it was like... walking around in a dream.");
+~chatnpc("<p,quiz>And this spirit you speak of? Was it guarding the gold?");
+~chatplayer("<p,confused>I'm not quite sure, it all seems so distant now.");
+~chatnpc("<p,neutral>Well, if it is, that must mean you must kill it! Simple!");
+~chatplayer("<p,neutral>Right. Kill it. Simple. Okay.");
+~chatnpc("<p,quiz>So are you ready to have another go in the rock?");
+if (~p_choice2("Ready as I'll ever be.", 1, "Err... maybe another time.", 2) = 2) {
+    ~chatplayer("<p,neutral>Err, maybe another time, I have some important business to attend to.");
+    return;
+}
+~chatplayer("<p,neutral>Ready as I'll ever be...");
+if (inv_total(worn, dwarf_goldrock_helmet) = 0) {
+    ~chatnpc("<p,angry>Not without wearing your golden helmet you're not!");
+    return;
+}
+~chatnpc("<p,happy>Okay, here we go, hold on to your helmet!");
+~bar_shoot_in;
+~mesbox("Your helmet starts to feel heavier and heavier! While you have the feeling it somehow keeps you in the rock, you think you can only keep it on for about eight more minutes.");
+
+[label,bar_dondakan_finish]
+~chatnpc("<p,quiz>The whole cave was shaking! What happened in there?");
+~chatplayer("<p,confused>I em... let me just collect my thoughts. It all seems like a sort of distant dream now.");
+~chatplayer("<p,neutral>I think I killed the Arzinian demon thing.");
+~chatnpc("<p,shock>What, you actually killed him?");
+~chatplayer("<p,neutral>Well, I killed its avatar. I'm not sure what happened to the demon itself.");
+~chatnpc("<p,neutral>Probably banished it to some hellish realm or other.");
+~chatnpc("<p,neutral>He'll be back, but not for a few thousand years, I'm sure.");
+~chatnpc("<p,happy>But in the mean time, there's plenty of gold for me!");
+~chatplayer("<p,neutral>For us.");
+~chatnpc("<p,happy>Of course, of course! Whenever you want to go back in there, let me know... just don't forget to bring your helmet!");
+~chatnpc("<p,happy>And here, have this rune pickaxe as well, I can just use a normal one now anyway.");
+~chatplayer("<p,happy>Great, thanks a lot!");
+~chatnpc("<p,happy>No no, thank you! After all these years, the riddle of the rock has finally been cracked!");
+~bar_complete;
+
+// the reward (OSRS wiki): 2 quest points, 5,000 Defence, Mining and Smithing experience, a rune
+// pickaxe, the gold helmet (yours already) and the Arzinian Mine
+[proc,bar_complete]
+%dwarfrock_quest = ^bar_complete;
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, rune_pickaxe, 1, 200);
+    mes("Dondakan tried to hand you a rune pickaxe, but you dropped it on the ground.");
+} else {
+    inv_add(inv, rune_pickaxe, 1);
+}
+stat_advance(defence, 50000);
+stat_advance(mining, 50000);
+stat_advance(smithing, 50000);
+session_log(^log_adventure, "Quest complete: Between a Rock...");
+~send_quest_complete(questlist:dwarfrock, dwarf_goldrock_helmet, 250, ^bar_questpoints, "You have completed\\nBetween a Rock...!", "2 Quest Points|5,000 Defence XP|5,000 Mining XP|5,000 Smithing XP|A rune pickaxe|Access to the Arzinian Mine");
+
+[label,bar_dondakan_after]
+~chatplayer("<p,happy>How are you doing, Dondakan?");
+~chatnpc("<p,happy>Oh, just fine, just fine! This gold is certainly creating a steady flow of income for me! After the company takes some of the cut, of course.");
+if (~p_choice2("Can you shoot me into the rock again?", 1, "That's great, but I have to go.", 2) = 2) {
+    ~chatplayer("<p,neutral>That's great, but I have to go now.");
+    ~chatnpc("<p,happy>Come back any time!");
+    return;
+}
+~chatplayer("<p,quiz>Can you shoot me into the rock again?");
+if (inv_total(worn, dwarf_goldrock_helmet) = 0) {
+    ~chatnpc("<p,neutral>You need to wear that golden helmet... unless you want to crack open your skull on the rock.");
+    return;
+}
+~chatnpc("<p,happy>Of course, just a second, let me adjust my cannon again.");
+~bar_shoot_in;
+
+// ---------------------------------------------------------------- the golden cannonball (a furnace)
+// hooked in smelting.rs2: a gold bar on a furnace with an ammo mould, once Dondakan asked for it
+[proc,bar_furnace_gold_wanted]()(boolean)
+if (%dwarfrock_gold_cannonball = 0 | %dwarfrock_quest ! ^bar_need_material) return(false);
+if (inv_total(inv, ammo_mould) = 0) return(false);
+return(true);
+
+[label,bar_furnace_gold]
+if (~p_choice2("Yes.", 1, "No.", 2) = 2) @craft_gold_interface; // "Do you wish to make a golden cannonball?"
+~mesbox("You heat the gold bar");
+mes("...You heat the gold bar to a liquid state...");
+anim(human_furnace, 0);
+p_delay(2);
+mes("...You pour it into your cannonball mould...");
+p_delay(2);
+mes("...You then leave it to cool for a short while.");
+p_delay(2);
+inv_del(inv, gold_bar, 1);
+inv_add(inv, dwarf_rock_cannonball_gold, 1);
+mes("You make one beautiful golden cannonball.");
+
+// ---------------------------------------------------------------- the gold helmet (an anvil)
+// hooked in smithing.rs2: 3 gold bars and a hammer, 50 Smithing, 30 experience (the wiki); once
+// Dondakan has asked for it, and only if you have none (ours, as the wiki says after the quest)
+[proc,bar_anvil_gold_wanted]()(boolean)
+if (%dwarfrock_quest < ^bar_find_schematics) return(false);
+if (~obj_gettotal(dwarf_goldrock_helmet) > 0) return(false);
+return(true);
+
+[label,bar_anvil_gold]
+if (inv_total(inv, hammer) = 0) {
+    mes("You need a hammer to work the metal with."); // ours
+    return;
+}
+if (stat(smithing) < 50) {
+    mes("You need a Smithing level of 50 to make a gold helmet."); // ours
+    return;
+}
+if (inv_total(inv, gold_bar) < 3) {
+    mes("You need 3 gold bars to make a gold helmet."); // ours
+    return;
+}
+anim(human_smithing, 0);
+p_delay(2);
+inv_del(inv, gold_bar, 3);
+inv_add(inv, dwarf_goldrock_helmet, 1);
+stat_advance(smithing, 300);
+mes("You make a gold helmet."); // ours
+
+// ---------------------------------------------------------------- Khorvak (White Wolf Mountain passage)
+[opnpc1,dwarfrock_engineer2]
+if (%dwarfrock_quest < ^bar_find_schematics) {
+    ~chatnpc("<p,happy>Hic!"); // ours
+    return;
+}
+if (~obj_gettotal(dwarf_rock_schematic2) > 0 | %dwarfrock_schematics_solved = 1) {
+    ~chatplayer("<p,happy>Thanks for that schematic.");
+    ~chatnpc("<p,quiz>Sho have you been shot out of a cannon yet?");
+    ~chatplayer("<p,neutral>No, fortunately not.");
+    return;
+}
+~chatplayer("<p,quiz>I'm looking for schematics to modify the dwarven multicannon to fire a human. Can you help?");
+~chatnpc("<p,laugh>Haha, yesh, I have jusht the shing!");
+~chatnpc("<p,happy>I've been working on thish deshign for quite a while now!");
+~chatnpc("<p,happy>Never got to test it, love to shee it shoot a real human!");
+~chatplayer("<p,neutral>Well, can you give them to me? I'd be willing to try the experiment.");
+~chatnpc("<p,neutral>Oooh, shure, shure... I've only got one part left, though, I gave all the other parts away.");
+~chatplayer("<p,quiz>Who did you give them to?");
+~chatnpc("<p,confused>How should I know? I'm only a shimple dwarf.");
+~chatplayer("<p,neutral>Okay, okay, can I have that one schematic then?");
+~chatnpc("<p,happy>Of courshe!");
+~chatnpc("<p,happy>Just give me a drink and I'll gladly help you.");
+if (~p_choice2("No, I've had enough of buying drinks for people!", 1, "Oh, alright, what do you want to drink?", 2) = 2) {
+    ~chatplayer("<p,neutral>Oh, alright, what do you want to drink?");
+    ~chatnpc("<p,happy>Oooh, jusht a glash of dwarven shtout over there...");
+    return;
+}
+~chatplayer("<p,angry>No, I've had enough of buying drinks for people!");
+~chatplayer("<p,angry>It's always like this... Sure, I'll help you <displayname>, just as soon as you get me a drink!");
+~chatplayer("<p,angry>And more often than not they actually want a very special kind of drink that can only be gotten in the next town, or beyond.");
+~chatplayer("<p,angry>And what is wrong with all you people anyway? Sometimes it seems as if half the population of Gielinor are alcoholics!");
+~chatplayer("<p,angry>So, no, I won't do it anymore, you can get your own drink for once, and I'm just going to stay right here until you've done so!");
+~chatnpc("<p,neutral>Pffft, I only wanted a dwarven shtout from that table over there.");
+~chatnpc("<p,neutral>Here, have the shtupid schematic, I've gone right off my drink now.");
+~bar_give_khorvak_schematic;
+
+[opnpcu,dwarfrock_engineer2]
+if (last_useitem ! dwarven_stout | %dwarfrock_quest < ^bar_find_schematics | ~obj_gettotal(dwarf_rock_schematic2) > 0 | %dwarfrock_schematics_solved = 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,happy>Here, I've got your dwarven stout.");
+inv_del(inv, dwarven_stout, 1);
+~chatnpc("<p,happy>That'sh wonderful! You're a good human, you are. Here, have thish schematic and have fun with it!");
+~bar_give_khorvak_schematic;
+
+[proc,bar_give_khorvak_schematic]
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, dwarf_rock_schematic2, 1, 200);
+    mes("You can't carry the schematic and drop it on the ground.");
+    return;
+}
+inv_add(inv, dwarf_rock_schematic2, 1);
+
+// ---------------------------------------------------------------- the Dwarven Engineer (Keldagrim)
+[proc,bar_engineer_step2]()(boolean)
+if (%dwarfrock_quest < ^bar_find_schematics) return(false);
+~chatplayer("<p,quiz>Do you have any schematics related to the dwarven multicannon?");
+if (~obj_gettotal(dwarf_rock_schematic3) > 0 | %dwarfrock_schematics_solved = 1) {
+    ~chatnpc("<p,neutral>Yes, and I already gave a part to you, remember?");
+    ~chatplayer("<p,neutral>Oh yes.");
+    return(true);
+}
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>You wouldn't be able to carry them anyway, so why ask for them?");
+    return(true);
+}
+~chatnpc("<p,quiz>Why, what do you need them for?");
+~chatplayer("<p,happy>Ah, so you do!");
+~chatplayer("<p,neutral>Dondakan needs schematics to modify his multicannon, to fire a human you see.");
+~chatnpc("<p,quiz>And you'd be the test subject? I mean, the cannonball?");
+~chatplayer("<p,neutral>Ehm, yes, I suppose so...");
+~chatnpc("<p,laugh>Haha, that I would like to see!");
+~chatnpc("<p,neutral>Here, take this. Khorvak sent it to me from White Wolf Mountain, kind of as a joke. It's incomplete, of course, doesn't mean anything without other parts.");
+~chatnpc("<p,laugh>Haha, he's always a laugh, that Khorvak. Shooting humans out of cannons!");
+~chatplayer("<p,neutral>Thanks... I suppose.");
+inv_add(inv, dwarf_rock_schematic3, 1);
+return(true);
+
+// ---------------------------------------------------------------- Rolad and the base schematics
+[proc,bar_rolad_step2]()(boolean)
+if (%dwarfrock_quest < ^bar_find_schematics) return(false);
+if (~obj_gettotal(dwarf_rock_base_schematic) > 0 | %dwarfrock_schematics_solved = 1) {
+    ~chatplayer("<p,happy>I found your schematics! You wrote them down on one of the pages of that book you gave me!");
+    ~chatnpc("<p,happy>Oh, of course, why didn't I think of that!");
+    return(true);
+}
+if (~obj_gettotal(dwarf_rock_book) = 0) {
+    ~chatplayer("<p,quiz>Say, you wouldn't happen to have another copy of that book, would you?");
+    ~chatnpc("<p,shock>Don't tell me you lost that book!");
+    ~chatplayer("<p,sad>Er, yes, I lost your book...");
+    ~chatnpc("<p,neutral>Lucky that I have another copy, isn't it? Please don't lose it again.");
+    ~bar_give(dwarf_rock_book);
+    ~chatplayer("<p,happy>Great, thanks a lot!");
+    return(true);
+}
+if (%dwarfrock_rolad_schematics_heardof = 1) {
+    ~chatplayer("<p,quiz>I can't seem to find your schematics... Did you lose them down in the mines again?");
+    ~chatnpc("<p,confused>Oh, let's see... well... maybe. I'm not altogether sure where I left them.");
+    ~chatplayer("<p,quiz>No idea at all?");
+    ~chatnpc("<p,sad>Sorry, no... I do not even remember what I drew them on.");
+    return(true);
+}
+~chatplayer("<p,neutral>You've been so helpful with that book, I was wondering, can you help me with something else as well?");
+~chatnpc("<p,happy>Of course, anything to help a fellow dwarf, especially such a big, strong one such as yourself!");
+~chatplayer("<p,neutral>Dondakan wants to modify his multicannon, you see, to fire a human.");
+~chatnpc("<p,quiz>A human, you say? Are we using humans as cannon fodder now?");
+~chatnpc("<p,neutral>Well, good for him, never did like humans anyway.");
+~chatplayer("<p,quiz>But can you help me with the schematics? Dondakan needs to know what he needs to modify.");
+~chatnpc("<p,neutral>Oh, I see, I see. No, I have no schematics to... what did you say? Modify the cannon to shoot humans? Such a preposterous idea.");
+~chatnpc("<p,neutral>No, all I have are the base schematics of the cannon. I was on the multicannon project once, you know?");
+~chatnpc("<p,neutral>You see, back when-");
+~chatplayer("<p,happy>Oh, those will be a tremendous help already, can I borrow those off of you as well?");
+~chatnpc("<p,neutral>Well, of course, I have the schematics written down on a piece of paper somewhere. Let me just look for it.");
+~chatnpc("<p,sad>Oh dear, I seem to have lost the schematics.");
+%dwarfrock_rolad_schematics_heardof = 1;
+%dwarfrock_rolad_schematics_lookingfor = 1;
+// the transcript has no words for the second option, so both lead to the first one's (ours)
+def_int $any = ~p_choice2("You are rather a forgetful person, aren't you?", 1, "I'd better look for them as well then?", 2);
+~chatplayer("<p,neutral>You are rather a forgetful person, aren't you?");
+~chatnpc("<p,angry>I hardly ever lose anything, I'll have you know!");
+~chatnpc("<p,quiz>Now, you wouldn't be able to go and look for the schematics, would you?");
+~chatplayer("<p,neutral>Oh, alright, I'll go and have a look.");
+return(true);
+
+// reading the book once Rolad has lost his schematics: they're on its last page
+[proc,bar_book_schematic]()(boolean)
+if (%dwarfrock_rolad_schematics_lookingfor = 0 | %dwarfrock_quest < ^bar_find_schematics) return(false);
+~mesbox("As you finish reading the book, you notice the last page has a very peculiar picture drawn on it.");
+if (~p_choice2("Yes.", 1, "No.", 2) = 2) return(true); // "Tear out the page?"
+inv_del(inv, dwarf_rock_book, 1);
+inv_add(inv, dwarf_rock_base_schematic, 1);
+%dwarfrock_rolad_schematics_lookingfor = 0;
+~objbox(dwarf_rock_base_schematic, "You tear out the page and find what appears to be one of the schematics you've been looking for! You throw away the ruined book and tuck the schematic safely away.", 250, 0, 0);
+return(true);
+
+// ---------------------------------------------------------------- putting the schematics together (ours)
+[opheld1,dwarf_rock_base_schematic] @bar_assemble;
+[opheld1,dwarf_rock_schematic1] @bar_assemble;
+[opheld1,dwarf_rock_schematic2] @bar_assemble;
+[opheld1,dwarf_rock_schematic3] @bar_assemble;
+
+[label,bar_assemble]
+if (~bar_has_all_schematics = false) {
+    mes("These are only some of the parts. You need all four to put the schematic together."); // ours
+    return;
+}
+inv_del(inv, dwarf_rock_base_schematic, 1);
+inv_del(inv, dwarf_rock_schematic1, 1);
+inv_del(inv, dwarf_rock_schematic2, 1);
+inv_del(inv, dwarf_rock_schematic3, 1);
+inv_add(inv, dwarf_rock_schematic_assembled, 1);
+%dwarfrock_schematics_solved = 1;
+~objbox(dwarf_rock_schematic_assembled, "You lay the transparent overlays on top of the base schematics until they line up. The schematic is complete!", 250, 0, 0); // ours
+
+// ---------------------------------------------------------------- inside the rock
+// the helmet's weight (the wiki's messages by tick)
+[softtimer,bar_helmet]
+if (~bar_in_rock = false | %dwarfrock_quest >= ^bar_complete) {
+    softtimer(bar_helmet, 0);
+    return;
+}
+%dwarfrock_inside_timeleft = add(%dwarfrock_inside_timeleft, 25);
+switch_int (%dwarfrock_inside_timeleft) {
+    case 100 : mes("The helmet seems to become even heavier");
+    case 250 : mes("You feel a headache coming on... oh wait, it's just your helmet.");
+    case 400 : mes("You feel like you're being pushed into the ground by the weight of the golden helmet.");
+    case 500 : mes("You stumble and nearly fall. You can only keep this helmet on for a few more minutes!");
+    case 600 : mes("You fight the urge to take off your helmet. It's getting harder and harder to resist!");
+    case 700 : mes("You don't think you can keep on this helmet for more than a minute. Whatever you want to accomplish here, do it fast!");
+    case 750 : mes("Must... not... take... off... helmet!");
+    case 775 : mes("The weight of the helmet is becoming unbearable. You can't keep it on for more than a few seconds now!");
+}
+if (%dwarfrock_inside_timeleft >= 800) {
+    softtimer(bar_helmet, 0);
+    mes("Just as you feel your neck is about to snap, you take off your helmet.");
+    queue(bar_helmet_snap, 0, 0);
+}
+
+// taking the helmet off in the rock (hooked in equip.rs2's on_unequip)
+[proc,bar_helmet_off](obj $obj)
+if ($obj ! dwarf_goldrock_helmet | ~bar_in_rock = false) return;
+queue(bar_expel, 0, 0);
+
+[queue,bar_helmet_snap]
+if (inv_total(worn, dwarf_goldrock_helmet) > 0 & inv_freespace(inv) > 0) {
+    inv_moveitem(worn, inv, dwarf_goldrock_helmet, 1);
+    ~update_all(dwarf_goldrock_helmet);
+}
+@bar_expel_now;
+
+[queue,bar_expel] @bar_expel_now;
+
+[label,bar_expel_now]
+if (~bar_in_rock = false) return;
+softtimer(bar_helmet, 0);
+~bar_avatar_clear;
+mes("The world turns black and you feel as if you're being sucked out of the rock.");
+p_telejump(0_44_158_10_55);
+if (%dwarfrock_quest < ^bar_complete & inv_total(inv, gold_ore) > 0) {
+    inv_del(inv, gold_ore, inv_total(inv, gold_ore));
+    ~mesbox("You suddenly notice all the gold in your inventory has disappeared! It must have been absorbed into the rock!");
+}
+
+// the mineral veins (goldrock1/2 are mined as usual, with mining.rs2's hook)
+[oploc1,dwarf_gold_mine] @bar_mine_vein;
+[oploc1,dwarf_gold_mine_l] @bar_mine_vein;
+[oploc1,dwarf_gold_mine_r] @bar_mine_vein;
+
+[label,bar_mine_vein]
+if (stat(mining) < 40) {
+    mes("You need a Mining level of 40 to mine this rock.");
+    return;
+}
+def_obj $pick = ~pickaxe_checker;
+if ($pick = null) {
+    mes("You need a pickaxe to mine this rock.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+anim(oc_param($pick, mining_animation), 0);
+p_delay(3);
+anim(null, 0);
+if (stat_random(mining, 7, 75) = false) { // gold rocks' chance (mine.dbrow)
+    mes("You fail to mine any gold."); // ours
+    return;
+}
+inv_add(inv, gold_ore, 1);
+stat_advance(mining, 650);
+mes("You manage to mine some gold.");
+~bar_being_warns;
+
+// the Being speaks now and then while you mine its gold (the transcript, random; how often is ours)
+[proc,bar_being_warns]
+if (~bar_in_rock = false | %dwarfrock_quest ! ^bar_inside | random(6) ! 0) return;
+switch_int (random(4)) {
+    case 0 : mes("Arzinian Being of Bordanzan: Stop what you're doing or taste my wrath!");
+    case 1 : mes("Arzinian Being of Bordanzan: Do not touch what is not yours!");
+    case 2 : mes("Arzinian Being of Bordanzan: I would not do that again if I were you!");
+    case 3 : mes("Arzinian Being of Bordanzan: You are bringing doom down on yourself!");
+}
+
+// the walls of flame: through the first ones; the second ones speak
+[oploc1,dwarf_firewall_straight] @bar_jump_fire;
+[oploc1,dwarf_firewall_diagonal] @bar_jump_fire;
+[oploc1,dwarf_firewall_centre_straight] @bar_jump_fire;
+[oploc1,dwarf_firewall_centre_diagonal] @bar_jump_fire;
+
+[label,bar_jump_fire]
+def_int $dx = 0;
+def_int $dz = 0;
+if (coordx(coord) < coordx(loc_coord)) $dx = 1;
+if (coordx(coord) > coordx(loc_coord)) $dx = -1;
+if (coordz(coord) < coordz(loc_coord)) $dz = 1;
+if (coordz(coord) > coordz(loc_coord)) $dz = -1;
+p_telejump(movecoord(loc_coord, $dx, 0, $dz));
+mes("You jump through the wall of flame."); // ours
+
+[oploc2,dwarf_firewall_centre_straight] @bar_being;
+[oploc2,dwarf_firewall_centre_diagonal] @bar_being;
+
+[label,bar_being]
+if (%dwarfrock_quest ! ^bar_inside) {
+    mes("The flames crackle quietly."); // ours
+    return;
+}
+if (~bar_avatar_near = true) {
+    mes("The avatar is already here!"); // ours
+    return;
+}
+def_int $gold = inv_total(inv, gold_ore);
+~mesbox("Arzinian Being of Bordanzan: You did not heed my messages to stay away! You have brought doom down on to yourself!");
+~mesbox("Arzinian Being of Bordanzan: There are many aspects to my being and there are many skills I possess.");
+// the highest combat stat picks the avatar that counters it
+def_int $att = max(stat_base(attack), stat_base(strength));
+def_int $rng = stat_base(ranged);
+def_int $mag = stat_base(magic);
+def_int $kind = 0; // 0 magic avatar (against melee), 1 strength (against ranged), 2 ranging (against magic)
+if ($mag > $att & $mag >= $rng) {
+    $kind = 2;
+    ~mesbox("Arzinian Being of Bordanzan: Your magical abilities are impressive, but my powers of archery will foil them!");
+} else if ($rng > $att & $rng > $mag) {
+    $kind = 1;
+    ~mesbox("Arzinian Being of Bordanzan: You are an able ranger, yet that is useless against my might!");
+} else {
+    ~mesbox("Arzinian Being of Bordanzan: You, I can see, are a skilled warrior. Yet your might is no match for my magic!");
+}
+~mesbox("Arzinian Being of Bordanzan: Behold, as my avatar descends to your level to extinguish the flame of your puny existence!");
+def_int $tier = 0; // 0 invincible, 1 level 125, 2 level 75
+if ($gold >= 15) {
+    $tier = 2;
+    ~mesbox("Arzinian Being of Bordanzan: And while your power is great, mortal, I will still resist you!");
+} else if ($gold >= 5) {
+    $tier = 1;
+    ~mesbox("Arzinian Being of Bordanzan: You are no match for me!");
+} else {
+    ~mesbox("Arzinian Being of Bordanzan: I am invincible! You stand no chance against me!");
+}
+def_npc $type = dwarf_rock_avatar_mage;
+if ($kind = 0) {
+    if ($tier = 1) $type = dwarf_rock_avatar_mage_green;
+    if ($tier = 2) $type = dwarf_rock_avatar_mage_yellow;
+} else if ($kind = 1) {
+    $type = dwarf_rock_avatar_warrior;
+    if ($tier = 1) $type = dwarf_rock_avatar_warrior_green;
+    if ($tier = 2) $type = dwarf_rock_avatar_warrior_yellow;
+} else {
+    $type = dwarf_rock_avatar_archer;
+    if ($tier = 1) $type = dwarf_rock_avatar_archer_green;
+    if ($tier = 2) $type = dwarf_rock_avatar_archer_yellow;
+}
+npc_add(movecoord(coord, -2, 0, 0), $type, 800);
+npc_setmode(opplayer2);
+
+[proc,bar_avatar_near]()(boolean)
+if (npc_find(coord, dwarf_rock_avatar_mage, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_mage_green, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_mage_yellow, 25, 0) = true) return(true);
+if (npc_find(coord, dwarf_rock_avatar_warrior, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_warrior_green, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_warrior_yellow, 25, 0) = true) return(true);
+if (npc_find(coord, dwarf_rock_avatar_archer, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_archer_green, 25, 0) = true | npc_find(coord, dwarf_rock_avatar_archer_yellow, 25, 0) = true) return(true);
+return(false);
+
+[proc,bar_avatar_clear]
+if (npc_find(coord, dwarf_rock_avatar_mage, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_mage_green, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_mage_yellow, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_warrior, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_warrior_green, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_warrior_yellow, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_archer, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_archer_green, 25, 0) = true) npc_del;
+if (npc_find(coord, dwarf_rock_avatar_archer_yellow, 25, 0) = true) npc_del;
+
+// the ranging and magic avatars attack from range (the strength ones use the default melee)
+[ai_opplayer2,dwarf_rock_avatar_archer] ~bar_avatar_shoot(troll_rock_launch, troll_rock_travel, ^ranged_style);
+[ai_opplayer2,dwarf_rock_avatar_archer_green] ~bar_avatar_shoot(troll_rock_launch, troll_rock_travel, ^ranged_style);
+[ai_opplayer2,dwarf_rock_avatar_archer_yellow] ~bar_avatar_shoot(troll_rock_launch, troll_rock_travel, ^ranged_style);
+[ai_opplayer2,dwarf_rock_avatar_mage] ~bar_avatar_shoot(null, earthblast_travel, ^magic_style);
+[ai_opplayer2,dwarf_rock_avatar_mage_green] ~bar_avatar_shoot(null, earthblast_travel, ^magic_style);
+[ai_opplayer2,dwarf_rock_avatar_mage_yellow] ~bar_avatar_shoot(null, earthblast_travel, ^magic_style);
+
+[proc,bar_avatar_shoot](spotanim $launch, spotanim $travel, int $style)
+if (%npc_action_delay > map_clock) {
+    npc_setmode(applayer2);
+    return;
+}
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) return;
+def_int $attack_roll = ~npc_ranged_attack_roll;
+def_int $defence_roll = ~player_defence_roll_specific($style);
+def_int $maxhit = ~npc_ranged_maxhit;
+npc_anim(npc_param(attack_anim), 0);
+if ($launch ! null) spotanim_npc($launch, 92, 0);
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+def_int $duration = ~player_projectile(npc_coord, coord, uid, $travel, 40, 36, 32, 15, 0, 11, 5);
+def_int $damage = 0;
+if (randominc($attack_roll) > randominc($defence_roll)) $damage = randominc($maxhit);
+if (~check_protect_prayer($style) = true) $damage = 0;
+if_close;
+anim(%com_defendanim, $duration);
+queue(combat_damage_player, calc($duration / 30), $damage);
+queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
+~npc_set_attack_vars;
+
+// the invincible avatars taunt you (the transcript, random)
+[ai_queue1,dwarf_rock_avatar_mage] @bar_avatar_taunt;
+[ai_queue1,dwarf_rock_avatar_warrior] @bar_avatar_taunt;
+[ai_queue1,dwarf_rock_avatar_archer] @bar_avatar_taunt;
+
+[label,bar_avatar_taunt]
+gosub(npc_default_retaliate);
+if (random(4) ! 0) return;
+if (random(2) = 0) {
+    npc_say("Your puny efforts cannot harm me!");
+} else {
+    npc_say("Give up and resign yourself to your death!");
+}
+
+// the avatar's death
+[ai_queue3,dwarf_rock_avatar_mage_green] @bar_avatar_death;
+[ai_queue3,dwarf_rock_avatar_mage_yellow] @bar_avatar_death;
+[ai_queue3,dwarf_rock_avatar_warrior_green] @bar_avatar_death;
+[ai_queue3,dwarf_rock_avatar_warrior_yellow] @bar_avatar_death;
+[ai_queue3,dwarf_rock_avatar_archer_green] @bar_avatar_death;
+[ai_queue3,dwarf_rock_avatar_archer_yellow] @bar_avatar_death;
+
+[label,bar_avatar_death]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(bar_avatar_slain, 0, 0);
+
+[queue,bar_avatar_slain]
+if (%dwarfrock_quest ! ^bar_inside) return;
+%dwarfrock_quest = ^bar_avatar_dead;
+mes("You have defeated the Arzinian Avatar! You should return to Dondakan."); // ours
+
+// ---------------------------------------------------------------- the gold boatman (after the quest)
+// he banks your gold ore for a fifth of it, rounded up (a tenth with the ring of charos), the wiki;
+// his words are ours
+[opnpc1,dwarfrock_multi_gold_boatman]
+def_int $ore = inv_total(inv, gold_ore);
+if ($ore = 0) {
+    ~chatnpc("<p,neutral>Bring me your gold ore and I'll take it to the bank for you. For a share of it, of course.");
+    return;
+}
+def_int $fee = divide(add($ore, 4), 5);
+if (inv_total(worn, ring_of_charos_unlocked) > 0) $fee = divide(add($ore, 9), 10);
+def_int $banked = sub($ore, $fee);
+~chatnpc("<p,neutral>I'll take <tostring($banked)> of your gold ore to the bank, and keep <tostring($fee)> for my trouble. Deal?");
+if (~p_choice2("Deal.", 1, "No thanks.", 2) = 2) return;
+inv_del(inv, gold_ore, $ore);
+if ($banked > 0) inv_add(bank, gold_ore, $banked);
+mes("The boatman takes your gold ore to the bank.");
