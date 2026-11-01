@@ -21,6 +21,19 @@ if ($weapon = null) {
     walkanim_r(oc_param($weapon, walk_r_baseanim));
     runanim(oc_param($weapon, running_baseanim));
 }
+// EASCape: riding a Keldagrim cart (eascape_world.rs2): the cart ride's animation (seq
+// human_minecart_anim) stands and moves
+if (%keldagrim_cart_riding = 1) {
+    readyanim(human_minecart_anim);
+    turnanim(human_minecart_anim);
+    walkanim(human_minecart_anim);
+    walkanim_b(human_minecart_anim);
+    walkanim_l(human_minecart_anim);
+    walkanim_r(human_minecart_anim);
+    runanim(human_minecart_anim);
+    buildappearance(worn);
+    return;
+}
 // EASCape: Ghosts Ahoy's bedsheet ghost disguise floats with the ghost's own animations
 def_obj $hat = inv_getobj(worn, ^wearpos_hat);
 if ($hat = ahoy_bedsheet | $hat = ahoy_bedsheetgreen) {

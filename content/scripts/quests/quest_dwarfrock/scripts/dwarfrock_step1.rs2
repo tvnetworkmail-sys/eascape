@@ -344,7 +344,6 @@ if (~bar_page_wanted(2) = false) return;
 
 // ---------------------------------------------------------------- the dwarven lore book
 [opheld1,dwarf_rock_book]
-if (~bar_book_schematic = true) return; // the base schematics on its last page (dwarfrock_step2.rs2)
 %book_page = 0;
 %open_book = dwarf_rock_book;
 @book_flip_page(0, 0, ~bar_lore_last, bar_lore_book);
@@ -370,6 +369,11 @@ if (%book_page < split_pagecount) {
 split_init(" ", 175, 22, q8_full);
 ~book_page($title, 0);
 if_sethide(book:dwarf_lore_picture, false); // the 2007 picture (tools/dwarfrock/lore_picture.py)
+// the last page once Dondakan wants schematics: its picture is the base schematics (dwarfrock_step2.rs2)
+if (~bar_book_schematic_wanted = true) {
+    ~bar_book_schematic;
+    return;
+}
 // the last pages read: the book is done (the wiki shows this in a box; ours a message)
 if (%dwarfrock_quest = ^bar_have_book) {
     %dwarfrock_quest = ^bar_read_book;

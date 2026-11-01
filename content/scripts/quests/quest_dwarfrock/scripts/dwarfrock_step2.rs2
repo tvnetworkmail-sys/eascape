@@ -536,16 +536,21 @@ def_int $any = ~p_choice2("You are rather a forgetful person, aren't you?", 1, "
 ~chatplayer("<p,neutral>Oh, alright, I'll go and have a look.");
 return(true);
 
-// reading the book once Rolad has lost his schematics: they're on its last page
-[proc,bar_book_schematic]()(boolean)
-if (%dwarfrock_rolad_schematics_lookingfor = 0 | %dwarfrock_quest < ^bar_find_schematics) return(false);
+// the book's last page, once Dondakan wants schematics (the wiki's walkthrough: after Dondakan's
+// schematic, read the book to its end; talking to Rolad first is not needed)
+[proc,bar_book_schematic_wanted]()(boolean)
+if (%dwarfrock_quest ! ^bar_find_schematics | %dwarfrock_schematics_solved = 1) return(false);
+if (~obj_gettotal(dwarf_rock_base_schematic) > 0) return(false);
+return(true);
+
+[proc,bar_book_schematic]
 ~mesbox("As you finish reading the book, you notice the last page has a very peculiar picture drawn on it.");
-if (~p_choice2_header("Yes.", 1, "No.", 2, "Tear out the page?") = 2) return(true);
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Tear out the page?") = 2) return;
+if_close;
 inv_del(inv, dwarf_rock_book, 1);
 inv_add(inv, dwarf_rock_base_schematic, 1);
 %dwarfrock_rolad_schematics_lookingfor = 0;
 ~objbox(dwarf_rock_base_schematic, "You tear out the page and find what appears to be one of the schematics you've been looking for! You throw away the ruined book and tuck the schematic safely away.", 250, 0, 0);
-return(true);
 
 // putting the schematics together: the puzzle (dwarfrock_schematic.rs2)
 

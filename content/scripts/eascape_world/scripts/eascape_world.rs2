@@ -384,11 +384,15 @@ mes("The boat arrives at its destination."); // ours
 // ---------------------------------------------------------------- Keldagrim's carts
 // The OSRS wiki's cart conductor transcript gives the Keldagrim station's words and fares (Ice
 // Mountain 150, White Wolf Mountain 100 once Fishing Contest is done, half with the Ring of
-// Charos); 2009scape's CartConductorDialogue and KeldagrimCartMethods give the far conductors'
-// words and where the rides end (Keldagrim 2915,10175, White Wolf Mountain 2875,9871, Ice Mountain
-// 2997,9837). Ours: the ride goes straight to its end once paid (no tickets or tracks), the Grand
-// Exchange route is left out (2006 has no Grand Exchange), and The Giant Dwarf (not built) isn't
-// required.
+// Charos); 2009scape's CartConductorDialogue gives the far conductors' words, and its
+// KeldagrimCartMethods the ride: into Keldagrim the screen fades, you ride the cart from 2942,10175
+// west to 2915,10175 as it fades back, and step off by a mine cart (npc 1544, ours
+// hauntedmine_boss_cart, "Mine cart"); out of Keldagrim you ride from 2911,10171 east to 2936,10171,
+// the screen fades and you arrive (White Wolf Mountain 2875,9871, Ice Mountain 2997,9837). The
+// 2007 cache's ride animation (human_minecart_anim) is what you ride in. The far carts' "Ride"
+// (2007's icemountain_train_cart and whitewolfmountain_train_cart) asks the fare too (ours). Ours:
+// once paid you ride at once (OSRS has tickets and tracks), the Grand Exchange route is left out
+// (2006 has none), The Giant Dwarf (not built) isn't required.
 [opnpc1,dwarf_city_train_conductor1] @keldagrim_cart_station;
 [opnpc1,dwarf_city_train_conductor2] @keldagrim_cart_station;
 [opnpc1,dwarf_city_train_conductor3] @keldagrim_cart_station;
@@ -458,25 +462,70 @@ if (inv_total(inv, coins) < $fare) {
     @keldagrim_cart_menu;
 }
 inv_del(inv, coins, $fare);
-@keldagrim_cart_ride($dest);
+@keldagrim_cart_leave($dest);
 
 // the far ends: Ice Mountain (conductor7, 150 coins) and White Wolf Mountain (conductor6, 100)
 [opnpc1,dwarf_city_train_conductor7] @keldagrim_cart_far(150);
 [opnpc1,dwarf_city_train_conductor6] @keldagrim_cart_far(100);
+[oploc1,icemountain_train_cart] @keldagrim_cart_far_ride(150);
+[oploc1,whitewolfmountain_train_cart] @keldagrim_cart_far_ride(100);
 
 [label,keldagrim_cart_far](int $fare)
 ~chatplayer("<p,neutral>I'd like to use your cart, please.");
 ~chatnpc("<p,neutral>Alright, that'll cost ye <tostring($fare)>gp.");
+@keldagrim_cart_far_pay($fare);
+
+[label,keldagrim_cart_far_ride](int $fare)
+~mesbox("The ride to Keldagrim costs <tostring($fare)> coins."); // ours
+@keldagrim_cart_far_pay($fare);
+
+[label,keldagrim_cart_far_pay](int $fare)
 if (~p_choice2("Okay, sure.", 1, "No, thanks.", 2) = 2) return;
 if (inv_total(inv, coins) < $fare) {
     ~mesbox("You can not afford that.");
     return;
 }
 inv_del(inv, coins, $fare);
-@keldagrim_cart_ride(0_45_158_35_63);
+@keldagrim_cart_arrive;
 
-[label,keldagrim_cart_ride](coord $dest)
-mes("You climb into the cart."); // ours
+[proc,keldagrim_cart_ride](boolean $on)
+if ($on = true) {
+    %keldagrim_cart_riding = 1;
+} else {
+    %keldagrim_cart_riding = 0;
+}
+~update_bas;
+
+// into Keldagrim (2009scape's TravelToKeldagrimPulse)
+[label,keldagrim_cart_arrive]
+if_close;
+~fade_out;
 p_delay(2);
+~keldagrim_cart_ride(true);
+p_telejump(0_45_158_62_63);
+p_delay(1);
+~fade_in;
+~forcemove(0_45_158_35_63); // a square a tick
+~keldagrim_cart_ride(false);
+npc_add(coord, hauntedmine_boss_cart, 14);
+p_telejump(movecoord(coord, 0, 0, 1));
+if_openoverlay(null);
+
+// out of Keldagrim (2009scape's TravelFromKeldagrimPulse)
+[label,keldagrim_cart_leave](coord $dest)
+if_close;
+~fade_out;
+p_delay(3);
+~keldagrim_cart_ride(true);
+p_telejump(0_45_158_31_59);
+p_delay(1);
+~fade_in;
+~forcemove(0_45_158_56_59);
+~fade_out;
+p_delay(6);
+~keldagrim_cart_ride(false);
 p_telejump($dest);
-mes("The cart arrives at its destination."); // ours
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
