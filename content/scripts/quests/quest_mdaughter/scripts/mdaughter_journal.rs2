@@ -14,7 +14,20 @@ if ($s = ^md_started) {
     $t = append($t, "@str@I heard the voice of his daughter Asleif at the shining|@str@pool. She is dead.||");
     if ($s >= ^md_tasks_done) {
         $t = append($t, "@str@I brought her people and Rellekka closer together, and|@str@found them a new supply of food.||");
-        $next = "@dbl@I should tell @dre@Asleif@dbl@ at the shining pool.";
+        if ($s >= ^md_complete) {
+            $t = append($t, "@str@I found the Kendal, a man in a bearsuit who killed her, and|@str@buried her on the island under a cairn.||");
+            $next = "@red@QUEST COMPLETE!";
+        } else if ($s >= ^md_burial) {
+            $t = append($t, "@str@I found the Kendal, a man in a bearsuit who killed her, and|@str@showed Hamal her body.||");
+            $next = "@dbl@I should bury her on the island in the pool with one of her|@dbl@possessions (@dre@Ragnar@dbl@ may have one), then build a cairn of|@dre@5 muddy rocks@dbl@ on top.";
+        } else if ($s >= ^md_kendal_dead) {
+            $t = append($t, "@str@I found the Kendal, a man in a bearsuit who killed her, in a|@str@cave north of the pool, and killed him.||");
+            $next = "@dbl@I should take her @dre@corpse@dbl@ to @dre@Hamal@dbl@.";
+        } else if ($s >= ^md_seek_killer) {
+            $next = "@dbl@Asleif wants me to convince her father she is dead. She was|@dbl@attacked by the lake and dragged off; the path east along the|@dbl@north of the pool leads to a cave behind some dead trees.";
+        } else {
+            $next = "@dbl@I should tell @dre@Asleif@dbl@ at the shining pool.";
+        }
     } else {
         $next = "@dbl@Asleif asked me to bring her people and @dre@Rellekka@dbl@ closer|@dbl@together, and to find them a new supply of @dre@food@dbl@.||";
         def_int $r = %mdaughter_relations_var;

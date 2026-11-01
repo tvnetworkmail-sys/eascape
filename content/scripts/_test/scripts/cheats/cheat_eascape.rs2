@@ -687,6 +687,13 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~ahoy_complete; // the Ectophial, experience and quest complete scroll (quest_ahoy/ahoy_npcs.rs2)
+} else if (compare($name, "mdaughter") = 0) {
+    if (%mdaughter_quest_var >= ^md_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    if (inv_freespace(inv) > 0) inv_add(inv, mdaughter_bear_helmet, 1);
+    ~md_complete; // experience and quest complete scroll (quest_mdaughter/mdaughter_step3.rs2)
 } else if (compare($name, "onesmallfavour") = 0) {
     if (%onesmallfavour >= ^osf_complete) {
         mes("You've already done that quest.");
@@ -778,7 +785,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1798,7 +1805,7 @@ $banked = calc($banked + ~questpack_give(leather_gloves, 1));
 ~questpack_done("Mountain Daughter", $banked);
 
 // ::mdstage <n> - sets Mountain Daughter's stage (%mdaughter_quest_var, ours: 10 Hamal's leave,
-// 20 Asleif's two tasks)
+// 20 Asleif's two tasks, 30 both done, 40 find her killer, 50 the Kendal dead, 60 the burial)
 [debugproc,mdstage](int $n)
 if (p_finduid(uid) = false) return;
 %mdaughter_quest_var = $n;

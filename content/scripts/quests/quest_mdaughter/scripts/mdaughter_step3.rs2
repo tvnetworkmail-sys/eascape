@@ -1,0 +1,434 @@
+// EASCape: Mountain Daughter, step 3: the Kendal, Asleif's burial and the reward (%mdaughter_quest_var
+// 30 -> 70). Words from the OSRS wiki's transcript, the order and reward from its walkthrough; the
+// Kendal's combat from Void. Ours: the stage values (40 Asleif asks you to convince Hamal, 50 the
+// Kendal dead, 60 Hamal asks for the burial, 70 complete), where the corpse lies (by the pillars,
+// 2784,10078, in place of a misplaced map item), where you stand to bury her (2782,3694), and the lines marked "ours".
+
+// ---------------------------------------------------------------- the shining pool
+[proc,md_pool_step3]()(boolean)
+def_int $s = %mdaughter_quest_var;
+if ($s < ^md_tasks_done) return(false);
+if ($s >= ^md_complete) {
+    mes("The pool is quiet now."); // ours
+    return(true);
+}
+if ($s = ^md_tasks_done) {
+    ~chatplayer("<p,quiz>Hey, ehm... Asleif spirit thing? Hello?");
+    ~mesbox("'Yes, <~md_name>?'");
+    ~chatplayer("<p,happy>I did what you asked me to! I improved the relations between Rellekka and the mountain camp, and I found a new supply of food!");
+    ~mesbox("'Yes, <~md_name>, I can sense that this is so.'");
+    ~chatplayer("<p,quiz>So do you have any other quests for me, perhaps with some bigger rewards?");
+    ~mesbox("'I do not fully understand what you speak of, but I do have one more task I would like you to do.'");
+    ~mesbox("'My father does not believe that I am dead. In his heart, he knows it to be true, but he cannot accept it.'");
+    ~mesbox("'You must convince him, <~md_name>. Once you have convinced my father, everyone else in the camp will follow him. Then, perhaps, they can move on again.'");
+    ~chatplayer("<p,quiz>How do I do that, exactly? I don't think I'll be able to get him down to this little island.");
+    %mdaughter_quest_var = ^md_seek_killer;
+    ~mesbox("'I must leave that to you. All I know is that I was attacked by some creature or animal while I was sitting by the lake. It dragged me off and I remember nothing else.'");
+    ~mesbox("'Perhaps this will help you, I cannot provide further assistance.'");
+    return(true);
+}
+if ($s = ^md_seek_killer) {
+    ~mesbox("'All I know is that I was attacked by some creature or animal while I was sitting by the lake. It dragged me off and I remember nothing else.'"); // ours: her words again
+    return(true);
+}
+if ($s = ^md_kendal_dead) {
+    ~chatplayer("<p,happy>I found him! I found your murderer! It was some bear-like man who called himself the Kendal.");
+    ~mesbox("'The Kendal is an ancient spirit of our people, but he is benevolent. Are you sure of this?'");
+    ~chatplayer("<p,neutral>Well, it was actually a guy in a bearsuit. But he's dead now.");
+    ~mesbox("'Go then, to my father, and show him what you've learned.'");
+    return(true);
+}
+if (%mdaughter_burial_state = 0) {
+    ~chatplayer("<p,quiz>Uhm... Asleif? Hello?");
+    ~mesbox("'Yes, <~md_name>?'");
+    ~chatplayer("<p,neutral>I convinced your father about your death. He asked me to give you a proper burial, here on this island.");
+    ~mesbox("'Then my father made a wise decision. Please proceed.'");
+    ~chatplayer("<p,confused>Well, it's kind of awkward... can you maybe be silent while I bury you?");
+    ~chatplayer("<p,quiz>Hello?");
+    ~chatplayer("<p,neutral>Oh, right. Well, I'd better get on with it then.");
+    return(true);
+}
+~chatplayer("<p,quiz>Uhm... Asleif? Hello?");
+~chatplayer("<p,quiz>Hello? Are you there?");
+~chatplayer("<p,happy>Burying her must have really helped! I should get on with building the cairn on top.");
+return(true);
+
+// ---------------------------------------------------------------- the dead trees and the cave
+[oploc1,mdaughter_impassable_tree] @md_tree_too_thick;
+[oploc1,mdaughter_impassable_tree2] @md_tree_too_thick;
+
+[label,md_tree_too_thick]
+mes("This tree is too thick to chop through."); // ours
+
+[oploc1,mdaughter_passable_tree]
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+p_delay(2);
+anim(null, 0);
+loc_change(mdaughter_passable_tree_stump, 200);
+mes("You chop down the dead tree."); // ours
+
+[oploc1,mdaughter_passable_tree_stump]
+if (coordx(coord) < coordx(loc_coord)) {
+    ~forcemove(movecoord(loc_coord, 1, 0, 0));
+} else {
+    ~forcemove(movecoord(loc_coord, -1, 0, 0));
+}
+
+[proc,md_cave_step3]()(boolean)
+if (%mdaughter_quest_var < ^md_seek_killer | %mdaughter_quest_var >= ^md_complete) return(false);
+mes("You take a very deep breath...");
+// the Kendal shows himself again to whoever left before the fight was over
+if (%mdaughter_quest_var = ^md_seek_killer) %mdaughter_bear_multi_state = 0;
+~eascape_link(1);
+return(true);
+
+[oploc1,mdaughter_caveexit]
+mes("You welcome the fresh air.");
+~eascape_link(1);
+
+// ---------------------------------------------------------------- the Kendal
+[opnpc2,mdaughter_multi_bear]
+if (%mdaughter_bear_mayattack = 0) {
+    npc_say("Do not attack me, puny mortal <~md_name>!");
+    return;
+}
+@md_kendal_fight;
+
+[opnpc1,mdaughter_multi_bear]
+if (%mdaughter_quest_var ! ^md_seek_killer) {
+    ~chatnpc("<p,angry>Go now, mortal, but I'll be watching you!"); // ours: his parting words
+    return;
+}
+if (%mdaughter_bearman_autotalk = 1) @md_kendal_unmasked;
+~chatplayer("<p,quiz>Errr... hello?");
+~chatnpc("<p,angry>Who dares to disturb my slumber?");
+%mdaughter_bear_discovery = 1;
+switch_int (~p_choice3("It's just me, no one special.", 1, "It's me, of whom many legends are sung.", 2, "Slumber? You didn't seem to be sleeping.", 3)) {
+    case 2 :
+        ~chatplayer("<p,happy>It's <~md_name>, of whom many legends are sung.");
+        ~chatnpc("<p,angry>You are brave, to come into my cave and say a thing like that!");
+        return;
+    case 3 :
+        ~chatplayer("<p,quiz>Slumber? You didn't seem to be sleeping.");
+        ~chatnpc("<p,angry>Do not mock me, mortal!");
+        return;
+}
+~chatplayer("<p,neutral>It's just me, <~md_name>, no one special.");
+~chatnpc("<p,quiz>Have you come, then, to pay your respects?");
+~chatplayer("<p,quiz>How... exactly do I do that?");
+~chatnpc("<p,angry>With your blood, mortal!");
+if (~p_choice2("Time to go!", 1, "You mean a sacrifice?", 2) = 1) {
+    ~chatplayer("<p,neutral>Time to go, see you later!");
+    ~chatnpc("<p,angry>Go now, mortal, but I'll be watching you!");
+    return;
+}
+~chatplayer("<p,quiz>You mean a sacrifice? Are you some kind of god?");
+~chatnpc("<p,angry>I am the guardian of the mountain, the god of the northern lands. I move the earth and control the skies. I am the Kendal!");
+switch_int (~p_choice3("I seek your advice, oh great one!", 1, "You look like you escaped from a fairground!", 2, "You look like a man in a bearsuit!", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I seek your advice, oh great one.");
+        ~chatplayer("<p,neutral>I seek the cowardly murderer of a young lady of a nearby clan of mountain people. Do you know where I can find this person?");
+        ~chatnpc("<p,angry>I am not here to answer questions of such trivial nature! Go now before doom befalls you, mortal!");
+        return;
+    case 2 :
+        ~chatplayer("<p,laugh>You look like you escaped from a fairground!");
+        ~chatnpc("<p,angry>I would not say such things if I were you, mortal!");
+        return;
+}
+~chatplayer("<p,laugh>You look like a man in a bearsuit!");
+~chatnpc("<p,confused>What did you say, mortal?");
+~chatplayer("<p,neutral>I said, you look like a man wearing a bearsuit!");
+~chatnpc("<p,confused>How did you figure that out? How did you know?");
+~chatplayer("<p,confused>I just said you looked like a man wearing a bearsuit, I didn't know you were!");
+%mdaughter_bearman_autotalk = 1;
+@md_kendal_unmasked;
+
+// the conversation picks up here if it was left (the transcript)
+[label,md_kendal_unmasked]
+~chatplayer("<p,quiz>So what are you doing here, pretending to be a god?");
+~chatnpc("<p,neutral>Ah, the people that live in the mountains here, they are a superstitious lot. They fear few things, but magic and gods they're scared to death of.");
+~chatnpc("<p,neutral>So I took on the guise of one of their legends. It's a good way of being left alone.");
+~chatplayer("<p,quiz>And do you leave them alone as well?");
+~chatnpc("<p,neutral>Ah, you're referring to the skeletons you see here? Yes, I did. Most of the time, at least. When there was no troll to be ambushed, and I had to eat...");
+~chatplayer("<p,quiz>Did you kill a young lady, by the lake? Just recently?");
+~chatnpc("<p,neutral>Recently? Oh no, the entrance you came through has been blocked off for a good many years now. I've only seen trolls and the occasional stray dwarf since then, until you came along.");
+~chatnpc("<p,neutral>But yes, more than ten years ago, I did kill someone like that.");
+if (~p_choice2("Oh, never mind then, that can't be right.", 1, "Can I see that corpse?", 2) = 1) {
+    ~chatplayer("<p,neutral>Oh, never mind then, that can't be the person I'm looking for. I'll be off.");
+    return;
+}
+~chatplayer("<p,quiz>Can I see that corpse? I'd like to make sure of something.");
+~chatnpc("<p,neutral>She is just over there, in the centre, with the dress. I did not eat her after I killed her, she was too beautiful for that.");
+~chatnpc("<p,sad>I felt sorry for killing her, but by then it was already too late.");
+~chatplayer("<p,neutral>Yes, she does match the description I was given, it is her after all!");
+switch_int (~p_choice3("Hand the body over to me!", 1, "I humbly request to be given the remains.", 2, "I think you're completely mad!", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>I demand that you hand the body over to me! I must return them to her father!");
+        ~chatnpc("<p,angry>You demand nothing! You may have uncovered my disguise, but my claws can still tear you apart at will!");
+        ~chatnpc("<p,angry>I will not allow you to leave!");
+        @md_kendal_fight;
+    case 3 :
+        ~chatplayer("<p,angry>I think you're completely mad, walking around in your silly bearsuit, killing innocent people!");
+        ~chatnpc("<p,neutral>And how is that very much different from you, walking around in silly suits of armour, killing everything that moves?");
+        ~chatplayer("<p,neutral>Never mind.");
+        return;
+}
+~chatplayer("<p,neutral>I humbly request to be given the remains, so I can return them to her father.");
+~chatnpc("<p,neutral>I cannot do that. If they knew I wasn't a god, and if her father knew I killed his daughter, the whole tribe would come in here at once and I'd be finished.");
+if (~p_choice2("I will kill you myself!", 1, "Never mind then, I'd better leave", 2) = 1) {
+    ~chatplayer("<p,angry>I will kill you myself!");
+    ~chatnpc("<p,angry>Come and try!");
+} else {
+    ~chatnpc("<p,angry>I'm afraid I can't allow you to leave either. You cannot tell anyone about me.");
+}
+@md_kendal_fight;
+
+// the Kendal you fight is your own (ours): the one you talked to hides for you while it lives
+[label,md_kendal_fight]
+%mdaughter_bear_mayattack = 1;
+%mdaughter_bear_multi_state = 1;
+npc_add(npc_coord, mdaughter_bearman_fighter, 500);
+npc_setmode(opplayer2);
+
+[ai_queue3,mdaughter_bearman_fighter]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(md_kendal_slain, 0, 0);
+
+[queue,md_kendal_slain]
+if (%mdaughter_quest_var ! ^md_seek_killer) return;
+%mdaughter_quest_var = ^md_kendal_dead;
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, mdaughter_bear_helmet, 1, 200);
+} else {
+    inv_add(inv, mdaughter_bear_helmet, 1);
+}
+mes("You collect the helmet from the corpse of the 'bear' as a trophy.");
+
+// Asleif's corpse
+[opobj3,mdaughter_daughter_corpse]
+if (%mdaughter_quest_var < ^md_kendal_dead) {
+    if (npc_find(coord, mdaughter_multi_bear, 15, 0) = true) {
+        ~chatnpc("<p,angry>I did not give you permission to touch that, mortal!");
+    }
+    return;
+}
+if (inv_total(inv, mdaughter_daughter_corpse) > 0 | %mdaughter_quest_var >= ^md_complete | %mdaughter_burial_state > 0) {
+    mes("This must be someone else's corpse, you already have Asleif's corpse.");
+    return;
+}
+@pickup_obj;
+
+// ---------------------------------------------------------------- Hamal
+[proc,md_hamal_step3]()(boolean)
+def_int $s = %mdaughter_quest_var;
+if ($s < ^md_tasks_done) return(false);
+if ($s >= ^md_complete) {
+    if (%viking >= ^viking_complete) {
+        ~chatnpc("<p,neutral>You are a most unusual outerlander. The council of Rellekka was wise to make you an honourary Fremennik.");
+    } else {
+        ~chatnpc("<p,neutral>You are a most unusual outerlander. I'm sure that you will be able to complete your Fremennik trials some time.");
+    }
+    ~chatnpc("<p,happy>You have my thanks, in any case.");
+    ~chatplayer("<p,quiz>So what are you all going to do now? Are you finally going to move to another location?");
+    ~chatnpc("<p,neutral>No, I've decided to set up a permanent camp here.");
+    ~chatnpc("<p,happy>There is no need to move now with our new supply of food. Also, there is a protective spirit looking after us now.");
+    if (~obj_gettotal(mdaughter_bear_helmet) = 0) {
+        if (~p_choice2("Excuse me, have you seen my helmet?", 1, "Well, I must be off again.", 2) = 1) {
+            ~chatplayer("<p,quiz>Excuse me, have you seen my helmet?");
+            ~chatnpc("<p,neutral>One of my people found it. Here, take it."); // ours
+            if (inv_freespace(inv) = 0) {
+                inv_dropitem(inv, coord, mdaughter_bear_helmet, 1, 200);
+            } else {
+                inv_add(inv, mdaughter_bear_helmet, 1);
+            }
+            return(true);
+        }
+    }
+    ~chatplayer("<p,neutral>Well, I must be off again.");
+    return(true);
+}
+if ($s = ^md_burial) {
+    ~chatnpc("<p,neutral>If she is given a proper burial, she is to be buried with some of her possessions. When she has been buried, you must build a cairn on top, of about five rocks."); // ours: his instructions, shortened
+    ~chatnpc("<p,neutral>Perhaps Ragnar, out by the pool, has something of hers.");
+    return(true);
+}
+if (%mdaughter_bear_discovery = 0) {
+    ~chatplayer("<p,sad>Hamal, I'm sorry, but your daughter is dead.");
+    ~chatnpc("<p,angry>I told you before not to say such things.");
+    ~chatnpc("<p,quiz>What proof of it do you have anyway?");
+    ~chatplayer("<p,neutral>Ehm, none really...");
+    ~chatnpc("<p,angry>Then do not say it again. I appreciate what you've done for us already, but don't try our patience.");
+    return(true);
+}
+if (%mdaughter_hamal_heardofbear = 1) {
+    if ($s < ^md_kendal_dead) {
+        ~chatplayer("<p,quiz>I need some help with killing this bear thing in the cave. Do you have any warriors to come with me?");
+        ~chatnpc("<p,neutral>If you wish to confront the god it is your own affair, outerlander, but we will not be any part of it.");
+        return(true);
+    }
+    ~chatplayer("<p,happy>I killed the bearman! He really was just a man after all, like I said!");
+    ~md_hamal_kendal_dead;
+    return(true);
+}
+~chatplayer("<p,quiz>Do you know there is a strange bear like thing in a cave near the pool?");
+~chatnpc("<p,neutral>Yes, it is the Kendal.");
+~chatplayer("<p,neutral>Only the cave is hidden behind some trees, you see-");
+~chatplayer("<p,confused>What, you mean you know that already?");
+~chatnpc("<p,neutral>Of course. We planted the trees there ourselves many years ago.");
+~chatnpc("<p,neutral>It is unwise to come too close to a god, so we made sure no one would go there anymore.");
+def_int $any = ~p_choice3("But he's not a god!", 1, "But he killed your daughter!", 2, "And why didn't you tell me your daughter's been missing for years?", 3);
+~chatplayer("<p,angry>But but but...");
+~chatplayer("<p,angry>He's not a god! He's a man in a bearsuit! And he killed your daughter!");
+~chatplayer("<p,angry>And why didn't you tell me she's been missing for more than ten years?");
+%mdaughter_hamal_heardofbear = 1;
+~chatnpc("<p,neutral>Fourteen years, to be exact. And I didn't say otherwise, did I? As for the Kendal, what proof have you of these serious accusations?");
+if ($s < ^md_kendal_dead) {
+    ~chatplayer("<p,angry>You want proof for everything, don't you? Why don't you just go and have a look?");
+    ~chatnpc("<p,neutral>Like I said, it is not wise to approach a god so closely.");
+    return(true);
+}
+if (inv_total(worn, mdaughter_bear_helmet) > 0) {
+    ~chatplayer("<p,happy>Well... I've only gone and killed him, haven't I? Look, I'm even wearing his silly hat!");
+} else {
+    ~chatplayer("<p,happy>Well... I've only gone and killed him, haven't I?");
+}
+~md_hamal_kendal_dead;
+return(true);
+
+[proc,md_hamal_kendal_dead]
+~chatnpc("<p,neutral>You have? Then we made an enormous mistake.");
+~chatnpc("<p,neutral>As did he. Impersonating a god bears the highest penalty imaginable, but I did not think that kind of justice would be delivered by the hand of an outerlander.");
+~chatplayer("<p,sad>I also found your daughter. The bearman killed her.");
+~chatnpc("<p,sad>So it is true then, after all? Let me see her body please.");
+if (inv_total(inv, mdaughter_daughter_corpse) = 0) {
+    ~chatplayer("<p,neutral>I didn't bring it with me, I'll go and look for it.");
+    return;
+}
+~chatplayer("<p,neutral>Of course.");
+~chatnpc("<p,sad>Yes, I see it is her. So it is also true that you spoke to her spirit at the pool?");
+~chatplayer("<p,neutral>Yes, it's true.");
+~chatnpc("<p,neutral>Then she must be buried there, on the island at the center of the pool... to bring peace to her spirit. This is a most unusual situation, but will you bury her, <~md_name>?");
+if (~p_choice2("I will.", 1, "I won't.", 2) = 2) {
+    ~chatplayer("<p,neutral>I won't.");
+    ~chatplayer("<p,confused>I... ehm...");
+    ~chatplayer("<p,confused>Errr...");
+}
+~chatplayer("<p,neutral>I will.");
+%mdaughter_quest_var = ^md_burial;
+%mdaughter_hamal_heardofburial = 1;
+~chatnpc("<p,neutral>Then please listen closely. If she is given a proper burial, she is to be buried with some of her possessions. I see she's still wearing her dress, so you will need one more item.");
+~chatnpc("<p,neutral>When she has been buried, you must build a cairn on top. It is our tradition to build these cairns in the shape of our longboats that we use when we need to cross the seas. You can use rocks for this purpose, about five or so should be enough.");
+~chatnpc("<p,neutral>Only then are the burial rites complete.");
+~chatplayer("<p,quiz>So I need to bury her with one of her possessions, and build a cairn on top made out of rocks. So where do I get another one of her possessions?");
+~chatnpc("<p,neutral>Asleif had little possessions in life and none that have survived the years. I do not know where you might find such a thing, but perhaps Ragnar does, out by the pool.");
+
+// ---------------------------------------------------------------- Ragnar
+[proc,md_ragnar_step3]()(boolean)
+def_int $s = %mdaughter_quest_var;
+if ($s < ^md_kendal_dead) return(false);
+if ($s = ^md_kendal_dead) {
+    ~chatplayer("<p,happy>I found the man who murdered Asleif! He was in a cave just by the pool, but I killed him!");
+    ~chatnpc("<p,angry>Do not say such things, outerlander! She is not dead, merely missing.");
+    ~chatnpc("<p,sad>She'll show up again... yes, yes, I'm sure of it.");
+    ~chatplayer("<p,confused>But she's been missing for more than ten years!");
+    ~chatnpc("<p,sad>Yes, I know... well, that doesn't mean she can't still come back, right?");
+    if (inv_total(inv, mdaughter_daughter_corpse) = 0) {
+        ~chatplayer("<p,neutral>Er, yeah, right... sure.");
+        return(true);
+    }
+    ~chatplayer("<p,neutral>Look, here, I even have her corpse!");
+    ~chatnpc("<p,angry>I do not want to see any of the corpses you're carrying around with you! Begone!");
+    return(true);
+}
+if ($s = ^md_burial & %mdaughter_ragnar_gavenecklace = 0) {
+    ~chatnpc("<p,sad>I heard the news from Hamal, outerlander. Alas, I have known this had to be so for a long time, but Hamal just didn't want to listen.");
+    ~chatplayer("<p,neutral>Uh huh.");
+    ~chatplayer("<p,neutral>Well, Hamal asked me to bury her with some of her possessions. But he doesn't have any anymore.");
+    ~chatplayer("<p,quiz>Do you have anything that may help?");
+    ~chatnpc("<p,neutral>I'm not altogether sure... I do have one thing that may be appropriate.");
+    ~chatnpc("<p,sad>I was going to give her a necklace, when we were supposed to meet here many years ago.");
+    ~chatnpc("<p,neutral>I still have it, and since it was a gift for Asleif, technically it's hers.");
+    ~chatnpc("<p,neutral>Take it, outerlander, and bury it with her. It will be my parting gift.");
+    ~md_give_necklace;
+    if (~p_choice2("Thank you. I will make sure she's given a proper burial now.", 1, "You've been waiting to give it to her all that time?", 2) = 1) {
+        ~chatplayer("<p,neutral>Thank you. I will make sure she's given a proper burial now.");
+        return(true);
+    }
+    ~chatplayer("<p,quiz>You've been waiting to give it to her all that time?");
+    ~chatnpc("<p,sad>Oh yes... she is my only love, you see, and will be so forever.");
+    ~chatplayer("<p,angry>But that's ridiculous! Don't you ever go out and have some fun? What is wrong with you people!");
+    ~chatnpc("<p,neutral>I do not expect you to understand such things. But perhaps you will find your own love one day, and then you will remember these words.");
+    if (%misc_quest >= ^misc_complete) ~chatplayer("<p,neutral>I've already got a marriage lined up, thanks.");
+    return(true);
+}
+// ours: the necklace again if it was lost before the burial
+if ($s = ^md_burial & %mdaughter_burial_state = 0 & ~obj_gettotal(mdaughter_necklace) = 0) {
+    ~chatplayer("<p,sad>I've lost the necklace you gave me.");
+    ~chatnpc("<p,angry>Then it is lucky that it was found by the pool. Here, and do not lose it again.");
+    ~md_give_necklace;
+    return(true);
+}
+~chatnpc("<p,sad>Thank you for what you are doing for her, outerlander."); // ours
+return(true);
+
+[proc,md_give_necklace]
+%mdaughter_ragnar_gavenecklace = 1;
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, mdaughter_necklace, 1, 200);
+} else {
+    inv_add(inv, mdaughter_necklace, 1);
+}
+~objbox(mdaughter_necklace, "Ragnar gives you Asleif's necklace.", 250, 0, 0); // ours
+
+// ---------------------------------------------------------------- the burial and the cairn
+[opheld3,mdaughter_daughter_corpse]
+if (%mdaughter_quest_var < ^md_burial) {
+    mes("You'd better bring this back to the chieftain instead.");
+    return;
+}
+if (~md_on_centre_island = false) {
+    mes("She should be buried on the island at the centre of the pool."); // ours
+    return;
+}
+if (inv_total(inv, mdaughter_necklace) = 0) {
+    mes("She needs to be buried with some of her possessions, like jewelry.");
+    return;
+}
+p_telejump(0_43_57_30_46);
+anim(human_pickupfloor, 0);
+inv_del(inv, mdaughter_daughter_corpse, 1);
+inv_del(inv, mdaughter_necklace, 1);
+%mdaughter_burial_state = 1;
+~objbox(mdaughter_daughter_corpse, "You dig a hole in the ground, then carefully lay down the skeleton of the chieftain's daughter, together with her necklace. You then close the hole, creating a small burial mound. Now all you need to do is build a cairn on top.", 250, 0, 0);
+
+[oplocu,mdaughter_multimound]
+if (last_useitem ! mdaughter_rock | %mdaughter_burial_state ! 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $have = inv_total(inv, mdaughter_rock);
+if ($have < 5) {
+    def_int $need = sub(5, $have);
+    if ($need = 1) {
+        mes("You don't have enough rocks to build a cairn. You need 1 more rock.");
+    } else {
+        mes("You don't have enough rocks to build a cairn. You need <tostring($need)> more rocks.");
+    }
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_del(inv, mdaughter_rock, 5);
+%mdaughter_burial_state = 2;
+mes("You think you can hear a soft 'thank you' as the singing quietens down.");
+~md_complete;
+
+// the reward (OSRS wiki): 2 quest points, 2,000 Prayer and 1,000 Attack experience, the bearhead
+// (from the Kendal) and the rockslide into the camp
+[proc,md_complete]
+%mdaughter_quest_var = ^md_complete;
+stat_advance(prayer, 20000);
+stat_advance(attack, 10000);
+session_log(^log_adventure, "Quest complete: Mountain Daughter");
+~send_quest_complete(questlist:mdaughter, mdaughter_bear_helmet, 250, ^md_questpoints, "You have completed\\nMountain Daughter!", "2 Quest Points|2,000 Prayer XP|1,000 Attack XP|The Bearhead");
