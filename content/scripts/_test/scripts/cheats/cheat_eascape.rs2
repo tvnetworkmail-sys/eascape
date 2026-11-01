@@ -1637,6 +1637,18 @@ $banked = calc($banked + ~questpack_give(spade, 1));
 $banked = calc($banked + ~questpack_give(coins, 50));
 ~questpack_done("Creature of Fenkenstrain", $banked);
 
+// ::ectopack - a start at the Ectofuntus (port_phasmatys.rs2): 7 empty pots, 7 bones and 6 empty
+// buckets
+[debugproc,ectopack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(pot_empty, 7));
+$banked = calc($banked + ~questpack_give(bones, 7));
+$banked = calc($banked + ~questpack_give(bucket_empty, 6));
+~questpack_done("Ectofuntus", $banked);
+
 // ::ghostsahoypack - what Ghosts Ahoy needs you to bring (OSRS wiki's item list): a ghostspeak
 // amulet, gloves for the nettles, a bowl of water and a bucket of milk for the tea, silk, needle,
 // thread and a knife for the toy boat and a dye of each colour for its flag (ours: one of each, as
