@@ -1408,11 +1408,25 @@ export default class Player extends PathingEntity {
             }
         }
 
+        // EASCape: riding a Keldagrim cart: as 2009scape's Appearance.rideCart, the weapon slot
+        // shows identity kit 82 (the minecart) and the shield slot is empty
+        const cartVar = VarPlayerType.getId('keldagrim_cart_riding');
+        const ridingCart = cartVar !== -1 && this.vars[cartVar] === 1;
+
         for (let slot = 0; slot < 12; slot++) {
             if (this.npcId != -1) {
                 stream.p2(-1);
                 stream.p2(this.npcId);
                 break;
+            }
+
+            if (ridingCart && slot === 3) {
+                stream.p2(0x100 + 82);
+                continue;
+            }
+            if (ridingCart && slot === 5) {
+                stream.p1(0);
+                continue;
             }
 
             if (skippedSlots.indexOf(slot) !== -1) {
