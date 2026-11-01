@@ -694,6 +694,13 @@ if (compare($name, "runemysteries") = 0) {
     }
     if (inv_freespace(inv) > 0) inv_add(inv, dwarf_goldrock_helmet, 1);
     ~bar_complete; // the rune pickaxe, experience and quest complete scroll (quest_dwarfrock/dwarfrock_step2.rs2)
+} else if (compare($name, "feud") = 0) {
+    if (%feud_var >= ^feud_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    if (inv_freespace(inv) > 0) inv_add(inv, blackjack_oak, 1);
+    ~feud_complete; // 500 coins, experience and quest complete scroll (quest_feud/feud_world.rs2)
 } else if (compare($name, "mdaughter") = 0) {
     if (%mdaughter_quest_var >= ^md_complete) {
         mes("You've already done that quest.");
@@ -792,7 +799,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1837,3 +1844,22 @@ $banked = calc($banked + ~questpack_give(coins, 1000));
 if (p_finduid(uid) = false) return;
 %dwarfrock_quest = $n;
 mes("Between a Rock... stage: <tostring($n)>");
+
+// ::feudpack - what The Feud needs you to bring (OSRS wiki's item list): coins, a Kharidian
+// headpiece and fake beard, 3 beers, a bucket, leather gloves; and 30 Thieving to start
+[debugproc,feudpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 2000));
+$banked = calc($banked + ~questpack_give(feud_karidian_turban, 1));
+$banked = calc($banked + ~questpack_give(feud_karidian_fakebeard, 1));
+$banked = calc($banked + ~questpack_give(beer, 3));
+$banked = calc($banked + ~questpack_give(bucket_empty, 1));
+$banked = calc($banked + ~questpack_give(leather_gloves, 1));
+~questpack_done("The Feud", $banked);
+
+// ::feudstage <n> - sets The Feud's stage (%feud_var; the OSRS game's values, feud.constant)
+[debugproc,feudstage](int $n)
+if (p_finduid(uid) = false) return;
+%feud_var = $n;
+mes("The Feud stage: <tostring($n)>");

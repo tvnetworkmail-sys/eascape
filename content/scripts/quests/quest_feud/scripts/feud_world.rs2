@@ -1,0 +1,432 @@
+// EASCape: The Feud's things to do in Pollnivneach: the disguise, the camels' dung, the snake, the
+// poisoned drink, the mayor's house and safe (the August 2007 cache's interface 330), picking the
+// villagers' pockets, the two fights, and the end. Words are the OSRS wiki's quest transcript unless
+// marked ours.
+
+// ---------------------------------------------------------------- the disguise
+[opheldu,feud_karidian_turban] @feud_make_disguise(last_useitem, feud_karidian_fakebeard);
+[opheldu,feud_karidian_fakebeard] @feud_make_disguise(last_useitem, feud_karidian_turban);
+
+[label,feud_make_disguise](obj $used, namedobj $other)
+if ($used ! $other) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, feud_karidian_turban, 1);
+inv_del(inv, feud_karidian_fakebeard, 1);
+inv_add(inv, feud_desert_disguise, 1);
+mes("You attach the fake beard to the headpiece to make a desert disguise."); // ours
+
+// ---------------------------------------------------------------- the mayor's notes (Transcript:Note (numbers), Note (Fibonacci))
+[opheld1,feud_nos_note] ~mesbox("These numbers contained within,|A sequence age old begin,|Have a look,|Where do they fit in?|1,1,2,3,5....");
+[opheld1,feud_fib_hint] ~mesbox("The piece of paper has the word 'Fibonacci' scrawled on it.");
+
+// ---------------------------------------------------------------- the camels' dung
+[oplocu,feud_foodtrough] @feud_trough;
+[oplocu,feud_foodtrough2] @feud_trough;
+
+[label,feud_trough]
+if (last_useitem ! superhot_kebab_sauce) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, superhot_kebab_sauce, 1);
+anim(human_pickuptable, 0);
+%feud_used_sauce = 1;
+mes("You pour the red hot sauce into the trough."); // ours
+p_delay(2);
+mes("The camels eat from the trough and, before long, they leave a fresh pile of dung."); // ours
+// ours: the dung lands in the pen beside the trough
+loc_add(0_52_46_12_18, feud_ugthanki_pooh, 0, centrepiece_straight, 300);
+
+[oplocu,feud_ugthanki_pooh] @feud_take_dung;
+[oploc1,feud_ugthanki_pooh] @feud_take_dung;
+[aplocu,feud_ugthanki_pooh] @feud_dung_ap;
+[aploc1,feud_ugthanki_pooh] @feud_dung_ap;
+
+[label,feud_dung_ap]
+if (distance(loc_coord, coord) > 3) {
+    p_aprange(3);
+    return;
+}
+@feud_take_dung;
+
+[label,feud_take_dung]
+if (inv_total(inv, bucket_empty) = 0) {
+    mes("You'll need an empty bucket to collect the dung."); // ours
+    return;
+}
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, feud_camel_pooh_bucket, 1);
+anim(human_pickupfloor, 0);
+loc_del(1);
+mes("You collect the fresh camel dung in your bucket."); // ours
+
+[opheld4,feud_camel_pooh_bucket] @feud_empty_dung(feud_camel_pooh_bucket);
+[opheld4,feud_camel_poison_pooh_bucket] @feud_empty_dung(feud_camel_poison_pooh_bucket);
+
+[label,feud_empty_dung](obj $bucket)
+inv_del(inv, $bucket, 1);
+inv_add(inv, bucket_empty, 1);
+mes("You empty the bucket."); // ours
+
+// ---------------------------------------------------------------- charming a snake
+[opnpcu,feud_desert_snake]
+if (last_useitem ! snake_flute) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, basket_for_snake) = 0) {
+    mes("You need a snake basket to put a charmed snake in."); // ours
+    return;
+}
+anim(snake_charming, 0);
+p_delay(2);
+if (random(2) = 0) { // ours: no source gives the chance
+    ~mesbox("Your snake charming skills are insufficient to pacify the creature.");
+    return;
+}
+npc_del;
+inv_del(inv, basket_for_snake, 1);
+inv_add(inv, basket_with_snake, 1);
+~mesbox("You successfully charm and capture the snake!");
+
+// ---------------------------------------------------------------- Traitorous Ali's drink
+[oploc1,feud_poison_beer_table]
+mes("Someone has left a drink here. I'd better leave it alone."); // ours
+
+[oplocu,feud_poison_beer_table]
+if (%feud_var >= ^feud_drink_poisoned) {
+    ~chatplayer("<p,neutral>I've poisoned the drink. I'd better leave it alone now in case someone notices.");
+    return;
+}
+if (last_useitem ! poison_from_hag | %feud_var ! ^feud_got_poison) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%feud_var_drink_found = 0) {
+    mes("I don't know whose drink this is."); // ours: the barman points it out
+    return;
+}
+anim(feud_poisoning_beer, 0);
+inv_del(inv, poison_from_hag, 1);
+mes("You poison the drink.");
+%feud_var = ^feud_drink_poisoned;
+
+// ---------------------------------------------------------------- the mayor's house
+[oploc1,feud_closed_door_left] @feud_mayor_door;
+[oploc1,feud_closed_door_right] @feud_mayor_door;
+
+[label,feud_mayor_door]
+if (%feud_var_mayorsdoor = 0) {
+    mes("The door is locked."); // ours
+    return;
+}
+~eascape_door_walk;
+
+[oplocu,feud_closed_door_left] @feud_mayor_door_keys;
+[oplocu,feud_closed_door_right] @feud_mayor_door_keys;
+
+[label,feud_mayor_door_keys]
+if (last_useitem ! feud_mayors_house_keys) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%feud_var < ^feud_staked_out) {
+    mes("I should make sure nobody's home before I let myself in."); // ours
+    return;
+}
+%feud_var_mayorsdoor = 1;
+mes("You hear a satisfying click as the door unlocks.");
+
+[oploc1,feud_cactus_row]
+if (%feud_var ! ^feud_got_keys) {
+    ~mesbox("I'd feel a little silly crouching down behind these prickly shrubs for no apparent reason.");
+    return;
+}
+if (inv_getobj(worn, ^wearpos_hands) = null) {
+    ~mesbox("I need something to cover my hands before I stake out the house. I might leave fingerprints.");
+    return;
+}
+if (inv_getobj(worn, ^wearpos_hat) ! feud_desert_disguise) {
+    ~mesbox("I need something to disguise my head before I stake out the house. Somebody might spot me.");
+    return;
+}
+anim(human_pickupfloor, 0); // ours: crouching down
+say("I better be careful, this cactus is prickly!");
+p_delay(2);
+%feud_var = ^feud_staked_out;
+~mesbox("The coast is clear, nobody's home.");
+
+[oploc1,feud_mayors_desk]
+~mesbox("You find an interesting note on the desk.");
+if (~obj_gettotal(feud_nos_note) > 0) return;
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room in your inventory to take it.");
+    return;
+}
+inv_add(inv, feud_nos_note, 1);
+
+[oploc1,feud_mayors_bed]
+~mesbox("You find a flattened note under the mattress.");
+if (~obj_gettotal(feud_fib_hint) > 0) return;
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room in your inventory to take it.");
+    return;
+}
+inv_add(inv, feud_fib_hint, 1);
+
+[oploc1,feud_mayors_picture]
+~mesbox("On the wall hangs a rather nondescript picture. On closer inspection you notice that it's covering something: a safe.");
+if (%feud_var ! ^feud_staked_out) {
+    mes("The safe is shut tight."); // ours: before the job, and once it's been emptied
+    return;
+}
+if_close;
+if_openmain(feud_safe);
+
+// ---------------------------------------------------------------- the safe (1, 1, 2, 3, 5, 8)
+// %feud_safe_digit counts the numbers entered and %feud_safe_correct stays 1 while they are right
+// (the 377 cache's own varbits). The dial turns with the cache's feud_turns_N.
+[if_button,feud_safe:set1] ~feud_safe_press(1, feud_turns_1);
+[if_button,feud_safe:set2] ~feud_safe_press(2, feud_turns_2);
+[if_button,feud_safe:set3] ~feud_safe_press(3, feud_turns_3);
+[if_button,feud_safe:set4] ~feud_safe_press(4, feud_turns_4);
+[if_button,feud_safe:set5] ~feud_safe_press(5, feud_turns_5);
+[if_button,feud_safe:set6] ~feud_safe_press(6, feud_turns_6);
+[if_button,feud_safe:set7] ~feud_safe_press(7, feud_turns_7);
+[if_button,feud_safe:set8] ~feud_safe_press(8, feud_turns_8);
+[if_button,feud_safe:set9] ~feud_safe_press(9, feud_turns_9);
+[if_button,feud_safe:reset]
+%feud_safe_digit = 0;
+%feud_safe_correct = 1;
+if_setanim(feud_safe:dial, feud_safe_turns);
+mes("Clank!! That must be the safe resetting itself.");
+
+[proc,feud_safe_press](int $n, seq $turn)
+if_setanim(feud_safe:dial, $turn);
+def_int $want = 1;
+switch_int (%feud_safe_digit) {
+    case 2 : $want = 2;
+    case 3 : $want = 3;
+    case 4 : $want = 5;
+    case 5 : $want = 8;
+}
+if ($n ! $want) %feud_safe_correct = 0;
+%feud_safe_digit = add(%feud_safe_digit, 1);
+if (%feud_safe_digit < 6) return;
+if (%feud_safe_correct = 0 | %feud_safe_digit > 6) {
+    %feud_safe_digit = 0;
+    %feud_safe_correct = 1;
+    if_close;
+    ~mesbox("A rather loud clank reverberates from the safe. It sounds as if you've gotten the combination wrong. You wonder how many more attempts you have before the safe permanently locks itself.");
+    return;
+}
+%feud_safe_digit = 0;
+%feud_safe_correct = 1;
+if_setanim(feud_safe:dial, feud_safe_opens_jewels);
+if (inv_freespace(inv) = 0) {
+    if_close;
+    ~mesbox("The mayor's jewels are contained within the safe, however you have no room in your inventory to take them.");
+    return;
+}
+if_close;
+inv_add(inv, feud_mayors_jewels, 1);
+%feud_var = ^feud_got_jewels;
+~objbox(feud_mayors_jewels, "You remove the jewels from the safe.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the villagers' pockets
+// %feud_npc_multi turns the villagers into the ones with Lure (1, after the first pocket) and
+// Knock-Out (2, after the second), as the OSRS game's varbit 340 does.
+[opnpc3,feud_villager_1_1] @feud_villager_pickpocket;
+[opnpc3,feud_villager_1_2] @feud_villager_pickpocket;
+[opnpc3,feud_villager_1_3] @feud_villager_pickpocket;
+[opnpc3,feud_villager_2_1] @feud_villager_pickpocket;
+[opnpc3,feud_villager_2_2] @feud_villager_pickpocket;
+[opnpc3,feud_villager_2_3] @feud_villager_pickpocket;
+[opnpc3,feud_villager_3_1] @feud_villager_pickpocket;
+[opnpc3,feud_villager_3_2] @feud_villager_pickpocket;
+[opnpc3,feud_villager_3_3] @feud_villager_pickpocket;
+
+[label,feud_villager_pickpocket]
+def_int $s = %feud_var;
+mes("You attempt to pick the villager's pocket.");
+anim(human_pickpocket, 0);
+p_delay(1);
+if ($s = ^feud_joined | $s = ^feud_distracted | $s = ^feud_knocked_out) {
+    mes("You pick the villager's pocket.");
+    stat_advance(thieving, 80); // ours
+    if ($s = ^feud_joined) {
+        %feud_var = ^feud_pickpocket1;
+        %feud_npc_multi = 1;
+    } else if ($s = ^feud_distracted) {
+        %feud_var = ^feud_pickpocket2;
+        %feud_npc_multi = 2;
+        %feud_distracted = 0;
+    } else {
+        %feud_var = ^feud_pickpocket3;
+    }
+    return;
+}
+if ($s >= ^feud_pickpocket3) {
+    mes("You pick the villager's pocket, but find nothing of value."); // ours: no source has their loot
+    return;
+}
+if ($s = ^feud_pickpocket1 | $s = ^feud_pickpocket2 | $s = ^feud_lured) {
+    npc_say("I know your tricks, thief.");
+    p_delay(0);
+    npc_say("You won't get my purse.");
+}
+@feud_villager_caught;
+
+[label,feud_villager_caught]
+mes("You fail to pick the villager's pocket.");
+npc_setmode(playerface);
+spotanim_pl(stunned_thieving, 124, 0);
+sound_synth(stunned, 1, 0);
+~damage_self(2);
+%action_delay = calc(map_clock + 5);
+%stunned = calc(map_clock + 5);
+walktrigger(stunned);
+npc_setmode(null);
+
+[opnpc4,feud_villager_1_2] @feud_villager_lure;
+[opnpc4,feud_villager_1_3] @feud_villager_lure;
+[opnpc4,feud_villager_2_2] @feud_villager_lure;
+[opnpc4,feud_villager_2_3] @feud_villager_lure;
+[opnpc4,feud_villager_3_2] @feud_villager_lure;
+[opnpc4,feud_villager_3_3] @feud_villager_lure;
+
+[label,feud_villager_lure]
+if (%feud_var ! ^feud_pickpocket2 & %feud_var ! ^feud_lured) {
+    mes("I've no reason to lure anyone away right now."); // ours
+    return;
+}
+~chatplayer("<p,neutral>Psst. Come here, I want to show you something");
+~chatnpc("<p,quiz>What is it?");
+~chatplayer("<p,happy>It's a surprise! Follow me.");
+%feud_var = ^feud_lured;
+npc_setmode(playerfollow);
+
+[opnpc5,feud_villager_1_3] @feud_villager_knockout;
+[opnpc5,feud_villager_2_3] @feud_villager_knockout;
+[opnpc5,feud_villager_3_3] @feud_villager_knockout;
+
+[label,feud_villager_knockout]
+def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+if ($weapon ! blackjack_oak & $weapon ! blackjack_willow) {
+    mes("You need to be wielding a blackjack to knock someone out."); // ours
+    return;
+}
+if (%feud_var ! ^feud_lured) {
+    mes("Not here, someone might see you."); // ours: only a lured villager, somewhere quiet
+    return;
+}
+// ours: somewhere quiet means no other townsfolk within a few squares
+def_int $seen = 0;
+npc_huntall(coord, 4, 0);
+while (npc_findnext = true) {
+    if (compare(npc_name, "Villager") = 0 | compare(npc_name, "Bandit") = 0 | compare(npc_name, "Menaphite Thug") = 0) $seen = add($seen, 1);
+}
+if ($seen > 1) {
+    mes("There are too many people around. Lure the villager somewhere quieter."); // ours
+    return;
+}
+anim(human_blunt_pound, 0);
+p_delay(0);
+npc_anim(stunned_blackjack, 0);
+npc_setmode(null);
+mes("You knock the villager out."); // ours
+%feud_var = ^feud_knocked_out;
+
+// the gangs' pockets (op3) and the later blackjack options aren't part of the 2005 town (ours)
+[opnpc3,feud_arabian_guard1_1] mes("They're watching you too closely.");
+[opnpc3,feud_arabian_guard1_2] mes("They're watching you too closely.");
+[opnpc3,feud_arabian_guard2_1] mes("They're watching you too closely.");
+[opnpc3,feud_arabian_guard2_2] mes("They're watching you too closely.");
+[opnpc3,feud_egyptian_doorman_2] mes("They're watching you too closely.");
+[opnpc4,feud_arabian_guard1_2] mes("They're watching you too closely.");
+[opnpc4,feud_arabian_guard2_2] mes("They're watching you too closely.");
+[opnpc4,feud_egyptian_doorman_2] mes("They're watching you too closely.");
+[opnpc5,feud_arabian_guard1_2] mes("They're watching you too closely.");
+[opnpc5,feud_arabian_guard2_2] mes("They're watching you too closely.");
+[opnpc5,feud_egyptian_doorman_2] mes("They're watching you too closely.");
+
+// ---------------------------------------------------------------- the two fights
+// ours: each player's champion is their own, as with Mountain Daughter's Kendal
+[label,feud_toughguy_call]
+if (npc_find(coord, feud_menap_toughguy, 10, 0) = true) return;
+npc_add(npc_coord, feud_menap_toughguy, 500);
+npc_say("Grr!");
+npc_setmode(opplayer2);
+
+[ai_queue3,feud_menap_toughguy]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(feud_toughguy_slain, 0, 0);
+
+[queue,feud_toughguy_slain]
+// Void's tough_guy drop table (ours: dropped where you stand)
+obj_add(coord, bones, 1, ^lootdrop_duration);
+obj_add(coord, blackjack_willow, 1, ^lootdrop_duration);
+if (%feud_var ! ^feud_meet_leader) return;
+%feud_var = ^feud_menaphites_beaten;
+%feud_boss_vis = 0;
+%feud_var_menaboss = 0;
+if (npc_find(coord, feud_menap_boss_vis, 15, 0) = true) npc_say("You haven't seen the last of me!");
+~chatplayer("<p,neutral>No doubt I haven't seen the last of you... but what about Ali's nephew?");
+~chatplayer("<p,neutral>Maybe the villagers will feel more talkative now that I've rid them of these evil Menaphites. Who knows, they might even give me a reward!");
+
+[label,feud_champion_call]
+if (npc_find(coord, feud_bandit_toughguy, 10, 0) = true) return;
+npc_add(npc_coord, feud_bandit_toughguy, 500);
+npc_say("Grrr");
+npc_setmode(opplayer2);
+
+[ai_queue3,feud_bandit_toughguy]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(feud_champion_slain, 0, 0);
+
+[queue,feud_champion_slain]
+// Void's bandit_champion drop table (ours: dropped where you stand)
+obj_add(coord, bones, 1, ^lootdrop_duration);
+obj_add(coord, blackjack_willow, 1, ^lootdrop_duration);
+obj_add(coord, adamant_scimitar, 1, ^lootdrop_duration);
+if (%feud_var ! ^feud_menaphites_beaten) return;
+%feud_var = ^feud_bandits_beaten;
+%feud_var_banditboss = 0;
+%feud_mayor_invis = 1;
+if (npc_find(coord, feud_bandit_boss_vis, 15, 0) = false) return;
+~chatplayer("<p,angry>I have defeated your champion, now get out of town.");
+~chatnpc("<p,neutral>Adventurer... I have underestimated you. Perhaps we can come to an agreement. How about I work for you? Think of the riches you would make.");
+~chatplayer("<p,angry>Don't try my patience. Tell me where Ali is, and then get out of here?");
+~chatnpc("<p,quiz>Ali? Which Ali?");
+~chatplayer("<p,angry>Ali Morrisane's nephew! I know you gangs had something to do with his disappearance, so tell me where he is!");
+~chatnpc("<p,happy>Ali Morrisane?! You fool. You've been had!");
+~chatplayer("<p,quiz>What do you mean?");
+~chatnpc("<p,neutral>Go have a chat with these precious townspeople of yours. You'll soon learn the truth.");
+~chatplayer("<p,angry>I'll go talk to a villager now, just to prove you wrong. Now get out of here before I really get angry with you!");
+
+// ---------------------------------------------------------------- the end
+[proc,feud_complete]
+inv_add(inv, coins, 500);
+~mesbox("Ali Morrisane gives you 500 coins.");
+%feud_var = ^feud_complete;
+stat_advance(thieving, 150000);
+session_log(^log_adventure, "Quest complete: The Feud");
+~send_quest_complete(questlist:feud, blackjack_oak, 250, ^feud_questpoints, "You have completed\\nThe Feud!", "1 Quest Point|15,000 Thieving XP|500 coins|Access to Pollnivneach's|thieving opportunities");
+
+// ---------------------------------------------------------------- Diango's spinning plate (same update)
+// Void's ItemEmotes: spin, then catch it or drop it, then cheer or cry
+[opheld1,spinning_plate]
+p_stopaction;
+anim(start_spinning_plate, 0);
+p_delay(1);
+if (random(2) = 0) {
+    anim(drop_spinning_plate, 0);
+    p_delay(0);
+    anim(emote_cry, 0);
+    return;
+}
+anim(stop_spinning_plate, 0);
+p_delay(0);
+anim(emote_cheer, 0);

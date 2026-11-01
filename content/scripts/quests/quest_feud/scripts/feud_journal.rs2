@@ -1,0 +1,34 @@
+// EASCape: The Feud's journal. Ours: no source has its journal text, so these lines say what the
+// OSRS wiki's quick guide has you do next.
+[if_button,questlist:feud]
+def_int $s = %feud_var;
+if ($s = ^feud_not_started) {
+    ~quest_journal("The Feud", "@dbl@I can start this quest by talking to @dre@Ali Morrisane@dbl@ at his stall|@dbl@in the north of @dre@Al Kharid@dbl@.|@dbl@I will need level @dre@30 Thieving@dbl@ and be able to defeat|@dre@level 70 and 75@dbl@ fighters.");
+    return;
+}
+if ($s >= ^feud_complete) {
+    ~quest_journal("The Feud", "@str@Ali Morrisane sent me to Pollnivneach to find his nephew.|@str@I ended up running both gangs out of town, and learned that|@str@the nephew is a wanted salesman, hiding with forty friends.|@str@Ali Morrisane, it turns out, was selling me Pollnivneach all|@str@along.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@Ali Morrisane asked me to find his nephew Ali in|@str@Pollnivneach, south of the Shantay Pass.||";
+def_string $next;
+switch_int ($s) {
+    case ^feud_started : $next = "@dbl@I should ask around @dre@Pollnivneach@dbl@. @dre@Drunken Ali@dbl@ in the bar might|@dbl@talk for a few @dre@beers@dbl@.";
+    case ^feud_drunk_told : $next = "@dbl@The nephew is in trouble with the town's two gangs. I should|@dbl@talk to a @dre@bandit@dbl@ and a @dre@Menaphite thug@dbl@ about their feud.";
+    case ^feud_gangs_asked : $next = "@dbl@Both gangs might make peace for a camel each. @dre@Ali the Camel|@dre@Man@dbl@ may have two for sale.";
+    case ^feud_camels_bought : $next = "@dbl@I should give a camel @dre@receipt@dbl@ to a @dre@bandit@dbl@ and to a @dre@Menaphite|@dre@thug@dbl@.";
+    case ^feud_camels_refused : $next = "@dbl@The camels didn't work. I should try to join a gang: @dre@Ali the|@dre@Operator@dbl@ by the Menaphites' tent wants a word.";
+    case ^feud_joined, ^feud_pickpocket1, ^feud_distracted, ^feud_pickpocket2, ^feud_lured, ^feud_knocked_out : $next = "@dbl@Ali the Operator wants me to pick the pockets of three|@dre@villagers@dbl@. He has advice if I get stuck, and the @dre@street|@dre@urchin@dbl@ might help.";
+    case ^feud_pickpocket3 : $next = "@dbl@I've picked three pockets. I should report to @dre@Ali the Operator@dbl@.";
+    case ^feud_got_keys : $next = "@dbl@I'm to steal the mayor's wife's jewels. In a @dre@disguise@dbl@ and|@dre@gloves@dbl@, I should stake out the house from behind the @dre@cactus@dbl@.";
+    case ^feud_staked_out : $next = "@dbl@Nobody's home. I should let myself in with the @dre@keys@dbl@ and|@dbl@search the house for the @dre@jewels@dbl@.";
+    case ^feud_got_jewels : $next = "@dbl@I have the jewels. I should take them to @dre@Ali the Operator@dbl@.";
+    case ^feud_traitor_task : $next = "@dbl@There's a traitor among the Menaphites. I should ask the|@dre@Menaphite thugs@dbl@, then tell @dre@Ali the Operator@dbl@.";
+    case ^feud_traitor_found, ^feud_snake_given, ^feud_got_poison : $next = "@dbl@I'm to quietly kill @dre@Traitorous Ali@dbl@. @dre@Ali the Barman@dbl@ may know|@dbl@where he is, and @dre@Ali the Hag@dbl@ can make a poison from a @dre@snake@dbl@|@dbl@and fresh @dre@camel dung@dbl@.";
+    case ^feud_drink_poisoned : $next = "@dbl@Traitorous Ali's drink is poisoned. I should tell @dre@Ali the|@dre@Operator@dbl@.";
+    case ^feud_meet_leader : $next = "@dbl@The @dre@Menaphite Leader@dbl@ outside the tent wants to see me.";
+    case ^feud_menaphites_beaten : $next = "@dbl@I've seen off the Menaphites. A @dre@villager@dbl@ may tell me what|@dbl@to do next, and the @dre@Bandit Leader@dbl@ must go too.";
+    case ^feud_bandits_beaten : $next = "@dbl@I've beaten the bandits' champion. I should talk to a|@dre@villager@dbl@, then @dre@Ali the Mayor@dbl@.";
+    case default : $next = "@dbl@The mayor told me about the nephew. I should tell @dre@Ali|@dre@Morrisane@dbl@ in Al Kharid.";
+}
+~quest_journal("The Feud", append($t, $next));

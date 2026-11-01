@@ -289,6 +289,9 @@ if (%dwarfrock_quest >= ^bar_complete) {
 if (%mdaughter_quest_var >= ^md_complete) {
     $questpoints = add($questpoints, ^md_questpoints);
 }
+if (%feud_var >= ^feud_complete) {
+    $questpoints = add($questpoints, ^feud_questpoints);
+}
 if (%onesmallfavour >= ^osf_complete) {
     $questpoints = add($questpoints, ^osf_questpoints);
 }
@@ -394,6 +397,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:ahoy, %ahoy_questvar, ^ahoy_complete);
 ~send_quest_progress_colour(questlist:onesmallfavour, %onesmallfavour, ^osf_complete);
 ~send_quest_progress_colour(questlist:mdaughter, %mdaughter_quest_var, ^md_complete);
+~send_quest_progress_colour(questlist:feud, %feud_var, ^feud_complete);
 ~send_quest_progress_colour(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);
