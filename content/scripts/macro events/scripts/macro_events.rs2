@@ -110,6 +110,10 @@ if ($random >= ^teleport_macro_start & (random(4) ! 0 | ~wilderness_level(coord)
 if(map_members = ^false) {
     while($random = ^macro_triffidseed) $random = ~random_range(1, sub(^teleport_macro_start, 1));
 }
+// EASCape: no Pious Pete (the candlelight event); another event is rolled instead
+while ($random = ^macro_candlelight | ($random = ^macro_triffidseed & map_members = ^false)) {
+    $random = ~random_range(1, sub(^teleport_macro_start, 1));
+}
 return($random);
 
 // used for skilling random events
