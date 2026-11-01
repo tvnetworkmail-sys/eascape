@@ -350,3 +350,33 @@ return(true);
 // KeldagrimPlugin: 5973 -> 2838,10125, 5998 -> 2780,10161)
 [oploc1,dwarf_cavewall_tunnel] p_telejump(0_44_158_22_13);
 [oploc1,dwarf_cave_entrance] p_telejump(0_43_158_28_49);
+
+// the Dwarven Boatman between the mines and Keldagrim (the OSRS wiki's transcript, its standard
+// dialogue). Ours: The Giant Dwarf isn't built, so he takes you from the start, with his standard
+// words; where you land (2843,10129 in the mines, 2892,10227 in the city)
+[opnpc1,dwarf_city_boatman_mines_prequest]
+~chatnpc("<p,happy>Hello again, <displayname>! Want to go back to Keldagrim?");
+if (~p_choice2("Yes, please take me.", 1, "What, on your ship? No way.", 2) = 2) {
+    ~chatplayer("<p,neutral>What, on your ship? No way.");
+    ~chatnpc("<p,neutral>Hey, it was only a little accident! Calm down!");
+    return;
+}
+~chatplayer("<p,happy>Yes, please take me.");
+@dwarf_boatman_trip(0_45_159_12_51);
+
+[opnpc1,dwarf_city_boatman_city]
+~chatnpc("<p,quiz>Want me to take you back to the mines?");
+if (~p_choice2("Yes, please take me.", 1, "What, on your ship! No thanks!", 2) = 2) {
+    ~chatplayer("<p,angry>What, on your ship? No thanks! I don't want to crash into any more things!");
+    ~chatnpc("<p,neutral>Hey now, it was only a slight accident!");
+    ~chatnpc("<p,neutral>Calm down, calm down! You got what you paid for the trip, didn't you?");
+    return;
+}
+~chatplayer("<p,happy>Yes, please take me.");
+@dwarf_boatman_trip(0_44_158_27_17);
+
+[label,dwarf_boatman_trip](coord $dest)
+mes("You board the boat."); // ours
+p_delay(2);
+p_telejump($dest);
+mes("The boat arrives at its destination."); // ours
