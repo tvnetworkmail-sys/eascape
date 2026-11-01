@@ -380,3 +380,103 @@ mes("You board the boat."); // ours
 p_delay(2);
 p_telejump($dest);
 mes("The boat arrives at its destination."); // ours
+
+// ---------------------------------------------------------------- Keldagrim's carts
+// The OSRS wiki's cart conductor transcript gives the Keldagrim station's words and fares (Ice
+// Mountain 150, White Wolf Mountain 100 once Fishing Contest is done, half with the Ring of
+// Charos); 2009scape's CartConductorDialogue and KeldagrimCartMethods give the far conductors'
+// words and where the rides end (Keldagrim 2915,10175, White Wolf Mountain 2875,9871, Ice Mountain
+// 2997,9837). Ours: the ride goes straight to its end once paid (no tickets or tracks), the Grand
+// Exchange route is left out (2006 has no Grand Exchange), and The Giant Dwarf (not built) isn't
+// required.
+[opnpc1,dwarf_city_train_conductor1] @keldagrim_cart_station;
+[opnpc1,dwarf_city_train_conductor2] @keldagrim_cart_station;
+[opnpc1,dwarf_city_train_conductor3] @keldagrim_cart_station;
+[opnpc1,dwarf_city_train_conductor4] @keldagrim_cart_station;
+[opnpc1,dwarf_city_train_conductor5] @keldagrim_cart_station;
+[opnpc1,dwarf_city_train_conductor8] @keldagrim_cart_station;
+
+[label,keldagrim_cart_station]
+~chatnpc("<p,quiz>Yes <text_gender("sir", "m'am")>? Can I help you at all?");
+@keldagrim_cart_menu;
+
+[label,keldagrim_cart_menu]
+switch_int (~p_choice4("What is this place?", 1, "Where can you take me?", 2, "I'd like to buy a ticket.", 3, "I have to go.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What is this place?");
+        ~chatnpc("<p,neutral>You're in the main waiting area of Keldagrim Carts- station.");
+        ~chatplayer("<p,quiz>Cart-station? What goes on here then?");
+        ~chatnpc("<p,neutral>Keldagrim is the hub of all the traffic of the dwarven realm. Almost every dwarven outpost has railtracks leading to Keldagrim, connecting them all for easy travel and transportation of goods.");
+        ~chatplayer("<p,quiz>Amazing! And what powers the carts? Magic?");
+        ~chatnpc("<p,neutral>Oh, no no, we dwarves don't use magic. No, all of this is powered by steam engines, developed during the past few centuries after the Consortium came to power.");
+        ~chatplayer("<p,happy>Thanks for the info.");
+        @keldagrim_cart_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Where can you take me?");
+        ~chatnpc("<p,neutral>Let's see, we could let you travel to Ice Mountain."); // the wiki's words, without the Grand Exchange
+        if (%fishingcompo >= ^fishingcompo_complete) {
+            ~chatnpc("<p,neutral>I could also let you go to White Wolf Mountain, since you've befriended our brothers there.");
+        }
+        @keldagrim_cart_menu;
+    case 3 :
+        ~chatplayer("<p,neutral>I'd like to buy a ticket.");
+        ~chatnpc("<p,quiz>And where would you like to go?");
+        def_int $c;
+        if (%fishingcompo >= ^fishingcompo_complete) {
+            $c = ~p_choice3("To Ice Mountain.", 1, "To White Wolf Mountain.", 2, "Nowhere.", 3);
+        } else {
+            $c = ~p_choice2("To Ice Mountain.", 1, "Nowhere.", 3);
+        }
+        if ($c = 1) {
+            ~chatplayer("<p,neutral>I'd like to buy a ticket to Ice Mountain.");
+            @keldagrim_cart_buy(150, 0_46_153_53_45);
+        }
+        if ($c = 2) {
+            ~chatplayer("<p,neutral>I'd like to buy a ticket to White Wolf Mountain.");
+            @keldagrim_cart_buy(100, 0_44_154_59_15);
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>I have to go.");
+        ~chatnpc("<p,neutral>Just remember, wherever you go, you go there faster through Keldagrim Carts.");
+}
+
+[label,keldagrim_cart_buy](int $fare, coord $dest)
+~chatnpc("<p,neutral>That'll be <tostring($fare)> gold coins please.");
+def_int $c;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    $c = ~p_choice3("Buy.", 1, "Don't buy.", 2, "[Charm] Only pay half.", 3);
+} else {
+    $c = ~p_choice2("Buy.", 1, "Don't buy.", 2);
+}
+if ($c = 2) {
+    ~chatplayer("<p,neutral>No thanks, I changed my mind.");
+    @keldagrim_cart_menu;
+}
+if ($c = 3) $fare = divide($fare, 2);
+if (inv_total(inv, coins) < $fare) {
+    ~chatplayer("<p,sad>I'm sorry, I've run out of money.");
+    @keldagrim_cart_menu;
+}
+inv_del(inv, coins, $fare);
+@keldagrim_cart_ride($dest);
+
+// the far ends: Ice Mountain (conductor7, 150 coins) and White Wolf Mountain (conductor6, 100)
+[opnpc1,dwarf_city_train_conductor7] @keldagrim_cart_far(150);
+[opnpc1,dwarf_city_train_conductor6] @keldagrim_cart_far(100);
+
+[label,keldagrim_cart_far](int $fare)
+~chatplayer("<p,neutral>I'd like to use your cart, please.");
+~chatnpc("<p,neutral>Alright, that'll cost ye <tostring($fare)>gp.");
+if (~p_choice2("Okay, sure.", 1, "No, thanks.", 2) = 2) return;
+if (inv_total(inv, coins) < $fare) {
+    ~mesbox("You can not afford that.");
+    return;
+}
+inv_del(inv, coins, $fare);
+@keldagrim_cart_ride(0_45_158_35_63);
+
+[label,keldagrim_cart_ride](coord $dest)
+mes("You climb into the cart."); // ours
+p_delay(2);
+p_telejump($dest);
+mes("The cart arrives at its destination."); // ours
