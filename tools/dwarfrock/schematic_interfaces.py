@@ -44,9 +44,9 @@ GFX = {297: 'tradebacking,0'}
 for name, ids in SHEETS.items():
     ims = [sprite_img(g) for g in ids]
     w, h = ims[0].size
-    sheet = Image.new('RGBA', (w * len(ims), h), (0, 0, 0, 0))
+    sheet = Image.new('RGBA', (w * len(ims), h), (255, 0, 255, 255))   # our sprites' transparent key is magenta
     for i, im in enumerate(ims):
-        sheet.paste(im, (i * w, 0)); GFX[ids[i]] = f'{name},{i}'
+        sheet.paste(im, (i * w, 0), im); GFX[ids[i]] = f'{name},{i}'
     sheet.save(f'{E}/content/sprites/{name}.png')
     open(f'{E}/content/sprites/meta/{name}.opt', 'w').write(f'{w}x{h}\n')
 
