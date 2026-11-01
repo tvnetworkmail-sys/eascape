@@ -1783,3 +1783,23 @@ $banked = calc($banked + ~questpack_give(pot_empty, 1));
 if (p_finduid(uid) = false) return;
 %onesmallfavour = $n;
 mes("One Small Favour stage: <tostring($n)>");
+
+// ::mountaindaughterpack - what Mountain Daughter needs you to bring (OSRS wiki's item list): a rope,
+// a pickaxe, an axe, a plank, a staff (the pole near Jokul does too) and gloves
+[debugproc,mountaindaughterpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(bronze_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(bronze_axe, 1));
+$banked = calc($banked + ~questpack_give(woodplank, 1));
+$banked = calc($banked + ~questpack_give(plainstaff, 1));
+$banked = calc($banked + ~questpack_give(leather_gloves, 1));
+~questpack_done("Mountain Daughter", $banked);
+
+// ::mdstage <n> - sets Mountain Daughter's stage (%mdaughter_quest_var, ours: 10 Hamal's leave,
+// 20 Asleif's two tasks)
+[debugproc,mdstage](int $n)
+if (p_finduid(uid) = false) return;
+%mdaughter_quest_var = $n;
+mes("Mountain Daughter stage: <tostring($n)>");

@@ -1,0 +1,17 @@
+// EASCape: Mountain Daughter's journal. Ours: no source has its journal text, so these lines say
+// what the OSRS wiki's quick guide has you do next.
+[if_button,questlist:mdaughter]
+def_int $s = %mdaughter_quest_var;
+if ($s = ^md_not_started) {
+    ~quest_journal("Mountain Daughter", "@dbl@I can start this quest by talking to @dre@Hamal the Chieftain@dbl@ in|@dbl@the @dre@Mountain Camp@dbl@ east of Rellekka. A @dre@rope@dbl@ will get me into|@dbl@the camp.|@dbl@I will need level @dre@20 Agility@dbl@ and be able to defeat a|@dre@level 70 monster@dbl@.");
+    return;
+}
+def_string $t = "@str@Hamal the Chieftain's daughter has gone missing, and he|@str@let me search for her.||";
+def_string $next;
+if ($s = ^md_started) {
+    $next = "@dbl@I should look for her by the @dre@pool@dbl@ beyond the camp, where @dre@Ragnar@dbl@,|@dbl@her fiance, waits. Mud from the pond south of Hamal's tent|@dbl@might help me climb the @dre@tall tree@dbl@, and a @dre@pole@dbl@ and a @dre@plank@dbl@|@dbl@get me across the water.";
+} else {
+    $t = append($t, "@str@I heard the voice of his daughter Asleif at the shining|@str@pool. She is dead.||");
+    $next = "@dbl@Asleif asked me to bring her people and @dre@Rellekka@dbl@ closer|@dbl@together, and to find them a new supply of @dre@food@dbl@.";
+}
+~quest_journal("Mountain Daughter", append($t, $next));

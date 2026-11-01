@@ -1,0 +1,432 @@
+// EASCape: Mountain Daughter, step 1: into the Mountain Camp, Hamal, and Asleif's voice at the
+// shining pool (%mdaughter_quest_var 0 -> 20). Words from the OSRS wiki's transcript, the order from
+// its walkthrough and quick guide. Where we land you after a climb, jump or fall is ours, read off the
+// map (m43_57): the shore by the tall tree 2771,3677, the little island 2772,3685, past the clump of
+// rocks 2774,3691, the pool's centre island 2778,3691 and the north shore 2775,3699.
+
+// the player's name, or their Fremennik name after The Fremennik Trials (the transcript)
+[proc,md_name]()(string)
+if (%viking >= ^viking_complete) return(~get_viking_name);
+return(displayname);
+
+[proc,md_on_centre_island]()(boolean)
+if (inzone(0_43_57_25_41, 0_43_57_35_49, coord) = true) return(true);
+return(false);
+
+// ---------------------------------------------------------------- getting in
+// the rope on the boulder above the guard: the way in before the quest (wiki: 10 Agility at first)
+[oplocu,mdaughter_cliff_boulder]
+if (last_useitem ! rope) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(agility) < 10) {
+    mes("You need an Agility level of 10 to climb down there."); // ours
+    return;
+}
+mes("You tie the rope around the boulder and prepare to climb down.");
+p_delay(1);
+p_telejump(0_43_57_14_15);
+mes("You pull on the rope and miraculously, it comes loose.");
+
+[oploc3,mdaughter_cliff_boulder]
+mes("The boulder won't budge. Perhaps you could tie something to it."); // ours
+
+// the rockslide by the guard: out at any time, in once Hamal lets you roam (wiki walkthrough)
+[oploc1,mdaughter_rockslide]
+if (coordz(coord) >= 3660) {
+    if (npc_find(coord, mdaughter_rockslide_guard, 6, 0) = true) {
+        ~chatnpc("<p,angry>Go, outerlander, and do not hurry back.");
+    }
+    mes("You climb onto the rock...");
+    p_delay(1);
+    p_telejump(0_43_57_8_8);
+    mes("...and step down the other side.");
+    return;
+}
+if (%mdaughter_quest_var < ^md_started) {
+    mes("The guard on the other side won't let you climb over."); // ours
+    return;
+}
+mes("You climb onto the rock...");
+p_delay(1);
+p_telejump(0_43_57_9_12);
+mes("...and step down the other side.");
+
+// ---------------------------------------------------------------- Hamal the Chieftain
+[opnpc1,mdaughter_hamal]
+if (%mdaughter_quest_var = ^md_not_started) {
+    ~chatnpc("<p,neutral>Greetings, outerlander, I am Hamal. I am the chieftain of this tribe.");
+    ~chatplayer("<p,neutral>And my name is <~md_name>, honourable chieftain.");
+    ~chatnpc("<p,neutral>Ah, an outerlander with manners.");
+    ~chatnpc("<p,quiz>So tell me what you want from us.");
+    def_int $c;
+    if (%viking >= ^viking_complete) {
+        $c = ~p_choice3("Actually, I'm a Fremennik.", 1, "Why is everyone so hostile?", 2, "I'm looking for a quest!", 3);
+    } else {
+        $c = ~p_choice2("Why is everyone so hostile?", 2, "I'm looking for a quest!", 3);
+    }
+    switch_int ($c) {
+        case 1 :
+            ~chatplayer("<p,neutral>Actually, I'm a Fremennik, not an outerlander.");
+            ~chatnpc("<p,neutral>We are not Fremennik, outerlander.");
+            ~chatplayer("<p,confused>But you look like Fremennik!");
+            ~chatnpc("<p,neutral>And you do not look like a Fremennik, but still claim to be one.");
+            ~chatnpc("<p,neutral>But I will not deceive you. We were part of the Fremennik once, but left the village of Rellekka long ago.");
+            if (~p_choice2("So what are you doing up here?", 1, "That's fascinating.", 2) = 2) {
+                ~chatplayer("<p,neutral>That's fascinating, but I'm afraid I have other things to do at the moment.");
+                return;
+            }
+            @md_hamal_why_here;
+        case 2 :
+            ~chatplayer("<p,quiz>Why is everyone being so hostile to me?");
+            ~chatnpc("<p,neutral>We are a solitary group, outerlander, and have little experience or interest in outside contact.");
+            ~chatnpc("<p,neutral>It is also our custom not to talk to outerlanders without my sanction. And I see no reason to sanction it for you.");
+            if (~p_choice2("So what are you doing up here?", 1, "Oh, I'll stop talking to you then.", 2) = 2) {
+                ~chatplayer("<p,neutral>Oh, I'll stop talking to you then.");
+                ~chatnpc("<p,neutral>As you wish, outerlander.");
+                return;
+            }
+            @md_hamal_why_here;
+        case 3 :
+            ~chatplayer("<p,happy>I'm looking for a quest! Do you have any for me?");
+            ~chatnpc("<p,neutral>We do not employ outerlanders.");
+            ~chatplayer("<p,neutral>Okay, I know the drill, where do I sign up for the trials to join your tribe?");
+            ~chatnpc("<p,angry>And we certainly don't let them join us!");
+    }
+    return;
+}
+if (~md_hamal_step2 = true) return; // step 2 (mdaughter_step2.rs2)
+switch_int (~p_choice2("Any idea on where I should start looking?", 1, "What does your daughter look like?", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Uhm... any idea on where I should start looking for your daughter?");
+        ~chatnpc("<p,neutral>There is a large pool of water beyond the camp. She used to go there often, it was her favourite spot.");
+        ~chatnpc("<p,neutral>Ragnar, her fiance, is probably there as well. I will give him my permission to talk to you.");
+    case 2 :
+        ~chatplayer("<p,quiz>What does your daughter look like?");
+        ~chatnpc("<p,neutral>She is the fairest maiden of all our tribe, and I daresay of all the northern lands. She has flowing black hair, and when last we saw her, she was wearing a brown dress.");
+        ~chatnpc("<p,neutral>Perhaps you should speak to the man she is to marry, tribesman Ragnar. He can probably tell you more.");
+        ~chatnpc("<p,neutral>You can find him out by the pool beyond the camp, where my daughter used to go so often.");
+}
+
+[label,md_hamal_why_here]
+~chatplayer("<p,quiz>So what are you lot all doing up here in the mountains?");
+~chatnpc("<p,neutral>We left Rellekka because we wanted to live closer to nature. We feel that the people of Rellekka have grown complacent and rely too much on their tools rather than their skill. And while they share our view on the sanctity");
+~chatnpc("<p,neutral>of the runestones, they still employ and actively use magic.");
+~chatnpc("<p,angry>Their Seer is an affront to the gods!");
+if (%viking >= ^viking_complete) {
+    ~chatplayer("<p,laugh>And you haven't even seen what he did to his house!");
+    ~chatnpc("<p,confused>What?");
+}
+~chatnpc("<p,neutral>Anyway.");
+~chatnpc("<p,neutral>We do not recognise the council of Rellekka and want nothing more to do with them. We live on rock and stone now, pure and hard.");
+~chatnpc("<p,neutral>We move on to another part of the mountain slope when the rough land cannot sustain us anymore.");
+~chatnpc("<p,neutral>That said, we have tarried at this location for too long and should be moving on.");
+~chatplayer("<p,quiz>So why are you still here?");
+~chatnpc("<p,neutral>For one thing, this side of the mountain is mostly free from the menace of the trolls and the delvings of the deformed dwarves.");
+~chatplayer("<p,quiz>And?");
+~chatnpc("<p,sad>Well, you see...");
+~chatnpc("<p,sad>My daughter has gone missing. We have been looking for her and cannot go on without her.");
+@md_hamal_daughter_options;
+
+[label,md_hamal_daughter_options]
+switch_int (~p_choice3("I will search for her!", 1, "I'm sorry to hear that.", 2, "Maybe the trolls got her?", 3)) {
+    case 1 : @md_hamal_search;
+    case 2 :
+        ~chatplayer("<p,sad>I'm sorry to hear that.");
+        ~chatnpc("<p,angry>We do not need your sympathy, outerlander.");
+    case 3 :
+        ~chatplayer("<p,quiz>Maybe the trolls got her?");
+        ~chatnpc("<p,angry>Do not say such things in jest, outerlander.");
+        ~chatnpc("<p,neutral>Besides, stealth and kidnapping is not their way.");
+        if (~p_choice2("I will search for her!", 1, "Forget it then.", 2) = 1) @md_hamal_search;
+        ~chatplayer("<p,angry>Forget it then, you can figure it out on your own.");
+}
+
+[label,md_hamal_search]
+~chatplayer("<p,happy>A damsel in distress! I will search for her!");
+~chatnpc("<p,laugh>Haha, you have spirit, <~md_name>.");
+~chatnpc("<p,neutral>But we do not employ outerlanders.");
+~chatplayer("<p,neutral>You don't need to employ me! Just let me look for her.");
+~chatnpc("<p,neutral>Hmmm.");
+~chatnpc("<p,neutral>That seems acceptable to me. Very well, I will allow you to look for her.");
+%mdaughter_quest_var = ^md_started;
+~chatnpc("<p,neutral>I will instruct my people to let you roam about the area freely, and give limited consent to them to talk to you.");
+~chatplayer("<p,happy>Great! I'll be back with her soon. Just wait here.");
+~chatnpc("<p,neutral>Oh, I'll be waiting here alright.");
+
+// ---------------------------------------------------------------- the camp's people
+[opnpc1,mdaughter_camp_male1]
+~chatplayer("<p,happy>Hello! I'm trying to help your chieftain here.");
+~chatnpc("<p,angry>We don't need any help.");
+
+[opnpc1,mdaughter_camp_male2]
+~chatplayer("<p,quiz>Hello there! Can you help me?");
+~mesbox("The camp dweller shakes his head.");
+
+[opnpc1,mdaughter_camp_female1]
+~chatnpc("<p,angry>Stay away from me, outerlander.");
+
+[opnpc1,mdaughter_camp_female2]
+~chatplayer("<p,neutral>I think I need some help.");
+~chatplayer("<p,neutral>Well, yes...");
+~chatnpc("<p,angry>Run along then!");
+
+[opnpc1,mdaughter_camp_female3]
+~chatplayer("<p,happy>Hello, I'm-");
+~chatnpc("<p,angry>No.");
+~chatplayer("<p,confused>What?");
+~chatplayer("<p,confused>But I-");
+~chatplayer("<p,confused>Isn't there-");
+~chatplayer("<p,sad>Never mind.");
+
+[opnpc1,mdaughter_rockslide_guard]
+~chatplayer("<p,quiz>Can you come and help me? The chieftain's daughter-");
+~chatnpc("<p,angry>No, outerlander, I'm guarding this mountain pass from trolls and inquisitive people like you.");
+~chatplayer("<p,neutral>Doesn't look like you were very successful in the last regard.");
+~chatnpc("<p,angry>If the chieftain would let me, I would correct that oversight.");
+
+[opnpc1,mdaughter_jokul]
+if (~md_jokul_step2 = true) return; // step 2
+if (%mdaughter_quest_var < ^md_started) {
+    ~chatnpc("<p,angry>Stay away from me, outerlander."); // ours: before Hamal's leave, a camp dweller's line
+    return;
+}
+~chatplayer("<p,quiz>Do you have any idea where the chieftain's daughter is?");
+~chatnpc("<p,sad>That's what we would all like to know.");
+
+[opnpc1,mdaughter_ragnar]
+if (~md_ragnar_step3 = true) return; // step 3
+if (%mdaughter_quest_var < ^md_started) {
+    ~chatnpc("<p,angry>Stay away from me, outerlander."); // ours: before Hamal's leave, a camp dweller's line
+    return;
+}
+if (%mdaughter_quest_var >= ^md_asleif_tasks) {
+    ~chatplayer("<p,happy>I spoke to Asleif!");
+    ~chatnpc("<p,quiz>Really? You found her? Where is she, tell me!");
+    ~chatplayer("<p,neutral>Well... there's something you should know.");
+    ~chatnpc("<p,quiz>Yes?");
+    ~chatplayer("<p,neutral>Er, she's sort of... well...");
+    ~chatplayer("<p,sad>She's sort of dead.");
+    ~chatnpc("<p,angry>What? Do not say such things! Tell me where you saw her!");
+    ~chatplayer("<p,neutral>I didn't actually see her, not as such. But I did talk to her, right there, on that island in the center of the pool.");
+    ~chatnpc("<p,angry>That island is bare! There's no one there! Do not try to deceive me, outerlander, she is not dead and you did not talk to her!");
+    ~chatplayer("<p,neutral>Fine, don't believe me then.");
+    return;
+}
+~chatnpc("<p,neutral>So, you are the outerlander whom Hamal said would look for Asleif.");
+~chatplayer("<p,quiz>Who?");
+~chatnpc("<p,angry>You don't even know her name!");
+~chatnpc("<p,sad>I am sorry outerlander, I have not spoken with your kind for a long time and I'm not feeling so well. You see, I was set to marry Asleif, the most beautiful woman ever to grace this world.");
+switch_int (~p_choice2("Do you have any idea where she might be?", 1, "What do you mean, my kind?", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Do you have any idea where she might be?");
+        ~chatnpc("<p,sad>She used to come here every day, you know, whenever our camp was set up in the vicinity. She would come to sing, her voice reflecting on the mountains and falling into the pool like sparkling silver.");
+        ~chatnpc("<p,sad>Sometimes I think I can hear her singing, but when I follow the sound around the pool I just end up here again.");
+        ~chatplayer("<p,quiz>So... do you have any idea where she might be now?");
+        ~chatnpc("<p,neutral>We were supposed to meet here, at the tree by the pool. I think if I wait long enough maybe she will show up again.");
+        ~chatplayer("<p,quiz>But... you don't actually have any idea where she is right at the moment?");
+        ~chatnpc("<p,angry>If I knew I wouldn't be standing here, would I?");
+    case 2 :
+        if (%viking >= ^viking_complete) {
+            ~chatplayer("<p,quiz>What do you mean, my kind? I'm a Fremennik you know.");
+            ~chatnpc("<p,neutral>Yet you still use magic, I assume, and have little actual knowledge of the earth and the rock that you stand on every day.");
+            ~chatplayer("<p,neutral>I suppose...");
+            ~chatnpc("<p,angry>Then you are an ignorant, an insult to the gods... and an outerlander.");
+            ~chatplayer("<p,neutral>Okay, okay, you made your point!");
+        } else {
+            ~chatplayer("<p,quiz>What do you mean, my kind?");
+            ~chatnpc("<p,neutral>You outerlanders with your fancy armour and your runestones and all your convenient little tools.");
+            ~chatplayer("<p,neutral>Oh, that kind...");
+        }
+}
+
+// ---------------------------------------------------------------- mud and the tall tree
+[oploc1,mdaughter_swampbubbles1] @md_dig_mud;
+[oploc1,mdaughter_roots_1] @md_dig_mud;
+[oploc1,mdaughter_roots_2] @md_dig_mud;
+
+[label,md_dig_mud]
+if (inv_freespace(inv) = 0) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+anim(human_pickuptable, 0);
+inv_add(inv, mdaughter_mud, 1);
+mes("You dig up some mud with your bare hands. Yuck, now they're all sticky.");
+
+// mud, or swamp paste (the wiki), on the tree; you don't need to do it again
+[oplocu,mdaughter_lake_tree]
+if (last_useitem ! mdaughter_mud & last_useitem ! swamppaste) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, last_useitem, 1);
+%mdaughter_mud_var = 1;
+mes("Great, now the tree bar isn't slippery anymore!");
+
+[oploc3,mdaughter_lake_tree]
+if (%mdaughter_mud_var = 0) {
+    mes("The bark has become slippery with water, you fail to find a suitable hold.");
+    mes("Perhaps you could find something to apply to it to make it less slippery.");
+    return;
+}
+mes("You jump up to grab the bark of the tree...");
+p_delay(1);
+mes("...crawl along the branch...");
+p_delay(1);
+p_telejump(0_43_57_20_37);
+mes("...and jump down to the little island!");
+
+// ---------------------------------------------------------------- the clump of rocks
+// a pole or a staff vaults you across (the wiki); 20 Agility is the quest's requirement (where it
+// is tested is ours)
+[oplocu,mdaughter_polerocks]
+if (last_useitem = mdaughter_broken_stick) {
+    mes("That would be a good idea... if the pole wasn't broken, that is.");
+    return;
+}
+if (last_useitem = dramen_staff | (last_useitem ! mdaughter_stick & oc_category(last_useitem) ! weapon_staff)) { // the Dramen staff no longer works (OSRS wiki)
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(agility) < 20) {
+    mes("You need an Agility level of 20 to vault across."); // ours
+    return;
+}
+mes("You plant your staff into the clump of rocks...");
+p_delay(1);
+if (coordz(coord) >= 3689) {
+    p_telejump(0_43_57_20_37); // back to the little island (ours)
+} else {
+    p_telejump(0_43_57_22_43);
+}
+mes("...then successfully jump across!");
+
+[oploc1,mdaughter_polerocks] @md_fall_in(0_43_57_19_29);
+
+[label,md_fall_in](coord $shore)
+mes("You slip and fall into the water!");
+p_delay(1);
+p_telejump($shore);
+mes("You only just manage to get to shore!");
+
+// ---------------------------------------------------------------- the flat stones
+// the plank across (you keep it); on the island, the plank takes you back to shore
+[oplocu,mdaughter_flatstone1] @md_plank;
+[oplocu,mdaughter_flatstone2] @md_plank;
+
+[label,md_plank]
+if (last_useitem ! woodplank) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~md_on_centre_island = true) {
+    if (~p_choice2("Yes.", 1, "No.", 2) = 2) return; // "Do you wish to return to shore?"
+    p_telejump(0_43_57_19_29);
+    mes("With a lot of effort you manage to get back to shore.");
+    return;
+}
+mes("You place the plank on the two flat stones...");
+p_delay(1);
+p_telejump(0_43_57_26_43);
+mes("...then successfully walk across!");
+
+// without the plank you fall in; from the island you come out on the north shore (the wiki)
+[oploc1,mdaughter_flatstone1] @md_flatstone_jump;
+[oploc1,mdaughter_flatstone2] @md_flatstone_jump;
+
+[label,md_flatstone_jump]
+if (~md_on_centre_island = true) @md_fall_in(0_43_57_23_51);
+@md_fall_in(0_43_57_19_29);
+
+// ---------------------------------------------------------------- the shining pool
+[oploc1,mdaughter_sulphar_gas]
+if (~md_on_centre_island = false | %mdaughter_quest_var < ^md_started) {
+    mes("You think you can hear soft singing!");
+    mes("The sound seems to be coming from the center of the pool.");
+    return;
+}
+if (~md_pool_step3 = true) return; // step 3
+~mesbox("You can clearly hear the voice coming from the water now.");
+~mesbox("'<~md_name>... <~md_name>!'");
+if (%mdaughter_quest_var >= ^md_asleif_tasks) {
+    ~chatplayer("<p,quiz>Er... yes, hello?");
+    ~mesbox("'Thank you, <~md_name>, and may the gods bless you on your journey.'"); // ours: her blessing again
+    return;
+}
+~chatplayer("<p,quiz>Er... yes, hello?");
+~mesbox("'Listen to me, <~md_name>, listen to what I will say.'");
+if (~p_choice2("I think I'm going mad.", 1, "Hello! Who are you?", 2) = 1) {
+    ~chatplayer("<p,confused>I think I'm going mad, I'm starting to hear things.");
+    return;
+}
+~chatplayer("<p,quiz>Hello! Who are you? And where for that matter?");
+~mesbox("'I am all around you. I am the soft singing in the wind. I am the faint rippling of the water. I am the stone of the rocks around you.'");
+~chatplayer("<p,neutral>Well, I suppose that answered both questions then.");
+~mesbox("'I am the voice of Asleif, daughter of Hamal, son of Wulfgard.'");
+~chatplayer("<p,quiz>Wait, you're Asleif? I think I was looking for you! Where are you hiding?");
+~mesbox("'Asleif is no longer in your world, she dwells in the halls of her ancestors now.'");
+~chatplayer("<p,confused>But I thought you said you were Asleif?");
+~mesbox("'I am but the voice of her, an echo of the past, reflected on the water. A tiny part of her spirit.'");
+if (~p_choice2("I think I'd better have a lie down.", 1, "So what exactly do you want from me?", 2) = 1) {
+    ~chatplayer("<p,confused>I think I'd better have a lie down, I'm starting to get a little dizzy.");
+    return;
+}
+~chatplayer("<p,quiz>So what exactly do you want from me?");
+~mesbox("'I am greatly concerned for the people who were once my tribesmen. You must help me, <~md_name>, for their current course will lead to their doom.'");
+~chatplayer("<p,neutral>Er, I don't think they like the idea of me helping them.");
+~mesbox("'Listen to me, and judge then if you think yourself capable or not.'");
+~mesbox("'My people have, as is their way, isolated themselves from the rest of the world. There is no one for them to turn to in times of need.'");
+~mesbox("'Our tribesmen are the children of the Fremennik of Rellekka. The parting was a bitter affair and the two groups never forgave each other.'");
+~mesbox("'I ask you, <~md_name>, to help bring these two people closer together again.'");
+def_int $c;
+if (%misc_quest >= ^misc_complete) {
+    $c = ~p_choice3("That sounds like something I can do.", 1, "I'm not really a diplomat.", 2, "Don't tell me, there's an anthem involved?", 3);
+} else {
+    $c = ~p_choice2("That sounds like something I can do.", 1, "I'm not really a diplomat.", 2);
+}
+if ($c = 3) {
+    ~chatplayer("<p,quiz>Don't tell me, there's an anthem involved?");
+    ~mesbox("'Your words are not clear to me. But please, try to find a way to bring our people closer together again.'");
+    return;
+}
+if ($c = 2) {
+    ~chatplayer("<p,neutral>I'm sorry, but I'm not really a diplomat. You'll have to find someone else.");
+    ~mesbox("'I am sad to hear that, <~md_name>, but you must do what you think is right.'");
+    return;
+}
+~chatplayer("<p,neutral>All right, that sounds like something I can do.");
+~mesbox("'There is another thing, <~md_name>, that I ask of you.'");
+~chatplayer("<p,quiz>Yes?");
+~mesbox("'My father has not moved camp for far too long. There is very little food now for my people. You must find a new supply of food for them, for I fear the worst.'");
+if (~p_choice2("I'll get right on it.", 1, "I'm not really a farmer.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'm sorry, but I'm not really a farmer. You'll have to find someone else.");
+    ~mesbox("'I am sad to hear that, <~md_name>, but you must do what you think is right.'");
+    return;
+}
+~chatplayer("<p,happy>I'll get right on it.");
+~chatplayer("<p,neutral>So let's see, peace with Rellekka, and a new supply of food.");
+%mdaughter_quest_var = ^md_asleif_tasks;
+~mesbox("'Thank you, <~md_name>, and may the gods bless you on your journey.'");
+
+// ---------------------------------------------------------------- the cave (the Kendal comes in step 3)
+[oploc1,mdaughter_caveentrance]
+if (~md_cave_step3 = true) return; // step 3
+mes("What a terrible stench! No one can live there, so you decide not to go either.");
+
+// ---------------------------------------------------------------- hooks the next steps fill in
+[proc,md_hamal_step2]()(boolean)
+return(false);
+
+[proc,md_jokul_step2]()(boolean)
+return(false);
+
+[proc,md_ragnar_step3]()(boolean)
+return(false);
+
+[proc,md_pool_step3]()(boolean)
+return(false);
+
+[proc,md_cave_step3]()(boolean)
+return(false);

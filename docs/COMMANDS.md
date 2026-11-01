@@ -47,6 +47,8 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::hampack` | A lockpick, and puts you by the H.A.M. Hideout's trapdoor between Lumbridge and Draynor |
 | `::onesmallfavourpack` | The items One Small Favour needs: 3 steel bars, a bowl of water, an empty cup, a harralander, 2 guam leaves, a marrentill, 3,000 coins, a chisel, a hammer, a bronze, iron and steel bar, a rune pickaxe, 5 pigeon cages and an empty pot |
 | `::osfstage <n>` | Sets One Small Favour's stage to test one favour (the OSRS values: 5 forester, 10 Shanks, 15 Brian, 20 Aggie, 25 Johanhus, 45 Fred, 50 Seth, 55 Horvik, 60 Apothecary, 65 Tassie, 70 Hammerspike, 75 Sanfew, 80 tea for Bleemadge, 88 Arhein, 90 Farsight, 95 sculpture, 100 Cromperty, 105 Tindel, 110 Rantz, 115 Gnormadium, 120 landing lights, 130 Rantz, 135 Tindel, 140 Cromperty, 145 the scroll, 152 free Petra, 155 Farsight, 160 weather vane, 170 the report, 175 Bleemadge, 180 Sanfew, 185 Hammerspike, 195 Tassie, 200 pot lid, 205 Horvik, 210 pigeon cages, 215 Seth, 220 Johanhus, 225 Aggie, 230 Brian, 235 forester, 240 Yanni). `::questdone onesmallfavour` finishes it |
+| `::mountaindaughterpack` | The items Mountain Daughter needs: a rope, a pickaxe, an axe, a plank, a staff and leather gloves |
+| `::mdstage <n>` | Sets Mountain Daughter's stage (ours: 10 Hamal lets you search, 20 Asleif's two tasks) |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
