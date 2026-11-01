@@ -74,7 +74,9 @@ switch_int (~p_choice3("Yes, I'll give you a game.", 1, "How do you play Runedra
             ~chatplayer("<p,sad>I don't have enough money on me for a game of Runedraw at the moment.");
             return;
         }
-        if (%ahoy_subquest_bow = 1) %ahoy_subquest_bow = 2;
+        if (%ahoy_subquest_bow = 1) {
+            %ahoy_subquest_bow = 2;
+        }
         inv_del(inv, coins, 25);
         ~ahoy_rd_start;
     case 2 :
@@ -216,7 +218,9 @@ if (%ahoy_rd_outcome ! 0) return;
 def_int $turn = %ahoy_rd_pturn;
 def_int $roll = random(10);
 if ($turn = 9) $roll = 9;
-if ($roll ! 9) %ahoy_rd_psum = add(%ahoy_rd_psum, add($roll, 1));
+if ($roll ! 9) {
+    %ahoy_rd_psum = add(%ahoy_rd_psum, add($roll, 1));
+}
 ~ahoy_rd_show(0, add($turn, 1), $roll);
 %ahoy_rd_pturn = add($turn, 1);
 ~ahoy_rd_buttons(false);
@@ -227,7 +231,7 @@ if ($roll = 9) {
 if_settext(ahoy_runedraw:com_28, tostring(%ahoy_rd_psum));
 if_settext(ahoy_runedraw:com_29, "");
 if_settext(ahoy_runedraw:com_31, "Thinking...");
-queue(ahoy_rd_robin, 4, 0);
+softtimer(ahoy_rd_robin, 4);
 
 [if_button,ahoy_runedraw:com_7]
 if (%ahoy_rd_outcome ! 0) return;
@@ -236,14 +240,18 @@ if (%ahoy_rd_outcome ! 0) return;
 if_settext(ahoy_runedraw:com_29, "HELD");
 if_settext(ahoy_runedraw:com_31, "Thinking...");
 ~ahoy_rd_buttons(false);
-queue(ahoy_rd_robin, 4, 0);
+softtimer(ahoy_rd_robin, 4);
 
-[queue,ahoy_rd_robin]
+// a soft timer, as queues wait while the game's window is open; it acts once and stops
+[softtimer,ahoy_rd_robin]
+clearsofttimer(ahoy_rd_robin);
 if (%ahoy_rd_outcome ! 0) return;
 def_int $turn = %ahoy_rd_rturn;
 def_int $roll = random(10);
 if (%ahoy_rd_pturn = 9) $roll = 9;
-if ($roll ! 9) %ahoy_rd_rsum = add(%ahoy_rd_rsum, add($roll, 1));
+if ($roll ! 9) {
+    %ahoy_rd_rsum = add(%ahoy_rd_rsum, add($roll, 1));
+}
 ~ahoy_rd_show(1, add($turn, 1), $roll);
 %ahoy_rd_rturn = add($turn, 1);
 if_settext(ahoy_runedraw:com_30, tostring(%ahoy_rd_rsum));
@@ -265,7 +273,7 @@ if (%ahoy_rd_held = 1) {
         return;
     }
     %ahoy_rd_pturn = add(%ahoy_rd_pturn, 1);
-    queue(ahoy_rd_robin, 4, 0);
+    softtimer(ahoy_rd_robin, 4);
     return;
 }
 ~ahoy_rd_buttons(true);
@@ -286,3 +294,7 @@ if_settext(ahoy_runedraw:com_29, "You lose!");
 ~ahoy_rd_buttons(false);
 %ahoy_rd_outcome = 1;
 mes("You've lost the game of Runedraw.");
+
+// closing the window ends Robin's turn too (the result counts when you next talk to him)
+[if_close,ahoy_runedraw]
+clearsofttimer(ahoy_rd_robin);
