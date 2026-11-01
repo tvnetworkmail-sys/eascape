@@ -1,0 +1,24 @@
+// EASCape: Between a Rock...'s journal. Ours: no source has its journal text, so these lines say
+// what the OSRS wiki's walkthrough has you do next.
+[if_button,questlist:dwarfrock]
+def_int $s = %dwarfrock_quest;
+if ($s = ^bar_not_started) {
+    ~quest_journal("Between a Rock...", "@dbl@I can start this quest by talking to @dre@Dondakan the Dwarf@dbl@ in|@dbl@the mines south of @dre@Keldagrim@dbl@, across the river from the|@dre@Dwarven Ferryman@dbl@.|@dbl@I will need to have completed @dre@Dwarf Cannon@dbl@ and @dre@Fishing|@dre@Contest@dbl@, and have level @dre@30 Defence@dbl@, @dre@40 Mining@dbl@ and|@dre@50 Smithing@dbl@.");
+    return;
+}
+def_string $t = "@str@Dondakan has been trying to break open an impenetrable|@str@rock, and asked me to find out more about it.||";
+def_string $next;
+if ($s = ^bar_started) {
+    $next = "@dbl@I should ask around in @dre@Keldagrim@dbl@; the @dre@librarian@dbl@ knows a lot.";
+} else if ($s = ^bar_find_rolad) {
+    $next = "@dbl@The @dre@Dwarven Engineer@dbl@ says @dre@Rolad@dbl@, a scholar, is with the Black|@dbl@Guard at @dre@Ice Mountain@dbl@.";
+} else if ($s = ^bar_find_pages) {
+    $next = "@dbl@Rolad lost three pages of a book about the rock in the|@dre@Dwarven Mine@dbl@ below Ice Mountain. I have found @dre@<tostring(~bar_pages_held)>@dbl@ of them.";
+} else if ($s = ^bar_have_book) {
+    $t = append($t, "@str@Rolad put his book back together for me.||");
+    $next = "@dbl@I should read the @dre@dwarven lore@dbl@ book.";
+} else {
+    $t = append($t, "@str@Rolad put his book back together for me, and I read it.||");
+    $next = "@dbl@I should tell @dre@Dondakan@dbl@ what I've learned.";
+}
+~quest_journal("Between a Rock...", append($t, $next));

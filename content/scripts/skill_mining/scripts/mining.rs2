@@ -171,6 +171,7 @@ if (random($chance) = ^true) {
     inv_add(inv, $output, 1);
     stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
     mes("You manage to mine some <db_getfield($data, mining_table:ore_name, 0)>.");
+    ~bar_mined($output); // EASCape: Between a Rock... (quest_dwarfrock)
     return;
 }
 p_oploc(3);
@@ -208,6 +209,7 @@ if (random($chance) = ^true) {
     inv_add(inv, db_getfield($data, mining_table:rock_output, 0), 1);
     stat_advance(mining, db_getfield($data, mining_table:rock_exp, 0));
     mes("You manage to mine some <db_getfield($data, mining_table:ore_name, 0)>.");
+    ~bar_mined(db_getfield($data, mining_table:rock_output, 0)); // EASCape: Between a Rock... (quest_dwarfrock)
     return;
 }
 p_oploc(3);

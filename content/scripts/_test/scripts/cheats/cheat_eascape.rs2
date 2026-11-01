@@ -1810,3 +1810,22 @@ $banked = calc($banked + ~questpack_give(leather_gloves, 1));
 if (p_finduid(uid) = false) return;
 %mdaughter_quest_var = $n;
 mes("Mountain Daughter stage: <tostring($n)>");
+
+// ::betweenarockpack - what Between a Rock... needs you to bring (OSRS wiki's item list): a pickaxe,
+// 4 gold bars, a hammer, an ammo mould and coins for the ferry and the cart
+[debugproc,betweenarockpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(gold_bar, 4));
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(ammo_mould, 1));
+$banked = calc($banked + ~questpack_give(coins, 1000));
+~questpack_done("Between a Rock...", $banked);
+
+// ::barstage <n> - sets Between a Rock...'s stage (%dwarfrock_quest, ours: 10 Dondakan, 20 find Rolad,
+// 30 find the pages, 40 the book, 50 read it)
+[debugproc,barstage](int $n)
+if (p_finduid(uid) = false) return;
+%dwarfrock_quest = $n;
+mes("Between a Rock... stage: <tostring($n)>");

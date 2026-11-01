@@ -1,0 +1,372 @@
+// EASCape: Between a Rock..., step 1: Dondakan's rock, the Dwarven Engineer, Rolad's lost pages and
+// the dwarven lore book (%dwarfrock_quest 0 -> 50). Words from the OSRS wiki's transcripts (the quest,
+// the Dwarven Ferryman, the dwarven lore book), the order from its walkthrough. Ours: the stage values,
+// where the ferry lands you (2840,10127 south, 2855,10146 north), %bar_pages (which pages you found),
+// and that a page turns up the first time you do each thing in the Dwarven Mine.
+
+// ---------------------------------------------------------------- the Dwarven Ferrymen
+// ferryman1 is on the entrance (south) side, ferryman2 on the mines (north) side
+[opnpc1,dwarfrock_ferryman1] @bar_ferry(false);
+[opnpc1,dwarfrock_ferryman2] @bar_ferry(true);
+
+[label,bar_ferry](boolean $north)
+~chatnpc("<p,happy>Want to cross the river? It's just 2 gold pieces!");
+def_int $c;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    $c = ~p_choice3("Yes please.", 1, "No thanks.", 2, "[Charm] I don't have any money on me.", 3);
+} else {
+    $c = ~p_choice2("Yes please.", 1, "No thanks.", 2);
+}
+if ($c = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+if ($c = 3) {
+    if ($north = true) {
+        ~chatplayer("<p,sad>I don't have any money on me, now I'm stuck here forever!");
+        ~chatnpc("<p,happy>Oh, we wouldn't want that to happen. Come along, you can go for free this time.");
+    } else {
+        ~chatplayer("<p,sad>I don't have any money on me, is that alright?");
+        ~chatnpc("<p,confused>I... guess.");
+    }
+    @bar_ferry_cross($north);
+}
+~chatplayer("<p,neutral>Yes please.");
+def_int $coins = inv_total(inv, coins);
+if ($coins >= 2) {
+    inv_del(inv, coins, 2);
+    @bar_ferry_cross($north);
+}
+if ($north = false) {
+    ~chatnpc("<p,angry>You don't even have 2 gold coins, humans!");
+    ~chatnpc("<p,neutral>Come back later.");
+    return;
+}
+~chatnpc("<p,angry>You don't even have 2 gold coins, human!");
+~chatnpc("<p,neutral>Come back later.");
+~chatplayer("<p,sad>But... that means I'm stuck here.");
+~chatnpc("<p,neutral>Hmm. I suppose I could make an exception for you this time.");
+if ($coins = 1) {
+    ~chatnpc("<p,neutral>Here, let me just relieve you of that one coin you have there and I'll take you across.");
+    inv_del(inv, coins, 1);
+}
+~chatplayer("<p,happy>Thanks a lot!");
+@bar_ferry_cross($north);
+
+[label,bar_ferry_cross](boolean $north)
+mes("The dwarf ferries you across the river.");
+p_delay(1);
+if ($north = true) {
+    p_telejump(0_44_158_24_15);
+} else {
+    p_telejump(0_44_158_39_34);
+}
+
+// ---------------------------------------------------------------- Dondakan
+[opnpc1,dwarfrock_multi_dondakan]
+if (~bar_dondakan_step2 = true) return; // step 2 (dwarfrock_step2.rs2)
+if (%dwarfrock_quest = ^bar_not_started) @bar_dondakan_start;
+if (%dwarfrock_quest >= ^bar_find_pages & %dwarfrock_quest < ^bar_read_book) {
+    ~chatplayer("<p,happy>Rolad has a book that might help us!");
+    ~chatnpc("<p,quiz>A book? How's a book going to help? What's in it?");
+    ~chatplayer("<p,neutral>Well, that's the problem... the most important pages are missing.");
+    ~chatnpc("<p,angry>Then run along and find them!");
+    return;
+}
+switch_int (~p_choice3("Any idea on what's inside?", 1, "What did you need me to do?", 2, "I'll be back later.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Any idea on what's inside the rock?");
+        ~chatnpc("<p,neutral>No, but that's where you come in!");
+        ~chatplayer("<p,quiz>How so?");
+        @bar_dondakan_info;
+    case 2 :
+        ~chatplayer("<p,quiz>What did you need me to do?");
+        @bar_dondakan_info;
+    case 3 : ~chatplayer("<p,neutral>I'll be back later.");
+}
+
+[label,bar_dondakan_info]
+~chatnpc("<p,neutral>I want you to find out some more information on the rock.");
+~chatplayer("<p,quiz>Now where would I do that?");
+~chatnpc("<p,neutral>I don't know! Wish I knew!");
+~chatnpc("<p,neutral>But we have to get some better understanding of what this thing actually is. Maybe then we can find a way to break it open.");
+~chatplayer("<p,quiz>And what are you going to do while I go running across half of Gielinor, I'll wager?");
+~chatnpc("<p,happy>I'll guard my cannon and fire more cannonballs at it, of course! Wish I had your job, mine's a tough one!");
+~chatplayer("<p,quiz>Want to trade places?");
+~chatnpc("<p,sad>My legs are too old and worn to do much running around anymore, I'm afraid.");
+~chatnpc("<p,neutral>Well, off you go now! Start running, start talking!");
+~chatplayer("<p,confused>But I still don't know where!");
+~chatnpc("<p,angry>Oh, why so difficult?");
+~chatnpc("<p,neutral>Look, try the city, further down the stream here. There's bound to be someone there who knows something. If you still can't find anyone, go to the librarian, he knows a lot.");
+
+[label,bar_dondakan_start]
+~chatplayer("<p,happy>Hello!");
+~chatnpc("<p,confused>What?");
+~chatplayer("<p,neutral>I said hello!");
+~chatnpc("<p,happy>Hello!");
+@bar_dondakan_start_options;
+
+[label,bar_dondakan_start_options]
+switch_int (~p_choice4("Who are you?", 1, "Why are you firing a cannon at a wall?", 2, "Bit noisy here, isn't it?", 3, "Goodbye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,happy>Why, I'm Dondakan, of course!");
+        @bar_dondakan_start_options;
+    case 2 : @bar_dondakan_rock;
+    case 3 :
+        ~chatplayer("<p,neutral>Bit noisy here, isn't it?");
+        ~chatnpc("<p,confused>Cozy? No, not really, it's damp and cold!");
+        ~chatplayer("<p,angry>No! I said it's noisy!");
+        ~chatnpc("<p,angry>Then stop shouting!");
+        @bar_dondakan_start_options;
+    case 4 : ~chatplayer("<p,neutral>Goodbye!");
+}
+
+[label,bar_dondakan_rock]
+~chatplayer("<p,quiz>Why are you firing a cannon at a wall?");
+~chatnpc("<p,angry>It's not a wall! It's a rock!");
+~chatplayer("<p,quiz>What's the difference?");
+~chatnpc("<p,neutral>It's a very special rock!");
+~chatplayer("<p,confused>I still don't quite follow...");
+~chatnpc("<p,angry>Oh, for Guthix' sake, it's perfectly simple! See, that rock over there, it's impenetrable!");
+~chatplayer("<p,quiz>Have you tried taking a pickaxe to it?");
+~chatnpc("<p,angry>Of course I have, I'm holding this rune pickaxe, aren't I? We've been trying to mine through it for years!");
+~chatplayer("<p,quiz>We? I don't see anyone else.");
+~chatnpc("<p,sad>Well, I'm the only one left... all the others gave up. Said it wasn't worth their while anymore. Wouldn't have a good return profit on their time investment.");
+~chatnpc("<p,neutral>At first we thought there might be a huge treasure behind the rock, you see.");
+~chatplayer("<p,quiz>Isn't there?");
+~chatnpc("<p,neutral>Until we had a look further down the stream, around the rock... no, there's no treasure there, just a dead end.");
+~chatplayer("<p,quiz>Okay... so why were you trying to get through the rock again?");
+~chatnpc("<p,happy>Because obviously there are vast deposits of minerals inside the rock! And if not, I want to harness the extreme hardness of the rock itself!");
+~chatnpc("<p,sad>The only problem is that I have run out of ideas on how to do it.");
+~chatnpc("<p,quiz>Perhaps a young adventurer like you is willing to help out an old dwarf like me? Want to find out what's inside the rock?");
+// the quest needs Dwarf Cannon and Fishing Contest done (the wiki); the skills are not needed to start
+if (%mcannon < ^mcannon_complete | %fishingcompo < ^fishingcompo_complete) {
+    mes("You need to have completed Dwarf Cannon and Fishing Contest to start this quest."); // ours
+    return;
+}
+if (~p_choice2("Yes.", 1, "No.", 2) = 2) { // "Start the Between a Rock... quest?"
+    ~chatplayer("<p,neutral>No thanks, I do enough mining on my own.");
+    ~chatnpc("<p,angry>Suit yourself, I don't need any help from a human anyway!");
+    return;
+}
+~chatplayer("<p,happy>Sure, sounds interesting!");
+%dwarfrock_quest = ^bar_started;
+~send_quest_progress(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
+~chatnpc("<p,happy>Welcome aboard then!");
+
+// ---------------------------------------------------------------- Keldagrim: the librarian and the engineer
+[opnpc1,dwarf_city_librarian]
+~chatnpc("<p,happy>Welcome to the Keldagrim library, human traveller!");
+if (%dwarfrock_quest < ^bar_started | %dwarfrock_quest >= ^bar_complete) return; // ours: his library talk isn't built
+if (~p_choice2("What do you know about impenetrable rocks?", 1, "Goodbye.", 2) = 2) return; // ours: "Goodbye."
+~chatplayer("<p,quiz>What do you know about impenetrable rocks?");
+~chatnpc("<p,confused>You're confusing me, what rock exactly are you talking about?");
+~chatplayer("<p,neutral>The big one in the mines south of the city. Dondakan's big rock.");
+~chatnpc("<p,neutral>I see, I see.");
+~chatnpc("<p,neutral>But I don't know much about that rock, I'm afraid. It's baffled us for many generations.");
+~chatnpc("<p,neutral>There is a dwarf in the mechanics shop, though, who I believe has some connections with a certain scholar.");
+~chatplayer("<p,quiz>Where can I find him exactly?");
+~chatnpc("<p,neutral>Go south to the palace, the shop is called Wemund's Wrench Warehouse. He should be working there somewhere.");
+~chatplayer("<p,happy>Thanks!");
+
+[opnpc1,dwarfrock_engineer1]
+if (~bar_engineer_step2 = true) return; // step 2
+if (%dwarfrock_quest < ^bar_started) {
+    ~chatnpc("<p,neutral>I'm busy, human."); // ours
+    return;
+}
+~chatplayer("<p,quiz>Do you know anything about this rock in the mines?");
+~chatnpc("<p,quiz>Now what rock would that be, exactly?");
+~chatplayer("<p,neutral>The big rock in the mines to the south, with an old dwarf standing beside it..?");
+~chatnpc("<p,neutral>Ah, Don's rock, right?");
+~chatplayer("<p,quiz>Er, yes, I think so. Do you know what it's made of?");
+~chatnpc("<p,neutral>No, no one knows. No one here, anyway. The only one I can think of is Rolad, a renowned scholar. He was part of Dondakan's team once, many years ago.");
+~chatplayer("<p,quiz>So where can I find this Rolad?");
+~chatnpc("<p,neutral>He left to explore the world. Learning by experience, or so he said. Me, I prefer a cold stout at home, but it takes all sorts.");
+~chatnpc("<p,neutral>I think he's currently with the Black Guard at Ice Mountain.");
+~chatplayer("<p,happy>Great, thanks a lot!");
+%dwarfrock_met_engineer = 1;
+if (%dwarfrock_quest = ^bar_started) %dwarfrock_quest = ^bar_find_rolad;
+
+// ---------------------------------------------------------------- Rolad
+[opnpc1,dwarfrock_rolad]
+if (~bar_rolad_step2 = true) return; // step 2
+def_int $s = %dwarfrock_quest;
+if ($s < ^bar_find_rolad) {
+    ~chatnpc("<p,neutral>Hmm? Oh, don't mind me, I'm studying."); // ours: before the engineer sends you
+    return;
+}
+if ($s = ^bar_find_rolad) {
+    ~chatplayer("<p,quiz>Excuse me... would you happen to be Rolad the scholar?");
+    ~chatnpc("<p,quiz>Why, yes, I think so... who's asking?");
+    ~chatplayer("<p,neutral><displayname>, and I've come to ask you about a rock.");
+    ~chatnpc("<p,neutral>You're awfully tall for a dwarf, you know, <displayname>. And a rock you say? I suppose I know a fair bit about rocks, yes.");
+    ~chatplayer("<p,neutral>It's this rock that Dondakan is trying to break open. You know Dondakan, right?");
+    ~chatnpc("<p,happy>Oh, old Dondakan, sure I know him. And I know his rock too. It's that unbreakable one, isn't it?");
+    ~chatplayer("<p,quiz>Yes, that's the one. What can you tell me about it?");
+    ~chatnpc("<p,neutral>Well, as a matter of fact, I picked up an interesting book on one of my travels, from a quite out of the way dwarven outpost.");
+    ~chatnpc("<p,neutral>I'm not entirely sure, but it seems to describe this very rock, and how it came to be placed in that cavern. I tore out the most interesting pages for more detailed perusal. Let me get them for you.");
+    ~mesbox("There is a slight pause, as Rolad realizes something is wrong.");
+    ~chatnpc("<p,sad>Oh dear...");
+    ~chatplayer("<p,quiz>What's wrong?");
+    ~chatnpc("<p,sad>I seem to have misplaced the pages... a pity, I had wanted to study them some more. Oh well...");
+    ~chatplayer("<p,angry>What? No! I need that book!");
+    ~chatnpc("<p,neutral>Oh, well, if it's that important to you, perhaps you can go and look for the pages? There should be three of them.");
+    ~chatplayer("<p,quiz>Where should I start looking?");
+    ~chatnpc("<p,neutral>I probably lost them in the mines below. I don't have them up here in any case.");
+    ~chatplayer("<p,quiz>What, in the mining guild?");
+    ~chatnpc("<p,neutral>No no, I never go there, I'm not a member you know. But I sometimes go down to the regular mines to study the conditions of the working dwarf.");
+    ~chatplayer("<p,neutral>Okay, thanks, I'll go and look for the pages then.");
+    %dwarfrock_quest = ^bar_find_pages;
+    return;
+}
+if ($s = ^bar_find_pages) {
+    ~chatnpc("<p,quiz>How are you getting on with finding those missing pages?");
+    def_int $have = ~bar_pages_held;
+    if ($have = 0) {
+        ~chatplayer("<p,sad>I haven't found a single one yet, I have no idea where I should be looking.");
+        ~chatnpc("<p,neutral>Down in the mines below, that'd be my best bet. I don't know where though, they could be anywhere down there.");
+        return;
+    }
+    if ($have = 1) {
+        ~chatplayer("<p,neutral>Well, I found the first page, but I still have two to go.");
+        ~chatnpc("<p,happy>That's splendid, keep going and you'll find them all, I'm sure!");
+        return;
+    }
+    if ($have = 2) {
+        ~chatplayer("<p,neutral>I found two of the pages! But I haven't found the last one yet.");
+        ~chatnpc("<p,happy>Marvelous! I'm sure it's only a matter of time before you find the final page!");
+        return;
+    }
+    ~chatplayer("<p,happy>Look, I found all of your missing pages!");
+    ~chatnpc("<p,confused>Missing pages..?");
+    ~chatplayer("<p,neutral>Yes, the missing pages of that book we were talking about earlier?");
+    ~chatnpc("<p,happy>Oh yes, quite right... let me see them, please, and I'll put the book back together for you.");
+    inv_del(inv, dwarf_rock_pagex3, 1);
+    ~bar_give(dwarf_rock_book);
+    %dwarfrock_quest = ^bar_have_book;
+    ~objbox(dwarf_rock_book, "You hand over the pages to Rolad.", 250, 0, 0);
+    ~chatnpc("<p,neutral>There you go... You will give it back when you've finished with it, won't you? I'd really like to study it in more detail some time.");
+    if (~p_choice2("Of course.", 1, "Of course. (lie)", 2) = 1) {
+        ~chatplayer("<p,happy>Of course, I'd be happy to!");
+    } else {
+        ~chatplayer("<p,neutral>Of course... when I've finished with it I'll give it back to you, sure...");
+    }
+    ~chatnpc("<p,happy>Splendid, now, there's a good dwarf!");
+    return;
+}
+if ($s = ^bar_have_book & ~obj_gettotal(dwarf_rock_book) = 0) {
+    ~chatplayer("<p,sad>Ahem... errr... I lost that book you gave me.");
+    ~chatnpc("<p,angry>That's terrible! Have you even read it yet?");
+    ~chatplayer("<p,sad>No, I hadn't had the chance yet.");
+    ~chatnpc("<p,neutral>Well, here, I happened to have a copy of it. Try not to lose it this time!");
+    ~bar_give(dwarf_rock_book);
+    ~chatplayer("<p,confused>Wait, if you had a copy of it, why did I have to look for your missing pages?");
+    ~chatnpc("<p,neutral>I suppose I just forgot that I had one.");
+    return;
+}
+if ($s = ^bar_have_book) {
+    ~chatplayer("<p,happy>Thanks again for that book, I really appreciate it.");
+    ~chatnpc("<p,quiz>Oh yes, have you read it yet?");
+    ~chatplayer("<p,neutral>No, not yet, but I will.");
+    return;
+}
+~chatplayer("<p,happy>That was quite an interesting book you gave me.");
+~chatnpc("<p,quiz>Oh yes, have you read it yet?");
+~chatplayer("<p,neutral>Yes, but I'd like to hang on to it a little longer, if I may.");
+~chatnpc("<p,happy>Why, naturally, that's no problem for someone with such a keen interest in expanding <text_gender("his", "her")> knowledge!");
+
+[proc,bar_give](namedobj $obj)
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, $obj, 1, 200);
+} else {
+    inv_add(inv, $obj, 1);
+}
+
+// ---------------------------------------------------------------- the three pages (Dwarven Mine)
+// page 1 from a scorpion you kill, page 2 from a mine cart, page 3 behind a rock you mine (not
+// adamantite or coal); the cache's "Pages" items hold two or all three once you have more than one
+[proc,bar_in_dwarven_mine]()(boolean)
+if (inzone(0_46_152_0_0, 0_47_153_63_63, coord) = true) return(true);
+return(false);
+
+[proc,bar_pages_held]()(int)
+def_int $n = 0;
+if (testbit(%bar_pages, 0) = ^true) $n = add($n, 1);
+if (testbit(%bar_pages, 1) = ^true) $n = add($n, 1);
+if (testbit(%bar_pages, 2) = ^true) $n = add($n, 1);
+return($n);
+
+[proc,bar_page_wanted](int $bit)(boolean)
+if (%dwarfrock_quest ! ^bar_find_pages) return(false);
+if (testbit(%bar_pages, $bit) = ^true) return(false);
+if (~bar_in_dwarven_mine = false) return(false);
+return(true);
+
+[proc,bar_find_page](int $bit, namedobj $page, string $text)
+%bar_pages = setbit(%bar_pages, $bit);
+// the pages you already carry go together with the new one
+inv_del(inv, dwarf_rock_page1, 1);
+inv_del(inv, dwarf_rock_page2, 1);
+inv_del(inv, dwarf_rock_page3, 1);
+inv_del(inv, dwarf_rock_pagex2, 1);
+def_int $n = ~bar_pages_held;
+def_namedobj $item = $page;
+if ($n = 2) $item = dwarf_rock_pagex2;
+if ($n = 3) $item = dwarf_rock_pagex3;
+if (inv_freespace(inv) = 0) {
+    inv_dropitem(inv, coord, $item, 1, 200);
+    ~objbox($page, append($text, " Unfortunately, you can't carry it and are forced to drop it on the ground."), 250, 0, 0);
+} else {
+    inv_add(inv, $item, 1);
+    ~objbox($page, $text, 250, 0, 0);
+}
+if ($n = 3) ~objbox(dwarf_rock_pagex3, "You've found all three of Rolad's missing pages. Return them to him so he can put them back in his book.", 250, 0, 0);
+
+// a scorpion's death (hooked in npc_combat.rs2's default death)
+[queue,bar_scorpion_page]
+if (~bar_page_wanted(0) = false) return;
+~bar_find_page(0, dwarf_rock_page1, "You turn over the corpse of the scorpion and find a missing page of Rolad's book!");
+
+[oploc1,dwarfrock_book_cart]
+if (~bar_page_wanted(1) = false) {
+    mes("You search the mine cart but find nothing of interest."); // ours
+    return;
+}
+~bar_find_page(1, dwarf_rock_page2, "At the bottom of the cart you find a missing page of Rolad's book!");
+
+// after you mine some ore (hooked in mining.rs2)
+[proc,bar_mined](namedobj $ore)
+if ($ore = adamantite_ore | $ore = coal) return;
+if (~bar_page_wanted(2) = false) return;
+~bar_find_page(2, dwarf_rock_page3, "You see something lying just behind the rock you just mined... it's a missing page of Rolad's book!");
+
+// ---------------------------------------------------------------- the dwarven lore book
+[opheld1,dwarf_rock_book]
+%book_page = 0;
+%open_book = dwarf_rock_book;
+@book_flip_page(0, 0, 2, bar_lore_book);
+
+[proc,bar_lore_book]
+switch_int (%book_page) {
+    case 0 : ~book("Dwarven lore", "... in such a way that the miners could no longer safely go down into the mines that were so important to them.||Thus the Elders, in their great wisdom, decided to harness the great power of the yellow stones and drive the spirit out of the area.||They knew that without the power of the stones, they would face a foe too powerful to beat.");
+    case 1 : ~book("Dwarven lore", "So for three days and three nights the Arzinian was chased through the twisty passages, always eluding its hunters, until finally it was cornered inside a small tunnel.||On either side the brethren approached, their hands sparkling with yellow light, so attempting to banish the spirit back to Bordanzan from whence it came.||But lo! The roof did shake and the walls did crumble and the tunnel did collapse.");
+    case 2 :
+        ~book("Dwarven lore", "And all who were standing outside rushed inward to aid their fallen brothers, their yellow stones in hand. Their combined power proved too much for the Arzinian Being and so it collapsed into itself as the tunnel had collapsed onto its hunters.||But instead of being driven out, the monstrous creature tapped into its Bordanzian essence, so that all stone and debris coalesced into a single rock.||Thus, trapped but not banished to the nightmare of Bordanzan, set inside a rock filled with the yellow power stones, the Arzinian...");
+        // the last pages read: the book is done (the wiki shows this in a box; ours a message)
+        if (%dwarfrock_quest = ^bar_have_book) {
+            %dwarfrock_quest = ^bar_read_book;
+            mes("That certainly was an interesting read! You now have enough info for Dondakan. You should go back to him.");
+        }
+}
+
+// ---------------------------------------------------------------- hooks the next steps fill in
+[proc,bar_dondakan_step2]()(boolean)
+return(false);
+
+[proc,bar_engineer_step2]()(boolean)
+return(false);
+
+[proc,bar_rolad_step2]()(boolean)
+return(false);
