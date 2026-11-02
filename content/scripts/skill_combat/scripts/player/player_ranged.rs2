@@ -95,7 +95,7 @@ if (~crystal_bow($rhand) = true) {
 }
 def_obj $ammo = inv_getobj(worn, ^wearpos_quiver);
 if ($ammo = null) {
-    if($rhand = ogre_bow) mes("There is no ammo left in your quiver");
+    if($rhand = ogre_bow | $rhand = zogre_bow) mes("There is no ammo left in your quiver");
     else mes("There is no ammo left in your quiver.");
     return(null);
 }
@@ -108,8 +108,9 @@ if (oc_param($rhand, barrows_set) = ^barrows_set_karil) {
     return($ammo);
 }
 def_category $ammo_cat = oc_category($ammo);
-if (($rhand = ogre_bow & $ammo_cat ! ogre_arrows) | 
-    ($rhand ! ogre_bow & $weapon_cat = weapon_bow & $ammo_cat ! arrows)) {
+// EASCape: the comp ogre bow fires ogre and brutal arrows, the ogre bow only ogre arrows
+if ((($rhand = ogre_bow | $rhand = zogre_bow) & $ammo_cat ! ogre_arrows) | ($rhand = ogre_bow & $ammo ! ogre_arrow) |
+    ($rhand ! ogre_bow & $rhand ! zogre_bow & $weapon_cat = weapon_bow & $ammo_cat ! arrows)) {
     mes("You can't use that ammo with your bow."); // todo confirm this for 2004.
     return(null);
 }
@@ -125,7 +126,7 @@ if (oc_param($ammo, levelrequire) > oc_param($rhand, levelrequire)) { //todo con
 return($ammo);
 
 [proc,player_ranged_use_weapon](obj $rhand, obj $ammo)(int)
-if ($ammo = ogre_arrow) spotanim_pl(oc_param($ammo, proj_launch), 50, 0);
+if (oc_category($ammo) = ogre_arrows) spotanim_pl(oc_param($ammo, proj_launch), 50, 0);
 else spotanim_pl(oc_param($ammo, proj_launch), 96, 0);
 def_int $delay = 30;
 switch_category(oc_category($rhand)) {

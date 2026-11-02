@@ -1,0 +1,390 @@
+// EASCape: Zogre Flesh Eaters - Grish, the ogre guard, Uglug Nar, Pilg and Grug at Jiggig. Words from
+// Void (content/area/kandarin/feldip_hills/Grish.kt, OgreGuard.kt, UglugNar.kt and
+// quest/member/ogre/ZogreFleshEaters.kt). Grish is the 2007 cache's zogre_ogre_shaman. Ours is marked.
+
+// ---------------------------------------------------------------- Grish
+[opnpc1,zogre_ogre_shaman]
+def_int $s = %zogre;
+if ($s = ^zogre_not_started) {
+    if (%thzfe_grish_warning_yes = 1) @grish_confirm;
+    ~chatplayer("<p,neutral>Hello there, what's going on here?");
+    ~chatnpc("<p,neutral>Hey yous creature...wha's you's doing here? Yous be cleverer to be running so da sickies from da zogres don't dead ya.");
+    @grish_intro_menu(0);
+}
+if ($s = ^zogre_given_key | $s = ^zogre_killed_slash_bash) {
+    if (inv_total(inv, zogre_tomb_artefact_key) = 0) {
+        ~chatnpc("<p,neutral>Yous creature got da old fings yet?");
+        ~chatplayer("<p,sad>I've lost the key you gave me!");
+        ~chatnpc("<p,angry>Yous stupid creatures....luckily Grish has 'nother one..");
+        ~zogre_give(zogre_tomb_artefact_key);
+        ~chatnpc("<p,neutral>Yous creatures doesn't loosing this ones.");
+        return;
+    }
+    if ($s = ^zogre_killed_slash_bash) @grish_handover;
+    ~chatnpc("<p,neutral>Yous creature got da old fings yet?");
+    switch_int (~p_choice4("Nope, not yet.", 1, "There must be an easier way to kill these zogres!", 2, "There must be a way to cure this disease!", 3, "Sorry, I have to go.", 4)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Nope, not yet.");
+            ~chatnpc("<p,angry>Yous gets 'em quick tho, cos we'ze wonna do da new Jiggig place...");
+            @grish_post_no_menu;
+        case 2 : @grish_easier_way;
+        case 3 : @grish_cure_way;
+        case 4 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+    }
+    return;
+}
+if ($s >= ^zogre_complete) {
+    ~chatnpc("<p,happy>Hey yous creatures da good un...");
+    @grish_post_finish_menu;
+}
+~chatnpc("<p,quiz>Yous creature dun da fing yet? Da zogries going in da dirt full home?");
+if ($s = ^zogre_permanent) @grish_found_menu;
+~chatplayer("<p,neutral>Nope, I haven't figured out why the zogres are here yet.");
+
+// $more: 1 once "Can I help in any way?" is on offer
+[label,grish_intro_menu](int $more)
+def_int $help = 0;
+if ($more = 1) $help = 4;
+switch_int (~p_choice_some5("I'm just looking around thanks.", 1, "What do you mean sickies?", 2, "What are Zogres?", 3, "Can I help in any way?", $help, "Sorry, I have to go.", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I'm just looking around thanks.");
+        ~chatnpc("<p,neutral>Yous creature won'ts see muchly in dis place...just da zogries coming wiv da sickies.");
+        @grish_intro_menu(1);
+    case 2 :
+        ~chatplayer("<p,quiz>What do you mean sickies?");
+        ~chatnpc("<p,neutral>Da zogries comin wiv da sickies...yous get bashed by da zogries and get da sickies...den you gonna be like da zogries.");
+        ~chatplayer("<p,confused>Sorry, I just don't understand...");
+        ~chatnpc("<p,neutral>Da sickies is when yous creature goes like orange till green and then goes 'Urggghhhh!' @blu@~ Grish imitates falling down with only the white of his eyes visible. ~");
+        @grish_intro_menu(1);
+    case 3 :
+        ~chatplayer("<p,quiz>What are Zogres?");
+        ~chatnpc("<p,neutral>Da Zogres are da bigun nasties wiv da sickies, deys old pals of Grish but deys jig in Jiggig when dey's full home is deep in da dirt, dey's is not da same dead'uns like was before.");
+        ~chatnpc("<p,sad>Dem zogries commin from da under dirt and us is lost for da Jiggie jig place.");
+        @grish_intro_menu(1);
+    case 4 :
+        ~chatplayer("<p,quiz>Can I help in any way?");
+        ~chatnpc("<p,neutral>Yes creatures...yous does good fings for Grish and learn why Zogries at Jiggig and den get da Zogries back in da ground.");
+        ~chatplayer("<p,neutral>Oh, so you want me to find out why the Zogres have appeared and then find a way of burying them?");
+        ~chatnpc("<p,neutral>Is what Grish says! But dis is da biggy danger fing yous creatures...yous be geddin' sickies most surely...yous needs be ready..wiv da foodies un da glug-glugs.");
+        ~chatplayer("<p,neutral>Right, so you think there's a good chance that I can get ill from this, so I need to get some food and something to drink?");
+        ~chatnpc("<p,neutral>Yea creatures, yous just say what Grish says...not know own wordies creature?");
+        if (~p_choice2("Hmm, sorry, it sounds a bit too dangerous.", 1, "Ok, I'll check things out then and report back.", 2) = 1) @grish_too_dangerous;
+        @grish_confirm;
+    case 5 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+}
+
+[label,grish_too_dangerous]
+~chatplayer("<p,neutral>Hmm, sorry, it sounds a bit too dangerous.");
+~chatnpc("<p,neutral>Yous creature is not a stoopid one...stays out of dere, like clever Grish. Yous can paint circles on chest and be da Shaman too!");
+~chatplayer("<p,quiz>Hmm, is it too late to reconsider?");
+
+[label,grish_confirm]
+~chatnpc("<p,quiz>Is yous creatures really, really sure yous wanna do dis creatures..we's got no glug-glugs for da sickies? We's knows nuffin for da going of da sickies?");
+%thzfe_grish_warning_yes = 1;
+if (~p_choice2("Yes, I'm really sure!", 1, "Hmm, sorry, it sounds a bit too dangerous.", 2) = 2) @grish_too_dangerous;
+~chatplayer("<p,happy>Yes, I'm really sure!");
+// Void's check: 30 Ranged, Jungle Potion and Big Chompy Bird Hunting
+if (stat_base(ranged) < 30 | %junglepotion < ^junglepotion_complete | %chompybird ! ^chompybird_complete) {
+    ~chatnpc("<p,angry>Sorry, yous creatures, but yous is too green behind da ears for dis job Grish finks.");
+    ~chatplayer("<p,angry>No, I'm not!");
+    ~chatnpc("<p,angry>Yes you are!");
+    ~chatplayer("<p,angry>No, I'm not!");
+    ~chatnpc("<p,angry>Yes you are and that's final!");
+    ~mesbox("You do not meet all of the requirements to start the Zogre Flesh Eaters quest.");
+    return;
+}
+~chatnpc("<p,neutral>Dats da good fing yous creature...yous does Grish a good fing. But yous know dat yous get sickies and mebe get dead!");
+~chatplayer("<p,neutral>If that's your idea of a pep talk, I have to say that it leaves a lot to be desired.");
+~chatnpc("<p,happy>Yous creatures is alus says funny stuff...speaks proper like Grish!");
+%zogre = ^zogre_investigate;
+inv_add(inv, cooked_chompy, 3);
+inv_add(inv, 3dose2restore, 2);
+~doubleobjbox(cooked_chompy, 3dose2restore, "Grish hands you some food and two potions.", 250);
+~chatnpc("<p,neutral>Der's yous go creatures...da best me's do for yous...and be back wivout da sickies.");
+
+// ---------------------------------------------------------------- what Sithik told you
+[label,grish_found_menu]
+def_int $arrows = 0;
+if (%thzfe_makebrutalarrow = 1) $arrows = 2;
+def_int $cure = 0;
+if (%thzfe_makecuredisease = 1) $cure = 3;
+switch_int (~p_choice_some5("I found who's responsible for the Zogres being here.", 1, ~grish_arrow_option, $arrows, ~grish_cure_option, $cure, "I have some other questions for you.", 4, "Sorry, I have to go.", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I found who's responsible for the Zogres being here.");
+        ~chatnpc("<p,angry>Where is da creature? Me's wants to squeeze him till he's a deadun...");
+        ~chatplayer("<p,neutral>The person responsible is a wizard named 'Sithik Ints' and he's going to be in serious trouble. He told me that the spell which raised the zogres from the ground will last forever.");
+        ~chatplayer("<p,sad>I'm sorry to say, but you'll have to move the site of your ceremonial dancing somewhere else.");
+        ~chatnpc("<p,sad>Dat is da bad fing creature...we's needs new Jiggig for da fallin' down jig.");
+        ~chatplayer("<p,neutral>Yes, that's right, you'll need to create a new ceremonial dance area.");
+        ~chatnpc("<p,neutral>Urghhh...not good fing creature, yous gotta get da ogrish old fings for da making new jiggig special. You's creature needs da key for getting in da low bury place.");
+        %zogre = ^zogre_given_key;
+        %thzfe_sithik_transformed = 2;
+        ~zogre_give(zogre_tomb_artefact_key);
+        ~objbox(zogre_tomb_artefact_key, "Grish gives you a crudely crafted key.", 250, 0, 0);
+        ~chatplayer("<p,quiz>Oh, so you want me to go back in there and look for something for you?");
+        ~chatnpc("<p,neutral>Yeah creature, yous gotta get da ogrish old fings for da making new jiggig and proper in da special way.");
+    case 2 : @grish_arrows;
+    case 3 : @grish_cure;
+    case 4 : @grish_other_questions;
+    case 5 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+}
+
+[proc,grish_arrow_option]()(string)
+if (%thzfe_makecompozogrebow = 1) return("There must be an easier way to kill these zogres!");
+return("I've got some information on how to kill the zogres from a distance.");
+
+[proc,grish_cure_option]()(string)
+if (%thzfe_sold_balm = 1) return("There must be a way to cure this disease!");
+return("I've found out how to cure the disease.");
+
+[label,grish_arrows]
+if (%thzfe_makecompozogrebow = 1) @grish_easier_way;
+~chatplayer("<p,happy>Sithik told me how to make Brutal arrows which means I can kill these zogres from a distance!");
+~chatnpc("<p,confused>Uhggh, whas you's sayin' creature? Yous speakies too stupid for Grish...");
+~chatplayer("<p,neutral>I know how to make large arrows...you know, 'big stabbers', to kill the zogres...they're bigger and apparently do a lot of damage, only thing is, the normal ogre bow I need to fire it is quite slow.");
+~chatnpc("<p,happy>Why you's not say so creature...me's shows you how to make da bigger stabber chucker... @blu@~ Grish gets a couple of items out of his back pack.~");
+%thzfe_makecompozogrebow = 1;
+~doubleobjbox(achey_tree_logs, wolf_bones, "Grish shows you he has Achey tree logs and wolf bones, he starts to whittle away at them both with a knife.", 250);
+~objbox(unstrung_zogre_bow, "Grish shows you his achievement, a rather powerful looking composite bow frame...", 250, 0, 0);
+~doubleobjbox(unstrung_zogre_bow, bow_string, "He shows you the bow frame and the string and after some time and a great deal of effort, he strings the composite ogre bow.", 250);
+~objbox(zogre_bow, "Grish shows you his proud achievement...", 250, 0, 0);
+~chatnpc("<p,happy>De're creature...now yous is makin' da bigga stabber chucker...");
+~chatplayer("<p,neutral>Thanks! I think....");
+@grish_back;
+
+[label,grish_cure]
+if (%thzfe_sold_balm = 1) @grish_cure_way;
+~chatplayer("<p,happy>I also found out that the disease can be cured.");
+~chatnpc("<p,happy>Dat's da good fing creature, yous do good fing to give un to Uglug...he gives bright pretties for da sickies glug glug.");
+@grish_back;
+
+[label,grish_back]
+if (%zogre = ^zogre_permanent) @grish_found_menu;
+@grish_post_no_menu;
+
+[label,grish_easier_way]
+~chatplayer("<p,neutral>There must be an easier way to kill these zogres!");
+~chatnpc("<p,neutral>Yous creature jus makin da bigga stabber chucker like Grish shows you...");
+@grish_post_no_menu;
+
+[label,grish_cure_way]
+~chatplayer("<p,neutral>There must be a way to cure this disease!");
+~chatnpc("<p,neutral>Did yous creature makes da sickies glug glug and putin some wiv Uglug for bright pretties? He's goodun for makin' da glug glugs...yous maken da glug-glug, den sellin' one for Uglug, he's makin' more of da sickies glug");
+~chatnpc("<p,neutral>glug and sellin' for bright pretties to yous creature...");
+@grish_post_no_menu;
+
+[label,grish_post_no_menu]
+def_int $arrows = 0;
+if (%thzfe_makebrutalarrow = 1) $arrows = 1;
+def_int $cure = 0;
+if (%thzfe_makecuredisease = 1) $cure = 2;
+switch_int (~p_choice_some5(~grish_arrow_option, $arrows, ~grish_cure_option, $cure, "I have some other questions for you.", 3, "Sorry, I have to go.", 4, "", 0)) {
+    case 1 : @grish_arrows;
+    case 2 : @grish_cure;
+    case 3 : @grish_other_questions;
+    case 4 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+}
+
+[label,grish_other_questions]
+~chatplayer("<p,quiz>I have some other questions for you.");
+~chatnpc("<p,happy>Oh yes creatures...what's other fings yous wanna know?");
+@grish_questions;
+
+[label,grish_questions]
+def_int $shaman = 1;
+if (%zogre = ^zogre_permanent) $shaman = 0;
+switch_int (~p_choice_some5("Why are you much nicer than the Shaman in Gu'Tanoth?", $shaman, "Do you know Rantz?", 2, "Why doesn't Rantz live with the rest of the Ogres?", 3, "Why do you call this place Jiggig?", 4, "I want to talk about the quest.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why are you much nicer than the Shaman in Gu'Tanoth?");
+        ~chatnpc("<p,angry>Dey's is da big crazy one's! Dey's biggest angries wiv fings and wanna dead all fings...dey's gotten da biggies wizzy stuff...and dey's wanna eat yous creatures...Grish, not do dat...");
+        ~chatplayer("<p,happy>Oh, well that's a relief! It's good to know you don't eat humans...");
+        ~chatnpc("<p,neutral>Grish not say dat! Me's want's tasty looking creatures for yums...you's looks like da sickies chompy...not good for da gutsies...");
+        ~chatplayer("<p,shock>Gulp!");
+        ~chatnpc_specific("Uglug Nar", zogre_uglug_nar, "<p,happy>Grish, you's is fright da creatures! Leave it alone!");
+        ~chatnpc("<p,happy>But it's da  big laffsies when it's facey goes to whiteness....ha ha ha!");
+        ~chatnpc_specific("Uglug Nar", zogre_uglug_nar, "<p,neutral>But it's not da big yumsies when it's gone to all frighty...");
+        ~chatnpc_specific("Uglug Nar", zogre_uglug_nar, "<p,happy>ha ha ha ha!");
+        ~chatplayer("<p,shock>Yeah...very funny, I'm sure.");
+        @grish_questions;
+    case 2 :
+        ~chatplayer("<p,quiz>Do you know Rantz?");
+        ~chatnpc("<p,happy>Me's know's about Rantz, he's da biggun chompy hunter..he finks...ha ha ha!");
+        ~chatplayer("<p,quiz>How do you mean?");
+        ~chatnpc("<p,happy>He's da bad shot chompy sticker, no good at sneaky, sneaky part, he's more gooder at da 'noisy, noisy miss da chompy', ha ha ha!");
+        @grish_questions;
+    case 3 :
+        ~chatplayer("<p,quiz>Why doesn't Rantz live with the rest of the Ogres?");
+        ~chatnpc("<p,neutral>He's been leaving Gu 'Noth 'cos dey's peoples is da big stressy dere? All da ogries is busying all da time...not doin' no good for da healfy fing. Rantz is da brave-un tho! He's got da big secret fing for leaving Gu' Noth but me's not knowin it. But maybe's he's just want's to be da better chompy sticker?");
+        @grish_questions;
+    case 4 :
+        ~chatplayer("<p,quiz>Why do you call this place Jiggig?");
+        ~chatnpc("<p,neutral>It's da place where da Jiggig is done...we's jig at Jiggig...");
+        @grish_questions;
+    case 5 :
+        ~chatplayer("<p,neutral>I want to talk about the quest.");
+        if (%zogre >= ^zogre_complete) @grish_post_finish_menu;
+        if (%zogre = ^zogre_permanent) @grish_found_menu;
+        @grish_post_no_menu;
+}
+
+[label,grish_handover]
+~chatnpc("<p,quiz>Hey, you's creature got da old fings?");
+def_string $first = "No sorry, I don't have them yet.";
+if (inv_total(inv, zogre_artifacts) > 0) $first = "Yeah, I have them here!";
+switch_int (~p_choice4($first, 1, "How's everything going now?", 2, "I have some other questions for you.", 3, "Sorry, I have to go now.", 4)) {
+    case 1 :
+        if (inv_total(inv, zogre_artifacts) = 0) {
+            ~chatplayer("<p,sad>No sorry, I don't have them yet.");
+            ~chatnpc("<p,angry>Yous creatures get dem for me soon doh, yes?");
+            @grish_post_no_menu;
+        }
+        ~chatplayer("<p,happy>Yeah, I have them here!");
+        ~chatnpc("<p,happy>Dat is da goodly fing yous creature, now's we's can make da new Jiggig place away from zogries! Yous been da big helpy fing yous creature, Grish wishin' yous good stuff for da next fings for creature.");
+        ~chatnpc("<p,happy>@dbl@~ Grish seems very pleased about the return of the @dbl@artefacts. ~");
+        ~chatplayer("<p,happy>Thanks, that's very nice of you!");
+        ~zogre_complete;
+    case 2 : @grish_how_going;
+    case 3 : @grish_other_questions;
+    case 4 : ~chatplayer("<p,neutral>Sorry, I have to go now.");
+}
+
+[label,grish_how_going]
+~chatplayer("<p,quiz>How's everything going now?");
+~chatnpc("<p,neutral>All da zogries stayin' in da oldie Jiggig, we's gonna do da new Jiggig someways else. Yous creature da good-un for geddin' da oldie fings...");
+@grish_post_finish_menu;
+
+[label,grish_post_finish_menu]
+switch_int (~p_choice3("How's everything going now?", 1, "I have some other questions for you.", 2, "Sorry, I have to go.", 3)) {
+    case 1 : @grish_how_going;
+    case 2 : @grish_other_questions;
+    case 3 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+}
+
+// Void's rewards: 1 quest point, 2,000 Ranged, Fletching and Herblore experience
+[proc,zogre_complete]
+inv_del(inv, zogre_artifacts, inv_total(inv, zogre_artifacts));
+inv_del(inv, zogre_tomb_artefact_key, inv_total(inv, zogre_tomb_artefact_key));
+%zogre = ^zogre_complete;
+stat_advance(ranged, 20000);
+stat_advance(fletching, 20000);
+stat_advance(herblore, 20000);
+session_log(^log_adventure, "Quest complete: Zogre Flesh Eaters");
+~send_quest_complete(questlist:zogre, zogre_artifacts, 250, ^zogre_questpoints, "You have completed\\nZogre Flesh Eaters!", "1 Quest Point|Can now make Brutal Arrows|and cure disease potions.|2000 Ranged, Fletching and|Herblore XP.");
+
+[proc,zogre_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+}
+
+// the clues shown to Grish (Void)
+[opnpcu,zogre_ogre_shaman]
+switch_obj (last_useitem) {
+    case zogre_black_prism :
+        ~objbox(zogre_black_prism, "You show the black prism to Grish.", 250, 0, 0);
+        ~chatplayer("<p,quiz>Hey Grish, I found this in the tomb, do you know what it is?");
+        ~chatnpc("<p,neutral>Whas you's shuvvin wizzy stuff in Grish face...is a pretty one but dat's more stuff for da wizzy's dan Grish.");
+    case zogre_necromantic_page :
+        ~objbox(zogre_necromantic_page, "You show the necromantic page to Grish.", 250, 0, 0);
+        ~chatplayer("<p,quiz>This torn page was on a lectern in the tomb, do you know why?");
+        ~chatnpc("<p,neutral>Dat's der wizzy stuff, not Ogery stuffsies like what Grish got. Das not even big enough for empty da big blower on! No use for Grish dat creatures...you's keeps it.");
+    case zogre_dragon_tankard :
+        ~objbox(zogre_dragon_tankard, "You show the tankard to Grish.", 250, 0, 0);
+        ~chatplayer("<p,quiz>I found this tankard in the tomb, have you got any suggestions?");
+        ~chatnpc("<p,neutral>Das a good drinker for da drinkies dat un is...is a small-un for Grish so yous creature keeps it yes. Yous creature keeps da fimble drinkers for da smaller drinkies.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- the ogre guard at the barricade
+[opnpc1,zogre_ogre_guard]
+if (%zogre = ^zogre_not_started) {
+    ~chatnpc("<p,neutral>Yous needs ta stay away from dis place...yous get da sickies and mebe yous goes to dead if yous da unlucky fing.");
+    return;
+}
+if (%zogre = ^zogre_investigate) {
+    ~chatnpc("<p,neutral>Yous needs ta stay away from dis place...yous get da sickies and mebe yous goes to dead if yous da unlucky fing.");
+    ~chatplayer("<p,neutral>But Grish has asked me to look into this place and find out why all the undead ogres are here.");
+    ~chatnpc("<p,shock>Ok, dat is da big, big scary, danger fing!|You's sure you's wants to go in?");
+    ~chatplayer("<p,neutral>Yes, I'm sure.");
+    ~chatnpc("<p,neutral>Ok, I opens da stoppa's for yous creature.");
+    npc_facesquare(0_38_47_26_41);
+    p_delay(1);
+    npc_anim(ogre_kick, 0);
+    p_delay(1);
+    %zogre = ^zogre_barricade;
+    %thzfe_blocking_barricade = 1;
+    p_delay(1);
+    ~chatnpc("<p,happy>Ok der' yous goes!");
+    return;
+}
+~chatnpc("<p,neutral>Hey yous tryin' not to get da sickies else yous be da sick-un and mebe get to be a dead-un if yous be da unlucky fing.");
+~chatplayer("<p,neutral>Don't worry, I know how to take care of myself.");
+
+// the coffin guards (ours: the barricade guard's warning)
+[opnpc1,zogre_ogre_coffin_guard]
+~chatnpc("<p,neutral>Hey yous tryin' not to get da sickies else yous be da sick-un and mebe get to be a dead-un if yous be da unlucky fing.");
+
+// ---------------------------------------------------------------- Uglug Nar
+[opnpc1,zogre_uglug_nar]
+def_string $first = "Hello again.";
+if (%zogre = ^zogre_not_started) $first = "Hey, what's going on here?";
+switch_int (~p_choice3($first, 1, "What are you selling?", 2, "Ok, thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral><$first>");
+        if (%zogre = ^zogre_not_started) {
+            ~chatnpc("<p,sad>Dem's dead ogre's come out of da ground...dey's makin' da rest of us into sick-uns ...and dead-uns.");
+            ~chatplayer("<p,shock>That doesn't sound good!");
+            ~chatnpc("<p,neutral>Grish want's da person go down der - see what's what!");
+        } else if (%thzfe_sold_balm = 1) {
+            ~chatnpc("<p,happy>Hey yous creature...yous did good fings gedin that glug-glugs for da sickies! All is ogries pepels are not gettin dead cos of you.");
+        } else {
+            ~chatnpc("<p,quiz>Hey yous creature...yous still here?");
+            ~chatplayer("<p,neutral>Yeah, I'm going to help Grish by figuring out what went on here.");
+            ~chatnpc("<p,neutral>If yous finds somefin for da sickies, yous brings to me...and I's gives you bright pretties, den me make more for alls pepels.");
+            ~chatplayer("<p,neutral>Hmm, ok, I'll try to bear that in mind.");
+        }
+    case 2 :
+        ~chatplayer("<p,quiz>What are you selling?");
+        @uglug_shop;
+    case 3 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[opnpc3,zogre_uglug_nar] @uglug_shop;
+
+[label,uglug_shop]
+if (%thzfe_sold_balm = 1) {
+    ~chatnpc("<p,happy>Me's showin' you da stufsies for yous creatures!");
+    ~openshop(uglug_nar_shop, 550, 1000, 10, "Uglug's Stuffsies."); // ours: the usual multipliers
+    return;
+}
+~chatnpc("<p,neutral>Me's not got no glug-glugs to sell, yous bring me da sickies glug-glug den me's open da stufsies for ya.");
+
+// Void's prices for your first balm
+[opnpcu,zogre_uglug_nar]
+def_int $price = 0;
+switch_obj (last_useitem) {
+    case relicyms_balm4 : $price = 1000;
+    case relicyms_balm3 : $price = 650;
+    case relicyms_balm2 : $price = 300;
+    case relicyms_balm1 : $price = 100;
+    case default :
+        ~displaymessage(^dm_default);
+        return;
+}
+if (%thzfe_sold_balm = 1) {
+    ~chatnpc("<p,happy>Yous creatures is da funny ones...yous already solds me's ones now..and us can now sell un to yous!");
+    return;
+}
+def_obj $balm = last_useitem;
+~objbox($balm, "You show the potion to Uglug Nar.", 250, 0, 0);
+~chatplayer("<p,happy>Hey, here you go! I brought you some of the potion which should cure the disease. You said that you would buy some from me.");
+~chatnpc("<p,happy>Yous creatures done da good fing...yous get many bright pretties for dis...!");
+%thzfe_sold_balm = 1;
+inv_del(inv, $balm, 1);
+inv_add(inv, coins, $price);
+~doubleobjbox($balm, coins, "You sell the potion and get <tostring($price)> coins in return.", 250);
+
+// ---------------------------------------------------------------- the dying ogres (Void)
+[opnpc1,zogre_dying1] ~chatnpc("<p,sad>Dey got me in da belly, mees gutsies feel like had a dead dead dog dinner.");
+[opnpc1,zogre_dying2] ~chatnpc("<p,sad>Ukk...I's dun fer...me's don't feel legsies anymore!");

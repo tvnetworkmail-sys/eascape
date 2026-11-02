@@ -43,6 +43,7 @@ $duration = ~player_projectile(npc_coord, coord, uid, npc_param(proj_travel), 40
 if (randominc($attack_roll) > randominc($defence_roll)) {
     ~playerhit_n_ranged(true, randominc($maxhit), $duration, npc_param(attackrate));
     ~npc_poison_player;
+    ~npc_disease_player; // EASCape: Jiggig's disease (quest_zogre/zogre_skills.rs2)
     return;
 }
 ~playerhit_n_ranged(true, 0, $duration, npc_param(attackrate));

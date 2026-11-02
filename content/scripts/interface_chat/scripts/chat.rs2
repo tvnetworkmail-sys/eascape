@@ -1002,3 +1002,19 @@ if(p_finduid(uid) = true) {
 if(p_finduid(uid) = true) {
     %weakqueue_map_clock = map_clock;
 }
+
+// EASCape: a menu of up to five options that leaves out any option whose return is 0
+[proc,p_choice_some5](string $s1, int $r1, string $s2, int $r2, string $s3, int $r3, string $s4, int $r4, string $s5, int $r5)(int)
+def_string $a = ""; def_string $b = ""; def_string $c = ""; def_string $d = ""; def_string $e = "";
+def_int $ra = 0; def_int $rb = 0; def_int $rc = 0; def_int $rd = 0; def_int $re = 0;
+def_int $n = 0;
+if ($r1 > 0) { $n = calc($n + 1); $a = $s1; $ra = $r1; }
+if ($r2 > 0) { $n = calc($n + 1); if ($n = 1) { $a = $s2; $ra = $r2; } else { $b = $s2; $rb = $r2; } }
+if ($r3 > 0) { $n = calc($n + 1); if ($n = 1) { $a = $s3; $ra = $r3; } else if ($n = 2) { $b = $s3; $rb = $r3; } else { $c = $s3; $rc = $r3; } }
+if ($r4 > 0) { $n = calc($n + 1); if ($n = 1) { $a = $s4; $ra = $r4; } else if ($n = 2) { $b = $s4; $rb = $r4; } else if ($n = 3) { $c = $s4; $rc = $r4; } else { $d = $s4; $rd = $r4; } }
+if ($r5 > 0) { $n = calc($n + 1); if ($n = 1) { $a = $s5; $ra = $r5; } else if ($n = 2) { $b = $s5; $rb = $r5; } else if ($n = 3) { $c = $s5; $rc = $r5; } else if ($n = 4) { $d = $s5; $rd = $r5; } else { $e = $s5; $re = $r5; } }
+if ($n <= 1) return($ra);
+if ($n = 2) return(~p_choice2($a, $ra, $b, $rb));
+if ($n = 3) return(~p_choice3($a, $ra, $b, $rb, $c, $rc));
+if ($n = 4) return(~p_choice4($a, $ra, $b, $rb, $c, $rc, $d, $rd));
+return(~p_choice5($a, $ra, $b, $rb, $c, $rc, $d, $rd, $e, $re));

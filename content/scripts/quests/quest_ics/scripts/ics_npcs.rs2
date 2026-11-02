@@ -59,7 +59,7 @@ if (~ics_has_cat = false) {
 ~chatnpc("<p,shock>Agh!|Get that cat away from me.|Quickly please.");
 def_int $why = 0;
 if (%fluffs >= ^fluffs_complete) $why = 1;
-switch_int (~p_choice3("Why?", $why, "I'm terribly sorry, come here kitty.", 2, "I have no time for this madness. Goodbye.", 3)) {
+switch_int (~p_choice_some5("Why?", $why, "I'm terribly sorry, come here kitty.", 2, "I have no time for this madness. Goodbye.", 3, "", 0, "", 0)) {
     case 1 :
         ~chatplayer("<p,quiz>Why?|What's your problem with my cat?");
         ~chatnpc("<p,shock>Just take it away please.|Take it away.");

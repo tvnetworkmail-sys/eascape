@@ -701,6 +701,17 @@ if (compare($name, "runemysteries") = 0) {
     }
     if (inv_freespace(inv) > 0) inv_add(inv, blackjack_oak, 1);
     ~feud_complete; // 500 coins, experience and quest complete scroll (quest_feud/feud_world.rs2)
+} else if (compare($name, "zogre") = 0) {
+    if (%zogre >= ^zogre_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %thzfe_makebrutalarrow = 1;
+    %thzfe_makecuredisease = 1;
+    %thzfe_makecompozogrebow = 1;
+    %thzfe_sithik_transformed = 2;
+    %thzfe_blocking_barricade = 1;
+    ~zogre_complete; // experience and quest complete scroll (quest_zogre/zogre_grish.rs2)
 } else if (compare($name, "tog") = 0) {
     if (%tog_juna_bowl = ^tog_complete) {
         mes("You've already done that quest.");
@@ -811,7 +822,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1936,3 +1947,40 @@ if ($n >= 3) {
 }
 %tog_juna_bowl = $n;
 mes("Tears of Guthix stage: <tostring($n)>");
+
+// ::zogrepack - what Zogre Flesh Eaters needs (the OSRS wiki's list): an ogre bow and arrows, a knife,
+// papyrus and charcoal, and for the brutal arrows, comp bow and balm: nails, flighted ogre arrows,
+// achey logs, wolf bones, a bow string, rogue's purse, snake weed and a vial of water
+[debugproc,zogrepack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(ogre_bow, 1));
+$banked = calc($banked + ~questpack_give(ogre_arrow, 100));
+$banked = calc($banked + ~questpack_give(knife, 1));
+$banked = calc($banked + ~questpack_give(papyrus, 3));
+$banked = calc($banked + ~questpack_give(charcoal, 1));
+$banked = calc($banked + ~questpack_give(nails_bronze, 30));
+$banked = calc($banked + ~questpack_give(ogre_headless_arrow, 30));
+$banked = calc($banked + ~questpack_give(achey_tree_logs, 1));
+$banked = calc($banked + ~questpack_give(wolf_bones, 1));
+$banked = calc($banked + ~questpack_give(bow_string, 1));
+$banked = calc($banked + ~questpack_give(rogues_purse, 1));
+$banked = calc($banked + ~questpack_give(snake_weed, 1));
+$banked = calc($banked + ~questpack_give(vial_water, 1));
+~questpack_done("Zogre Flesh Eaters", $banked);
+
+// ::zogrestage <n> - sets Zogre Flesh Eaters' stage (%zogre, the game's values: 2 investigate,
+// 3 barricade down, 4 Sithik (potion given), 6 potion in his tea, 8 the spell is permanent,
+// 10 Grish's key, 12 Slash Bash killed). 3 and up also knocks the barricade down; 8 and up also
+// sets what Sithik told you and makes him an ogre (2 a man again from 10).
+[debugproc,zogrestage](int $n)
+if (p_finduid(uid) = false) return;
+%zogre = $n;
+if ($n >= ^zogre_barricade) %thzfe_blocking_barricade = 1;
+if ($n >= ^zogre_permanent) {
+    %thzfe_makebrutalarrow = 1;
+    %thzfe_makecuredisease = 1;
+    %thzfe_sithik_transformed = 1;
+}
+if ($n >= ^zogre_given_key) %thzfe_sithik_transformed = 2;
+mes("Zogre Flesh Eaters stage: <tostring($n)>");

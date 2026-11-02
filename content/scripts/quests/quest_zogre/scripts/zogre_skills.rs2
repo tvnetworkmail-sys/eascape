@@ -1,0 +1,193 @@
+// EASCape: Zogre Flesh Eaters' skills: brutal arrows and the comp ogre bow (2009scape's
+// ZogreFletchingListeners: the nail levels and experience; the OSRS wiki: the bow's 30 Fletching and
+// 45 experience), Relicym's balm (the OSRS wiki: rogue's purse and snake weed in water, 8 Herblore,
+// 40 experience) and the disease the zogres carry (the OSRS wiki: a skill, not Hitpoints or Prayer,
+// lowered every 18 seconds, Hitpoints instead when the skill is at 1). Ours is marked.
+
+// ---------------------------------------------------------------- brutal arrows: a nail in a flighted
+// ogre arrow, 6 at a time (2009scape)
+[label,zogre_brutal_nails](obj $nails)
+switch_obj ($nails) {
+    case nails_bronze : @zogre_brutal(nails_bronze, zogre_brutal_bronze, 7, 84);
+    case nails_iron : @zogre_brutal(nails_iron, zogre_brutal_iron, 18, 156);
+    case nails : @zogre_brutal(nails, zogre_brutal_steel, 33, 306);
+    case nails_black : @zogre_brutal(nails_black, zogre_brutal_black, 38, 390);
+    case nails_mithril : @zogre_brutal(nails_mithril, zogre_brutal_mithril, 49, 450);
+    case nails_adamant : @zogre_brutal(nails_adamant, zogre_brutal_adamant, 62, 612);
+    case nails_rune : @zogre_brutal(nails_rune, zogre_brutal_rune, 77, 750);
+}
+
+// $xp: tenths of a point for 6 arrows (2009scape)
+[label,zogre_brutal](namedobj $nails, namedobj $arrow, int $level, int $xp)
+if (%thzfe_makebrutalarrow = 0) {
+    mes("You need to complete part of Zogre Flesh Eaters to make these.");
+    return;
+}
+if (stat(fletching) < $level) {
+    mes("You need a Fletching level of <tostring($level)> to make these.");
+    return;
+}
+def_int $n = min(6, min(inv_total(inv, $nails), inv_total(inv, ogre_headless_arrow)));
+if ($n < 1) return;
+inv_del(inv, $nails, $n);
+inv_del(inv, ogre_headless_arrow, $n);
+inv_add(inv, $arrow, $n);
+stat_advance(fletching, calc($xp * $n / 6));
+mes("You make <tostring($n)> brutal arrows.");
+
+// ---------------------------------------------------------------- the comp ogre bow
+// a knife on achey logs: ogre arrow shafts, or, with wolf bones once Grish has shown you, the bow
+[label,zogre_achey_knife]
+if (%thzfe_makecompozogrebow = 0 | inv_total(inv, wolf_bones) = 0) @make_ogre_shafts;
+if (~p_choice2("Ogre arrow shafts.", 1, "Composite ogre bow.", 2) = 1) @make_ogre_shafts; // ours
+if (stat(fletching) < 30) {
+    mes("You need a Fletching level of 30 to make this."); // ours
+    return;
+}
+anim(human_fletching, 0);
+p_delay(2);
+inv_del(inv, achey_tree_logs, 1);
+inv_del(inv, wolf_bones, 1);
+inv_add(inv, unstrung_zogre_bow, 1);
+stat_advance(fletching, 450);
+mes("You carefully cut the wood and bones into a composite bow frame."); // ours
+
+[opheldu,unstrung_zogre_bow]
+if (last_useitem ! bow_string) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(human_fletching, 0);
+p_delay(1);
+inv_del(inv, unstrung_zogre_bow, 1);
+inv_del(inv, bow_string, 1);
+inv_add(inv, zogre_bow, 1);
+stat_advance(fletching, 450);
+mes("You add a string to the bow."); // the usual bow message
+
+// ---------------------------------------------------------------- Relicym's balm
+// rogue's purse in a vial of water, then snake weed; only once Sithik has told you the cure
+[opheldu,rogues_purse]
+if (last_useitem ! vial_water) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@zogre_purse_vial;
+
+[label,zogre_purse_vial]
+if (%thzfe_makecuredisease = 0) {
+    mes("You're not sure what effect this might have."); // the game's line for unknown mixtures
+    return;
+}
+if (stat(herblore) < 8) {
+    ~mesbox("You need a Herblore level of at least 8 to make this potion.");
+    return;
+}
+anim(human_herbing_vial, 0);
+inv_del(inv, rogues_purse, 1);
+inv_del(inv, vial_water, 1);
+inv_add(inv, rogues_purse_sol, 1);
+mes("You put the rogue's purse into the vial of water."); // ours, like the other herbs
+
+[opheldu,rogues_purse_sol]
+if (last_useitem ! snake_weed) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(herblore) < 8) {
+    ~mesbox("You need a Herblore level of at least 8 to make this potion.");
+    return;
+}
+anim(human_herbing_vial, 0);
+inv_del(inv, rogues_purse_sol, 1);
+inv_del(inv, snake_weed, 1);
+inv_add(inv, relicyms_balm3, 1);
+stat_advance(herblore, 400);
+mes("You mix the snake weed into your potion."); // ours
+
+[opheld1,relicyms_balm4] @zogre_drink_balm(relicyms_balm3);
+[opheld1,relicyms_balm3] @zogre_drink_balm(relicyms_balm2);
+[opheld1,relicyms_balm2] @zogre_drink_balm(relicyms_balm1);
+[opheld1,relicyms_balm1] @zogre_drink_balm(vial_empty);
+
+// the OSRS wiki: three doses cure most disease, Slash Bash's in more; ours: a dose takes 4 off it
+[label,zogre_drink_balm](namedobj $next)
+anim(human_eat, 0);
+sound_synth(liquid, 1, 0);
+inv_setslot(inv, last_slot, $next, 1);
+mes("You drink some of your Relicym's balm."); // ours
+%disease = max(0, calc(%disease - 4));
+if (%disease = 0) {
+    cleartimer(disease);
+    mes("The disease has been cured."); // ours
+}
+
+[opheld4,relicyms_balm4] ~empty_container(vial_empty);
+[opheld4,relicyms_balm3] ~empty_container(vial_empty);
+[opheld4,relicyms_balm2] ~empty_container(vial_empty);
+[opheld4,relicyms_balm1] ~empty_container(vial_empty);
+
+// ---------------------------------------------------------------- disease
+// %disease is the strength left; every 30 ticks a random skill (not Hitpoints or Prayer) drops by a
+// fifth of it, rounded up, and the strength falls by 1 (ours: the hit's size and the countdown are
+// poison's). Void's starting strengths: 10 from zogres, skogres and the coffins, 15 from Slash Bash.
+[proc,zogre_disease_player](int $severity)
+if (%disease >= $severity) return;
+if (%disease = 0) mes("You have been diseased.");
+%disease = $severity;
+if (gettimer(disease) = 0) settimer(disease, 30);
+
+// called by the npc melee and ranged attacks (skill_combat/npc)
+[proc,npc_disease_player]
+switch_npc (npc_type) {
+    case zogre_1, zogre_2, zogre_3, zogre_4, zogre_5, zogre_6, zogre_skele, zogre_human_brentle_vahn : queue(zogre_disease, 0, 10);
+    case zogre_slash_bash : queue(zogre_disease, 0, 15);
+}
+
+[queue,zogre_disease](int $severity)
+~zogre_disease_player($severity);
+
+[timer,disease]
+if (%disease <= 0) {
+    %disease = 0;
+    cleartimer(disease);
+    return;
+}
+def_int $hit = calc((%disease + 4) / 5);
+def_stat $s = ~zogre_disease_stat(random(18));
+if (stat($s) <= 1) {
+    ~damage_self($hit);
+} else {
+    stat_sub($s, $hit, 0);
+    mes("You feel ill."); // ours: the 2007 client has no disease hitsplat
+}
+%disease = calc(%disease - 1);
+if (%disease = 0) {
+    cleartimer(disease);
+    mes("The disease has worn off."); // ours
+}
+
+[proc,zogre_disease_stat](int $i)(stat)
+switch_int ($i) {
+    case 0 : return(attack);
+    case 1 : return(defence);
+    case 2 : return(strength);
+    case 3 : return(ranged);
+    case 4 : return(magic);
+    case 5 : return(cooking);
+    case 6 : return(woodcutting);
+    case 7 : return(fletching);
+    case 8 : return(fishing);
+    case 9 : return(firemaking);
+    case 10 : return(crafting);
+    case 11 : return(smithing);
+    case 12 : return(mining);
+    case 13 : return(herblore);
+    case 14 : return(agility);
+    case 15 : return(thieving);
+    case 16 : return(slayer);
+    case default : return(runecraft);
+}
+
+[proc,zogre_disease_login]
+if (%disease > 0) settimer(disease, 30);

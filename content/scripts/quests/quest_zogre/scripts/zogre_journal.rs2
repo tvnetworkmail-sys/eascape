@@ -1,0 +1,31 @@
+// EASCape: Zogre Flesh Eaters' journal (Void's ZogreFleshEaters.kt words, shortened to the next step)
+[if_button,questlist:zogre]
+def_int $s = %zogre;
+if ($s = ^zogre_not_started) {
+    ~quest_journal("Zogre Flesh Eaters", "@dbl@I can start this quest by talking to @dre@Grish@dbl@ at the Ugrish|@dbl@ceremonial dance place called @dre@Jiggig@dbl@.|@dbl@To start this @dre@quest@dbl@ I should complete these quests:-|@dre@Jungle Potion.|@dre@Big Chompy Bird Hunting.|@dbl@It would help if I had the following skill levels:-|@dre@Ranged level: 30|@dre@Fletching level: 30|@dre@Smithing level: 4|@dre@Herblore level: 8|@dbl@Must be able to defeat a @dre@level 111@dbl@ foe.");
+    return;
+}
+if ($s >= ^zogre_complete) {
+    ~quest_journal("Zogre Flesh Eaters", "@str@I talked to an ogre called Grish who asked me to look into|@str@the problem. After some searching around in a tomb, I|@str@found some clues which pointed me to the human|@str@habitation of Yannile.|@str@With the help of Zavistic Rarve, the grand secretary of|@str@the Wizards guild I was able to piece the clues together|@str@and discover that a Wizard named 'Sithik Ints' was|@str@responsible.|@str@Unfortunately I couldn't remove the curse from the area,|@str@however, I was able to return some important artefacts to|@str@Grish, who can now set up a new ceremonial dance area for|@str@the ogres of Gu' Tanoth.|@str@Sithik Ints also told me how to make Brutal arrows which are|@str@more effective against Zogres, and he also told me how to|@str@make a disease balm.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@I started this quest by talking to Grish, he asked me to|@str@check out the underground area where some Zombie ogres|@str@(Zogres) were coming from.||";
+def_string $next;
+if ($s = ^zogre_investigate) {
+    $next = "@dbl@I have to @dre@find a way into@dbl@ the @dre@ceremonial dance area@dbl@ and|@dbl@then @dre@underground@dbl@.";
+} else if ($s = ^zogre_barricade & %thzfe_prismsearch < 4) {
+    $next = "@dbl@The guard has smashed the barricade down. I need to find out|@dbl@what happened here. The @dre@coffins@dbl@, the @dre@lectern@dbl@ and the @dre@remains@dbl@ in|@dbl@the tomb may hold clues for a @dre@wizard@dbl@ to look at.";
+} else if ($s = ^zogre_barricade) {
+    $next = "@dbl@@dre@Zavistic Rarve@dbl@ told me about a @dre@wizard@dbl@ named @dre@Sithik Ints@dbl@ in Yanille.|@dbl@I need @dre@evidence@dbl@ that he was involved: his books, and a @dre@signed@dbl@|@dre@portrait@dbl@ from the Dragon Inn's bartender.";
+} else if ($s = ^zogre_sithik) {
+    $next = "@dbl@Zavistic gave me a @dre@strange potion@dbl@ to slip to @dre@Sithik@dbl@.";
+} else if ($s = ^zogre_potion) {
+    $next = "@dbl@I put the potion in Sithik's tea. I should leave, then come back|@dbl@and @dre@question@dbl@ him.";
+} else if ($s = ^zogre_permanent) {
+    $next = "@dbl@Sithik admitted it: the spell is permanent. I should tell @dre@Grish@dbl@.";
+} else if ($s = ^zogre_given_key) {
+    $next = "@dbl@Grish gave me a key to the tomb's lower level. I need to find|@dbl@the @dre@ogre artefacts@dbl@ for a new Jiggig.";
+} else {
+    $next = "@dbl@I have the way to the @dre@artefacts@dbl@. I should take them to @dre@Grish@dbl@.";
+}
+~quest_journal("Zogre Flesh Eaters", append($t, $next));

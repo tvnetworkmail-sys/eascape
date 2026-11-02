@@ -1,12 +1,16 @@
 // EASCape: Zavistic Rarve, the Grand Secretary of the Wizards' Guild. Void ZavisticRarve.kt's plain
-// Talk-to and guild menu (Zogre Flesh Eaters and The Hand in the Sand aren't in our game, so his
-// quest talk isn't either).
+// Talk-to and guild menu (The Hand in the Sand isn't in our game; his Zogre Flesh Eaters talk is in
+// quest_zogre/zogre_yanille.rs2).
 
 [opnpc1,zogre_human_zavistic_rarve]
-~chatnpc("<p,neutral>What are you doing bothering me? Don't you think some of us have work to do?");
-~chatplayer("<p,neutral>I thought you were here to help?");
-~chatnpc("<p,neutral>Well... I am, I suppose, anyway... we're very busy here, hurry up, what do you want?");
-~zavistic_guild_menu;
+if (%zogre >= ^zogre_sithik | %thzfe_prismsearch >= 4) {
+    ~chatnpc("<p,neutral>What are you doing...Oh, it's you...sorry...didn't realise...what can I do for you?");
+} else {
+    ~chatnpc("<p,neutral>What are you doing bothering me? Don't you think some of us have work to do?");
+    ~chatplayer("<p,neutral>I thought you were here to help?");
+    ~chatnpc("<p,neutral>Well... I am, I suppose, anyway... we're very busy here, hurry up, what do you want?");
+}
+@zavistic_menu; // Zogre Flesh Eaters' talk first (quest_zogre/zogre_yanille.rs2)
 
 [proc,zavistic_guild_menu]
 switch_int (~p_choice4("What is there to do in the Wizards' Guild?", 1, "What are the requirements to get in the Wizards' Guild?", 2, "What do you do in the Guild?", 3, "Ok, thanks.", 4)) {

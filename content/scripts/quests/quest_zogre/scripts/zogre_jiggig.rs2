@@ -1,0 +1,302 @@
+// EASCape: Zogre Flesh Eaters - Jiggig and its tombs: the barricade, the stairs and stone doors, the
+// lectern, Brentle Vahn's skeleton, the special coffin, the stand and Slash Bash, the clue items, and
+// the ogre coffins thieves can rob. From Void (quest/member/ogre/ZogreFleshEaters.kt) and the 2007
+// cache's places; the coffins from the OSRS wiki (Ogre Coffin). Ours is marked.
+
+// ---------------------------------------------------------------- the barricade (cache multiloc:
+// whole until the guard kicks it in, %thzfe_blocking_barricade)
+[oploc1,zogre_multi_blocking_barricade_l] @zogre_climb_barricade;
+[oploc1,zogre_multi_blocking_barricade_r] @zogre_climb_barricade;
+
+[label,zogre_climb_barricade]
+if (%thzfe_blocking_barricade = 0) return;
+def_int $dx = 2;
+if (coordx(coord) > coordx(loc_coord)) $dx = -2;
+def_int $dir = ^exact_east;
+if ($dx < 0) $dir = ^exact_west;
+anim(regicide_stepover, 0);
+p_exactmove(coord, movecoord(coord, $dx, 0, 0), 0, 30, $dir);
+p_delay(1);
+p_telejump(movecoord(coord, $dx, 0, 0));
+
+// ---------------------------------------------------------------- stairs (Void's destinations)
+[label,zogre_stairs](coord $dest, string $text)
+mes($text);
+~fade_out;
+p_delay(2);
+p_telejump($dest);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- the stone doors (Void: the gate key)
+[oploc1,ogre_cavedoorl] @zogre_cave_door;
+[oploc1,ogre_cavedoorr] @zogre_cave_door;
+
+[label,zogre_cave_door]
+if (coordz(coord) >= coordz(loc_coord)) {
+    if (inv_total(inv, zogre_tomb_artefact_key) = 0) {
+        mes("These gates are locked, you don't seem to be able to open them.");
+        return;
+    }
+    mes("You use the Ogre Tomb Key to unlock the door.");
+} else {
+    mes("You push the gates open.");
+}
+~eascape_door_walk;
+
+// ---------------------------------------------------------------- the lectern
+[oploc1,zogre_lecturn]
+if (%zogre >= ^zogre_sithik) {
+    mes("You search the lectern, but find nothing.");
+    return;
+}
+mes("You search the broken down lectern.");
+anim(human_pickupfloor, 0);
+p_delay(2);
+if (inv_total(inv, zogre_necromantic_page) > 0) {
+    mes("You find nothing here this time.");
+    return;
+}
+~zogre_give(zogre_necromantic_page);
+~objbox(zogre_necromantic_page, "You find a half torn page...it has spidery writing all over it.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Brentle Vahn's remains
+[oploc1,zogre_brentle_skeleton]
+if (%thzfe_brentle_skele = 2) {
+    if (%zogre >= ^zogre_sithik | inv_total(inv, zogre_brentle_vahn_backpack) > 0 | inv_total(inv, zogre_dragon_tankard) > 0) {
+        mes("You find nothing on the corpse.");
+        return;
+    }
+    ~zogre_give(zogre_brentle_vahn_backpack);
+    ~objbox(zogre_brentle_vahn_backpack, "You find a backpack on the corpse.", 250, 0, 0);
+    return;
+}
+if (npc_find(coord, zogre_human_brentle_vahn, 10, 0) = true) {
+    mes("You're in mortal danger, you don't have time to search!");
+    return;
+}
+spotanim_map(smokepuff_large, 2_38_147_10_50, 0, 0);
+p_delay(1);
+%thzfe_brentle_skele = 1;
+mes("Something screams into life right in front of you.");
+npc_add(2_38_147_10_50, zogre_human_brentle_vahn, 1000);
+npc_setmode(opplayer2);
+
+[opnpc1,zogre_human_brentle_vahn] npc_say("Raaarrrggghhh");
+
+[ai_queue3,zogre_human_brentle_vahn]
+spotanim_map(smokepuff_large, npc_coord, 0, 0);
+gosub(npc_death);
+if (npc_findhero = ^true) queue(zogre_brentle_slain, 0, 0);
+
+[queue,zogre_brentle_slain]
+%thzfe_brentle_skele = 2;
+
+// ---------------------------------------------------------------- the special coffin (%thzfe_prismsearch:
+// 1 the hole found, 2 the lock forced, 3 the lid lifted; the cache shows it searched from 3)
+[oploc1,zogre_coffin_special_entity]
+def_int $v = %thzfe_prismsearch;
+if ($v <= 1) {
+    ~mesbox("You search the coffin and find a small geometrically shaped hole in the side. It looks as if this hole was made with a considerable amount of force, maybe the thing which made the hole is still inside?");
+    if ($v = 0) {
+        %thzfe_prismsearch = 1;
+        ~mesbox("The lock looks quite crude, with some skill and a slender blade, you may be able to force it.");
+    }
+    return;
+}
+if ($v = 2) {
+    if (inv_freespace(inv) = 0) {
+        ~mesbox("You start to lift the lid and see something inside, but you have no space in your inventory to store the item.");
+        return;
+    }
+    ~mesbox("The lid looks heavy, but now that you've unlocked it, you may be able to lift it. You prepare yourself.");
+    say("Urrrgggg.");
+    p_delay(2);
+    say("Aarrrgghhh!");
+    p_delay(2);
+    if (random(2) = 0) {
+        stat_sub(strength, 2, 0);
+        ~mesbox("You struggle, but just get weakened from your experience. Perhaps you should try again after you've recovered from the effort?");
+        return;
+    }
+    %thzfe_prismsearch = 3;
+    say("Raarrrggggg! Yes!");
+    p_delay(1);
+    ~mesbox("You eventually manage to lift the lid.");
+    return;
+}
+if (inv_total(inv, zogre_black_prism) > 0 | %zogre >= ^zogre_sithik) {
+    mes("You find nothing inside this time.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~mesbox("You see something inside, but you have no space in your inventory to store the item.");
+    return;
+}
+inv_add(inv, zogre_black_prism, 1);
+~objbox(zogre_black_prism, "You find a creepy looking black prism inside.", 250, 0, 0);
+
+[oplocu,zogre_coffin_special_entity]
+if (last_useitem ! knife | %thzfe_prismsearch ! 1) {
+    mes("Nothing interesting happens.");
+    return;
+}
+%thzfe_prismsearch = 2;
+~objbox(knife, "With some skill you manage to slide the blade along the lock edge and click into place the teeth of the primitive mechanism.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the stand, and Slash Bash
+[oploc1,zogre_stand]
+if (npc_find(coord, zogre_slash_bash, 15, 0) = true) {
+    mes("You're in mortal danger, you don't have time to search!");
+    return;
+}
+~mesbox("You search the plinth...");
+if (%zogre >= ^zogre_complete | inv_total(inv, zogre_artifacts) > 0 | %zogre < ^zogre_given_key) {
+    mes("You find nothing in particular.");
+    return;
+}
+if (%zogre = ^zogre_killed_slash_bash) {
+    spotanim_map(smokepuff_large, loc_coord, 0, 0);
+    ~zogre_give(zogre_artifacts);
+    ~objbox(zogre_artifacts, "An ogre artefact appears in front of you. You quickly put it into your backpack.", 250, 0, 0);
+    return;
+}
+mes("Something stirs behind you!");
+spotanim_map(smokepuff_large, 0_38_147_45_36, 0, 0);
+npc_add(0_38_147_45_36, zogre_slash_bash, 1000);
+npc_setmode(opplayer2);
+
+[ai_queue3,zogre_slash_bash]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(zogre_slash_bash_slain, 0, 0);
+
+[queue,zogre_slash_bash_slain]
+if (%zogre = ^zogre_given_key) %zogre = ^zogre_killed_slash_bash;
+
+// ---------------------------------------------------------------- the clues (Void's item options)
+[opheld1,zogre_brentle_vahn_backpack]
+if (inv_freespace(inv) < 2) {
+    mes("You don't have enough room in your inventory for the contents of this bag.");
+    return;
+}
+~objbox(zogre_brentle_vahn_backpack, "Just before you open the backpack, you notice a small leather patch with the moniker: 'B.Vahn', on it.", 250, 0, 0);
+inv_del(inv, zogre_brentle_vahn_backpack, 1);
+inv_add(inv, zogre_dragon_tankard, 1);
+inv_add(inv, rotten_food, 1);
+~zogre_give(knife);
+mes("You find a knife and some rotten food.");
+mes("You find an interesting looking tankard.");
+~objbox(zogre_dragon_tankard, "You find an interesting looking tankard.", 250, 0, 0);
+~doubleobjbox(knife, rotten_food, "You find a knife and some rotten food, the backpack is ripped to shreds.", 250);
+
+[opheld1,zogre_necromantic_page]
+~mesbox("You don't manage to understand all of it as there is only a half page here. But it seems the spell was used to place a curse on an area and for all time raise the dead.");
+~mesbox("If you look very carefully, you see what looks like a guild emblem.");
+
+[opheld1,zogre_black_prism] ~objbox(zogre_black_prism, "It looks like a smokey black gem of some sort...very creepy. Some magical force must have prevented it from being shattered when it hit the coffin.", 250, 0, 0);
+[opheld1,zogre_dragon_tankard] ~objbox(zogre_dragon_tankard, "A stout ceramic tankard with a Dragon Emblem on the side, the words, 'Ye Olde Dragon Inn' are inscribed in the bottom.", 250, 0, 0);
+[opheld1,zogre_sithik_portrait_signed] ~objbox(zogre_sithik_portrait_signed, "You see an image of Sithik with a message underneath '@blu@I, the bartender of the Dragon Inn, do swear that this @blu@is a true likeness of the wizzy who was talking to @blu@Brentle Vahn, my customer the other day.'", 250, 0, 0);
+[opheld1,zogre_necrobook] ~objbox(zogre_necrobook, "This book uses very strange language and some incomprehensible symbols. It has a very dark feeling to it. As you're looking through the book, you notice that one of the pages has been torn and half of it is missing.", 250, 0, 0);
+[opheld1,zogre_portrait_book] ~objbox(zogre_portrait_book, "All interested artisans should really consider taking up the hobby of portraiture. To do so, one uses a piece of papyrus on the intended subject to initiate a likeness drawing activity.", 250, 0, 0);
+
+[opheld1,zogre_hambook]
+~mesbox("You read this book for a while, it seems to be some sort of political manifesto about how the king doesn't do enough to safeguard the citizens of the realm from the monsters that still thrive within the borders. It sends out a rallying cry to all people who would want to stop monsters, to join the HAM movement.");
+~chatplayer("<p,quiz>Hmmm, Sithik must really hate monsters then, I wonder if he hates ogres in particular?");
+
+// ---------------------------------------------------------------- the ogre coffins (the OSRS wiki)
+// Open uses an ogre coffin key; Pick-lock needs 20 Thieving (27 XP; a slip is 0.5 XP and numb
+// fingers, Thieving drained 1-4). Every attempt may bring disease. The coffin stays open 10 ticks
+// (2009scape). Loot: the wiki's bones and other tables, rolled separately.
+[oploc1,ogre_coffin] @zogre_coffin_open(zogre_coffin_open, true);
+[oploc2,ogre_coffin] @zogre_coffin_open(zogre_coffin_open, false);
+[oploc1,ogre_dark_coffin] @zogre_coffin_open(zogre_dark_coffin_open, true);
+[oploc2,ogre_dark_coffin] @zogre_coffin_open(zogre_dark_coffin_open, false);
+[oploc1,ogre_wall_coffin] @zogre_coffin_open(zogre_wall_coffin_open, true);
+[oploc2,ogre_wall_coffin] @zogre_coffin_open(zogre_wall_coffin_open, false);
+[oploc1,ogre_wall_coffinl] @zogre_coffin_open(zogre_wall_coffin_open, true);
+[oploc2,ogre_wall_coffinl] @zogre_coffin_open(zogre_wall_coffin_open, false);
+
+[label,zogre_coffin_open](loc $open, boolean $key)
+if (%zogre < ^zogre_investigate) {
+    ~chatnpc_specific("Ogre guard", zogre_ogre_guard, "<p,angry>Oi! Yous leaves da coffins alone! Yous talk to Grish first."); // ours
+    return;
+}
+if ($key = true) {
+    if (inv_total(inv, zogre_coffinkey) = 0) {
+        mes("This coffin is locked, you need a key to open it."); // ours
+        return;
+    }
+    inv_del(inv, zogre_coffinkey, 1);
+    mes("You unlock the coffin with the key."); // ours
+} else {
+    if (stat(thieving) < 20) {
+        mes("You need a Thieving level of 20 to pick the lock of this coffin."); // ours
+        return;
+    }
+    mes("You attempt to pick the lock."); // ours
+    anim(human_pickupfloor, 0);
+    p_delay(2);
+    if (random(4) = 0) ~zogre_disease_player(10);
+    def_int $high = 127;
+    if (inv_total(inv, lockpick) > 0) $high = 191;
+    if (stat_random(thieving, 0, $high) = false) {
+        stat_advance(thieving, 5);
+        stat_sub(thieving, calc(1 + random(4)), 0);
+        mes("Your fingers get numb from trying to pick the lock."); // ours
+        return;
+    }
+    stat_advance(thieving, 270);
+}
+if (random(4) = 0) ~zogre_disease_player(10);
+loc_change($open, 10);
+~zogre_coffin_loot;
+
+[proc,zogre_coffin_loot]
+def_namedobj $bones = null;
+def_int $r = random(128);
+if ($r < 64) $bones = zogre_bones;
+else if ($r < 78) $bones = zogre_ancestral_bones_fayg;
+else if ($r < 88) $bones = zogre_ancestral_bones_raurg;
+else if ($r < 93) $bones = zogre_ancestral_bones_ourg;
+def_namedobj $other = null;
+def_int $count = 1;
+$r = random(100);
+if ($r >= 24 & $r < 39) {
+    $other = coins;
+    $count = calc(6 + random(15));
+} else if ($r >= 39) {
+    switch_int (calc(($r - 39) / 3)) {
+        case 0 : $other = bronze_axe;
+        case 1 : $other = iron_axe;
+        case 2 : $other = steel_axe;
+        case 3 : $other = bronze_pickaxe;
+        case 4 : $other = iron_pickaxe;
+        case 5 : $other = steel_pickaxe;
+        case 6 : $other = bronze_dagger;
+        case 7 : $other = iron_dagger;
+        case 8 : $other = steel_dagger;
+        case 9 : $other = knife;
+        case 10 : $other = uncut_opal;
+        case 11 : $other = uncut_jade;
+        case 12 : $other = leather_armour;
+        case 13 : $other = nails_bronze; $count = calc(1 + random(11));
+        case 14 : $other = nails_iron; $count = calc(1 + random(11));
+        case 15 : $other = nails; $count = calc(1 + random(11));
+        case 16 : $other = nails_black; $count = calc(1 + random(11));
+        case 17 : $other = tinderbox;
+        case 18 : $other = unidentified_lantadyme;
+        case default : $other = coins; $count = calc(6 + random(15));
+    }
+}
+if ($bones = null & $other = null) {
+    mes("You find nothing inside the coffin."); // ours
+    return;
+}
+mes("You find something."); // the wiki's loot message
+if ($bones ! null) ~zogre_give($bones);
+if ($other ! null) {
+    if (inv_freespace(inv) > 0 | oc_stackable($other) = true) inv_add(inv, $other, $count);
+    else obj_add(coord, $other, $count, ^lootdrop_duration);
+}
