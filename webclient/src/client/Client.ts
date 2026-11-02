@@ -357,6 +357,7 @@ export class Client extends GameShell {
     // August 2007 game frame (tools/frame2007/build.py, sprites f2007_*) and its places for the
     // side panel, chat box and minimap; 2006's by default
     private frame2007: boolean = false;
+    private icons2006: boolean = false;
     private sideX: number = 553;
     private frameChatX: number = 17;
     private frameChatY: number = 357;
@@ -3021,6 +3022,11 @@ export class Client extends GameShell {
     // (interface 548) puts the side panel at 547,205, the minimap at 545,4 and the chat at 20,362;
     // its tab bars and chat buttons are drawn here from its sprites (tools/frame2007/build.py).
     private syncFrame2007(): void {
+        const icons: boolean = !!lostlite()?.icons2006 && this.f07Icons[0] !== null;
+        if (icons !== this.icons2006) {
+            this.icons2006 = icons;
+            this.redrawIcons = true;
+        }
         const want: boolean = !!lostlite()?.frame2007 && this.f07Frame !== null;
         if (want === this.frame2007) {
             return;
@@ -3034,6 +3040,21 @@ export class Client extends GameShell {
         (globalThis as any).__eascapeFrame = { frame2007: want, sideX: this.sideX, sideY: 205, chatX: this.frameChatX, chatY: this.frameChatY, mapX: this.mapX };
         this.redrawFrame = true;
         this.isMenuOpen = false;
+    }
+
+    // EASCape: the "2006 interface" plugin (lostlite().icons2006): the 2006 frame with the later tab
+    // icons (the 2007 cache's, tools/frame2007/build.py: the logout door, the red ignore face...),
+    // each centred where 2006's icon sat. sideicons index -> f2007_icons index (7 is clan chat).
+    private static readonly ICONS2006_MAP: number[] = [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13];
+    private static readonly ICONS2006_AT: number[][] = [[29, 10], [51, 8], [82, 10], [114, 6], [152, 12], [178, 8], [206, 10], [74, -1], [102, 0], [137, 4], [174, 0], [202, 2], [226, 2]];
+
+    private drawSideIcon(i: number, x: number, y: number): void {
+        if (this.icons2006) {
+            const at: number[] = Client.ICONS2006_AT[i];
+            this.f07Icons[Client.ICONS2006_MAP[i]]?.plotSprite(at[0], at[1]);
+            return;
+        }
+        this.sideicons[i]?.plotSprite(x, y);
     }
 
     private drawTabs2007(): void {
@@ -4336,31 +4357,31 @@ export class Client extends GameShell {
                 }
 
                 if (this.sideIcon[0] !== -1 && (this.tutFlashIcon !== 0 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[0]?.plotSprite(29, 13);
+                    this.drawSideIcon(0, 29, 13);
                 }
 
                 if (this.sideIcon[1] !== -1 && (this.tutFlashIcon !== 1 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[1]?.plotSprite(53, 11);
+                    this.drawSideIcon(1, 53, 11);
                 }
 
                 if (this.sideIcon[2] !== -1 && (this.tutFlashIcon !== 2 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[2]?.plotSprite(82, 11);
+                    this.drawSideIcon(2, 82, 11);
                 }
 
                 if (this.sideIcon[3] !== -1 && (this.tutFlashIcon !== 3 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[3]?.plotSprite(115, 12);
+                    this.drawSideIcon(3, 115, 12);
                 }
 
                 if (this.sideIcon[4] !== -1 && (this.tutFlashIcon !== 4 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[4]?.plotSprite(153, 13);
+                    this.drawSideIcon(4, 153, 13);
                 }
 
                 if (this.sideIcon[5] !== -1 && (this.tutFlashIcon !== 5 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[5]?.plotSprite(180, 11);
+                    this.drawSideIcon(5, 180, 11);
                 }
 
                 if (this.sideIcon[6] !== -1 && (this.tutFlashIcon !== 6 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[6]?.plotSprite(208, 13);
+                    this.drawSideIcon(6, 208, 13);
                 }
             }
 
@@ -4389,27 +4410,27 @@ export class Client extends GameShell {
                 }
 
                 if (this.sideIcon[8] !== -1 && (this.tutFlashIcon !== 8 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[7]?.plotSprite(74, 2);
+                    this.drawSideIcon(7, 74, 2);
                 }
 
                 if (this.sideIcon[9] !== -1 && (this.tutFlashIcon !== 9 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[8]?.plotSprite(102, 3);
+                    this.drawSideIcon(8, 102, 3);
                 }
 
                 if (this.sideIcon[10] !== -1 && (this.tutFlashIcon !== 10 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[9]?.plotSprite(137, 4);
+                    this.drawSideIcon(9, 137, 4);
                 }
 
                 if (this.sideIcon[11] !== -1 && (this.tutFlashIcon !== 11 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[10]?.plotSprite(174, 2);
+                    this.drawSideIcon(10, 174, 2);
                 }
 
                 if (this.sideIcon[12] !== -1 && (this.tutFlashIcon !== 12 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[11]?.plotSprite(201, 2);
+                    this.drawSideIcon(11, 201, 2);
                 }
 
                 if (this.sideIcon[13] !== -1 && (this.tutFlashIcon !== 13 || Client.loopCycle % 20 < 10)) {
-                    this.sideicons[12]?.plotSprite(226, 2);
+                    this.drawSideIcon(12, 226, 2);
                 }
             }
 
