@@ -83,6 +83,7 @@ switch_int (~p_choice_some5("Why?", $why, "I'm terribly sorry, come here kitty."
         ~chatplayer("<p,quiz>What do you need?");
         ~chatnpc("<p,neutral>Get me a full waterskin and a tinderbox. I seem to have lost my own and these desert nights are very cold.");
         %ics_little_var = ^ics_supplies;
+        ~send_quest_progress(questlist:ics_little, %ics_little_var, ^ics_complete);
         if (inv_total(inv, water_skin4) > 0 & inv_total(inv, tinderbox) > 0) {
             ~chatplayer("<p,happy>Okay. I actually have those on me already.");
             @ics_hypnosis;

@@ -17,6 +17,7 @@ if(%golem_a = ^golem_not_started) {
     switch_int(~p_choice2("Shall I try to repair you?", 1, "I'm not going to find a conversation here!", 2)) {
         case 1 :
             %golem_a = ^golem_started;
+            ~send_quest_progress(questlist:golem, %golem_a, ^golem_complete);
             ~send_quest_progress_colour(questlist:golem, %golem_a, ^golem_complete);
             ~chatplayer("<p,quiz>Shall I try to repair you?");
             ~chatnpc_specific($golem_name, $golem_npc, "<p,happy>Repairs... needed...");

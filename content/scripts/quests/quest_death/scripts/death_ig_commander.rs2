@@ -80,6 +80,7 @@ switch_int(~p_choice2("I'm sorry to hear that.", 1, "Is there anything I can do 
         switch_int(~p_choice2("I'll get Godric back!", 1, "I'm sorry, there's nothing I can do.", 2)) {
             case 1 :
                 %troll_quest = ^troll_started;
+                ~send_quest_progress(questlist:troll, %troll_quest, ^troll_complete);
                 ~send_quest_progress_colour(questlist:troll, %troll_quest, ^troll_complete);
                 ~chatplayer("<p,angry>I'll get Godric back!");
                 ~chatnpc("<p,happy>God speed friend! I would send some of my men with you, but none of them are brave enough to follow.");
@@ -109,6 +110,7 @@ switch_int(~p_choice2("No but perhaps I could try and find one?", 1, "No, sorry.
         ~chatnpc("<p,neutral>The equipment room is unlocked when the stone balls are placed in the correct order on the stone mechanism outside it. The right order is written on a piece of paper the guard had.");
         ~chatplayer("<p,confused>A stone what...?!");
         %death_equiproom = ^death_started;
+        ~send_quest_progress(questlist:death, %death_equiproom, ^death_complete);
         ~death_set_haroldgold(100);
         ~send_quest_progress_colour(questlist:death, %death_equiproom, ^death_complete);
         ~chatnpc("<p,angry>Well citizen, the Prince is fond of puzzles. Why we couldn't just have a key is beyond me!");
