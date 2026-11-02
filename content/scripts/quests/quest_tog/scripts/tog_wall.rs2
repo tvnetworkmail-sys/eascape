@@ -68,7 +68,9 @@ if ($colour < 1 | ~tog_wall_state(~tog_wall($to)) ! 0) return;
 ~tog_wall_set($to, $colour);
 
 // ---------------------------------------------------------------- collecting
-[oploc1,tog_weepingwall]
+// an ap trigger, so you walk straight to the square in front of the wall (the wall's own approach,
+// forceapproach=west, would first take you round to its west side)
+[aploc1,tog_weepingwall]
 if (%tog_minigame_collecting = 0 | inv_getobj(worn, ^wearpos_rhand) ! tog_bowl) {
     mes("You need Juna's stone bowl to collect the tears."); // ours
     return;
@@ -88,7 +90,6 @@ if (coord ! $stand) {
     }
     if (coord ! $stand) return;
 }
-p_arrivedelay;
 facesquare($wall);
 anim(tog_lean_forward_bowl, 0);
 settimer(tog_collect, 1, $wall, coord);
