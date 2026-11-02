@@ -1,8 +1,7 @@
 // EASCape: Icthlarin's Little Helper, the burial room door's tile puzzle (2007 interface 96:
 // tiles com_4-com_28, five rows of five; com_29 the golden bird, "Reset puzzle"). The OSRS wiki's
-// quick guide: reset with the bird, then turn tiles until all are gold. Ours: turning a tile turns
-// it and the eight around it (Lights Out on a 3x3), and a reset presses tiles at random, so the
-// board can always be solved. %ics_tilechecker (main_ics_var bits 6-30) holds a 1 for each tile
+// quick guide: reset with the bird, then turn tiles until all are gold. The OSRS wiki: turning a tile
+// turns it and the eight around it, and a reset puts the board back in its default position. %ics_tilechecker (main_ics_var bits 6-30) holds a 1 for each tile
 // that is not gold.
 
 [if_button,inter_96:com_4] ~ics_tile_press(0);
@@ -31,8 +30,13 @@
 [if_button,inter_96:com_27] ~ics_tile_press(23);
 [if_button,inter_96:com_28] ~ics_tile_press(24);
 [if_button,inter_96:com_29]
+def_int $old = %ics_tilechecker;
 ~ics_puzzle_shuffle;
-~ics_puzzle_draw;
+def_int $j = 0;
+while ($j < 25) {
+    if (testbit($old, $j) ! testbit(%ics_tilechecker, $j)) ~ics_tile_show($j, ^true);
+    $j = calc($j + 1);
+}
 
 [proc,ics_tile_com](int $i)(component)
 switch_int ($i) {
@@ -116,11 +120,8 @@ if (%ics_tilechecker = 0) {
     queue(ics_puzzle_solved, 0, 0);
 }
 
-// ours: 6 to 10 random presses, never an already solved board
+// the default position (the OSRS wiki's picture): the top row, the second row's first three, the
+// middle row and the fourth row's last two turned away from gold; solved by pressing the second
+// row's second tile, the top row's last and the middle row's last (the wiki's numbered picture)
 [proc,ics_puzzle_shuffle]
-def_int $n = calc(6 + random(5));
-%ics_tilechecker = 0;
-while ($n > 0 | %ics_tilechecker = 0) {
-    %ics_tilechecker = ~ics_tile_flip(random(25));
-    $n = calc($n - 1);
-}
+%ics_tilechecker = 818431; // bits 0-4, 5-7, 10-14, 18-19
