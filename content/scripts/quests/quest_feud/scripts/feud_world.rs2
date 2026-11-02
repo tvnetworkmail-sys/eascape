@@ -322,16 +322,7 @@ if (%feud_var ! ^feud_lured) {
     mes("You need to Lure this villager somewhere quiet first."); // ours: only a lured villager, somewhere quiet
     return;
 }
-// ours: somewhere quiet means no bandit or Menaphite thug within a few squares (multi NPCs, found by
-// base type with the secondary npc pointer)
-def_int $seen = 0;
-if (.npc_find(coord, feud_arabian_guard_multi, 4, 0) = true) $seen = 2;
-if (.npc_find(coord, feud_arabian_guard2_multi, 4, 0) = true) $seen = 2;
-if (.npc_find(coord, feud_egyptian_doorman_multi, 4, 0) = true) $seen = 2;
-if ($seen > 1) {
-    mes("There are gang members about. Lure the villager somewhere quieter."); // ours
-    return;
-}
+// ours: no "somewhere quiet" check any more (it misfired on the gangs' multi NPCs); luring first is enough
 anim(human_blunt_pound, 0);
 p_delay(0);
 npc_anim(stunned_blackjack, 0);
