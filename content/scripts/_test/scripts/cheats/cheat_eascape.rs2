@@ -701,6 +701,12 @@ if (compare($name, "runemysteries") = 0) {
     }
     if (inv_freespace(inv) > 0) inv_add(inv, blackjack_oak, 1);
     ~feud_complete; // 500 coins, experience and quest complete scroll (quest_feud/feud_world.rs2)
+} else if (compare($name, "ics") = 0) {
+    if (%ics_little_var >= ^ics_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~ics_complete; // the catspeak amulet, experience and quest complete scroll (quest_ics/ics_npcs.rs2)
 } else if (compare($name, "mdaughter") = 0) {
     if (%mdaughter_quest_var >= ^md_complete) {
         mes("You've already done that quest.");
@@ -799,7 +805,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1863,3 +1869,36 @@ $banked = calc($banked + ~questpack_give(leather_gloves, 1));
 if (p_finduid(uid) = false) return;
 %feud_var = $n;
 mes("The Feud stage: <tostring($n)>");
+
+// ::icspack - what Icthlarin's Little Helper needs you to bring (the OSRS wiki's item list): a cat,
+// a full waterskin, a tinderbox, willow logs, a bucket, a knife and 30 coins for the linen
+[debugproc,icspack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(kittenobject, 1));
+$banked = calc($banked + ~questpack_give(water_skin4, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(willow_logs, 1));
+$banked = calc($banked + ~questpack_give(bucket_empty, 1));
+$banked = calc($banked + ~questpack_give(knife, 1));
+$banked = calc($banked + ~questpack_give(coins, 100));
+$banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
+~questpack_done("Icthlarin's Little Helper", $banked);
+
+// ::icsstage <n> - sets Icthlarin's Little Helper's stage (%ics_little_var; ics.constant: 1 supplies,
+// 2 hypnotised, 3 remembered, 4 token, 5 return the jar, 6 stole it, 7 returned, 8 ceremony, 19
+// symbol hidden, 20 fight, 22 priest beaten, 25 back to town, 26 complete). Also clears the
+// flashback and sets the things the stage needs (a jar for 2-6, the pyramid door's rocks).
+[debugproc,icsstage](int $n)
+if (p_finduid(uid) = false) return;
+%ics_little_var = $n;
+%ics_stateofmind = 0;
+if (%ics_little_jar_multi = 0) %ics_little_jar_multi = 1;
+if ($n >= ^ics_hypnotised) %ics_ent_open = 1;
+%ics_specvis = 0;
+if ($n >= ^ics_hypnotised & $n < ^ics_jar_returned) %ics_specvis = 1;
+%ics_little_priestvis = 0;
+if ($n >= ^ics_symbol_hidden & $n < ^ics_return_town) %ics_little_priestvis = 1;
+~ics_setpot(%ics_little_jar_multi, 0);
+if ($n >= ^ics_hypnotised & $n < ^ics_jar_returned) ~ics_setpot(%ics_little_jar_multi, 1);
+mes("Icthlarin's Little Helper stage: <tostring($n)>");

@@ -53,6 +53,8 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::barstage <n>` | Sets Between a Rock...'s stage (ours: 10 Dondakan, 20 find Rolad, 30 find the pages, 40 the book, 50 read it, 60 a new material, 70 the schematics, 80 been inside the rock, 90 the avatar dead). `::questdone dwarfrock` finishes it |
 | `::feudpack` | The items The Feud needs: 2,000 coins, a Kharidian headpiece and fake beard, 3 beers, a bucket and leather gloves (you need 30 Thieving to start) |
 | `::feudstage <n>` | Sets The Feud's stage (the OSRS game's values: 1 started, 2 Drunken Ali told, 3 gangs asked, 4 camels bought, 5 camels refused, 6 joined, 7-12 the three pockets, 13 keys, 14 staked out, 15 jewels, 16 traitor task, 17 traitor found, 18 snake given, 22 poison, 23 drink poisoned, 24 meet the leader, 25 Menaphites beaten, 26 bandits beaten, 27 mayor thanked). `::questdone feud` finishes it |
+| `::icspack` | The items Icthlarin's Little Helper needs: a kitten, a full waterskin, a tinderbox, willow logs, a bucket, a knife, 100 coins and a ghostspeak amulet (you need Gertrude's Cat done to start) |
+| `::icsstage <n>` | Sets Icthlarin's Little Helper's stage (1 supplies, 2 hypnotised, 3 remembered, 4 Sphinx's token, 5 return the jar, 6 jar stolen in the flashback, 7 jar returned, 8 ceremony preparations, 19 symbol hidden, 20 the fight, 22 priest beaten, 25 back to town); also clears a flashback and sets the jar, the ghost and the pots for that stage. `::questdone ics` finishes it |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

@@ -1,0 +1,126 @@
+// EASCape: Icthlarin's Little Helper, the burial room door's tile puzzle (2007 interface 96:
+// tiles com_4-com_28, five rows of five; com_29 the golden bird, "Reset puzzle"). The OSRS wiki's
+// quick guide: reset with the bird, then turn tiles until all are gold. Ours: turning a tile turns
+// it and the eight around it (Lights Out on a 3x3), and a reset presses tiles at random, so the
+// board can always be solved. %ics_tilechecker (main_ics_var bits 6-30) holds a 1 for each tile
+// that is not gold.
+
+[if_button,inter_96:com_4] ~ics_tile_press(0);
+[if_button,inter_96:com_5] ~ics_tile_press(1);
+[if_button,inter_96:com_6] ~ics_tile_press(2);
+[if_button,inter_96:com_7] ~ics_tile_press(3);
+[if_button,inter_96:com_8] ~ics_tile_press(4);
+[if_button,inter_96:com_9] ~ics_tile_press(5);
+[if_button,inter_96:com_10] ~ics_tile_press(6);
+[if_button,inter_96:com_11] ~ics_tile_press(7);
+[if_button,inter_96:com_12] ~ics_tile_press(8);
+[if_button,inter_96:com_13] ~ics_tile_press(9);
+[if_button,inter_96:com_14] ~ics_tile_press(10);
+[if_button,inter_96:com_15] ~ics_tile_press(11);
+[if_button,inter_96:com_16] ~ics_tile_press(12);
+[if_button,inter_96:com_17] ~ics_tile_press(13);
+[if_button,inter_96:com_18] ~ics_tile_press(14);
+[if_button,inter_96:com_19] ~ics_tile_press(15);
+[if_button,inter_96:com_20] ~ics_tile_press(16);
+[if_button,inter_96:com_21] ~ics_tile_press(17);
+[if_button,inter_96:com_22] ~ics_tile_press(18);
+[if_button,inter_96:com_23] ~ics_tile_press(19);
+[if_button,inter_96:com_24] ~ics_tile_press(20);
+[if_button,inter_96:com_25] ~ics_tile_press(21);
+[if_button,inter_96:com_26] ~ics_tile_press(22);
+[if_button,inter_96:com_27] ~ics_tile_press(23);
+[if_button,inter_96:com_28] ~ics_tile_press(24);
+[if_button,inter_96:com_29]
+~ics_puzzle_shuffle;
+~ics_puzzle_draw;
+
+[proc,ics_tile_com](int $i)(component)
+switch_int ($i) {
+    case 0 : return(inter_96:com_4);
+    case 1 : return(inter_96:com_5);
+    case 2 : return(inter_96:com_6);
+    case 3 : return(inter_96:com_7);
+    case 4 : return(inter_96:com_8);
+    case 5 : return(inter_96:com_9);
+    case 6 : return(inter_96:com_10);
+    case 7 : return(inter_96:com_11);
+    case 8 : return(inter_96:com_12);
+    case 9 : return(inter_96:com_13);
+    case 10 : return(inter_96:com_14);
+    case 11 : return(inter_96:com_15);
+    case 12 : return(inter_96:com_16);
+    case 13 : return(inter_96:com_17);
+    case 14 : return(inter_96:com_18);
+    case 15 : return(inter_96:com_19);
+    case 16 : return(inter_96:com_20);
+    case 17 : return(inter_96:com_21);
+    case 18 : return(inter_96:com_22);
+    case 19 : return(inter_96:com_23);
+    case 20 : return(inter_96:com_24);
+    case 21 : return(inter_96:com_25);
+    case 22 : return(inter_96:com_26);
+    case 23 : return(inter_96:com_27);
+    case 24 : return(inter_96:com_28);
+    case default : return(inter_96:com_4);
+}
+
+// the tile's face: a 1 is turned away from gold (ours: the cache's turn animations
+// ics_tile_turn_f2b and _b2f, front to back and back again)
+[proc,ics_tile_show](int $i, int $animate)
+def_component $com = ~ics_tile_com($i);
+if (testbit(%ics_tilechecker, $i) = ^true) {
+    if_setanim($com, ics_tile_turn_f2b);
+} else if ($animate = ^true) {
+    if_setanim($com, ics_tile_turn_b2f);
+} else {
+    if_setanim($com, null);
+}
+
+[proc,ics_puzzle_draw]
+def_int $i = 0;
+while ($i < 25) {
+    ~ics_tile_show($i, ^false);
+    $i = calc($i + 1);
+}
+
+// turns tile $i and its neighbours (on the board's edges, only those on the board)
+[proc,ics_tile_flip](int $i)(int)
+def_int $v = %ics_tilechecker;
+def_int $row = calc($i / 5);
+def_int $col = calc($i % 5);
+def_int $dr = -1;
+def_int $dc;
+while ($dr <= 1) {
+    $dc = -1;
+    while ($dc <= 1) {
+        if (calc($row + $dr) >= 0 & calc($row + $dr) < 5 & calc($col + $dc) >= 0 & calc($col + $dc) < 5) {
+            $v = togglebit($v, calc(($row + $dr) * 5 + $col + $dc));
+        }
+        $dc = calc($dc + 1);
+    }
+    $dr = calc($dr + 1);
+}
+return($v);
+
+[proc,ics_tile_press](int $i)
+if (%ics_tilechecker = 0) return;
+def_int $old = %ics_tilechecker;
+%ics_tilechecker = ~ics_tile_flip($i);
+def_int $j = 0;
+while ($j < 25) {
+    if (testbit($old, $j) ! testbit(%ics_tilechecker, $j)) ~ics_tile_show($j, ^true);
+    $j = calc($j + 1);
+}
+if (%ics_tilechecker = 0) {
+    if_close; // the queue waits for the window to close
+    queue(ics_puzzle_solved, 0, 0);
+}
+
+// ours: 6 to 10 random presses, never an already solved board
+[proc,ics_puzzle_shuffle]
+def_int $n = calc(6 + random(5));
+%ics_tilechecker = 0;
+while ($n > 0 | %ics_tilechecker = 0) {
+    %ics_tilechecker = ~ics_tile_flip(random(25));
+    $n = calc($n - 1);
+}

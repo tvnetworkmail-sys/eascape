@@ -1,0 +1,584 @@
+// EASCape: Icthlarin's Little Helper - Sophanem, Klenter's pyramid and the flashbacks.
+// Words: the RuneScape wiki's transcript (closest to the 2005 original), with the 2007 game's
+// supplies step (a full waterskin and a tinderbox for the wanderer) from the OSRS wiki.
+// Places: the 2007 cache (map squares 51_43, 51_44 and the pyramid, 51_143). Our choices are
+// marked "ours".
+
+// ---------------------------------------------------------------- shared
+[proc,ics_has_cat]()(boolean)
+if (%follower_obj ! null) {
+    def_category $c = oc_category(%follower_obj);
+    if ($c = kitten | $c = cat | $c = overgrown) return(true);
+}
+if (inv_totalcat(inv, kitten) > 0 | inv_totalcat(inv, cat) > 0 | inv_totalcat(inv, overgrown) > 0) return(true);
+return(false);
+
+[proc,ics_ghostspeak]()(boolean)
+def_obj $neck = inv_getobj(worn, ^wearpos_front);
+if ($neck = amulet_of_ghostspeak | $neck = amulet_of_ghostspeak_enchanted) return(true);
+return(false);
+
+// %ics_little_jar_multi: 1 liver (Het), 2 intestines (Apmeken), 3 stomach (Scabaras), 4 lungs (Crondis)
+[proc,ics_jar]()(namedobj)
+switch_int (%ics_little_jar_multi) {
+    case 2 : return(ics_little_canopic_jar_intestines);
+    case 3 : return(ics_little_canopic_jar_stomach);
+    case 4 : return(ics_little_canopic_jar_lungs);
+    case default : return(ics_little_canopic_jar_liver);
+}
+
+[proc,ics_has_jar]()(boolean)
+if (inv_total(inv, ~ics_jar) > 0) return(true);
+return(false);
+
+[proc,ics_del_all](namedobj $obj)
+def_int $n = inv_total(inv, $obj);
+if ($n > 0) inv_del(inv, $obj, $n);
+
+[proc,ics_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+}
+
+[proc,ics_setpot](int $organ, int $v)
+switch_int ($organ) {
+    case 1 : %ics_liverpot_vis = $v;
+    case 2 : %ics_intestinespot_vis = $v;
+    case 3 : %ics_stomachpot_vis = $v;
+    case 4 : %ics_lungpot_vis = $v;
+}
+
+[proc,ics_fade_tele](coord $c)
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump($c);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// a flashback: the jar or the holy symbol becomes the mistress's unholy symbol (both transcripts)
+[proc,ics_flash_start]
+%ics_stateofmind = 1;
+~ics_del_all(ics_little_canopic_jar_liver);
+~ics_del_all(ics_little_canopic_jar_intestines);
+~ics_del_all(ics_little_canopic_jar_stomach);
+~ics_del_all(ics_little_canopic_jar_lungs);
+~ics_del_all(ics_little_holy_symbol);
+if (inv_total(inv, ics_little_unholy_symbol) = 0) ~ics_give(ics_little_unholy_symbol);
+
+// waking up early, or coming back after a teleport: what you held before the flashback
+[proc,ics_flash_cancel]
+%ics_stateofmind = 0;
+~ics_del_all(ics_little_unholy_symbol);
+if (%ics_little_var = ^ics_hypnotised | %ics_little_var = ^ics_return_jar) {
+    if (~ics_has_jar = false) ~ics_give(~ics_jar);
+    if (%ics_little_var = ^ics_return_jar) ~ics_setpot(%ics_little_jar_multi, 1);
+}
+if (%ics_little_var = ^ics_ceremony_prep & inv_total(inv, ics_little_holy_symbol) = 0) ~ics_give(ics_little_holy_symbol);
+
+// ---------------------------------------------------------------- the way in
+// The wanderer's rocks (2007 cache: icthal_entrance, Enter once ics_ent_open is set). Ours: they
+// lead to the inside of the hole in Sophanem's east wall.
+[oploc1,ics_little_entrance_multi]
+if (%ics_ent_open ! 1) return;
+mes("You crawl into the tunnel..."); // ours
+~ics_fade_tele(0_51_43_56_44);
+
+// 2009scape's WallShortcut: 21 Agility, 3320,2796 <-> 3324,2796
+[oploc1,ics_wall_crack]
+if (stat(agility) < 21) {
+    ~mesbox("You need an Agility level of at least 21 to do this.");
+    return;
+}
+def_coord $to = 0_51_43_60_44;
+if (coordx(coord) > coordx(loc_coord)) $to = 0_51_43_56_44;
+anim(agilty_shortcut_enter_hole, 0);
+p_delay(1);
+anim(agilty_shortcut_tunnel_walk, 0);
+p_delay(1);
+p_telejump($to);
+anim(agilty_shortcut_exit_hole, 0);
+
+// The wanderer's tent (the OSRS wiki's transcript)
+[oploc1,icthalarins_tent_door]
+~chatplayer("<p,neutral>Yuck! It smells like there's dead cats in there or something. I'm not going in.");
+
+// The city gate and its doormen (the RuneScape wiki's transcript; ours: the gate opens from
+// the ceremony's preparations until the end, and always after the quest)
+[oploc1,clue_suggestion_list]
+if (%ics_little_var >= ^ics_ceremony_prep) {
+    ~eascape_door_walk;
+    return;
+}
+~chatnpc_specific("Priest", ics_little_priestdoorman, "<p,neutral>I cannot permit you to pass. The city is under quarantine due to the outbreak of plagues.");
+if (coordz(coord) < coordz(loc_coord)) {
+    ~chatplayer("<p,angry>I am not afflicted by any plagues, so let me pass.");
+    ~chatnpc_specific("Priest", ics_little_priestdoorman, "<p,angry>No!");
+}
+
+// ---------------------------------------------------------------- the salt
+[oplocu,icthalarins_waters_edge]
+if (last_useitem ! bucket_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, ics_little_saltwaterbucket, 1);
+~objbox(ics_little_saltwaterbucket, "You scoop some salty water into the bucket.", 250, 0, 0);
+
+[opheld4,ics_little_saltwaterbucket] ~empty_container(bucket_empty);
+[opheld4,ics_little_sap_bucket] ~empty_container(bucket_empty);
+
+[oploc1,icthalarins_suntrap_centre]
+if (%ics_suntrapgotsalt = 1) {
+    ~mesbox("A residue of salt remains in the centre of the font.");
+    if (~p_choice2("Scrape it out.", 1, "Leave it alone.", 2) = 1) {
+        if (inv_freespace(inv) = 0) {
+            mes("You don't have enough inventory space."); // ours
+            return;
+        }
+        anim(scrape_salt, 0);
+        inv_add(inv, ics_little_pileofsalt, 1);
+        %ics_suntrapgotsalt = 0;
+        ~mesbox("You scrape the salt out.");
+    } else {
+        ~chatplayer("<p,neutral>I have better things to do than mess around with suntraps.");
+    }
+    return;
+}
+~mesbox("The centre of the font is empty apart from 3 or 4 salt crystals.");
+if (inv_total(inv, ics_little_saltwaterbucket) = 0) return;
+if (~p_choice2("Pour your bucket of salty water into the font.", 1, "Leave it alone.", 2) = 1) @ics_suntrap_pour;
+
+[oplocu,icthalarins_suntrap_centre]
+if (last_useitem ! ics_little_saltwaterbucket) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@ics_suntrap_pour;
+
+[label,ics_suntrap_pour]
+inv_del(inv, ics_little_saltwaterbucket, 1);
+inv_add(inv, bucket_empty, 1);
+~mesbox("You pour the water into the font at the centre of the sun trap.");
+~mesbox("The water quickly evaporates in the intense heat.");
+%ics_suntrapgotsalt = 1;
+
+// ---------------------------------------------------------------- Klenter's pyramid door
+[oploc1,icthalarins_temple_door] @ics_pyramid_door;
+[oploc3,icthalarins_temple_door] @ics_pyramid_door;
+
+[label,ics_pyramid_door]
+def_int $s = %ics_little_var;
+if (%ics_stateofmind = 1) ~ics_flash_cancel;
+if ($s >= ^ics_complete) {
+    ~chatplayer("<p,neutral>I think it would be best if I stayed out of this tomb after what happened last time.");
+    return;
+}
+if ($s < ^ics_hypnotised | $s = ^ics_token) {
+    ~chatplayer("<p,angry>Drat! It's locked.");
+    return;
+}
+if ($s = ^ics_hypnotised) {
+    if (~ics_has_jar = false) {
+        ~ics_give(~ics_jar);
+        ~mesbox("You notice a decorative jar lying nearby, which is oddly familiar.");
+    }
+    ~mesbox("A sense of deja-vu swamps you as you touch the pyramid's door. Your vision begins to swim before you collapse.");
+    ~ics_flash_start;
+    ~ics_fade_tele(0_51_143_14_19);
+    ~mesbox("Before you can settle, you feel your body moving as if it were on strings.");
+    ~chatplayer("<p,neutral>I must go to the heart of the pyramid.");
+    ~chatplayer("<p,confused>Did I say that? Something strange is going on. Perhaps I should just go with it, for now.");
+    return;
+}
+if ($s = ^ics_remembered) {
+    ~chatplayer("<p,neutral>If this cat hieroglyph had wings, it'd look a lot like that sphinx north-east of here.");
+    ~chatplayer("<p,quiz>I wonder if the sphinx saw me enter this pyramid?");
+    return;
+}
+if (~ics_has_cat = false) {
+    ~chatplayer("<p,neutral>I think the High Priest mentioned something about needing a cat to enter the pyramid.");
+    return;
+}
+if ($s = ^ics_ceremony_prep & inv_total(inv, ics_little_holy_symbol) = 0) {
+    ~chatplayer("<p,neutral>I think I should get a holy symbol from the carpenter before I proceed into the pyramid.");
+    return;
+}
+if ($s = ^ics_return_jar & ~ics_has_jar = false) {
+    ~ics_give(~ics_jar);
+    ~objbox(~ics_jar, "You notice an oddly familiar decorative jar lying nearby and pick it up.", 250, 0, 0);
+}
+~chatplayer("<p,happy>Hey puss! What do you reckon about that cat on the door? Do you think you can open it?");
+~chatnpc_specific("Cat", ics_little_cat, "<p,happy>Meeeow.");
+~mesbox("The door of the temple opens and you step through.");
+~ics_fade_tele(0_51_143_14_19);
+if ($s = ^ics_return_jar) ~chatplayer("<p,confused>This place feels strangely familiar. I'm sure I've been here before.");
+
+// the way out (ours: back to the pyramid's door)
+[oploc1,ics_ladder]
+if (%ics_stateofmind = 1) {
+    if (%ics_little_var = ^ics_ceremony_prep) {
+        ~chatplayer("<p,neutral>I must first plant the mistress' symbol.");
+    } else {
+        ~chatplayer("<p,neutral>I must get the burial jar for the mistress.");
+    }
+    ~mesbox("You find yourself establishing some kind of hold on your self.");
+    if (~p_choice2("Wake yourself up.", 1, "Let go of the ladder.", 2) = 2) {
+        mes("You let go of the ladder.");
+        return;
+    }
+    ~ics_flash_cancel;
+    ~ics_fade_tele(0_51_43_30_29);
+    ~mesbox("You find yourself outside of the pyramid.");
+    ~chatplayer("<p,confused>How'd did I get here?");
+    return;
+}
+anim(human_reachforladder, 0);
+p_delay(1);
+p_telejump(0_51_43_30_29);
+
+// ---------------------------------------------------------------- the pit
+// Two pits on the two corridors (x 3291-3292 and 3295-3296), each three squares deep; you land
+// two squares past the far edge. The OSRS wiki: it takes 20% run energy. Ours: the jump always
+// works, and a click on either edge's pit square works from up to three squares away (a click
+// often lands on the far one), like the lava fishing spot's approach.
+[aploc2,ics_little_pit_to]
+if (distance(loc_coord, coord) > 3) {
+    p_aprange(3);
+    return;
+}
+def_int $north = ^false;
+if (coordz(coord) < 9195) $north = ^true;
+if (%ics_stateofmind = 1 & %ics_little_var = ^ics_ceremony_prep) {
+    ~chatplayer("<p,neutral>I need to hide the mistress's symbol in the ceremonial room...");
+    return;
+}
+if (runenergy < 2000) {
+    ~chatplayer("<p,neutral>I need to rest a little before I make the jump.");
+    return;
+}
+def_coord $land = movecoord(loc_coord, 0, 0, calc(9192 - coordz(loc_coord)));
+if ($north = ^true) $land = movecoord(loc_coord, 0, 0, calc(9198 - coordz(loc_coord)));
+healenergy(-2000);
+anim(agility_pyramid_gap_jump, 0);
+p_delay(1);
+p_telejump($land);
+if ($north = ^false | %ics_stateofmind = 1) return;
+if (%ics_little_var = ^ics_return_jar) {
+    ~mesbox("As you go to make the jump, another sense of deja-vu sweeps over you...");
+    ~ics_flash_start;
+    %ics_guardian_dead = 0;
+    ~ics_setpot(%ics_little_jar_multi, 0);
+    ~ics_fade_tele(0_51_143_16_48);
+    ~chatplayer("<p,neutral>I need to get a burial jar for the mistress.");
+    mes("You find yourself back in a dreamlike state.");
+    return;
+}
+if (%ics_little_var = ^ics_ceremony_prep & inv_total(inv, ics_little_holy_symbol) > 0) {
+    ~mesbox("As you go to make the jump, another sense of deja-vu sweeps over you...");
+    ~ics_flash_start;
+    ~ics_fade_tele(0_51_143_27_46);
+    mes("You feel your fleeting memories of the past come rushing towards you.");
+    ~chatplayer("<p,neutral>I must hide the mistress's symbol somewhere in the ceremonial room so that she can enter the pyramid whenever she pleases.");
+}
+
+// ---------------------------------------------------------------- the two doorways
+// loc_6643 at 3280,9199 (the burial room, west) and 3306,9199 (the ceremonial room, east).
+// Ours: you step through to the square on the far side.
+[oploc1,loc_6643]
+def_int $inside = ^false;
+if (coordz(coord) < coordz(loc_coord)) $inside = ^true;
+if (coordx(loc_coord) < 3295) {
+    @ics_burial_door($inside);
+}
+@ics_ceremony_door($inside);
+
+[label,ics_burial_door](int $inside)
+if ($inside = ^false) {
+    if (%ics_stateofmind = 1 & %ics_little_var = ^ics_hypnotised) {
+        ~mesbox("A small panel near the door opens up.");
+        if (%ics_tilechecker = 0) ~ics_puzzle_shuffle;
+        if_openmain(inter_96);
+        ~ics_puzzle_draw;
+        return;
+    }
+    if (%ics_stateofmind = 1 & %ics_little_var = ^ics_ceremony_prep) {
+        ~mesbox("The panel in the door seems to be jammed. I don't think I'll be able to get back in there.");
+        return;
+    }
+    if (%ics_little_var < ^ics_remembered) {
+        mes("The door is locked."); // ours
+        return;
+    }
+    p_telejump(movecoord(loc_coord, 0, 0, -1));
+    return;
+}
+if (%ics_stateofmind = 1 & %ics_little_var = ^ics_return_jar & ~ics_has_jar = true) {
+    ~ics_fade_tele(movecoord(loc_coord, 0, 0, 1));
+    %ics_stateofmind = 0;
+    ~ics_del_all(ics_little_unholy_symbol);
+    %ics_little_var = ^ics_stole_jar;
+    ~chatplayer("<p,shock>Oh no. What have I done?");
+    ~chatplayer("<p,sad>I really did steal that jar. I had better return it quickly before more harm is done.");
+    mes("Your head clears as you piece together your actions.");
+    return;
+}
+p_telejump(movecoord(loc_coord, 0, 0, 1));
+
+[label,ics_ceremony_door](int $inside)
+if ($inside = ^true) {
+    p_telejump(movecoord(loc_coord, 0, 0, 1));
+    return;
+}
+p_telejump(movecoord(loc_coord, 0, 0, -1));
+if (%ics_little_var = ^ics_symbol_hidden) @ics_ceremony_cutscene;
+if (%ics_little_var = ^ics_fight & npc_find(coord, ics_little_possessedpriest, 15, 0) = false) {
+    ~ics_spawn_possessed;
+}
+
+// ---------------------------------------------------------------- the puzzle is solved
+[queue,ics_puzzle_solved]
+if_close;
+mes("You hear a click of the door's locking mechanism retracting.");
+p_delay(1);
+mes("On opening the door a healing spell is cast on you.");
+healenergy(10000);
+stat_heal(hitpoints, 0, 100);
+~ics_fade_tele(0_51_43_30_29);
+%ics_stateofmind = 0;
+~ics_del_all(ics_little_unholy_symbol);
+if (~ics_has_jar = false) ~ics_give(~ics_jar);
+%ics_little_var = ^ics_remembered;
+~chatplayer("<p,sad>Ahh my poor head.");
+~mesbox("Your head feels a little clearer as you pick yourself up.");
+~chatplayer("<p,confused>What in the name of Guthix is going on? Was I dreaming?");
+
+// ---------------------------------------------------------------- the burial room
+[oploc1,ics_little_pot_liver_multi] @ics_take_pot(1);
+[oploc1,ics_little_pot_intestines_multi] @ics_take_pot(2);
+[oploc1,ics_little_pot_stomach_multi] @ics_take_pot(3);
+[oploc1,ics_little_pot_lungs_multi] @ics_take_pot(4);
+
+[label,ics_take_pot](int $organ)
+if (%ics_stateofmind = 1 & %ics_little_var = ^ics_return_jar) {
+    if ($organ ! %ics_little_jar_multi) {
+        ~chatplayer("<p,neutral>I don't need this jar.");
+        return;
+    }
+    if (%ics_guardian_dead = 0) {
+        if (npc_find(coord, ics_little_het, 12, 0) = true | npc_find(coord, ics_little_apmeken, 12, 0) = true | npc_find(coord, ics_little_scabaras, 12, 0) = true | npc_find(coord, ics_little_crondis, 12, 0) = true) {
+            ~chatplayer("<p,angry>I've got enough on my hands at the moment. I don't want to fight another guardian.");
+            return;
+        }
+        switch_int ($organ) {
+            case 2 : npc_add(0_51_143_20_43, ics_little_apmeken, 500);
+            case 3 : npc_add(0_51_143_20_43, ics_little_scabaras, 500);
+            case 4 : npc_add(0_51_143_20_43, ics_little_crondis, 500);
+            case default : npc_add(0_51_143_20_43, ics_little_het, 500);
+        }
+        npc_say("You will not defile this place!"); // the OSRS wiki's transcript
+        npc_setmode(opplayer2);
+        return;
+    }
+    if (inv_freespace(inv) = 0) {
+        ~chatplayer("<p,neutral>I couldn't possibly carry anything more.");
+        return;
+    }
+    inv_add(inv, ~ics_jar, 1);
+    ~ics_setpot($organ, 1);
+    ~mesbox("You take the jar.|You feel an overwhelming compulsion to leave this room.");
+    return;
+}
+if (%ics_little_var >= ^ics_stole_jar) {
+    ~chatplayer("<p,neutral>I've already caused enough trouble over these jars. I'll just leave them alone.");
+    return;
+}
+~chatplayer("<p,neutral>I think I'll leave this alone. I've been in enough trouble.");
+
+[ai_queue3,ics_little_het] @ics_guardian_death;
+[ai_queue3,ics_little_apmeken] @ics_guardian_death;
+[ai_queue3,ics_little_scabaras] @ics_guardian_death;
+[ai_queue3,ics_little_crondis] @ics_guardian_death;
+
+[label,ics_guardian_death]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(ics_guardian_slain, 0, 0);
+
+[queue,ics_guardian_slain]
+if (%ics_little_var = ^ics_return_jar) %ics_guardian_dead = 1;
+
+// putting the jar back: drop it in the burial room (the RuneScape wiki's transcript)
+[opheld5,ics_little_canopic_jar_liver] @ics_drop_jar;
+[opheld5,ics_little_canopic_jar_intestines] @ics_drop_jar;
+[opheld5,ics_little_canopic_jar_stomach] @ics_drop_jar;
+[opheld5,ics_little_canopic_jar_lungs] @ics_drop_jar;
+
+[label,ics_drop_jar]
+def_boolean $pyramid = inzone(0_51_143_0_0, 0_51_143_63_63, coord);
+if (%ics_little_var = ^ics_stole_jar & $pyramid = true) {
+    if (inzone(0_51_143_12_40, 0_51_143_23_46, coord) = false) {
+        ~chatplayer("<p,neutral>I should return this to where I took it from.");
+        return;
+    }
+    inv_delslot(inv, last_slot);
+    ~ics_setpot(%ics_little_jar_multi, 0);
+    %ics_little_var = ^ics_jar_returned;
+    %ics_specvis = 0;
+    mes("You drop the jar.");
+    ~chatplayer("<p,neutral>I should return to the high priest and tell him that I have returned the jar.");
+    if (~ics_ghostspeak = true) {
+        ~mesbox("You hear a faint voice inside your head.");
+        ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,neutral>Thank you, adventurer. You have given my soul some respite. I will cease to haunt you and the plague creatures will no longer seek you out.");
+        ~chatplayer("<p,quiz>Wait I want to ask you a question.");
+        ~mesbox("The voice in your head doesn't reply.|It must be gone.");
+    }
+    return;
+}
+if ($pyramid = true & %ics_little_var >= ^ics_return_jar & %ics_little_var < ^ics_jar_returned) {
+    ~mesbox("A magical force or perhaps a deep rooted moral objection prevents you throwing this item away. Perhaps your near vicinity to the owner's tomb is stopping you.");
+    return;
+}
+inv_delslot(inv, last_slot);
+mes("The burial jar magically turns to dust as you drop it.");
+
+[opheld5,ics_little_unholy_symbol]
+~chatplayer("<p,neutral>The mistress would not permit me do this.");
+~chatplayer("<p,confused>What did I just say?");
+
+[opheld5,ics_little_holy_symbol]
+if (%ics_little_var >= ^ics_ceremony_prep & %ics_little_var < ^ics_complete) {
+    mes("I don't think I should throw this away yet.");
+    return;
+}
+~dropslot(last_slot);
+
+// ---------------------------------------------------------------- the ceremonial room
+[oplocu,ics_ceremtable]
+if (last_useitem = ics_little_unholy_symbol) {
+    ~chatplayer("<p,neutral>No, this isn't a good enough hiding place. I need to put the symbol somewhere more secret.");
+    return;
+}
+~displaymessage(^dm_default);
+
+[oplocu,loc_6630]
+if (last_useitem = ics_little_unholy_symbol & %ics_stateofmind = 1 & %ics_little_var = ^ics_ceremony_prep) {
+    @ics_hide_symbol;
+}
+~displaymessage(^dm_default);
+
+[oploc1,loc_6630]
+if (%ics_stateofmind = 1 & %ics_little_var = ^ics_ceremony_prep & coordx(loc_coord) > 3297) {
+    switch_int (~p_choice3("Hide the unholy symbol in this sarcophagus.", 1, "Search the sarcophagus.", 2, "Leave the sarcophagus alone.", 3)) {
+        case 1 : @ics_hide_symbol;
+        case 2 : @ics_search_sarcophagus;
+    }
+    return;
+}
+if (%ics_little_var >= ^ics_stole_jar) {
+    ~chatplayer("<p,neutral>I think I've learned my lesson about this grave robbing business.");
+    return;
+}
+@ics_search_sarcophagus;
+
+// the transcript's outcomes, but not its 1,000 coins (ours: they could be searched for again and again)
+[label,ics_search_sarcophagus]
+mes("You search the sarcophagus...");
+p_delay(1);
+switch_int (random(4)) {
+    case 0 :
+        mes("Uh, oh.");
+        npc_add(map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk), ics_little_scarabs, 200);
+        npc_setmode(opplayer2);
+    case 1 :
+        mes("You cut yourself on a sharp object inside the sarcophagus.");
+        ~damage_self(2);
+    case 2 :
+        ~mesbox("A noxious gas spills out from the sarcophagus.");
+        queue(poison_player, 0, 3);
+    case default : mes("You don't find anything interesting.");
+}
+
+[label,ics_hide_symbol]
+~ics_del_all(ics_little_unholy_symbol);
+~chatplayer("<p,happy>Ha! Those foolish priests will never find this here. She will be able to enter the pyramid now at her whim.");
+~chatplayer("<p,happy>Those preposterous priests won't know what hit them. I must now return to the mistress with the jar.");
+%ics_stateofmind = 0;
+%ics_little_var = ^ics_symbol_hidden;
+%ics_little_priestvis = 1;
+~ics_give(ics_little_holy_symbol);
+~ics_fade_tele(0_51_143_42_49);
+~chatplayer("<p,angry>No. This is ridiculous. Even my memory is working against me.");
+~chatplayer("<p,shock>I have to warn the priests about the Devourer. I hope I'm not too late already.");
+
+[label,ics_ceremony_cutscene]
+~chatnpc_specific("High Priest", ics_little_hipriest_vis, "<p,neutral>Mighty Icthlarin, set Klenter's soul to rest.");
+~chatnpc_specific("Priest", ics_little_priest, "<p,happy>Hail mighty Icthlarin!");
+~chatnpc_specific("High Priest", ics_little_hipriest_vis, "<p,neutral>Mighty Icthlarin, set Klenter's soul to rest.");
+~chatnpc_specific("Priest", ics_little_priest, "<p,happy>Hail mighty Icthlarin.");
+~chatplayer("<p,shock>Wait, wait, wait, there's something wrong!");
+~chatnpc_specific("High Priest", ics_little_hipriest_vis, "<p,angry>Don't interrupt, adventurer.");
+~chatplayer("<p,shock>But the Devourer. She's coming!");
+%ics_wanderermulti = 2;
+~chatnpc_specific("Wanderer", ics_little_redheadlady, "<p,happy>My thanks, adventurer. You have been most helpful. I will have my soul now.");
+~chatnpc_specific("High Priest", ics_little_hipriest_vis, "<p,angry>You will not as long as I draw breath.");
+~chatnpc_specific("Wanderer", ics_little_redheadlady, "<p,neutral>Adventurer, I command you to kill these priests.");
+~chatplayer("<p,angry>Your spells won't work on me, now that I see you for what you are.");
+~chatnpc_specific("Wanderer", ics_little_redheadlady, "<p,neutral>No matter. You've already served your purpose.");
+~chatnpc_specific("Wanderer", ics_little_redheadlady, "<p,angry>You.|Priest of the dog lord.|Kill your brethren.");
+~chatnpc_specific("Priest", ics_little_priest, "<p,angry>Yes, Mistress!|Kill them all.");
+~chatnpc_specific("High Priest", ics_little_hipriest_vis, "<p,shock>Adventurer, protect us so we may finish the ceremony.");
+mes("The Wanderer's voice echoes in your mind: Kill them all.");
+%ics_wanderermulti = 0;
+~mesbox("The final battle begins...");
+%ics_little_var = ^ics_fight;
+~ics_spawn_possessed;
+
+[proc,ics_spawn_possessed]
+npc_add(0_51_143_42_42, ics_little_possessedpriest, 1000);
+npc_say("Grrrr.");
+npc_setmode(opplayer2);
+
+[ai_queue3,ics_little_possessedpriest]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(ics_priest_slain, 0, 0);
+
+[queue,ics_priest_slain]
+if (%ics_little_var ! ^ics_fight) return;
+%ics_little_var = ^ics_priest_beaten;
+mes("The priest seems to recover from the Devourer's spell."); // the OSRS wiki's transcript
+
+// ---------------------------------------------------------------- the treasure chest
+[oploc1,ics_chestclosed]
+if (%ics_chestempty = 1) {
+    mes("The chest is empty."); // ours
+    return;
+}
+~mesbox("You find 50 coins inside the chest.");
+if (~p_choice2("Take the money and run.", 1, "Leave the gold coins.", 2) = 1) {
+    inv_add(inv, coins, 50);
+    %ics_chestempty = 1;
+    return;
+}
+~chatplayer("<p,neutral>I'm going to leave the money there. I'm not a grave robber.");
+
+// ---------------------------------------------------------------- sap (the OSRS wiki: a knife on
+// an evergreen or a common tree, with a bucket)
+[label,ics_tree_sap]
+if (inv_total(inv, bucket_empty) = 0) {
+    mes("You need a bucket to collect the sap."); // ours
+    return;
+}
+anim(human_pickupfloor, 0);
+p_delay(1);
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, ics_little_sap_bucket, 1);
+~objbox(ics_little_sap_bucket, "You cut the tree and allow some sap to drip into your bucket.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Sophanem's odds and ends
+[oploc1,icthalarins_bananatreeempty] mes("There are no bananas left on the tree."); // ours
+[oploc1,icthalarins_spicemarket] mes("You don't find anything of interest."); // ours

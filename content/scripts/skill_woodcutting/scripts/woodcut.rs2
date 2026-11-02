@@ -7,6 +7,11 @@
 switch_obj(last_useitem) {
     case bronze_axe, iron_axe, steel_axe, black_axe, mithril_axe, adamant_axe, rune_axe :
         p_oploc(1); // gets delayed by a tick >:(
+    case knife : // EASCape: Icthlarin's Little Helper's sap (quest_ics/ics_world.rs2)
+        switch_loc (loc_type) {
+            case evergreen, evergreen_large, evergreen_snowy_large, evergreen_vsnowy_large, tree, tree2, tree3, lighttree, lighttree2 : @ics_tree_sap;
+            case default : ~displaymessage(^dm_default);
+        }
     case raw_herring, herring :
         mes("This is not the mightiest tree in the forest.");
         return;

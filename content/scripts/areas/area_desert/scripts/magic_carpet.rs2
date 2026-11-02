@@ -1,8 +1,9 @@
 // EASCape: Ali Morrisane's flying carpet fleet, from Void (content/area/kharidian_desert/RugMerchant.kt):
 // the Rug Merchants, their stations, 200 coins a journey, and the routes the carpets fly
 // (configs/magic_carpet.dbrow, Void's patrols). Uzer's merchant shows once The Golem is done (a
-// multinpc in the 377 cache); Sophanem's and Menaphos's stay hidden until Icthlarin's Little Helper,
-// which isn't in the game yet. The flight uses the 377 cache's carpet animations.
+// multinpc in the 377 cache); Sophanem's and Menaphos's show once Icthlarin's Little Helper's
+// passage is open (the cache's multinpc), and fly once the quest is done (Void). The flight uses
+// the 377 cache's carpet animations.
 
 [opnpc1,magic_carpet_seller1] ~carpet_merchant("shantay_pass");
 [opnpc1,magic_carpet_seller2] ~carpet_merchant("bedabin_camp");
@@ -10,6 +11,8 @@
 [opnpc1,magic_carpet_seller3] ~carpet_merchant("south_pollnivneach");
 [opnpc1,magic_carpet_seller8] ~carpet_merchant("nardah");
 [opnpc1,magic_carpet_seller5_multi] ~carpet_merchant("uzer");
+[opnpc1,magic_carpet_seller6_multi] ~carpet_merchant("sophanem");
+[opnpc1,magic_carpet_seller7_multi] ~carpet_merchant("menaphos");
 
 [proc,carpet_merchant](string $here)
 ~chatplayer("<p,neutral>Hello.");
@@ -35,6 +38,21 @@ if (compare($here, "shantay_pass") = 0) {
             case 2 : $to = "bedabin_camp";
             case 3 : $to = "north_pollnivneach";
         }
+    }
+} else if (compare($here, "south_pollnivneach") = 0 & %ics_little_var >= ^ics_complete) {
+    ~chatnpc("<p,neutral>From here you can travel to Nardah and the Menaphite cities of Sophanem and Menaphos.");
+    switch_int (~p_choice4("I want to travel to Nardah.", 1, "I want to travel to Sophanem.", 2, "I want to travel to Menaphos.", 3, "I don't want to travel to any of those places.", 4)) {
+        case 1 : $to = "nardah";
+        case 2 : $to = "sophanem";
+        case 3 : $to = "menaphos";
+    }
+} else if (compare($here, "sophanem") = 0 | compare($here, "menaphos") = 0) {
+    if (%ics_little_var < ^ics_complete) {
+        ~chatnpc("<p,neutral>The carpets can't leave while the city is under quarantine."); // ours
+        return;
+    }
+    switch_int (~p_choice2("I want to travel to Pollnivneach.", 1, "Actually, I've changed my mind.", 2)) {
+        case 1 : $to = "south_pollnivneach";
     }
 } else if (compare($here, "south_pollnivneach") = 0) {
     ~chatnpc("<p,neutral>Travel to Menaphos and Sophanem from here would be possible, but for the strange goings on there. You can still travel from here to Nardah.");

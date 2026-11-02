@@ -1,0 +1,1056 @@
+// EASCape: Icthlarin's Little Helper - the people of Sophanem. Words: the RuneScape wiki's
+// transcript (Transcript:Icthlarin's Little Helper), which keeps the 2005 wording; the wanderer's
+// supplies and a few lines the RuneScape one lacks are from the OSRS wiki's transcript. The 2007
+// cache names the cloth seller "Linen Worker" (the transcripts' Raetul). Our choices are marked
+// "ours".
+
+// ---------------------------------------------------------------- the wanderer
+// (the engine runs a multi npc's ops on its base type)
+[opnpc1,ics_little_multi_wanderer]
+def_int $s = %ics_little_var;
+if ($s >= ^ics_hypnotised) {
+    ~mesbox("The wanderer stares at you with her strange red eyes, and says nothing."); // ours
+    return;
+}
+if ($s = ^ics_supplies) {
+    if (%follower_obj ! null) {
+        def_category $c = oc_category(%follower_obj);
+        if ($c = kitten | $c = cat | $c = overgrown) {
+            ~chatnpc_specific("Cat", ics_little_cat, "<p,angry>Hiss!");
+            ~chatnpc("<p,shock>Get that cat away from me!");
+            return;
+        }
+    }
+    ~chatnpc("<p,quiz>You again. Do you have my supplies?");
+    if (inv_total(inv, water_skin4) > 0 & inv_total(inv, tinderbox) > 0) {
+        ~chatplayer("<p,happy>Yes. I have them here.");
+        @ics_hypnosis;
+    }
+    ~chatplayer("<p,quiz>What did you need again?");
+    ~chatnpc("<p,neutral>Bring me a full waterskin and a tinderbox.");
+    return;
+}
+~chatplayer("<p,neutral>Good day, wanderer.");
+~chatnpc("<p,neutral>Hello to you too, adventurer.");
+if (~ics_has_cat = false) {
+    ~chatnpc("<p,neutral>Sniff, sniff.");
+    ~chatnpc("<p,quiz>You have the smell of cats about you.|Do you have one?");
+    switch_int (~p_choice4("Yes, but I've not brought it with me. Cats are no adventurers.", 1, "No, I don't like cats. They're nasty cruel creatures.", 2, "Why do you ask?", 3, "Eww, get away from me, you mad woman.", 4)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Yes, but I've not brought it with me. Cats are no adventurers.");
+            ~chatnpc("<p,angry>Filthy nasty creatures.");
+        case 2 :
+            ~chatplayer("<p,angry>No, I don't like cats. They're nasty cruel creatures.");
+            ~chatplayer("<p,neutral>Besides, they make me sneeze.");
+            ~chatnpc("<p,angry>Yes, awful creatures.|The brood of Icthlarin.");
+            ~chatplayer("<p,quiz>What was that?");
+            ~chatnpc("<p,angry>Nasty cats.|Filthy sneaking beasts.");
+            ~chatplayer("<p,neutral>I sense some resentment of cats coming from you.");
+        case 3 :
+            ~chatplayer("<p,quiz>Why do you ask?");
+            ~chatnpc("<p,angry>Oh, no reason whatsoever, except that I hate cats!");
+        case 4 :
+            ~chatplayer("<p,angry>Eww, get away from me, you mad woman.");
+            return;
+    }
+    @ics_wanderer_chat;
+}
+~chatnpc_specific("Cat", ics_little_cat, "<p,angry>Hiss!");
+~chatnpc("<p,shock>Agh!|Get that cat away from me.|Quickly please.");
+def_int $why = 0;
+if (%fluffs >= ^fluffs_complete) $why = 1;
+switch_int (~p_choice3("Why?", $why, "I'm terribly sorry, come here kitty.", 2, "I have no time for this madness. Goodbye.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why?|What's your problem with my cat?");
+        ~chatnpc("<p,shock>Just take it away please.|Take it away.");
+        ~chatnpc("<p,neutral>If you do, I'll tell you of the secret passageway.");
+        ~chatplayer("<p,quiz>What secret passage?");
+        ~chatnpc("<p,neutral>Get the cat away from me, and then I'll tell you.");
+        if (~p_choice2("Accept the quest.", 1, "Not right now.", 2) = 2) {
+            ~chatplayer("<p,neutral>I don't believe such a entrance exists.");
+            ~chatnpc("<p,angry>Fool! It's the only way into the city. Wander the desert and die of thirst. See if I care.");
+            return;
+        }
+        ~chatplayer("<p,neutral>Here, kitty, kitty, kitty. Leave that nice lady alone.");
+        ~chatplayer("<p,quiz>Alright, now where is this secret passage?");
+        ~chatnpc("<p,neutral>It's over yonder by the group of rocks to the north-east.");
+        ~chatnpc("<p,neutral>But you won't be able to enter.|Well, not yet anyway.");
+        ~chatplayer("<p,quiz>Where does it lead to?");
+        ~chatnpc("<p,neutral>To Sophanem, the city of the dead.");
+        // the 2007 game's supplies (the OSRS wiki's transcript)
+        ~chatplayer("<p,quiz>So why do you say I won't be able to enter the passage?");
+        ~chatnpc("<p,neutral>First bring me some supplies and then I'll tell you. I'm running low and I'm about to embark on a long journey.");
+        ~chatplayer("<p,quiz>What do you need?");
+        ~chatnpc("<p,neutral>Get me a full waterskin and a tinderbox. I seem to have lost my own and these desert nights are very cold.");
+        %ics_little_var = ^ics_supplies;
+        if (inv_total(inv, water_skin4) > 0 & inv_total(inv, tinderbox) > 0) {
+            ~chatplayer("<p,happy>Okay. I actually have those on me already.");
+            @ics_hypnosis;
+        }
+        ~chatplayer("<p,neutral>Okay, I'll get you your supplies.");
+        return;
+    case 2 :
+        ~chatplayer("<p,sad>I'm terribly sorry, come here kitty.");
+        ~chatplayer("<p,neutral>Here, kitty, kitty, kitty. Leave that nice lady alone.");
+        @ics_wanderer_chat;
+    case 3 :
+        ~chatplayer("<p,angry>I have no time for this madness. Goodbye.");
+}
+
+[label,ics_wanderer_chat]
+switch_int (~p_choice5("What are you doing out in the desert?", 1, "Who are you?", 2, "How do you survive out here in the desert?", 3, "I'm in need of supplies. Is there a town nearby?", 4, "I'm busy. I must be going now.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What are you doing out in the desert?");
+        ~chatnpc("<p,neutral>Wandering, drifting and surviving.|What about you?");
+        ~chatplayer("<p,happy>The usual, you know, seeking fame, fortune and adventure.");
+    case 2 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,sad>Just a nameless one. I had a name once, but it's been long forgotten.");
+        ~chatplayer("<p,neutral>How sad. I hope no one will ever forget my name. The bards of Gielinor will learn of my epic adventures and write songs to recount my great deeds.");
+        ~chatnpc("<p,neutral>I don't doubt that.");
+    case 3 :
+        ~chatplayer("<p,quiz>How do you survive out here in the desert?");
+        ~chatnpc("<p,neutral>I survive off what little the land provides and the generosity of strangers and fellow travellers.");
+    case 4 :
+        ~chatplayer("<p,quiz>I'm in need of supplies. Is there a town nearby?");
+        ~chatnpc("<p,neutral>Yes, Sophanem to the south, but it is closed to all outsiders.");
+    case 5 :
+        ~chatplayer("<p,neutral>I'm busy. I must be going now.");
+        return;
+}
+@ics_wanderer_chat;
+
+// The hypnosis: the RuneScape wiki's words, the 2007 supplies taken (the OSRS wiki). Ours: which of
+// the four jars you stole is chosen at random.
+[label,ics_hypnosis]
+~chatnpc("<p,neutral>Look into my eyes.");
+~chatnpc("<p,neutral>Look deeply into them.");
+~chatnpc("<p,neutral>Don't blink.");
+inv_del(inv, water_skin4, 1);
+inv_del(inv, tinderbox, 1);
+%ics_little_jar_multi = calc(random(4) + 1);
+~ics_setpot(%ics_little_jar_multi, 1);
+%ics_little_var = ^ics_hypnotised;
+%ics_ent_open = 1;
+%ics_specvis = 1;
+~mesbox("You feel yourself moving towards a group of rocks, where the secret entrance to Sophanem lies.");
+~ics_fade_tele(0_51_43_30_29);
+~ics_give(~ics_jar);
+~mesbox("You slowly pick yourself off the ground.|Your head pounds and an irrational sense of guilt nags you.");
+~chatplayer("<p,sad>Ah, my poor head. What's going on?");
+~chatplayer("<p,angry>How did I get here? That woman, that wanderer, this is her doing.");
+~mesbox("You notice a ghostly figure making pained gestures in your direction.");
+if (~ics_ghostspeak = true) {
+    ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>You foul thief, return what is mine.");
+    ~chatplayer("<p,confused>What?");
+    ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>You heard me, restore what you have stolen from my tomb!");
+    ~chatplayer("<p,shock>But...");
+    return;
+}
+~mesbox("The spirit tries to converse with you, but you fail to understand. All you can sense is his anger which is directed toward you.");
+~mesbox("The spirit points insistently at the nearby tomb door with a hieroglyph of a cat.");
+
+// ---------------------------------------------------------------- Klenter
+[opnpc1,ics_little_spectre]
+if (~ics_ghostspeak = false) {
+    ~mesbox("The spirit tries to converse with you, but it makes no sense. All you can understand from him is his deepest anger which is directed towards you.");
+} else {
+    switch_int (random(10)) {
+        case 0 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Evil doer.");
+        case 1 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Give me my guts back, thief.");
+        case 2 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Grave defiler.");
+        case 3 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Graverobber.");
+        case 4 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Organ snatcher.");
+        case 5 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Return what is mine.");
+        case 6 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Spawn of evil.");
+        case 7 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>Thief.");
+        case 8 : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>You pathetic excuse for a thief.");
+        case default : ~chatnpc_specific("Klenter", ics_little_spectre_vis, "<p,angry>You worm! May the Devourer take your soul.");
+    }
+}
+if (%ics_little_var = ^ics_remembered) {
+    ~mesbox("The spirit gestures at the sphinx to the north-east of his pyramid, and rolls his eyes in frustration.");
+    return;
+}
+~mesbox("The spirit points insistently at the nearby tomb with a hieroglyph of a cat.");
+
+// ---------------------------------------------------------------- the Sphinx
+[opnpc1,ics_little_sphinx]
+def_int $s = %ics_little_var;
+~chatplayer("<p,neutral>Good day.");
+if (~ics_has_cat = false) {
+    if ($s >= ^ics_remembered) {
+        ~chatnpc("<p,neutral>I have no interest in speaking with you. You should bring your cat to me again. The two of us have much to discuss.");
+        if (%ics_sphinx_robbedcat = 1) {
+            ~chatplayer("<p,angry>But you stole my last one!");
+            ~chatnpc("<p,neutral>Well, you would be well advised to get another.");
+        }
+        return;
+    }
+    ~chatnpc("<p,quiz>You have the feel of a cat person about you. Do you look after one?");
+    switch_int (~p_choice3("Yes, but I don't bring it to harsh places like this.", 1, "No, you are mistaken.", 2, "Yes, but I've left mine in the bank.", 3)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Yes, but I don't bring it to harsh places like this.");
+            ~chatnpc("<p,neutral>A pity; they can be of great help in some adventures. I would like to talk to your cat. Would you bring it to me?");
+            ~chatplayer("<p,neutral>I might, but I have a few things to sort out first though.");
+        case 2 :
+            ~chatplayer("<p,neutral>No, you are mistaken.");
+            ~chatnpc("<p,quiz>Really? I'm generally quite good at knowing these sorts of things.");
+        case 3 :
+            ~chatplayer("<p,neutral>Yes, but I've left mine in the bank.");
+            ~chatnpc("<p,shock>What? That's no place for a cat!");
+    }
+    return;
+}
+~mesbox("The Sphinx ignores you.");
+~chatnpc("<p,happy>Ah, how interesting...a cat. Come here to me, kitty.");
+~chatnpc_specific("Cat", ics_little_cat, "<p,happy>Meow.");
+~mesbox("Your cat and the Sphinx converse in a yeowling language for a short time.");
+@ics_sphinx_menu;
+
+[label,ics_sphinx_menu]
+switch_int (~p_choice3("I need help.", 1, "Who are you?", 2, "What's going on in town?", 3)) {
+    case 1 : @ics_sphinx_help;
+    case 2 : @ics_sphinx_who;
+    case 3 : @ics_sphinx_town;
+}
+
+[label,ics_sphinx_help]
+def_int $s = %ics_little_var;
+~chatplayer("<p,sad>I need help.");
+if ($s >= ^ics_complete) {
+    ~chatnpc("<p,neutral>What with? Your cat tells me that you have held The Devourer at bay.");
+    ~chatplayer("<p,neutral>I need help with The Devourer. I haven't defeated her.");
+    ~chatnpc("<p,neutral>I hope that you will come to the understanding that not all the world's problems can be solved by an individual. You've done your bit; it's now up to the Menaphites and the priests of Icthlarin to solve this standoff.");
+    ~chatnpc("<p,neutral>I have to confess that, despite myself, I am impressed by your actions. I may have some work for you at a later date.");
+    return;
+}
+if ($s < ^ics_remembered) {
+    ~chatnpc("<p,neutral>Your companion tells me that you are in a spot of bother.");
+    ~chatplayer("<p,quiz>What companion? Oh, you mean my pet cat?");
+    ~chatplayer("<p,confused>Well, I'm a little bit confused about 'goings on'.");
+    ~chatnpc("<p,quiz>What do you mean by goings on?");
+    ~chatplayer("<p,confused>Well, one second I'm here, and the next things go all black, and then I'm somewhere else. I have a cracking headache and some strange object in my bag which I can't throw away.");
+    ~chatnpc("<p,quiz>Have you taken a bang to the head recently?");
+    ~chatplayer("<p,neutral>None really of much note. Although, thinking about it, things started to go a bit weird once I started talking to a wanderer outside town. She had the strangest red eyes and hair.");
+    ~chatnpc("<p,neutral>Interesting, very interesting. I'd like to help but I'm not going to get involved. Well, not just yet, anyway.");
+    ~chatplayer("<p,neutral>Well, thanks. You've been a real help.");
+    ~chatnpc("<p,neutral>I will tell you one thing, though: some important objects and locations can trigger memories, no matter how repressed they are.");
+    return;
+}
+if ($s = ^ics_remembered) @ics_sphinx_riddle;
+if ($s = ^ics_token) {
+    if (inv_total(inv, ics_little_sphinxstatue) = 0 & %ics_givensphinxstatue = 0) {
+        ~chatplayer("<p,sad>I lost that token you gave me; could I have another please?");
+        ~chatnpc("<p,neutral>Ahhh, you humans.");
+        ~ics_give(ics_little_sphinxstatue);
+        ~objbox(ics_little_sphinxstatue, "The sphinx hands you another little statue.", 250, 0, 0);
+        return;
+    }
+    ~chatnpc("<p,angry>Your cat tells me that you have yet to speak to the high priest. I wonder why I tried to help at all!");
+    ~chatplayer("<p,angry>Traitor.");
+    ~chatnpc_specific("Cat", ics_little_cat, "<p,happy>Meow!");
+    ~chatplayer("<p,sad>I can't find him.");
+    ~chatnpc("<p,neutral>Try the large building to the south of Sophanem.");
+    ~chatplayer("<p,neutral>Thanks. Come on, cat.");
+    return;
+}
+~chatnpc("<p,neutral>How go things, great guardian of cats?");
+~chatplayer("<p,angry>I don't care for your mocking tone.");
+~chatnpc("<p,neutral>I have helped you enough, or at least as much as I'm willing to.");
+~chatplayer("<p,neutral>Come on, cat; lets leave that nasty Sphinx alone.");
+
+[label,ics_sphinx_riddle]
+~chatnpc("<p,neutral>Your cat tells me you're in a spot of bother; something to do with grave-robbing, tisk tisk. So unbecoming of a guardian of cats.");
+~chatplayer("<p,sad>Can you help me? Please?");
+~chatnpc("<p,happy>Well, I have to say I enjoy a laugh at someone's expense now and again...so let's have a bit of fun.");
+~chatplayer("<p,neutral>I don't like the sound of this.");
+~chatnpc("<p,neutral>I'll help you if you can answer a simple puzzle of mine, but...");
+~chatplayer("<p,neutral>There's always a 'but', isn't there?");
+~chatnpc("<p,neutral>...but if you answer incorrectly, I get to keep your cat.");
+if (~p_choice2("Okay, that sounds fair.", 1, "I don't know; I don't want to risk my cat.", 2) = 2) {
+    ~chatplayer("<p,neutral>I don't know; I don't want to risk my cat.");
+    ~chatnpc("<p,sad>How disappointing; well, nothing ventured, nothing gained. Goodbye, then.");
+    return;
+}
+~chatplayer("<p,neutral>Okay, that sounds fair.");
+~chatnpc("<p,quiz>A husband and wife have six sons and each son has one sister. How many people are in the family?");
+def_int $answer = ~p_choice4("7.", 7, "9.", 9, "12.", 12, "14.", 14);
+~chatplayer("<p,neutral>The answer's <tostring($answer)>.");
+~chatnpc("<p,quiz>Are you sure?");
+if ($answer ! 9) ~mesbox("Your cat shakes its head frantically and starts to scratch your leg.");
+if (~p_choice2("Totally positive.", 1, "I don't know; I don't want to risk my cat.", 2) = 2) {
+    ~chatplayer("<p,neutral>I don't know; I don't want to risk my cat.");
+    ~chatnpc("<p,sad>How disappointing; well, nothing ventured, nothing gained. Goodbye, then.");
+    return;
+}
+~chatplayer("<p,neutral>Totally positive.");
+if ($answer ! 9) {
+    ~ics_lose_cat;
+    ~mesbox("Your cat abandons you for the Sphinx.");
+    ~chatnpc("<p,neutral>I think your master has proven that it is too foolish to look after you. Come with me.");
+    ~chatplayer("<p,shock>Oh, come on, you can't take my cat. I've spent so long training and looking after it!");
+    ~chatnpc("<p,neutral>Well, you should have thought of that before you risked it for some advice from a crazy old Sphinx.");
+    return;
+}
+~chatnpc("<p,neutral>Well answered, human. I guess you get to keep your cat.");
+~chatplayer("<p,quiz>Now will you help me?");
+~chatnpc("<p,neutral>Now what was it with which you needed help? Oh yes, I remember; your cat mentioned something about grave-robbing.");
+~chatplayer("<p,angry>I didn't rob anybody's grave!");
+~chatnpc("<p,neutral>Too true, you didn't rob just anybody's tomb, you robbed the grave of the late high priest of Icthlarin.");
+~chatplayer("<p,angry>I didn't. Anyway, there's no proof that I did.");
+if (~ics_has_jar = true) {
+    ~chatnpc("<p,neutral>Really? So explain why the shade of the high priest is ranting about you to the west of here...or how about explaining why you have a burial jar in your possession?");
+    ~chatplayer("<p,shock>How did you know about the burial jar?");
+    ~chatnpc("<p,neutral>Simple: I can smell the rotting organs off you.");
+} else {
+    ~chatnpc("<p,neutral>Really? So explain why the shade of the high priest is ranting about you to the west of here...or how about explaining why you had a burial jar in your possession?");
+    ~chatplayer("<p,shock>How did you know about the burial jar?");
+    ~chatnpc("<p,neutral>Simple: I can still smell the rotting organs off you.");
+}
+~chatplayer("<p,sad>Well, I don't know how it came into my possession. All I know is that one minute I'm entering a tunnel to get into the city and the next I wake up outside this pyramid with a cracking headache and a stinking burial jar in my bag.");
+~chatnpc("<p,quiz>Have you had any strange turns, flashbacks or out-of-body experiences recently?");
+~chatplayer("<p,neutral>Well, as a matter of fact, yes.");
+~chatnpc("<p,neutral>Ah hah. It sounds like someone hypnotised you and forced you to carry out their bidding. I won't get any more involved with your petty human bickerings; I have my own kingdom to look after.");
+~chatnpc("<p,neutral>However, I will give you one bit of advice: seek out the new high priest of the temple south of here. He will help you.");
+~chatplayer("<p,quiz>Are you sure? Everyone else around here seems to be too upset with me to have a proper conversation.");
+~chatnpc("<p,neutral>Here, I have a token that he will know is from me. Take that to him and I'm sure he will talk to you.");
+~ics_give(ics_little_sphinxstatue);
+%ics_little_var = ^ics_token;
+~objbox(ics_little_sphinxstatue, "The Sphinx gives you a token.", 250, 0, 0);
+~chatplayer("<p,neutral>Well, thanks for your advice...although why did you have to drag me through all that?");
+~chatnpc("<p,neutral>The trials of humans concern me not, but I do make exceptions for guardians of my kind.");
+
+// the Sphinx keeps your cat (a follower, else the first cat in the pack)
+[proc,ics_lose_cat]
+%ics_sphinx_robbedcat = 1;
+if (%follower_obj ! null) {
+    def_category $c = oc_category(%follower_obj);
+    if ($c = kitten | $c = cat | $c = overgrown) {
+        if (.npc_finduid(%follower_uid) = true) {
+            %follower_uid = null;
+            %follower_obj = null;
+            %cat_growth = 0;
+            .npc_say("Meeeooow!");
+            .npc_del;
+            return;
+        }
+    }
+}
+def_int $slot = 0;
+def_obj $obj;
+while ($slot < inv_size(inv)) {
+    $obj = inv_getobj(inv, $slot);
+    if ($obj ! null) {
+        if (oc_category($obj) = kitten | oc_category($obj) = cat | oc_category($obj) = overgrown) {
+            %cat_growth = 0;
+            inv_delslot(inv, $slot);
+            return;
+        }
+    }
+    $slot = calc($slot + 1);
+}
+
+[label,ics_sphinx_who]
+~chatplayer("<p,quiz>Who are you?");
+~chatnpc("<p,neutral>I am an agent of neither good nor evil. I am concerned with the plight of mankind and their petty wars and beliefs.");
+~chatplayer("<p,quiz>Well, now that you've told me what you're not, can you please tell me who or what you are?");
+~chatnpc("<p,neutral>I am the guardian of feline kind.");
+~chatplayer("<p,quiz>Why would they need a guardian?");
+~chatnpc("<p,neutral>Cats play a significant role in the religion of this area, particularly when it comes to guarding the dead from The Devourer.");
+~chatplayer("<p,quiz>The Devourer?");
+~chatnpc("<p,neutral>She's the very incarnation of destruction.");
+~chatplayer("<p,confused>I don't understand.");
+~chatnpc("<p,quiz>What understanding do you have of the Menaphite gods?");
+~chatplayer("<p,neutral>Little to none.");
+~chatnpc("<p,neutral>The Menaphite pantheon is made up of four main deities.");
+if (~p_choice2("Go on.", 1, "This is all very interesting but I've got to get going.", 2) = 2) {
+    ~chatplayer("<p,neutral>This is all very interesting but I've got to get going.");
+    return;
+}
+~chatnpc("<p,neutral>The main god which the Menaphites worship is called Tumeken. His wife, Elidinis, is the goddess of fertility and growth.");
+~chatnpc("<p,neutral>Tumeken and Elidinis had two children: Icthlarin and The Devourer.");
+~chatplayer("<p,neutral>With a name like The Devourer, it's no wonder the kid turned out to be messed up.");
+~chatnpc("<p,neutral>She was not always called such. She is thought of by her deeds, now, rather than her name.");
+~chatplayer("<p,quiz>So, then, we've got a simple case of good sibling fighting against bad sibling?");
+~chatnpc("<p,neutral>No, it's not really that simple. Neither are either good or bad. Icthlarin is the god of the dead and takes care of the passing of souls from one plane to another.");
+~chatnpc("<p,neutral>Once long ago, he even was worshipped by the Mahjarrat but they have since turned away from him.");
+~chatnpc("<p,neutral>The Devourer is the goddess of destruction; she craves only to destroy things.");
+~chatplayer("<p,quiz>I thought you said she wasn't evil?");
+~chatnpc("<p,quiz>Fire destroys, but is that evil?");
+~chatplayer("<p,neutral>Um, no, but it also creates heat.");
+~chatnpc("<p,neutral>Okay, we could have an overlong theological debate now, but to get to my point, recently - well, in the last age or so - The Devourer has taken to destroying humans.");
+~chatplayer("<p,quiz>And...?");
+~chatnpc("<p,neutral>Not just killing them; totally destroying them, body and soul. This has brought her into conflict with Icthlarin.");
+~chatplayer("<p,neutral>Ah hah, I see where this is going: the cats are used to protect the dead from The Devourer, like you said earlier. But who protects the cats?");
+~chatnpc("<p,neutral>Well anticipated. The Devourer is terrified of cats for reasons I will not explain, but her followers - although few in number - are not. I ensure the survival of cats and, for this service, Icthlarin grants me eternal life.");
+~chatplayer("<p,quiz>So, then, you are a follower of Icthlarin?");
+~chatnpc("<p,neutral>Nothing of the sort. As I've said before, I have no interest in humans. I look after my kind and, for that, Icthlarin looks after me.");
+@ics_sphinx_menu;
+
+[label,ics_sphinx_town]
+~chatplayer("<p,quiz>What's going on in town?");
+~chatnpc("<p,neutral>I thought that this would be pretty obvious.");
+~chatplayer("<p,neutral>Well, I could benefit from your point of view; you seem the independent type.");
+~chatnpc("<p,happy>Flattery, my adventurer, will get you everywhere. But to answer your question, Sophanem has been struck down with plagues.");
+~chatplayer("<p,shock>What? More than one?");
+~chatnpc("<p,neutral>Quite a number; there's a plague of frogs to the west of town and, in the east, you can find locusts.");
+~chatnpc("<p,neutral>The livestock are diseased, the cows have only been producing sour milk since the outbreak and the remaining residents have been struck down by some rash of spots.");
+~chatplayer("<p,quiz>The remaining residents? There are a lot of living people here for a city of the dead.");
+~chatnpc("<p,neutral>Sophanem is called the city of the dead because the dead are brought here. Death plays a rather large role in the beliefs of the people and, as a result, the business.");
+~chatplayer("<p,quiz>So how did they get out with all those guards at the gate?");
+~chatnpc("<p,neutral>When the plague first broke out, many of the resident tradespeople fled before the priests of Icthlarin decided to quarantine the city to prevent the plague being passed on to others living nearby.");
+~chatplayer("<p,quiz>So, what caused the plague to break out?");
+~chatnpc("<p,neutral>Some irritated god or other...or, perhaps, some peevish human; their grievances interest me little.");
+@ics_sphinx_menu;
+
+// ---------------------------------------------------------------- the High Priest in town
+[opnpc1,ics_little_hipriest_town]
+def_int $s = %ics_little_var;
+if ($s < ^ics_token) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,angry>I will have no dealings with those who plunder the houses of the dead.");
+    ~chatnpc("<p,angry>Get thee gone from my presence.");
+    return;
+}
+if ($s = ^ics_token) @ics_priest_token;
+if ($s = ^ics_return_jar | $s = ^ics_stole_jar) {
+    if (~ics_has_jar = false & %ics_little_var = ^ics_return_jar) {
+        ~chatnpc("<p,neutral>One of my priests found this lying outside the pyramid. Please try to be more respectful of our dead."); // the OSRS wiki
+        ~ics_give(~ics_jar);
+        ~objbox(~ics_jar, "The High Priest gives you a burial jar.", 250, 0, 0);
+        return;
+    }
+    ~chatnpc("<p,quiz>Have you managed to return the jar yet?");
+    ~chatplayer("<p,neutral>No, not yet.");
+    ~chatnpc("<p,sad>Can you please hurry up? The people are beginning to...erm...");
+    ~chatplayer("<p,quiz>What? Question your sanity?");
+    ~chatnpc("<p,neutral>Um...well, no, just my authority. Don't forget that to enter the pyramid, you need a cat.");
+    return;
+}
+if ($s = ^ics_jar_returned) @ics_priest_ceremony_ask;
+if ($s = ^ics_ceremony_prep) {
+    ~chatnpc("<p,quiz>Have you helped the embalmer and the carpenter to get all they need yet?");
+    if (inv_total(inv, ics_little_holy_symbol) > 0) {
+        ~chatplayer("<p,neutral>I've collected all the things that they asked for. I have the holy symbol now."); // ours
+        ~chatnpc("<p,neutral>Then I must leave for the ceremonial room in the pyramid, to get things underway. Meet me there."); // ours
+        return;
+    }
+    if (%ics_gotsalt = 1 & %ics_gotsap = 1 & %ics_gotlinen = 1) {
+        ~chatplayer("<p,neutral>I've collected all the things that they asked for. I'm just waiting on he carpenter for the holy symbol now.");
+        ~chatnpc("<p,neutral>Perhaps you should go and check back with him. I'm probably going to leave for the ceremonial room soon, to get things underway.");
+        return;
+    }
+    ~chatplayer("<p,neutral>I have plenty of things to do yet.");
+    ~chatnpc("<p,sad>Do hurry up; I'm being driven demented with these infernal spots.");
+    return;
+}
+if ($s = ^ics_return_town) @ics_priest_reward;
+if ($s >= ^ics_complete) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,happy>Ah, there you are. I must thank you again; your victory over The Devourer's beast was magnificent."); // ours, from his last words
+    return;
+}
+~chatnpc("<p,neutral>Protect us from The Devourer's minion.");
+
+[label,ics_priest_token]
+~chatplayer("<p,neutral>Hello.");
+if (%ics_givensphinxstatue = 0) {
+    ~chatnpc("<p,angry>I will have no dealings with those who plunder the houses of the dead.");
+    ~chatplayer("<p,shock>Wait! The Sphinx told me that I should talk to you.");
+    ~chatnpc("<p,quiz>The Sphinx? Is it possible? That contrary old cat has never done anything to help us. Prove it!");
+    if (inv_total(inv, ics_little_sphinxstatue) = 0) {
+        ~chatplayer("<p,sad>She gave me a statue but I lost it.");
+        ~chatnpc("<p,angry>Stop wasting my time; can't you see I'm trying to put a stop to this plague?");
+        return;
+    }
+    inv_del(inv, ics_little_sphinxstatue, 1);
+    %ics_givensphinxstatue = 1;
+    ~objbox(ics_little_sphinxstatue, "You hand the statue to the high priest.", 250, 0, 0);
+} else {
+    ~chatplayer("<p,neutral>I've already given you proof.");
+    ~chatnpc("<p,confused>Ummm... So you have.");
+}
+~chatnpc("<p,neutral>Hmmm...|So, what do you want then.");
+~chatplayer("<p,neutral>Well, there's this jar that's come into my possession.");
+if (~ics_has_jar = false) {
+    ~chatnpc("<p,quiz>What kind of jar? A burial jar?");
+    ~chatplayer("<p,neutral>I guess so.");
+    ~chatnpc("<p,shock>Oh no! What am I going to do? What am I going to do? Umm, yes, I have it. Um...");
+    ~chatplayer("<p,quiz>What?");
+    ~chatnpc("<p,confused>Um. What what?");
+    ~chatplayer("<p,angry>What is wrong with you?");
+    ~chatnpc("<p,quiz>You don't mean...this jar?");
+    ~mesbox("The priest shows you the canopic jar which you had previously been holding.");
+    ~chatplayer("<p,neutral>Yes, that looks like it.");
+    ~chatnpc("<p,quiz>Oh dear, oh dear. What do you intend to do with it?");
+    ~chatplayer("<p,neutral>Well, I'm just happy to be without it. I don't even know how I got it in the first place.");
+    ~chatnpc("<p,quiz>Would you return it to its rightful place if I gave it to you?");
+    ~chatplayer("<p,quiz>I suppose so. Where would that be, exactly?");
+    ~chatnpc("<p,neutral>There is a room to the north of the pyramid containing a number of jars. That is its rightful place.");
+    ~ics_give(~ics_jar);
+    ~mesbox("The priest hands you the jar.");
+} else {
+    ~chatnpc("<p,quiz>What, a burial jar?");
+    ~chatplayer("<p,neutral>I guess so.");
+    ~chatnpc("<p,shock>Oh no! What am I going to do? What am I going to do? Umm, yes, I have it. Um...");
+    ~chatplayer("<p,quiz>What?");
+    ~chatnpc("<p,confused>Um. What what?");
+    ~chatplayer("<p,angry>What is wrong with you?");
+    ~chatnpc("<p,sad>Sorry, I'm still well...you know?");
+    ~chatplayer("<p,angry>What? Come on, spit it out.");
+    ~chatnpc("<p,sad>You know...new.");
+    ~chatplayer("<p,quiz>What do you mean, 'new'?");
+    ~chatnpc("<p,sad>It's my first week on the job and already I've had an outbreak of plagues, half the population has fled the town and, to top it off, some adventurer has desecrated the tomb of the old high priest.");
+    ~chatplayer("<p,sad>Yeah, that was probably me...");
+    ~chatnpc("<p,shock>You did?");
+    ~chatplayer("<p,quiz>Yes... Do you think I should return the jar, then?");
+    ~chatnpc("<p,neutral>Um, yes. That would be a good idea...wouldn't it?");
+}
+%ics_little_var = ^ics_return_jar;
+~chatplayer("<p,quiz>So, do you have any tips about the pyramid, seeing as it was probably your priests who built it?");
+~chatnpc("<p,neutral>Well, um...you could try to avoid the traps?");
+~chatplayer("<p,quiz>Any other useful advice to go with that?");
+~chatnpc("<p,happy>Oh yes, how could I forget! The key to getting into the pyramid is to have a cat.");
+~chatplayer("<p,quiz>Have a cat?");
+~chatnpc("<p,quiz>Didn't the Sphinx tell you that cats act as guardians against The Devourer?");
+~chatplayer("<p,neutral>She may have.");
+~chatnpc("<p,neutral>So, it stands to reason that only they should be able to open the pyramid door. Ask your cat to help when you intend to enter.");
+~chatplayer("<p,neutral>Ummm...I see. 'Ask my cat', you said. Anyway, I had better return this jar.");
+
+[label,ics_priest_ceremony_ask]
+~chatnpc("<p,quiz>Have you managed to return the jar yet?");
+~chatplayer("<p,quiz>Yes, but why are you still spotty and why have only some of the plagues lifted?");
+~chatnpc("<p,confused>Ummm, ah, well...um...");
+~mesbox("The high priest flaps about in near complete panic.");
+~chatplayer("<p,angry>Look, pull yourself together.|Are you the high priest or not?");
+~chatnpc("<p,neutral>I am.");
+~chatplayer("<p,quiz>Do your people need you to lead them in this troubled time or not?");
+~chatnpc("<p,angry>By Icthlarin, they do and I will lead them.");
+~chatplayer("<p,quiz>So then why haven't the plagues completely left?");
+~chatnpc("<p,neutral>Because all the ceremonies haven't been completed yet and Klenter, the old high priest, grows weary of the mortal realm.");
+~chatplayer("<p,angry>What ceremonies? Why didn't you mention this before?");
+~chatnpc("<p,sad>Umm...I guess I forgot.");
+~chatplayer("<p,angry>You forgot? No matter. What has to be done, then?");
+~chatnpc("<p,neutral>Actually, very little is left to be done. Most of the prayers have already been said but the embalmer still has a bit of work to do.");
+~chatnpc("<p,neutral>I have my own preparations to make, but could you help out the town's carpenter and embalmer?");
+if (~p_choice2("Sure, no problem.", 1, "I could, for a price...", 2) = 1) {
+    ~chatplayer("<p,happy>Sure, no problem.");
+    ~chatnpc("<p,happy>Thank you, <displayname>. You'll be handsomely rewarded for your services to Icthlarin.");
+} else {
+    ~chatplayer("<p,neutral>Sure, for a price...");
+    ~chatnpc("<p,neutral>Don't worry; you will be handsomely rewarded.");
+    ~chatplayer("<p,neutral>So, what kind of reward are we talking about? It's not as if I'm going up against a couple of cave crawlers or anything.");
+    ~chatplayer("<p,angry>So far, a god or something has hypnotised me and made me run through a mummy and trap infested pyramid to steal the internal organs of some dead priest.");
+    ~chatplayer("<p,quiz>This reward really better be worth a lot. What are we talking about? Gold? Weapons? Pointy hats? I've got to know before I make a decision to help or not.");
+    ~chatnpc("<p,neutral>It's none of those things and it's of no monetary value whatsoever.");
+    ~chatplayer("<p,shock>You're kidding me, right?");
+    ~chatnpc("<p,neutral>To quote someone else, 'all that glitters is not gold.'");
+    ~chatplayer("<p,neutral>Hang on, I think you have that one wrong.");
+    ~chatnpc("<p,quiz>I have?");
+    ~chatplayer("<p,neutral>When you say, 'all that glitters', you imply that everything that's flashy isn't valuable - like gold. Now this...");
+    ~chatnpc("<p,angry>Oh, just listen. What I'm offering you is something a bit different but quite useful, nonetheless. So, will you help or not?");
+    if (~p_choice2("You're not really selling this to me.", 1, "Well, I suppose I really should help; this is partly my fault.", 2) = 1) {
+        ~chatplayer("<p,neutral>You're not really selling this to me. I'd rather go fishing or chop down trees for a while.");
+        ~chatnpc("<p,sad>So much for Gielinor's greatest adventurer.");
+        ~chatplayer("<p,neutral>I've played out my part in this mess already; I was forced to steal a jar but now I have returned it. Job done, thank you very much.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Well, I suppose I really should help; this is partly my fault.");
+}
+~chatplayer("<p,quiz>Okay, so what exactly do you want me to do, then?");
+~chatnpc("<p,neutral>I need you to tell the carpenter to create a new holy symbol for the ceremony. Also, you should talk to the embalmer. I know that he's having problems getting supplies into the town with the quarantine.");
+%ics_little_var = ^ics_ceremony_prep;
+
+[label,ics_priest_reward]
+~chatnpc("<p,happy>Ah, there you are, <displayname>. I've been waiting for you.");
+~chatnpc("<p,happy>I must thank you again; your victory over The Devourer's beast was magnificent.");
+~chatnpc("<p,sad>It's only a pity that we haven't won an outright victory over her. Well, I'll just have to get used to these spots and the sour milk the cows are producing, not to mention those darned frogs outside.");
+~chatplayer("<p,neutral>I'm sure the frog problem could be solved easily enough. A few cats could go a long way in reducing their numbers.");
+~chatnpc("<p,neutral>You're right, of course. Anyway, where did I put that trinket I promised you?");
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>I would reward you but, by the looks of you, I doubt you could carry any more baggage.");
+    ~chatplayer("<p,neutral>I guess you're right. I could do with dropping some of this junk. I'll be back; just don't lose my reward.");
+    return;
+}
+~chatnpc("<p,happy>Ah, yes, I have it here. I'm sure you'll get a huge amount of enjoyment out of it.");
+~ics_complete;
+
+// the OSRS wiki's rewards: 2 quest points, 4,500 Thieving, 4,000 Agility and 4,000 Woodcutting
+// experience, and the catspeak amulet
+[proc,ics_complete]
+if (inv_freespace(inv) > 0) inv_add(inv, ics_little_amulet_of_catspeak, 1);
+%ics_little_var = ^ics_complete;
+%ics_little_priestvis = 0;
+stat_advance(thieving, 45000);
+stat_advance(agility, 40000);
+stat_advance(woodcutting, 40000);
+session_log(^log_adventure, "Quest complete: Icthlarin's Little Helper");
+~send_quest_complete(questlist:ics_little, ics_little_amulet_of_catspeak, 250, ^ics_questpoints, "You have completed\\nIcthlarin's Little Helper!", "2 Quest Points|4,500 Thieving XP|4,000 Agility XP|4,000 Woodcutting XP|Catspeak amulet|Access to Sophanem");
+
+// ---------------------------------------------------------------- the ceremony
+[opnpc1,ics_little_hipriest_ceremony]
+if (%ics_little_var ! ^ics_priest_beaten) {
+    ~chatnpc("<p,neutral>Protect us from The Devourer's minion.");
+    return;
+}
+~chatnpc("<p,happy>Thank you so much, adventurer. We have defeated The Devourer; the plagues should abate now.");
+~chatplayer("<p,quiz>Then why are you still covered in spots?");
+~chatnpc("<p,shock>What? So I am. Somehow, I don't think this is over. The Devourer will not concede defeat so easily, after all.");
+~chatplayer("<p,quiz>So what happened? I returned the jars and we performed the final ceremony... Why will Klenter's spirit not rest now?");
+~chatnpc("<p,neutral>The only explanation I can think of is that some other adventurer has repeated your mistakes and stolen a burial jar whilst we were here.");
+~chatplayer("<p,quiz>So what do I have to do now?");
+~chatnpc("<p,neutral>Nothing, nothing. You've done all you can.");
+~chatplayer("<p,angry>What? I can sort this; come on, tell me what to do and I'll sort it.");
+~chatnpc("<p,neutral>We must find the adventurer who has carried out this theft and get him to return the jar. Then, we will have to perform the ceremony again.");
+~chatplayer("<p,quiz>So this cycle could repeat itself endlessly?");
+~chatnpc("<p,neutral>Well, until one of the sides gives up, that is. Anyway, I have a gift for you back in town. But first, I have a few things to sort out here.");
+if (inv_total(inv, ics_little_holy_symbol) > 0) {
+    ~chatplayer("<p,neutral>You'd better keep this holy symbol, not that it did much good.");
+    ~chatnpc("<p,neutral>You might be surprised to know that we wouldn't have been able to complete the ceremony without that in our presence, nor would you have been able to defeat The Wanderer's minion so easily.");
+    ~chatplayer("<p,neutral>I'll hold onto my doubts. Anyway, you should take this.");
+    ~ics_del_all(ics_little_holy_symbol);
+    ~mesbox("You hand the high priest the holy symbol.");
+}
+~chatplayer("<p,neutral>I still don't feel right, though, about this whole thing. There are still so many loose ends untied.");
+~chatnpc("<p,quiz>What do you mean?");
+~chatplayer("<p,confused>Well, for one, I still don't know why I didn't complete my task for The Devourer.");
+~chatplayer("<p,neutral>I have a feeling that I'll get my answers soon enough.");
+~mesbox("The now-familiar feeling of memories shooting to the surface of your thoughts overcomes you.");
+%ics_little_var = ^ics_icthlarin;
+~ics_fade_tele(0_51_143_15_19);
+~chatplayer("<p,neutral>I must return the jar to the mistress.");
+~chatnpc_specific("Icthlarin", ics_little_ic_vis, "<p,angry>What's this? A mortal thieving from my domain? This will not do.");
+~chatnpc_specific("Icthlarin", ics_little_ic_vis, "<p,angry>I command you to halt.");
+~chatplayer("<p,angry>Never! The mistress will have the jar and the high priest's soul.");
+~chatnpc_specific("Icthlarin", ics_little_ic_vis, "<p,angry>This is no mere mortal in front of me.|Amascut, release your hold on this human.");
+~chatplayer("<p,shock>Agh!|Nooo.");
+~chatnpc_specific("Icthlarin", ics_little_ic_vis, "<p,neutral>Arise, spirit of Klenter.|Protect your soul.");
+~mesbox("You despairingly reach for the ladder before your vision fades out.");
+%ics_little_var = ^ics_return_town;
+%ics_little_priestvis = 0;
+~ics_fade_tele(0_51_43_30_29);
+~mesbox("You exit Klenter's pyramid and return to the high priest of the temple of Icthlarin."); // ours: no choice, the transcript's "Yes"
+
+[opnpc1,ics_little_priest_ceremony]
+if (%ics_little_var >= ^ics_priest_beaten) {
+    ~chatnpc_specific("Priest", ics_little_priest, "<p,happy>Thank you, unbeliever; your heroic efforts have saved the day. I shudder to think of the fallout if we were to have lost another high priest so soon after the last.");
+    return;
+}
+~chatnpc_specific("Priest", ics_little_priest, "<p,shock>Protect us from The Devourer's minion.");
+
+// ---------------------------------------------------------------- the temple's priests (Jex in RS)
+[opnpc1,ics_little_priest]
+def_int $s = %ics_little_var;
+~chatplayer("<p,neutral>Hello.");
+if ($s >= ^ics_complete) {
+    ~chatnpc("<p,happy>Greetings, non-believer. May the blessings of Icthlarin rest on your tired shoulders and may they set you at ease during interesting times.");
+    return;
+}
+if ($s >= ^ics_jar_returned) {
+    ~chatnpc("<p,neutral>Bother me not, I am in preparation for the burial ceremony. I'm sure even you can curb your trivial demands until after that.");
+    return;
+}
+if ($s >= ^ics_return_jar) {
+    ~chatnpc("<p,angry>Cursed one, why have you not yet returned the burial jar of our old leader?");
+    ~chatplayer("<p,neutral>I'm working on that still.");
+    ~chatnpc("<p,angry>I wonder how someone as insignificant as you even managed to get inside the pyramid, never mind reach its heart.");
+    return;
+}
+if ($s = ^ics_token) {
+    ~chatnpc("<p,angry>What does the cursed one want?");
+    ~chatplayer("<p,neutral>The Sphinx told me to find the high priest of Icthlarin.");
+    ~chatnpc("<p,angry>A likely story. She would never reduce herself to talk to one as lowly as you, never mind help you.");
+    return;
+}
+if ($s >= ^ics_hypnotised) {
+    ~chatnpc("<p,angry>What business does the cursed one have with a servant of Icthlarin?");
+    if (~ics_has_jar = true) {
+        ~chatplayer("<p,neutral>I need some help getting rid of this jar.");
+    } else {
+        ~chatplayer("<p,neutral>I need some helping figuring out what's going on.");
+    }
+    ~chatnpc("<p,angry>I will not aid a defiler of the dead. Get ye gone; your presence is soiling my austere aura.");
+    return;
+}
+~chatnpc("<p,neutral>Nobody may enter or leave Sophanem for any reason, so says the new High Priest of Icthlarin."); // ours: the doorman's words before the quest
+
+[opnpc1,ics_little_priestdoorman]
+def_int $s = %ics_little_var;
+if ($s >= ^ics_complete) {
+    ~chatnpc("<p,happy>Good day, adventurer. I must thank you for protecting our High Priest, though I was sad to hear of the death of one of our brethren. Word is that it was quite the battle.");
+    ~chatplayer("<p,happy>It was nothing, really. I'm quite good at that type of thing.");
+    ~chatnpc("<p,neutral>Don't let us keep you. I'm sure you've got plenty of other important questing to get on with.");
+    return;
+}
+if ($s >= ^ics_ceremony_prep) {
+    ~chatnpc("<p,neutral>You're the adventurer who's helping the High Priest, aren't you? You can pass through the gate if you wish.");
+    ~chatplayer("<p,happy>Thank you.");
+    return;
+}
+~chatnpc("<p,neutral>Nobody may enter or leave Sophanem for any reason, so says the new High Priest of Icthlarin.");
+
+// ---------------------------------------------------------------- the embalmer
+[opnpc1,ics_little_embalmer]
+def_int $s = %ics_little_var;
+if ($s >= ^ics_complete) {
+    ~chatplayer("<p,neutral>Hi there.");
+    ~chatnpc("<p,sad>Hello.");
+    ~chatplayer("<p,sad>I can see you're a bit down. I'm sorry that the plague hasn't lifted just yet.");
+    ~chatnpc("<p,neutral>Well, I suppose that's only to be expected. The old high priest was a vindictive sort. He could hold a grudge forever.");
+    ~chatplayer("<p,neutral>I really hope for your sake he cannot.");
+    ~chatnpc("<p,sad>He might just make this city of the dead a dead city if he does carry on for much longer. Anyway, I'm rambling.");
+    return;
+}
+if ($s < ^ics_jar_returned) {
+    if ($s >= ^ics_hypnotised) {
+        ~chatnpc("<p,angry>Clear off, you evil body snatcher. You won't get any of my wares.");
+        return;
+    }
+    ~chatnpc("<p,neutral>Sorry, adventurer, I have nothing to trade with you."); // the transcript's trade line
+    return;
+}
+if ($s = ^ics_jar_returned) {
+    ~chatplayer("<p,neutral>Hi.");
+    ~chatnpc("<p,neutral>Hello.|What can I do for you?");
+    ~chatplayer("<p,neutral>Nothing in particular; I'm just curious about a few things.");
+    ~chatnpc("<p,angry>Well, you can take your curiosity elsewhere.");
+    return;
+}
+if ($s > ^ics_ceremony_prep | inv_total(inv, ics_little_holy_symbol) > 0) {
+    ~chatplayer("<p,neutral>Hello.");
+    switch_int (random(4)) {
+        case 0 : ~chatnpc("<p,angry>Heh!!");
+        case 1 : ~chatnpc("<p,angry>Hrmph!!");
+        case 2 : ~chatnpc("<p,angry>Keh!!");
+        case default : ~chatnpc("<p,angry>Pah!!");
+    }
+    ~chatplayer("<p,confused>Real friendly! No?");
+    return;
+}
+if (%ics_metembalmer = 0) {
+    ~chatnpc("<p,neutral>Good day to you. I won't say you're welcome into my workplace, because you're not. However, I must apologise if I was outrightly hostile towards you earlier.");
+    ~chatplayer("<p,neutral>Don't worry about it...too much. We've got to work together now to put that dreadful spirit to rest.");
+    ~chatnpc("<p,neutral>I'll admit that I shed no tears when he passed away. He was a rather cruel and hard leader.");
+    ~chatnpc("<p,neutral>Well, there's no point in complaining about him. I want rid of his cursed plague as soon as possible and, according to the high priest, the best way to do that is to carry out the final ceremony.");
+    ~chatplayer("<p,neutral>Of course you're right. Now, can I help you with anything?");
+    ~chatnpc("<p,neutral>Yes, because of the quarantine I cannot leave Sophanem. You seem to have been left unaffected by it so perhaps the guards will let you out of the city.");
+    ~chatplayer("<p,neutral>I think entering and leaving the city shouldn't be a problem.");
+    ~chatnpc("<p,happy>Good, that's what I like to hear. Now, to carry out the ceremony, I need three things.");
+    ~chatnpc("<p,neutral>I need some linen to wrap the corpse up. That should be easily obtained from Raetul the cloth salesman here in the town. His silk stall's north-east of here.");
+    ~chatnpc("<p,neutral>I also need some salt and some sap. I need the salt to preserve the body and the sap for sealing the bandages.");
+    ~chatplayer("<p,quiz>Where will I get those?");
+    ~chatnpc("<p,neutral>Well, with an empty bucket, you can get salty water from the shore of the salt lake, immediately north-west of Sophanem's north gate.");
+    ~chatnpc("<p,neutral>I also hear Slayer masters sell salt to disintegrate rock slugs. That'd work too.");
+    ~chatplayer("<p,quiz>How about the sap?");
+    ~chatnpc("<p,neutral>The sap you should be able to get easily enough from any coniferous tree. You'll need something to collect the sap. Here, have a bucket or two.");
+    ~chatplayer("<p,quiz>Coniferous?");
+    ~chatnpc("<p,neutral>Evergreen, cone shaped, you know the ones I'm talking about.");
+    %ics_metembalmer = 1;
+    ~ics_give(bucket_empty);
+    ~ics_give(bucket_empty);
+    ~mesbox("The embalmer gives you two buckets.");
+    ~chatplayer("<p,quiz>But where would I find one of those trees here in the desert?");
+    ~chatnpc("<p,neutral>Evergreens don't grow in the desert. There's evergreens in Asgarnia, north of Falador and on White Wolf Mountain.");
+    return;
+}
+if (%ics_gotsalt = 1 & %ics_gotsap = 1 & %ics_gotlinen = 1) {
+    ~chatnpc("<p,quiz>Well, you've collected all the things that I need, so when's this plague going to end?");
+    ~chatplayer("<p,neutral>I have to get a symbol from the carpenter. I think the priests can start the ceremony once they have that.");
+    return;
+}
+if (%ics_gotlinen = 0) {
+    ~chatnpc("<p,quiz>Have you got the linen I asked for?");
+    if (inv_total(inv, ics_little_linen) = 0) {
+        ~chatplayer("<p,neutral>No, not yet.");
+        ~chatnpc("<p,angry>Well, can you get on with it?");
+    } else {
+        inv_del(inv, ics_little_linen, 1);
+        %ics_gotlinen = 1;
+        ~objbox(ics_little_linen, "You hand a sheet of linen to the embalmer.", 250, 0, 0);
+    }
+}
+if (%ics_gotsalt = 0) {
+    ~chatnpc("<p,quiz>Have you got the salt I asked for?");
+    if (inv_total(inv, ics_little_pileofsalt) > 0) {
+        inv_del(inv, ics_little_pileofsalt, 1);
+        %ics_gotsalt = 1;
+        ~objbox(ics_little_pileofsalt, "You hand the embalmer the salt which you have carefully purified.", 250, 0, 0);
+    } else if (inv_total(inv, slayer_bag_of_salt) > 0) {
+        inv_del(inv, slayer_bag_of_salt, 1);
+        %ics_gotsalt = 1;
+        ~objbox(slayer_bag_of_salt, "You hand the embalmer a bag of salt.", 250, 0, 0);
+    } else {
+        ~chatplayer("<p,neutral>No, not yet.");
+        ~chatnpc("<p,angry>So hurry up! There's a salt lake just north of the city. You can get salty water from it with a bucket.");
+    }
+}
+if (%ics_gotsap = 0) {
+    ~chatnpc("<p,quiz>Have you got the sap I asked for?");
+    if (inv_total(inv, ics_little_sap_bucket) = 0) {
+        ~chatplayer("<p,neutral>No, not yet.");
+        ~chatnpc("<p,angry>Well, can you get on with it?");
+        return;
+    }
+    inv_del(inv, ics_little_sap_bucket, 1);
+    inv_add(inv, bucket_empty, 1); // ours: he gives the bucket back
+    %ics_gotsap = 1;
+    ~objbox(ics_little_sap_bucket, "You hand the bucket of sap to the embalmer.", 250, 0, 0);
+}
+if (%ics_gotsalt = 1 & %ics_gotsap = 1 & %ics_gotlinen = 1) {
+    ~chatnpc("<p,happy>That's everything I need to get the ceremony underway. I'll send word to the high priest to get things started.");
+    ~chatplayer("<p,neutral>I don't think everything's ready just yet; the carpenter still has to finish some work.");
+    ~chatnpc("<p,neutral>Never-the-less, I'll let the high priest know that everything's sorted from this side.");
+}
+
+// ---------------------------------------------------------------- the carpenter
+[opnpc1,ics_little_carpenter]
+def_int $s = %ics_little_var;
+if ($s >= ^ics_complete) {
+    ~chatplayer("<p,neutral>Hey there, how're you holding up?");
+    ~chatnpc("<p,sad>Well, I suppose things could be worse, though I really did have my hopes up I thought you could fix things up.");
+    ~chatplayer("<p,sad>I suppose that makes two of us.");
+    ~chatnpc("<p,neutral>Well, I've got a business to run here. I can't keep feeling sorry for myself for ever.");
+    return;
+}
+if ($s < ^ics_jar_returned) {
+    ~chatplayer("<p,neutral>Good day.");
+    if ($s < ^ics_hypnotised) {
+        ~chatnpc("<p,neutral>Sorry, adventurer, I have nothing to trade with you.");
+        return;
+    }
+    ~chatnpc("<p,angry>Get away from me you filthy grave robber.");
+    ~chatplayer("<p,angry>I did no such thing.");
+    ~chatnpc("<p,angry>So explain why that spectre is accusing you of such a crime. The dead rarely have need for lies.");
+    return;
+}
+if ($s = ^ics_jar_returned) {
+    ~chatplayer("<p,neutral>Good day.");
+    ~chatnpc("<p,angry>Good day, grave robber. What do you want?");
+    ~chatplayer("<p,neutral>I'm not a ghoul. Well, not by choice, anyway. I've just put the burial jar back.");
+    ~chatnpc("<p,angry>Well aren't you wonderful! Do you want a medal for your efforts.");
+    ~chatplayer("<p,neutral>I think I detect a touch of resentment from you.");
+    ~chatnpc("<p,angry>I'd hope so. Because of your actions, I'm covered with the most awful spots, I've been forced to close my business down, there are hordes of giant frogs and locust roaming the streets and all the nearby livestock are sick.");
+    ~chatplayer("<p,sad>Would an apology cover the damage?");
+    ~mesbox("The carpenter glares angrily at you. You notice a vein on his left temple starting to bulge...");
+    ~chatplayer("<p,neutral>I think I should probably be going.");
+    return;
+}
+~chatplayer("<p,neutral>Good afternoon.");
+~chatnpc("<p,neutral>Hello, adventurer.");
+if (%ics_little_carpenter_multi = 1) {
+    if ($s > ^ics_ceremony_prep | inv_total(inv, ics_little_holy_symbol) > 0) {
+        ~chatnpc("<p,quiz>Have you given the symbol to the high priest yet?");
+        if (inv_total(inv, ics_little_holy_symbol) > 0) {
+            ~chatplayer("<p,neutral>I would have if I could have found him.");
+            ~chatnpc("<p,neutral>Well, if he's not in town, then I'm sure he must be down in the pyramid getting the ceremony underway.");
+            return;
+        }
+        @ics_carpenter_lost;
+    }
+    ~chatplayer("<p,quiz>Is the symbol ready yet?");
+    if (%ics_gotsalt = 0 | %ics_gotsap = 0 | %ics_gotlinen = 0) {
+        ~chatnpc("<p,angry>No, now look... I'm busy trying to get this thing finished. If you don't stop annoying me, it will never get done.");
+        return;
+    }
+    ~chatnpc("<p,neutral>Just adding the finishing touches.");
+    ~chatnpc("<p,happy>Okay, it's finished here you go.");
+    if (inv_freespace(inv) = 0) {
+        ~chatplayer("<p,neutral>Actually, I can't take that off you. I'm over-burdened as it is. I'll just go drop something first.");
+        ~chatnpc("<p,angry>Get a move on; I'm really getting sick of these spots.");
+        return;
+    }
+    inv_add(inv, ics_little_holy_symbol, 1);
+    ~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, 0);
+    ~chatplayer("<p,neutral>Thanks, I guess.");
+    ~chatnpc("<p,neutral>You should get that to the high priest as soon as possible. We're all really getting sick of these plagues.");
+    ~chatplayer("<p,neutral>Yeah, yeah, yeah.");
+    ~chatnpc("<p,neutral>Oh, one more thing. I think that the high priest has had a particularly bad dose of these spots so he's gone off to start the ceremony already.");
+    return;
+}
+if (%ics_metcarpenter = 0) {
+    ~chatnpc("<p,neutral>Apologies if I was a little on the cold side earlier, but the high priest said that you're working with him and that's good enough for me.");
+    ~chatplayer("<p,neutral>Thank you for your understanding. If I had been given a dose of acne, had my business ruined and my town turned upside-down by hordes of plague creatures by some outsider, I would be more than a little angry too.");
+    ~chatnpc("<p,quiz>So, does the high priest have any instructions for me?");
+    ~chatplayer("<p,neutral>He said he needs you to craft a new holy symbol for the ceremony.");
+    ~chatnpc("<p,neutral>Yes. I remember he gave me some drawings a few days ago. Now what wood was it to be made of again?");
+    ~chatnpc("<p,neutral>Give me a second.");
+    ~chatnpc("<p,neutral>Ah yes, I remember now, it was to be made of willow. Though there's a small problem with that.");
+    ~chatplayer("<p,neutral>Oh, great. Here's the bit where you say you need me to get you something.");
+    ~chatnpc("<p,happy>Wow, you're quick. I'm all out of willow wood and seeing as I'm unable to get any more due to the quarantine, I'm going to need some help with this.");
+    if (~p_choice2("Why should I help?", 1, "Alright, I'll get the wood for you.", 2) = 1) {
+        ~chatplayer("<p,quiz>Why should I help?");
+        ~chatnpc("<p,angry>Well, seeing as I have gotten this dreadful dermatological disease as a direct result of some of your antics, I think you should be duty bound to help me.");
+        ~chatplayer("<p,neutral>Well, I suppose you may have a point. Now, do you have any idea where I might find some willow trees around here?");
+    } else {
+        ~chatplayer("<p,neutral>Alright, I'll get the wood for you.");
+        ~chatnpc("<p,happy>Great.");
+        ~chatplayer("<p,quiz>Now do you have any idea where I might find some willow trees around here?");
+    }
+    ~chatnpc("<p,neutral>I know of no willow trees that grow in the desert. They're a fairly common tree in the more verdant climate of Misthalin and Asgarnia. A good place to start's between Varrock and Lumbridge.");
+    %ics_metcarpenter = 1;
+    return;
+}
+~chatnpc("<p,quiz>Have you got the logs yet?");
+if (inv_total(inv, willow_logs) > 0) {
+    inv_del(inv, willow_logs, 1);
+    %ics_little_carpenter_multi = 1;
+    ~chatplayer("<p,happy>Yes, I have some here for you.");
+    ~chatnpc("<p,neutral>That's good. I'll have the symbol ready for you shortly. I'm sure you have plenty of other important things to do in the meanwhile.");
+    ~chatplayer("<p,quiz>Hang on, what do you mean you'll have it ready for me shortly?");
+    ~chatnpc("<p,neutral>Well, last time I checked, the job description for a carpenter is to craft things out of wood, while you, being an adventurer, need to run around doing thankless tasks for people in need...and right now I need you to do this.");
+    ~chatplayer("<p,neutral>Okay, I'll be back.");
+    return;
+}
+if (inv_total(bank, willow_logs) > 0) {
+    ~chatplayer("<p,neutral>I have some in the bank. I'd better nip off and get them then.");
+    ~chatnpc("<p,angry>In your own good time. Don't rush on my behalf; I'm only half crippled with these pus-filled pustules of penance.");
+    return;
+}
+~chatplayer("<p,neutral>No, I'm still working on that.");
+~chatnpc("<p,angry>Well then, hurry up and get me those willow logs.");
+
+[label,ics_carpenter_lost]
+~chatplayer("<p,sad>Actually, there's a slight problem with the holy symbol.");
+~chatnpc("<p,shock>What? What? I made that symbol to exactly match the drawings I was given. I can't believe this.");
+~chatplayer("<p,neutral>Look, calm down; I'm sure there's nothing wrong with the symbol you made. I've just lost it.");
+def_string $who = "man";
+if (gender() ! 0) $who = "woman";
+~chatnpc("<p,angry>Aghhh!!! You stupid <$who>. Will I ever be free of these plagues? First it was the spots, now it's stupidity.");
+~chatplayer("<p,neutral>Can you please calm down? I gave you plenty of willow wood. I'm sure there's some left over for another symbol.");
+~chatnpc("<p,sad>Sorry, it's just these spots. They have me half demented. Just hang on a second and I'll make up another one.");
+if (inv_freespace(inv) = 0) {
+    ~chatplayer("<p,neutral>I can't carry anymore. I'll come back later and get it off you.");
+    ~chatnpc("<p,angry>Oh, do hurry up, will you. I really need this interminable itching to end.");
+    return;
+}
+inv_add(inv, ics_little_holy_symbol, 1);
+~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, 0);
+~chatnpc("<p,neutral>Here you go. Now, do hurry up and get this to the ceremony.");
+
+// ---------------------------------------------------------------- the cloth seller (Raetul)
+[opnpc1,ics_little_linen1]
+def_int $s = %ics_little_var;
+if ($s >= ^ics_hypnotised & $s < ^ics_jar_returned) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,angry>Clear off you despicable vagabond.");
+    return;
+}
+if ($s >= ^ics_complete) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,angry>I see you have managed to mess things up again.");
+    ~chatplayer("<p,quiz>Why do you say that?");
+    ~chatnpc("<p,neutral>Well the ceremony should have been over by now, yet the plagues remain.");
+    ~chatplayer("<p,sad>Unfortunately some other hapless adventurer was tricked in the same manner as me.");
+    ~chatnpc("<p,angry>All you adventurers are alike!");
+    ~chatplayer("<p,quiz>In what way?");
+    ~chatnpc("<p,angry>You're all trouble.");
+    ~chatnpc("<p,neutral>Well I could hold it against you, but then again adventurers are my best customers and because of this quarantine my only customers. So may I interest you in any of my wares?");
+    @ics_raetul_shop;
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,happy>Good afternoon.");
+~chatplayer("<p,quiz>Is it?");
+~chatnpc("<p,happy>It's hot and sunny, which is good enough for me. So can I help you with anything?");
+if ($s = ^ics_ceremony_prep & %ics_metembalmer = 1 & %ics_gotlinen = 0 & inv_total(inv, ics_little_linen) = 0) {
+    ~chatplayer("<p,neutral>I've met with the town's embalmer and he mentioned that he needed a few things, linen being one of them.");
+    ~chatnpc("<p,happy>Ah yes, very good. Very good. Here, I have just the thing for you.");
+    if (inv_total(inv, coins) < 30) {
+        mes("You can not afford that.");
+        ~chatplayer("<p,quiz>So can I have it?");
+        ~chatnpc("<p,neutral>I've a business to run.|I'll sell you this sheet of linen for 30 gold coins.");
+        ~chatplayer("<p,neutral>Hang onto it while I get some money.");
+        return;
+    }
+    if (inv_freespace(inv) = 0) {
+        ~mesbox("The cloth merchant motions to hand you a sheet of linen.");
+        ~chatplayer("<p,neutral>Can I pick it up from you again later? I don't think I'm able to carry anymore.");
+        ~chatnpc("<p,neutral>You can of course, but you'll have to remind me, my memory isn't as good as it used be.");
+        return;
+    }
+    ~chatnpc("<p,happy>That will be 30 coins please and thank you.");
+    inv_del(inv, coins, 30);
+    inv_add(inv, ics_little_linen, 1);
+    ~objbox(ics_little_linen, "The merchant takes your money and hands you a sheet of linen before you realise that a transaction has been agreed.", 250, 0, 0);
+    ~chatplayer("<p,shock>What the..?");
+    ~chatnpc("<p,happy>Thank you come again.");
+    return;
+}
+@ics_raetul_shop;
+
+[label,ics_raetul_shop]
+if (~p_choice2("What do you have?", 1, "No thanks.", 2) = 1) {
+    ~openshop(sophanem_cloth_store, 550, 1000, 10, "Raetul and Co's Cloth Store."); // ours: the usual multipliers
+    return;
+}
+~chatplayer("<p,neutral>No thanks.");
+
+// Siamun (the RuneScape wiki: before the jar is back, "Clear off..."; after, a grunt)
+[opnpc1,ics_little_linen2]
+~chatplayer("<p,neutral>Hello.");
+if (%ics_little_var >= ^ics_hypnotised & %ics_little_var < ^ics_jar_returned) {
+    ~chatnpc("<p,angry>Clear off you despicable vagabond.");
+    return;
+}
+switch_int (random(4)) {
+    case 0 : ~chatnpc("<p,angry>Hah!!");
+    case 1 : ~chatnpc("<p,angry>Hrmph!!");
+    case 2 : ~chatnpc("<p,angry>Keh!!");
+    case default : ~chatnpc("<p,angry>Pah!!");
+}
+~chatplayer("<p,confused>Real friendly! No?");
+
+// ---------------------------------------------------------------- the slaves
+[opnpc1,ics_little_worker1] @ics_slave;
+[opnpc1,ics_little_worker2] @ics_slave;
+
+[label,ics_slave]
+if (%ics_little_var >= ^ics_complete) {
+    ~chatplayer("<p,happy>Hi!");
+    ~chatnpc("<p,angry>What do you want?");
+    ~chatplayer("<p,quiz>What's wrong?");
+    ~chatnpc("<p,angry>Word has it that you very nearly spoiled our fun!");
+    ~chatplayer("<p,quiz>What, you're upset that I tried to put the high priest's soul to rest?");
+    ~chatnpc("<p,angry>So that we could get back to work again? What makes you believe that he even deserves such a burial?");
+    ~chatplayer("<p,quiz>Doesn't everyone?");
+    ~chatnpc("<p,angry>What, even those that gain through the blood, sweat, tears and misery of others?");
+    ~chatplayer("<p,sad>I was just trying to help and, as it turns out, I've not achieved not a whole lot.");
+    return;
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,happy>Hey there!");
+~chatplayer("<p,neutral>You seem rather happy for an enslaved labourer with a bad case of spots.");
+~chatnpc("<p,happy>These spots are the best thing since log rollers!");
+~chatplayer("<p,confused>I really don't follow.");
+~chatnpc("<p,happy>Well you see, since the outbreak of the plagues, the city has been under quarantine and has been unable to import anything.");
+~chatplayer("<p,neutral>So...");
+~chatnpc("<p,happy>So, no quarried rock has been able to get in. So, we have had no work to do. I hope the plague lasts forever.");
+~chatplayer("<p,quiz>But aren't the spots intolerable?");
+~chatnpc("<p,neutral>I would take a dermatological irritation over back-breaking, mind-numbing labour any day. Although, there are other downsides.");
+if (~p_choice2("Dermi wha?", 1, "Tell me about these downsides, then.", 2) = 1) {
+    ~chatplayer("<p,confused>Dermi wha?");
+    ~chatnpc("<p,neutral>You know - when your epidermis...");
+    ~chatplayer("<p,confused>...?");
+    ~chatnpc("<p,neutral>Your hide? Your skin? Your bark?");
+    ~chatplayer("<p,neutral>I get ya. Now what were we talking about again? Oh, yes.");
+}
+~chatplayer("<p,quiz>Tell me about these downsides, then.");
+~chatnpc("<p,sad>Well, the cows have the plague too, so all they produce is sour milk...and plagued beef has me considering the unthinkable.");
+~chatplayer("<p,quiz>What, starvation?");
+~chatnpc("<p,shock>No, something far worse!");
+~chatplayer("<p,quiz>What?");
+~chatnpc("<p,shock>Vegetarianism!");
+~mesbox("A visible shiver runs down the back of the slave.");
+
+// ---------------------------------------------------------------- the plague cows and Neite
+[opnpc1,ics_little_plague_cow1] @ics_pet_cow;
+[opnpc1,ics_little_plague_cow2] @ics_pet_cow;
+[opnpc1,ics_little_plague_cow3] @ics_pet_cow;
+
+[label,ics_pet_cow]
+~chatplayer("<p,neutral>Don't worry cow, I'm sure someone will find a cure for this plague soon.");
+npc_say("Moo.");
+mes("The cow makes a pathetic attempt to moo.");
+
+[opnpc1,ics_little_cat]
+~chatnpc("<p,happy>Meow."); // ours

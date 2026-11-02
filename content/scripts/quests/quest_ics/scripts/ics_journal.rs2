@@ -1,0 +1,29 @@
+// EASCape: Icthlarin's Little Helper's journal. Ours: no source has its journal text, so these lines
+// say what the wiki's quick guide has you do next.
+[if_button,questlist:ics_little]
+def_int $s = %ics_little_var;
+if ($s = ^ics_not_started) {
+    ~quest_journal("Icthlarin's Little Helper", "@dbl@I can start this quest by talking to the @dre@Wanderer@dbl@ at her tent|@dbl@west of the @dre@Agility Pyramid@dbl@, in the south of the desert.|@dbl@I will need to have completed @dre@Gertrude's Cat@dbl@, bring a @dre@cat@dbl@,|@dbl@and be able to defeat a @dre@level 91@dbl@ monster.");
+    return;
+}
+if ($s >= ^ics_complete) {
+    ~quest_journal("Icthlarin's Little Helper", "@str@A wanderer hypnotised me into robbing the tomb of Klenter,|@str@the late high priest of Icthlarin. I returned his burial jar,|@str@helped prepare his ceremony and protected the priests|@str@when the wanderer - the Devourer herself - struck.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@A wanderer in the desert told me of a secret way into|@str@Sophanem, the city of the dead.||";
+def_string $next;
+switch_int ($s) {
+    case ^ics_supplies : $next = "@dbl@She wants a @dre@full waterskin@dbl@ and a @dre@tinderbox@dbl@ before she will tell|@dbl@me more.";
+    case ^ics_hypnotised : $next = "@dbl@I woke up in @dre@Sophanem@dbl@ with a burial jar and a ghost cursing me.|@dbl@Perhaps touching the @dre@pyramid door@dbl@ will bring back memories.";
+    case ^ics_remembered : $next = "@dbl@I remember being hypnotised. The @dre@Sphinx@dbl@ north-east of the|@dbl@pyramid may know more; I should bring my @dre@cat@dbl@.";
+    case ^ics_token : $next = "@dbl@The Sphinx gave me a @dre@token@dbl@ to show the @dre@High Priest@dbl@ in the|@dbl@temple in the south of the city.";
+    case ^ics_return_jar : $next = "@dbl@I must return the burial jar to the room of jars in the|@dbl@pyramid. Only a @dre@cat@dbl@ can open the pyramid door.";
+    case ^ics_stole_jar : $next = "@dbl@I really did steal the jar. I should put it back in the|@dre@burial room@dbl@ where I took it from.";
+    case ^ics_jar_returned : $next = "@dbl@The jar is back. I should tell the @dre@High Priest@dbl@.";
+    case ^ics_ceremony_prep : $next = "@dbl@The @dre@embalmer@dbl@ needs linen, salt and sap; the @dre@carpenter@dbl@ needs|@dre@willow logs@dbl@ for a holy symbol. Then I should take the symbol to|@dbl@the ceremony in the pyramid.";
+    case ^ics_symbol_hidden : $next = "@dbl@I hid the Devourer's symbol in the ceremonial room! I must|@dbl@warn the priests in the @dre@ceremonial room@dbl@.";
+    case ^ics_fight : $next = "@dbl@The Devourer has possessed a priest. I must protect the|@dbl@others.";
+    case ^ics_priest_beaten, ^ics_icthlarin : $next = "@dbl@The priest is free again. I should speak to the @dre@High Priest@dbl@ in|@dbl@the ceremonial room.";
+    case default : $next = "@dbl@The @dre@High Priest@dbl@ has a gift for me back at the temple.";
+}
+~quest_journal("Icthlarin's Little Helper", append($t, $next));
