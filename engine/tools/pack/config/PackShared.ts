@@ -653,15 +653,14 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 // EASCape: locs may be added after the 14974 from 377 (the Warriors' Guild, 21 Oct
                 // 2026); the 377 ones (the first 735813 bytes) must still match. Fairytale II (27 Oct
                 // 2026) gave the Queen's throne the 2007 cache's third state (fairy_throne_multi).
+                // Tears of Guthix (2 Nov 2026, your call): the weeping wall (tog_weepingwall) loses
+                // forceapproach=west, so the north and south walls can be reached from the cave; that
+                // takes 2 bytes out of the 377 locs, hence 735811 and the new checksum.
                 const original = 14974;
-                const count = (client.data[0] << 8) | client.data[1];
-                if (count <= original) {
-                    return Packet.checkcrc(client.data, 0, client.pos, -767308590);
-                }
-                const copy = Uint8Array.from(client.data.subarray(0, 735813));
+                const copy = Uint8Array.from(client.data.subarray(0, 735811));
                 copy[0] = original >> 8;
                 copy[1] = original & 0xff;
-                return Packet.checkcrc(copy, 0, copy.length, -767308590);
+                return Packet.checkcrc(copy, 0, copy.length, -1712756223);
             }
         );
     }
