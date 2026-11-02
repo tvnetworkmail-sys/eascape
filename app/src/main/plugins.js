@@ -14,6 +14,7 @@ const CHECKED_2006 = new Set([
   'kingdom', // made for EASCape's 2006 Miscellania (31 Oct 2026)
   'frame2007', // made for EASCape (31 Oct 2026)
   'crystalbow', // made for EASCape (31 Oct 2026)
+  'tears', // made for EASCape's Tears of Guthix (2 Nov 2026)
 ]);
 
 function notChecked(d) {

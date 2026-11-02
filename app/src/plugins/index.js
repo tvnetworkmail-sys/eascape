@@ -39,6 +39,7 @@ module.exports = [
   require('./loottracker/descriptor'),
   require('./farming/descriptor'),
   require('./kingdom/descriptor'),
+  require('./tears/descriptor'),
   require('./frame2007/descriptor'),
   require('./crystalbow/descriptor'),
   require('./chatnotifications/descriptor'),
