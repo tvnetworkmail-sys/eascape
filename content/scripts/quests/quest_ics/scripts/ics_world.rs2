@@ -293,7 +293,7 @@ if (%ics_little_var = ^ics_ceremony_prep & inv_total(inv, ics_little_holy_symbol
 // Ours: you step through to the square on the far side.
 [oploc1,loc_6643]
 def_int $inside = ^false;
-if (coordz(coord) < coordz(loc_coord)) $inside = ^true;
+if (coordz(coord) <= coordz(loc_coord)) $inside = ^true; // the door is on the north edge of its square, so inside is on it or south of it
 if (coordx(loc_coord) < 3295) {
     @ics_burial_door($inside);
 }
