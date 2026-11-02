@@ -326,7 +326,7 @@ if (%feud_var ! ^feud_lured) {
 def_int $seen = 0;
 npc_huntall(coord, 4, 0);
 while (npc_findnext = true) {
-    if (compare(npc_name, "Villager") = 0 | compare(npc_name, "Bandit") = 0 | compare(npc_name, "Menaphite Thug") = 0) $seen = add($seen, 1);
+    if (npc_type = feud_villager_multi_1 | npc_type = feud_villager_multi_2 | npc_type = feud_villager_multi_3 | npc_type = feud_arabian_guard_multi | npc_type = feud_arabian_guard2_multi | npc_type = feud_egyptian_doorman_multi) $seen = add($seen, 1);
 }
 if ($seen > 1) {
     mes("There are too many people around. Lure the villager somewhere quieter."); // ours
@@ -430,3 +430,23 @@ if (random(2) = 0) {
 anim(stop_spinning_plate, 0);
 p_delay(0);
 anim(emote_cheer, 0);
+
+// the multi base types (the engine runs a multi npc's ops on its base type)
+[opnpc3,feud_villager_multi_1] @feud_villager_pickpocket;
+[opnpc4,feud_villager_multi_1] @feud_villager_lure;
+[opnpc5,feud_villager_multi_1] @feud_villager_knockout;
+[opnpc3,feud_villager_multi_2] @feud_villager_pickpocket;
+[opnpc4,feud_villager_multi_2] @feud_villager_lure;
+[opnpc5,feud_villager_multi_2] @feud_villager_knockout;
+[opnpc3,feud_villager_multi_3] @feud_villager_pickpocket;
+[opnpc4,feud_villager_multi_3] @feud_villager_lure;
+[opnpc5,feud_villager_multi_3] @feud_villager_knockout;
+[opnpc3,feud_arabian_guard_multi] mes("They're watching you too closely.");
+[opnpc4,feud_arabian_guard_multi] mes("They're watching you too closely.");
+[opnpc5,feud_arabian_guard_multi] mes("They're watching you too closely.");
+[opnpc3,feud_arabian_guard2_multi] mes("They're watching you too closely.");
+[opnpc4,feud_arabian_guard2_multi] mes("They're watching you too closely.");
+[opnpc5,feud_arabian_guard2_multi] mes("They're watching you too closely.");
+[opnpc3,feud_egyptian_doorman_multi] mes("They're watching you too closely.");
+[opnpc4,feud_egyptian_doorman_multi] mes("They're watching you too closely.");
+[opnpc5,feud_egyptian_doorman_multi] mes("They're watching you too closely.");

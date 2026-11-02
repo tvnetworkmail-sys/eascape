@@ -230,6 +230,8 @@ if (%feud_var < ^feud_drunk_told) %feud_var = ^feud_drunk_told;
 ~chatplayer("<p,neutral>What do you think?");
 
 // ---------------------------------------------------------------- the bandits
+[opnpc1,feud_arabian_guard_multi] @feud_bandit_talk(false);
+[opnpc1,feud_arabian_guard2_multi] @feud_bandit_talk(false);
 [opnpc1,feud_arabian_guard1_1] @feud_bandit_talk(false);
 [opnpc1,feud_arabian_guard1_2] @feud_bandit_talk(false);
 [opnpc1,feud_arabian_guard2_1] @feud_bandit_talk(false);
@@ -324,6 +326,7 @@ if ($s = ^feud_bandits_beaten) {
 ~chatnpc("<p,angry>What do you want?");
 
 // ---------------------------------------------------------------- the Menaphite thugs
+[opnpc1,feud_egyptian_doorman_multi] @feud_thug_talk;
 [opnpc1,feud_egyptian_doorman_1] @feud_thug_talk;
 [opnpc1,feud_egyptian_doorman_2] @feud_thug_talk;
 
@@ -620,7 +623,9 @@ switch_int (~p_choice3("In what way?", 1, "Well the weak will always be trodden 
 }
 
 // ---------------------------------------------------------------- Ali the Mayor
-[opnpc1,feud_mayor_geom]
+[opnpc1,feud_mayor] @feud_mayor_talk;
+[opnpc1,feud_mayor_geom] @feud_mayor_talk;
+[label,feud_mayor_talk]
 def_int $s = %feud_var;
 if ($s >= ^feud_complete) {
     // Transcript:Ali the Mayor
@@ -793,7 +798,7 @@ if (~feud_find_villager(10) = true) npc_say("Excuse me?");
 [proc,feud_find_villager](int $range)(boolean)
 npc_huntall(coord, $range, 0);
 while (npc_findnext = true) {
-    if (compare(npc_name, "Villager") = 0) return(true);
+    if (npc_type = feud_villager_multi_1 | npc_type = feud_villager_multi_2 | npc_type = feud_villager_multi_3) return(true);
 }
 return(false);
 
@@ -1123,7 +1128,10 @@ if ($s = ^feud_drink_poisoned) {
 ~chatplayer("<p,neutral>Nothing, thanks."); // ours
 
 // ---------------------------------------------------------------- the Menaphite Leader
-[opnpc1,feud_menap_boss_vis]
+[opnpc1,feud_menap_boss] @feud_menap_boss_talk;
+[opnpc1,feud_menap_boss2] @feud_menap_boss_talk;
+[opnpc1,feud_menap_boss_vis] @feud_menap_boss_talk;
+[label,feud_menap_boss_talk]
 if (%feud_var ! ^feud_meet_leader) return;
 if (%feud_var_menaboss = 1) {
     npc_say("Guards!");
@@ -1147,7 +1155,9 @@ if (%feud_var_menaboss = 1) {
 @feud_toughguy_call;
 
 // ---------------------------------------------------------------- the Bandit Leader
-[opnpc1,feud_bandit_boss_vis]
+[opnpc1,feud_bandit_boss] @feud_bandit_boss_talk;
+[opnpc1,feud_bandit_boss_vis] @feud_bandit_boss_talk;
+[label,feud_bandit_boss_talk]
 def_int $s = %feud_var;
 if ($s = ^feud_bandits_beaten) {
     ~chatplayer("<p,angry>I told you to clear off! Why are you still here?");
@@ -1177,6 +1187,9 @@ if (%feud_var_banditboss = 1) {
 @feud_champion_call;
 
 // ---------------------------------------------------------------- villagers
+[opnpc1,feud_villager_multi_1] @feud_villager_talk;
+[opnpc1,feud_villager_multi_2] @feud_villager_talk;
+[opnpc1,feud_villager_multi_3] @feud_villager_talk;
 [opnpc1,feud_villager_1_1] @feud_villager_talk;
 [opnpc1,feud_villager_1_2] @feud_villager_talk;
 [opnpc1,feud_villager_1_3] @feud_villager_talk;
@@ -1422,5 +1435,7 @@ inv_add(inv, $dye, 1);
 ~objbox($dye, $box, 250, 0, 0);
 
 // the blackjack seller stands in town once the feud is over (ours: no transcript)
+[opnpc1,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
+[opnpc3,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
 [opnpc1,feud_bjseller] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
 [opnpc3,feud_bjseller] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
