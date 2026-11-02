@@ -19,6 +19,8 @@ import { canTravel, changeNpcCollision, changeBlockCollision, changePlayerOccCol
 import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
 import World from '#/engine/World.js';
 import NpcType from '#/cache/config/NpcType.js';
+import ParamType from '#/cache/config/ParamType.js';
+import { ParamHelper } from '#/cache/config/ParamHelper.js';
 
 type TargetSubject = {
     type: number;
@@ -658,6 +660,15 @@ export default abstract class PathingEntity extends Entity {
         // Noclip stuff, I guess. God mode
         if (this.moveStrategy === MoveStrategy.FLY) {
             return [dx, dz];
+        }
+
+        // EASCape: npcs with the eascape_fly param fly over anything (the light creature carrying you
+        // across the Chasm of Tears; Void walks it with noCollision)
+        if (this instanceof Npc) {
+            const fly: number = ParamType.getId('eascape_fly');
+            if (fly !== -1 && ParamHelper.getIntParam(fly, NpcType.get(this.type), 0) === 1) {
+                return [dx, dz];
+            }
         }
 
         // Move diagonal
