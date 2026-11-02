@@ -20,16 +20,36 @@ if (distance(npc_coord, coord) > 8 | coordx(coord) > 3238) {
     return;
 }
 def_coord $dest = 2_50_148_24_58;
-if (coordz(coord) > 9515) $dest = 2_50_148_24_32;
+def_coord $over = 2_50_148_24_53; // the creature's last square over the chasm (Void: it flies you to the edge)
+if (coordz(coord) > 9515) {
+    $dest = 2_50_148_24_32;
+    $over = 2_50_148_24_34;
+}
 mes("The light creature is attracted to your beam and comes towards you...");
+// Void: the creature flies over to you (it can only move over the chasm: moverestrict=blocked)
+def_coord $near = movecoord(coord, 0, 0, -1);
+if (coordz(coord) < 9515) $near = movecoord(coord, 0, 0, 1);
+npc_walk($near);
+def_int $wait = 0;
+while ($wait < 8 & distance(npc_coord, coord) > 1) {
+    p_delay(0);
+    $wait = calc($wait + 1);
+}
 npc_facesquare(coord);
 npc_anim(light_creature_grow, 0);
 anim(tog_player_float_up, 0);
 sound_synth(light_creature_up, 1, 0);
 p_delay(3);
 ~bas_set_all(tog_player_float_across);
-// ours: you glide across (the creature stays put; Void sends it along with you)
-~carpet_glide($dest);
+// you and the creature cross together, a square a tick
+def_int $dx = calc(coordx($dest) - coordx(coord));
+def_int $dz = calc(coordz($dest) - coordz(coord));
+def_int $dist = max(abs($dx), abs($dz));
+def_int $dir = ^exact_north;
+if ($dz < 0) $dir = ^exact_south;
+npc_walk($over);
+p_exactmove(coord, $dest, 0, multiply($dist, 30), $dir);
+p_delay(sub($dist, 1));
 anim(tog_player_float_down, 0);
 npc_anim(light_creature_shrink, 0);
 sound_synth(light_creature_down, 1, 0);
