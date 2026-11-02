@@ -57,7 +57,7 @@ while (coord ! $dest) {
     if ($sz < 0) $dir = ^exact_south;
     $next = movecoord(coord, $sx, 0, $sz);
     npc_walk(movecoord($next, -1, 0, -1));
-    p_exactmove(coord, $next, 0, 30, $dir);
+    p_exactmove(coord, $next, 30, 60, $dir); // a tick late: the npc takes its step on the next tick
     p_delay(0);
 }
 anim(tog_player_float_down, 0);
