@@ -10,8 +10,8 @@ if (%tog_juna_bowl = ^tog_bowl) {
 }
 def_string $t = "@str@I met Juna the serpent in a deep chasm beneath the|@str@Lumbridge Swamp Caves. I made a bowl out of magical stone in|@str@order to catch the Tears of Guthix.||@red@QUEST COMPLETE!||@dbl@Now Juna will let me into the cave to collect the Tears if I @dre@tell|@dre@her stories@dbl@ of my adventures.|";
 def_int $days = calc(7 - (date_runeday - %tog_last_day));
-if (%tog_last_day > 0 & %qp <= %tog_qp_before_return) {
-    $t = append($t, "@dbl@I need to gain a @dre@quest point@dbl@ before Juna will want more stories.");
+if (%tog_last_day > 0 & ~tog_had_adventures = false) {
+    $t = append($t, "@dbl@I need to gain a @dre@quest point@dbl@ or @dre@100,000 experience@dbl@ before Juna will|@dbl@want more stories.");
 } else if (%tog_last_day > 0 & $days > 0) {
     $t = append($t, "@dbl@I will be able to collect the Tears of Guthix @dre@in <tostring($days)> days@dbl@.");
 } else {

@@ -84,10 +84,9 @@ if (%tog_juna_bowl = ^tog_complete & %tog_last_day > 0) {
     def_int $days = calc(7 - (date_runeday - %tog_last_day));
     def_string $when = "in <tostring($days)> days";
     if ($days = 1) $when = "tomorrow";
-    if (%qp <= %tog_qp_before_return) {
+    if (~tog_had_adventures = false) {
         ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Your story has entertained me. But it is a poor sort of adventurer who only tells stories of the past and does not find new stories to tell. I will not let you into the cave again until you have had more adventures!");
-        // ours: the OSRS wiki also counts 100,000 experience; the 2007 cache keeps only the quest points
-        ~mesbox("You cannot enter the cave again until you have gained a quest point.");
+        ~mesbox("You cannot enter the cave again until you have gained a quest point or 100,000 experience.");
         return;
     }
     if ($days > 0) {
@@ -183,6 +182,23 @@ stat_advance($low, calc($tears * $each));
 mes(~tog_stat_message($low));
 %tog_last_day = date_runeday;
 %tog_qp_before_return = %qp;
+%tog_xp_before_return = ~tog_total_xp_k;
+
+// the OSRS wiki: a quest point or 100,000 experience since your last visit
+[proc,tog_had_adventures]()(boolean)
+if (%qp > %tog_qp_before_return) return(true);
+if (calc(~tog_total_xp_k - %tog_xp_before_return) >= 100) return(true);
+return(false);
+
+// your total experience in thousands (each skill rounded down; stat_xp is in tenths)
+[proc,tog_total_xp_k]()(int)
+def_int $i = 1;
+def_int $total = 0;
+while ($i <= enum_getoutputcount(stats)) {
+    $total = calc($total + stat_xp(enum(int, stat, stats, $i)) / 10000);
+    $i = calc($i + 1);
+}
+return($total);
 
 [proc,tog_stat_order](int $i)(stat)
 switch_int ($i) {

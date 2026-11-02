@@ -73,10 +73,25 @@ if (%tog_minigame_collecting = 0 | inv_getobj(worn, ^wearpos_rhand) ! tog_bowl) 
     mes("You need Juna's stone bowl to collect the tears."); // ours
     return;
 }
+// Void: you stand right in front of the wall (west of the east walls, north of the south ones,
+// south of the north ones) before you lean in
+def_coord $stand = movecoord(loc_coord, -1, 0, 0);
+if (loc_angle = 1) $stand = movecoord(loc_coord, 0, 0, 1);
+if (loc_angle = 3) $stand = movecoord(loc_coord, 0, 0, -1);
+def_coord $wall = loc_coord;
+if (coord ! $stand) {
+    p_walk($stand);
+    def_int $wait = 0;
+    while (coord ! $stand & $wait < 10) {
+        p_delay(0);
+        $wait = calc($wait + 1);
+    }
+    if (coord ! $stand) return;
+}
 p_arrivedelay;
-facesquare(loc_coord);
+facesquare($wall);
 anim(tog_lean_forward_bowl, 0);
-settimer(tog_collect, 1, loc_coord, coord);
+settimer(tog_collect, 1, $wall, coord);
 
 // every tick while you stand at the wall (Void: a blue tear adds one, a green one takes one)
 [timer,tog_collect](coord $wall, coord $stand)
