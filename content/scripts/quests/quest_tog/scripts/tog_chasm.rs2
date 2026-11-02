@@ -25,29 +25,28 @@ if (distance(npc_coord, coord) > 8 | coordx(coord) > 3238) {
 def_coord $dest = 2_50_148_24_58;
 if (coordz(coord) > 9515) $dest = 2_50_148_24_32;
 mes("The light creature is attracted to your beam and comes towards you...");
-// Void: the creature flies over to you (it can only move over the chasm: moverestrict=blocked)
-def_coord $near = movecoord(coord, 0, 0, -1);
-if (coordz(coord) < 9515) $near = movecoord(coord, 0, 0, 1);
-npc_walk($near);
+// Void: the creature flies over to you, grows round you and carries you across. Ours: it becomes the
+// carrying creature (eascape_fly, defaultmode=none so it doesn't wander off) before it flies over.
+npc_changetype(tog_light_creature_carrying, 60);
+npc_setmode(null); // the carrying creature's default: no wandering
+npc_walk(movecoord(coord, -1, 0, -1));
 def_int $wait = 0;
-while ($wait < 8 & distance(npc_coord, coord) > 1) {
+while ($wait < 10 & npc_coord ! movecoord(coord, -1, 0, -1)) {
     p_delay(0);
     $wait = calc($wait + 1);
 }
-npc_facesquare(coord);
+npc_tele(movecoord(coord, -1, 0, -1));
 npc_anim(light_creature_grow, 0);
 anim(tog_player_float_up, 0);
 sound_synth(light_creature_up, 1, 0);
 p_delay(3);
 ~bas_set_all(tog_player_float_across);
-// Void: it becomes the creature carrying you (bigger, round you) and you cross inside it, a square a tick
+// you and the creature cross together, a square a tick
 def_int $dx = calc(coordx($dest) - coordx(coord));
 def_int $dz = calc(coordz($dest) - coordz(coord));
 def_int $dist = max(abs($dx), abs($dz));
 def_int $dir = ^exact_north;
 if ($dz < 0) $dir = ^exact_south;
-npc_changetype(tog_light_creature_carrying, calc($dist + 4));
-npc_tele(movecoord(coord, -1, 0, -1));
 npc_walk(movecoord($dest, -1, 0, -1));
 p_exactmove(coord, $dest, 0, multiply($dist, 30), $dir);
 p_delay(sub($dist, 1));
@@ -57,6 +56,9 @@ sound_synth(light_creature_down, 1, 0);
 p_delay(1);
 ~update_bas;
 buildappearance(worn);
+// it goes back to being a light creature and wanders back over the chasm
+npc_changetype(tog_light_creature, 1);
+npc_setmode(null);
 
 // ---------------------------------------------------------------- the climbing rocks
 // Void: climb over the rocks to the far side; the "down" rocks can only be climbed down (east)
