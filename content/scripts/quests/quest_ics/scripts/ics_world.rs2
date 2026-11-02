@@ -55,6 +55,7 @@ if_close;
 ~fade_out;
 p_delay(2);
 p_telejump($c);
+if (inzone(0_51_143_0_0, 0_51_143_63_63, $c) = true) settimer(ics_crushers, 1);
 p_delay(1);
 ~fade_in;
 p_delay(2);
@@ -582,3 +583,25 @@ inv_add(inv, ics_little_sap_bucket, 1);
 // ---------------------------------------------------------------- Sophanem's odds and ends
 [oploc1,icthalarins_bananatreeempty] mes("There are no bananas left on the tree."); // ours
 [oploc1,icthalarins_spicemarket] mes("You don't find anything of interest."); // ours
+
+// ---------------------------------------------------------------- the wall crushers
+// The RuneScape wiki's transcript: running into one damages you ("You run into a wall crusher.").
+// The 2007 cache places 18 (deserttreasure_wall_crusher, always swinging) in pairs across the
+// corridors. Ours: the timing and the damage (each tick on a crusher's square, 1 in 4, 1-5 damage).
+[proc,ics_on_crusher](coord $c)(boolean)
+if (inzone(0_51_143_24_19, 0_51_143_25_19, $c) = true | inzone(0_51_143_26_18, 0_51_143_27_18, $c) = true) return(true);
+if (inzone(0_51_143_28_19, 0_51_143_29_19, $c) = true | inzone(0_51_143_30_18, 0_51_143_31_18, $c) = true) return(true);
+if (inzone(0_51_143_32_36, 0_51_143_33_36, $c) = true | inzone(0_51_143_35_33, 0_51_143_36_33, $c) = true) return(true);
+if (inzone(0_51_143_35_37, 0_51_143_36_37, $c) = true | inzone(0_51_143_38_32, 0_51_143_39_32, $c) = true) return(true);
+if (inzone(0_51_143_38_36, 0_51_143_39_36, $c) = true) return(true);
+return(false);
+
+[timer,ics_crushers]
+if (inzone(0_51_143_0_0, 0_51_143_63_63, coord) = false) {
+    cleartimer(ics_crushers);
+    return;
+}
+if (~ics_on_crusher(coord) = true & random(4) = 0) {
+    mes("You run into a wall crusher.");
+    ~damage_self(calc(1 + random(5)));
+}
