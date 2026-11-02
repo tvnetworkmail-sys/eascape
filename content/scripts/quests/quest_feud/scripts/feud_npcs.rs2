@@ -793,13 +793,20 @@ if (~feud_find_villager(10) = false) {
 %feud_var = ^feud_distracted;
 %feud_distracted = 1;
 npc_say("Hey you, camel features! Come here.");
-if (~feud_find_villager(10) = true) npc_say("Excuse me?");
-
-[proc,feud_find_villager](int $range)(boolean)
-npc_huntall(coord, $range, 0);
-while (npc_findnext = true) {
-    if (npc_type = feud_villager_multi_1 | npc_type = feud_villager_multi_2 | npc_type = feud_villager_multi_3) return(true);
+if (.npc_find(coord, feud_villager_multi_1, 10, 0) = true) {
+    .npc_say("Excuse me?");
+} else if (.npc_find(coord, feud_villager_multi_2, 10, 0) = true) {
+    .npc_say("Excuse me?");
+} else if (.npc_find(coord, feud_villager_multi_3, 10, 0) = true) {
+    .npc_say("Excuse me?");
 }
+
+// the villagers are multi NPCs, whose base type has no options, so npc_huntall skips them; look
+// for each base type with the secondary npc pointer instead (the urchin stays the active one)
+[proc,feud_find_villager](int $range)(boolean)
+if (.npc_find(coord, feud_villager_multi_1, $range, 0) = true) return(true);
+if (.npc_find(coord, feud_villager_multi_2, $range, 0) = true) return(true);
+if (.npc_find(coord, feud_villager_multi_3, $range, 0) = true) return(true);
 return(false);
 
 // ---------------------------------------------------------------- Ali the Operator

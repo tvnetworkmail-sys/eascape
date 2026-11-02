@@ -322,14 +322,14 @@ if (%feud_var ! ^feud_lured) {
     mes("Not here, someone might see you."); // ours: only a lured villager, somewhere quiet
     return;
 }
-// ours: somewhere quiet means no other townsfolk within a few squares
+// ours: somewhere quiet means no bandit or Menaphite thug within a few squares (multi NPCs, found by
+// base type with the secondary npc pointer)
 def_int $seen = 0;
-npc_huntall(coord, 4, 0);
-while (npc_findnext = true) {
-    if (npc_type = feud_villager_multi_1 | npc_type = feud_villager_multi_2 | npc_type = feud_villager_multi_3 | npc_type = feud_arabian_guard_multi | npc_type = feud_arabian_guard2_multi | npc_type = feud_egyptian_doorman_multi) $seen = add($seen, 1);
-}
+if (.npc_find(coord, feud_arabian_guard_multi, 4, 0) = true) $seen = 2;
+if (.npc_find(coord, feud_arabian_guard2_multi, 4, 0) = true) $seen = 2;
+if (.npc_find(coord, feud_egyptian_doorman_multi, 4, 0) = true) $seen = 2;
 if ($seen > 1) {
-    mes("There are too many people around. Lure the villager somewhere quieter."); // ours
+    mes("There are gang members about. Lure the villager somewhere quieter."); // ours
     return;
 }
 anim(human_blunt_pound, 0);
