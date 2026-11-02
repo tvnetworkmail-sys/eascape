@@ -41,23 +41,17 @@ anim(tog_player_float_up, 0);
 sound_synth(light_creature_up, 1, 0);
 p_delay(3);
 ~bas_set_all(tog_player_float_across);
-// you and the creature cross together, a square a tick, side by side each tick so you stay inside it
-def_int $sx;
-def_int $sz;
-def_int $dir;
-def_coord $next;
+// you and the creature cross together, a square a tick. Npcs take their step on the tick after a
+// script asks, so the creature is always sent one square ahead of you and you stay inside it.
+def_int $dir = ^exact_north;
+if (coordz($dest) < coordz(coord)) $dir = ^exact_south;
+def_coord $next = ~tog_step(coord, $dest);
+npc_walk(movecoord($next, -1, 0, -1));
+p_delay(0);
 while (coord ! $dest) {
-    $sx = 0;
-    if (coordx($dest) > coordx(coord)) $sx = 1;
-    if (coordx($dest) < coordx(coord)) $sx = -1;
-    $sz = 0;
-    if (coordz($dest) > coordz(coord)) $sz = 1;
-    if (coordz($dest) < coordz(coord)) $sz = -1;
-    $dir = ^exact_north;
-    if ($sz < 0) $dir = ^exact_south;
-    $next = movecoord(coord, $sx, 0, $sz);
-    npc_walk(movecoord($next, -1, 0, -1));
-    p_exactmove(coord, $next, 30, 60, $dir); // a tick late: the npc takes its step on the next tick
+    $next = ~tog_step(coord, $dest);
+    p_exactmove(coord, $next, 0, 30, $dir);
+    npc_walk(movecoord(~tog_step($next, $dest), -1, 0, -1));
     p_delay(0);
 }
 anim(tog_player_float_down, 0);
@@ -69,6 +63,16 @@ buildappearance(worn);
 // it goes back to being a light creature and wanders back over the chasm
 npc_changetype(tog_light_creature, 1);
 npc_setmode(null);
+
+// one square from $from towards $to
+[proc,tog_step](coord $from, coord $to)(coord)
+def_int $sx = 0;
+if (coordx($to) > coordx($from)) $sx = 1;
+if (coordx($to) < coordx($from)) $sx = -1;
+def_int $sz = 0;
+if (coordz($to) > coordz($from)) $sz = 1;
+if (coordz($to) < coordz($from)) $sz = -1;
+return(movecoord($from, $sx, 0, $sz));
 
 // ---------------------------------------------------------------- the climbing rocks
 // Void: climb over the rocks to the far side; the "down" rocks can only be climbed down (east)
