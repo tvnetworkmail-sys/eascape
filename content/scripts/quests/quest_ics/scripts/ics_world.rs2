@@ -605,3 +605,8 @@ if (~ics_on_crusher(coord) = true & random(4) = 0) {
     mes("You run into a wall crusher.");
     ~damage_self(calc(1 + random(5)));
 }
+
+// the crushers' check starts whenever you enter the pyramid's map square, however you got there
+[mapzone,0_51_143]
+settimer(ics_crushers, 1);
+@music_playbyregion(coord);
