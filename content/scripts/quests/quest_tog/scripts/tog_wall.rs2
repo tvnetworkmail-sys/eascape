@@ -84,15 +84,24 @@ def_coord $stand = movecoord(loc_coord, -1, 0, 0);
 if (loc_angle = 1) $stand = movecoord(loc_coord, 0, 0, 1);
 if (loc_angle = 3) $stand = movecoord(loc_coord, 0, 0, -1);
 def_coord $wall = loc_coord;
-if (coord ! $stand) {
-    p_walk($stand);
-    def_int $wait = 0;
-    while (coord ! $stand & $wait < 10) {
-        p_delay(0);
-        $wait = calc($wait + 1);
-    }
-    if (coord ! $stand) return;
+if (gettimer(tog_collect) > 0) {
+    cleartimer(tog_collect);
+    if (coord ! $stand) anim(tog_lean_back_bowl, 0);
 }
+cleartimer(tog_walk_wall);
+if (coord = $stand) @tog_lean_in($wall);
+// walk there first; the timer starts collecting once you've arrived
+p_walk($stand);
+settimer(tog_walk_wall, 1, $wall, $stand, calc(map_clock + 20));
+
+[timer,tog_walk_wall](coord $wall, coord $stand, int $until)
+if (coord = $stand) {
+    cleartimer(tog_walk_wall);
+    @tog_lean_in($wall);
+}
+if (map_clock > $until) cleartimer(tog_walk_wall);
+
+[label,tog_lean_in](coord $wall)
 facesquare($wall);
 anim(tog_lean_forward_bowl, 0);
 settimer(tog_collect, 1, $wall, coord);
