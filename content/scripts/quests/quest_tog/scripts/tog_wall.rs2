@@ -1,0 +1,95 @@
+// EASCape: Tears of Guthix - the weeping walls. Void's WeepingWall.kt: nine walls, three blue and
+// three green streams at a time, a stream moving to a dry wall every so often; Collect-from leans
+// in with the bowl and, every tick, a blue stream adds a tear and a green one takes one away. The
+// streams are the 2007 cache's wall decorations (tog_weeping_wall_good/bad/off, _l or _r by the
+// wall). Ours: a random stream moves every 3 ticks (Void moves them in turn), so each stays about
+// 16 ticks (the OSRS wiki).
+
+// the nine walls (Void's tears_of_guthix.spawns) and which way round each one's decoration is
+[proc,tog_wall](int $i)(coord)
+switch_int ($i) {
+    case 0 : return(2_50_148_57_42);
+    case 1 : return(2_50_148_58_42);
+    case 2 : return(2_50_148_59_42);
+    case 3 : return(2_50_148_57_48);
+    case 4 : return(2_50_148_58_48);
+    case 5 : return(2_50_148_59_48);
+    case 6 : return(2_50_148_61_44);
+    case 7 : return(2_50_148_61_45);
+    case default : return(2_50_148_61_46);
+}
+
+// 0 for the walls with the _l decoration, 1 for _r (from the map)
+[proc,tog_wall_r](int $i)(boolean)
+switch_int ($i) {
+    case 1, 3, 5, 7 : return(false);
+    case default : return(true);
+}
+
+// 0 dry, 1 blue, 2 green; leaves the decoration as the active loc
+[proc,tog_wall_state](coord $c)(int)
+if (loc_find($c, tog_weeping_wall_good_l) = true | loc_find($c, tog_weeping_wall_good_r) = true) return(1);
+if (loc_find($c, tog_weeping_wall_bad_l) = true | loc_find($c, tog_weeping_wall_bad_r) = true) return(2);
+if (loc_find($c, tog_weeping_wall_off_l) = true | loc_find($c, tog_weeping_wall_off_r) = true) return(0);
+return(-1);
+
+[proc,tog_wall_set](int $i, int $state)
+def_coord $c = ~tog_wall($i);
+def_loc $new = tog_weeping_wall_off_l;
+if (~tog_wall_r($i) = true) {
+    if ($state = 1) $new = tog_weeping_wall_good_r; else if ($state = 2) $new = tog_weeping_wall_bad_r; else $new = tog_weeping_wall_off_r;
+} else {
+    if ($state = 1) $new = tog_weeping_wall_good_l; else if ($state = 2) $new = tog_weeping_wall_bad_l;
+}
+if (loc_find($c, tog_weeping_wall_good_l) = true) { loc_change($new, ^max_32bit_int); return; }
+if (loc_find($c, tog_weeping_wall_good_r) = true) { loc_change($new, ^max_32bit_int); return; }
+if (loc_find($c, tog_weeping_wall_bad_l) = true) { loc_change($new, ^max_32bit_int); return; }
+if (loc_find($c, tog_weeping_wall_bad_r) = true) { loc_change($new, ^max_32bit_int); return; }
+if (loc_find($c, tog_weeping_wall_off_l) = true) { loc_change($new, ^max_32bit_int); return; }
+if (loc_find($c, tog_weeping_wall_off_r) = true) { loc_change($new, ^max_32bit_int); return; }
+
+// Juna moves a stream: a random flowing wall dries up and a random dry wall takes its colour
+[ai_timer,tog_juna_dummy]
+def_int $from = random(9);
+def_int $tries = 0;
+while (~tog_wall_state(~tog_wall($from)) < 1 & $tries < 20) {
+    $from = random(9);
+    $tries = calc($tries + 1);
+}
+def_int $to = random(9);
+$tries = 0;
+while (~tog_wall_state(~tog_wall($to)) ! 0 & $tries < 20) {
+    $to = random(9);
+    $tries = calc($tries + 1);
+}
+def_int $colour = ~tog_wall_state(~tog_wall($from));
+if ($colour < 1 | ~tog_wall_state(~tog_wall($to)) ! 0) return;
+~tog_wall_set($from, 0);
+~tog_wall_set($to, $colour);
+
+// ---------------------------------------------------------------- collecting
+[oploc1,tog_weepingwall]
+if (%tog_minigame_collecting = 0 | inv_getobj(worn, ^wearpos_rhand) ! tog_bowl) {
+    mes("You need Juna's stone bowl to collect the tears."); // ours
+    return;
+}
+p_arrivedelay;
+facesquare(loc_coord);
+anim(tog_lean_forward_bowl, 0);
+settimer(tog_collect, 1, loc_coord, coord);
+
+// every tick while you stand at the wall (Void: a blue tear adds one, a green one takes one)
+[timer,tog_collect](coord $wall, coord $stand)
+if (%tog_minigame_collecting = 0 | coord ! $stand) {
+    anim(tog_lean_back_bowl, 0);
+    cleartimer(tog_collect);
+    return;
+}
+def_int $state = ~tog_wall_state($wall);
+if ($state = 1) {
+    %tog_tears_collected = min(511, calc(%tog_tears_collected + 1));
+    sound_synth(collect_good_tear, 1, 0);
+} else if ($state = 2 & %tog_tears_collected > 0) {
+    %tog_tears_collected = calc(%tog_tears_collected - 1);
+    sound_synth(collect_bad_tear, 1, 0);
+}

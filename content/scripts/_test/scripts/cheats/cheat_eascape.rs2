@@ -701,6 +701,12 @@ if (compare($name, "runemysteries") = 0) {
     }
     if (inv_freespace(inv) > 0) inv_add(inv, blackjack_oak, 1);
     ~feud_complete; // 500 coins, experience and quest complete scroll (quest_feud/feud_world.rs2)
+} else if (compare($name, "tog") = 0) {
+    if (%tog_juna_bowl = ^tog_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~tog_complete; // experience and quest complete scroll (quest_tog/tog_juna.rs2)
 } else if (compare($name, "ics") = 0) {
     if (%ics_little_var >= ^ics_complete) {
         mes("You've already done that quest.");
@@ -805,7 +811,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -1902,3 +1908,31 @@ if ($n >= ^ics_symbol_hidden & $n < ^ics_return_town) %ics_little_priestvis = 1;
 ~ics_setpot(%ics_little_jar_multi, 0);
 if ($n >= ^ics_hypnotised & $n < ^ics_jar_returned) ~ics_setpot(%ics_little_jar_multi, 1);
 mes("Icthlarin's Little Helper stage: <tostring($n)>");
+
+// ::togpack - what Tears of Guthix needs (the OSRS wiki's item list): a bullseye lantern frame and a
+// sapphire for the sapphire lantern, swamp tar for the Rimmington still, a tinderbox, a chisel, a
+// pickaxe and a rope; you need 43 quest points, 49 Firemaking, 20 Crafting and 20 Mining
+[debugproc,togpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(tog_sapphire_lantern_lit, 1));
+$banked = calc($banked + ~questpack_give(bullseye_lantern_nolens, 1));
+$banked = calc($banked + ~questpack_give(sapphire, 1));
+$banked = calc($banked + ~questpack_give(swamp_tar, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(chisel, 1));
+$banked = calc($banked + ~questpack_give(bronze_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(rope, 1));
+~questpack_done("Tears of Guthix", $banked);
+
+// ::togstage <n> - sets Tears of Guthix's stage (%tog_juna_bowl: 0 not started, 1 make the bowl,
+// 2 complete); ::togstage 3 also forgets your last visit to the Tears, so Juna lets you in again
+[debugproc,togstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n >= 3) {
+    %tog_last_day = 0;
+    %tog_qp_before_return = 0;
+    $n = 2;
+}
+%tog_juna_bowl = $n;
+mes("Tears of Guthix stage: <tostring($n)>");

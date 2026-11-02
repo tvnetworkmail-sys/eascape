@@ -1,0 +1,273 @@
+// EASCape: Tears of Guthix - Juna, the quest and the way into the Tears' cave. From Void
+// (content/area/misthalin/lumbridge/swamp/chams_of_tears/Juna.kt): her words, the stories, the
+// cave's time (one tick a quest point) and the reward; the "come back" lines are the OSRS wiki's
+// Transcript:Juna. Places: the 2007 cache (Juna is the loc at 3252,9516, level 2). Ours is marked.
+
+// ---------------------------------------------------------------- Juna
+[oploc1,hidey_unbuilt_bush_easy]
+if (%tog_minigame_collecting = 1) {
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>I will not permit you to be in the cave for long. Collect as many tears as you can.");
+    if (~p_choice2("Okay.", 1, "I want to get out now.", 2) = 2) @tog_leave;
+    return;
+}
+if (%tog_juna_bowl = ^tog_bowl) {
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Before you can collect the Tears of Guthix you must make a bowl out of the stone in the cave on the south of the chasm.");
+    if (inv_total(inv, tog_bowl) > 0) {
+        ~chatplayer("<p,neutral>I have a bowl.");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>I will keep your bowl for you, so that you may collect the tears many times in the future.");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Now... tell me another story, and I will let you collect the tears for the first time.");
+        ~tog_complete;
+    }
+    return;
+}
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Tell me... a story...");
+switch_int (~p_choice3("Okay...", 1, "A story?", 2, "You tell me a story.", 3)) {
+    case 1 : @tog_tell_story;
+    case 2 :
+        ~chatplayer("<p,quiz>A story?");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>I have been waiting here three thousand years, guarding the Tears of Guthix. I serve my master faithfully, but I am bored.");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>An adventurer such as yourself must have many tales to tell. If you can entertain me, I will let you into the cave for a time.");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>The more I enjoy your story, the more time I will give you in the cave.");
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Then you can drink of the power of balance, which will make you stronger in whatever area you are weakest.");
+        switch_int (~p_choice3("Okay...", 1, "What are the Tears of Guthix?", 2, "Not now.", 3)) {
+            case 1 : @tog_tell_story;
+            case 2 :
+                ~chatplayer("<p,quiz>What are the Tears of Guthix?");
+                ~tog_story_tears;
+            case 3 : ~chatplayer("<p,neutral>Not now.");
+        }
+    case 3 : @tog_juna_stories;
+}
+
+[label,tog_juna_stories]
+~chatplayer("<p,neutral>You tell me a story.");
+def_int $heard = %tog_juna_stories;
+if ($heard = 0) {
+    ~tog_story_tears;
+    %tog_juna_stories = 1;
+    return;
+}
+if ($heard = 1) {
+    switch_int (~p_choice2("Tell me about the Tears of Guthix.", 1, "Tell me a new story.", 2)) {
+        case 1 : ~tog_story_tears;
+        case 2 :
+            ~tog_story_light;
+            %tog_juna_stories = 2;
+    }
+    return;
+}
+def_string $third = "Tell me a new story.";
+if ($heard >= 3) $third = "Tell me about the Cave Goblins.";
+switch_int (~p_choice3("Tell me about the Tears of Guthix.", 1, "Tell me about the light-creatures.", 2, $third, 3)) {
+    case 1 : ~tog_story_tears;
+    case 2 : ~tog_story_light;
+    case 3 :
+        ~tog_story_goblins;
+        if (%tog_juna_stories < 3) %tog_juna_stories = 3;
+}
+
+[label,tog_tell_story]
+~chatplayer("<p,quiz>Okay...");
+if (%qp < 43) {
+    ~chatplayer("<p,confused>Well... Um...");
+    ~mesbox("You try to tell a story, but Juna does not seem impressed.");
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Hmm. Maybe you should come back when you can tell a good story.");
+    ~mesbox("You need at least 43 Quest Points to start this quest.");
+    return;
+}
+if (%tog_juna_bowl = ^tog_complete & (inv_getobj(worn, ^wearpos_rhand) ! null | inv_getobj(worn, ^wearpos_lhand) ! null)) {
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Perhaps you should empty your hands before you begin.");
+    return;
+}
+~mesbox("You tell Juna some stories of your adventures.");
+if (%tog_juna_bowl = ^tog_complete & %tog_last_day > 0) {
+    def_int $days = calc(7 - (date_runeday - %tog_last_day));
+    def_string $when = "in <tostring($days)> days";
+    if ($days = 1) $when = "tomorrow";
+    if (%qp <= %tog_qp_before_return) {
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Your story has entertained me. But it is a poor sort of adventurer who only tells stories of the past and does not find new stories to tell. I will not let you into the cave again until you have had more adventures!");
+        // ours: the OSRS wiki also counts 100,000 experience; the 2007 cache keeps only the quest points
+        ~mesbox("You cannot enter the cave again until you have gained a quest point.");
+        return;
+    }
+    if ($days > 0) {
+        ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>It has not been long since your last visit. Come back <$when>.");
+        return;
+    }
+}
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Your stories have entertained me. I will let you into the cave for a short time.");
+if (%tog_juna_bowl = ^tog_not_started) {
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>But first you will need to make a bowl in which to collect the tears.");
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>There is a cave on the south side of the chasm that is similarly infused with the power of Guthix. The stone in that cave is the only substance that can catch the Tears of Guthix.");
+    %tog_juna_bowl = ^tog_bowl;
+    ~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Mine some stone from that cave, make it into a bowl, and bring it to me, and then I will let you catch the Tears.");
+    return;
+}
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Collect as much as you can from the blue streams. If you let in water from the green streams, it will take away from the blue. For Guthix is god of balance, and balance lies in the juxtaposition of opposites.");
+@tog_enter;
+
+// ---------------------------------------------------------------- the Tears' cave
+// Void: Juna opens and closes, the bowl is wielded, you walk past her into the cave
+[label,tog_enter]
+if (loc_find(2_50_148_52_44, hidey_unbuilt_bush_easy) = true) loc_anim(tog_snake_openclose);
+sound_synth(juna_hiss, 1, 0);
+inv_setslot(worn, ^wearpos_rhand, tog_bowl, 1);
+~bas_set(tog_ready_bowl, tog_ready_bowl, tog_walk_bowl, tog_walk_bowl, tog_walk_bowl, tog_walk_bowl, tog_run_bowl);
+%tog_minigame_collecting = 1;
+%tog_tears_collected = 0;
+p_telejump(2_50_148_54_45);
+// one tick in the cave for each quest point (Void and the OSRS wiki)
+softtimer(tog_time_up, max(1, %qp));
+
+[softtimer,tog_time_up]
+clearsofttimer(tog_time_up);
+cleartimer(tog_collect);
+mes("Your time in the caves is up.");
+strongqueue(tog_exit, 0, 0);
+
+[queue,tog_exit]
+@tog_leave;
+
+[label,tog_leave]
+if (%tog_minigame_collecting = 0) return;
+if_close;
+clearsofttimer(tog_time_up);
+cleartimer(tog_collect);
+if (loc_find(2_50_148_52_44, hidey_unbuilt_bush_easy) = true) loc_anim(tog_snake_openclose);
+p_telejump(2_50_148_51_44);
+~tog_take_bowl;
+~update_bas;
+buildappearance(worn);
+%tog_minigame_collecting = 0;
+anim(tog_drink_bowl, 0);
+~tog_reward;
+
+[proc,tog_take_bowl]
+if (inv_getobj(worn, ^wearpos_rhand) = tog_bowl) inv_delslot(worn, ^wearpos_rhand);
+def_int $n = inv_total(inv, tog_bowl);
+if ($n > 0 & %tog_juna_bowl = ^tog_complete) inv_del(inv, tog_bowl, $n);
+
+// logged out in the cave: put outside, given the reward (Void)
+[proc,tog_login]
+if (%tog_minigame_collecting = 0) return;
+%tog_minigame_collecting = 0;
+~tog_take_bowl;
+p_telejump(2_50_148_51_44);
+~tog_reward;
+
+// Void's reward: experience in the skill with the least, a tear at a time; each tear is worth
+// 10 + (experience / 27) / 10, up to 60 (the OSRS wiki's formula). Herblore needs Druidic Ritual
+// and Runecraft Rune Mysteries. Ties go to the first in the OSRS wiki's order.
+[proc,tog_reward]
+def_int $tears = %tog_tears_collected;
+%tog_tears_collected = 0;
+if ($tears <= 0) return;
+def_stat $low = attack;
+def_int $lowxp = stat_xp(attack);
+def_int $i = 1;
+def_stat $s;
+while ($i < 20) {
+    $s = ~tog_stat_order($i);
+    if (($s ! herblore | %druidquest = ^druid_complete) & ($s ! runecraft | %runemysteries = ^runemysteries_complete)) {
+        if (stat_xp($s) < $lowxp) {
+            $low = $s;
+            $lowxp = stat_xp($s);
+        }
+    }
+    $i = calc($i + 1);
+}
+// tenths of a point: (10 + floor(xp / 27) / 10) a tear, up to 60
+def_int $each = min(600, calc(100 + ($lowxp / 10) / 27));
+stat_advance($low, calc($tears * $each));
+mes(~tog_stat_message($low));
+%tog_last_day = date_runeday;
+%tog_qp_before_return = %qp;
+
+[proc,tog_stat_order](int $i)(stat)
+switch_int ($i) {
+    case 1 : return(strength);
+    case 2 : return(ranged);
+    case 3 : return(magic);
+    case 4 : return(defence);
+    case 5 : return(hitpoints);
+    case 6 : return(prayer);
+    case 7 : return(agility);
+    case 8 : return(herblore);
+    case 9 : return(thieving);
+    case 10 : return(crafting);
+    case 11 : return(runecraft);
+    case 12 : return(mining);
+    case 13 : return(smithing);
+    case 14 : return(fishing);
+    case 15 : return(cooking);
+    case 16 : return(firemaking);
+    case 17 : return(woodcutting);
+    case 18 : return(fletching);
+    case 19 : return(slayer);
+    case default : return(attack);
+}
+
+// Void's tears_of_guthix_messages
+[proc,tog_stat_message](stat $s)(string)
+switch_stat ($s) {
+    case cooking : return("You have a brief urge to cook some food.");
+    case crafting : return("Your fingers feel nimble and suited to delicate work.");
+    case firemaking : return("You have a brief urge to set light to something!");
+    case fishing : return("You gain a deep understanding of the creatures of the sea.");
+    case magic : return("You feel magical power coursing through your body.");
+    case mining : return("You gain a deep understanding of the stones of the earth.");
+    case prayer : return("You suddenly feel very close to the gods.");
+    case ranged : return("Your aim improves.");
+    case runecraft : return("You gain a deep understanding of runes.");
+    case smithing : return("You gain a deep understanding of metal.");
+    case woodcutting : return("You gain a deep understanding of the trees in the forest.");
+    case agility : return("You feel very nimble.");
+    case herblore : return("You gain a deep understanding of all kinds of strange plants.");
+    case fletching : return("You gain a deep understanding of wooden sticks.");
+    case thieving : return("You feel your respect for others' property slipping away.");
+    case slayer : return("You gain a deep understanding of many strange creatures.");
+    case defence : return("You feel very defensive!");
+    case strength : return("Your muscles bulge!");
+    case hitpoints : return("You feel more healthy.");
+    case farming : return("You gain a deep understanding of the cycles of nature.");
+    case default : return("You feel a brief surge of aggression!");
+}
+
+// ---------------------------------------------------------------- the quest's end (Void)
+[proc,tog_complete]
+inv_del(inv, tog_bowl, inv_total(inv, tog_bowl));
+%tog_juna_bowl = ^tog_complete;
+stat_advance(crafting, 10000);
+session_log(^log_adventure, "Quest complete: Tears of Guthix");
+~send_quest_complete(questlist:tog, tog_bowl, 250, ^tog_questpoints, "You have completed\\nTears of Guthix!", "1 Quest Point|1,000 Crafting XP|Access to the Tears of Guthix|cave");
+
+// ---------------------------------------------------------------- Juna's stories (Void)
+[proc,tog_story_tears]
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>The Third Age of the world was a time of great conflict, of destruction never seen before or since, when all the gods save Guthix warred for control.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>The colossal Wyrms, of whom today's dragons are a pale reflection, turned all the sky to fire, while on the ground armies of foot soldiers, goblins and trolls and humans, filled the valleys and plains with blood.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>In time the noise of the conflict woke Guthix from His deep slumber, and He rose and stood in the centre of the battlefield so that the splendour of His wrath filled the world, and He called for the conflict to cease!");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Silence fell, for the gods knew that none could challenge the power of the mighty Guthix -- for His power is that of nature itself, to which all other things are subject, in the end.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Guthix reclaimed that which had been stolen from Him, and went back underground to return to His sleep and continue to draw the world's power into Himself.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>But on His way into the depths of the earth He sat and rested in this cave; and, thinking of the battle-scarred desert that now stretched from one side of His world to the other, He wept.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>And so great was His sorrow, and so great was His life-giving power, that the rocks themselves began to weep with Him.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,quiz>Later, Guthix noticed that the rocks continued to weep, and that their tears were infused with a small part of His power.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>So He set me, His servant, to guard the cave, and He entrusted to me the task of judging who was and was not worthy to access the tears.");
+
+[proc,tog_story_light]
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>I will tell you the story of the light-creatures.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Myriad and beautiful were the creatures and civilizations of the early ages of the world. Gielinor was a work of art, shaped lovingly over the millennia by the creative mind of Guthix.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Only the sturdiest races survived the Godwars, and even then only by abandoning their high culture and gearing their societies towards war. Of the more delicate races there is now no trace, and almost no memory.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>One such race had bodies as fragile as snowflakes, yet they built crystal cities that stood for a thousand years.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>The wind would whisper through the spires and fill them with sweet harmonies, and the rising sun would shine through the precious gems that studded the towers and create inter plays of light as if rainbows were dancing.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Indeed, so marvellous was this light-show at its height that the patterns of light themselves became alive, and great flocks of luminous creatures rode along the gem-cast beams, each drawn to its own colour.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>The creatures you see floating in this chasm are the last sorry remnants of that age. I do not know how they made their way here and survived to this time, but I am grateful for their company.");
+
+[proc,tog_story_goblins]
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Not long after the start of my vigil a party of goblins happened on my cave. These were the ugly brutes of the gods' armies, but their armour bore a faded patch where the symbol of a god had been removed.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>They looked around hesitantly, squinting in the light of crude torches, but as soon as they saw me they raised their spears and charged.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>No one may access the Tears of Guthix by force. I sent them tumbling into the chasm.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Two hundred years later another goblin found me. This one was unarmed, and although she was very wary I succeeded in engaging her in conversation.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,happy>Since then I have had many more visits from the descendants of those lost warriors, and over the centuries I have seen them change.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>They have become timid rather than aggressive, and I have seen the light of intelligence grow in their bulging eyes.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>Their stories are repetitive and grim, of scraping a living out of the harsh rock and through ingenuity and toil shaping it into a home.");
+~chatnpc_specific("Juna", tog_juna_dummy, "<p,neutral>I have followed the progress of their race, but their individual stories hold little interest for me.");

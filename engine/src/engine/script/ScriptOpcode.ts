@@ -433,6 +433,7 @@ export const enum ScriptOpcode {
     ABS, // custom
     DATE_MINUTES, // derived
     DATE_RUNEDAY, // derived
+    STAT_XP, // EASCape: a stat's experience (tenths), for Tears of Guthix
 
     // Struct ops (4700-4799)
     STRUCT_PARAM = 4700,
@@ -865,6 +866,7 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['ABS', ScriptOpcode.ABS],
     ['DATE_MINUTES', ScriptOpcode.DATE_MINUTES],
     ['DATE_RUNEDAY', ScriptOpcode.DATE_RUNEDAY],
+    ['STAT_XP', ScriptOpcode.STAT_XP],
 
     ['STRUCT_PARAM', ScriptOpcode.STRUCT_PARAM],
 

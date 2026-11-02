@@ -1,0 +1,199 @@
+// EASCape: Tears of Guthix - the Chasm of Tears. Void: the light creatures carry you across with a
+// lit sapphire lantern (LightCreature.kt), the climbing rocks (ChasmOfTears.kt), the magic stone
+// (Mining.kt, ores.tables: 20 Mining, no experience) and the stone bowl (tears_of_guthix.recipes:
+// a chisel). The lanterns: 2009scape's LanternCrafting.kt (20 Crafting to fit a sapphire) and Void's
+// lens swaps; the lamp oil still: the OSRS wiki (swamp tar in, then an empty lamp or lantern).
+// Ours is marked.
+
+// ---------------------------------------------------------------- the light creatures
+[apnpcu,tog_light_creature]
+if (last_useitem = bullseye_lantern_lit) {
+    mes("The creature is momentarily attracted to the light, but quickly loses interest.");
+    return;
+}
+if (last_useitem ! tog_sapphire_lantern_lit) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (distance(npc_coord, coord) > 8 | coordx(coord) > 3238) {
+    mes("That light creature is too far away to see you clearly.");
+    return;
+}
+def_coord $dest = 2_50_148_24_58;
+if (coordz(coord) > 9515) $dest = 2_50_148_24_32;
+mes("The light creature is attracted to your beam and comes towards you...");
+npc_facesquare(coord);
+npc_anim(light_creature_grow, 0);
+anim(tog_player_float_up, 0);
+sound_synth(light_creature_up, 1, 0);
+p_delay(3);
+~bas_set_all(tog_player_float_across);
+// ours: you glide across (the creature stays put; Void sends it along with you)
+~carpet_glide($dest);
+anim(tog_player_float_down, 0);
+npc_anim(light_creature_shrink, 0);
+sound_synth(light_creature_down, 1, 0);
+p_delay(1);
+~update_bas;
+buildappearance(worn);
+
+// ---------------------------------------------------------------- the climbing rocks
+// Void: climb over the rocks to the far side; the "down" rocks can only be climbed down (east)
+[oploc1,tog_climbing_rocks_up]
+def_int $dx = 1;
+if (coordx(coord) > coordx(loc_coord)) $dx = -1;
+@tog_climb($dx);
+
+[oploc1,tog_climbing_rocks_down]
+if (coordx(coord) >= coordx(loc_coord)) {
+    mes("You could climb down here, but it is too uneven to climb up.");
+    return;
+}
+@tog_climb(1);
+
+[label,tog_climb](int $dx)
+def_coord $dest = movecoord(loc_coord, $dx, 0, 0);
+if ($dx = 1) {
+    anim(tog_climb_slope_down, 0);
+} else {
+    anim(tog_climb_slope_up, 0);
+}
+p_exactmove(coord, $dest, 0, 100, ^exact_west);
+p_delay(3);
+p_telejump($dest);
+
+// ---------------------------------------------------------------- the magic stone and the bowl
+[oploc1,tog_blue_stone_rocks1] @tog_mine;
+[oploc1,tog_blue_stone_rocks2] @tog_mine;
+[oploc1,tog_blue_stone_rocks3] @tog_mine;
+[oploc2,tog_blue_stone_rocks1] mes("This rock contains a magical kind of stone.");
+[oploc2,tog_blue_stone_rocks2] mes("This rock contains a magical kind of stone.");
+[oploc2,tog_blue_stone_rocks3] mes("This rock contains a magical kind of stone.");
+
+[label,tog_mine]
+if (inv_total(inv, tog_stone) > 0 | inv_total(inv, tog_bowl) > 0 | %tog_juna_bowl = ^tog_complete) {
+    mes("You have already mined some stone. You don't need any more.");
+    return;
+}
+if (stat(mining) < 20) {
+    ~mesbox("You need a Mining level of 20 to mine this rock.");
+    return;
+}
+def_obj $pickaxe = ~pickaxe_checker;
+if ($pickaxe = null) {
+    ~mesbox("You need a Pickaxe to mine this rock. You do not have a Pickaxe which you have the Mining level to use.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~mesbox("Your inventory is too full to hold any more stone.");
+    return;
+}
+mes("You swing your pick at the rock.");
+// Void's chance: 200-375 in 256
+while (1 = 1) {
+    anim(oc_param($pickaxe, mining_animation), 0);
+    sound_synth(mine_quick, 1, 0);
+    p_delay(2);
+    if (stat_random(mining, 200, 375) = true) {
+        anim(null, 0);
+        inv_add(inv, tog_stone, 1);
+        mes("You manage to mine some stone.");
+        return;
+    }
+}
+
+// the chisel's own script sends the magic stone here (skill_crafting/gem/uncut_gem.rs2)
+[label,tog_make_bowl]
+if (%tog_juna_bowl = ^tog_not_started) {
+    mes("Nothing interesting happens."); // the OSRS wiki: you must have told Juna a story first
+    return;
+}
+inv_del(inv, tog_stone, 1);
+inv_add(inv, tog_bowl, 1);
+mes("You make a stone bowl.");
+
+// ---------------------------------------------------------------- the sapphire lantern
+[opheldu,sapphire]
+switch_obj (last_useitem) {
+    case bullseye_lantern_nolens :
+        if (stat(crafting) < 20) {
+            mes("You require a crafting level of 20 to use a gem as a lens.");
+            return;
+        }
+        inv_del(inv, bullseye_lantern_nolens, 1);
+        inv_del(inv, sapphire, 1);
+        inv_add(inv, tog_sapphire_lantern_empty, 1);
+        mes("You fashion the gem into a lens and fit it onto the lantern.");
+    case bullseye_lantern_empty : @tog_lens_swap(bullseye_lantern_empty, tog_sapphire_lantern_empty);
+    case bullseye_lantern_unlit : @tog_lens_swap(bullseye_lantern_unlit, tog_sapphire_lantern_unlit);
+    case bullseye_lantern_lit : mes("The lantern is too hot to do that while it is lit.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,tog_lens_swap](obj $lantern, namedobj $sapphire_lantern)
+if (stat(crafting) < 20) {
+    mes("You require a crafting level of 20 to use a gem as a lens.");
+    return;
+}
+inv_del(inv, $lantern, 1);
+inv_del(inv, sapphire, 1);
+inv_add(inv, $sapphire_lantern, 1);
+inv_add(inv, bullseye_lantern_lens, 1);
+mes("You replace the lantern lens with a sapphire.");
+
+[opheldu,bullseye_lantern_lens]
+switch_obj (last_useitem) {
+    case bullseye_lantern_nolens :
+        inv_del(inv, bullseye_lantern_nolens, 1);
+        inv_del(inv, bullseye_lantern_lens, 1);
+        inv_add(inv, bullseye_lantern_empty, 1);
+        mes("You fashion the lens onto the lantern.");
+    case tog_sapphire_lantern_empty : @tog_lens_back(tog_sapphire_lantern_empty, bullseye_lantern_empty);
+    case tog_sapphire_lantern_unlit : @tog_lens_back(tog_sapphire_lantern_unlit, bullseye_lantern_unlit);
+    case tog_sapphire_lantern_lit : mes("The lantern is too hot to do that while it is lit.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,tog_lens_back](obj $lantern, namedobj $bullseye)
+inv_del(inv, $lantern, 1);
+inv_del(inv, bullseye_lantern_lens, 1);
+inv_add(inv, $bullseye, 1);
+inv_add(inv, sapphire, 1);
+mes("You replace the sapphire with a lantern lens.");
+
+// ---------------------------------------------------------------- the lamp oil still (Rimmington)
+[oplocu,lamp_oil_still]
+if (last_useitem = swamp_tar) {
+    if (%lamp_oil_still_state = 1) {
+        mes("The still already has oil in it."); // ours
+        return;
+    }
+    inv_del(inv, swamp_tar, 1);
+    %lamp_oil_still_state = 1;
+    mes("You refine some swamp tar into lamp oil."); // ours
+    return;
+}
+def_namedobj $full;
+switch_obj (last_useitem) {
+    case oil_lamp_empty : $full = oil_lamp_unlit;
+    case oil_lantern_empty : $full = oil_lantern_unlit;
+    case bullseye_lantern_empty : $full = bullseye_lantern_unlit;
+    case tog_sapphire_lantern_empty : $full = tog_sapphire_lantern_unlit;
+    case default :
+        ~displaymessage(^dm_default);
+        return;
+}
+if (%lamp_oil_still_state = 0) {
+    mes("There is no oil in the still."); // ours
+    return;
+}
+inv_del(inv, last_useitem, 1);
+inv_add(inv, $full, 1);
+%lamp_oil_still_state = 0;
+mes("You fill the <lowercase(oc_name($full))> with oil."); // ours
+
+// ---------------------------------------------------------------- the tunnel down from the swamp caves
+// Void: lumbridge_cave_tunnel, to 3219,9532 (the way back up is eascape_links' row for tog_cave_up)
+[oploc1,tog_cave_down]
+p_arrivedelay;
+p_telejump(2_50_148_19_60);

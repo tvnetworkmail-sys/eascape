@@ -5,6 +5,11 @@ if ($product = slayer_buglan_on & stat(firemaking) < 33) {
     mes("You need to have a Firemaking level of 33.");
     return;
 }
+// EASCape: bullseye and sapphire lanterns need Firemaking 49 (2009scape LightSources)
+if (($product = bullseye_lantern_lit | $product = tog_sapphire_lantern_lit) & stat(firemaking) < 49) {
+    mes("You need to have a Firemaking level of 49.");
+    return;
+}
 if($product = torch_lit & inzone(0_43_51_8_7, 1_43_51_52_63, coord) = true) {
     mes("Your tinderbox is damp from the sea crossing. It won't light here.");
     return;

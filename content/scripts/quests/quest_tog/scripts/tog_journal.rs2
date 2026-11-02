@@ -1,0 +1,20 @@
+// EASCape: Tears of Guthix's journal (Void's TearsOfGuthix.kt words)
+[if_button,questlist:tog]
+if (%tog_juna_bowl = ^tog_not_started) {
+    ~quest_journal("Tears of Guthix", "@dbl@I can start this quest by speaking to @dre@Juna the serpent@dbl@ who lives|@dbl@deep in the @dre@Lumbridge Swamp Caves@dbl@.|@dbl@I will need @dre@43 Quest Points@dbl@, @dre@49 Firemaking@dbl@, @dre@20 Crafting@dbl@ and|@dre@20 Mining@dbl@.");
+    return;
+}
+if (%tog_juna_bowl = ^tog_bowl) {
+    ~quest_journal("Tears of Guthix", "@str@I met Juna the serpent in a deep chasm beneath the|@str@Lumbridge Swamp Caves.|@dbl@I told her a story and she said she would let me into the Tears of|@dbl@Guthix cave if I brought her a @dre@bowl@dbl@ made from the stone in @dre@the|@dre@cave on the South side of the chasm@dbl@.");
+    return;
+}
+def_string $t = "@str@I met Juna the serpent in a deep chasm beneath the|@str@Lumbridge Swamp Caves. I made a bowl out of magical stone in|@str@order to catch the Tears of Guthix.||@red@QUEST COMPLETE!||@dbl@Now Juna will let me into the cave to collect the Tears if I @dre@tell|@dre@her stories@dbl@ of my adventures.|";
+def_int $days = calc(7 - (date_runeday - %tog_last_day));
+if (%tog_last_day > 0 & %qp <= %tog_qp_before_return) {
+    $t = append($t, "@dbl@I need to gain a @dre@quest point@dbl@ before Juna will want more stories.");
+} else if (%tog_last_day > 0 & $days > 0) {
+    $t = append($t, "@dbl@I will be able to collect the Tears of Guthix @dre@in <tostring($days)> days@dbl@.");
+} else {
+    $t = append($t, "@dbl@I have had enough adventures to tell Juna more stories, and a week|@dbl@has passed since I last collected the Tears. I can visit Juna again|@dbl@now.");
+}
+~quest_journal("Tears of Guthix", $t);

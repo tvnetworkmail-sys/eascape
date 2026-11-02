@@ -514,6 +514,13 @@ const PlayerOps: CommandHandlers = {
         state.pushInt(state.activePlayer.baseLevels[stat]);
     },
 
+    // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)
+    [ScriptOpcode.STAT_XP]: state => {
+        const stat: PlayerStat = check(state.popInt(), PlayerStatValid);
+
+        state.pushInt(state.activePlayer.stats[stat]);
+    },
+
     [ScriptOpcode.STAT_ADD]: state => {
         const [stat, constant, percent] = state.popInts(3);
 
