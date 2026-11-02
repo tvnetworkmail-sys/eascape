@@ -1902,6 +1902,15 @@ $banked = calc($banked + ~questpack_give(coins, 100));
 $banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
 ~questpack_done("Icthlarin's Little Helper", $banked);
 
+// ::icssupplies - the embalmer's three things: a sheet of linen, the purified salt and a bucket of sap
+[debugproc,icssupplies]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(ics_little_linen, 1));
+$banked = calc($banked + ~questpack_give(ics_little_pileofsalt, 1));
+$banked = calc($banked + ~questpack_give(ics_little_sap_bucket, 1));
+~questpack_done("Icthlarin's Little Helper (embalmer)", $banked);
+
 // ::icsstage <n> - sets Icthlarin's Little Helper's stage (%ics_little_var; ics.constant: 1 supplies,
 // 2 hypnotised, 3 remembered, 4 token, 5 return the jar, 6 stole it, 7 returned, 8 ceremony, 19
 // symbol hidden, 20 fight, 22 priest beaten, 25 back to town, 26 complete). Also clears the
