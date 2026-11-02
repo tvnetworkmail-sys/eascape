@@ -1993,3 +1993,13 @@ if ($n >= ^zogre_permanent) {
 }
 if ($n >= ^zogre_given_key) %thzfe_sithik_transformed = 2;
 mes("Zogre Flesh Eaters stage: <tostring($n)>");
+
+// ::togfly - the nearest light creature carries you across the Chasm of Tears (as the lit sapphire
+// lantern does), for testing
+[debugproc,togfly]
+if (p_finduid(uid) = false) return;
+if (npc_find(coord, tog_light_creature, 10, 0) = false) {
+    mes("No light creature near enough.");
+    return;
+}
+@tog_light_carry;
