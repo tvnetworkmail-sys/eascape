@@ -835,6 +835,24 @@ if (inv_total(inv, dwarf_battleaxe_old) = 0 & inv_total(inv, dwarf_battleaxe_sap
 if (%squire >= ^squire_complete | ~gd_flag(^gdf_reldo) = true) return(true);
 return(false);
 
+// ours: Thurgo won't talk to a stranger, so say what the axe still needs
+[proc,gd_thurgo_hint]()(boolean)
+if (%giantdwarf_quest ! ^gd_items) return(false);
+if (~gd_riki_has(2) = true | ~gd_flag(^gdf_thurgo_fixed) = true) return(false);
+if (inv_total(inv, dwarf_battleaxe_old) = 0 & inv_total(inv, dwarf_battleaxe_sapphires) = 0) {
+    if (~gd_flag(^gdf_reldo) = true) {
+        ~mesbox("Thurgo doesn't appear to be interested in talking.|You'll need the ancient axe with you before you ask him about it.");
+        return(true);
+    }
+    return(false);
+}
+if (~gd_flag(^gdf_librarian_imcando) = false) {
+    ~mesbox("Thurgo doesn't appear to be interested in talking.|Perhaps the librarian in Keldagrim knows how to find an Imcando dwarf.");
+} else {
+    ~mesbox("Thurgo doesn't appear to be interested in talking.|The Keldagrim librarian suggested asking Reldo in Varrock's palace about the Imcando dwarves.");
+}
+return(true);
+
 [label,gd_thurgo]
 def_int $pie = 0;
 if (inv_total(inv, redberry_pie) > 0 & %giantdwarf_pie_given = 0) $pie = 2;
