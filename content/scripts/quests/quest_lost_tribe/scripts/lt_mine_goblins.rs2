@@ -1,0 +1,62 @@
+// EASCape: Talk-to for the cave goblin miners and guards in the Dorgeshuun mine. Source: the OSRS
+// wiki's transcripts (Transcript:Cave goblin miner, Transcript:Cave goblin guard).
+
+[opnpc1,cave_goblin_miner] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner2] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner3] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner4] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner_mining] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner2_mining] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner3_mining] ~lt_miner_talk;
+[opnpc1,cave_goblin_miner4_mining] ~lt_miner_talk;
+[opnpc1,cave_goblin_guard1] ~lt_guard_talk;
+[opnpc1,cave_goblin_guard2] ~lt_guard_talk;
+
+[proc,lt_miner_talk]
+if (%lt_stage < ^lt_complete) {
+    ~chatnpc("<p,shock>Help! An outsider!");
+    return;
+}
+~chatnpc("<p,neutral>Hello.");
+switch_int (~p_choice3("How's the mining going?", 1, "Where do you take all this ore?", 2, "Why do you use bones to build with?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>How's the mining going?");
+        switch_int (random(5)) {
+            case 0 :
+                ~chatnpc("<p,shock>I nearly got caught in a rockfall earlier!");
+                ~chatnpc("<p,happy>Still, since humans started coming down here, the proportion of miners killed in rockfalls has fallen dramatically!");
+            case 1 : ~chatnpc("<p,neutral>Oh, you know, can't complain.");
+            case 2 : ~chatnpc("<p,happy>It's going well. I find repeatedly hitting a piece of rock very therapeutic.");
+            case 3 :
+                ~chatnpc("<p,neutral>Well, don't tell Mistag...");
+                ~chatnpc("<p,happy>...but actually I wasn't working very hard!");
+            case default : ~chatnpc("<p,neutral>We're a bit behind schedule. If you lent us a hand, Mistag would pay you for your work.");
+        }
+    case 2 :
+        ~chatplayer("<p,quiz>Where do you take all this ore?");
+        ~chatnpc("<p,neutral>To the town of Dorgesh-Kaan, deep in the caves.");
+    case 3 :
+        ~chatplayer("<p,quiz>Why do you use bones to build with?");
+        ~chatnpc("<p,neutral>Well, our legends say that on the surface there was a substance called 'wood', which grew out of the ground in towers.");
+        ~chatnpc("<p,neutral>But we cannot get wood here, so we can only build with stone, bone, and iron.");
+        if (~p_choice2("Oh, right.", 1, "Giant frogs aren't fearsome!", 2) = 1) {
+            ~chatplayer("<p,neutral>Oh, right.");
+            return;
+        }
+        ~chatplayer("<p,laugh>Giant frogs aren't fearsome!");
+        ~chatnpc("<p,neutral>Perhaps not for a mighty adventurer like you, but we think they're terrifying!");
+}
+
+[proc,lt_guard_talk]
+if (%lt_stage < ^lt_complete) {
+    ~chatnpc("<p,angry>Surface-dweller! You should leave the mines now!");
+    return;
+}
+switch_int (random(3)) {
+    case 0 : ~chatnpc("<p,happy>Have a nice day!");
+    case 1 : ~chatnpc("<p,neutral>I'm keeping an eye on you, surface-dweller.");
+    case default :
+        ~chatnpc("<p,angry>Surface-dweller! You will never find your way into the city of Dorgesh-Kaan!");
+        ~chatplayer("<p,quiz>Isn't it through that big door?");
+        ~chatnpc("<p,angry>Well, yes, but you'll never find your way in!");
+}
