@@ -1,0 +1,500 @@
+// EASCape: the Wise Old Man of Draynor Village (Seeds, Bankspace And Advisors, 6 June 2005: "a Wise
+// Old Man has moved into a disused house in Draynor Village. He's been exploring the world and
+// studying its history for many years, and is happy to share his knowledge with any passing
+// adventurer. He'll even help you identify a few useless items from old quests that you might still
+// have in your bank. Members may offer to do a few simple tasks for him").
+// He stands where 2006Scape's spawns.json and our map's own wom_multi had him (3088,3255).
+// Sources: his words are the OSRS wiki's Transcript:Wise Old Man (its first talk, his topics, the
+// tasks, items used on him); where the transcript has the later Recycling Centre interface or the
+// Quest Point Cape (2007), we have Void's WiseOldMan.kt instead (the bank / inventory junk check and
+// its words), and 2009scape's WiseOldManDialogue for his own books. Branches for quests we don't
+// have (The Dig Site, Shadow of the Storm, Swan Song) are left out. The facial expressions are ours.
+// Tasks, rewards, letters and the thing under the bed: wom_tasks.rs2. His house: wom_house.rs2.
+
+[opnpc1,wise_old_man]
+~chatnpc("<p,happy>Greetings, <displayname>.");
+if (%wom_met = 0) @wom_intro;
+~wom_check_bed;
+~wom_check_items;
+@wom_menu;
+
+[label,wom_intro]
+~chatplayer("<p,quiz>So you're a wise old man, huh?");
+~chatnpc("<p,shifty>Less of the 'old' man, if you please!");
+~chatnpc("<p,happy>But yes, I suppose you could say that. I prefer to think of myself as a sage.");
+~chatplayer("<p,quiz>So what's a sage doing here?");
+~chatnpc("<p,neutral>I've spent most of my life studying this world in which we live. I've strode through the depths of the deadliest dungeons, roamed the murky jungles of Karamja, meditated on the glories of Saradomin on Entrana,");
+~chatnpc("<p,neutral>and read some dusty tomes in the Library of Varrock.");
+~chatnpc("<p,happy>Now I'm not as young as I used to be, I'm settling here where it's peaceful.");
+if (%vampire ! ^vampire_complete) {
+    ~chatnpc("<p,sad>It's a pity about that vampyre that keeps attacking the village. At least Saradomin protects me.");
+}
+~chatplayer("<p,neutral>That's quite an exciting life you've had.");
+~chatnpc("<p,laugh>Exciting? Yes, I suppose so.");
+~chatnpc("<p,happy>Now I'm here, perhaps I could offer you the benefit of my experience and wisdom?");
+~chatplayer("<p,happy>Thanks! So you can help me?");
+%wom_met = 1;
+~chatnpc("<p,neutral>Well, I imagine you've gathered up quite a lot of stuff on your travels. Things you used for quests a long time ago that you don't need now.");
+~chatnpc("<p,neutral>If you like, I can look through your bank and see if there's anything you can chuck away.");
+~chatnpc("<p,neutral>Alternatively, you can bring items here and show them to me. If I see that it's something you don't need, I'll let you know. I might even be willing to buy it.");
+~chatplayer("<p,quiz>So you'll help me clear junk out of my bank?");
+~chatnpc("<p,happy>Yes, that's right. Or I'd be happy to chat with you about the wonders of this world!");
+def_int $choice = ~p_choice5("Could I have some free stuff, please?", 1, "I'd just like to ask you something.", 2, "Is there anything I can do for you?", 3, "Could you check my items for junk, please?", 4, "Thanks, maybe some other time.", 5);
+if ($choice = 1) {
+    ~chatplayer("<p,shifty>Could I have some free stuff, please?");
+    ~chatnpc("<p,sad>Deary deary me...");
+    if (map_members = ^false) {
+        ~chatnpc("<p,neutral>I'm not giving out free money, but if you try again later I'd be glad to reward you if you'd do a little job for me.");
+        return;
+    }
+    ~chatnpc("<p,neutral>I'm not giving out free money, but I'd be happy to reward you if you'll do a little job for me.");
+    if (~p_choice2("Ok, what do you want me to do?", 1, "Thanks, maybe some other time.", 2) = 1) {
+        ~chatplayer("<p,happy>Ok, what do you want me to do?");
+        @wom_new_task;
+    }
+    ~chatplayer("<p,shifty>Thanks, maybe some other time.");
+    return;
+}
+if ($choice = 2) @wom_ask;
+if ($choice = 3) @wom_anything;
+if ($choice = 4) @wom_junk;
+if ($choice = 5) ~chatplayer("<p,shifty>Thanks, maybe some other time.");
+
+// the transcript's "Subsequent dialogue", More... (its Quest Point Cape options are 2007's, left out)
+[label,wom_menu]
+def_string $task = "Is there anything I can do for you?";
+if (~wom_has_task = true) $task = "What did you ask me to do?";
+def_int $choice = ~p_choice3($task, 1, "Could you check my items for junk, please?", 2, "I'd just like to ask you something.", 3);
+if ($choice = 1) {
+    if (~wom_has_task = true) @wom_what_task;
+    @wom_anything;
+}
+if ($choice = 2) @wom_junk;
+if ($choice = 3) @wom_ask;
+
+[label,wom_anything]
+~chatplayer("<p,happy>Is there anything I can do for you?");
+if (map_members = ^false) {
+    ~chatnpc("<p,neutral>Thanks, but I don't have anything I need doing right now.");
+    return;
+}
+@wom_new_task;
+
+[label,wom_ask]
+~chatplayer("<p,happy>I'd just like to ask you something.");
+~chatnpc("<p,happy>Please do!");
+@wom_topics;
+
+// ---------------------------------------------------------------- junk
+// Void's WiseOldMan.kt (checkJunk): your bank or your inventory, then throw it all away or keep it.
+// What's junk: wom_junk.dbrow. No source says what he'd pay for any of it, so he pays nothing.
+[label,wom_junk]
+~chatplayer("<p,happy>Could you check my items for junk, please?");
+if (~p_choice2("Could you check my bank for junk, please?", 1, "Could you check my inventory for junk, please?", 2) = 1) {
+    ~chatplayer("<p,happy>Could you check my bank for junk, please?");
+    ~wom_check_junk(bank, "bank");
+    return;
+}
+~chatplayer("<p,happy>Could you check my inventory for junk, please?");
+~wom_check_junk(inv, "inventory");
+
+[proc,wom_check_junk](inv $inv, string $where)
+~chatnpc("<p,neutral>Certainly, but I should warn you that I don't know about all items.");
+def_int $found = 0;
+def_namedobj $first = null;
+def_namedobj $obj;
+def_dbrow $row;
+db_listall(wom_junk);
+$row = db_findnext;
+while ($row ! null) {
+    $obj = db_getfield($row, wom_junk:obj, 0);
+    if (inv_total($inv, $obj) > 0) {
+        if (~wom_quest_done(db_getfield($row, wom_junk:quest, 0)) = true) {
+            $found = add($found, 1);
+            if ($first = null) $first = $obj;
+        }
+    }
+    $row = db_findnext;
+}
+if ($found = 0) {
+    ~chatnpc("<p,neutral>There doesn't seem to be any junk in your <$where> at all.");
+    return;
+}
+def_string $items = "items";
+if ($found = 1) $items = "item";
+~objbox($first, "The Wise Old Man has found <tostring($found)> <$items> in your <$where> left over from quests you've completed.", 250, 0, divide(^objbox_height, 2));
+if (~p_choice2("Yes, get rid of it please.", 1, "No thanks, I'll hang on to it.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks, I'll hang on to it.");
+    return;
+}
+~chatplayer("<p,happy>Yes, get rid of it please.");
+def_int $removed = 0;
+def_boolean $books = false;
+db_listall(wom_junk);
+$row = db_findnext;
+while ($row ! null) {
+    $obj = db_getfield($row, wom_junk:obj, 0);
+    if (inv_total($inv, $obj) > 0) {
+        if (~wom_quest_done(db_getfield($row, wom_junk:quest, 0)) = true) {
+            inv_del($inv, $obj, inv_total($inv, $obj));
+            $removed = add($removed, 1);
+            if ($obj = wom_book_1 | $obj = wom_book_2 | $obj = wom_chicken_book) $books = true;
+        }
+    }
+    $row = db_findnext;
+}
+if ($removed = 0) {
+    ~chatnpc("<p,confused>Hmm, it seems to have gone already.");
+    return;
+}
+if ($books = true) ~chatnpc("<p,angry>That's my book! What's it doing in your <$where>?"); // 2009scape
+~chatnpc("<p,happy>There, that's much tidier. You won't be needing those any more.");
+
+// ---------------------------------------------------------------- items used on him
+[opnpcu,wise_old_man]
+if (%wom_met = 0) {
+    ~chatnpc("<p,angry>Humph! You could at least say hello before waving your items in my face.");
+    return;
+}
+def_obj $obj = last_useitem;
+~chatplayer("<p,quiz>Do you think I need to keep this?");
+if ($obj = wom_message) {
+    if (%wom_npc >= ^wom_to_aereck & %wom_npc <= ^wom_to_oracle) {
+        ~chatnpc("<p,confused>Yes, you're meant to be delivering it for me!");
+        return;
+    }
+    inv_del(inv, wom_message, 1);
+    ~chatnpc("<p,confused>I asked you to deliver that for me. But I may as well take it back now.");
+    return;
+}
+if ($obj = wom_book_1 | $obj = wom_book_2 | $obj = wom_chicken_book) {
+    ~chatnpc("<p,angry>That's mine. I'll take it back, thank you very much!");
+    inv_del(inv, wom_book_1, inv_total(inv, wom_book_1));
+    inv_del(inv, wom_book_2, inv_total(inv, wom_book_2));
+    inv_del(inv, wom_chicken_book, inv_total(inv, wom_chicken_book));
+    return;
+}
+if ($obj = coins) {
+    ~chatnpc("<p,neutral>That's called 'money'. Money is fantastically important if you haven't got enough of it, but when you've got as much as I have, you realise that money doesn't matter.");
+    ~chatplayer("<p,confused>Right...");
+    return;
+}
+// ours: "an item with offensive stats" is a weapon, "only defensive stats" anything else worn
+if (oc_wearpos($obj) = ^wearpos_rhand) {
+    ~chatnpc("<p,neutral>I suppose you could use that in combat.");
+    ~chatplayer("<p,happy>Thanks, old man.");
+    return;
+}
+if (oc_wearpos($obj) >= 0) {
+    ~chatnpc("<p,neutral>I suppose you could use that for defense.");
+    ~chatplayer("<p,happy>Thanks, old man.");
+    return;
+}
+// the transcript opens the Recycling Centre here; ours is his inventory junk check
+~chatnpc("<p,neutral>Tell you what, rather than you showing me items individually, I'll look through all your possessions to see if I can find anything worth discarding.");
+~wom_check_junk(inv, "inventory");
+
+// ---------------------------------------------------------------- his topics
+[label,wom_topics]
+def_int $choice = ~p_choice5("Distant lands", 1, "Strange beasts", 2, "Days gone by", 3, "Gods and demons", 4, "Something to do with you...", 5);
+if ($choice = 1) @wom_distant_lands;
+if ($choice = 2) @wom_strange_beasts;
+if ($choice = 3) @wom_days_gone_by;
+if ($choice = 4) @wom_gods;
+if ($choice = 5) @wom_hat; // ours: without Swan Song his hat is the only thing here
+
+[label,wom_anything_else]
+~chatnpc("<p,neutral>Is there anything else you'd like to ask?");
+@wom_anything_else_choice;
+
+[label,wom_anything_else_choice]
+if (~p_choice2("Yes please.", 1, "Thanks, maybe some other time.", 2) = 1) {
+    ~chatplayer("<p,happy>Yes please.");
+    @wom_topics;
+}
+~chatplayer("<p,shifty>Thanks, maybe some other time.");
+~chatnpc("<p,neutral>As you wish. Farewell, <displayname>.");
+
+[label,wom_distant_lands]
+def_int $choice = ~p_choice4("The Wilderness", 1, "Misty jungles", 2, "Underground domains", 3, "Mystical realms", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Could you tell me about the Wilderness, please?");
+    ~chatnpc("<p,neutral>If Entrana is a land dedicated to the glory of Saradomin, the Wilderness is surely the land of Zamorak.");
+    ~chatnpc("<p,neutral>It's a dangerous place, where adventurers such as yourself may attack each other, using all their combat skills in the struggle for survival.");
+    ~chatnpc("<p,neutral>The Wilderness has different levels. In a low level area, you can only fight adventurers whose combat level is close to yours.");
+    ~chatnpc("<p,neutral>But if you venture into the high level areas in the far north, you can be attacked by adventurers who are significantly stronger than you.");
+    ~chatnpc("<p,happy>Of course, you'd be able to attack considerably weaker people too, so it can be worth the risk.");
+    ~chatnpc("<p,laugh>If you dare to go to the far north-west of the Wilderness, there's a building called the Mage Arena where you can learn to summon the power of Saradomin himself!");
+} else if ($choice = 2) {
+    ~chatplayer("<p,happy>What can you tell me about jungles?");
+    ~chatnpc("<p,happy>If it's jungle you want, look no further than the southern regions of Karamja.");
+    ~chatnpc("<p,happy>Once you get south of Brimhaven, the whole island is pretty much covered in exotic trees, creepers and shrubs.");
+    ~chatnpc("<p,neutral>There's a small settlement called Tai Bwo Wannai Village in the middle of the island. It's a funny place; the chieftain's an unfriendly chap and his sons are barking mad.");
+    ~chatnpc("<p,laugh>Honestly, one of them asked me to stuff a dead monkey with seaweed so he could EAT it!");
+    if (%tbwt_main >= ^tbwt_complete) ~chatplayer("<p,happy>Yes, I've met them.");
+    ~chatnpc("<p,neutral>Further south you'll find Shilo Village. It's been under attack by terrifying zombies in recent months, if my sources are correct.");
+    if (%zombiequeen >= ^zombiequeen_complete) ~chatplayer("<p,happy>I've dealt with them, although there are a few still knocking about.");
+    ~chatnpc("<p,neutral>The jungle's filled with nasty creatures. There are vicious spiders that you can hardly see before they try to bite your legs off, and great big jungle ogres.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,happy>Tell me about what's underground.");
+    ~chatnpc("<p,laugh>Oh, the dwarven realms?");
+    ~chatnpc("<p,neutral>Yes, there was a time, back in the Fourth Age, when we humans wouldn't have been able to venture underground. That was before we had magic; the dwarves were quite a threat.");
+    ~chatnpc("<p,happy>Still, it's much more friendly now. You can visit the vast dwarven mine if you like; the entrance is on the mountain north of Falador.");
+    ~chatnpc("<p,happy>If you go further west you may be able to visit the dwarven city of Keldagrim. But they were a bit cautious about letting humans in, last time I asked.");
+    ~chatnpc("<p,happy>On the other hand, if you go west of Brimhaven, you'll find a huge underground labyrinth full of giants, demons, dogs and dragons to fight. It's even bigger than the caves under Taverley, although the Taverley dungeon's pretty good for training your combat skills.");
+} else if ($choice = 4) {
+    ~chatplayer("<p,happy>What mystical realms can I visit?");
+    if (%zanaris = ^zanaris_complete) {
+        ~chatnpc("<p,happy>Well, you've been to Zanaris. I met a fairy years ago who said she lived there. She was an incredible warrior, considering that she wasn't even a metre tall.");
+    } else {
+        ~chatnpc("<p,happy>The fabled Lost City of Zanaris has an entrance somewhere near here. Perhaps some day you'll go there."); // Void
+    }
+    ~chatnpc("<p,neutral>Also, in my research I came across ancient references to some kind of Abyss. Demons from the Abyss have already escaped into this land; Saradomin be thanked that they are very rare!");
+} else {
+    return;
+}
+@wom_anything_else;
+
+[label,wom_strange_beasts]
+def_int $choice = ~p_choice4("Biggest & Baddest", 1, "Poison and how to survive it", 2, "Wealth through slaughter", 3, "Random events", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>What's the biggest monster in the world?");
+    ~chatnpc("<p,happy>There's a mighty fire-breathing dragon living underground in the deep Wilderness, known as the King Black Dragon. It's a fearsome beast, with a breath that can poison you, freeze you to the ground or incinerate you where you stand.");
+    ~chatnpc("<p,happy>But even more deadly is the Queen of the Kalphites. As if her giant mandibles of death were not enough, she also throws her spines at her foes with deadly force. She can even cast rudimentary spells.");
+    ~chatnpc("<p,sad>Some dark power must be protecting her, for she can block attacks using prayer just as humans do.");
+    ~chatnpc("<p,neutral>Another beast that's worthy of a special mention is the Shaikahan. It dwells in the eastern reaches of Karamja, and is almost impossible to kill except with specially prepared weapons.");
+    if (%tbwt_main >= ^tbwt_complete) ~chatplayer("<p,happy>Actually, that one's dead. I've been helping a barmy hunter who'd sworn to kill it.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,quiz>What does poison do?");
+    ~chatnpc("<p,neutral>Many monsters use poison against their foes. If you get poisoned, you will not feel it at the time, but later you will begin to suffer its effects, and your life will drain slowly from you.");
+    ~chatnpc("<p,neutral>Over time the effects dwindle to nothing, but if you had already been wounded you might die before they wear off completely.");
+    ~chatnpc("<p,neutral>Fortunately, followers of Guthix have devised potions that can cure the poison or even give immunity to it.");
+    ~chatnpc("<p,neutral>Should you wish to use poison against your own enemies and those of our Lord Saradomin, there is a potion that you can smear on your daggers, arrows, spears, javelins and throwing knives.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,shifty>What monsters drop good items?");
+    ~chatnpc("<p,happy>As a general rule, tougher monsters drop more valuable items. But even a lowly hobgoblin can drop valuable gems; it just does this extremely rarely.");
+    ~chatnpc("<p,happy>If you can persuade the Slayer Masters to train you as a Slayer, you will be able to fight certain monsters that drop valuable items far more often.");
+    ~chatnpc("<p,happy>You might care to invest in an enchanted dragonstone ring. These are said to make a monster drop its most valuable items a little more often.");
+} else if ($choice = 4) {
+    ~chatplayer("<p,quiz>What are these strange monsters that keep appearing out of nowhere and attacking me when I'm training?");
+    ~chatnpc("<p,laugh>Ah, I imagine you see a lot of those.");
+    ~chatnpc("<p,happy>Creatures such as the rock golem, river troll and tree spirit dwell in places where adventurers frequently go to train their skills. While you're training you will often disturb one by accident. It will then get angry and attack you. The safest way to deal with them is to run away immediately, but they sometimes drop valuable items if you kill them.");
+} else {
+    return;
+}
+@wom_anything_else;
+
+[label,wom_days_gone_by]
+def_int $choice = ~p_choice4("Heroic figures", 1, "The origin of magic", 2, "Settlements", 3, "The Wise Old Man of Draynor Village", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Tell me about valiant heroes!");
+    ~chatnpc("<p,laugh>Ha ha ha... There are plenty of heroes. Always have been, always will be, until the fall of the world.");
+    if (%qp < 80) {
+        ~chatnpc("<p,happy>If you'd do a few more quests, you'd soon become a fairly noted adventurer yourself.");
+    } else {
+        ~chatnpc("<p,happy>You're quite a noted adventurer yourself!");
+    }
+    ~chatnpc("<p,happy>But I suppose I could tell you of a couple...");
+    ~chatnpc("<p,neutral>Yes, there was a man called Arrav. No-one knew where he came from, but he was a fearsome fighter, a skillful hunter and a remarkable farmer. He lived in the ancient settlement of Avarrocka, defending it from goblins, until he went forth in search of some strange artefact long desired by the dreaded Mahjarrat.");
+    ~chatnpc("<p,neutral>Perhaps some day I shall be able to tell you what became of him.");
+    ~chatnpc("<p,neutral>But do not let your head be turned by heroics. Randas was another great man, but he let himself be beguiled into turning to serve Zamorak, and they say he is now a mindless creature deep in the Underground Pass that leads to Isafdar.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,happy>Where did humans learn to use magic?");
+    ~chatnpc("<p,happy>Ah, that was quite a discovery! It revolutionised our way of life and jolted us into this Fifth Age of the world.");
+    ~chatnpc("<p,neutral>They say a traveller in the north discovered the key, although no records state exactly what he found. From this he was able to summon the magic of the four elements, using magic as a tool and a weapon. He and his followers learnt how to bind the power into little stones so that others could use it.");
+    ~chatnpc("<p,neutral>in the land south of here they constructed an immense tower where the power could be studied, but followers of Zamorak destroyed it with fire many years ago, and most of the knowledge was lost.");
+    if (%runemysteries = ^runemysteries_complete) {
+        ~chatnpc("<p,happy>I hear you've been very helpful to the wizards who are working on the mysteries of the rune stones.");
+        ~chatplayer("<p,shifty>Well, I didn't do much...");
+    } else {
+        ~chatnpc("<p,neutral>Perhaps one day those lost secrets will be uncovered once more.");
+    }
+} else if ($choice = 3) {
+    ~chatplayer("<p,neutral>I suppose you'd know about the history of today's cities?");
+    ~chatnpc("<p,bored>Yes, there are fairly good records of the formation of the cities from primitive settlements.");
+    ~chatnpc("<p,neutral>In the early part of the Fourth Age, of course, there were no permanent settlements. Tribes wandered the lands, staying where they could until the resources were exhausted.");
+    ~chatnpc("<p,neutral>This changed as people learnt to grow crops and breed animals, and now there are very few of the old nomadic tribes. There's at least one tribe roaming between the Troll Stronghold and Rellekka, though.");
+    if (%mdaughter_quest_var >= ^md_complete) {
+        ~chatplayer("<p,laugh>Yes, I've met them. They're all mad.");
+        ~chatnpc("<p,neutral>Truly, their faith in natural spirits is rather foolish, but they're a pleasant enough people.");
+    }
+    ~chatnpc("<p,neutral>Anyway, what was I saying? Ah, yes...");
+    ~chatnpc("<p,happy>One settlement was Avarrocka, a popular trading centre.");
+    ~chatnpc("<p,neutral>In the west, Ardougne gradually formed under the leadership of the Carnillean family, despite the threat of the Mahjarrat warlord Hazeel who dwelt in that area until his downfall.");
+    ~wom_hazeel_side("He'll be back, just you wait!", "Oh dear, I hope you haven't done anything rash!");
+} else if ($choice = 4) {
+    ~chatplayer("<p,shifty>Tell me about yourself, old man.");
+    ~chatnpc("<p,laugh>Ah, so you want to know about me, eh?");
+    ~chatnpc("<p,shifty>Mmm... what could I say about myself? Let's see what I've done...");
+    ~chatnpc("<p,neutral>I've delved into the dungeon west of Brimhaven and heard the terrifying CRASH of the steel dragons battling each other for territory.");
+    ~chatnpc("<p,happy>I spent some years on Entrana, where I learnt the techniques of pure meditation.");
+    ~chatnpc("<p,neutral>I've wandered through the vast desert that lies south of Al Kharid and seen the great walls of Menaphos and Sophanem.");
+    if (%ics_little_var >= ^ics_complete) {
+        ~chatplayer("<p,quiz>That feline statue you've got on your bookshelf there - I'm sure I saw something like that when I was in Sophanem.");
+        ~chatnpc("<p,happy>I've always liked to collect little trinkets to remind me of the time when my life was more - ah - exciting.");
+        ~chatplayer("<p,quiz>So you've spoken to the Sphinx, then?");
+        // the transcript's "young lady" is for a woman; ours for a man
+        ~chatnpc("<p,laugh>Spoken to a sphinx, you say? My dear <text_gender("young man", "young lady")>, you can't possibly be serious!");
+        ~chatplayer("<p,quiz>What do you mean?");
+        ~chatnpc("<p,laugh>Ha ha ha! The people who live deep in the shifting sands of the desert will often tell travellers tall tales of strange beasts, but that doesn't mean any of it's remotely true!");
+        ~chatplayer("<p,angry>But I've met the Sph...");
+        ~chatnpc("<p,neutral>Please, adventurer, there is nothing to be gained by interfering in matters you do not understand.");
+        ~chatnpc("<p,neutral>Even if such a creature were to exist...");
+        ~chatplayer("<p,shifty>... which it does...");
+        ~chatnpc("<p,angry>EVEN IF SUCH A CREATURE WERE TO EXIST it would be terribly dangerous for you to get involved in its business.");
+        ~chatnpc("<p,sad>I have heard of terrible things happening to travellers in that land, and I would not wish for you to be dragged into anything like that.");
+        ~chatnpc("<p,angry>Indeed, I have heard of adventurers doing the most shameful and blasphemous deeds believing themselves to be acting on behalf of some false god!");
+        ~chatplayer("<p,confused>Hmmm?");
+        ~chatnpc("<p,neutral>So please do not speak to me of this matter again. Now, I believe I was telling you of my adventurous youth...");
+    }
+    ~chatnpc("<p,happy>Apart from all that, I've spent many a happy hour in dusty libraries, searching through ancient scrolls and texts for the wisdom of those who have passed on.");
+    ~chatnpc("<p,bored>Plus plenty of other adventures, quests, journeys... Is there anything else you'd like to know?");
+    @wom_anything_else_choice;
+} else {
+    return;
+}
+@wom_anything_else;
+
+// Hazeel Cult: the cult's side or Ceril's (%hazeelcult_side; ^hazeelcult_goodside is Ceril's)
+[proc,wom_hazeel_side](string $cult_player, string $cult_npc)
+if (%hazeelcultquest ! ^hazeelcult_complete) return;
+if (%hazeelcult_side = ^hazeelcult_goodside) {
+    ~chatplayer("<p,happy>I've foiled a dastardly Zamorakian plot to have Hazeel resurrected.");
+    ~chatnpc("<p,happy>So I'd heard. Lord Saradomin is smiling on you.");
+    return;
+}
+~chatplayer("<p,angry><$cult_player>");
+~chatnpc("<p,sad><$cult_npc>");
+
+[label,wom_gods]
+def_int $choice = ~p_choice4("Three gods?", 1, "The wars of the gods", 2, "The Mahjarrat", 3, "Wielding the power of the gods", 4);
+if ($choice = 1) @wom_three_gods;
+if ($choice = 2) {
+    ~chatplayer("<p,happy>I wanna know about the wars of the gods!");
+    ~chatnpc("<p,sad>Ah, that was a terrible time. The armies of Saradomin fought gloriously against the minions of Zamorak, but many brave warriors and noble cities were overthrown and destroyed utterly.");
+    ~chatplayer("<p,quiz>How did it all end?");
+    ~chatnpc("<p,shifty>Before the Zamorakian forces could be utterly routed, Lord Saradomin took pity on them and the battle- scarred world, and allowed a truce.");
+    @wom_anything_else;
+}
+if ($choice = 3) {
+    ~chatplayer("<p,shifty>What are the Mahjarrat?");
+    ~chatnpc("<p,sad>Very little is written about the tribe of the Mahjarrat. They are believed to be from the realm of Freneskae, or Frenaskrae - the spelling in this tongue is only approximate.");
+    ~chatnpc("<p,sad>One of them, the foul Zamorak, has achieved godhood, although none knows how this came about.");
+    ~chatnpc("<p,neutral>Other Mahjarrat who have been particularly active upon this plane are Hazeel, Lucien, Azzanadra and Zemouregal.");
+    ~wom_hazeel_side("Hazeel will rise again, you'll see!", "Adventurer, your actions fill me with concern!");
+    if (%ikov = ^ikov_completed_armadyl) {
+        ~chatplayer("<p,happy>I've defeated Lucien.");
+        ~chatnpc("<p,neutral>Truly, your bravery exceeds your stature. But I fear his defeat will not be permanent.");
+    } else if (%ikov >= ^ikov_completed_lucien) {
+        ~chatplayer("<p,happy>I've met Lucien. He paid me very nicely for bringing him a staff he wanted.");
+        ~chatnpc("<p,sad>Traveller, I beg of you, do not have further dealings with such creatures! You do not know their power as I do.");
+    }
+    if (%deserttreasure >= ^deserttreasure_complete) {
+        ~chatplayer("<p,happy>Azzanadra taught me some ancient magical powers after I unlocked the pyramid where he had been trapped.");
+        ~chatnpc("<p,scared>Leave me, traveller; I am old, and your words fill me with horror.");
+    }
+    return;
+}
+if ($choice = 4) {
+    ~chatplayer("<p,happy>Can I wield the power of Saradomin myself?");
+    if (%magearena >= ^mage_arena_complete) {
+        ~chatnpc("<p,happy>I see you are already learning to summon the power of Saradomin.");
+    } else {
+        ~chatnpc("<p,happy>If you travel to the Mage Arena in the north-west reaches of the Wilderness, the battle mage Kolodion may be willing to let you learn to summon the power of Saradomin, should you be able to pass his test.");
+    }
+    @wom_anything_else;
+}
+
+[label,wom_three_gods]
+~chatplayer("<p,quiz>I heard that Gielinor has three gods.");
+~chatnpc("<p,neutral>Indeed. This is correct: Saradomin, Guthix and Zamorak.");
+~chatnpc("<p,happy>Saradomin, the great and glorious, gives life to this world.");
+~chatnpc("<p,angry>Zamorak craves only death and destruction.");
+~chatnpc("<p,neutral>Guthix, calling itself a god of 'balance', holds no allegiance, but simply aids whatever cause suits its shifting purpose.");
+if (%ikov >= ^ikov_completed_armadyl & %deserttreasure < ^deserttreasure_complete) {
+    ~chatplayer("<p,quiz>I've heard of another god, called Armadyl.");
+    ~chatnpc("<p,quiz>What is this of which you speak?");
+    ~chatplayer("<p,neutral>A strange man asked me to go into the Temple of Ikov and steal the Staff of Armadyl.");
+    ~chatnpc("<p,quiz>And what makes you believe in this 'Armadyl'?");
+    ~chatplayer("<p,neutral>Well, there were servants of Armadyl living down in the depths of the temple. They'd been there for generations, guarding the staff.");
+    ~chatnpc("<p,quiz>So you trusted the word of these people who had been sitting down a hole all their lives?");
+    ~chatplayer("<p,confused>Um... Yes, I suppose so.");
+    ~chatnpc("<p,laugh>I wouldn't worry about this sacred 'armadyllo' anymore. Just another foolish myth.");
+    if (%ikov = ^ikov_completed_armadyl) {
+        ~chatplayer("<p,happy>Oh well, the servants rewarded me very kindly for defeating Lucien for them.");
+        ~chatnpc("<p,happy>That is an impressive feat, adventurer. Truly you must be beloved in the eyes of Saradomin.");
+    } else {
+        ~chatplayer("<p,laugh>It's lucky there's no Armadyl! I've pinched his staff and given it to Lucien.");
+        ~chatnpc("<p,shock>YOU'VE DONE WHAT?");
+        ~chatnpc("<p,sad>Adventurer, I beg of you, do not meddle in the gods' affairs. No good can come of it.");
+    }
+}
+if (%ics_little_var >= ^ics_complete & %deserttreasure < ^deserttreasure_complete) {
+    ~chatplayer("<p,quiz>How about Tumeken, Elindis, Icthlarin and the Devourer?");
+    ~chatnpc("<p,quiz>What names are these?");
+    ~chatplayer("<p,neutral>Down in Sophanem, they've got a chief god named Tumeken, plus a fertility goddess named Elindis. Icthlarin is their god of the dead and the Devourer...");
+    ~chatnpc("<p,angry>Adventurer, what folly leads you to think any of these - things, exist?");
+    ~chatplayer("<p,angry>But I've met Icthlarin! He'd got a jackal's head!");
+    ~chatnpc("<p,neutral>It is hot in that land, and the heat can affect a traveller in strange ways. Tell me, when you met 'Icthlarin', had you been feeling at all unwell?");
+    ~chatplayer("<p,confused>Well, now you mention it, I'd just been hypnotised by a weird woman I met in the desert.");
+    ~chatnpc("<p,neutral>So a strange woman interfered with your mind, then you met a man with the head of a jackal, and you decided he must be a god?");
+    ~chatplayer("<p,confused>Umm...");
+    ~chatnpc("<p,laugh>Well, make sure you don't get hypnotised again, and I'm sure you'll not meet any more jackal-headed men claiming to be gods!");
+    ~chatplayer("<p,confused>But...?");
+    ~chatnpc("<p,neutral>It'd probably be best if you don't go there again.");
+    ~chatplayer("<p,quiz>But you've been all around that area, haven't you? When you were travelling?");
+    ~chatnpc("<p,neutral>Indeed, I have.");
+    ~chatplayer("<p,quiz>So you'd know all about their gods?");
+    ~chatnpc("<p,shifty>I know what I know.");
+    ~chatnpc("<p,neutral>And knowing what I know, I do not speak of this matter. Perhaps you would be wise to heed my example.");
+}
+@wom_anything_else; // ours: the transcript doesn't show what follows
+
+// "Your hat!": the transcript's branch for a player who hasn't seen the bank's security recording
+// (there is no Draynor Bank Robbery recording here)
+[label,wom_hat]
+~chatplayer("<p,neutral>I want to ask you about your hat.");
+~chatnpc("<p,happy>Why, thank you! I rather like it myself.");
+~chatplayer("<p,quiz>Did you steal it from the bank?");
+~chatnpc("<p,shock>Me? Steal from the bank? Whatever do you mean?");
+~chatplayer("<p,angry>There's been a break-in at Draynor Bank, and I bet you did it.");
+~chatnpc("<p,shock>Oh my goodness, what in the world could make you think I did such a thing?");
+~chatplayer("<p,angry>Well, you've been sitting here looking at the bank ever since you moved into this house. Now someone's robbed the bank, and suddenly your house is full of expensive stuff!");
+~chatnpc("<p,sad>Oh dear, oh dear...");
+~chatnpc("<p,neutral>So what do you think I did? March across the street, smash the bank wall, knock out the bankers and steal all the money?");
+~chatnpc("<p,angry>I'm an old man! I walk with a stick! How could I possibly have done that?");
+~chatplayer("<p,quiz>So you didn't rob the bank?");
+// ours: "lass" for a woman (the transcript has "lad")
+~chatnpc("<p,shifty>Just run along now, be a good <text_gender("lad", "lass")>, and don't worry yourself about me or my finances!");
+~chatplayer("<p,shifty>Hmmm... But I'll be keeping an eye on you.");
+@wom_hat_more;
+
+[label,wom_hat_more]
+~chatnpc("<p,happy>Now you've got that off your chest, would you like to ask me about anything else?");
+def_int $choice = ~p_choice3("How can I get a hat like that?", 1, "Yes please.", 2, "Thanks, maybe some other time.", 3);
+if ($choice = 1) @wom_hat_get;
+if ($choice = 2) {
+    ~chatplayer("<p,happy>Yes please.");
+    @wom_topics;
+}
+~chatplayer("<p,shifty>Thanks, maybe some other time.");
+~chatnpc("<p,neutral>As you wish. Farewell, <displayname>.");
+
+[label,wom_hat_get]
+~chatplayer("<p,quiz>How can I get a hat like that?");
+~chatnpc("<p,neutral>You could buy one off another player, or wait until they're next made available by the Council.");
+~chatplayer("<p,quiz>Can I buy your hat?");
+~chatnpc("<p,laugh>Ohhh no, I don't intend to part with this. Would you like to ask me about something else?");
+def_int $choice = ~p_choice3("You should give it back, you know.", 1, "Yes please.", 2, "Thanks, maybe some other time.", 3);
+if ($choice = 1) {
+    ~chatplayer("<p,angry>You should give it back, you know.");
+    ~chatnpc("<p,shifty>No, I think I'll keep it.");
+    ~chatplayer("<p,angry>But...");
+    @wom_hat_more;
+}
+if ($choice = 2) {
+    ~chatplayer("<p,happy>Yes please.");
+    @wom_topics;
+}
+~chatplayer("<p,shifty>Thanks, maybe some other time.");
+~chatnpc("<p,neutral>As you wish. Farewell, <displayname>.");

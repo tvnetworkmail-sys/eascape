@@ -29,3 +29,9 @@
 [oploc2,dwarf_market_silver] @attempt_steal_from_stall(loc_type, loc_coord, loc_angle, loc_shape);
 [oploc2,dwarf_market_gems] @attempt_steal_from_stall(loc_type, loc_coord, loc_angle, loc_shape);
 [oploc2,dwarf_market_clothes] mes("The dwarves watch this stall too closely to steal from it."); // ours: no source lets you
+
+// EASCape: Draynor Village's seed stalls (stealing.dbrow stealing_seed_stall)
+[oploc2,seed_stall] @attempt_steal_from_stall(loc_type, loc_coord, loc_angle, loc_shape);
+
+[queue,stolen_from_stall_seed]
+%thieving_stall_timer = clearbit(%thieving_stall_timer, ^seed_stall_index);

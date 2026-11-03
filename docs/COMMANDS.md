@@ -66,6 +66,8 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::togstage <n>` | Sets Tears of Guthix's stage (0 not started, 1 make the bowl, 2 complete); `::togstage 3` also forgets your last visit so Juna lets you into the Tears again. `::questdone tog` finishes it |
 | `::zogrepack` | The items Zogre Flesh Eaters needs: an ogre bow and arrows, a knife, papyrus and charcoal, and for the extras: bronze nails, flighted ogre arrows, achey logs, wolf bones, a bow string, rogue's purse, snake weed and a vial of water (you need Jungle Potion, Big Chompy Bird Hunting and 30 Ranged to start) |
 | `::zogrestage <n>` | Sets Zogre Flesh Eaters' stage (the game's values: 2 investigate, 3 barricade down, 4 potion given, 6 potion in Sithik's tea, 8 the spell is permanent, 10 Grish's key, 12 Slash Bash killed); 3+ knocks the barricade down, 8+ sets what Sithik told you. `::questdone zogre` finishes it |
+| `::womtask <n>` | Gives you a Wise Old Man task (talk to him once first): 0 clears it, 1-7 a letter (1 Father Aereck, 2 High Priest of Entrana, 3 Reldo, 4 Thurgo, 5 Father Lawrence, 6 Abbot Langley, 7 the Oracle; gives you the letter), 8 the thing under his bed (kick the bed upstairs), 9 fetch 3 bones (gives you them) |
+| `::womjunk` | Banks the Wise Old Man's three books (always junk) and two of Imp Catcher's beads (junk once Imp Catcher is done) for his junk check |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |

@@ -1,0 +1,273 @@
+// EASCape: Gee and Donie, Lumbridge's two advisors (Seeds, Bankspace And Advisors, 6 June 2005:
+// "two other new characters wandering around Lumbridge called Donie and Gee who can give some advice
+// to new players on which quests to try"). Their words are the OSRS wiki's Transcript:Gee and
+// Transcript:Donie, which are the same word for word (Void's Donie.kt and 2009scape's GeeDialogue /
+// DonieDialogue are parts of the same). Each talk picks one of the transcript's four option sets at
+// random. The facial expressions are ours.
+
+[opnpc1,lumbridge_guide2_man] @gee_donie_talk; // Gee
+[opnpc1,lumbridge_guide2_woman] @gee_donie_talk; // Donie
+
+[label,gee_donie_talk]
+~chatnpc("<p,happy>Hello there, can I help you?");
+// Transcript: "During The Lost Tribe"
+if (%lt_stage = ^lt_started) {
+    def_int $lt = ~p_choice5("Where am I?", 1, "How are you today?", 2, "Are there any quests I can do here?", 3, "Your shoe lace is untied.", 4, "Do you know what happened in the castle cellar?", 5);
+    if ($lt = 1) @gee_donie_whereami;
+    if ($lt = 2) @gee_donie_howareyou;
+    if ($lt = 3) @gee_donie_quests;
+    if ($lt = 4) @gee_donie_shoelace;
+    ~chatplayer("<p,quiz>Do you know what happened in the castle cellar?");
+    ~chatnpc("<p,neutral>I heard the wall collapsed or something. I don't know why. Perhaps you could get to the bottom of this mystery!");
+    return;
+}
+def_int $choice;
+switch_int (random(4)) {
+    case 0 :
+        $choice = ~p_choice4("Where am I?", 1, "How are you today?", 2, "Are there any quests I can do here?", 3, "Where can I get a haircut like yours?", 4);
+        if ($choice = 1) @gee_donie_whereami;
+        if ($choice = 2) @gee_donie_howareyou;
+        if ($choice = 3) @gee_donie_quests;
+        if ($choice = 4) @gee_donie_haircut;
+    case 1 :
+        $choice = ~p_choice3("What's up?", 1, "Are there any quests I can do here?", 2, "Can I buy your stick?", 3);
+        if ($choice = 1) @gee_donie_whatsup;
+        if ($choice = 2) @gee_donie_quests;
+        if ($choice = 3) @gee_donie_stick;
+    case 2 :
+        $choice = ~p_choice3("Do you have anything of value which I can have?", 1, "Are there any quests I can do here?", 2, "Can I buy your stick?", 3);
+        if ($choice = 1) @gee_donie_freestuff;
+        if ($choice = 2) @gee_donie_quests;
+        if ($choice = 3) @gee_donie_stick;
+    case default :
+        $choice = ~p_choice4("Where am I?", 1, "How are you today?", 2, "Are there any quests I can do here?", 3, "Your shoe lace is untied.", 4);
+        if ($choice = 1) @gee_donie_whereami;
+        if ($choice = 2) @gee_donie_howareyou;
+        if ($choice = 3) @gee_donie_quests;
+        if ($choice = 4) @gee_donie_shoelace;
+}
+
+[label,gee_donie_whereami]
+~chatplayer("<p,quiz>Where am I?");
+~chatnpc("<p,happy>This is the town of Lumbridge my friend.");
+def_int $choice = ~p_choice3("How are you today?", 1, "Do you know of any quests I can do?", 2, "Your shoe lace is untied.", 3);
+if ($choice = 1) @gee_donie_howareyou;
+if ($choice = 2) @gee_donie_quests;
+if ($choice = 3) @gee_donie_shoelace;
+
+[label,gee_donie_howareyou]
+~chatplayer("<p,happy>How are you today?");
+~chatnpc("<p,happy>Aye, not too bad thank you. Lovely weather in Gielinor this fine day.");
+~chatplayer("<p,confused>Weather?");
+~chatnpc("<p,happy>Yes weather, you know.");
+~chatnpc("<p,neutral>The state or condition of the atmosphere at a time and place, with respect to variables such as temperature, moisture, wind velocity, and barometric pressure.");
+~chatplayer("<p,confused>...");
+~chatnpc("<p,laugh>Not just a pretty face eh? Ha ha ha.");
+
+[label,gee_donie_shoelace]
+~chatplayer("<p,happy>Your shoe lace is untied.");
+~chatnpc("<p,angry>No it's not!");
+~chatplayer("<p,neutral>No you're right. I have nothing to back that up.");
+~chatnpc("<p,angry>Fool! Leave me alone!");
+
+[label,gee_donie_haircut]
+~chatplayer("<p,quiz>Where can I get a haircut like yours?");
+~chatnpc("<p,happy>Yes, it does look like you need a hairdresser.");
+~chatplayer("<p,angry>Oh thanks!");
+~chatnpc("<p,happy>No problem. The hairdresser in Falador will probably be able to sort you out.");
+~chatnpc("<p,happy>The Lumbridge general store sells useful maps if you don't know the way.");
+
+[label,gee_donie_whatsup]
+~chatplayer("<p,happy>What's up?");
+~chatnpc("<p,neutral>I assume the sky is up..");
+~chatplayer("<p,confused>You assume?");
+~chatnpc("<p,sad>Yeah, unfortunately I don't seem to be able to look up.");
+
+[label,gee_donie_stick]
+~chatplayer("<p,quiz>Can I buy your stick?");
+~chatnpc("<p,angry>It's not a stick! I'll have you know it's a very powerful staff!");
+~chatplayer("<p,quiz>Really? Show me what it can do!");
+~chatnpc("<p,sad>Um..It's a bit low on power at the moment..");
+~chatplayer("<p,laugh>It's a stick isn't it?");
+~chatnpc("<p,sad>...Ok it's a stick.. But only while I save up for a staff. Zaff in Varrock square sells them in his shop.");
+~chatplayer("<p,happy>Well good luck with that.");
+
+[label,gee_donie_freestuff]
+~chatplayer("<p,quiz>Do you have anything of value which I can have?");
+~chatnpc("<p,quiz>Are you asking for free stuff?");
+~chatplayer("<p,shifty>Well... er... yes.");
+~chatnpc("<p,angry>No I do not have anything I can give you. If I did have anything of value I wouldn't want to give it away.");
+
+[label,gee_donie_quests]
+~chatplayer("<p,quiz>Do you know of any quests I can do?");
+~chatnpc("<p,quiz>What kind of quest are you looking for?");
+def_int $choice = ~p_choice5("I fancy a bit of a fight, anything dangerous?", 1, "Something easy please, I'm new here.", 2, "I'm a thinker rather than fighter, anything skill oriented?", 3, "I want to do all kinds of things, do you know of anything like that?", 4, "Maybe another time.", 5);
+if ($choice = 1) @gee_donie_fight;
+if ($choice = 2) @gee_donie_easy;
+if ($choice = 3) @gee_donie_skill;
+if ($choice = 4) @gee_donie_allkinds;
+~chatplayer("<p,neutral>Maybe another time.");
+
+[label,gee_donie_fight]
+~chatnpc("<p,quiz>Hmm.. dangerous you say? What sort of creatures are you looking to fight?");
+def_int $choice = ~p_choice4("Big scary demons!", 1, "Vampyres!", 2, "Small.. something small would be good.", 3, "Maybe another time.", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Big scary demons!");
+    ~chatnpc("<p,happy>You are a brave soul indeed.");
+    ~chatnpc("<p,neutral>Now that you mention it, I heard a rumour about a fortune-teller in Varrock who is rambling about some kind of greater evil.. sounds demon-like if you ask me.");
+    ~chatnpc("<p,quiz>Perhaps you could check it out if you are as brave as you say?");
+    if (%demonstart = ^demon_complete) {
+        ~chatplayer("<p,laugh>I've already killed the demon Delrith. He was merely a stain on my sword when I was finished with him!");
+        ~chatnpc("<p,happy>Well done! However I'm sure if you search around the world you will find more challenging foes to slay.");
+        return;
+    }
+    ~chatplayer("<p,happy>Thanks for the tip, perhaps I will.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,shock>Vampyres!");
+    ~chatnpc("<p,laugh>Ha ha. I personally don't believe in such things. However, there is a man in Draynor Village who has been scaring the village folk with stories of vampyres.");
+    ~chatnpc("<p,happy>He's named Morgan and can be found in one of the village houses. Perhaps you could see what the matter is?");
+    if (%vampire = ^vampire_complete) {
+        ~chatplayer("<p,laugh>Oh I have already killed that nasty blood-sucking vampyre. Draynor will be safe now.");
+        ~chatnpc("<p,laugh>Yeah, yeah of course you did. Everyone knows vampyres are not real....");
+        ~chatplayer("<p,angry>What! I did slay the beast..I really did.");
+        ~chatnpc("<p,laugh>You're not fooling anyone you know.");
+        ~chatplayer("<p,angry>..Huh.. But... Hey! I did... believe what you like.");
+        return;
+    }
+    ~chatplayer("<p,happy>Thanks for the tip.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,happy>Small.. something small would be good.");
+    ~chatnpc("<p,quiz>Small? Small isn't really that dangerous though is it?");
+    ~chatplayer("<p,angry>Yes it can be! There could be anything from an evil chicken to a poisonous spider. They attack in numbers you know!");
+    ~chatnpc("<p,happy>Yes ok, point taken. Speaking of small monsters, I hear old Wizard Mizgog in the wizards' tower has just had all his beads taken by a gang of mischievous imps.");
+    ~chatnpc("<p,quiz>Sounds like it could be a quest for you?");
+    if (%imp = ^imp_complete) {
+        ~chatplayer("<p,happy>Yes I know of Mizgog and have already helped him with his imp problem. It took me ages to find those beads!");
+        ~chatnpc("<p,laugh>Imps will be imps!");
+        return;
+    }
+    ~chatplayer("<p,happy>Thanks for your help.");
+} else if ($choice = 4) {
+    ~chatplayer("<p,neutral>Maybe another time.");
+}
+
+[label,gee_donie_easy]
+~chatplayer("<p,happy>Something easy please, I'm new here.");
+~chatnpc("<p,happy>I can tell you about plenty of small easy tasks.");
+~chatnpc("<p,neutral>The Lumbridge cook has been having problems, the Duke is confused over some strange talisman and on top of all that, poor lad Romeo in Varrock has girlfriend problems.");
+def_int $choice = ~p_choice4("The Lumbridge cook.", 1, "The Duke's strange talisman.", 2, "Romeo and his girlfriend.", 3, "Maybe another time.", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Tell me about the Lumbridge cook.");
+    ~chatnpc("<p,laugh>It's funny really, the cook would forget his head if it wasn't screwed on. This time he forgot to get ingredients for the Duke's birthday cake.");
+    ~chatnpc("<p,quiz>Perhaps you could help him? You will probably find him in the Lumbridge Castle kitchen.");
+    if (%cookquest = ^cook_complete) {
+        ~chatplayer("<p,happy>I have already helped the cook in Lumbridge.");
+        ~chatnpc("<p,happy>Oh yes, so you have. I am sure the Duke will be pleased.");
+        return;
+    }
+    ~chatplayer("<p,happy>Thank you. I shall go speak with him.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,happy>Tell me about the Duke's strange talisman.");
+    ~chatnpc("<p,neutral>Well the Duke of Lumbridge has found a strange talisman that no one seems to understand. Perhaps you could help him? You can probably find him upstairs in Lumbridge Castle.");
+    if (%runemysteries = ^runemysteries_complete) {
+        ~chatplayer("<p,happy>Yes, I have already solved the Rune mysteries.");
+        ~chatnpc("<p,happy>Ah excellent. Thank you very much adventurer.");
+        return;
+    }
+    ~chatplayer("<p,quiz>Sounds mysterious. I may just do that. Thanks.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,happy>Tell me about Romeo and his girlfriend please.");
+    ~chatnpc("<p,neutral>Romeo in Varrock needs help with finding his beloved Juliet, you may be able to help him out.");
+    ~chatnpc("<p,laugh>Unless of course you manage to find Juliet first in which case she has probably lost Romeo.");
+    if (%rjquest = ^romeojuliet_complete) {
+        ~chatplayer("<p,happy>Oh yes, I've already helped Romeo in the best possible way I can...");
+        ~chatnpc("<p,quiz>Really?");
+        ~chatplayer("<p,happy>Yup.");
+        ~chatnpc("<p,quiz>...How?");
+        ~chatplayer("<p,neutral>He thinks Juliet is dead...");
+        ~chatnpc("<p,confused>Well.. ok.. well done... I think...");
+        return;
+    }
+    ~chatplayer("<p,quiz>Right, ok. Romeo is in Varrock?");
+    ~chatnpc("<p,happy>Yes you can't miss him, he's wandering aimlessly in the square.");
+} else if ($choice = 4) {
+    ~chatplayer("<p,neutral>Maybe another time.");
+}
+
+[label,gee_donie_skill]
+~chatplayer("<p,happy>I'm a thinker rather than fighter, anything skill orientated?");
+~chatnpc("<p,neutral>Skills play a big part when you want to progress in knowledge throughout Gielinor. I know of a few skill- related quests that can get you started.");
+~chatnpc("<p,happy>You may be able to help out Fred the farmer who is in need of someones crafting expertise.");
+~chatnpc("<p,happy>Or, there's always Doric the dwarf who needs an errand running for him?");
+def_int $choice = ~p_choice3("Fred the farmer.", 1, "Doric the dwarf.", 2, "Maybe another time.", 3);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Tell me about Fred the farmer please.");
+    ~chatnpc("<p,neutral>You can find Fred next to the field of sheep in Lumbridge. Perhaps you should go and speak with him.");
+    if (%sheep = ^sheep_complete) {
+        ~chatplayer("<p,happy>I have already helped Fred the farmer. I sheared his sheep and made 20 balls of wool for him.");
+        ~chatplayer("<p,sad>He wouldn't let me kill his chickens though.");
+        ~chatnpc("<p,laugh>Lumbridge chickens do make good target practice.");
+        ~chatnpc("<p,happy>You will have to wait until he isn't looking.");
+        return;
+    }
+    ~chatplayer("<p,happy>Thanks, maybe I will.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,happy>Tell me about Doric the dwarf.");
+    ~chatnpc("<p,neutral>Doric the dwarf is located north of Falador. He might be able to help you with smithing. You should speak to him. He may let you use his anvils.");
+    if (%doricquest = ^doric_complete) {
+        ~chatplayer("<p,happy>Yes, I've been to see Doric already. He was happy to let me use his anvils after I ran a small errand for him.");
+        ~chatnpc("<p,happy>Oh good, Thank you <displayname>!");
+        return;
+    }
+    ~chatplayer("<p,happy>Thanks for the tip.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,neutral>Maybe another time.");
+}
+
+[label,gee_donie_allkinds]
+~chatplayer("<p,happy>I want to do all kinds of things, do you know of anything like that?");
+~chatnpc("<p,happy>Of course I do. Gielinor is a huge place you know, now let me think...");
+~chatnpc("<p,neutral>Hetty the witch in Rimmington might be able to offer help in the ways of magical abilities..");
+~chatnpc("<p,neutral>Also, pirates are currently docked in Port Sarim, Where pirates are, treasure is never far away...");
+~chatnpc("<p,neutral>Or you could go help out Ernest who got lost in Draynor Manor, spooky place that.");
+def_int $choice = ~p_choice4("Hetty the Witch.", 1, "Pirate's treasure.", 2, "Ernest and Draynor Manor.", 3, "Maybe another time.", 4);
+if ($choice = 1) {
+    ~chatplayer("<p,happy>Tell me about Hetty the witch.");
+    ~chatnpc("<p,neutral>Hetty the witch can be found in Rimmington, south of Falador. She's currently working on some new potions. Perhaps you could give her a hand? She might be able to offer help with your magical abilities.");
+    if (%hetty = ^hetty_complete) {
+        ~chatplayer("<p,happy>Yes, I have already been to see Hetty, she gave me super cosmic powers after I helped out with her potion! I could probably destroy you with a single thought!");
+        ~chatnpc("<p,scared>Did she really?");
+        ~chatplayer("<p,laugh>No not really...");
+        ~chatnpc("<p,angry>Right.....");
+        return;
+    }
+    ~chatplayer("<p,happy>Ok thanks, let's hope she doesn't turn me into a potato or something..");
+} else if ($choice = 2) {
+    ~chatplayer("<p,happy>Tell me about Pirate's Treasure.");
+    ~chatnpc("<p,neutral>RedBeard Frank in Port Sarim's bar, the Rusty Anchor, might be able to tell you about the rumored treasure that is buried somewhere in Gielinor.");
+    if (%hunt = ^hunt_complete) {
+        ~chatplayer("<p,angry>Yarr! I already found the booty!");
+        ~chatnpc("<p,laugh>Yarr indeed my friend. A most excellent find.");
+        ~chatplayer("<p,angry>Yarr!");
+        ~chatnpc("<p,laugh>Yarrr!");
+        ~chatplayer("<p,angry>YARRR!");
+        ~chatnpc("<p,angry>Right, that's enough of that!");
+        ~chatplayer("<p,sad>..Sorry.");
+        return;
+    }
+    ~chatplayer("<p,happy>Sounds adventurous, I may have to check that out. Thank you.");
+} else if ($choice = 3) {
+    ~chatplayer("<p,happy>Tell me about Ernest please.");
+    ~chatnpc("<p,neutral>The best place to start would be at the gate to Draynor Manor. There you will find Veronica who will be able to tell you more.");
+    ~chatnpc("<p,neutral>I suggest you tread carefully in that place; it's haunted.");
+    if (%haunted = ^haunted_complete) {
+        ~chatplayer("<p,happy>Yeah, I found Ernest already. Professor Oddenstein had turned him into a chicken!");
+        ~chatnpc("<p,shock>A chicken!?");
+        ~chatplayer("<p,happy>Yeah a chicken. It could have been worse though.");
+        ~chatnpc("<p,laugh>Very true, poor guy.");
+        return;
+    }
+    ~chatplayer("<p,quiz>Sounds like fun. I've never been to a Haunted Manor before.");
+} else if ($choice = 4) {
+    ~chatplayer("<p,neutral>Maybe another time.");
+}

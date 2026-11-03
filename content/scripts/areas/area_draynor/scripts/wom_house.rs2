@@ -1,0 +1,100 @@
+// EASCape: the Wise Old Man's house in Draynor Village. Its door (loc_1530) and stairs (loc_7057 /
+// loc_7056) already work. Three of his bookshelves hold his books (2009scape's
+// WiseOldManHouseListener: 7065 Strange book, 7066 Book of folklore, 7068 Book on chickens); the
+// books' words are 2009scape's StrangeBook / FolkloreBook / ChickenBook. Searching before you've
+// spoken to him: the OSRS wiki's Transcript:Wise Old Man. His letter's words: Void's OldMansMessage.
+
+[oploc1,bookshelf_old_tall_movedin] ~wom_bookshelf(wom_book_1, "Strange Book");
+[oploc1,bookshelf_old_tall2_movedin] ~wom_bookshelf(wom_book_2, "Book of folklore");
+[oploc1,bookshelf_old_short_movedin] ~wom_bookshelf(wom_chicken_book, "Book on chickens");
+// ours: his other shelves have nothing for you (2009scape lists them but gives them nothing)
+[oploc1,bookshelf_old_tall_double] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall_movedin2] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall2_movedin2] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall3_movedin2] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_short_movedin2] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_short3_movedin2] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall_movedin3] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall2_movedin3] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_tall3_movedin3] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_short2_movedin3] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_short3_movedin3] ~wom_bookshelf(null, "");
+[oploc1,bookshelf_old_short_withsphinx] ~wom_bookshelf(null, "");
+[oploc1,wom_bookshelf_old_tall_double] ~wom_bookshelf(null, "");
+[oploc1,wom_bookshelf_old_tall_double2] ~wom_bookshelf(null, "");
+
+[proc,wom_bookshelf](namedobj $book, string $name)
+if (%wom_met = 0) {
+    ~chatnpc_specific("Wise Old Man", wise_old_man, "<p,angry>It'd be politer to come and talk to me before you start messing around with my possessions!");
+    return;
+}
+if ($book = null | inv_total(inv, $book) > 0) {
+    mes("You search the bookcase and find nothing of interest.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You search the bookcase and find a book named '<$name>', but you have no room to take it."); // ours
+    return;
+}
+mes("You search the bookcase and find a book named '<$name>'.");
+inv_add(inv, $book, 1);
+
+// ---------------------------------------------------------------- his books
+[opheld1,wom_book_1]
+%book_page = 0;
+%open_book = wom_book_1;
+@book_flip_page(0, 0, 8, wom_strange_book);
+
+[opheld1,wom_book_2]
+%book_page = 0;
+%open_book = wom_book_2;
+@book_flip_page(0, 0, 0, wom_folklore_book);
+
+[opheld1,wom_chicken_book]
+%book_page = 0;
+%open_book = wom_chicken_book;
+@book_flip_page(0, 0, 2, wom_chicken_book);
+
+[proc,wom_strange_book]
+switch_int (%book_page) {
+    case 0 : ~book("Strange book", "Perception and Reality||... which leads us to the new definition of knowledge as a belief that is both reliably generated and true.||Our senses tell us about the world, but to what extent are they reliable? One witness may perceive the weather to be hot, but another witness may consider it to be quite cold.||Perception of colour may be similarly affected, as the reader may demonstrate by staring at a piece of brightly-coloured paper. When the paper is removed, the reader may find that");
+    case 1 : ~book("Strange book", "everything else appears to be a slightly different colour from normal.||We may conclude from this that, although we are sensing some intrinsic property of the object under examination, qualities such as colour and temperature are NOT intrinsic.||Henceforth we recommend that the reader consider them to be Secondary qualities. The quantity of caloric within the object that gives it this perceived temperature truly is intrinsic to the object, so this may");
+    case 2 : ~book("Strange book", "be considered a Primary quality.||In the following chapter we will examine the implications of this distinction for the study of natural philosophy.||Certainty and Assumption||In this chapter we aim to examine the extent to which our senses give us a reliable impression of the world in which we live.||Although we may believe that we are seeing and hearing things that exist, we may be deceived by");
+    case 3 : ~book("Strange book", "our senses, as every keen drinker will have experienced! But if our senses may be deceived, what can we trust?||We may perhaps try to rely only on logical deductions and mathematical principles. Yet it is even possible that some fiend may have confused our minds to the extent that we are making false deductions without being aware of this.||We therefore present the following statement as the only piece of knowledge about which we cannot possibly be deceived:");
+    case 4 : ~book("Strange book", "'I EXIST'||Although all information gained through use of our senses and minds may be distorted, no self-aware being can be led to believe that it does not exist. It may not be the man or woman it believes itself to be, but it can never question its own existence in some form.||In the following chapter we will discuss ways in which one may attempt to demonstrate the existence of a world outside of one's own consciousness.||Graphical solution of");
+    case 5 : ~book("Strange book", "mathematical problems||A simple graph containing an x-axis and a y-axis may be used to represent equations similar to the following: x + 3y = 5||For every 'x' and 'y' that satisfy the equation (such as x = 2, y = 1 or x = 5, y = 0 for the above example), the points 'x,y' may be plotted on the graph, and it will be found that they form a line.||If a second equation of this form is plotted on the same graph, the two lines may cross at some point.");
+    case 6 : ~book("Strange book", "Any point where the two lines cross will be given by some 'x' and 'y' that fits both equations.||Readers are invited to create two such equations and try it for themselves!||Readers' Comments||This page left blank for readers' comments||... better now, walls look decent, nice and elegant. Those new lanterns were a rip-off, blasted dwarf craftsmen. Still, not a problem for me!");
+    case 7 : ~book("Strange book", "Even got my old Saradomin armour gilded, beautiful gold edges on it now. No-one else's going to have armour like that, that'll make them think, heh heh heh...||Lick of gold-leaf here and there, even my globe looks smarter now, maybe that bath screen was a bit much? No, I saw it, I wanted it, it's mine. Vidi, volui, mihi est!||Still don't know what that 'thing' is, but it looks nice on my desk. Probably some kind of transport? Must run off hot air or dragon flatulence? Running a");
+    case 8 : ~book("Strange book", "bit short of runes now. Those wizards over to the south always seem to have plenty, but will they spare me some? Bah! Not a chance, poxy mage scum!||Perhaps another little expedition is needed - they all look pretty weedy over there...");
+}
+
+[proc,wom_folklore_book]
+~book("The Myth of the Elder-dragons", "Although the Elder-dragons are generally considered to be a myth, stories tell of an ancient race that dwelt on Gielinor before any other.||In some arcane way their lifeforce was linked to the life of the world itself; it is written that, as long as the Elder-dragons continue to live, the world shall not end.||However, sceptics claim that the myth of the Elder-dragons was invented to cast doubt on claims that this realm was lifeless until the gods first arrived.");
+
+[proc,wom_chicken_book]
+switch_int (%book_page) {
+    case 0 : ~book("The Origins of the Bird of Evil", "Many are the rumours and tales surrounding this foul beast.||The earliest of these tales seems to date back to the time of the Mahjarrat. It is a story about a mad mage, who attempts to summon a demon and bind it to his will. Unfortunately his spell failed and all that appeared was one confused chicken. In a fit of anger at his failure the mage banished the chicken to the Abyss. The chicken however appears to have survived and grown in power. Years later, when the mage cast another spell of summoning, the chicken appeared!");
+    case 1 : ~book("The Origins of the Bird of Evil", "The story does not tell of what became of the mage.||Another popular tale tells of a chicken of higher than average mental ability. Realising that it and its kind were prisoners in their coops he organised a rebellion against the human farmers. The farmers, of course, simply slaughtered the rebellious chickens.||However, the Evil Chicken escaped. Blaming its brethren for the coup's failure it swore revenge on all chickens and all humans.");
+    case 2 : ~book("The Origins of the Bird of Evil", "The Chicken can strike anybody, anywhere. It is said that a coven worships this fell fowl and have even built a shrine to it. The exact location of this shrine is unknown, but is rumoured to be in the fairyworlds. Further rumour suggests that his lair is guarded by some fearsome beasts, but it may be reached by making a tasty offering... whatever that may be.");
+}
+
+// ---------------------------------------------------------------- his letter
+// Void's OldMansMessage (a scroll there; ours shows it in the book). Reldo's and the Oracle's have
+// no words in Void (ours: nothing to read).
+[opheld1,wom_message]
+if (%wom_npc < ^wom_to_aereck | %wom_npc = ^wom_to_reldo | %wom_npc >= ^wom_to_oracle) {
+    mes("The letter is sealed."); // ours
+    return;
+}
+%book_page = 0;
+%open_book = wom_message;
+@book_flip_page(0, 0, 0, wom_message_book);
+
+[proc,wom_message_book]
+switch_int (%wom_npc) {
+    case ^wom_to_aereck : ~book("Old man's message", "To Aereck, resident priest of Lumbridge, greetings:||I am pleased to inform you that, following a careful search, the staff of the seminary have located your pyjamas.||Before returning them to you, however, they would be very interested to know exactly how these garments came to be in the graveyard.||Please pass on my regards to Urhney.|*D");
+    case ^wom_to_langley : ~book("Old man's message", "To Langley, Abbot of the Monastery of Saradomin, greetings:||Long has it been since our last meeting, my friend, too long. Truly we are living in tumultuous times, and the foul works of Zamorak can be seen across the lands. Indeed, I hear a whisper from the south that the power of the Terrible One has been rediscovered! But be of good cheer, my friend, for we are all in the hands of Lord Saradomin.||Until our next meeting, then,|*D");
+    case ^wom_to_highpriest : ~book("Old man's message", "To the High Priest of Entrana, greetings:||In an effort to respond to your recent questions about the effects of summoning the power of Saradomin, I have spent some time searching through the scrolls of Kolodion the Battle Mage. He records that a bolt of lightning falls from above, accompanied by a resounding crash, and the victim loses up to 20 points of health. However, he believed that this could be increased by 50% should one be wearing the Cape of Saradomin and be Charged when casting the spell.||Fare thee well, my young friend, - *D");
+    case ^wom_to_lawrence : ~book("Old man's message", "To Lawrence, resident priest of Varrock, greetings:||Despite our recent conversation on this matter, I hear that you are still often found in a less than sober condition. I am forced to repeat the warning I gave you at the time: if you continue to indulge yourself in this manner, the Council will have no choice but to transfer you to Entrana where you can be supervised more carefully.||I trust you will heed this message.|*D");
+    case ^wom_to_thurgo : ~book("Old man's message", "To Thurgo, master blacksmith, greetings:||Following your request, I have spent some time re-reading the relevant scrolls in the Library of Varrock. It appears that when your forefathers encountered that adventurer, he was on a quest to find a mysterious shield.||Many thanks for the recipe you sent me; I shall certainly try this 'redberry pie' of which you speak so highly.||Regards,|*D");
+}

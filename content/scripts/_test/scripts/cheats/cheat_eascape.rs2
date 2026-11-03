@@ -2103,3 +2103,36 @@ if ($n >= ^gd_support & %gd_chosen = 0) %gd_chosen = ^gd_purple_pewter;
 ~gd_set($n);
 ~send_quest_progress(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
 mes("The Giant Dwarf stage: <tostring($n)>");
+
+// ::womtask <n> - gives you a Wise Old Man task (area_draynor/wom_tasks.rs2): 0 clears it, 1-7 a
+// letter (1 Father Aereck, 2 the High Priest of Entrana, 3 Reldo, 4 Thurgo, 5 Father Lawrence,
+// 6 Abbot Langley, 7 the Oracle; gives you the letter), 8 the thing under his bed, 9 fetch 3 bones
+// (gives you the bones). Talk to him first once (%wom_met).
+[debugproc,womtask](int $n)
+if (p_finduid(uid) = false) return;
+%wom_npc = ^wom_to_none;
+%wom_fetch = null;
+%wom_remaining = 0;
+if ($n >= ^wom_to_aereck & $n <= ^wom_to_oracle) {
+    %wom_npc = $n;
+    inv_add(inv, wom_message, 1);
+} else if ($n = ^wom_to_bed) {
+    %wom_npc = ^wom_to_bed;
+    %wom_remaining = 1;
+} else if ($n = 9) {
+    %wom_fetch = bones;
+    %wom_remaining = 3;
+    inv_add(inv, bones, 3);
+}
+mes("Wise Old Man task: <tostring($n)>");
+
+// ::womjunk - puts some of the Wise Old Man's junk in your bank: his three books (always junk) and
+// Imp Catcher's beads (junk once Imp Catcher is done)
+[debugproc,womjunk]
+if (p_finduid(uid) = false) return;
+inv_add(bank, wom_book_1, 1);
+inv_add(bank, wom_book_2, 1);
+inv_add(bank, wom_chicken_book, 1);
+inv_add(bank, red_bead, 1);
+inv_add(bank, yellow_bead, 1);
+mes("Banked the Wise Old Man's three books and two beads.");

@@ -1,0 +1,102 @@
+// EASCape: Phileas the Lumbridge Guide (Seeds, Bankspace And Advisors, 6 June 2005: "He can give
+// tips and reminders on where to go to make money, fight monsters or simply find the bank. He'll
+// also gives some handy hints on things such as avoiding scams and keeping your password safe.").
+// No transcript of his 2005 words survives: the OSRS one was reworked (and its "Historical" one is
+// from after X Marks the Spot), and the RuneScape wiki's is the 2009 Lumbridge Sage. So his words
+// are 2009scape's LumbridgeGuideDialogue (the greeting, the quests, the monsters, the money, the
+// bank), and for the scams and passwords, which 2009scape sends to the Stronghold of Security
+// (2007), the OSRS wiki's "Historical" security answers. Where those speak of later things (bank
+// PINs, authenticators, Old School RuneScape, the Stronghold) they are trimmed: ours, marked.
+// The facial expressions are ours.
+
+[opnpc1,lumbridge_guide]
+~chatnpc("<p,happy>Greetings, adventurer. I am Phileas, the Lumbridge Guide. I am here to give information and directions to new players. Do you require any help?");
+@lumbridge_guide_menu;
+
+[label,lumbridge_guide_menu]
+def_int $choice = ~p_choice5("Where can I find a quest to go on?", 1, "What monsters should I fight?", 2, "Where can I make money?", 3, "I'd like to know more about security.", 4, "Where can I find a bank?", 5);
+if ($choice = 1) {
+    ~chatplayer("<p,quiz>Where can I find a quest to go on?");
+    if (%cookquest ! ^cook_complete) {
+        ~chatnpc("<p,neutral>You can try talking to the Cook in the Lumbridge Castle. I hear he is always looking for some help.");
+    } else if (%sheep ! ^sheep_complete) {
+        ~chatnpc("<p,neutral>You can try talking to Fred the Farmer north-west of here. I hear he is always looking for some help.");
+    } else {
+        ~chatnpc("<p,happy>You are such an accomplished adventurer already; you should be telling me some good quests to go on.");
+    }
+    return;
+}
+if ($choice = 2) {
+    ~chatplayer("<p,quiz>What monsters should I fight?");
+    if (~player_combat_level >= 30) {
+        // 2009scape goes on "...but the tutors might help you with any questions you have about the
+        // skills; they're just south of the general store." There are no tutors in 2005 (ours: cut).
+        ~chatnpc("<p,happy>You're strong enough to work out what monsters to fight for yourself now.");
+        return;
+    }
+    ~chatnpc("<p,happy>There are things to kill all over the place! At your level, you might like to try wandering westwards to the Wizards' Tower or north-west to the Barbarian Village.");
+    ~chatnpc("<p,neutral>Non-player characters usually appear as yellow dots on your mini-map, although there are some that you won't be able to fight, such as myself. Watch out for monsters which are tougher than you. A monster's combat level is shown next to their 'Attack' option. If that level is coloured green it means the monster is weaker than you. If it is red, it means the monster is tougher than you.");
+    ~chatnpc("<p,neutral>Remember, you will do better if you have better armour and weapons and it's always worth carrying a bit of food to heal yourself.");
+    @lumbridge_guide_menu;
+}
+if ($choice = 3) {
+    ~chatplayer("<p,quiz>Where can I make money?");
+    ~chatnpc("<p,neutral>There are many ways to make money in the game. I would suggest either killing monsters or doing a trade skill such as Smithing or Fishing.");
+    ~chatnpc("<p,neutral>Please don't try to get money by begging off other players. It will make you unpopular. Nobody likes a beggar. It is very irritating to have other players asking for your hard-earned cash.");
+    @lumbridge_guide_menu;
+}
+if ($choice = 4) @lumbridge_guide_security;
+if ($choice = 5) {
+    ~chatplayer("<p,quiz>Where can I find a bank?");
+    ~chatnpc("<p,happy>You'll find a bank upstairs in Lumbridge Castle - go right to the top!");
+    @lumbridge_guide_menu;
+}
+
+// the OSRS wiki's "Historical" security answers (ours: "and PIN" and the Stronghold of Security cut)
+[label,lumbridge_guide_security]
+~chatplayer("<p,neutral>I'd like to know more about security.");
+~chatnpc("<p,neutral>First I must warn you to take every precaution to keep your RuneScape password secure. The most important thing to remember is to never give your password to, or share your account with, anyone.");
+~chatnpc("<p,neutral>I can also tell you about password security, avoiding item scamming and in-game moderation.");
+@lumbridge_guide_security_menu;
+
+[label,lumbridge_guide_security_menu]
+def_int $choice = ~p_choice3("I'd like to know about password security.", 1, "I'd like to know more about avoiding item scamming.", 2, "I'd like to know more about in-game moderation.", 3);
+if ($choice = 1) {
+    ~chatplayer("<p,neutral>I'd like to know about password security.");
+    // ours: "your password, bank PIN or authenticator details" is "your password"
+    ~chatnpc("<p,neutral>Well, the first thing to remember with password security, which I can't stress enough, is to never tell your password to anyone, not even if they claim to be Jagex staff. Real Jagex staff will NEVER ask for your password. Sharing your account is a very bad idea, even if you think that you know and trust the person you are sharing with. Players have lost items and even their account this way. Sharing accounts is also against the rules.");
+    ~chatplayer("<p,quiz>Is there anything else to be aware of?");
+    // ours: "Old School RuneScape" is "RuneScape", "device" is "computer", the bank PIN is cut
+    ~chatnpc("<p,neutral>Yes, also be careful where you enter your password. Be aware that fake RuneScape websites exist. These are sites that claim to give things such as item/stat upgrades, free items, beta testing and moderator applications. Jagex do not offer any of these services.");
+    ~chatnpc("<p,neutral>Also be aware of trojans and keyloggers. These nasty programs can send everything you type into your computer back to the computers of malicious people, so you can lose more than just your RuneScape password in this way. To avoid getting these on your computer, be very wary of what you download, especially when it comes to downloading third party software. Also be very wary of email attachments and instant messenger file transfers, which can contain such things.");
+    ~chatnpc("<p,neutral>Finally, remember the game doesn't censor your password when you type it; anyone who tells you otherwise is probably trying to steal your character or items.");
+    @lumbridge_guide_security_more;
+}
+if ($choice = 2) {
+    ~chatplayer("<p,neutral>I'd like to know more about avoiding item scamming.");
+    // ours: "Old School RuneScape" is "RuneScape"
+    ~chatnpc("<p,neutral>There are many nice and helpful players in RuneScape; unfortunately, as in real life, there are some who aren't so honest. Some people may try to trick you out of your items. Try not to fall for this as Jagex policy is to never return lost items to players that have been scammed. Doing so just encourages users to claim they lost items they never had to gain an unfair advantage. However, people carrying out such scams will get banned as it is against the rules.");
+    ~chatnpc("<p,neutral>When trading, you have a second trade confirmation screen. Always double check that you are getting the items you expect on this page as some people may try and change what they are trading at the last minute on the first trade screen. Remember when you have clicked accept on the second trade screen, the trade is not reversible.");
+    ~chatnpc("<p,neutral>Try and find out from someone else what an item is before spending a lot of money on it. Not all merchants are honest about the rarity or the uses of their wares. For example, some people try to pass off spinach rolls as rare when in fact they're as common as cabbages!");
+    ~chatnpc("<p,neutral>Be wary of people offering to improve your items. For example, some people will claim they can add a trim to your armour or upgrade your sword to a more powerful one. This is not possible and they are trying to steal your hard-earned equipment.");
+    @lumbridge_guide_security_more;
+}
+if ($choice = 3) {
+    ~chatplayer("<p,neutral>I'd like to know more about in-game moderation.");
+    // ours: "Old School RuneScape" is "RuneScape"
+    ~chatnpc("<p,neutral>You will, from time to time, see moderator characters in game. Remember: a real staff member will never ask for your password or any other personal information. There are two types of moderator. You may see Jagex staff characters in game - these can be identified by a gold crown next to their name and are the people who work in the Jagex offices. They might be from Customer Support, or they might be a tester or a programmer. You may also see player moderators - these can be identified by a silver crown next to their name. Player moderators are trusted players of RuneScape that help keep in-game behaviour in line with the RuneScape rules.");
+    ~chatplayer("<p,quiz>How do I become a player moderator?");
+    ~chatnpc("<p,neutral>The only way to become a player moderator is to know and play by the rules laid down by Jagex. Report those who break the rules, help players who need it and one day you might find an invite to become a moderator in your RuneScape inbox. Note that Jagex will never contact you in game or by email to become a player moderator.");
+    @lumbridge_guide_security_more;
+}
+
+[label,lumbridge_guide_security_more]
+~chatnpc("<p,quiz>Is there anything else you need help with?");
+def_int $choice = ~p_choice3("Tell me more about security.", 1, "I'd like to know more about something else.", 2, "No thank you.", 3);
+if ($choice = 1) @lumbridge_guide_security;
+if ($choice = 2) {
+    ~chatplayer("<p,neutral>I'd like to know about something else.");
+    ~chatnpc("<p,happy>Well, what would you like to know?");
+    @lumbridge_guide_menu;
+}
+if ($choice = 3) ~chatplayer("<p,neutral>No thank you.");

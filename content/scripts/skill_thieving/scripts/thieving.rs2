@@ -110,6 +110,9 @@ switch_loc (loc_type) {
     case etc_veg_market :
         longqueue(stolen_from_stall_etcveg, ^etcveg_stall_timer, 0, ^discard);
         %thieving_stall_timer = setbit(%thieving_stall_timer, ^etcveg_stall_index);
+    case seed_stall : // EASCape: Draynor's seed stalls
+        longqueue(stolen_from_stall_seed, ^seed_stall_timer, 0, ^discard);
+        %thieving_stall_timer = setbit(%thieving_stall_timer, ^seed_stall_index);
 }
 ~stealing_check_for_reward($data);
 stat_advance(thieving, $experience);

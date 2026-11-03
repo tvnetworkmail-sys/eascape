@@ -1,0 +1,500 @@
+// EASCape: the Wise Old Man's tasks (members only): fetch 3 to 15 of an item (wom_task_item.dbrow),
+// take a letter to one of seven people, or get rid of the thing under his bed. Sources: Void's
+// WiseOldMan.kt, OldMansMessage.kt and ThingUnderTheBed.kt (how they're picked: 16 in 100 a letter or
+// the bed, each of those eight alike; the rewards and their chances), the OSRS wiki's Wise Old Man
+// tasks page (the reward amounts, the seed amounts) and Transcript:Wise Old Man (his words). The
+// people the letters go to say Void's words (their transcripts); where Void has none for a reward
+// they say nothing, and their "gives you some herbs" boxes are Void's placeholders (ours).
+
+[proc,wom_has_task]()(boolean)
+if (%wom_npc ! ^wom_to_none | %wom_fetch ! null) return(true);
+return(false);
+
+[proc,wom_npc_intro](int $who)(string)
+switch_int ($who) {
+    case ^wom_to_aereck : return("Father Aereck in Lumbridge is sure to reward you if you take a note to him for me.");
+    case ^wom_to_highpriest : return("Could you please take a message to the High Priest of Entrana for me?");
+    case ^wom_to_reldo : return("Reldo, the librarian in Varrock Palace, wrote to me recently about something. I need you to take my reply to him.");
+    case ^wom_to_thurgo : return("Thurgo the dwarf is from an ancient tribe. I've found some of its history that he was asking about, and I need you to deliver the information to him.");
+    case ^wom_to_lawrence : return("I hear my old friend Fr Lawrence in Varrock is drinking a bit too much. I'd like to get a letter to him about it.");
+    case ^wom_to_langley : return("I've written a letter to my old friend Abbot Langley that I'd like you to deliver.");
+    case ^wom_to_oracle : return("I'd like to get a note up to the Oracle on Ice Mountain.");
+    case ^wom_to_bed : return("Well, this is rather embarrassing, but I think there's some kind of monster in my house. Could you go upstairs and get rid of it, please?");
+}
+return("");
+
+[proc,wom_npc_hint](int $who)(string)
+switch_int ($who) {
+    case ^wom_to_aereck : return("Just head eastwards to Lumbridge. He'll be in the church.");
+    case ^wom_to_highpriest : return("There are some monks in Port Sarim, west of here, who will take you there so long as you're not carrying any weapons or armour.");
+    case ^wom_to_reldo : return("The library is on the ground floor of the Palace in Varrock.");
+    case ^wom_to_thurgo : return("Go west to Port Sarim, then southwards to some cliffs. He lives on the beach there.");
+    case ^wom_to_lawrence : return("Varrock is a fairly long way north-east of here. The church is at the eastern side of the town, near the Palace.");
+    case ^wom_to_langley : return("Walk northwards, past Draynor Manor. When you reach the Barbarian Village, go north-west until you find his Monastery. He'll be downstairs.");
+    case ^wom_to_oracle : return("Walk northwards, past Draynor Manor. When you reach the Barbarian Village, go north-west until you see the Ice Mountain. It'll be at the top.");
+    case ^wom_to_bed : return("I think it's somewhere upstairs. It kept me awake all last night.");
+}
+return("");
+
+[proc,wom_task_row](namedobj $obj)(dbrow)
+db_find(wom_task_item:obj, $obj);
+return(db_findnext);
+
+// can he ask you for this one? (Void's tasks(): the quest done and the skill level)
+[proc,wom_task_ok](dbrow $row)(boolean)
+if (db_getfieldcount($row, wom_task_item:quest) > 0) {
+    if (~wom_quest_done(db_getfield($row, wom_task_item:quest, 0)) = false) return(false);
+}
+if (db_getfieldcount($row, wom_task_item:skill) > 0) {
+    if (stat_base(db_getfield($row, wom_task_item:skill, 0)) < db_getfield($row, wom_task_item:level, 0)) return(false);
+}
+return(true);
+
+[label,wom_new_task]
+~chatnpc("<p,happy>I'm sure I can think of a few little jobs. This won't be a quest, mind you, just a little favour...");
+if (random(100) < 16) {
+    def_int $who = add(random(8), 1);
+    %wom_npc = $who;
+    ~chatnpc("<p,neutral><~wom_npc_intro($who)>");
+    if ($who = ^wom_to_bed) {
+        %wom_remaining = 1;
+        @wom_hint_npc;
+    }
+    if (inv_freespace(inv) = 0) {
+        ~chatnpc("<p,neutral>If you come back with at least one inventory space, I'll give you another copy.");
+        return;
+    }
+    ~chatnpc("<p,happy>Here's the letter.");
+    inv_add(inv, wom_message, 1);
+    @wom_hint_npc;
+}
+// an item, all equally likely among those he can ask you for
+def_int $count = 0;
+def_dbrow $row;
+db_listall(wom_task_item);
+$row = db_findnext;
+while ($row ! null) {
+    if (~wom_task_ok($row) = true) $count = add($count, 1);
+    $row = db_findnext;
+}
+def_int $pick = random($count);
+def_namedobj $obj = null;
+db_listall(wom_task_item);
+$row = db_findnext;
+while ($row ! null & $obj = null) {
+    if (~wom_task_ok($row) = true) {
+        if ($pick = 0) $obj = db_getfield($row, wom_task_item:obj, 0);
+        $pick = sub($pick, 1);
+    }
+    $row = db_findnext;
+}
+if ($obj = null) return;
+%wom_fetch = $obj;
+%wom_remaining = add(3, random(13)); // 3 to 15
+~chatnpc("<p,happy><db_getfield(~wom_task_row($obj), wom_task_item:intro, 0)> Please bring me <tostring(%wom_remaining)>.");
+@wom_hint_item;
+
+[label,wom_what_task]
+~chatplayer("<p,quiz>What did you ask me to do?");
+if (%wom_npc ! ^wom_to_none) {
+    ~chatnpc("<p,neutral><~wom_npc_intro(%wom_npc)>");
+    if (%wom_npc ! ^wom_to_bed & inv_total(inv, wom_message) = 0 & inv_total(bank, wom_message) = 0) {
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>If you come back with at least one inventory space, I'll give you another copy.");
+            return;
+        }
+        ~chatnpc("<p,neutral>You seem to have mislaid my letter, so here's another copy.");
+        inv_add(inv, wom_message, 1);
+    }
+    @wom_hint_npc;
+}
+if (%wom_fetch = null) return;
+~chatnpc("<p,happy><db_getfield(~wom_task_row(%wom_fetch), wom_task_item:intro, 0)> I still need <tostring(%wom_remaining)>."); // Void
+@wom_hint_item;
+
+[label,wom_hint_npc]
+if (~p_choice2("Where do I need to go?", 1, "Right, I'll see you later.", 2) = 1) {
+    ~chatplayer("<p,quiz>Where do I need to go?");
+    ~chatnpc("<p,neutral><~wom_npc_hint(%wom_npc)>");
+}
+~chatplayer("<p,happy>Right, I'll see you later.");
+
+[label,wom_hint_item]
+if (~p_choice2("Where can I get that?", 1, "Right, I'll see you later.", 2) = 1) {
+    ~chatplayer("<p,quiz>Where can I get that?");
+    ~chatnpc("<p,neutral><db_getfield(~wom_task_row(%wom_fetch), wom_task_item:hint, 0)>");
+}
+~chatplayer("<p,happy>Right, I'll see you later.");
+
+// ---------------------------------------------------------------- bringing the items
+[proc,wom_check_items]
+if (%wom_fetch = null) return;
+def_namedobj $obj = %wom_fetch;
+def_int $have = inv_total(inv, $obj);
+if ($have = 0) {
+    if (oc_cert($obj) ! $obj & inv_total(inv, oc_cert($obj)) > 0) {
+        ~chatplayer("<p,happy>Here, I've got the items you wanted.");
+        ~chatnpc("<p,angry>Those are banknotes! I can't use those!");
+    }
+    return;
+}
+if ($have < %wom_remaining) {
+    ~chatplayer("<p,happy>I've got some of the stuff you wanted.");
+    inv_del(inv, $obj, $have);
+    %wom_remaining = sub(%wom_remaining, $have);
+    ~chatnpc("<p,happy>Ahh, you are very kind.");
+    ~chatplayer("<p,happy>I'll come back when I've got the rest.");
+    return;
+}
+~chatplayer("<p,happy>I've got all the stuff you asked me to fetch.");
+// a stack that stays after he takes his share frees no space for the reward
+if (inv_freespace(inv) = 0 & oc_stackable($obj) = true & $have > %wom_remaining) {
+    ~chatnpc("<p,neutral>I'd give you a reward, but you don't seem to have any space for it. Come back when you do.");
+    return;
+}
+inv_del(inv, $obj, %wom_remaining);
+def_int $hard = db_getfield(~wom_task_row($obj), wom_task_item:hard, 0);
+%wom_fetch = null;
+%wom_remaining = 0;
+def_int $kind = ~wom_reward_kind($hard);
+def_namedobj $gift = ~wom_give_reward($kind, $hard);
+switch_int ($kind) {
+    case ^wom_reward_prayer :
+        ~chatnpc("<p,happy>Thank you, thank you! In thanks, I shall bestow on you a simple blessing.");
+        ~mesbox("The Wise Old Man blesses you.|You gain some Prayer xp.");
+    case ^wom_reward_coins :
+        ~objbox(coins_250, "<col=000080>The Wise Old Man gives you some coins.</col>", 250, 0, divide(^objbox_height, 2));
+        ~chatnpc("<p,happy>Thank you, thank you! Please take this money as a sign of my gratitude.");
+    case ^wom_reward_seeds :
+        ~objbox(potato_seed, "<col=000080>The Wise Old Man gives you some seeds.</col>", 250, 0, divide(^objbox_height, 2));
+        ~chatnpc("<p,happy>Thank you, thank you! Please take these seeds as a sign of my gratitude.");
+    case ^wom_reward_herbs :
+        ~objbox(unidentified_tarromin, "<col=000080>The Wise Old Man gives you some backnotes that can be exchanged for herbs.</col>", 250, 0, divide(^objbox_height, 2));
+        ~chatnpc("<p,happy>Thank you, thank you! Please take these herbs as a sign of my gratitude.");
+    case ^wom_reward_runes :
+        ~doubleobjbox(naturerune, waterrune, "<col=000080>The Wise Old Man gives you some runes.</col>", 250);
+        ~chatnpc("<p,happy>Thank you, thank you! Please take these runes as a sign of my gratitude.");
+    case ^wom_reward_gem :
+        ~chatnpc("<p,happy>Thank you, thank you! Please take this gem as a sign of my gratitude.");
+        ~objbox($gift, "<col=000080>The Wise Old Man gives you an <oc_name($gift)><~wom_gem_mark($gift)></col>", 250, 0, divide(^objbox_height, 2));
+}
+
+// Void: "!" after the diamond, ruby and emerald
+[proc,wom_gem_mark](namedobj $gem)(string)
+if ($gem = uncut_diamond | $gem = uncut_ruby | $gem = uncut_emerald) return("!");
+return(".");
+
+// ---------------------------------------------------------------- rewards
+// Void's OldMansMessage.reward: 1 in 16 a gem, 2 runes, 2 herbs, 2 seeds, then with 3 Prayer 7 a
+// blessing, and coins otherwise. Hard tasks (and letters) give more.
+[proc,wom_reward_kind](int $hard)(int)
+def_int $chance = random(16);
+if ($chance < 1) return(^wom_reward_gem);
+if ($chance < 3) return(^wom_reward_runes);
+if ($chance < 5) return(^wom_reward_herbs);
+if ($chance < 7) return(^wom_reward_seeds);
+if (stat_base(prayer) >= 3 & $chance < 14) return(^wom_reward_prayer);
+return(^wom_reward_coins);
+
+[proc,wom_give](namedobj $obj, int $count)
+def_int $overflow = inv_itemspace2(inv, $obj, $count, inv_size(inv));
+if ($overflow < $count) inv_add(inv, $obj, sub($count, $overflow));
+if ($overflow > 0) obj_add(coord, $obj, $overflow, ^lootdrop_duration);
+
+// gives the reward and returns the gem (null for the others)
+[proc,wom_give_reward](int $kind, int $hard)(namedobj)
+def_int $i;
+def_int $n;
+def_namedobj $gem = uncut_diamond;
+switch_int ($kind) {
+    case ^wom_reward_gem :
+        // Void's wise_old_man_gems: out of 25
+        $n = random(25);
+        if ($n < 2) $gem = uncut_red_topaz;
+        else if ($n < 6) $gem = uncut_sapphire;
+        else if ($n < 11) $gem = uncut_opal;
+        else if ($n < 15) $gem = uncut_emerald;
+        else if ($n < 19) $gem = uncut_ruby;
+        else if ($n < 24) $gem = uncut_jade;
+        ~wom_give($gem, 1);
+        return($gem);
+    case ^wom_reward_runes :
+        // the wiki: up to 10 sets of runes (25 for a hard task), each set alike: 1 chaos, 1 nature,
+        // 1 law, 1 fire, 2 mind, 2 body, 2 earth, 2 water or 3 air
+        $n = 10;
+        if ($hard = 1) $n = 25;
+        $n = add(random($n), 1);
+        $i = 0;
+        while ($i < $n) {
+            switch_int (random(9)) {
+                case 0 : ~wom_give(chaosrune, 1);
+                case 1 : ~wom_give(naturerune, 1);
+                case 2 : ~wom_give(lawrune, 1);
+                case 3 : ~wom_give(firerune, 1);
+                case 4 : ~wom_give(mindrune, 2);
+                case 5 : ~wom_give(bodyrune, 2);
+                case 6 : ~wom_give(earthrune, 2);
+                case 7 : ~wom_give(waterrune, 2);
+                case default : ~wom_give(airrune, 3);
+            }
+            $i = add($i, 1);
+        }
+    case ^wom_reward_herbs :
+        // the wiki: up to 3 herbs (10 for a hard task), noted, guam, marrentill, tarromin, ranarr or
+        // harralander
+        $n = 3;
+        if ($hard = 1) $n = 10;
+        $n = add(random($n), 1);
+        $i = 0;
+        while ($i < $n) {
+            switch_int (random(5)) {
+                case 0 : ~wom_give(cert_unidentified_guam, 1);
+                case 1 : ~wom_give(cert_unidentified_marentill, 1);
+                case 2 : ~wom_give(cert_unidentified_tarromin, 1);
+                case 3 : ~wom_give(cert_unidentified_ranarr, 1);
+                case default : ~wom_give(cert_unidentified_harralander, 1);
+            }
+            $i = add($i, 1);
+        }
+    case ^wom_reward_seeds :
+        ~wom_give_seeds;
+    case ^wom_reward_prayer :
+        // the wiki: 185-215 xp for an easy task, 370-430 for a hard one
+        if ($hard = 1) stat_advance(prayer, multiply(~random_range(370, 430), 10));
+        else stat_advance(prayer, multiply(~random_range(185, 215), 10));
+    case ^wom_reward_coins :
+        // the wiki: 185-215 coins for an easy task, 990-1020 for a hard one
+        if ($hard = 1) ~wom_give(coins, ~random_range(990, 1020));
+        else ~wom_give(coins, ~random_range(185, 215));
+}
+return(null);
+
+// Void's wise_old_man_seeds weights (common 4, uncommon 2, rare 1; out of 67), the wiki's amounts.
+// The wiki's snape grass seed isn't in this game (nor in Void's table).
+[proc,wom_give_seeds]
+def_int $n = random(67);
+if ($n < 4) { ~wom_give(potato_seed, ~random_range(1, 9)); return; }
+$n = sub($n, 4);
+if ($n < 4) { ~wom_give(onion_seed, ~random_range(1, 6)); return; }
+$n = sub($n, 4);
+if ($n < 4) { ~wom_give(tomato_seed, ~random_range(1, 4)); return; }
+$n = sub($n, 4);
+if ($n < 4) { ~wom_give(cabbage_seed, ~random_range(1, 3)); return; }
+$n = sub($n, 4);
+if ($n < 4) { ~wom_give(marigold_seed, ~random_range(1, 2)); return; }
+$n = sub($n, 4);
+if ($n < 1) { ~wom_give(limpwurt_seed, 1); return; }
+$n = sub($n, 1);
+// 23 uncommon ones, 2 each
+switch_int (divide($n, 2)) {
+    case 0 : ~wom_give(yanillian_hop_seed, ~random_range(1, 6));
+    case 1 : ~wom_give(cactus_seed, 1);
+    case 2 : ~wom_give(cadavaberry_bush_seed, 1);
+    case 3 : ~wom_give(hammerstone_hop_seed, ~random_range(1, 9));
+    case 4 : ~wom_give(jangerberry_bush_seed, 1);
+    case 5 : ~wom_give(barley_seed, ~random_range(1, 13));
+    case 6 : ~wom_give(nasturtium_seed, 1);
+    case 7 : ~wom_give(strawberry_seed, 1);
+    case 8 : ~wom_give(jute_seed, ~random_range(1, 9));
+    case 9 : ~wom_give(woad_seed, 1);
+    case 10 : ~wom_give(guam_seed, 1);
+    case 11 : ~wom_give(marrentill_seed, 1);
+    case 12 : ~wom_give(tarromin_seed, 1);
+    case 13 : ~wom_give(toadflax_seed, 1);
+    case 14 : ~wom_give(harralander_seed, 1);
+    case 15 : ~wom_give(watermelon_seed, 2);
+    case 16 : ~wom_give(rosemary_seed, 1);
+    case 17 : ~wom_give(redberry_bush_seed, 1);
+    case 18 : ~wom_give(dwellberry_bush_seed, 1);
+    case 19 : ~wom_give(asgarnian_hop_seed, ~random_range(1, 7));
+    case 20 : ~wom_give(sweetcorn_seed, 2);
+    case 21 : ~wom_give(whiteberry_bush_seed, 1);
+    case default : ~wom_give(wildblood_hop_seed, 3);
+}
+
+// ---------------------------------------------------------------- the letters
+// Called first by each person's own Talk-to; true when you gave them his letter.
+[proc,wom_letter](int $who)(boolean)
+if (%wom_npc ! $who | inv_total(inv, wom_message) = 0) return(false);
+def_string $name = "";
+switch_int ($who) {
+    case ^wom_to_aereck :
+        $name = "Father Aereck";
+        ~chatplayer("<p,happy>The Wise Old Man of Draynor Village said you might reward me if I brought you this.");
+        ~chatnpc("<p,neutral>Oh, did he?");
+    case ^wom_to_highpriest :
+        $name = "The High Priest";
+        ~chatplayer("<p,happy>I've got a message for you from the Wise Old Man in Draynor Village.");
+        ~chatnpc("<p,happy>How kind of you to bring me a message to this remote island!");
+    case ^wom_to_reldo :
+        $name = "Reldo";
+        ~chatplayer("<p,happy>The Wise Old Man of Draynor Village sent you this message.");
+        ~chatnpc("<p,happy>Ah, I am always delighted to hear from him. You would not imagine the depths of his wisdom!");
+    case ^wom_to_thurgo :
+        $name = "Thurgo";
+        ~chatplayer("<p,happy>The Wise Old Man says he's got the information you wanted. Here's his message.");
+        ~chatnpc("<p,happy>Ooh, thanks. I've been hoping he'd send me that information soon, although I wouldn't mind if he'd send me a pie instead!");
+    case ^wom_to_lawrence :
+        $name = "Father Lawrence";
+        ~chatplayer("<p,happy>The Wise Old Man of Draynor Village sent you this message about your drinking habits!");
+        ~chatnpc("<p,drunk>mssge? wha messsge?");
+        ~chatnpc("<p,drunk>oh, msesesge for me.");
+        mes("Oh dear, he doesn't look like he's going to be able to read the message!");
+    case ^wom_to_langley :
+        $name = "Abbot Langley";
+        ~chatplayer("<p,happy>I've got a message for you from your friend in Draynor Village.");
+        ~chatnpc("<p,happy>Gosh, you are very kind to bring a message to my remote monastery!");
+    case ^wom_to_oracle :
+        $name = "The Oracle";
+        ~chatplayer("<p,happy>I've got a message for you from the Wise Old Man who lives in Draynor Village.");
+        ~chatnpc("<p,happy>Many do my wisdom seek; few do their own wisdom to me send!");
+}
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>I'd give you a reward, but you don't seem to have any space for it. Come back when you do.");
+    return(true);
+}
+inv_del(inv, wom_message, 1);
+%wom_npc = ^wom_to_none;
+def_int $kind = ~wom_reward_kind(1); // Void: a letter's reward is a hard task's
+def_namedobj $gift = ~wom_give_reward($kind, 1);
+switch_int ($kind) {
+    case ^wom_reward_runes :
+        ~doubleobjbox(naturerune, waterrune, "<$name> gives you some runes.", 250);
+        if ($who = ^wom_to_aereck) ~chatnpc("<p,happy>Well, maybe you'll have a use for these?");
+        if ($who = ^wom_to_reldo) ~chatnpc("<p,happy>My old friend Aubury sent me some runes in return for some books he wanted. Perhaps you'd like them?");
+        if ($who = ^wom_to_thurgo) ~chatnpc("<p,happy>Magic isn't really my thing. Here, take these.");
+        if ($who = ^wom_to_lawrence) ~chatnpc("<p,drunk>Whee! Mmmgic power, kazamm...");
+    case ^wom_reward_herbs :
+        if ($who = ^wom_to_thurgo | $who = ^wom_to_langley) {
+            ~objbox(unidentified_tarromin, "<col=000080><$name> gives you some banknotes that can be exchanged for herbs.</col>", 250, 0, divide(^objbox_height, 2));
+        } else {
+            ~objbox(unidentified_tarromin, "<col=000080><$name> gives you some herbs.</col>", 250, 0, divide(^objbox_height, 2));
+        }
+        if ($who = ^wom_to_thurgo) ~chatnpc("<p,happy>Some guy died down in the hole just north of my house, and he dropped these herbs. Here, take them.");
+        if ($who = ^wom_to_langley) ~chatnpc("<p,happy>I grow a few herbs in my little cabbage patch; please take some as a sign of my gratitude.");
+        if ($who = ^wom_to_highpriest) ~chatnpc("<p,happy>Here, let me give you some herbs.");
+    case ^wom_reward_seeds :
+        ~objbox(potato_seed, "<col=000080><$name> gives you some seeds.</col>", 250, 0, divide(^objbox_height, 2));
+        if ($who = ^wom_to_aereck) ~chatnpc("<p,happy>Well, maybe you'll find a use for these seeds?");
+        if ($who = ^wom_to_reldo) ~chatnpc("<p,happy>These little things seem to be everywhere these days! Perhaps you'd like them?");
+        if ($who = ^wom_to_thurgo) ~chatnpc("<p,happy>I'm not the gardening type. Here, take these.");
+        if ($who = ^wom_to_oracle) ~chatnpc("<p,happy>New life from these shall perchance spring!");
+    case ^wom_reward_prayer :
+        ~mesbox("<col=000080><$name> blesses you.|You gain some Prayer xp.</col>");
+        if ($who = ^wom_to_aereck) ~chatnpc("<p,happy>Well, it's still nice of you to bring the message here. Here, I shall bless you...");
+        if ($who = ^wom_to_highpriest) ~chatnpc("<p,happy>In the name of Saradomin I shall bless you...");
+        if ($who = ^wom_to_lawrence) ~chatnpc("<p,drunk>in nomine saradomini, blah blah blah...");
+        if ($who = ^wom_to_langley) ~chatnpc("<p,happy>Allow me to bestow on you Saradomin's blessings...");
+    case ^wom_reward_coins :
+        ~objbox(coins_250, "<col=000080><$name> gives you some coins.</col>", 250, 0, divide(^objbox_height, 2));
+        if ($who = ^wom_to_highpriest) ~chatnpc("<p,happy>I don't have much in the way of wealth, but I can spare you a few coins for your trouble.");
+        if ($who = ^wom_to_reldo) ~chatnpc("<p,happy>King Roald has been very generous with my salary, so I can spare you some coins for your trouble.");
+        if ($who = ^wom_to_thurgo) ~chatnpc("<p,happy>Here's some cash for your time.");
+        if ($who = ^wom_to_lawrence) ~chatnpc("<p,drunk>here, hve som munny.");
+    case ^wom_reward_gem :
+        ~objbox($gift, "<$name> gives you an <oc_name($gift)>!", 250, 0, divide(^objbox_height, 2));
+        if ($who = ^wom_to_aereck) ~chatnpc("<p,happy>I suppose gems are always acceptable rewards!");
+        if ($who = ^wom_to_highpriest) ~chatnpc("<p,happy>The beasts which dwell under this island occasionally drop gems when they die - please take this one as a sign of my gratitude.");
+        if ($who = ^wom_to_thurgo) ~chatnpc("<p,happy>I found this while I was mining. Hope you like it.");
+}
+return(true);
+
+// ---------------------------------------------------------------- the thing under the bed
+// Void's ThingUnderTheBed.kt: kick the bed upstairs; on the task it growls and becomes the thing
+// (the cache's wom_bed_active, the OSRS wiki's stats in all.npc), which attacks you.
+[opnpc1,wom_bed_inactive]
+anim(human_unarmedkick, 0);
+sound_synth(unarmed_kick, 1, 0);
+p_delay(0);
+npc_anim(wom_bed_block, 0);
+if (%wom_npc ! ^wom_to_bed) return;
+if (%wom_remaining = 0) {
+    ~chatplayer("<p,happy>I think it's already dead. Maybe the Wise Old Man will reward me now?");
+    return;
+}
+npc_say("Gurrhh!");
+npc_changetype(wom_bed_active, 500); // ours: how long it stays a monster
+~npc_retaliate(0);
+
+[ai_queue3,wom_bed_active]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(wom_bed_killed, 0, 0);
+
+[queue,wom_bed_killed]
+if (%wom_npc = ^wom_to_bed) %wom_remaining = 0;
+
+[proc,wom_check_bed]
+if (%wom_npc ! ^wom_to_bed | %wom_remaining ! 0) return;
+~chatplayer("<p,happy>I've killed a creature that was under your bed.");
+~chatnpc("<p,happy>Ah, thank you very much! Now I shall be able to sleep in peace.");
+~chatnpc("<p,happy>Allow me to offer you an appropriate reward for your assistance...");
+%wom_npc = ^wom_to_none;
+stat_advance(hitpoints, multiply(~random_range(280, 300), 10)); // the wiki: 280-300 Hitpoints xp
+~mesbox("The Wise Old Man waves his arms at you. You gain some Hitpoints xp.");
+// EASCape: the quests the Wise Old Man's junk belongs to (wom_junk.dbrow), done or not
+[proc,wom_quest_done](int $quest)(boolean)
+switch_int ($quest) {
+    case 0 : return(true);
+    case ^womq_demon_slayer : if (%demonstart = ^demon_complete) return(true);
+    case ^womq_dragon_slayer : if (%dragonquest >= ^dragon_complete) return(true);
+    case ^womq_ernest_the_chicken : if (%haunted = ^haunted_complete) return(true);
+    case ^womq_goblin_diplomacy : if (%goblinquest = ^gobdip_complete) return(true);
+    case ^womq_imp_catcher : if (%imp = ^imp_complete) return(true);
+    case ^womq_the_knights_sword : if (%squire = ^squire_complete) return(true);
+    case ^womq_pirates_treasure : if (%hunt = ^hunt_complete) return(true);
+    case ^womq_romeo_juliet : if (%rjquest = ^romeojuliet_complete) return(true);
+    case ^womq_rune_mysteries : if (%runemysteries = ^runemysteries_complete) return(true);
+    case ^womq_shield_of_arrav : if (%blackarmgang = ^blackarmgang_complete | %phoenixgang = ^phoenixgang_complete) return(true);
+    case ^womq_vampire_slayer : if (%vampire = ^vampire_complete) return(true);
+    case ^womq_witches_potion : if (%hetty = ^hetty_complete) return(true);
+    case ^womq_ghosts_ahoy : if (%ahoy_questvar >= ^ahoy_complete) return(true);
+    case ^womq_biohazard : if (%biohazard >= ^biohazard_complete) return(true);
+    case ^womq_death_plateau : if (%death_equiproom = ^death_complete) return(true);
+    case ^womq_desert_treasure : if (%deserttreasure >= ^deserttreasure_complete) return(true);
+    case ^womq_druidic_ritual : if (%druidquest = ^druid_complete) return(true);
+    case ^womq_dwarf_cannon : if (%mcannon = ^mcannon_complete) return(true);
+    case ^womq_eadgars_ruse : if (%eadgar_quest >= ^eadgar_complete) return(true);
+    case ^womq_fairy_tale_i : if (%fairy_farmers_quest >= ^fairy1_complete) return(true);
+    case ^womq_family_crest : if (%crestquest = ^crest_complete) return(true);
+    case ^womq_creature_of_fenkenstrain : if (%fenk_quest >= ^fenk_complete) return(true);
+    case ^womq_fight_arena : if (%arenaquest >= ^arena_complete) return(true);
+    case ^womq_fishing_contest : if (%fishingcompo = ^fishingcompo_complete) return(true);
+    case ^womq_the_giant_dwarf : if (%giantdwarf_quest >= ^gd_complete) return(true);
+    case ^womq_the_golem : if (%golem_a = ^golem_complete) return(true);
+    case ^womq_the_grand_tree : if (%grandtree = ^grandtree_complete) return(true);
+    case ^womq_haunted_mine : if (%hauntedmine >= ^hauntedmine_complete) return(true);
+    case ^womq_hazeel_cult : if (%hazeelcultquest = ^hazeelcult_complete) return(true);
+    case ^womq_heroes_quest : if (%heroquest = ^hero_complete) return(true);
+    case ^womq_holy_grail : if (%grail = ^grail_complete) return(true);
+    case ^womq_horror_from_the_deep : if (%horrorquest >= ^horror_complete) return(true);
+    case ^womq_icthlarins_little_helper : if (%ics_little_var >= ^ics_complete) return(true);
+    case ^womq_temple_of_ikov : if (%ikov >= ^ikov_completed_armadyl) return(true);
+    case ^womq_legends_quest : if (%legendsquest = ^legends_complete) return(true);
+    case ^womq_lost_tribe : if (%lt_stage >= ^lt_complete) return(true);
+    case ^womq_throne_of_miscellania : if (%misc_quest >= ^misc_complete) return(true);
+    case ^womq_monkey_madness : if (%mm_main >= ^mm_complete) return(true);
+    case ^womq_mountain_daughter : if (%mdaughter_quest_var >= ^md_complete) return(true);
+    case ^womq_murder_mystery : if (%murderquest = ^murder_complete) return(true);
+    case ^womq_nature_spirit : if (%druidspirit = ^druidspirit_complete) return(true);
+    case ^womq_observatory_quest : if (%itgronigen >= ^itgronigen_complete) return(true);
+    case ^womq_one_small_favour : if (%onesmallfavour >= ^osf_complete) return(true);
+    case ^womq_plague_city : if (%elenaquest >= ^elena_complete) return(true);
+    case ^womq_priest_in_peril : if (%priestperil >= ^priestperil_complete) return(true);
+    case ^womq_regicide : if (%regicide_quest >= ^regicide_complete) return(true);
+    case ^womq_roving_elves : if (%roving_elves_quest >= ^roving_complete) return(true);
+    case ^womq_sea_slug : if (%seaslugquest = ^seaslug_complete) return(true);
+    case ^womq_sheep_herder : if (%sheepherderquest >= ^sheepherder_complete) return(true);
+    case ^womq_tai_bwo_wannai_trio : if (%tbwt_main >= ^tbwt_complete) return(true);
+    case ^womq_the_feud : if (%feud_var >= ^feud_complete) return(true);
+    case ^womq_tourist_trap : if (%desertrescue = ^desertrescue_complete) return(true);
+    case ^womq_tribal_totem : if (%totemquest = ^totem_complete) return(true);
+    case ^womq_troll_stronghold : if (%troll_quest = ^troll_complete) return(true);
+    case ^womq_troll_romance : if (%troll_love = ^troll_love_complete) return(true);
+    case ^womq_underground_pass : if (%upass = ^upass_complete) return(true);
+    case ^womq_watchtower : if (%itwatchtower >= ^itwatchtower_complete) return(true);
+    case ^womq_waterfall_quest : if (%waterfall_quest = ^waterfall_complete) return(true);
+    case ^womq_witches_house : if (%ballquest = ^ball_complete) return(true);
+    case ^womq_zogre_flesh_eaters : if (%zogre >= ^zogre_complete) return(true);
+    case ^womq_shilo_village : if (%zombiequeen >= ^zombiequeen_complete) return(true);
+}
+return(false);

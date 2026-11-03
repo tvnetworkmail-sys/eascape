@@ -161,6 +161,9 @@ if (testbit(%thieving_stall_timer, ^etcfish_stall_index) = ^true) {
 if (testbit(%thieving_stall_timer, ^etcveg_stall_index) = ^true) {
     longqueue(stolen_from_stall_etcveg, ^etcveg_stall_timer, 0, ^discard);
 }
+if (testbit(%thieving_stall_timer, ^seed_stall_index) = ^true) { // EASCape: Draynor's seed stalls
+    longqueue(stolen_from_stall_seed, ^seed_stall_timer, 0, ^discard);
+}
 
 
 // these are longqueues in osrs - they affect movement when p_delay'd
