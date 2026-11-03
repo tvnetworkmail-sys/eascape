@@ -44,7 +44,13 @@ if (%thzfe_makecompozogrebow = 0) {
     mes("You don't know how to make a composite bow yet. Grish might be able to show you.");
     @make_ogre_shafts;
 }
-if (~p_choice2("Ogre arrow shafts.", 1, "Composite ogre bow.", 2) = 1) @make_ogre_shafts; // ours
+// the OSRS game's "What would you like to make?" with both pictures
+def_namedobj $product = ~multiobj2("What would you like to make?",
+    ogre_arrow_shaft, 0, -15, 175, "Ogre Arrow Shafts", 0, 0,
+    unstrung_zogre_bow, 0, -15, 175, "Composite Ogre Bow", 0, 0
+);
+if ($product = null) return;
+if ($product = ogre_arrow_shaft) @make_ogre_shafts;
 if (stat(fletching) < 30) {
     mes("You need a Fletching level of 30 to make this."); // ours
     return;
