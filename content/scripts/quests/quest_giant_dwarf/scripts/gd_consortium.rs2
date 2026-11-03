@@ -1,0 +1,671 @@
+// EASCape: the Consortium: the seven companies' secretaries and directors and their errands (The
+// Giant Dwarf). The words are the OSRS wiki's (Transcript:The Giant Dwarf "Talking to a company
+// secretary" and "director", each company's Secretary/Director transcript for "Who are you?",
+// "Where am I?" and the directors' brush-offs); the rules its walkthrough: the secretary's errands
+// are 3-5 of clay or an ore in 10 minutes plus one a piece (20 points), the director's 2-4 bars in
+// 10 minutes plus two a piece (12 points), -2 for failing or turning one down, the director at 75,
+// joining at 100, 20 points once at the Purple Pewter for three pieces of H.A.M. robes. Ours: which
+// of each set of lines is said is random (the transcript's {{trandom}}), "few tasks" is under 40
+// points, and an errand's lateness is found out when you next talk to that company.
+
+// ---------------------------------------------------------------- the npcs
+[opnpc1,dwarf_city_secretary_purple_pewter] @gd_secretary(^gd_purple_pewter);
+[opnpc1,dwarf_city_secretary_yellow_fortune] @gd_secretary(^gd_yellow_fortune);
+[opnpc1,dwarf_city_secretary_blue_opal] @gd_secretary(^gd_blue_opal);
+[opnpc1,dwarf_city_secretary_green_gemstone] @gd_secretary(^gd_green_gemstone);
+[opnpc1,dwarf_city_secretary_white_chisel] @gd_secretary(^gd_white_chisel);
+[opnpc1,dwarf_city_secretary_silver_cog] @gd_secretary(^gd_silver_cog);
+[opnpc1,dwarf_city_secretary_brown_engine] @gd_secretary(^gd_brown_engine);
+[opnpc1,dwarf_city_director_purple_pewter] @gd_director(^gd_purple_pewter);
+[opnpc1,dwarf_city_director_yellow_fortune] @gd_director(^gd_yellow_fortune);
+[opnpc1,dwarf_city_director_blue_opal] @gd_director(^gd_blue_opal);
+[opnpc1,dwarf_city_director_green_gemstone] @gd_director(^gd_green_gemstone);
+[opnpc1,dwarf_city_director_white_chisel] @gd_director(^gd_white_chisel);
+[opnpc1,dwarf_city_director_silver_cog] @gd_director(^gd_silver_cog);
+[opnpc1,dwarf_city_director_brown_engine] @gd_director(^gd_brown_engine);
+// Transcript:The Giant Dwarf, the Red Axe
+[opnpc1,dwarf_city_secretary_red_axe_multi] ~chatnpc("<p,angry>Don't bother me!");
+[opnpc1,dwarf_city_director_red_axe_multi] ~chatnpc("<p,angry>I am conducting a meeting here, begone!");
+
+// ---------------------------------------------------------------- points and errands
+[proc,gd_points](int $c)(int)
+switch_int ($c) {
+    case 1 : return(%gd_points_1);
+    case 2 : return(%gd_points_2);
+    case 3 : return(%gd_points_3);
+    case 4 : return(%gd_points_4);
+    case 5 : return(%gd_points_5);
+    case 6 : return(%gd_points_6);
+    case 7 : return(%gd_points_7);
+}
+return(0);
+
+[proc,gd_setpoints](int $c, int $n)
+$n = max(0, min($n, 127));
+switch_int ($c) {
+    case 1 : %gd_points_1 = $n;
+    case 2 : %gd_points_2 = $n;
+    case 3 : %gd_points_3 = $n;
+    case 4 : %gd_points_4 = $n;
+    case 5 : %gd_points_5 = $n;
+    case 6 : %gd_points_6 = $n;
+    case 7 : %gd_points_7 = $n;
+}
+
+[proc,gd_addpoints](int $c, int $n)
+~gd_setpoints($c, calc(~gd_points($c) + $n));
+
+// 1-8 the secretaries' (clay and ores), 9-14 the directors' (bars)
+[proc,gd_task_obj](int $i)(namedobj)
+switch_int ($i) {
+    case 1 : return(clay);
+    case 2 : return(copper_ore);
+    case 3 : return(tin_ore);
+    case 4 : return(iron_ore);
+    case 5 : return(silver_ore);
+    case 6 : return(gold_ore);
+    case 7 : return(mithril_ore);
+    case 8 : return(coal);
+    case 9 : return(bronze_bar);
+    case 10 : return(iron_bar);
+    case 11 : return(steel_bar);
+    case 12 : return(silver_bar);
+    case 13 : return(gold_bar);
+    case 14 : return(mithril_bar);
+}
+return(null);
+
+// the secretaries' words for the ore ("copper ore", "clay"); the directors say "bars of iron"
+[proc,gd_task_word](int $i)(string)
+switch_int ($i) {
+    case 1 : return("clay");
+    case 2 : return("copper ore");
+    case 3 : return("tin ore");
+    case 4 : return("iron ore");
+    case 5 : return("silver ore");
+    case 6 : return("gold ore");
+    case 7 : return("mithril ore");
+    case 8 : return("coal");
+    case 9 : return("bronze");
+    case 10 : return("iron");
+    case 11 : return("steel");
+    case 12 : return("silver");
+    case 13 : return("gold");
+    case 14 : return("mithril");
+}
+return("rocks");
+
+[proc,gd_task_minutes]()(int)
+if (%gd_task_director = 1) return(calc(10 + 2 * %gd_task_count));
+return(calc(10 + %gd_task_count));
+
+[proc,gd_task_ticks]()(int)
+return(multiply(~gd_task_minutes, 100));
+
+[proc,gd_task_clear]
+%gd_task = 0;
+%gd_task_end = 0;
+
+[proc,gd_task_set](int $c, boolean $director)
+if ($director = true) {
+    %gd_task_item = calc(9 + random(6));
+    %gd_task_count = calc(2 + random(3));
+    %gd_task_director = 1;
+} else {
+    %gd_task_item = calc(1 + random(8));
+    %gd_task_count = calc(3 + random(3));
+    %gd_task_director = 0;
+}
+%gd_task_company = $c;
+%gd_task_end = calc(map_clock + ~gd_task_ticks);
+
+// an errand for this company (and secretary or director) is on
+[proc,gd_task_here](int $c, int $director)(boolean)
+if (%gd_task_item > 0 & %gd_task_company = $c & %gd_task_director = $director) return(true);
+return(false);
+
+// the time ran out: -2 (ours: told when you next talk to them)
+[proc,gd_task_expired](int $c, int $director)
+if (~gd_task_here($c, $director) = false) return;
+if (map_clock < %gd_task_end) return;
+mes("You took too long: the <~gd_company_name($c)> has found someone else for that errand."); // ours
+~gd_task_clear;
+if (%giantdwarf_quest < ^gd_complete) ~gd_addpoints($c, calc(0 - ^gd_fail_points));
+
+[proc,gd_task_has_items]()(boolean)
+if (inv_total(inv, ~gd_task_obj(%gd_task_item)) >= %gd_task_count) return(true);
+return(false);
+
+// the 2005 rules (before 9 November 2022): the Brown Engine is for gentlemen only, the Yellow
+// Fortune for women only
+[proc,gd_company_refuses](int $c)(boolean)
+if (~gd_2005_rules = false) return(false);
+if ($c = ^gd_brown_engine & gender = 1) return(true);
+if ($c = ^gd_yellow_fortune & gender = 0) return(true);
+return(false);
+
+[proc,gd_ham_pieces]()(int)
+def_int $n = 0;
+if (inv_total(worn, ham_hood) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_shirt) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_robe) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_cloak) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_badge) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_gloves) > 0) $n = calc($n + 1);
+if (inv_total(worn, ham_boots) > 0) $n = calc($n + 1);
+return($n);
+
+// ---------------------------------------------------------------- the secretaries
+[label,gd_secretary](int $c)
+def_string $name = ~gd_company_name($c);
+~gd_task_expired($c, 0);
+def_boolean $few = false;
+if (~gd_points($c) < ^gd_few_points) $few = true;
+if ($few = true) {
+    switch_int (random(6)) {
+        case 0 : ~chatnpc("<p,neutral>What can I do for you, human?");
+        case 1 : ~chatnpc("<p,neutral>Can I help you with anything?");
+        case 2 : ~chatnpc("<p,neutral>Was there anything you wanted?");
+        case 3 : ~chatnpc("<p,neutral>What did you need of the <$name>?");
+        case 4 : ~chatnpc("<p,neutral>Is there anything you need assistance with?");
+        case default : ~chatnpc("<p,neutral>And what can I do for you?");
+    }
+} else {
+    switch_int (random(6)) {
+        case 0 : ~chatnpc("<p,happy>Oh, hello there <displayname>! Nice to see you!");
+        case 1 : ~chatnpc("<p,happy>And what can I do for you on this fine day?");
+        case 2 : ~chatnpc("<p,happy>Welcome back to the palace of Keldagrim, <displayname>!");
+        case 3 : ~chatnpc("<p,happy>Come in, come in! And tell us what you need!");
+        case 4 : ~chatnpc("<p,happy>How may the <$name> assist you today?");
+        case default : ~chatnpc("<p,happy>Come to help us out some more, <displayname>?");
+    }
+}
+if ($c = ^gd_purple_pewter & ~gd_ham_pieces >= 3) {
+    ~chatnpc("<p,happy>Oh, by the way, I really like that outfit of yours!");
+    if (~gd_flag(^gdf_ham_bonus) = false & %giantdwarf_quest < ^gd_complete) {
+        ~gd_setflag(^gdf_ham_bonus);
+        ~gd_addpoints($c, 20);
+    }
+}
+// bringing the errand
+if (~gd_task_here($c, 0) = true & ~gd_task_has_items = true) {
+    ~chatplayer("<p,happy>I've completed your task! Here is your ore!");
+    inv_del(inv, ~gd_task_obj(%gd_task_item), %gd_task_count);
+    ~gd_task_clear;
+    if ($few = true) {
+        switch_int (random(5)) {
+            case 0 : ~chatnpc("<p,happy>And not a minute too late as well. Well done.");
+            case 1 : ~chatnpc("<p,happy>I am happy to see that the trust we put in you has not been in vain.");
+            case 2 : ~chatnpc("<p,happy>The <$name> recognizes your performance.");
+            case 3 : ~chatnpc("<p,happy>That's good to hear, thanks.");
+            case default : ~chatnpc("<p,happy>I have to admit, I was worried for a moment, but I'm glad to see you came through for us.");
+        }
+    } else {
+        switch_int (random(6)) {
+            case 0 : ~chatnpc("<p,happy>Well done, well done!");
+            case 1 : ~chatnpc("<p,happy>You're always reliable, <displayname>!");
+            case 2 : ~chatnpc("<p,happy>You have done a great service to the <$name>!");
+            case 3 : ~chatnpc("<p,happy>Wonderful! I will personally oversee that it goes to the trade floor on time!");
+            case 4 : ~chatnpc("<p,happy>I knew you were the right human for the job!");
+            case default : ~chatnpc("<p,happy>Thanks, I will make sure the director hears of your expeditiousness!");
+        }
+    }
+    if (%giantdwarf_quest < ^gd_complete) ~gd_addpoints($c, ^gd_secretary_points);
+    @gd_secretary_menu($c, true);
+}
+@gd_secretary_menu($c, false);
+
+[label,gd_secretary_menu](int $c, boolean $another)
+def_string $name = ~gd_company_name($c);
+def_string $help = "Is there anything I can help you with?";
+if ($another = true) $help = "Do you have another task for me?";
+switch_int (~p_choice5("Who are you?", 1, "Where am I?", 2, $help, 3, "I need to speak to the director.", 4, "I have to go!", 5)) {
+    case 1 : @gd_secretary_who($c);
+    case 2 :
+        ~chatplayer("<p,quiz>Where am I?");
+        switch_int (random(3)) {
+            case 0 : ~chatnpc("<p,neutral>These are the offices of the <$name>.");
+            case 1 : ~chatnpc("<p,neutral>This is the official residence of the <$name>.");
+            case default : ~chatnpc("<p,neutral>Why, you are in the headquarters of the <$name>.");
+        }
+        ~chatnpc("<p,neutral>We share this floor of the palace with the other companies of the Consortium. And trade with them on the Trade Octagon.");
+        ~chatplayer("<p,quiz>The Trade Octagon?");
+        ~chatnpc("<p,neutral>See those traders out there, just out the door? They're all standing in the Trade Octagon. There's an awful lot of trade going on in the palace, you know.");
+        ~chatplayer("<p,quiz>Anything else of interest in the palace?");
+        ~chatnpc("<p,neutral>You will have to find that out on your own, I'm afraid. I do have more work to do.");
+    case 3 : @gd_secretary_task($c, $help);
+    case 4 : @gd_secretary_director($c);
+    case 5 :
+        ~chatplayer("<p,neutral>I have to go!");
+        switch_int (random(3)) {
+            case 0 : ~chatnpc("<p,neutral>Goodbye, human.");
+            case 1 : ~chatnpc("<p,neutral>See you later.");
+            case default : ~chatnpc("<p,neutral>Okay.");
+        }
+}
+
+// each company's own words (Transcript:<company> Secretary); the Brown Engine's and the Yellow
+// Fortune's 2005 rules from Transcript:The Giant Dwarf
+[label,gd_secretary_who](int $c)
+~chatplayer("<p,quiz>Who are you?");
+switch_int ($c) {
+    case ^gd_purple_pewter :
+        ~chatnpc("<p,neutral>I am the head secretary of the Purple Pewter.");
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,neutral>I said, the Purple Pewter. Together with the other companies, we rule Keldagrim and the dwarven realm.");
+    case ^gd_yellow_fortune :
+        ~chatnpc("<p,neutral>I am the head secretary of the Yellow Fortune.");
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,happy>The Yellow Fortune! We are the grandest of the mining companies that make up the Consortium!");
+        if (~gd_2005_rules = true) {
+            ~chatplayer("<p,quiz>How is that?");
+            ~chatnpc("<p,happy>Why, because men are not allowed to work in our company, of course!");
+            if (gender = 1) {
+                ~chatplayer("<p,laugh>Ha, I see what you mean!");
+            } else {
+                ~chatplayer("<p,confused>That's a bit drastic, don't you think?");
+                ~chatnpc("<p,neutral>We simply consider men to be weak and inferior.");
+                ~chatplayer("<p,angry>I think I'd better go now, I don't like being insulted.");
+                return;
+            }
+        }
+    case ^gd_blue_opal :
+        ~chatnpc("<p,neutral>I am the head secretary of the Blue Opal.");
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,neutral>We are the Blue Opal. We are part of the Consortium, rulers of Keldagrim and beyond.");
+    case ^gd_green_gemstone :
+        ~chatnpc("<p,neutral>I am the head secretary of the Green Gemstone.");
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,neutral>The Green Gemstone. We are part of the Consortium of mining companies that rule the dwarven realm.");
+    case ^gd_white_chisel :
+        ~chatnpc("<p,neutral>I am the head secretary of the White Chisel.");
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,neutral>The White Chisel. We are one of the most powerful companies in the whole of the dwarven realm, we are. We have grown so powerful that we are now part of the Consortium.");
+    case ^gd_silver_cog :
+        ~chatnpc("<p,neutral>I am the head secretary of the White Chisel."); // sic, the transcript's
+        ~chatplayer("<p,confused>The what?");
+        ~chatnpc("<p,neutral>The Silver Cog! A shining example of how a mining company should be run to join the Consortium.");
+    case ^gd_brown_engine :
+        if (~gd_2005_rules = true) {
+            ~chatnpc("<p,neutral>I am the head secretary of the Brown Engine.");
+            ~chatplayer("<p,confused>The what?");
+            ~chatnpc("<p,neutral>The Brown Engine. We are one of the eight major mining companies, but our standard is higher than that of all the others.");
+            ~chatplayer("<p,quiz>How is that?");
+            ~chatnpc("<p,neutral>Our policy is strictly gentlemen only, you see.");
+            if (gender = 0) {
+                ~chatplayer("<p,neutral>I don't quite see how that is good, but if you say so...");
+            } else {
+                ~chatplayer("<p,angry>And this is a good thing, how?");
+                ~chatnpc("<p,neutral>Oh, my dear, please don't take it personally.");
+                ~chatplayer("<p,angry>Don't patronise me. I've had enough of this.");
+                return;
+            }
+        } else {
+            ~chatnpc("<p,neutral>I am the head secretary of the White Chisel."); // sic, the transcript's
+            ~chatplayer("<p,confused>The what?");
+            ~chatnpc("<p,neutral>The Brown Engine. We are one of the eight major mining companies, and one of the finest if I do say so myself!");
+        }
+}
+@gd_secretary_menu($c, false);
+
+[label,gd_secretary_task](int $c, string $help)
+def_string $name = ~gd_company_name($c);
+~chatplayer("<p,quiz><$help>");
+if (~gd_company_refuses($c) = true) {
+    if ($c = ^gd_brown_engine) {
+        ~chatnpc("<p,neutral>The Brown Engine is a gentleman only society, I'm afraid.");
+        ~chatplayer("<p,angry>How rude.");
+    } else {
+        ~chatnpc("<p,neutral>The Yellow Fortune does not employ the services of men.");
+        ~chatplayer("<p,quiz>Why not?");
+        ~chatnpc("<p,neutral>We often find that they are too weak or too slow to be of sufficient use.");
+        ~chatplayer("<p,angry>You shouldn't say such things to people.");
+    }
+    return;
+}
+if (~gd_task_here($c, 0) = true) {
+    ~chatnpc("<p,quiz>Have you completed your task yet? Did you get our <tostring(%gd_task_count)> pieces of <~gd_task_word(%gd_task_item)>?");
+    ~chatplayer("<p,sad>No, not yet.");
+    ~chatnpc("<p,neutral>Then please, hurry up before time runs out.");
+    return;
+}
+if (%gd_task_item > 0) {
+    // ours: one errand at a time
+    ~mesbox("You are already running an errand for the <~gd_company_name(%gd_task_company)>.");
+    return;
+}
+if (~gd_points($c) >= ^gd_director_at) {
+    switch_int (random(2)) {
+        case 0 : ~chatnpc("<p,neutral>You should speak directly to the director.");
+        case default : ~chatnpc("<p,neutral>I'm afraid I have no more work to offer you, <displayname>, please speak to the director.");
+    }
+    return;
+}
+def_boolean $few = false;
+if (~gd_points($c) < ^gd_few_points) $few = true;
+if ($few = true) {
+    switch_int (random(6)) {
+        case 0 : ~chatnpc("<p,neutral>There's always work to be done, yes.");
+        case 1 : ~chatnpc("<p,neutral>Just a moment.");
+        case 2 : ~chatnpc("<p,neutral>Yes, the <$name> always has work to do!");
+        case 3 : ~chatnpc("<p,neutral>Yes, I think we do have something for you.");
+        case 4 : ~chatnpc("<p,neutral>Let's see... yes, yes, I do have a task for you.");
+        case default : ~chatnpc("<p,neutral>I believe we have some work available, yes.");
+    }
+} else {
+    switch_int (random(7)) {
+        case 0 : ~chatnpc("<p,happy>Oh yes, as you know the <$name> always has work!");
+        case 1 : ~chatnpc("<p,happy>Ah, always looking for ways to help us!");
+        case 2 : ~chatnpc("<p,happy>Of course, we reserve our best tasks just for you, <displayname>!");
+        case 3 : ~chatnpc("<p,happy>The <$name> is pleased to offer more work to an eager worker such as yourself, <displayname>!");
+        case 4 : ~chatnpc("<p,happy>I do believe we do, yes!");
+        case 5 : ~chatnpc("<p,happy>I dare say we have something for you, yes.");
+        case default : ~chatnpc("<p,happy>Naturally, my good human, naturally!");
+    }
+}
+~gd_task_set($c, false);
+~chatnpc("<p,neutral>We need <tostring(%gd_task_count)> pieces of <~gd_task_word(%gd_task_item)> in the next <tostring(~gd_task_minutes)> minutes.");
+if (~p_choice2("I'll take it.", 1, "No thanks.", 2) = 2) {
+    ~gd_task_clear;
+    ~chatplayer("<p,neutral>No thanks.");
+    if (%giantdwarf_quest < ^gd_complete) ~gd_addpoints($c, calc(0 - ^gd_fail_points));
+    if ($few = true) {
+        switch_int (random(7)) {
+            case 0 : ~chatnpc("<p,sad>That's unfortunate to hear.");
+            case 1 : ~chatnpc("<p,angry>That does not reflect well on you.");
+            case 2 : ~chatnpc("<p,angry>Please, it would be appreciated if you made up your mind before you ask. I'm very busy you know.");
+            case 3 : ~chatnpc("<p,neutral>Fair enough, maybe some other time?");
+            case 4 : ~chatnpc("<p,sad>I can't say I'm too pleased to hear that, to be honest.");
+            case 5 : ~chatnpc("<p,angry>The <$name> isn't too pleased to hear that.");
+            case default : ~chatnpc("<p,angry>Please, in that case, you're wasting my time.");
+        }
+    } else {
+        switch_int (random(5)) {
+            case 0 : ~chatnpc("<p,sad>Oh. Didn't know you were the type to refuse work.");
+            case 1 : ~chatnpc("<p,sad>That's a great shame, <displayname>.");
+            case 2 : ~chatnpc("<p,quiz>I suppose you have other important business to attend to?");
+            case 3 : ~chatnpc("<p,quiz>Is everything okay? I didn't think you normally refused our tasks.");
+            case default : ~chatnpc("<p,quiz>No? That's unusual for you, <displayname>.");
+        }
+    }
+    return;
+}
+~chatplayer("<p,happy>I'll take it.");
+if ($few = true) {
+    switch_int (random(5)) {
+        case 0 : ~chatnpc("<p,neutral>That ore needs to go on the trade floor soon, <displayname>, please hurry back with it.");
+        case 1 : ~chatnpc("<p,neutral>I will await your return soon, then.");
+        case 2 : ~chatnpc("<p,neutral>The clock is ticking, please hurry back.");
+        case 3 : ~chatnpc("<p,happy>Thanks, it's appreciated.");
+        case default : ~chatnpc("<p,neutral>The <$name> has noted your willingness to help.");
+    }
+} else {
+    switch_int (random(5)) {
+        case 0 : ~chatnpc("<p,happy>Excellent, I thought you'd like this!");
+        case 1 : ~chatnpc("<p,happy>You never disappoint, <displayname>!");
+        case 2 : ~chatnpc("<p,happy>The <$name> appreciates the hard work you do.");
+        case 3 : ~chatnpc("<p,happy>Thanks! But hurry back please, we really need that ore!");
+        case default : ~chatnpc("<p,happy>I'm happy to hear that!");
+    }
+}
+
+[label,gd_secretary_director](int $c)
+def_string $name = ~gd_company_name($c);
+~chatplayer("<p,neutral>I need to speak to the director.");
+def_int $p = ~gd_points($c);
+if ($p >= ^gd_director_at) {
+    ~chatnpc("<p,happy>Why, naturally <displayname>! The director is standing right over there!");
+    return;
+}
+def_int $choice = 0;
+if ($p < ^gd_few_points) {
+    switch_int (random(2)) {
+        case 0 :
+            ~chatnpc("<p,neutral>And I would grant you such a request, why?");
+            ~chatnpc("<p,neutral>You need to prove yourself to the company first before such a privilege is bestowed on you.");
+        case default : ~chatnpc("<p,neutral>I don't see any reason to grant such a privilege to a lowly worker. No, first you must prove yourself.");
+    }
+    $choice = ~p_choice2("But I've come from Blasidar the sculptor.", 1, "How can I prove myself?", 2);
+    if ($choice = 1) {
+        ~chatplayer("<p,neutral>But you don't understand. I've come from Blasidar the sculptor.");
+        ~chatnpc("<p,neutral>Blasidar does not command the <$name>.");
+        ~chatplayer("<p,angry>But... Commander Veldaban of the Black Guard has instructed me to do this!");
+        ~chatnpc("<p,neutral>Nor does the Black Guard. They are under the command of the Consortium, not the other way around.");
+        return;
+    }
+    ~chatplayer("<p,quiz>How can I prove myself?");
+    ~chatnpc("<p,neutral>It's all very simple. You perform some tasks for us, help us out a little when we need something done urgently, and in reward you will rise in our estimation.");
+    return;
+}
+switch_int (random(2)) {
+    case 0 : ~chatnpc("<p,neutral>That is not a request that I can grant you yet, <displayname>, even though I am impressed with you so far.");
+    case default : ~chatnpc("<p,neutral>The <$name> appreciates what you have done so far, <displayname>, but the director will only speak to the most loyal of followers.");
+}
+$choice = ~p_choice2("But I've come from Blasidar the sculptor.", 1, "What else must I do?", 2);
+if ($choice = 1) {
+    ~chatplayer("<p,neutral>But you don't understand. I've come from Blasidar the sculptor.");
+    ~chatnpc("<p,neutral>Blasidar does not command the <$name>.");
+    ~chatplayer("<p,angry>But... Commander Veldaban of the Black Guard has instructed me to do this!");
+    ~chatnpc("<p,neutral>I see. This sounds like a most serious matter, but I cannot bend the rules.");
+    return;
+}
+~chatplayer("<p,quiz>What else must I do to prove myself?");
+~chatnpc("<p,happy>Keep up what you're doing, <displayname>! The more you help us out, the more we appreciate you!");
+~chatnpc("<p,happy>I'm sure the director will be happy to talk to you once the time is right.");
+
+// ---------------------------------------------------------------- the directors
+[label,gd_director](int $c)
+def_string $name = ~gd_company_name($c);
+~gd_task_expired($c, 1);
+def_boolean $joined = false;
+if (%giantdwarf_current_company = $c) $joined = true;
+if ($joined = false & ~gd_points($c) < ^gd_director_at) {
+    // Transcript:<company> Director, standard dialogue
+    switch_int (random(10)) {
+        case 0 : ~chatnpc("<p,angry>I'm too important to talk to the likes of you, leave.");
+        case 1 : ~chatnpc("<p,neutral>My secretary will deal with any inquiries you have about the <$name>.");
+        case 2 : ~chatnpc("<p,neutral>My secretary is sitting just over there, thank you.");
+        case 3 : ~chatnpc("<p,neutral>I'm busy, please leave.");
+        case 4 : ~chatnpc("<p,neutral>Today is not a good day, can you come back tomorrow?");
+        case 5 : ~chatnpc("<p,neutral>If you're looking for the market, it's downstairs.");
+        case 6 : ~chatnpc("<p,angry>Do you mind? You're blocking my view.");
+        case 7 : ~chatnpc("<p,angry>How did you get in here? I don't have time to talk to you!");
+        case 8 : ~chatnpc("<p,neutral>I can't help you, go and see my secretary.");
+        case default : ~chatnpc("<p,neutral>Talk to my secretary, I don't have time to deal with you.");
+    }
+    ~chatplayer("<p,neutral>But...");
+    switch_int (random(2)) {
+        case 0 : ~chatnpc("<p,angry>I said go!");
+        case default : ~chatnpc("<p,angry>I told you to leave, human!");
+    }
+    return;
+}
+// ours: the chosen director hands over new meeting notes if you lost yours (the OSRS wiki)
+if (%giantdwarf_quest >= ^gd_complete & %gd_chosen = $c & inv_total(inv, dwarf_meeting_notes1) = 0 & inv_total(bank, dwarf_meeting_notes1) = 0) {
+    ~gd_give(dwarf_meeting_notes1);
+    ~objbox(dwarf_meeting_notes1, "The director gives you a copy of the meeting notes.", 250, 0, 0); // ours
+}
+if ($joined = true) {
+    switch_int (random(4)) {
+        case 0 : ~chatnpc("<p,happy>Hello again, <displayname>, come in!");
+        case 1 : ~chatnpc("<p,happy>Come in, come in my friend!");
+        case 2 : ~chatnpc("<p,happy>The <$name> is pleased to see you again!");
+        case default : ~chatnpc("<p,happy>Welcome back <displayname>, it's great to see you again!");
+    }
+} else {
+    switch_int (random(7)) {
+        case 0 : ~chatnpc("<p,happy>You are an exceptional member of the <$name>.");
+        case 1 : ~chatnpc("<p,happy><displayname>! I've been hearing great things about you!");
+        case 2 : ~chatnpc("<p,happy>Come in, <displayname>, my secretary has been saying good things about you.");
+        case 3 : ~chatnpc("<p,quiz>What have you come to ask of us, honourable <displayname>?");
+        case 4 : ~chatnpc("<p,quiz>Have you come to serve the <$name> again, <displayname>?");
+        case 5 : ~chatnpc("<p,neutral>Come, <displayname>, let us converse a while on your future with us.");
+        case default : ~chatnpc("<p,happy>You are proving yourself a loyal member of the <$name>, <displayname>!");
+    }
+}
+// bringing the bars
+if (~gd_task_here($c, 1) = true & ~gd_task_has_items = true) {
+    ~chatplayer("<p,happy>I've completed your task! Here are your bars!");
+    def_namedobj $bar = ~gd_task_obj(%gd_task_item);
+    def_int $count = %gd_task_count;
+    inv_del(inv, $bar, $count);
+    ~gd_task_clear;
+    switch_int (random(6)) {
+        case 0 : ~chatnpc("<p,happy>I will get my secretary to send this to the trade floor at once!");
+        case 1 : ~chatnpc("<p,happy>You never fail to satisfy, <displayname>!");
+        case 2 : ~chatnpc("<p,happy>You are a true asset to the <$name>!");
+        case 3 : ~chatnpc("<p,happy>I am well pleased with your work, <displayname>!");
+        case 4 : ~chatnpc("<p,happy>Guthix be praised!");
+        case default : ~chatnpc("<p,happy>The <$name> can always rely on you, <displayname>.");
+    }
+    if (%giantdwarf_quest < ^gd_complete) {
+        ~gd_addpoints($c, ^gd_director_points);
+    } else if (%giantdwarf_current_company = $c) {
+        // ours: the OSRS wiki says the errands for the director of the company you joined pay in
+        // coins after the quest, not how many; he pays what the bars are worth in the shops
+        def_int $pay = multiply(oc_cost($bar), $count);
+        if ($pay > 0) {
+            inv_add(inv, coins, $pay);
+            mes("The director pays you <tostring($pay)> coins.");
+        }
+    }
+    if (%giantdwarf_current_company = 0) {
+        ~chatnpc("<p,quiz>Have you ever considered joining the <$name>, <displayname>? You would truly make a marvelous member.");
+    }
+}
+@gd_director_menu($c);
+
+[label,gd_director_menu](int $c)
+def_string $name = ~gd_company_name($c);
+def_int $join = 0;
+if (%giantdwarf_current_company = 0) $join = 2;
+def_int $blasidar = 0;
+if (%giantdwarf_quest = ^gd_consortium | %giantdwarf_quest = ^gd_support) $blasidar = 4;
+switch_int (~p_choice_some5("It's an honour to meet you!", 1, "I'd like to officially join your company.", $join, "Do you have any more tasks for me?", 3, "Blasidar the sculptor has sent me.", $blasidar, "Thank you for your time.", 5)) {
+    case 1 :
+        ~chatplayer("<p,happy>It's an honour to meet you!");
+        switch_int (random(4)) {
+            case 0 : ~chatnpc("<p,happy>I'm always happy to make time for you, <displayname>!");
+            case 1 : ~chatnpc("<p,happy>And I'm honoured to make some time for you, <displayname>!");
+            case 2 : ~chatnpc("<p,happy>Don't mention it, <displayname>!");
+            case default : ~chatnpc("<p,happy>Almost as much an honour as it is to meet you again, <displayname>!");
+        }
+        @gd_director_menu($c);
+    case 2 :
+        ~chatplayer("<p,neutral>I'd like to officially join your company.");
+        ~chatnpc("<p,neutral>Hmm, interesting, a human joining the <$name>.");
+        // ours: before Blasidar has asked you to see the Consortium the directors keep you on
+        // errands (the OSRS wiki: "or the tasks for the director will go on indefinitely")
+        if (~gd_points($c) < ^gd_join_at | %giantdwarf_quest < ^gd_consortium | ~gd_company_refuses($c) = true) {
+            ~chatnpc("<p,neutral>But no. You may have proven yourself to my head secretary, and much appreciated that is as well, you have not fully proven yourself to me yet.");
+            ~chatnpc("<p,neutral>So no, I cannot grant you this request yet, but I will certainly keep it in mind. In the mean time make sure you help out the <$name> in any way you can.");
+            @gd_director_menu($c);
+        }
+        ~chatnpc("<p,happy>But you have certainly proven yourself to be a most worthwhile contributor. I have not seen such dedication in all my years as a director of this company.");
+        ~chatnpc("<p,happy>It is agreed then! You are now a 'trusted associate' of the <$name>. Welcome!");
+        ~chatplayer("<p,happy>I will not disappoint you!");
+        %giantdwarf_current_company = $c;
+        @gd_director_menu($c);
+    case 3 : @gd_director_task($c);
+    case 4 : @gd_director_blasidar($c);
+    case 5 :
+        ~chatplayer("<p,happy>Thank you for your time.");
+        ~chatnpc("<p,happy>Not at all, it was a delight to speak to you once more!");
+}
+
+[label,gd_director_task](int $c)
+def_string $name = ~gd_company_name($c);
+~chatplayer("<p,quiz>Do you have any more tasks for me?");
+if (~gd_task_here($c, 1) = true) {
+    ~chatnpc("<p,quiz>Have you completed your current task yet? Did you get me my bars of <~gd_task_word(%gd_task_item)>?");
+    ~chatplayer("<p,sad>I'm still working on it, sorry.");
+    ~chatnpc("<p,angry>Hurry then, I don't have time for all this.");
+    @gd_director_menu($c);
+}
+if (%gd_task_item > 0) {
+    ~mesbox("You are already running an errand for the <~gd_company_name(%gd_task_company)>."); // ours
+    @gd_director_menu($c);
+}
+if (%giantdwarf_current_company = $c) {
+    ~chatnpc("<p,neutral>You don't need to do this anymore, you know?");
+} else {
+    switch_int (random(4)) {
+        case 0 : ~chatnpc("<p,neutral>Verily, I believe I do.");
+        case 1 : ~chatnpc("<p,neutral>I do believe so, yes.");
+        case 2 : ~chatnpc("<p,neutral>Why, certainly.");
+        case default :
+            ~chatnpc("<p,neutral>A moment please, let me check.");
+            ~chatnpc("<p,neutral>Yes, I have something appropriate for you here.");
+    }
+}
+~gd_task_set($c, true);
+~chatnpc("<p,neutral>We need <tostring(%gd_task_count)> bars of <~gd_task_word(%gd_task_item)> in the next <tostring(~gd_task_minutes)> minutes.");
+if (~p_choice2("I'll take it.", 1, "No thanks.", 2) = 2) {
+    ~gd_task_clear;
+    ~chatplayer("<p,neutral>No thanks.");
+    if (%giantdwarf_quest < ^gd_complete) ~gd_addpoints($c, calc(0 - ^gd_fail_points));
+    switch_int (random(5)) {
+        case 0 : ~chatnpc("<p,sad>I'm sorry to hear that, <displayname>, the company really needed those bars.");
+        case 1 : ~chatnpc("<p,confused>I don't understand, I thought you were a loyal follower?");
+        case 2 : ~chatnpc("<p,angry>Then why did you ask, <displayname>?");
+        case 3 : ~chatnpc("<p,confused>That is an unusual thing to say for you, <displayname>.");
+        case default : ~chatnpc("<p,confused>Oh? I thought you liked doing this kind of work?");
+    }
+    return;
+}
+~chatplayer("<p,happy>I'll take it.");
+switch_int (random(5)) {
+    case 0 : ~chatnpc("<p,happy>Happy to hear that!");
+    case 1 : ~chatnpc("<p,happy>Admirable attitude, <displayname>!");
+    case 2 : ~chatnpc("<p,happy>The <$name> appreciates what you're doing, <displayname>.");
+    case 3 : ~chatnpc("<p,happy>Excellent, get to it now!");
+    case default : ~chatnpc("<p,happy>Then hurry back, <displayname>, I'm counting on you!");
+}
+
+[label,gd_director_blasidar](int $c)
+def_string $name = ~gd_company_name($c);
+~chatplayer("<p,neutral>Blasidar the sculptor has sent me.");
+~chatnpc("<p,quiz>Oh yes? This is in connection with the statue, presumably?");
+~chatplayer("<p,neutral>He says he needs to know what the head of the statue should look like now that it's no longer going to look like King Alvis.");
+~chatnpc("<p,neutral>Oh yes, Hreidmar suggested that it should be one of us. The Era of Kings is long gone, after all. Now the Consortium provides peace and above all prosperity... so the statue should reflect this.");
+~chatplayer("<p,quiz>Hreidmar? Who is Hreidmar?");
+~chatnpc("<p,laugh>He is the Director of the Red Axe. Ha, that old fool quite fancies his own head up on that statue, he thinks he can get away with that just because his company is one of the largest in the Consortium.");
+~chatplayer("<p,quiz>So I shouldn't tell the sculptor that he should base it on him then?");
+~chatnpc("<p,angry>Certainly not!");
+~chatnpc("<p,neutral>The Consortium has yet to make a decision... all the companies are vying for the honour.");
+if (~p_choice2("I would support you.", 1, "I hope you lot figure it out soon.", 2) = 2) {
+    ~chatplayer("<p,bored>I hope you lot figure it out soon. This little job is starting to tire me out.");
+    ~chatnpc("<p,neutral>Don't count on it being any time soon. We're rather locked in an impasse on it.");
+    ~chatplayer("<p,sad>Just my luck.");
+    @gd_director_menu($c);
+}
+~chatplayer("<p,happy>I would support you.");
+~chatnpc("<p,quiz>Ah, would you now, would you?");
+if (~gd_points($c) < ^gd_join_at | ~gd_company_refuses($c) = true) {
+    ~chatnpc("<p,neutral>I'm not altogether sure... much appreciated though you are, you are not really part of the <$name>. Not as such.");
+    ~chatplayer("<p,quiz>What if I were?");
+    ~chatnpc("<p,quiz>Were what? A part of the <$name>?");
+    ~chatnpc("<p,neutral>Yes, that might certainly change things...");
+    @gd_director_menu($c);
+}
+~chatnpc("<p,happy>This might well work. Yes, an outsider to the city might have considerably more influence than one might expect, if we play our cards right.");
+~chatplayer("<p,quiz>How do you mean, play our cards right?");
+~chatnpc("<p,neutral>We wait until the most opportune moment for you to show your support. Yes, you must really come along to one of our meetings.");
+~chatplayer("<p,confused>Now you're really losing me... what meetings?");
+~chatnpc("<p,neutral>A Consortium meeting, when all the directors meet on the top floor of the palace. We have them from time to time. We'll have another one soon, to once and for all solve our little problem with the statue.");
+~chatnpc("<p,quiz>So what do you say, will you speak out for me at the next meeting, so that they will base the head of the statue on me?");
+if (~p_choice2("Yes! Long live the <$name>!", 1, "I need to have a think about that.", 2) = 2) {
+    ~chatplayer("<p,neutral>I need to have a think about that.");
+    ~chatnpc("<p,neutral>Understandable, yes. Just be sure not to think about it for too long.");
+    @gd_director_menu($c);
+}
+~chatplayer("<p,happy>Yes! Long live the <$name>!");
+~chatnpc("<p,happy>Hurrah!");
+%gd_chosen = $c;
+~gd_set(^gd_support);
+~mesbox("Now would be a good time to visit Veldaban of the Black Guard, in the west of Keldagrim.");
+
+[proc,gd_2005_rules]()(boolean)
+def_int $rules = ^gd_2005_company_rules;
+if ($rules = 1) return(true);
+return(false);

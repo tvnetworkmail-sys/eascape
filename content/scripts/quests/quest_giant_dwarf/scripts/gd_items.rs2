@@ -1,0 +1,933 @@
+// EASCape: The Giant Dwarf, Blasidar's errands: Blasidar and Riki, the clothes (Vermundi, the
+// librarian, the book, the spinning machine), the boots (Saro, Dromund, his cat, the telegrab) and
+// the axe (Santiri, the sapphires, the librarian, Reldo, Thurgo). The words are the OSRS wiki's
+// (Transcript:The Giant Dwarf and the npcs' own transcripts), the steps its walkthrough (and the RS
+// wiki's, for Thurgo replacing a lost axe and the librarian before Reldo). The cache gives the items,
+// Riki's looks (giantdwarf_model_state), the spinning machine's and the sapphires' animations and the
+// boots on Dromund's tables. Ours is marked.
+
+// ---------------------------------------------------------------- helpers
+// Riki's model_state bits: 0 boots, 1 clothes, 2 axe (the cache's multinpc order)
+[proc,gd_riki_has](int $bit)(boolean)
+if (testbit(%giantdwarf_model_state, $bit) = ^true) return(true);
+return(false);
+
+[proc,gd_has_axe]()(boolean)
+if (inv_total(inv, dwarf_battleaxe_old) > 0 | inv_total(inv, dwarf_battleaxe_sapphires) > 0 | inv_total(inv, dwarf_battleaxe_sharpened) > 0 | inv_total(inv, dwarf_battleaxe_new) > 0) return(true);
+return(false);
+
+[proc,gd_has_logs]()(boolean)
+if (inv_total(inv, logs) > 0 | inv_total(inv, oak_logs) > 0 | inv_total(inv, willow_logs) > 0 | inv_total(inv, maple_logs) > 0 | inv_total(inv, yew_logs) > 0 | inv_total(inv, magic_logs) > 0) return(true);
+return(false);
+
+// the walkthrough: most logs work (not arctic pine)
+[proc,gd_del_logs]
+if (inv_total(inv, logs) > 0) { inv_del(inv, logs, 1); return; }
+if (inv_total(inv, oak_logs) > 0) { inv_del(inv, oak_logs, 1); return; }
+if (inv_total(inv, willow_logs) > 0) { inv_del(inv, willow_logs, 1); return; }
+if (inv_total(inv, maple_logs) > 0) { inv_del(inv, maple_logs, 1); return; }
+if (inv_total(inv, yew_logs) > 0) { inv_del(inv, yew_logs, 1); return; }
+if (inv_total(inv, magic_logs) > 0) inv_del(inv, magic_logs, 1);
+
+// ---------------------------------------------------------------- Blasidar the sculptor
+[label,gd_blasidar]
+def_int $s = %giantdwarf_quest;
+if ($s < ^gd_veldaban) {
+    ~chatnpc("<p,neutral>I'm very busy at the moment, human."); // ours: no source
+    return;
+}
+if ($s = ^gd_veldaban) {
+    if (%giantdwarf_sculptor_introduced = 1) {
+        ~chatplayer("<p,quiz>What was it you needed doing again?");
+        @gd_blasidar_errands;
+    }
+    ~chatplayer("<p,quiz>Excuse me, are you Blasidar, the famous sculptor?");
+    ~chatnpc("<p,happy>Why, yes, yes, that I am!");
+    ~chatplayer("<p,neutral>Oh, well, I'm <displayname>. Veldaban of the Black Guard sent me to you, you see. Said you might need some help with the statue.");
+    ~chatnpc("<p,neutral>Oh, I don't need an assistant sculptor, really, I can do just fine on my own.");
+    ~chatplayer("<p,neutral>I'm not a sculptor.");
+    ~chatnpc("<p,neutral>And I've also got a model here, you see, to base my statue on.");
+    ~chatplayer("<p,angry>I'm not a model!");
+    ~chatnpc("<p,neutral>But come to think of it, I do need some errands run. Yes, quite important errands too.");
+    ~chatnpc("<p,happy>Yes, you will do just fine.");
+    ~chatplayer("<p,confused>Ehm, right, okay.");
+    ~chatplayer("<p,quiz>So what did you need doing?");
+    %giantdwarf_sculptor_introduced = 1;
+    @gd_blasidar_errands;
+}
+if ($s = ^gd_items) @gd_blasidar_items;
+if ($s = ^gd_items_given) @gd_blasidar_head;
+~chatnpc("<p,quiz>Any word from the Consortium yet?");
+~chatplayer("<p,neutral>No, the directors have not made a decision yet.");
+~chatnpc("<p,neutral>Then please, try to persuade one of the directors to force the Consortium into a decision. I must finish this statue before I can move onto my other work.");
+
+[label,gd_blasidar_errands]
+~chatnpc("<p,neutral>Well, see... the Consortium has commisioned me to rebuild the statue exactly the way it was.");
+~chatnpc("<p,sad>But the statue itself has broken into a million pieces... and we dwarves aren't very good painters, you know, so we don't have any paintings of it either.");
+~chatplayer("<p,neutral>Not a very artistic race, then, are you?");
+~chatnpc("<p,angry>No, that's not what I said, I said we're not very good painters.");
+~chatnpc("<p,happy>We're excellent with, for example, stone. Oh yes, quite good if I say so myself.");
+~chatnpc("<p,neutral>But I digress... simply speaking, I need some help with getting some items that I can base the new statue on.");
+~chatnpc("<p,quiz>Will you be able to help me with this, <displayname>?");
+if (~p_choice2("No, I can't be bothered.", 1, "Yes, I will do this.", 2) = 1) {
+    ~chatplayer("<p,neutral>No, I can't be bothered.");
+    ~chatnpc("<p,angry>How rude is that? I don't think the Black Guard will be very pleased with you!");
+    return;
+}
+~chatplayer("<p,neutral>Yes, I will do this.");
+~gd_set(^gd_items);
+~chatnpc("<p,happy>Excellent, excellent! Now what I need is the following...");
+~chatnpc("<p,neutral>I will need a pair of boots, the most exquisite boots you can find. The more they look like the original the better, but I don't think you'll be able to find an exact match.");
+~chatnpc("<p,neutral>For the torso, I need clothes that look like King Alvis' clothes. I'm not sure where you would be able to find that, but I'm sure you'll manage.");
+~chatnpc("<p,neutral>Also, I need a battleaxe. Now this is particularly important. You are in luck, however, as I believe King Alvis' original axe still survives.");
+~chatplayer("<p,quiz>Right, so I need a pair of boots, a piece of clothing and a battleaxe. Is that all?");
+~chatnpc("<p,happy>For now, <displayname>, for now! I wish you good luck, and hurry back with the items!");
+~chatplayer("<p,confused>But... wait, wait, how am I supposed to find all this?");
+~chatnpc("<p,neutral>I don't know! You're supposed to find that out for me!");
+~chatnpc("<p,happy>But it's a beautiful city, Keldagrim is, I'm sure you'll see many things while you do these tasks!");
+
+[label,gd_blasidar_items]
+~chatnpc("<p,quiz>How are you getting along with those items, <displayname>?");
+def_boolean $boots = ~gd_riki_has(0);
+if ($boots = true) {
+    ~chatplayer("<p,happy>Riki is wearing the boots already."); // ours: the transcript has no words for this
+} else if (inv_total(inv, dwarf_perfect_pair_of_boots) > 0) {
+    $boots = true;
+    ~chatplayer("<p,happy>I have your boots!");
+    ~chatnpc("<p,happy>Excellent, excellent! Go and give them to Riki over there so I can start my work on the base of the statue!");
+} else {
+    ~chatplayer("<p,sad>I don't have your boots yet.");
+}
+~chatnpc("<p,quiz>What else?");
+if (~gd_riki_has(1) = true) {
+    ~chatplayer("<p,happy>Riki is wearing the clothes already."); // ours
+} else if (inv_total(inv, dwarf_clothes) > 0) {
+    ~chatplayer("<p,happy>I had Vermundi make these clothes!");
+    ~chatnpc("<p,happy>Oh yes, Vermundi is a good woman, she's very reliable. Wonderful clothing. Give it to Riki please.");
+} else if ($boots = true) {
+    ~chatplayer("<p,sad>I don't have your clothes yet.");
+} else {
+    ~chatplayer("<p,sad>I also don't have your clothes yet, I'm afraid.");
+}
+~chatnpc("<p,quiz>And? The battleaxe?");
+if (~gd_riki_has(2) = true) {
+    ~chatplayer("<p,happy>Riki has it already."); // ours
+} else if (inv_total(inv, dwarf_battleaxe_new) > 0) {
+    ~chatplayer("<p,happy>Oh, yes, I've got it right here!");
+    ~chatnpc("<p,happy>Good job! Riki is your man, right over there. Give it to him please!");
+} else if (~gd_has_axe = true) {
+    ~chatplayer("<p,neutral>Look, I've got it right here.");
+    ~chatnpc("<p,confused>What, that old thing? Is that a piece of rubbish you found in the garbage?");
+    ~chatnpc("<p,neutral>It looks so brittle it might well fall apart at any moment. I can't base my statue on that!");
+    ~chatnpc("<p,neutral>Besides, from what I recall of the original axe, this doesn't even look anything like it.");
+} else {
+    ~chatplayer("<p,sad>Sorry, no, I'm still looking for it.");
+    ~chatnpc("<p,neutral>Look a little harder please!");
+}
+
+[label,gd_blasidar_head]
+~chatplayer("<p,quiz>I've all the items you asked me to get you. Can you make the statue now?");
+~chatnpc("<p,neutral>Yes, yes, that will do just fine. There is only one problem now, I still need to make the head.");
+~chatplayer("<p,quiz>So you need me to find a crown now as well?");
+~chatnpc("<p,neutral>Oh no, no no, apparantly the Consortium has decided that crowns are out of fashion. As well as kings. Well, kings have been out of fashion here for hundreds of years.");
+~chatplayer("<p,quiz>So what is the head supposed to look like now?");
+~chatnpc("<p,neutral>I don't think they've quite made a decision on that. You see, I think each of the directors of the Consortium fancies their own face on top of the statue.");
+~chatplayer("<p,confused>What? But I thought the whole point was that it would look like king what's-his-face?");
+~chatnpc("<p,sad>Yes, the Consortium can be a little fickle like that, unfortunately.");
+~chatnpc("<p,quiz>But can you go and see if they've made a decision yet? I can't very well continue working on this statue without knowing what the face should look like, can I?");
+~chatplayer("<p,neutral>No, I suppose you can't. Alright, I'll check it out.");
+~chatnpc("<p,happy>Great! In the mean time, I'll build the statue up to the neck!");
+// the screen fades, the statue is shown built up to the neck, and you're back (ours: the view, as in the crash)
+def_coord $back = coord;
+if_close;
+~fade_out;
+p_delay(2);
+~gd_set(^gd_consortium);
+p_telejump(0_44_159_57_8);
+cam_moveto(0_44_159_55_14, 900, 254, 254);
+cam_lookat(0_44_159_63_2, 500, 254, 254);
+p_delay(1);
+~fade_in;
+p_delay(5);
+~fade_out;
+p_delay(2);
+cam_reset;
+p_telejump($back);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- Riki the sculptor's model
+[opnpc1,dwarf_city_shop_sculpture_model_multi] @gd_riki;
+[opnpcu,dwarf_city_shop_sculpture_model_multi]
+if (%giantdwarf_quest = ^gd_items & (last_useitem = dwarf_perfect_pair_of_boots | last_useitem = dwarf_clothes | last_useitem = dwarf_battleaxe_new)) @gd_riki;
+~displaymessage(^dm_default);
+
+[label,gd_riki]
+def_int $s = %giantdwarf_quest;
+if ($s < ^gd_items) {
+    ~chatplayer("<p,quiz>Hello there, can you help me?");
+    ~chatnpc("<p,neutral>Talk... to Blasidar.");
+    ~chatplayer("<p,confused>What? No, I was wondering if you could help me.");
+    ~chatnpc("<p,neutral>Talk... to Blasidar.");
+    ~chatplayer("<p,angry>Alright, alright.");
+    return;
+}
+if ($s = ^gd_items) {
+    if (~gd_riki_give = 0) {
+        def_int $left = 3;
+        if (~gd_riki_has(0) = true) $left = calc($left - 1);
+        if (~gd_riki_has(1) = true) $left = calc($left - 1);
+        if (~gd_riki_has(2) = true) $left = calc($left - 1);
+        if ($left = 3) ~chatplayer("<p,neutral>Don't worry, I'll be back later with all those items!");
+        else if ($left = 2) ~chatplayer("<p,neutral>Don't worry, I'll be back with the rest of the items later!");
+        else ~chatplayer("<p,neutral>I'll be back with the last item before you know it!");
+    }
+    if (%giantdwarf_model_state = 7) ~gd_set(^gd_items_given);
+    return;
+}
+if ($s = ^gd_items_given) {
+    ~chatplayer("<p,happy>Hey, you're looking nice in that outfit!");
+    ~chatnpc("<p,neutral>Yes... I do.");
+    ~chatplayer("<p,quiz>So is the job done now?");
+    ~chatplayer("<p,quiz>Hello?");
+    ~chatnpc("<p,neutral>No... it isn't.");
+    ~chatplayer("<p,quiz>Care to tell me why not?");
+    ~chatnpc("<p,neutral>Talk... to Blasidar.");
+    ~chatplayer("<p,angry>It's very tiring trying to talk to you, you know?");
+    return;
+}
+~chatplayer("<p,happy>I'm glad I don't have to talk to you anymore!");
+~chatnpc("<p,neutral>Hrm.");
+
+// gives Riki what you carry, boots then clothes then axe; returns how many
+[proc,gd_riki_give]()(int)
+def_int $n = 0;
+if (~gd_riki_has(0) = false & inv_total(inv, dwarf_perfect_pair_of_boots) > 0) {
+    ~chatplayer("<p,happy>Here, I have these boots for you to wear.");
+    ~chatnpc("<p,neutral>Thank... you.");
+    inv_del(inv, dwarf_perfect_pair_of_boots, 1);
+    %giantdwarf_model_state = setbit(%giantdwarf_model_state, 0);
+    $n = calc($n + 1);
+}
+if (~gd_riki_has(1) = false & inv_total(inv, dwarf_clothes) > 0) {
+    if ($n = 0) ~chatplayer("<p,happy>I have some clothes for you to wear.");
+    else ~chatplayer("<p,happy>And look, I have some clothes as well!");
+    ~chatnpc("<p,neutral>Thank... you.");
+    inv_del(inv, dwarf_clothes, 1);
+    %giantdwarf_model_state = setbit(%giantdwarf_model_state, 1);
+    $n = calc($n + 1);
+}
+if (~gd_riki_has(2) = false & inv_total(inv, dwarf_battleaxe_new) > 0) {
+    if ($n = 0) ~chatplayer("<p,happy>I have this battleaxe for you.");
+    else ~chatplayer("<p,happy>And finally, I have this battleaxe for you!");
+    ~chatnpc("<p,neutral>Thank... you.");
+    inv_del(inv, dwarf_battleaxe_new, 1);
+    %giantdwarf_model_state = setbit(%giantdwarf_model_state, 2);
+    $n = calc($n + 1);
+}
+return($n);
+
+// ---------------------------------------------------------------- the clothes: Vermundi
+[proc,gd_vermundi_topic]()(boolean)
+if (%giantdwarf_quest ! ^gd_items) return(false);
+if (~gd_riki_has(1) = true | inv_total(inv, dwarf_clothes) > 0) return(false);
+return(true);
+
+[label,gd_vermundi]
+~chatnpc("<p,neutral>Welcome to my clothes stall, can I help you with anything?");
+def_string $topic = "Yes, I'm looking for some special clothes.";
+if (~gd_flag(^gdf_vermundi) = true) $topic = "Yes, about those special clothes again...";
+switch_int (~p_choice3("Yes, what clothes do you have in stock?", 1, $topic, 2, "No, I'm just browsing.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes, what clothes do you have in stock?");
+        ~chatnpc("<p,neutral>Not a lot, I'm afraid, most of what I produce goes to my sister. Her shop is in Keldagrim-West.");
+        ~chatplayer("<p,neutral>Well, show me what you do have then.");
+        ~openshop_activenpc;
+        return;
+    case 3 :
+        ~chatplayer("<p,neutral>No, I'm just browsing.");
+        return;
+}
+if (~gd_flag(^gdf_vermundi) = false) {
+    ~chatplayer("<p,neutral>Yes, I'm looking for some special clothes.");
+    ~chatnpc("<p,happy>Oh, that sounds interesting, what's this about?");
+    ~chatplayer("<p,neutral>I'm helping the sculptor to rebuild the statue of King Alvis. But he wants to know what his clothes looked like.");
+    ~chatnpc("<p,sad>Oh dear, that statue is in a terrible mess, isn't it?");
+    ~chatnpc("<p,neutral>I could hear the tumult from over here!");
+    ~chatplayer("<p,quiz>But the clothes, do you have any similar clothes?");
+    ~chatnpc("<p,neutral>Oh no, no, I can't quite recall what the clothes looked like. But I know someone who can!");
+    ~chatplayer("<p,quiz>Who's that?");
+    ~chatnpc("<p,neutral>Well, I'm sure Hugi the librarian in West can help you along.");
+    ~chatplayer("<p,quiz>West?");
+    ~chatnpc("<p,neutral>Keldagrim-West, dear... on the other side of the Kelda, towards the north end of the city.");
+    ~chatnpc("<p,neutral>I'm sure he can show you the exact designs of the clothes.");
+    ~chatplayer("<p,neutral>But I need the actual clothes themselves, not just the designs.");
+    ~chatnpc("<p,happy>Oh, just bring the designs to me then, I'll fix you up some nice clothes!");
+    ~chatnpc("<p,happy>Sounds like a fun little thing to do!");
+    ~chatplayer("<p,happy>Great, thanks a lot, I'll check out the library!");
+    ~gd_setflag(^gdf_vermundi);
+    return;
+}
+~chatplayer("<p,neutral>Yes, about those special clothes again...");
+if (%giantdwarf_vermundi_givenbook = 0) {
+    ~chatnpc("<p,quiz>Oh yes, did you get those designs from the librarian?");
+    if (~gd_flag(^gdf_librarian_clothes) = false) {
+        ~chatplayer("<p,neutral>I haven't actually spoken to the librarian yet, let me do that now.");
+        return;
+    }
+    if (inv_total(inv, dwarf_library_book) = 0) {
+        ~chatplayer("<p,neutral>No, I don't have them yet, but I can get them for you. The librarian has a book.");
+        ~chatnpc("<p,happy>A book, how wonderful!");
+        return;
+    }
+    ~chatplayer("<p,happy>Yes, I have a book right here, have a look at it!");
+    inv_del(inv, dwarf_library_book, 1);
+    %giantdwarf_vermundi_givenbook = 1;
+    ~chatnpc("<p,happy>Oh, I see, I see!");
+    ~chatnpc("<p,happy>I can definitely help you with this.");
+    ~chatnpc("<p,sad>I only have one small problem, you see... I've run out of fuel for my spinning machine.");
+    ~chatplayer("<p,quiz>What does it run on?");
+    ~chatnpc("<p,neutral>Steam, of course!");
+    ~chatnpc("<p,neutral>But I've used up all my coal and wood and I don't have the time to leave my stall to get them.");
+    ~chatplayer("<p,neutral>Don't worry, I'll get them for you. Let's see... some coal and some logs. Shouldn't be too hard.");
+    return;
+}
+if (~gd_flag(^gdf_machine_loaded) = false) {
+    ~chatnpc("<p,neutral>Well, like I said, I can't do anything really without my spinning machine.");
+    ~chatplayer("<p,quiz>Right, and what did you need again to start the engine?");
+    ~chatnpc("<p,neutral>Some coal and logs should do it!");
+    if (inv_total(inv, coal) > 0 & ~gd_has_logs = true) {
+        ~chatplayer("<p,happy>I've got them right here!");
+        ~chatnpc("<p,neutral>Then put them in the machine dear!");
+    }
+    return;
+}
+if (~gd_flag(^gdf_machine_lit) = false) {
+    ~chatnpc("<p,neutral>Well, the spinning machine is all ready now, except that it needs to be powered up.");
+    ~chatnpc("<p,neutral>As soon as it's up and running, I can spin your clothes for you.");
+    ~chatplayer("<p,quiz>How does that work?");
+    ~chatnpc("<p,neutral>Why, you light the logs of course!");
+    ~chatplayer("<p,neutral>Okay, okay, I'll do it! Just a moment.");
+    return;
+}
+~chatplayer("<p,quiz>Can I have those clothes now?");
+~chatnpc("<p,neutral>Yes, I can spin them for you, but I will have to ask you for a small payment of money for them.");
+~chatplayer("<p,shock>What, after all that work?");
+~chatnpc("<p,sad>I'm sorry, but the cloth to spin this is expensive. But for you, I can make the clothes for a nominal fee of 200 credits.");
+if (~p_choice2("I'll pay.", 1, "I won't pay.", 2) = 2) {
+    ~chatplayer("<p,angry>I won't pay, that's outrageous!");
+    ~chatnpc("<p,sad>I'm sorry you feel that way, I was looking forward to making these clothes.");
+    return;
+}
+~chatplayer("<p,neutral>I'll pay, I'll pay.");
+if (inv_total(inv, coins) < 200) {
+    ~chatplayer("<p,sad>Oh, I don't seem to have enough money on me."); // ours
+    return;
+}
+inv_del(inv, coins, 200);
+~chatnpc("<p,happy>Wonderful, let me get started then!");
+~chatnpc("<p,happy>There we go! And look how beautiful these clothes look!");
+~gd_give(dwarf_clothes);
+~objbox(dwarf_clothes, "Vermundi gives you the exquisite clothes.", 250, 0, 0); // ours: the box's words
+~chatplayer("<p,happy>Thank you very much!");
+
+// the spinning machine: coal (with logs in your pack, or the logs with coal) and then a tinderbox
+[oplocu,dwarf_keldagrim_spinning_machine]
+switch_obj (last_useitem) {
+    case coal, logs, oak_logs, willow_logs, maple_logs, yew_logs, magic_logs : @gd_machine_fill;
+    case tinderbox : @gd_machine_light;
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,gd_machine_fill]
+if (%giantdwarf_quest ! ^gd_items | %giantdwarf_vermundi_givenbook = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~gd_flag(^gdf_machine_loaded) = true) {
+    mes("You've already done this.");
+    return;
+}
+if (inv_total(inv, coal) = 0 | ~gd_has_logs = false) {
+    mes("You need some coal and some logs to fuel the machine."); // ours
+    return;
+}
+anim(keldagrim_fill_machine, 0);
+p_delay(2);
+inv_del(inv, coal, 1);
+~gd_del_logs;
+~gd_setflag(^gdf_machine_loaded);
+mes("You put the coal and logs into the spinning machine."); // ours
+
+[label,gd_machine_light]
+if (%giantdwarf_quest ! ^gd_items | ~gd_flag(^gdf_machine_loaded) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~gd_flag(^gdf_machine_lit) = true) {
+    mes("You've already done this.");
+    return;
+}
+if (stat(firemaking) < 16) {
+    mes("You need a Firemaking level of 16 to light the logs."); // ours: the OSRS wiki's 16 Firemaking
+    return;
+}
+mes("You bend down to light the logs.");
+anim(keldagrim_ignite_machine, 0);
+p_delay(3);
+if (stat_random(firemaking, 64, 512) = true) { // ours: the usual log-lighting roll
+    ~gd_setflag(^gdf_machine_lit);
+    mes("...and successfully start the engine!");
+    return;
+}
+mes("...but fail miserably.");
+mes("Perhaps you should improve your firemaking skill? Or just try again...");
+
+// ---------------------------------------------------------------- the clothes: the librarian (Hugi)
+[proc,gd_librarian_clothes_topic]()(int)
+if (~gd_vermundi_topic = false | ~gd_flag(^gdf_vermundi) = false | %giantdwarf_vermundi_givenbook = 1) return(0);
+return(2);
+
+[proc,gd_librarian_imcando_topic]()(int)
+if (%giantdwarf_quest ! ^gd_items | ~gd_flag(^gdf_santiri) = false | %squire >= ^squire_complete) return(0);
+if (~gd_riki_has(2) = true | ~gd_flag(^gdf_thurgo_fixed) = true) return(0);
+return(3);
+
+[label,gd_librarian_clothes]
+~chatplayer("<p,quiz>Do you know anything about King Alvis's clothes?");
+~chatnpc("<p,quiz>His clothes? How do you mean?");
+~chatplayer("<p,neutral>I'm helping Blasidar the sculptor to rebuild the statue of King Alvis, but he needs to know the design of his clothes.");
+~chatnpc("<p,neutral>I see, I see.");
+~chatnpc("<p,neutral>There is a book, somewhere in the library, that may help you. It is the 'Scholars Guide to Dwarven Costumes' and it contains the designs of the costumes of a lot of old Kings and dwarven dignitaries.");
+~chatplayer("<p,quiz>Sounds like just the thing. Where exactly could I find it?");
+~chatnpc("<p,neutral>Let me think... I believe it is on the top shelf of one of the bookcases in the library, because it is such an old book.");
+~chatplayer("<p,quiz>Can you be any more specific? Upstairs, downstairs?");
+~chatnpc("<p,neutral>I don't remember, sorry. You will have to try several bookcases. You will probably need the ladders, tall a human though you are.");
+~chatplayer("<p,neutral>Well, thanks, I'll have a look.");
+~gd_setflag(^gdf_librarian_clothes);
+
+[label,gd_librarian_imcando]
+~chatplayer("<p,quiz>Can you help me find an Imcando dwarf?");
+~chatnpc("<p,quiz>An Imcando dwarf, you say?");
+~chatplayer("<p,neutral>Yes, I need the help of an Imcando dwarf to repair an ancient battleaxe.");
+~chatnpc("<p,neutral>I see, I see.");
+~chatnpc("<p,sad>Ah, I'm afraid I can't help you here, Keldagrim lost contact with that particular tribe of dwarves a long time ago.");
+~chatplayer("<p,quiz>Is there no one else who can help me?");
+~chatnpc("<p,neutral>I suppose you could try Reldo, in the palace of Varrock. He is a most capable human librarian and knows quite a bit about us dwarves.");
+~chatplayer("<p,quiz>Do you think he can help me?");
+~chatnpc("<p,neutral>He lives quite a good deal closer to where the Imcando used to live than we do, so it is not unlikely. Tell him Hugi the librarian sent you and I'm sure he'll be happy to help.");
+~chatnpc("<p,neutral>And take a cart to Ice Mountain from the station in the east side of the city. It'll help you get to Varrock faster.");
+~gd_setflag(^gdf_librarian_imcando);
+
+// the bookcases with ladders in the library
+[oploc1,dwarf_keldagrim_bookcase_ladder]
+if (inv_total(inv, dwarf_library_book) > 0) {
+    ~mesbox("You already have a copy of the 'Scholars Guide to Dwarven Costumes'. That's quite enough for you.");
+    return;
+}
+if (%giantdwarf_quest ! ^gd_items | ~gd_flag(^gdf_librarian_clothes) = false | %giantdwarf_vermundi_givenbook = 1) {
+    ~mesbox("You have no reason to climb that very wobbly looking ladder.");
+    return;
+}
+if (weight >= 30000) {
+    anim(human_climbing_bookcase_fail, 0);
+    ~mesbox("As you put your foot on the bottom of the ladder, you hear it creak loudly... It nearly breaks! This ladder can't support your weight!");
+    ~chatplayer("<p,angry>Bah. Annoying dwarven ladders, they're much too flimsy.");
+    return;
+}
+anim(human_climbing_bookcase, 0);
+p_delay(2);
+~gd_give(dwarf_library_book);
+~mesbox("You dust off the book you just retrieved and read the title: 'Scholars Guide to Dwarven Costumes'. Just what you need! You can take this to the clothes stall in the palace market now.");
+
+[opobj3,dwarf_library_book]
+if (inv_total(inv, dwarf_library_book) > 0) {
+    ~mesbox("You already have a copy of this book.");
+    return;
+}
+@pickup_obj;
+
+[opobj3,dwarf_clothes]
+if (inv_total(inv, dwarf_clothes) > 0 | ~gd_riki_has(1) = true) {
+    ~mesbox("You're not sure what those clothes are for, but you don't need them. You have the clothes you need for the sculptor already.");
+    return;
+}
+@pickup_obj;
+
+[opheld1,dwarf_clothes] ~chatplayer("<p,neutral>These clothes are too small for me, I might ruin them if I put them on. I'd better take them to the sculptor instead.");
+
+// ---------------------------------------------------------------- the boots: Saro
+[proc,gd_boots_topic]()(boolean)
+if (%giantdwarf_quest ! ^gd_items) return(false);
+if (~gd_riki_has(0) = true | inv_total(inv, dwarf_perfect_pair_of_boots) > 0) return(false);
+return(true);
+
+[label,gd_saro]
+~chatnpc("<p,happy>Welcome to my store, human! Are you interested in buying anything?");
+switch_int (~p_choice3("Yes, I'm looking for some armour.", 1, "Yes, I'm looking for a pair of special boots.", 2, "No thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes, I'm looking for some armour.");
+        ~openshop_activenpc;
+        return;
+    case 3 :
+        ~chatplayer("<p,neutral>No thanks.");
+        return;
+}
+~chatplayer("<p,neutral>Yes, I'm looking for a pair of special boots.");
+if (~gd_flag(^gdf_saro) = true) {
+    ~chatnpc("<p,quiz>I thought I already told you where to get them?");
+    ~chatplayer("<p,neutral>Oh yes. The old dwarf north of the bank has them, I remember now.");
+    return;
+}
+~chatnpc("<p,quiz>Boots, you say? What kind of boots?");
+~chatplayer("<p,happy>The best you have! Boots fit for a king!");
+~chatnpc("<p,neutral>Hmm, let's see... Well, I've got this pair of very exclusive boots. They're not armoured, but they look nice.");
+~chatnpc("<p,sad>Or rather, I had. I'm afraid I sold them, come to think of it.");
+~chatplayer("<p,quiz>And you don't have anything else?");
+~chatnpc("<p,neutral>I don't normally stock boots, no, nothing that's appropriate for... what did you say? A king?");
+~chatplayer("<p,quiz>Please, tell me! Who did you sell the boots to?");
+~chatnpc("<p,neutral>Old chap here in the west part of town, his name is Dromund. He's quite well known, not only for his wealth, but also for his... pecularities.");
+~chatplayer("<p,quiz>What house does he live in?");
+~chatnpc("<p,neutral>Go out the door, and head north. You'll have the headquarters of the Black Guard on your left and the bank on your right. Keep heading north and you'll find Dromund's house on your right. Can't miss it!");
+~chatnpc("<p,neutral>And if you're going to try to get the boots off him, good luck. You'll need it.");
+~chatplayer("<p,happy>Thanks!");
+~gd_setflag(^gdf_saro);
+
+// ---------------------------------------------------------------- the boots: Dromund
+[label,gd_dromund]
+if (~gd_riki_has(0) = true | inv_total(inv, dwarf_perfect_pair_of_boots) > 0 | %giantdwarf_quest > ^gd_items) {
+    ~chatnpc("<p,sad>Someone stole my beautiful boots... I had to buy some crummy replicas, the real boots were one of a kind.");
+    ~chatplayer("<p,neutral>Don't worry, if I find out who did it I'll take care of them.");
+    return;
+}
+if (~gd_flag(^gdf_saro) = false) {
+    ~chatnpc("<p,angry>Get out of my house!");
+    ~chatplayer("<p,neutral>Alright, alright, I was just leaving!");
+    return;
+}
+if (~gd_flag(^gdf_dromund) = true) {
+    ~chatplayer("<p,quiz>Are you sure you don't want to give me those boots?");
+    ~chatnpc("<p,angry>Get out of here before I get one of my servants to throw you out!");
+    return;
+}
+~chatnpc("<p,angry>You're trespassing, get out!");
+~chatplayer("<p,neutral>Calm down! I just want to ask you a few questions.");
+~chatnpc("<p,quiz>Are you with the Black Guard or something?");
+~chatnpc("<p,neutral>No, you wouldn't be, you're just a human.");
+~chatnpc("<p,quiz>What do you want from me?");
+~chatplayer("<p,neutral>I went to the Quality Armour shop. The proprietor told me you have just recently purchased a pair of boots from him.");
+~chatnpc("<p,happy>Right, and nice they look too on my display tables.");
+~chatplayer("<p,quiz>You're not actually using them then? Might I be able to buy them off you?");
+~chatnpc("<p,laugh>Good one, human!");
+~chatnpc("<p,angry>They're mine and the last thing I'll do is part with them!");
+~chatplayer("<p,quiz>Tell me, how much will you accept for these boots?");
+~chatnpc("<p,angry>Get out you pesky human! The boots are mine and you're not having them!");
+~gd_setflag(^gdf_dromund);
+
+// ours: every few ticks Dromund turns to face north, east, south or west (%gd_dromund_look 0-3);
+// he sees what is in front of him (half the room) when nothing blocks his view
+[ai_timer,dwarf_city_excentric_dwarf]
+%gd_dromund_look = random(4);
+switch_int (%gd_dromund_look) {
+    case 0 : npc_facesquare(movecoord(npc_coord, 0, 0, 5));
+    case 1 : npc_facesquare(movecoord(npc_coord, 5, 0, 0));
+    case 2 : npc_facesquare(movecoord(npc_coord, 0, 0, -5));
+    case default : npc_facesquare(movecoord(npc_coord, -5, 0, 0));
+}
+
+[proc,gd_dromund_sees](coord $target)(boolean)
+if (npc_find(0_44_159_21_47, dwarf_city_excentric_dwarf, 12, 0) = false) return(false);
+def_int $dx = calc(coordx($target) - coordx(npc_coord));
+def_int $dz = calc(coordz($target) - coordz(npc_coord));
+def_int $ahead = 0;
+switch_int (%gd_dromund_look) {
+    case 0 : $ahead = $dz;
+    case 1 : $ahead = $dx;
+    case 2 : $ahead = calc(0 - $dz);
+    case default : $ahead = calc(0 - $dx);
+}
+if ($ahead <= 0) return(false);
+return(lineofsight(npc_coord, $target));
+
+// ours: Dromund's house (2834-2841,10220-10226)
+[proc,gd_in_dromunds_house]()(boolean)
+return(inzone(0_44_159_18_44, 0_44_159_25_50, coord));
+
+[proc,gd_boot_check]()(boolean)
+if (~gd_riki_has(0) = true | inv_total(inv, dwarf_perfect_pair_of_boots) > 0) {
+    ~mesbox("You already have the perfect pair of boots, you don't need to bother with this one.");
+    return(false);
+}
+if (%giantdwarf_quest ! ^gd_items | ~gd_flag(^gdf_dromund) = false) {
+    mes("You don't need this boot.");
+    return(false);
+}
+return(true);
+
+// the left boot, on the table by the door
+[opobj3,dwarf_perfect_left_boot]
+if (~gd_boot_check = false) return;
+if (~gd_dromund_sees(coord) = true) {
+    ~chatnpc_specific("Dromund", dwarf_city_excentric_dwarf, "<p,angry>What are you doing there?!");
+    ~chatplayer("<p,shifty>Nothing...");
+    return;
+}
+@pickup_obj;
+
+// the right boot, guarded by the cat: only Telekinetic Grab from outside the window gets it
+[opobj3,dwarf_perfect_right_boot]
+if (~gd_boot_check = false) return;
+if (~gd_in_dromunds_house = true) {
+    ~chatnpc_specific("Dromund's cat", dwarf_city_guarding_cat, "<p,angry>Get your hands off that, you dirty human!");
+    ~chatnpc_specific("Dromund", dwarf_city_excentric_dwarf, "<p,angry>Stay away from there! Who do you think you are, coming into my house like that?");
+    ~mesbox("You don't think you'll be able to get close to this boot without the old dwarf noticing you, what with his cat guarding.");
+    return;
+}
+@pickup_obj;
+
+// Telekinetic Grab on a boot (skill_magic/telegrab.rs2 asks this first)
+[proc,gd_telegrab_boot]()(boolean)
+if (~gd_boot_check = false) return(false);
+if (~gd_in_dromunds_house = true) {
+    ~chatnpc_specific("Dromund", dwarf_city_excentric_dwarf, "<p,angry>What are you doing, casting spells in my house? Get out!");
+    return(false);
+}
+if (~gd_dromund_sees(obj_coord) = true) {
+    ~chatnpc_specific("Dromund", dwarf_city_excentric_dwarf, "<p,angry>Hey! Is there someone at my window?");
+    ~chatnpc_specific("Dromund", dwarf_city_excentric_dwarf, "<p,angry>Scram before I get the Black Guard to arrest you!");
+    return(false);
+}
+return(true);
+
+[opheld1,dwarf_perfect_left_boot] @gd_wear_boot;
+[opheld1,dwarf_perfect_right_boot] @gd_wear_boot;
+[label,gd_wear_boot]
+if (inv_total(inv, dwarf_perfect_left_boot) > 0 & inv_total(inv, dwarf_perfect_right_boot) > 0) {
+    inv_del(inv, dwarf_perfect_left_boot, 1);
+    inv_del(inv, dwarf_perfect_right_boot, 1);
+    inv_add(inv, dwarf_perfect_pair_of_boots, 1);
+    ~mesbox("You now have the perfect pair of boots to bring to the sculptor's model!");
+    return;
+}
+~chatplayer("<p,neutral>What, wear just one boot? Besides, the boot is too precious for that.");
+
+[opheld1,dwarf_perfect_pair_of_boots] ~chatplayer("<p,neutral>I shouldn't wear these boots, I don't want anything to happen to them before I bring them to the sculptor.");
+
+// the OSRS wiki: the boots are lost when dropped
+[opheld5,dwarf_perfect_pair_of_boots]
+inv_del(inv, dwarf_perfect_pair_of_boots, 1);
+~mesbox("You drop one boot, but then the other shoe falls... you've lost them both!");
+
+[opheld5,dwarf_perfect_left_boot]
+inv_del(inv, dwarf_perfect_left_boot, 1);
+~mesbox("You drop the boot on the ground and lose sight of it.");
+
+[opheld5,dwarf_perfect_right_boot]
+inv_del(inv, dwarf_perfect_right_boot, 1);
+~mesbox("You drop the boot on the ground and lose sight of it.");
+
+// ---------------------------------------------------------------- the axe: Santiri
+[label,gd_santiri]
+~chatnpc("<p,happy>Welcome, human, to the Quality Weapons Shop! Can I interest you in a purchase?");
+switch_int (~p_choice3("Yes, I'm looking for some weapons.", 1, "Yes, I'm looking for a particular battleaxe.", 2, "No thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes, I'm looking for some weapons.");
+        ~openshop_activenpc;
+        return;
+    case 3 :
+        ~chatplayer("<p,neutral>No thanks.");
+        return;
+}
+~chatplayer("<p,neutral>Yes, I'm looking for a particular battleaxe.");
+if (~gd_flag(^gdf_santiri) = true) @gd_santiri_again;
+~chatnpc("<p,neutral>Fancy a particular colour then? Blue is quite popular at the moment, and red is on the rise.");
+~chatplayer("<p,neutral>No, actually, I'm looking for King Alvis' axe.");
+~chatnpc("<p,shock>The King's axe!");
+~chatnpc("<p,quiz>What would a human want with it?");
+~chatplayer("<p,neutral>I've been tasked by Veldaban, Commander of the Black Guard in Keldagrim, to assist in every way possible with the rebuilding of King Alvis' statue.");
+~chatnpc("<p,sad>Oh yes, the statue... a most unfortunate incident.");
+~chatnpc("<p,shifty>Not that I'm entirely sure that it was merely an accident, of course.");
+~chatplayer("<p,quiz>How do you mean?");
+~chatnpc("<p,neutral>I'm not entirely sure what I mean, human. But the axe, you say, what exactly did you need it for?");
+switch_int (~p_choice3("Just give me the axe already, I know you have it!", 1, "Blasidar the sculptor needs it for his statue.", 2, "I don't really care for it after all.", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>Just give me the axe already, I know you have it!");
+        ~chatnpc("<p,angry>I'll give it to you, embedded into your head!");
+        ~chatplayer("<p,angry>I've had just about enough of this! Goodbye!");
+        return;
+    case 3 :
+        ~chatplayer("<p,neutral>I don't really care for it after all.");
+        ~chatnpc("<p,angry>Then stop wasting my time.");
+        return;
+}
+~chatplayer("<p,neutral>Blasidar the sculptor needs it for his statue. He wants a model for the axe, you see, and he believes the original axe still survives.");
+~chatnpc("<p,happy>And so it does!");
+~chatnpc("<p,neutral>It's been in my family's care for a few generations now, after it has been lost for a long time.");
+~chatplayer("<p,quiz>What happened to it?");
+~chatnpc("<p,neutral>I do not know how it got lost, but my great-grandfather found it at the banks of the Kelda, further downstream from the city.");
+~chatplayer("<p,quiz>Can I see it?");
+~chatnpc("<p,sad>There is not much left of it, to be honest. The blade has almost completely rusted away, and the sapphires on the hilt were either stolen or were washed away by the river before it was found.");
+~chatnpc("<p,neutral>I doubt it is useful to Blasidar in this state, master sculptor though he is.");
+~chatplayer("<p,quiz>Are you sure this is the real axe then?");
+~chatnpc("<p,neutral>Not entirely, no, but it matches the description well enough, and the holes for the sapphires are still clearly visible on the hilt. But since no one has a similar claim, I don't really care. It's genuine to me.");
+if (~p_choice2("This is tedious, I've lost interest.", 1, "Perhaps I can repair the axe?", 2) = 1) {
+    ~chatplayer("<p,bored>This is tedious, I've lost interest.");
+    ~chatnpc("<p,neutral>I'll get back to work then.");
+    return;
+}
+~chatplayer("<p,quiz>Perhaps I can repair the axe?");
+~chatnpc("<p,neutral>On your own? I doubt it. The sapphires, perhaps, if you are a skilled enough crafter. But the blade...");
+def_int $smith = stat_base(smithing);
+if ($smith >= 99) {
+    ~chatnpc("<p,neutral>Clearly you are a master smith, perhaps one of the best human smiths in all of Gielinor. Yet this is beyond even you.");
+} else if ($smith >= 75) {
+    ~chatnpc("<p,neutral>Formidable though your smithing skills are, this is beyond your capabilities.");
+} else if ($smith >= 30) {
+    ~chatnpc("<p,neutral>You're a decent smith, but this is far beyond your capabilities.");
+} else {
+    ~chatnpc("<p,neutral>Your feeble smithing skills will be of no use. No, you will need expert help on this.");
+}
+~chatnpc("<p,sad>What you need is the skills of an Imcando dwarf... but they must all be dead by now.");
+if (%squire >= ^squire_complete) {
+    ~chatplayer("<p,happy>Oh, I know where I can find an Imcando dwarf!");
+    ~chatplayer("<p,happy>He actually made a sword for me a while ago. I'm sure I can get him to help me again.");
+    ~chatnpc("<p,shock>Really? That is amazing news.");
+    ~chatplayer("<p,neutral>He lives on a cliff at the very south end of Asgarnia, just south of Port Sarim. I can visit him again if you like.");
+    ~chatnpc("<p,happy>Excellent! You can take a cart to Ice Mountain from the station here, that should help you get there faster.");
+} else {
+    ~chatplayer("<p,quiz>Perhaps I could try and find one?");
+    ~chatnpc("<p,neutral>Yes, perhaps, perhaps...");
+    ~chatnpc("<p,neutral>Perhaps the librarian, just due east of here, can help you.");
+    ~chatnpc("<p,happy>Yes, I like the sound of this!");
+}
+~chatnpc("<p,neutral>I will entrust you with King Alvis' battleaxe, then, human.");
+~chatnpc("<p,happy>Help to restore it to its former glory!");
+~chatnpc("<p,neutral>And please ask Blasidar to return it to me after he's done with it, I would sure love to see the restored blade again.");
+~chatplayer("<p,happy>Thank you. I will not disappoint you.");
+~gd_setflag(^gdf_santiri);
+~gd_give(dwarf_battleaxe_old);
+
+[label,gd_santiri_again]
+if (~gd_riki_has(2) = true) {
+    ~chatnpc("<p,quiz>Ah, you mean King Alvis' axe? Didn't you give it to Blasidar?");
+    ~chatplayer("<p,neutral>I did, actually, I was just wondering if he returned it to you yet.");
+    ~chatnpc("<p,neutral>No, I believe he's still using it.");
+    ~chatnpc("<p,happy>But thanks for your help with restoring the axe to its former glory!");
+    return;
+}
+~chatnpc("<p,quiz>Ah, you mean King Alvis' axe? You still have it, yes?");
+if (inv_total(inv, dwarf_battleaxe_new) > 0) {
+    ~chatplayer("<p,happy>Yes, and look, it's all fixed up now! I got Thurgo the Imcando dwarf to fix the blade, and I've crafted three sapphires onto the hilt.");
+    ~chatnpc("<p,shock>That is amazing! Absolutely astounding work!");
+    ~chatnpc("<p,happy>Go and give Blasidar a hand with it then, and make sure to tell him to send it back to me when he's done with it!");
+    return;
+}
+if (inv_total(inv, dwarf_battleaxe_sharpened) > 0) {
+    ~chatplayer("<p,happy>Yes, and I got Thurgo the Imcando dwarf to fix it up nice and proper! Look!");
+    ~chatnpc("<p,happy>Oh, that's beautiful! All it needs now is three sapphires crafted onto the hilt.");
+    return;
+}
+if (inv_total(inv, dwarf_battleaxe_sapphires) > 0) {
+    ~chatplayer("<p,happy>Yes, and I've crafted some sapphires on the hilt, look!");
+    ~chatnpc("<p,happy>That's a great start! Now if you can find an Imcando dwarf so the blade can be repaired, that would be even better!");
+    return;
+}
+if (inv_total(inv, dwarf_battleaxe_old) > 0) {
+    ~chatplayer("<p,neutral>Yes, but I was just wondering what I should be doing with this piece of junk.");
+    ~chatnpc("<p,shock>Piece of junk??");
+    ~chatnpc("<p,quiz>I thought you were going to put sapphires on it and bring it to an Imcando dwarf?");
+    ~chatplayer("<p,neutral>Oh yes, of course, that's what I was going to do!");
+    return;
+}
+~chatplayer("<p,sad>I... sort of... ehm...");
+~chatplayer("<p,sad>Look, I lost it!");
+~chatnpc("<p,neutral>At least you are honest, human.");
+~chatnpc("<p,neutral>I found it, actually, after you lost it. I'm not happy with giving it to you again, but the rebuilding of the statue is important.");
+~chatnpc("<p,angry>Be careful with it this time, alright?");
+~gd_give(dwarf_battleaxe_old);
+
+// ---------------------------------------------------------------- the axe: the sapphires
+[opheldu,dwarf_battleaxe_old]
+if (last_useitem ! sapphire) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@gd_axe_sapphires(dwarf_battleaxe_old);
+
+[opheldu,dwarf_battleaxe_sharpened]
+if (last_useitem ! sapphire) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@gd_axe_sapphires(dwarf_battleaxe_sharpened);
+
+// the OSRS wiki: three cut sapphires and 12 Crafting
+[label,gd_axe_sapphires](obj $axe)
+if (inv_total(inv, sapphire) < 3) {
+    mes("You need three cut sapphires to fit onto the hilt."); // ours
+    return;
+}
+if (stat(crafting) < 12) {
+    mes("You need a Crafting level of 12 to fit the sapphires onto the hilt."); // ours
+    return;
+}
+if ($axe = dwarf_battleaxe_old) {
+    mes("You take three of your cut sapphires and start your work...");
+    anim(keldagrim_crafting_sapphires_blunt, 0);
+    p_delay(3);
+    inv_del(inv, sapphire, 3);
+    inv_del(inv, dwarf_battleaxe_old, 1);
+    inv_add(inv, dwarf_battleaxe_sapphires, 1);
+    mes("Great, all it needs now is a little sharpening!");
+    return;
+}
+anim(keldagrim_crafting_sapphires_sharp, 0);
+p_delay(3);
+inv_del(inv, sapphire, 3);
+inv_del(inv, dwarf_battleaxe_sharpened, 1);
+inv_add(inv, dwarf_battleaxe_new, 1);
+~mesbox("Excellent, you've restored the battleaxe to its former glory! You'd better bring it to Blasidar the sculptor now.");
+
+[opheld1,dwarf_battleaxe_old] @gd_wield_axe;
+[opheld1,dwarf_battleaxe_sapphires] @gd_wield_axe;
+[opheld1,dwarf_battleaxe_sharpened] @gd_wield_axe;
+[label,gd_wield_axe]
+~chatplayer("<p,neutral>I should be very careful with this battleaxe, it's almost a museum piece! I don't want to damage it by wielding it.");
+
+[opheld1,dwarf_battleaxe_new]
+~mesbox("I went through all this trouble to restore this axe, I'm not going to ruin it now by wielding it and accidentally smashing it to pieces. I'd better take it to the sculptor.");
+
+[opobj3,dwarf_battleaxe_old] @gd_take_axe;
+[opobj3,dwarf_battleaxe_sapphires] @gd_take_axe;
+[opobj3,dwarf_battleaxe_sharpened] @gd_take_axe;
+[opobj3,dwarf_battleaxe_new] @gd_take_axe;
+[label,gd_take_axe]
+if (~gd_has_axe = true) {
+    ~mesbox("You already have King Alvis' axe. You're not sure what that axe is for, but you don't need it.");
+    return;
+}
+@pickup_obj;
+
+// ---------------------------------------------------------------- the axe: Reldo
+// Transcript:The Giant Dwarf (Reldo, with The Knight's Sword not done); the RS wiki: only after the
+// Keldagrim librarian has sent you
+[proc,gd_ask_reldo]()(boolean)
+if (%giantdwarf_quest ! ^gd_items | ~gd_flag(^gdf_librarian_imcando) = false | %squire >= ^squire_complete) return(false);
+if (~gd_riki_has(2) = true | ~gd_flag(^gdf_thurgo_fixed) = true) return(false);
+if (~p_choice2("What do you know about the Imcando dwarves?", 1, "Talk about something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>What do you know about the Imcando dwarves?");
+~chatnpc("<p,neutral>The Imcando dwarves, you say? Let's see...");
+~chatnpc("<p,neutral>Ah, yes... For many hundreds of years, they were the world's most skilled smiths. They used secret smithing knowledge passed down from generation to generation.");
+~chatnpc("<p,sad>Unfortunately, about a century ago, the once thriving group was wiped out during the barbarian invasions of that time.");
+~chatnpc("<p,neutral>I believe a few of them survived, but with the bulk of their population destroyed, their numbers dwindled even further. If any are left now, they'll no doubt keep to themselves.");
+~chatnpc("<p,neutral>However, I have heard tales of their love for redberry pie. Perhaps one of those could convince one to reveal their true heritage.");
+~chatplayer("<p,quiz>So I just go around offering random dwarves redberry pie?");
+~chatnpc("<p,neutral>Well, not totally random. Apparently some of the surviving Imcando made a home for themselves near the cliffs on the Asgarnian southern peninsula. That would be a good place to start.");
+~gd_setflag(^gdf_reldo);
+return(true);
+
+// ---------------------------------------------------------------- the axe: Thurgo
+[proc,gd_thurgo_topic]()(boolean)
+if (%giantdwarf_quest ! ^gd_items) return(false);
+if (inv_total(inv, dwarf_battleaxe_old) = 0 & inv_total(inv, dwarf_battleaxe_sapphires) = 0) return(false);
+if (%squire >= ^squire_complete | ~gd_flag(^gdf_reldo) = true) return(true);
+return(false);
+
+[label,gd_thurgo]
+def_int $pie = 0;
+if (inv_total(inv, redberry_pie) > 0 & %giantdwarf_pie_given = 0) $pie = 2;
+if (~p_choice_some5("Can you help me with this ancient axe?", 1, "Would you like a redberry pie?", $pie, "", 0, "", 0, "", 0) = 2) @gd_thurgo_pie;
+~chatplayer("<p,quiz>Can you help me with this ancient axe?");
+if (%giantdwarf_pie_given = 1) @gd_thurgo_axe; // ours: once he has had his pie
+if (%squire >= ^squire_complete) {
+    ~chatnpc("<p,neutral>Well, you know what to do! Get me another redberry pie and I'll have a look at that axe of yours!");
+} else {
+    ~chatnpc("<p,neutral>No. I don't do that anymore. I'm getting old.");
+}
+if ($pie = 0) {
+    ~chatplayer("<p,neutral>I'll come back another time."); // ours: the only choice left
+    return;
+}
+if (~p_choice2("Would you like a redberry pie?", 1, "I'll come back another time.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'll come back another time.");
+    return;
+}
+@gd_thurgo_pie;
+
+[label,gd_thurgo_pie]
+~chatplayer("<p,quiz>Would you like a redberry pie?");
+~mesbox("You see Thurgo's eyes light up.");
+~chatnpc("<p,happy>I'd never say no to a redberry pie! We Imcando dwarves love them - they're GREAT!");
+inv_del(inv, redberry_pie, 1);
+%giantdwarf_pie_given = 1;
+~mesbox("You hand over the pie. Thurgo eats the pie. Thurgo pats his stomach.");
+~chatnpc("<p,happy>By Guthix! THAT was good pie! Anyone who makes pie like THAT has got to be alright!");
+if (~p_choice2("Can you help me with this ancient axe?", 1, "I'll come back another time.", 2) = 2) { // ours: the second choice
+    ~chatplayer("<p,neutral>I'll come back another time.");
+    return;
+}
+~chatplayer("<p,quiz>Can you help me with this ancient axe?");
+@gd_thurgo_axe;
+
+[label,gd_thurgo_axe]
+~chatnpc("<p,happy>You make excellent redberry pies, <displayname>, so how can I refuse? Let me see what's wrong with it then.");
+~chatplayer("<p,neutral>Here... the blade of this axe has become extremely dull and brittle. I need it restored to its former glory.");
+~chatnpc("<p,quiz>Its former glory eh? May I ask where exactly you got this axe from?");
+~chatplayer("<p,shifty>It was given to me by someone in Keldagrim. I prefer not to say any more than that.");
+~chatnpc("<p,neutral>Ah, Keldagrim. We have not been there for a long time.");
+~chatplayer("<p,quiz>We?");
+~chatnpc("<p,shifty>Never mind.");
+~chatnpc("<p,neutral>Hand me the axe and I'll fix it right up for you.");
+if (%squire >= ^squire_complete) {
+    ~chatplayer("<p,quiz>You don't want any blurite this time?");
+    ~chatnpc("<p,neutral>Oh no, blurite is not appropriate here. No no, this is going to be a very delicate piece of work, requiring only a small amount in the way of raw materials.");
+} else {
+    ~chatplayer("<p,quiz>Will you need any materials?");
+}
+~chatnpc("<p,neutral>Can you get me one bar of iron? Then I'll be able to start my work on this.");
+if (inv_total(inv, iron_bar) = 0) {
+    ~chatplayer("<p,neutral>Of course.");
+    return;
+}
+~chatplayer("<p,happy>I've got one right here.");
+~chatnpc("<p,happy>Good, good! Hand me the axe and I'll get to work.");
+if_close;
+~fade_out;
+p_delay(3);
+inv_del(inv, iron_bar, 1);
+def_boolean $done = false;
+if (inv_total(inv, dwarf_battleaxe_sapphires) > 0) {
+    inv_del(inv, dwarf_battleaxe_sapphires, 1);
+    inv_add(inv, dwarf_battleaxe_new, 1);
+    $done = true;
+} else {
+    inv_del(inv, dwarf_battleaxe_old, 1);
+    inv_add(inv, dwarf_battleaxe_sharpened, 1);
+}
+~gd_setflag(^gdf_thurgo_fixed);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+if ($done = true) {
+    ~chatnpc("<p,happy>Here you go, <displayname>, good as new.");
+} else {
+    ~chatnpc("<p,neutral>Here's your axe, <displayname>. It looks like there's some damage to the hilt as well, probably some missing sapphires. But I'm sure you can take care of that yourself.");
+}
+~chatplayer("<p,happy>Thanks for your help Thurgo!");
+if ($done = true) {
+    ~mesbox("You have restored the axe to its former glory! You should return to Blasidar in Keldagrim now, do you wish to return at once?");
+} else {
+    ~mesbox("You are well on your way to restoring the axe. Do you wish to return to Keldagrim now?");
+}
+if (~p_choice2("Return to Keldagrim immediately.", 1, "Explore the area before returning.", 2) = 2) return;
+// ours: inside Blasidar's house (2906,10203)
+if_close;
+~fade_out;
+p_delay(3);
+p_telejump(0_45_159_26_27);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);

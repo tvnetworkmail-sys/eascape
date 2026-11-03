@@ -1,0 +1,72 @@
+// EASCape: The Giant Dwarf's journal. Ours: the words (no source has the 2005 journal); the start
+// and the requirements are the OSRS wiki's quest details.
+[if_button,questlist:giantdwarf]
+def_int $s = %giantdwarf_quest;
+if ($s = ^gd_not_started) {
+    ~quest_journal("The Giant Dwarf", "@dbl@I can start this quest by talking to the @dre@Dwarven Boatman@dbl@ by|@dbl@the underground @dre@River Kelda@dbl@, in the cave beyond the statues|@dbl@inside the Keldagrim entrance east of @dre@Rellekka@dbl@.|@dbl@To complete this quest I will need:|<~lt_req("Level 12 Crafting", stat_base(crafting), 12)>|<~lt_req("Level 16 Firemaking", stat_base(firemaking), 16)>|<~lt_req("Level 33 Magic", stat_base(magic), 33)>|<~lt_req("Level 14 Thieving", stat_base(thieving), 14)>");
+    return;
+}
+def_string $t = "";
+$t = append($t, ~lt_line("I took a boat ride to Keldagrim, but the boat crashed into", "the statue of King Alvis! The Black Guard arrested me and", "took me to Commander Veldaban.", ~gd_done(^gd_veldaban)));
+if ($s >= ^gd_veldaban) $t = append($t, ~lt_line("Commander Veldaban asked me to help Blasidar the", "sculptor in Keldagrim-East to rebuild the statue.", "", ~gd_done(^gd_items)));
+if ($s >= ^gd_items) {
+    $t = append($t, ~lt_line("Blasidar needs boots, clothes and a battleaxe fit for", "a king, for his model Riki to wear.", "", ~gd_done(^gd_items_given)));
+    if ($s = ^gd_items) $t = append($t, ~gd_journal_items);
+}
+if ($s >= ^gd_items_given) $t = append($t, ~lt_line("Riki is wearing everything I found. I should tell Blasidar.", "", "", ~gd_done(^gd_consortium)));
+if ($s >= ^gd_consortium) {
+    $t = append($t, ~lt_line("The Consortium can't decide whose head goes on the statue.", "I should win the trust of one of the companies in the", "palace, and persuade its director to force a decision.", ~gd_done(^gd_support)));
+    if ($s = ^gd_consortium & %giantdwarf_current_company > 0) {
+        $t = append($t, "@dbl@I am a trusted associate of the @dre@<~gd_company_name(%giantdwarf_current_company)>@dbl@.||");
+    }
+}
+if ($s >= ^gd_support) $t = append($t, ~lt_line("I promised to speak for the director of the", "<~gd_company_name(%gd_chosen)> at the next Consortium meeting.", "I should tell Commander Veldaban.", ~gd_done(^gd_complete)));
+if ($s >= ^gd_complete) $t = append($t, "|@red@QUEST COMPLETE!");
+~quest_journal("The Giant Dwarf", $t);
+
+[proc,gd_done](int $stage)(boolean)
+if (%giantdwarf_quest >= $stage) return(true);
+return(false);
+
+// what is still to find for Riki
+[proc,gd_journal_items]()(string)
+def_string $t = "";
+def_int $m = %giantdwarf_model_state;
+if (testbit($m, 0) = ^true) {
+    $t = append($t, "@str@Riki is wearing the boots.|");
+} else if (inv_total(inv, dwarf_perfect_pair_of_boots) > 0) {
+    $t = append($t, "@dbl@I have the exquisite boots for Riki.|");
+} else if (~gd_flag(^gdf_dromund) = true) {
+    $t = append($t, "@dbl@@dre@Dromund@dbl@ won't part with his boots; I'll have to take|@dbl@them when he isn't looking.|");
+} else if (~gd_flag(^gdf_saro) = true) {
+    $t = append($t, "@dbl@Saro sold the boots to @dre@Dromund@dbl@, north of the bank.|");
+} else {
+    $t = append($t, "@dbl@I still need a pair of boots.|");
+}
+if (testbit($m, 1) = ^true) {
+    $t = append($t, "@str@Riki is wearing the clothes.|");
+} else if (inv_total(inv, dwarf_clothes) > 0) {
+    $t = append($t, "@dbl@I have the exquisite clothes for Riki.|");
+} else if (~gd_flag(^gdf_machine_lit) = true) {
+    $t = append($t, "@dbl@@dre@Vermundi@dbl@'s spinning machine is running; she can make|@dbl@the clothes for 200 coins.|");
+} else if (%giantdwarf_vermundi_givenbook = 1) {
+    $t = append($t, "@dbl@@dre@Vermundi@dbl@ needs coal and logs in her spinning machine, lit.|");
+} else if (~gd_flag(^gdf_librarian_clothes) = true) {
+    $t = append($t, "@dbl@The book on costumes is on a high shelf in the library.|");
+} else if (~gd_flag(^gdf_vermundi) = true) {
+    $t = append($t, "@dbl@@dre@Vermundi@dbl@ sent me to the librarian for the designs.|");
+} else {
+    $t = append($t, "@dbl@I still need some clothes.|");
+}
+if (testbit($m, 2) = ^true) {
+    $t = append($t, "@str@Riki is holding the battleaxe.|");
+} else if (inv_total(inv, dwarf_battleaxe_new) > 0) {
+    $t = append($t, "@dbl@King Alvis' axe is restored.|");
+} else if (inv_total(inv, dwarf_battleaxe_old) > 0 | inv_total(inv, dwarf_battleaxe_sapphires) > 0 | inv_total(inv, dwarf_battleaxe_sharpened) > 0) {
+    $t = append($t, "@dbl@King Alvis' axe needs three sapphires on the hilt and|@dbl@an Imcando dwarf to restore the blade.|");
+} else if (~gd_flag(^gdf_santiri) = true) {
+    $t = append($t, "@dbl@I have lost King Alvis' axe; @dre@Santiri@dbl@ may have it.|");
+} else {
+    $t = append($t, "@dbl@I still need a battleaxe.|");
+}
+return(append($t, "|"));

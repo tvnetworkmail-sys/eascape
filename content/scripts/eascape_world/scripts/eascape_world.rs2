@@ -322,7 +322,6 @@ return(true);
 [oploc1,soulbane_rope_up] ~eascape_link(1);
 [oploc1,soulbane_rope_down] ~eascape_link(1);
 [oploc1,wild_ladder_middle] ~eascape_link(1);
-[oploc1,dwarf_keldagrim_bookcase_ladder] ~eascape_link(1);
 [oploc1,mm_trapdoor_nw] ~eascape_link(1);
 [oploc1,mm_trapdoor_ne] ~eascape_link(1);
 [oploc1,mm_trapdoor_sw] ~eascape_link(1);
@@ -344,9 +343,10 @@ return(true);
 [oploc1,dwarf_cave_entrance] p_telejump(0_43_158_28_49);
 
 // the Dwarven Boatman between the mines and Keldagrim (the OSRS wiki's transcript, its standard
-// dialogue). Ours: The Giant Dwarf isn't built, so he takes you from the start, with his standard
-// words; where you land (2843,10129 in the mines, 2892,10227 in the city)
+// dialogue). Your first ride starts The Giant Dwarf (quest_giant_dwarf/gd_start.rs2). Ours: where
+// you land (2843,10129 in the mines, 2892,10227 in the city)
 [opnpc1,dwarf_city_boatman_mines_prequest]
+if (%giantdwarf_quest = ^gd_not_started) @gd_boatman_start;
 ~chatnpc("<p,happy>Hello again, <displayname>! Want to go back to Keldagrim?");
 if (~p_choice2("Yes, please take me.", 1, "What, on your ship? No way.", 2) = 2) {
     ~chatplayer("<p,neutral>What, on your ship? No way.");
@@ -359,10 +359,7 @@ if (~p_choice2("Yes, please take me.", 1, "What, on your ship? No way.", 2) = 2)
 [opnpc1,dwarf_city_boatman_city]
 ~chatnpc("<p,quiz>Want me to take you back to the mines?");
 if (~p_choice2("Yes, please take me.", 1, "What, on your ship! No thanks!", 2) = 2) {
-    ~chatplayer("<p,angry>What, on your ship? No thanks! I don't want to crash into any more things!");
-    ~chatnpc("<p,neutral>Hey now, it was only a slight accident!");
-    ~chatnpc("<p,neutral>Calm down, calm down! You got what you paid for the trip, didn't you?");
-    return;
+    @gd_boatman_city_refuse;
 }
 ~chatplayer("<p,happy>Yes, please take me.");
 @dwarf_boatman_trip(0_44_158_27_17);
@@ -384,7 +381,8 @@ mes("The boat arrives at its destination."); // ours
 // 2007 cache's ride animation (human_minecart_anim) is what you ride in. The far carts' "Ride"
 // (2007's icemountain_train_cart and whitewolfmountain_train_cart) asks the fare too (ours). Ours:
 // once paid you ride at once (OSRS has tickets and tracks), the Grand Exchange route is left out
-// (2006 has none), The Giant Dwarf (not built) isn't required.
+// (2006 has none). The OSRS wiki: you must have started The Giant Dwarf to ride (2009scape's far
+// conductors' words when you haven't); White Wolf Mountain needs only Fishing Contest, as in 2005.
 [opnpc1,dwarf_city_train_conductor1] @keldagrim_cart_station;
 [opnpc1,dwarf_city_train_conductor2] @keldagrim_cart_station;
 [opnpc1,dwarf_city_train_conductor3] @keldagrim_cart_station;
@@ -393,6 +391,11 @@ mes("The boat arrives at its destination."); // ours
 [opnpc1,dwarf_city_train_conductor8] @keldagrim_cart_station;
 
 [label,keldagrim_cart_station]
+if (%giantdwarf_quest = ^gd_not_started) {
+    ~chatplayer("<p,neutral>I'd like to use your cart, please.");
+    ~chatnpc("<p,neutral>Sorry, but I can only take people who have been there before."); // 2009scape (ours: here too)
+    return;
+}
 ~chatnpc("<p,quiz>Yes <text_gender("sir", "m'am")>? Can I help you at all?");
 @keldagrim_cart_menu;
 
@@ -464,10 +467,18 @@ inv_del(inv, coins, $fare);
 
 [label,keldagrim_cart_far](int $fare)
 ~chatplayer("<p,neutral>I'd like to use your cart, please.");
+if (%giantdwarf_quest = ^gd_not_started) {
+    ~chatnpc("<p,neutral>Sorry, but I can only take people who have been there before."); // 2009scape
+    return;
+}
 ~chatnpc("<p,neutral>Alright, that'll cost ye <tostring($fare)>gp.");
 @keldagrim_cart_far_pay($fare);
 
 [label,keldagrim_cart_far_ride](int $fare)
+if (%giantdwarf_quest = ^gd_not_started) {
+    ~mesbox("You need to have visited Keldagrim before you can ride the cart there."); // ours
+    return;
+}
 ~mesbox("The ride to Keldagrim costs <tostring($fare)> coins."); // ours
 @keldagrim_cart_far_pay($fare);
 

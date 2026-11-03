@@ -1,0 +1,482 @@
+// EASCape: The Giant Dwarf (Keldagrim - The Dwarven City, 31 May 2005): the boat ride, the crash,
+// Commander Veldaban, the Consortium meeting and the end. The words are the OSRS wiki's
+// (Transcript:The Giant Dwarf, Transcript:Dwarven Boatman, Transcript:Meeting notes); the steps its
+// walkthrough; 2009scape's DwarvenBoatmanDialogue gives the boat's fades. The cutscenes are not the
+// original's camera work (no source has it): they are fades, jumps and the cache's cutscene npcs, and
+// every place in them is ours (worked out from the maps). Ours is marked.
+
+// ---------------------------------------------------------------- state
+[proc,gd_flag](int $bit)(boolean)
+if (testbit(%gd_flags, $bit) = ^true) return(true);
+return(false);
+
+[proc,gd_setflag](int $bit)
+%gd_flags = setbit(%gd_flags, $bit);
+
+// the stage, and the statue to match it (the cache's multilocs: giantdwarf_statue_invis hides the
+// body, giantdwarf_original_company picks the head). Ours: the statue stands whole before the
+// quest, is gone from the crash, has its body back once Blasidar builds it up to the neck, and gets
+// the chosen director's head at the end.
+[proc,gd_set](int $stage)
+%giantdwarf_quest = $stage;
+~gd_statue;
+
+[proc,gd_statue]
+def_int $s = %giantdwarf_quest;
+if ($s = ^gd_not_started) {
+    %giantdwarf_original_company = 0;
+    %giantdwarf_statue_invis = 0;
+    return;
+}
+if ($s >= ^gd_complete) {
+    if (%gd_chosen >= 1 & %gd_chosen <= 7) {
+        %giantdwarf_original_company = %gd_chosen;
+    } else {
+        %giantdwarf_original_company = 0; // ours: no company on record, so King Alvis' head
+    }
+    %giantdwarf_statue_invis = 0;
+    return;
+}
+%giantdwarf_original_company = ^gd_no_head;
+if ($s >= ^gd_consortium) {
+    %giantdwarf_statue_invis = 0;
+} else {
+    %giantdwarf_statue_invis = 1;
+}
+
+[proc,gd_login]
+~gd_statue;
+// ours: logged out in the middle of the meeting, you come back at Veldaban's headquarters
+if (inzone(0_31_70_0_0, 3_31_70_63_63, coord) = true) p_telejump(0_44_159_10_37);
+// ours: an errand's time is the server's clock, so after a restart it would never run out (or run
+// out at once); give it its whole time again
+if (%gd_task_item > 0) {
+    if (calc(%gd_task_end - map_clock) > 3000) %gd_task_end = calc(map_clock + ~gd_task_ticks);
+}
+
+[proc,gd_company_name](int $c)(string)
+switch_int ($c) {
+    case ^gd_purple_pewter : return("Purple Pewter");
+    case ^gd_yellow_fortune : return("Yellow Fortune");
+    case ^gd_blue_opal : return("Blue Opal");
+    case ^gd_green_gemstone : return("Green Gemstone");
+    case ^gd_white_chisel : return("White Chisel");
+    case ^gd_silver_cog : return("Silver Cog");
+    case ^gd_brown_engine : return("Brown Engine");
+}
+return("Black Bug"); // the OSRS wiki's meeting notes, when no company is known
+
+// ---------------------------------------------------------------- the Dwarven Boatman (mines side)
+// Transcript:Dwarven Boatman, pre-quest; the quest starts with the ride
+[label,gd_boatman_start]
+~chatnpc("<p,happy>Ho there, human!");
+~chatplayer("<p,neutral><displayname>.");
+~chatnpc("<p,happy>Ho there, <displayname>! Want to take a ride with me?");
+~chatplayer("<p,quiz>Where are you going? Across the river?");
+~chatnpc("<p,happy>No no, that's what the ferryman is for! I'm going to Keldagrim, my home!");
+~chatplayer("<p,quiz>How much will that cost me then?");
+~chatnpc("<p,happy>For a human like you, I can do it for free!");
+if (~p_choice2("That's a deal!", 1, "I prefer the mines to the city.", 2) = 2) {
+    ~chatplayer("<p,neutral>I prefer the mines to the city.");
+    ~chatnpc("<p,neutral>Well, suit yourself then!");
+    return;
+}
+~chatplayer("<p,happy>That's a deal!");
+~chatnpc("<p,happy>Excellent! I'm just waiting for my ship to arrive and then we can go.");
+~chatnpc("<p,neutral>Mind, this trip could take a few minutes! Are you sure you're ready to go as well?");
+if (stat_base(crafting) < 12 | stat_base(firemaking) < 16 | stat_base(magic) < 33 | stat_base(thieving) < 14) {
+    ~mesbox("Before starting this quest, be aware that one or more of your skill levels are lower than what is required to fully complete it.");
+}
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start The Giant Dwarf quest?") = 2) {
+    ~chatplayer("<p,neutral>No, I don't have time right now, I'll be back later.");
+    ~chatnpc("<p,happy>Sure, sure! Come back when you need to!");
+    return;
+}
+~chatplayer("<p,happy>Yes, I'm ready and don't mind it taking a few minutes.");
+~chatnpc("<p,happy>Well, let's not waste any more time then!");
+@gd_crash;
+
+// ---------------------------------------------------------------- the crash (cutscene)
+// ours: where you stand and look from (2873,10184, the bank just north-west of the statue at
+// 2878-2881,10177-10180); the berserkers on the dock by the boat's landing (2892,10227); you are
+// then taken to Veldaban's headquarters (2826,10213, two squares south of him)
+[label,gd_crash]
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(0_44_159_57_8);
+cam_moveto(0_44_159_55_14, 900, 254, 254); // ours: the camera's place and height
+cam_lookat(0_44_159_63_2, 500, 254, 254);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~mesbox("@red@Keldagrim, Grand Capital of the Dwarven realm");
+~mesbox("Five hundred years have passed since the rule of King Alvis,|saviour of Keldagrim, victim of his own inventions.");
+~mesbox("He founded the Consortium: the gathering of mining companies|that were to serve the monarchy. But eventually the monarchy came|to serve the Consortium.");
+~mesbox("By the time of his death, the monarchy was all but abolished.|Now the Kings in Keldagrim are but a distant memory...");
+~mesbox("with the only statue of King Alvis to remind people of the|old days. The dark days.");
+~mesbox("@red@Rise of the Red Axe Part 1");
+~mesbox("@red@The Giant Dwarf");
+~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,happy>Look, there's the statue of King Alvis, guarding the entrance to Keldagrim!");
+~chatplayer("<p,happy>Amazing! And we're going to go straight past it?");
+~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,happy>That's right!");
+~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,shock>Er, hold on! There's something wrong!");
+~chatplayer("<p,shock>Aaargh!");
+~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,shock>Aaargh!");
+cam_shake(4, 0, 10, 10); // ours
+~gd_set(^gd_arrested);
+~send_quest_progress(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
+p_delay(3);
+~fade_out;
+p_delay(2);
+cam_reset;
+p_telejump(0_45_159_12_51);
+npc_add(0_45_159_14_52, dwarf_city_berserker_cutscene, 40);
+npc_facesquare(0_45_159_12_51);
+npc_add(0_45_159_14_50, dwarf_city_berserker_cutscene, 40);
+npc_facesquare(0_45_159_12_51);
+npc_say("Halt!");
+facesquare(0_45_159_14_51);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatnpc_specific("Black Guard Berserker", dwarf_city_berserker_cutscene, "<p,angry>Halt! By order of the Black Guard, you are under arrest!");
+~chatplayer("<p,shock>What?? I didn't do anything! It wasn't me!");
+~chatnpc_specific("Black Guard Berserker", dwarf_city_berserker_cutscene, "<p,angry>Come with us, human! Commander Veldaban wants a word with you!");
+~fade_out;
+p_delay(2);
+~gd_crash_clear;
+p_telejump(0_44_159_10_37);
+facesquare(0_44_159_10_39);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+@gd_veldaban_identify;
+
+[proc,gd_crash_clear]
+if (npc_find(0_45_159_14_52, dwarf_city_berserker_cutscene, 0, 0) = true) {
+    npc_del;
+}
+if (npc_find(0_45_159_14_50, dwarf_city_berserker_cutscene, 0, 0) = true) {
+    npc_del;
+}
+
+// ---------------------------------------------------------------- Commander Veldaban
+[opnpc1,dwarf_city_black_guard_leader]
+def_int $s = %giantdwarf_quest;
+if ($s = ^gd_arrested) {
+    if (%giantdwarf_veldaban_introduced = 0) @gd_veldaban_identify;
+    @gd_veldaban_task; // ours: after turning him down he asks again
+}
+if ($s >= ^gd_veldaban & $s < ^gd_support) {
+    ~chatnpc("<p,quiz>How are you getting on with rebuilding our statue, <displayname>?");
+    ~chatplayer("<p,neutral>I haven't really done much yet...");
+    ~chatnpc("<p,neutral>Get back to it as soon as you can, please!");
+    return;
+}
+if ($s = ^gd_support) @gd_veldaban_meeting;
+if ($s >= ^gd_complete) {
+    ~chatnpc("<p,happy>Ah, <displayname>! The statue looks splendid, thanks to you."); // ours: no source has his words after the quest
+    return;
+}
+~chatnpc("<p,neutral>I am busy, human. Move along."); // ours: before the quest
+
+// the arrest, when the cutscene brings you in (or you come back before he has had his say)
+[label,gd_veldaban_identify]
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,angry>Identify yourself, human!");
+~chatplayer("<p,neutral>I err, I'm <displayname>. I was told I was under arrest. I had a little accident on the way in here.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,angry>Ah, so you're the one who knocked over the statue of our glorious king!");
+~chatplayer("<p,sad>I suppose so... I mean, I didn't do it on purpose or anything...");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,happy>Ah, don't worry about it!");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>We haven't been ruled by a king for many a year... that statue was long overdue for replacement anyway. You're not under arrest, I merely wanted to talk to you.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>But let me introduce myself. I am Veldaban, son of Dondakan. I am the Commander of the Black Guard in Keldagrim.");
+%giantdwarf_veldaban_introduced = 1;
+if (%dwarfrock_quest >= ^bar_complete) {
+    ~chatplayer("<p,quiz>Dondakan, you say?");
+    ~chatplayer("<p,happy>I helped your father in the mines south of the city.");
+    ~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,happy>Ah, so you are the one! I heard you banished a demon by defeating its avatar, most impressive.");
+} else if (%dwarfrock_quest > 0) {
+    ~chatplayer("<p,quiz>Dondakan, you say?");
+    ~chatplayer("<p,neutral>I'm helping your father in the mines south of the city.");
+    ~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>Ah, he is forever trying to break open that rock of his, until his death I sometimes think.");
+    ~chatplayer("<p,quiz>So you don't think it's possible?");
+    ~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>Perhaps, human, perhaps... but if even our multicannon does not dent it, what chance is there really?");
+} else {
+    ~chatplayer("<p,neutral>Well, ehm... nice to meet you, Veldaban.");
+}
+@gd_veldaban_task;
+
+[label,gd_veldaban_task]
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>Now listen carefully. I have a task for you.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>I want you to go and see the local sculptor and help him build a new statue.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,quiz>Will you do this for us?");
+if (~p_choice2("No, I can't be bothered.", 1, "Yes, I will do this.", 2) = 1) {
+    ~chatplayer("<p,neutral>No, I can't be bothered.");
+    ~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,angry>You destroy our statue and you cannot be bothered to help rebuild it? By Guthix, you are rude... even for a human!");
+    return;
+}
+~chatplayer("<p,neutral>Yes, I will do this.");
+~gd_set(^gd_veldaban);
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,happy>You are a good human, <displayname>.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>Now, I need you to go to Blasidar, he is a sculptor who lives in Keldagrim-East.");
+~chatplayer("<p,neutral>To be honest I'm not much of a sculptor myself.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,happy>Oh, don't worry! I just need you to help him out while he rebuilds the statue.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader, "<p,neutral>I'm sure there are many tasks that he needs doing.");
+~chatplayer("<p,neutral>I'll see what I can do.");
+
+// ---------------------------------------------------------------- the meeting
+[label,gd_veldaban_meeting]
+~chatnpc("<p,quiz>What news from the Consortium, <displayname>?");
+~chatplayer("<p,neutral>I have told the director of the <~gd_company_name(%gd_chosen)> that I will support their bid to be put upon the statue.");
+~chatnpc("<p,happy>Then perhaps they can finally end their impasse! Well, let's go to the meeting then!");
+~chatplayer("<p,shock>What, now?");
+def_coord $room = ~gd_meeting_room;
+if ($room = null) {
+    ~chatnpc("<p,neutral>Well... not exactly now, no. I believe the Consortium has some other important business to attend to first. Come back in a minute or so.");
+    return;
+}
+~chatnpc("<p,quiz>Yes, now! Are you ready?");
+if (~p_choice2("I'm ready.", 1, "No, I need more time.", 2) = 2) {
+    ~chatplayer("<p,neutral>No, I need more time.");
+    ~chatnpc("<p,neutral>Very well then. Come back when you're ready, but hurry! You don't want to miss the meeting.");
+    return;
+}
+~chatplayer("<p,happy>I'm ready.");
+~chatnpc("<p,neutral>I do have to warn you, this meeting may take a while. Do you want to attend the meeting personally, or do you simply want the minutes of the meetings so you can read what happened afterwards?");
+if (~p_choice2("I want to see the meeting.", 1, "I do NOT want to attend, I don't have time to waste.", 2) = 2) {
+    ~chatplayer("<p,angry>I do NOT want to attend, I don't have time to waste.");
+    ~chatnpc("<p,quiz><displayname>, are you absolutely sure? You might not get another chance like this. Are you sure you just want to read the summary of the meeting instead of seeing the actual meeting?");
+    if (~p_choice2("On second thought, I can spare a few minutes to attend.", 1, "I just have a lot of smithing to do today, I can't attend.", 2) = 2) {
+        ~chatplayer("<p,neutral>I just have a lot of smithing to do today, I can't attend.");
+        ~chatnpc("<p,neutral>Very well. I'll give you the meeting minutes after it's finished.");
+        if_close;
+        ~fade_out;
+        p_delay(3);
+        ~fade_in;
+        p_delay(2);
+        if_openoverlay(null);
+        ~gd_complete;
+        return;
+    }
+    ~chatplayer("<p,neutral>On second thought, I can spare a few minutes to attend.");
+} else {
+    ~chatplayer("<p,happy>I want to see the meeting.");
+}
+~chatnpc("<p,happy>Happy to hear that! Let's hurry then, I think the meeting is already starting!");
+$room = ~gd_meeting_room;
+if ($room = null) {
+    ~chatnpc("<p,neutral>Oh, I'm sorry, I was mistaken. The meeting hasn't started yet, we need to wait a bit longer.");
+    return;
+}
+@gd_meeting($room);
+
+// the sixteen meeting rooms of the cache's cutscene map (m31_70: four on each floor, the first at
+// 1984,4480); the OSRS wiki: a seventeenth player waits. Ours: a room is free when no one is in it.
+[proc,gd_meeting_room]()(coord)
+def_int $level = 0;
+def_int $i = 0;
+def_coord $base = null;
+while ($level < 4) {
+    $i = 0;
+    while ($i < 4) {
+        $base = movecoord(0_31_70_0_0, multiply(modulo($i, 2), 42), $level, multiply(divide($i, 2), 35));
+        if (map_playercount(movecoord($base, 2, 0, 2), movecoord($base, 19, 0, 26)) = 0) return($base);
+        $i = calc($i + 1);
+    }
+    $level = calc($level + 1);
+}
+return(null);
+
+// ours: where everyone stands (the table is at 9-12,12-15 of the room, its west door at 2,14)
+[label,gd_meeting](coord $b)
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(movecoord($b, 3, 0, 13));
+npc_add(movecoord($b, 3, 0, 14), dwarf_city_black_guard_leader_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 8, 0, 15), dwarf_city_director_purple_pewter_cutscene_alt, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 8, 0, 13), dwarf_city_director_blue_opal_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 10, 0, 16), dwarf_city_director_yellow_fortune_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 12, 0, 16), dwarf_city_director_green_gemstone_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 13, 0, 15), dwarf_city_director_white_chisel_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 13, 0, 13), dwarf_city_director_silver_cog_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 10, 0, 11), dwarf_city_director_brown_engine_cutscene, 500);
+npc_facesquare(movecoord($b, 10, 0, 13));
+npc_add(movecoord($b, 15, 0, 9), dwarf_city_evil_cat_cutscene_sleeping, 500);
+facesquare(movecoord($b, 10, 0, 13));
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~mesbox("@red@Keldagrim Palace, Consortium Meeting");
+~chatnpc_specific("Brown Engine Director", dwarf_city_director_brown_engine_cutscene, "<p,neutral>Clearly it is I who is most suitable.");
+if (~gd_2005_rules = true) {
+    ~chatnpc_specific("Yellow Fortune Director", dwarf_city_director_yellow_fortune_cutscene, "<p,angry>A male? How preposterous!");
+    ~chatnpc_specific("Silver Cog Director", dwarf_city_director_silver_cog_cutscene, "<p,neutral>But the statue is clearly male! It can't have a female head!");
+} else {
+    ~chatnpc_specific("Yellow Fortune Director", dwarf_city_director_yellow_fortune_cutscene, "<p,angry>You? How preposterous! Evidently, it should be my head atop that statue!");
+    ~chatnpc_specific("Silver Cog Director", dwarf_city_director_silver_cog_cutscene, "<p,neutral>Surely, your claim to the statue can be no better than anyone else's?");
+}
+// the cat gets up and leaves as the Red Axe Director comes in
+if (npc_find(movecoord($b, 15, 0, 9), dwarf_city_evil_cat_cutscene_sleeping, 2, 0) = true) {
+    npc_changetype(dwarf_city_evil_cat_cutscene_awake, 500);
+    npc_walk(movecoord($b, 18, 0, 14));
+}
+npc_add(movecoord($b, 18, 0, 13), dwarf_city_director_red_axe_cutscene, 500);
+npc_walk(movecoord($b, 12, 0, 11));
+p_delay(4);
+if (npc_find(movecoord($b, 18, 0, 14), dwarf_city_evil_cat_cutscene_awake, 3, 0) = true) npc_del;
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,angry>Enough of this, everyone! This bickering is pointless.");
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,neutral>The Red Axe is the largest and wealthiest mining company, we have all rights here!");
+if (%dwarfrock_quest >= ^bar_complete) {
+    ~chatnpc_specific("White Chisel Director", dwarf_city_director_white_chisel_cutscene, "<p,neutral>Dondakan's breaking of his rock, and the finding of his gold, has laid doubt to that claim!");
+    ~chatnpc_specific("Blue Opal Director", dwarf_city_director_blue_opal_cutscene, "<p,neutral>It is not yet clear what consequences that discovery will have on the economy.");
+} else {
+    ~chatnpc_specific("White Chisel Director", dwarf_city_director_white_chisel_cutscene, "<p,neutral>The fact that The Red Axe does its accounting behind closed doors makes that claim quite dubious!");
+    ~chatnpc_specific("Blue Opal Director", dwarf_city_director_blue_opal_cutscene, "<p,neutral>We are not assembled here to squabble over accounting details or the economic state of the Consortium.");
+}
+~chatnpc_specific("Green Gemstone Director", dwarf_city_director_green_gemstone_cutscene, "<p,neutral>Perhaps, then, we should choose a director for the statue at random?");
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,angry>No! I will go on top of that statue! I proposed this in the first place!");
+// Veldaban and you walk in
+if (npc_find(movecoord($b, 3, 0, 14), dwarf_city_black_guard_leader_cutscene, 2, 0) = true) {
+    npc_walk(movecoord($b, 6, 0, 14));
+}
+~forcemove(movecoord($b, 6, 0, 13));
+p_delay(1);
+facesquare(movecoord($b, 10, 0, 13));
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader_cutscene, "<p,neutral>Veldaban, Commander of the Black Guard in Keldagrim, presenting himself to the Consortium with a guest.");
+anim(emote_bow, 0);
+p_delay(2);
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,angry>A human, at a Consortium meeting? What is this?");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader_cutscene, "<p,neutral>This human helped to rebuild the statue. <text_gender("He deserves", "She deserves")> this honour, surely?");
+if (npc_find(movecoord($b, 8, 0, 15), dwarf_city_director_purple_pewter_cutscene_alt, 1, 0) = true) npc_say("Aye.");
+if (npc_find(movecoord($b, 12, 0, 16), dwarf_city_director_green_gemstone_cutscene, 1, 0) = true) npc_say("Aye.");
+if (npc_find(movecoord($b, 13, 0, 13), dwarf_city_director_silver_cog_cutscene, 1, 0) = true) npc_say("Aye.");
+p_delay(2);
+~chatnpc_specific("Purple Pewter Director", dwarf_city_director_purple_pewter_cutscene_alt, "<p,neutral>Well then... instead of flipping a coin, why don't we let the human decide?");
+~chatnpc_specific("Brown Engine Director", dwarf_city_director_brown_engine_cutscene, "<p,happy>Amusing, I accept!");
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,angry>This is outrageous! I'm warning you, The Red Axe will boycott the Trade Octagon!");
+~chatnpc_specific("Yellow Fortune Director", dwarf_city_director_yellow_fortune_cutscene, "<p,neutral>Stop your hollow threats and let the human speak.");
+~chatnpc_specific("Commander Veldaban", dwarf_city_black_guard_leader_cutscene, "<p,quiz>Well then, <displayname>, what is it going to be?");
+~chatplayer("<p,neutral>I choose...");
+~chatplayer("<p,happy>The <~gd_company_name(%gd_chosen)>!");
+if (npc_find(movecoord($b, 12, 0, 11), dwarf_city_director_red_axe_cutscene, 3, 0) = true) {
+    npc_walk(movecoord($b, 18, 0, 14));
+}
+~chatnpc_specific("Red Axe Director", dwarf_city_director_red_axe_cutscene, "<p,angry>You'll regret this, all of you!");
+~fade_out;
+p_delay(2);
+~gd_meeting_clear($b);
+// a little while later: the statue with its new head
+~gd_set(^gd_complete);
+p_telejump(0_44_159_57_8);
+cam_moveto(0_44_159_55_14, 900, 254, 254); // ours, as in the crash
+cam_lookat(0_44_159_63_2, 500, 254, 254);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~mesbox("@red@A little while later");
+p_delay(4);
+~fade_out;
+p_delay(2);
+cam_reset;
+p_telejump(0_44_159_10_37);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~gd_complete;
+
+[proc,gd_meeting_clear](coord $b)
+def_coord $c = movecoord($b, 10, 0, 13);
+if (npc_find($c, dwarf_city_black_guard_leader_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_purple_pewter_cutscene_alt, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_blue_opal_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_yellow_fortune_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_green_gemstone_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_white_chisel_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_silver_cog_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_brown_engine_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_director_red_axe_cutscene, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_evil_cat_cutscene_awake, 12, 0) = true) {
+    npc_del;
+}
+if (npc_find($c, dwarf_city_evil_cat_cutscene_sleeping, 12, 0) = true) {
+    npc_del;
+}
+
+// ---------------------------------------------------------------- the end
+// the OSRS wiki's rewards; the meeting notes either way
+[proc,gd_complete]
+~gd_set(^gd_complete);
+~gd_task_clear;
+stat_advance(crafting, 25000);
+stat_advance(mining, 25000);
+stat_advance(smithing, 25000);
+stat_advance(firemaking, 15000);
+stat_advance(magic, 15000);
+stat_advance(thieving, 15000);
+~gd_give(dwarf_meeting_notes1);
+session_log(^log_adventure, "Quest complete: The Giant Dwarf");
+~send_quest_complete(questlist:giantdwarf, dwarf_quest_complete_icon, 100, ^gd_questpoints, "You have completed\\nThe Giant Dwarf!", "2 Quest Points|2,500 Crafting XP|2,500 Mining XP|2,500 Smithing XP|1,500 Firemaking XP|1,500 Magic XP|1,500 Thieving XP");
+
+[proc,gd_give](namedobj $obj)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, 1);
+    return;
+}
+obj_add(coord, $obj, 1, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+// Transcript:Meeting notes
+[opheld1,dwarf_meeting_notes1]
+~mesbox("Consortium Meeting 43517||In attendance:|Director of the Purple Pewter|Director of the Blue Opal|Director of the Yellow Fortune");
+~mesbox("Director of the Green Gemstone|Director of the White Chisel|Director of the Silver Cog|Director of the Brown Engine|Director of the Red Axe");
+~mesbox("Veldaban of the Black Guard (guest)|The human <displayname> (guest)");
+~mesbox("Summary:|Many suggestions were heard for whose head was to go on top of King Alvis' new statue, a change of plans proposed from the Director of the Red Axe.");
+~mesbox("He suggested that as the most powerful company in Keldagrim, he should have the honour. This claim, however, cannot be entirely verified for accuracy.");
+~mesbox("After much deliberations, it was proposed to pick a company director at random, but this met with fierce resistance from the Red Axe.");
+~mesbox("At this point, Veldaban, Commander of the Black Guard in Keldagrim, joined the meeting and introduced the human <displayname>.");
+~mesbox("It seemed appropriate that, instead of choosing a company at random, the human would decide. Thus the <~gd_company_name(%gd_chosen)> was suggested.");
+~mesbox("Despite threats by the Red Axe to boycott the Trade Octagon, the motion was accepted.");
+
+// ---------------------------------------------------------------- the boatman in the city
+// Transcript:Dwarven Boatman, Keldagrim
+[label,gd_boatman_city_refuse]
+~chatplayer("<p,angry>What, on your ship? No thanks! I don't want to crash into any more things!");
+~chatnpc("<p,neutral>Hey now, it was only a slight accident!");
+if (%giantdwarf_quest >= ^gd_complete) {
+    ~chatplayer("<p,angry>A slight accident?? Have you any idea how much time I spent rebuilding that statue?");
+} else if (%giantdwarf_quest > 0) {
+    ~chatplayer("<p,angry>A slight accident?? Thanks to you I have to rebuild this statue you so carelessly knocked over!");
+}
+~chatnpc("<p,neutral>Calm down, calm down! You got what you paid for the trip, didn't you?");

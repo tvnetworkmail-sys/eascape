@@ -158,8 +158,17 @@ if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Between a Rock... quest?")
 // ---------------------------------------------------------------- Keldagrim: the librarian and the engineer
 [opnpc1,dwarf_city_librarian]
 ~chatnpc("<p,happy>Welcome to the Keldagrim library, human traveller!");
-if (%dwarfrock_quest < ^bar_started | %dwarfrock_quest >= ^bar_complete) return; // ours: his library talk isn't built
-if (~p_choice2("What do you know about impenetrable rocks?", 1, "Goodbye.", 2) = 2) return; // ours: "Goodbye."
+// ours: his library talk isn't built; Between a Rock... and The Giant Dwarf (quest_giant_dwarf/gd_items.rs2) ask him
+def_int $rock = 1;
+if (%dwarfrock_quest < ^bar_started | %dwarfrock_quest >= ^bar_complete) $rock = 0;
+def_int $clothes = ~gd_librarian_clothes_topic;
+def_int $imcando = ~gd_librarian_imcando_topic;
+if (calc($rock + $clothes + $imcando) = 0) return;
+switch_int (~p_choice_some5("What do you know about impenetrable rocks?", $rock, "Do you know anything about King Alvis' clothes?", $clothes, "Can you help me find an Imcando dwarf?", $imcando, "Goodbye.", 4, "", 0)) { // ours: "Goodbye."
+    case 2 : @gd_librarian_clothes;
+    case 3 : @gd_librarian_imcando;
+    case 4 : return;
+}
 ~chatplayer("<p,quiz>What do you know about impenetrable rocks?");
 ~chatnpc("<p,confused>You're confusing me, what rock exactly are you talking about?");
 ~chatplayer("<p,neutral>The big one in the mines south of the city. Dondakan's big rock.");

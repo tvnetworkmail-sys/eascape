@@ -8,6 +8,10 @@ def_dbrow $spell_data = ~get_spell_data(^telekinetic_grab);
 if (~check_spell_requirements($spell_data) = false) {
     return;
 }
+// EASCape: Dromund's boots (The Giant Dwarf, quest_giant_dwarf/gd_items.rs2)
+if ((obj_type = dwarf_perfect_right_boot | obj_type = dwarf_perfect_left_boot) & ~gd_telegrab_boot = false) {
+    return;
+}
 if (afk_event = ^true) {
     ~macro_event_general_spawn(~macro_event_set_random);
     return;

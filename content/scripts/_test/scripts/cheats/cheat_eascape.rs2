@@ -707,6 +707,15 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~lt_complete; // experience, ring and quest complete scroll (quest_lost_tribe/lt_lumbridge.rs2)
+} else if (compare($name, "giantdwarf") = 0) {
+    if (%giantdwarf_quest >= ^gd_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    if (%gd_chosen = 0) %gd_chosen = ^gd_purple_pewter; // the statue needs a head
+    if (%giantdwarf_current_company = 0) %giantdwarf_current_company = %gd_chosen;
+    %giantdwarf_model_state = 7;
+    ~gd_complete; // experience, meeting notes and quest complete scroll (quest_giant_dwarf/gd_start.rs2)
 } else if (compare($name, "zogre") = 0) {
     if (%zogre >= ^zogre_complete) {
         mes("You've already done that quest.");
@@ -828,7 +837,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -2029,3 +2038,68 @@ $banked = calc($banked + ~questpack_give(tinderbox, 1));
 if (p_finduid(uid) = false) return;
 ~lt_set($n);
 mes("The Lost Tribe stage: <tostring($n)>");
+
+// ::gdpack - what The Giant Dwarf needs (the OSRS wiki's list): 200 coins, coal, logs and a
+// tinderbox, the runes for Telekinetic Grab, an iron bar, three cut sapphires and a redberry pie;
+// and for the Consortium's errands five of each of its ores and clay and four of each of its bars.
+// You need 12 Crafting, 16 Firemaking, 33 Magic and 14 Thieving.
+[debugproc,gdpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 2000));
+$banked = calc($banked + ~questpack_give(coal, 1));
+$banked = calc($banked + ~questpack_give(logs, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(airrune, 10));
+$banked = calc($banked + ~questpack_give(lawrune, 10));
+$banked = calc($banked + ~questpack_give(iron_bar, 1));
+$banked = calc($banked + ~questpack_give(sapphire, 3));
+$banked = calc($banked + ~questpack_give(redberry_pie, 1));
+$banked = calc($banked + ~questpack_give(cert_clay, 5));
+$banked = calc($banked + ~questpack_give(cert_copper_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_tin_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_iron_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_silver_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_gold_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_mithril_ore, 5));
+$banked = calc($banked + ~questpack_give(cert_coal, 5));
+$banked = calc($banked + ~questpack_give(cert_bronze_bar, 4));
+$banked = calc($banked + ~questpack_give(cert_iron_bar, 4));
+$banked = calc($banked + ~questpack_give(cert_steel_bar, 4));
+$banked = calc($banked + ~questpack_give(cert_silver_bar, 4));
+$banked = calc($banked + ~questpack_give(cert_gold_bar, 4));
+$banked = calc($banked + ~questpack_give(cert_mithril_bar, 4));
+~questpack_done("The Giant Dwarf", $banked);
+
+// ::gdstage <n> - sets The Giant Dwarf's stage (%giantdwarf_quest; giant_dwarf.constant: 10 crashed
+// and arrested, 20 Veldaban agreed, 30 Blasidar's errands, 40 Riki has everything, 50 the
+// Consortium, 60 promised your support, 100 complete). Riki, the statue and the errand flags follow;
+// at 50 you also get 100 points with, and join, the Purple Pewter (::gdstage 50 then talk to its
+// director); at 60 the Purple Pewter is the company you'll speak for. 0 resets everything.
+[debugproc,gdstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 0) {
+    %gd_flags = 0;
+    %gd_points_a = 0;
+    %gd_points_b = 0;
+    %gd_chosen = 0;
+    ~gd_task_clear;
+    %giantdwarf_model_state = 0;
+    %giantdwarf_current_company = 0;
+    %giantdwarf_veldaban_introduced = 0;
+    %giantdwarf_sculptor_introduced = 0;
+    %giantdwarf_vermundi_givenbook = 0;
+    %giantdwarf_pie_given = 0;
+}
+if ($n >= ^gd_veldaban) %giantdwarf_veldaban_introduced = 1;
+if ($n >= ^gd_items) %giantdwarf_sculptor_introduced = 1;
+if ($n < ^gd_items) %giantdwarf_model_state = 0;
+if ($n >= ^gd_items_given) %giantdwarf_model_state = 7;
+if ($n >= ^gd_consortium & ~gd_points(^gd_purple_pewter) < ^gd_join_at) {
+    ~gd_setpoints(^gd_purple_pewter, ^gd_join_at);
+}
+if ($n >= ^gd_consortium & %giantdwarf_current_company = 0) %giantdwarf_current_company = ^gd_purple_pewter;
+if ($n >= ^gd_support & %gd_chosen = 0) %gd_chosen = ^gd_purple_pewter;
+~gd_set($n);
+~send_quest_progress(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
+mes("The Giant Dwarf stage: <tostring($n)>");
