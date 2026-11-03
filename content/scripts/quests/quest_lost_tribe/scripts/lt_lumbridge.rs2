@@ -42,6 +42,9 @@ if (string_length($topic) = 0) {
     if (%goblinquest < ^gobdip_complete | %runemysteries < ^runemysteries_complete) {
         ~chatnpc("<p,neutral>I hear the Duke has a task for an adventurer. Otherwise, if you want to make yourself useful, there are always evil monsters to slay."); // 2009scape
         ~chatplayer("<p,neutral>Okay, I might just do that.");
+        // ours: say which quest is still needed
+        if (%runemysteries < ^runemysteries_complete) mes("You need to complete Rune Mysteries before you can start The Lost Tribe.");
+        if (%goblinquest < ^gobdip_complete) mes("You need to complete Goblin Diplomacy before you can start The Lost Tribe.");
         return;
     }
     ~chatnpc("<p,neutral>There was recently some damage to the castle cellar. Part of the wall has collapsed.");
