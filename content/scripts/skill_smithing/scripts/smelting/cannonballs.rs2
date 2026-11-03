@@ -19,6 +19,16 @@ if (inv_total(inv, steel_bar) < 1) {
     mes("You need a steel bar to make cannonballs."); // should never happen
     return;
 }
+// EASCape: Make 1/5/X/All and 25.6 xp per bar from the Rogues' Den + Tweaks update (22 June 2005);
+// 2009scape's AmmoMouldOnFurnace (25.6 xp, repeats until the count or the steel bars run out)
+def_namedobj $obj;
+def_int $count;
+$obj, $count = ~skillmulti1(mcannonball);
+if ($obj = null | $count < 1) return;
+@smelt_cannonball_loop($count);
+
+[label,smelt_cannonball_loop](int $count)
+if (inv_total(inv, steel_bar) < 1 | inv_total(inv, ammo_mould) < 1) return;
 if (afk_event = ^true) {
     ~macro_event_general_spawn(~macro_event_set_random); // guess
     return;
@@ -36,7 +46,10 @@ anim(human_pickupfloor, 0);
 mes("You remove the cannonballs from the mould.");
 inv_del(inv, steel_bar, 1);
 inv_add(inv, mcannonball, 4);
-// 37.5 xp gained
-// https://web.archive.org/web/20040606145237/http://www.tip.it/runescape/index.php?page=rs2smithtables.htm
-// https://web.archive.org/web/20041222084000/http://www.runehq.com/cacheguides/viewotherguide00278.htm
-stat_advance(smithing, 375);
+stat_advance(smithing, 256); // 25.6 xp (2009scape)
+if (calc($count - 1) < 1) return;
+// a weak queue between bars, so walking away stops it (ours)
+weakqueue*(smelt_cannonball_next, 1)(calc($count - 1));
+
+[queue,smelt_cannonball_next](int $count)
+@smelt_cannonball_loop($count);

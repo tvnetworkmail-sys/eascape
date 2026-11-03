@@ -2136,3 +2136,17 @@ inv_add(bank, wom_chicken_book, 1);
 inv_add(bank, red_bead, 1);
 inv_add(bank, yellow_bead, 1);
 mes("Banked the Wise Old Man's three books and two beads.");
+
+// EASCape: plays The Giant Dwarf's opening film (up to the crash) without changing the quest
+[debugproc,gdcrash]
+if (p_finduid(uid) = false) return;
+def_coord $back = coord;
+~gd_crash_film;
+~fade_out;
+p_delay(2);
+cam_reset;
+p_telejump($back);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);

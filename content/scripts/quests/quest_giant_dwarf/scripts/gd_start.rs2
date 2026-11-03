@@ -97,37 +97,81 @@ if (~p_choice2_header("Yes.", 1, "No.", 2, "Start The Giant Dwarf quest?") = 2) 
 @gd_crash;
 
 // ---------------------------------------------------------------- the crash (cutscene)
-// ours: where you stand and look from (2873,10184, the bank just north-west of the statue at
-// 2878-2881,10177-10180); the berserkers on the dock by the boat's landing (2892,10227); you are
-// then taken to Veldaban's headquarters (2826,10213, two squares south of him)
+// The cache's own pieces, as in the original: the red story text (inter_235, the 2007 cache's 151),
+// the titles (gd_titles, from the 2007 cache's 152: tools/giant_dwarf/titles.py) and the river map
+// with the boat hitting the statue (inter_234, the 2007 cache's 150; its mini_statue_explodes anim
+// runs about 16 seconds from when it opens). Ours: the camera's places, heights and speeds (worked
+// out from the maps: the palace spans the river, the statue at 2878-2881,10177-10180 is just south
+// of it, the boat dock at 2888,10227 north of it) and how long each piece stays up. You stand out
+// of sight west of the palace (2840,10180) while the camera works.
 [label,gd_crash]
+~gd_crash_film;
+~gd_set(^gd_arrested);
+~send_quest_progress(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
+@gd_crash_arrest;
+
+// the film itself, up to the crash (::gdcrash plays it on its own)
+[proc,gd_crash_film]
 if_close;
 ~fade_out;
 p_delay(2);
-p_telejump(0_44_159_57_8);
-cam_moveto(0_44_159_55_14, 900, 254, 254); // ours: the camera's place and height
-cam_lookat(0_44_159_63_2, 500, 254, 254);
+p_telejump(0_44_159_24_4);
+// the palace from the south, the statue in front of it
+cam_moveto(0_44_158_63_56, 650, 0, 100);
+cam_lookat(0_44_159_63_20, 450, 0, 100);
 p_delay(1);
+cam_moveto(0_44_158_63_61, 650, 1, 0); // a slow drift towards it
 ~fade_in;
 p_delay(2);
+~gd_title(0);
+p_delay(7);
+~gd_title(-1);
+if_openoverlay(inter_235);
+~gd_story(0);
+if_sethide(inter_235:com_0, false);
+if_sethide(inter_235:com_1, false);
+p_delay(6);
+if_sethide(inter_235:com_2, false);
+if_sethide(inter_235:com_3, false);
+if_sethide(inter_235:com_4, false);
+p_delay(7);
+if_sethide(inter_235:com_5, false);
+if_sethide(inter_235:com_6, false);
+if_sethide(inter_235:com_7, false);
+if_sethide(inter_235:com_8, false);
+p_delay(8);
+~gd_story(0);
 if_openoverlay(null);
-~mesbox("@red@Keldagrim, Grand Capital of the Dwarven realm");
-~mesbox("Five hundred years have passed since the rule of King Alvis,|saviour of Keldagrim, victim of his own inventions.");
-~mesbox("He founded the Consortium: the gathering of mining companies|that were to serve the monarchy. But eventually the monarchy came|to serve the Consortium.");
-~mesbox("By the time of his death, the monarchy was all but abolished.|Now the Kings in Keldagrim are but a distant memory...");
-~mesbox("with the only statue of King Alvis to remind people of the|old days. The dark days.");
-~mesbox("@red@Rise of the Red Axe Part 1");
-~mesbox("@red@The Giant Dwarf");
+// over the city to the boat at the dock
+cam_moveto(0_45_159_2_30, 900, 0, 100);
+cam_lookat(0_45_159_10_51, 300, 0, 100);
+p_delay(1);
+cam_moveto(0_45_159_6_40, 800, 4, 0);
+p_delay(6);
+// down the river, under the palace, to the statue
+cam_moveto(0_45_159_4_44, 500, 0, 100);
+cam_lookat(0_44_159_63_2, 200, 0, 100);
+p_delay(1);
+cam_moveto(0_44_159_63_12, 450, 5, 0);
+~gd_title(1);
+p_delay(8);
+~gd_title(2);
+cam_moveto(0_44_159_56_8, 500, 1, 0); // round to the statue's west
+p_delay(8);
+~gd_title(-1);
+// the map: the boat comes down the river and hits the statue
+if_openoverlay(inter_234);
+def_int $crash_at = calc(map_clock + 27);
 ~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,happy>Look, there's the statue of King Alvis, guarding the entrance to Keldagrim!");
 ~chatplayer("<p,happy>Amazing! And we're going to go straight past it?");
 ~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,happy>That's right!");
 ~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,shock>Er, hold on! There's something wrong!");
-~chatplayer("<p,shock>Aaargh!");
-~chatnpc_specific("Dwarven Boatman", dwarf_city_boatman_city, "<p,shock>Aaargh!");
-cam_shake(4, 0, 10, 10); // ours
-~gd_set(^gd_arrested);
-~send_quest_progress(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
-p_delay(3);
+~chatnpc_specific("Both", dwarf_city_boatman_city, "<p,shock>Argh!"); // the video: one line for the two of them
+if_close;
+if ($crash_at > map_clock) p_delay(calc($crash_at - map_clock));
+p_delay(2);
+
+[label,gd_crash_arrest]
 ~fade_out;
 p_delay(2);
 cam_reset;
@@ -480,3 +524,35 @@ if (%giantdwarf_quest >= ^gd_complete) {
     ~chatplayer("<p,angry>A slight accident?? Thanks to you I have to rebuild this statue you so carelessly knocked over!");
 }
 ~chatnpc("<p,neutral>Calm down, calm down! You got what you paid for the trip, didn't you?");
+
+// the titles (-1 hides them all)
+[proc,gd_title](int $n)
+if_sethide(gd_titles:layer0, true);
+if_sethide(gd_titles:layer1, true);
+if_sethide(gd_titles:layer2, true);
+if_sethide(gd_titles:layer3, true);
+if_sethide(gd_titles:layer4, true);
+if_sethide(gd_titles:layer5, true);
+if_sethide(gd_titles:layer6, true);
+if ($n < 0) {
+    if_openoverlay(null);
+    return;
+}
+switch_int ($n) {
+    case 0 : if_sethide(gd_titles:layer0, false);
+    case 1 : if_sethide(gd_titles:layer1, false);
+    case 2 : if_sethide(gd_titles:layer2, false);
+}
+if_openoverlay(gd_titles);
+
+// every line of the story text hidden
+[proc,gd_story](int $unused)
+if_sethide(inter_235:com_0, true);
+if_sethide(inter_235:com_1, true);
+if_sethide(inter_235:com_2, true);
+if_sethide(inter_235:com_3, true);
+if_sethide(inter_235:com_4, true);
+if_sethide(inter_235:com_5, true);
+if_sethide(inter_235:com_6, true);
+if_sethide(inter_235:com_7, true);
+if_sethide(inter_235:com_8, true);

@@ -1,0 +1,71 @@
+// EASCape: the Rogues' Den people (Rogues' Den + Tweaks, 22 June 2005). Dialogue from Void
+// (BrianORichard.kt, MartinThwait.kt, EmeraldBenedict.kt); Martin's stock is the cache's own
+// roguesden_shop. Void's skillcape and bank PIN options came later and are left out. The maze
+// itself isn't built yet.
+
+// ---------------------------------------------------------------- Brian O'Richard
+[opnpc1,roguesden_mazemaster]
+~chatnpc("<p,happy>Hi there, looking for a challenge are you?");
+@roguesden_brian_menu;
+
+[label,roguesden_brian_menu]
+switch_int (~p_choice3("Yes actually, what've you got?", 1, "What is this place?", 2, "No thanks.", 3)) {
+    case 1 : @roguesden_brian_challenge;
+    case 2 : @roguesden_brian_place;
+    case 3 : ~chatplayer("<p,neutral>No thanks.");
+}
+
+[label,roguesden_brian_challenge]
+~chatplayer("<p,quiz>Yes actually, what've you got?");
+~chatnpc("<p,happy>Aha, I have the perfect thing for you! See if you can get to the centre of my maze, the further you get the greater the rewards. There's even some special prizes if you make it right to the end.");
+switch_int (~p_choice3("Ok that sounds good!", 1, "What is this place?", 2, "Actually I think I'll pass thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>Ok that sounds good!");
+        ~chatnpc("<p,happy>Great! When you enter the maze, I'll give you a jewel - it'll allow you to get out of the maze at any time. However that's all you're allowed to take in with you, no cheating!");
+        ~chatnpc("<p,shifty>Oh one last thing, if you happen to see my harmonica I'd really like to have it back.");
+    case 2 : @roguesden_brian_place;
+    case 3 : ~chatplayer("<p,neutral>Actually I think I'll pass thanks.");
+}
+
+[label,roguesden_brian_place]
+~chatplayer("<p,quiz>What is this place?");
+~chatnpc("<p,happy>Ah welcome to my humble home, well actually it belongs to mummsie but she's getting on a bit so I look after the place for her.");
+~chatnpc("<p,happy>So are you interested in a challenge?");
+if (~p_choice2("Yes actually, what've you got?", 1, "No thanks.", 2) = 1) @roguesden_brian_challenge;
+~chatplayer("<p,neutral>No thanks.");
+
+// ---------------------------------------------------------------- Martin Thwait
+[opnpc1,roguesden_trader]
+~chatnpc("<p,shifty>You know it's sometimes funny how things work out, I lose some gold but find an item, or I lose an item and find some gold... no-one ever knows what's gone where ya know.");
+if (~p_choice2("Yeah I know what you mean, found anything recently?", 1, "Okay... I'll be going now.", 2) = 2) {
+    ~chatplayer("<p,shock>Okay... I'll be going now.");
+    return;
+}
+~chatplayer("<p,neutral>Yeah I know what you mean, found anything recently?");
+~roguesden_martin_shop;
+
+[opnpc3,roguesden_trader] ~roguesden_martin_shop;
+
+[proc,roguesden_martin_shop]
+if (stat(thieving) < 50) {
+    ~chatnpc("<p,sad>Sorry, mate. Train up your Thieving skill to at least 50 and I might be able to help you out.");
+    return;
+}
+if (stat(agility) < 50) {
+    ~chatnpc("<p,sad>Sorry, mate. Train up your Agility skill to at least 50 and I might be able to help you out.");
+    return;
+}
+~openshop(roguesden_shop, 650, 1000, 20, "Martin Thwait's Lost and Found.");
+
+// ---------------------------------------------------------------- Emerald Benedict
+[apnpc1,roguesden_banker]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+~chatnpcrange("<p,shifty>Got anything you don't want to lose?");
+if (~p_choice2("Yes actually, can you help?", 1, "Yes thanks, and I'll keep hold of it too.", 2) = 1) {
+    ~chatplayer("<p,quiz>Yes actually, can you help?");
+    @openbank;
+}
+~chatplayer("<p,shock>Yes thanks, and I'll keep hold of it too.");
