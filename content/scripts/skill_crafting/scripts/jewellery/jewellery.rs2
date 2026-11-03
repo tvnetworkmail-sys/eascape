@@ -356,6 +356,15 @@ return(null);
 [inv_button1,inter_282:com_119] @silver_cast(5, 1);
 [inv_button2,inter_282:com_119] @silver_cast(5, 5);
 [inv_button3,inter_282:com_119] @silver_cast(5, 10);
+[inv_button4,inter_282:com_91] @silver_cast_x(1);
+[inv_button4,inter_282:com_98] @silver_cast_x(2);
+[inv_button4,inter_282:com_105] @silver_cast_x(3);
+[inv_button4,inter_282:com_112] @silver_cast_x(4);
+[inv_button4,inter_282:com_119] @silver_cast_x(5);
+
+[label,silver_cast_x](int $slot)
+p_countdialog;
+if (last_int > 0) @silver_cast($slot, last_int);
 
 [label,silver_cast](int $slot, int $count)
 def_namedobj $product = ~silver_cast_product($slot);
