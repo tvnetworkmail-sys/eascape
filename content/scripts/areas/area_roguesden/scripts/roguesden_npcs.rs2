@@ -1,10 +1,26 @@
 // EASCape: the Rogues' Den people (Rogues' Den + Tweaks, 22 June 2005). Dialogue from Void
 // (BrianORichard.kt, MartinThwait.kt, EmeraldBenedict.kt); Martin's stock is the cache's own
-// roguesden_shop. Void's skillcape and bank PIN options came later and are left out. The maze
-// itself isn't built yet.
+// roguesden_shop. Void's skillcape and bank PIN options came later and are left out. Brian's level
+// checks and his lines once you have been let in are the OSRS wiki's (Transcript:Brian O'Richard);
+// the maze is roguesden_maze.rs2.
 
 // ---------------------------------------------------------------- Brian O'Richard
 [opnpc1,roguesden_mazemaster]
+if (%roguesden_access = 1) {
+    ~chatnpc("<p,happy>Hi again, what can I do for you?");
+    switch_int (~p_choice3("I want to try the maze again!", 1, "What is this place?", 2, "Nothing thanks.", 3)) {
+        case 1 :
+            ~chatplayer("<p,happy>I want to try the maze again!");
+            if (inv_total(inv, roguesden_gem) > 0) {
+                ~chatnpc("<p,happy>Great, well you've already got a jewel so away you go!");
+            } else {
+                ~chatnpc("<p,happy>Certainly, when you enter the maze I'll give you another jewel. Good luck!");
+            }
+        case 2 : @roguesden_brian_place;
+        case 3 : ~chatplayer("<p,neutral>Nothing thanks.");
+    }
+    return;
+}
 ~chatnpc("<p,happy>Hi there, looking for a challenge are you?");
 @roguesden_brian_menu;
 
@@ -17,10 +33,20 @@ switch_int (~p_choice3("Yes actually, what've you got?", 1, "What is this place?
 
 [label,roguesden_brian_challenge]
 ~chatplayer("<p,quiz>Yes actually, what've you got?");
+// "Boostable: no" (OSRS wiki, Brian O'Richard)
+if (stat_base(thieving) < 50) {
+    ~chatnpc("<p,sad>Shame, I don't think I have anything for you. Train up your Thieving skill to at least 50 and I might be able to help you out.");
+    return;
+}
+if (stat_base(agility) < 50) {
+    ~chatnpc("<p,sad>Shame, I don't think I have anything for you. Train up your Agility skill to at least 50 and I might be able to help you out.");
+    return;
+}
 ~chatnpc("<p,happy>Aha, I have the perfect thing for you! See if you can get to the centre of my maze, the further you get the greater the rewards. There's even some special prizes if you make it right to the end.");
 switch_int (~p_choice3("Ok that sounds good!", 1, "What is this place?", 2, "Actually I think I'll pass thanks.", 3)) {
     case 1 :
         ~chatplayer("<p,happy>Ok that sounds good!");
+        %roguesden_access = 1;
         ~chatnpc("<p,happy>Great! When you enter the maze, I'll give you a jewel - it'll allow you to get out of the maze at any time. However that's all you're allowed to take in with you, no cheating!");
         ~chatnpc("<p,shifty>Oh one last thing, if you happen to see my harmonica I'd really like to have it back.");
     case 2 : @roguesden_brian_place;

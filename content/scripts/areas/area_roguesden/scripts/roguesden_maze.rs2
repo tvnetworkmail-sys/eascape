@@ -1,0 +1,588 @@
+// EASCape: the Rogues' Den maze (Rogues Den + Tweaks, 22 June 2005). Sources, in order: Void and
+// 2006Scape have nothing for the maze, 2009scape neither; so the OSRS wiki (Rogues' Den, its maze
+// legend and walkthrough; Wall safe; Floor, Wall, Blade, Ledge, Door, Passageway, Pendulum (Rogues'
+// Den); Contortion Bars; Temporary skill drain; Transcript:Brian O'Richard; Run trick) and the RS
+// wiki (Rogues' Den (minigame)), with the 2006 cache's own locs, animations and interfaces.
+// Everything marked "ours" is not in any of those.
+//
+// How it works here: while you are in the maze a timer looks at the square you are on each tick
+// (roguesden_maze). A trap goes off if you are on its square at the end of a tick, so running over
+// it (two squares a tick) misses it: the wiki's "run trick". The pendulums, floor blades, wall saws
+// and wall blades stand behind the map's server-side invisible walls; heading into one (or stopping
+// in front of it) takes you over it, as the wiki's "left click on one of the blades" (ours: the
+// squares are in roguesden_cross.dbrow, worked out from those walls).
+
+// ---------------------------------------------------------------- the doorway in
+[oploc1,roguesden_mazeentrance]
+// OSRS wiki: all doors in the maze are one-way, "even the first door you use to enter the maze"
+if (~check_axis(coord, loc_coord, loc_angle) = false) {
+    mes("The doorway won't open from this side."); // ours
+    return;
+}
+if (%roguesden_access = 0) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,angry>And where do you think you're going? A little too eager I think. Come and talk to me before you go wandering around in there.");
+    return;
+}
+if (stat_base(thieving) < 50 | stat_base(agility) < 50) {
+    // can't happen once Brian has let you in (base levels don't go down); his own words for it
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,sad>Shame, I don't think I have anything for you. Train up your Thieving and Agility skills to at least 50 and I might be able to help you out."); // ours: both skills in one line
+    return;
+}
+if (~roguesden_carrying = true) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>Tut tut tut, now you know you're not allowed to take anything except that jewel in with you.");
+    return;
+}
+~open_and_close_door(loc_type, true, false);
+p_delay(0);
+~roguesden_start;
+
+// anything carried or worn but the jewel
+[proc,roguesden_carrying]()(boolean)
+if (inv_freespace(worn) < inv_size(worn)) return(true);
+def_int $used = sub(inv_size(inv), inv_freespace(inv));
+if (sub($used, inv_total(inv, roguesden_gem)) > 0) return(true);
+return(false);
+
+// OSRS wiki: "Upon entering the maze, Prayer is reduced to zero, and Thieving and Agility are set to
+// their normal levels. A mystic jewel is placed in the inventory"
+[proc,roguesden_start]
+if (inv_total(inv, roguesden_gem) = 0) {
+    inv_add(inv, roguesden_gem, 1);
+    mes("Brian O'Richard gives you a jewel as you enter the maze."); // Transcript:Brian O'Richard
+}
+stat_sub(prayer, stat(prayer), 0);
+~stat_reset(thieving);
+~stat_reset(agility);
+%roguesden_state = 1;
+%roguesden_progress = 0;
+%roguesden_flags = 0;
+%roguesden_last = coord;
+%roguesden_stop = null;
+%roguesden_disarm = null;
+%roguesden_disarm_end = 0;
+%roguesden_crush_end = 0;
+settimer(roguesden_maze, 1);
+
+[proc,roguesden_inmaze](coord $c)(boolean)
+if (coordy($c) ! 1) return(false);
+return(inzone(^roguesden_maze_sw, ^roguesden_maze_ne, $c));
+
+// ---------------------------------------------------------------- the timer
+[timer,roguesden_maze]
+if (%roguesden_state ! 1) {
+    cleartimer(roguesden_maze);
+    return;
+}
+def_coord $cur = coord;
+if (~roguesden_inmaze($cur) = false) {
+    // out of the maze some other way: tidy up, nothing given (ours)
+    ~roguesden_leave(^rd_silent);
+    return;
+}
+def_coord $prev = %roguesden_last;
+if ($cur ! $prev) {
+    %roguesden_last = $cur;
+    if ($prev = null | coordy($prev) ! coordy($cur) | distance($prev, $cur) > 2) {
+        %roguesden_stop = null;
+        return;
+    }
+    ~roguesden_progress($cur);
+    def_int $dx = ~rd_sign(sub(coordx($cur), coordx($prev)));
+    def_int $dz = ~rd_sign(sub(coordz($cur), coordz($prev)));
+    if (~roguesden_cross($cur, $dx, $dz, false) = true) return;
+    if (~roguesden_trap_check($cur) = true) return;
+    %roguesden_stop = $cur;
+} else if (%roguesden_stop = $cur) {
+    %roguesden_stop = null;
+    if (~roguesden_cross($cur, 0, 0, true) = true) return;
+}
+if (~roguesden_guard_check($cur) = true) return;
+~roguesden_spinblade_check($cur);
+
+[proc,rd_sign](int $n)(int)
+if ($n > 0) return(1);
+if ($n < 0) return(-1);
+return(0);
+
+// ours: how far into the maze you got, as a percentage: the way from the doorway against the way
+// still to go to the safes (best reached), for the part-experience when you leave early
+[proc,roguesden_progress](coord $cur)
+if (coordx($cur) < 3040) %roguesden_flags = setbit(%roguesden_flags, 0); // past the first pendulum
+if (inzone(^roguesden_saferoom_sw, ^roguesden_saferoom_ne, $cur) = true) {
+    %roguesden_flags = setbit(%roguesden_flags, 1);
+    %roguesden_progress = 100;
+    return;
+}
+def_int $from = distance(^roguesden_start, $cur);
+def_int $to = distance($cur, ^roguesden_safes);
+if (add($from, $to) = 0) return;
+def_int $pct = divide(multiply($from, 100), add($from, $to));
+if ($pct > 99) $pct = 99;
+if ($pct > %roguesden_progress) %roguesden_progress = $pct;
+
+// ---------------------------------------------------------------- pendulums, floor blades, saws
+// $dx/$dz: the way you are going (0, 0 when you stopped on $cur)
+[proc,roguesden_cross](coord $cur, int $dx, int $dz, boolean $stopped)(boolean)
+db_find(roguesden_cross:from, $cur);
+def_dbrow $row = db_findnext;
+while ($row ! null) {
+    def_int $kind = db_getfield($row, roguesden_cross:kind, 0);
+    def_coord $to = db_getfield($row, roguesden_cross:to, 0);
+    def_coord $obstacle = db_getfield($row, roguesden_cross:obstacle, 0);
+    def_int $tx = ~rd_sign(sub(coordx($to), coordx($cur)));
+    def_int $tz = ~rd_sign(sub(coordz($to), coordz($cur)));
+    if ($stopped = true | add(multiply($dx, $tx), multiply($dz, $tz)) > 0) {
+        ~roguesden_obstacle($kind, $cur, $to, $obstacle);
+        return(true);
+    }
+    $row = db_findnext;
+}
+return(false);
+
+// Agility each takes: pendulum 3, floor blade 3 (OSRS wiki legend 4 and 7), wall blade 10 (OSRS
+// wiki, Temporary skill drain: "Rogues' Den wall (blade)"), wall saw 3 (ours: the wiki gives none)
+[proc,roguesden_obstacle_drain](int $kind)(int)
+switch_int ($kind) {
+    case ^rd_wallblade : return(10);
+    case default : return(3);
+}
+
+[proc,roguesden_obstacle](int $kind, coord $from, coord $to, coord $obstacle)
+p_stopaction;
+def_int $drain = ~roguesden_obstacle_drain($kind);
+// the obstacle's own animation (the cache's active ones; which goes with which is ours)
+switch_int ($kind) {
+    case ^rd_saw :
+        if (loc_find($obstacle, roguesden_trap_wall_saw) = true) loc_anim(rogue_wall_saw);
+        sound_synth(saw_spin, 1, 0);
+    case ^rd_wallblade :
+        if (loc_find($obstacle, roguesden_trap_wall_scytheblade) = true) loc_anim(rogue_wall_scythe);
+        sound_synth(blade_swing, 1, 0);
+    case ^rd_blade :
+        sound_synth(blade_swing, 1, 0);
+    case default :
+        sound_synth(blade_swing_double, 1, 0);
+}
+if (stat(agility) < $drain) {
+    // OSRS wiki: these "cannot be failed until you run out of agility"; then you leave the maze
+    anim(human_sidestep_fall, 0); // ours
+    mes("You don't have enough Agility left to get past!"); // ours
+    p_delay(1);
+    ~roguesden_leave(^rd_fail);
+    return;
+}
+stat_sub(agility, $drain, 0);
+def_int $dir = ~rd_exactdir(sub(coordx($to), coordx($from)), sub(coordz($to), coordz($from)));
+anim(human_spot_jump, 0); // ours
+p_exactmove($from, $to, 10, 40, $dir);
+p_delay(1);
+// OSRS wiki: pendulums and floor blades knock you down ("cancels previous inputs")
+if ($kind = ^rd_pendulum | $kind = ^rd_blade) {
+    anim(human_sidestep_fall, 0); // ours
+    p_delay(1);
+}
+anim(null, 0);
+%roguesden_last = coord;
+%roguesden_stop = null;
+
+[proc,rd_exactdir](int $dx, int $dz)(int)
+if ($dx > 0) return(^exact_east);
+if ($dx < 0) return(^exact_west);
+if ($dz > 0) return(^exact_north);
+return(^exact_south);
+
+// ---------------------------------------------------------------- traps
+// OSRS wiki, Floor and Wall (Rogues' Den): standing on a spike, spring or explosive floor, or in
+// front of a spike, gas or crusher wall, sets it off. true if something happened
+[proc,roguesden_trap_check](coord $cur)(boolean)
+if (~roguesden_disarmed($cur) = true) return(false);
+// floor traps (the trapdoor floor "does not appear to be possible to activate": left alone)
+if (loc_find($cur, roguesden_trap_floor_spikes) = true) {
+    loc_anim(agilityarena_floorspikes_activate); // ours: the spikes' own model is the arena's
+    sound_synth(floor_spikes, 1, 0);
+    anim(agilityarena_player_spiked, 0); // ours
+    ~roguesden_trapped;
+    return(true);
+}
+if (loc_find($cur, roguesden_trap_floor_explosion) = true) {
+    loc_anim(rogue_explosion);
+    sound_synth(explosion, 1, 0);
+    anim(roguesden_player_explosion, 0);
+    ~roguesden_trapped;
+    return(true);
+}
+if (loc_find($cur, roguesden_trap_floor_springtile) = true) {
+    loc_anim(rogue_springy_death);
+    sound_synth(springtrap, 1, 0);
+    anim(roguesden_spring_trap, 0);
+    ~roguesden_trapped;
+    return(true);
+}
+// wall traps: a spike wall faces the square in front of it; a gas or crusher wall is two squares
+// long across its wall and goes off on the half on your side (worked out from the map: ours)
+def_int $a = 0;
+while ($a < 4) {
+    if (~roguesden_walltrap_at($cur, $a) = true) return(true);
+    $a = add($a, 1);
+}
+return(false);
+
+[proc,roguesden_trapped]
+p_stopaction;
+mes("You set off a trap!"); // ours
+p_delay(2);
+~roguesden_leave(^rd_fail);
+
+// $a: the way the wall faces (^loc_west etc.), so its loc is on the other side of you
+[proc,roguesden_walltrap_at](coord $cur, int $a)(boolean)
+def_int $bx = 0;
+def_int $bz = 0;
+switch_int ($a) {
+    case ^loc_west : $bx = 1;
+    case ^loc_north : $bz = -1;
+    case ^loc_east : $bx = -1;
+    case ^loc_south : $bz = 1;
+}
+// spikes: one square, behind you
+def_coord $c = movecoord($cur, $bx, 0, $bz);
+if (loc_find($c, roguesden_trap_wall_spikes) = true) {
+    if (loc_angle = $a) {
+        loc_anim(rogue_wall_spikes);
+        sound_synth(floor_spikes, 1, 0);
+        anim(human_stunned, 0); // ours
+        ~roguesden_trapped;
+        return(true);
+    }
+}
+// gas and crushers: the loc's square is yours when it faces west or south, behind you otherwise
+if ($a = ^loc_west | $a = ^loc_south) $c = $cur;
+if (loc_find($c, roguesden_trap_wall_poison_gas) = true) {
+    if (loc_angle = $a) {
+        loc_anim(rogue_poison_gas);
+        sound_synth(gas_hiss, 1, 0);
+        anim(roguesden_player_poison_choke, 0);
+        ~roguesden_trapped;
+        return(true);
+    }
+}
+if (loc_find($c, roguesden_trap_wall_crusher) = true) {
+    if (loc_angle = $a & %roguesden_crush_end <= map_clock) {
+        // OSRS wiki, Temporary skill drain: a crusher takes 5 Agility "on failure" (and 1 Thieving
+        // searched); ours: it squashes you only when you have no Agility left for it, and both
+        // walls of a crusher go off together (no second drain for 3 ticks)
+        loc_anim(rogue_wall_crush);
+        sound_synth(mace_crush, 1, 0);
+        %roguesden_crush_end = add(map_clock, 3);
+        if (stat(agility) < 5) {
+            anim(human_stunned, 0); // ours
+            ~roguesden_trapped;
+            return(true);
+        }
+        stat_sub(agility, 5, 0);
+        anim(human_sidestep_fall, 0); // ours
+        mes("You dodge the crushing walls!"); // ours
+        return(true);
+    }
+}
+return(false);
+
+[proc,roguesden_disarmed](coord $c)(boolean)
+if (%roguesden_disarm = $c & %roguesden_disarm_end > map_clock) return(true);
+return(false);
+
+// Search: OSRS wiki, Floor and Wall (Rogues' Den): "The traps can be searched to temporarily
+// disable the trap, which lowers the player's visible Thieving level by 1"
+[oploc5,roguesden_trap_floor_spikes] ~roguesden_search(loc_coord, true);
+[oploc5,roguesden_trap_floor_explosion] ~roguesden_search(loc_coord, true);
+[oploc5,roguesden_trap_floor_springtile] ~roguesden_search(loc_coord, true);
+[oploc5,roguesden_trap_wall_spikes] ~roguesden_search(~roguesden_wall_square(loc_coord, loc_angle, false), false);
+[oploc5,roguesden_trap_wall_poison_gas] ~roguesden_search(~roguesden_wall_square(loc_coord, loc_angle, true), false);
+[oploc5,roguesden_trap_wall_crusher] ~roguesden_search(~roguesden_wall_square(loc_coord, loc_angle, true), false);
+
+// the square a wall trap goes off on (see ~roguesden_walltrap_at)
+[proc,roguesden_wall_square](coord $loc, int $a, boolean $long)(coord)
+if ($long = true & ($a = ^loc_west | $a = ^loc_south)) return($loc);
+switch_int ($a) {
+    case ^loc_west : return(movecoord($loc, -1, 0, 0));
+    case ^loc_north : return(movecoord($loc, 0, 0, 1));
+    case ^loc_east : return(movecoord($loc, 1, 0, 0));
+    case default : return(movecoord($loc, 0, 0, -1));
+}
+
+[proc,roguesden_search](coord $danger, boolean $floor)
+if (%roguesden_state ! 1) {
+    mes("You find nothing."); // ours
+    return;
+}
+if ($floor = true) {
+    anim(roguesden_player_disarm_floor, 0);
+} else {
+    anim(roguesden_player_disarm_wall_infront, 0);
+}
+sound_synth(safeclick, 1, 0); // ours
+p_delay(1);
+anim(null, 0);
+if (stat(thieving) < 1) {
+    // OSRS wiki: "If either skill would drop below zero, players are teleported back to the lobby"
+    mes("You don't have enough Thieving left to disarm it."); // ours
+    p_delay(1);
+    ~roguesden_leave(^rd_fail);
+    return;
+}
+stat_sub(thieving, 1, 0);
+%roguesden_disarm = $danger;
+%roguesden_disarm_end = add(map_clock, 10); // ours: how long it stays safe
+mes("You find a trap and disable it."); // ours
+%roguesden_last = coord;
+
+// ---------------------------------------------------------------- contortion bars
+// OSRS wiki, Contortion Bars: -5 Agility; "You don't have enough Agility skill left!"
+[oploc1,roguesden_obstacle_contortion_bars]
+if (%roguesden_state ! 1) return;
+if (stat(agility) < 5) {
+    mes("You don't have enough Agility skill left!");
+    return;
+}
+// across the bars, the way they lie (ours: from the map)
+def_int $dx = 0;
+def_int $dz = 0;
+if (loc_angle = ^loc_north | loc_angle = ^loc_south) {
+    $dx = -1;
+    if (coordx(coord) < coordx(loc_coord)) $dx = 1;
+} else {
+    $dz = -1;
+    if (coordz(coord) < coordz(loc_coord)) $dz = 1;
+}
+def_coord $near = movecoord(loc_coord, multiply($dx, -1), 0, multiply($dz, -1));
+def_coord $far = movecoord(loc_coord, $dx, 0, $dz);
+if (coord ! $near) {
+    p_teleport($near);
+    p_delay(0);
+}
+stat_sub(agility, 5, 0);
+sound_synth(squeeze_in, 1, 0);
+anim(roguesden_contortion, 0);
+~forcemove($far);
+sound_synth(squeeze_out, 1, 0);
+anim(null, 0);
+%roguesden_last = coord;
+%roguesden_stop = null;
+
+// ---------------------------------------------------------------- ledges
+// OSRS wiki legend 6: ledges take 4 Agility, 7 the longest and final one (Temporary skill drain:
+// "First wall hang is 4, first walk-over ledge is 4, long ledge is 7"), and can't be failed until
+// you run out of Agility
+[oploc1,roguesden_obstacle_wall_hanging_ledge] ~roguesden_ledge(loc_type, true);
+[oploc1,roguesden_obstacle_floor_balancing_ledge] ~roguesden_ledge(loc_type, false);
+
+[proc,roguesden_ledge](loc $type, boolean $hanging)
+if (%roguesden_state ! 1) return;
+// the ledge's two ends (ours: hand-hold ledges run east-west, the walk-over one north-south)
+def_int $dx = 0;
+def_int $dz = 0;
+if ($hanging = true) {
+    $dx = 1;
+} else {
+    $dz = 1;
+}
+def_coord $low = loc_coord;
+while (.loc_find(movecoord($low, multiply($dx, -1), 0, multiply($dz, -1)), $type) = true) {
+    $low = movecoord($low, multiply($dx, -1), 0, multiply($dz, -1));
+}
+def_coord $high = loc_coord;
+while (.loc_find(movecoord($high, $dx, 0, $dz), $type) = true) {
+    $high = movecoord($high, $dx, 0, $dz);
+}
+def_int $length = add(add(distance($low, $high), 1), 0);
+def_coord $start = movecoord($low, multiply($dx, -1), 0, multiply($dz, -1));
+def_coord $end = movecoord($high, $dx, 0, $dz);
+if (distance(coord, $end) < distance(coord, $start)) {
+    def_coord $swap = $start;
+    $start = $end;
+    $end = $swap;
+}
+def_int $drain = 4;
+if ($length >= 8) $drain = 7;
+if (coord ! $start) {
+    p_teleport($start);
+    p_delay(0);
+}
+if (stat(agility) < $drain) {
+    mes("You don't have enough Agility left to cross the ledge!"); // ours
+    anim(human_sidestep_fall, 0); // ours
+    p_delay(1);
+    ~roguesden_leave(^rd_fail);
+    return;
+}
+stat_sub(agility, $drain, 0);
+if ($hanging = true) {
+    mes("You put your foot on the ledge and try to edge across..."); // ours (the game's ledge line)
+    anim(human_into_sidestep, 0);
+    ~set_readywalkturn_bas(human_ready_sidestep, human_ready_sidestep, human_walk_sidestep);
+} else {
+    mes("You walk carefully across the ledge..."); // ours
+    ~set_readywalk_bas(human_walk_logbalance_ready, human_walk_logbalance);
+}
+sound_synth(balancing_ledge, 2, 0);
+~forcemove($end);
+~update_bas;
+%roguesden_last = coord;
+%roguesden_stop = null;
+
+// ---------------------------------------------------------------- doors, grills and passageways
+// OSRS wiki: "All doors in the maze are one-way" (grills too: "Blocking my way back."), and the
+// passageways are two-way. Which way each goes is ours, from the map: a grill or a locked door
+// lets you out of its own square, a door to the viewing gallery lets you in to its square.
+[oploc1,roguesden_obstacle_blocking_door_enter]
+if (~check_axis(coord, loc_coord, loc_angle) = false) {
+    mes("The grill won't open from this side."); // ours
+    return;
+}
+loc_anim(rogue_blocking_grill);
+~open_and_close_door(loc_type, true, false);
+
+// the 80 Thieving locks (OSRS wiki legend B; -10 Thieving: RS wiki, Rogues' Den (minigame), and
+// OSRS wiki, Temporary skill drain)
+[oploc1,roguesden_obstacle_door]
+if (~check_axis(coord, loc_coord, loc_angle) = false) {
+    mes("This door is locked from the other side."); // ours
+    return;
+}
+if (stat(thieving) < 80) {
+    mes("You need a Thieving level of 80 to pick this lock."); // ours
+    return;
+}
+mes("You attempt to pick the lock..."); // ours
+anim(human_pickpocket, 0); // ours
+sound_synth(locked, 1, 0);
+p_delay(1);
+stat_sub(thieving, 10, 0);
+mes("You manage to pick the lock."); // ours
+~open_and_close_door(loc_type, true, false);
+%roguesden_last = coord;
+
+[oploc1,roguesden_gallery_door]
+if (~check_axis(coord, loc_coord, loc_angle) = true) {
+    mes("The door won't open from this side."); // ours
+    return;
+}
+~open_and_close_door(loc_type, false, false);
+
+// a pair of passageways through one wall: in at one, out of the other (ours: from the map, the
+// other one is two squares on, you come out a square past it)
+[oploc1,roguesden_passage_across]
+def_int $dx = 0;
+def_int $dz = 0;
+switch_int (loc_angle) {
+    case ^loc_west : $dx = 1;
+    case ^loc_north : $dz = -1;
+    case ^loc_east : $dx = -1;
+    case ^loc_south : $dz = 1;
+}
+def_coord $out = movecoord(loc_coord, multiply($dx, 3), 0, multiply($dz, 3));
+mes("You squeeze through the passageway."); // ours
+anim(human_crawling, 0); // ours
+p_delay(1);
+p_telejump($out);
+anim(null, 0);
+%roguesden_last = $out;
+%roguesden_stop = null;
+
+// OSRS wiki, Passageway (Rogues' Den): the viewing gallery's passageways "can also be used to exit
+// the maze". Ours: our map has no floor for the gallery upstairs, so they take you out to the lobby.
+[oploc1,roguesden_passage_up]
+if (%roguesden_state ! 1) {
+    p_telejump(^roguesden_lobby);
+    return;
+}
+mes("You climb up into the viewing gallery and make your way back to the lobby."); // ours
+p_delay(1);
+~roguesden_leave(^rd_out);
+
+[oploc1,roguesden_passage_down]
+p_telejump(^roguesden_lobby);
+
+// ---------------------------------------------------------------- the mystic jewel
+// Transcript:Mystic jewel
+[opheld1,roguesden_gem]
+if (%roguesden_state ! 1) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>You don't really need my help do you? You're not even in the maze yet!");
+    return;
+}
+~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>Want to come out then? Giving up are you? You know there's no time limit here.");
+if (~p_choice2("Yes I'd like to leave!", 1, "No I'm fine thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No I'm fine thanks.");
+    return;
+}
+~chatplayer("<p,happy>Yes I'd like to leave!");
+~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>Right you are then, out you come.");
+~roguesden_leave(^rd_quit);
+
+// OSRS wiki, Mystic jewel: "Inside the maze: Drop - You don't want to lose that in here!"
+[opheld5,roguesden_gem]
+if (%roguesden_state = 1) {
+    mes("You don't want to lose that in here!");
+    return;
+}
+~dropslot(last_slot);
+
+// ---------------------------------------------------------------- leaving
+// OSRS wiki: a cracked safe gives 12 experience in Agility and Thieving for each level drained from
+// each; leaving any other way "only a fraction ... depending on distance into the maze" (ours: the
+// percentage in roguesden_progress, none before the first pendulum, when Brian gives none either).
+// "Leaving the maze also restores Prayer, Thieving, and Agility to their normal levels."
+[proc,roguesden_leave](int $how)
+cleartimer(roguesden_maze);
+p_stopaction;
+def_int $pct = %roguesden_progress;
+if ($how = ^rd_win) $pct = 100;
+if (testbit(%roguesden_flags, 0) = ^false & $how ! ^rd_win) $pct = 0;
+if ($how = ^rd_silent) $pct = 0;
+def_int $thv = max(0, sub(stat_base(thieving), stat(thieving)));
+def_int $agi = max(0, sub(stat_base(agility), stat(agility)));
+// in tenths
+def_int $thv_xp = divide(multiply(multiply($thv, 120), $pct), 100);
+def_int $agi_xp = divide(multiply(multiply($agi, 120), $pct), 100);
+def_int $flags = %roguesden_flags;
+%roguesden_state = 0;
+%roguesden_stop = null;
+%roguesden_disarm = null;
+if ($how ! ^rd_silent | ~roguesden_inmaze(coord) = true) p_telejump(^roguesden_lobby);
+~stat_reset(thieving);
+~stat_reset(agility);
+~stat_reset(prayer);
+// the maze's own things don't come out with you (RS wiki, Picture (Rogue's Den): "Any tiles that
+// were left in a players' inventory would be removed after exiting the maze via any means"; the
+// jewel and flash powder likewise: ours)
+~roguesden_take(roguesden_gem);
+~roguesden_take(roguesden_flash_powder);
+~roguesden_take(roguesden_puzzle_mosaic_tile1);
+~roguesden_take(roguesden_puzzle_mosaic_tile2);
+~roguesden_take(roguesden_puzzle_mosaic_tile3);
+~roguesden_take(roguesden_puzzle_mosaic_tile4);
+if ($thv_xp > 0) stat_advance(thieving, $thv_xp);
+if ($agi_xp > 0) stat_advance(agility, $agi_xp);
+if ($how = ^rd_silent) return;
+p_delay(0);
+// Transcript:Brian O'Richard, "While inside the maze"
+if ($how = ^rd_win) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,happy>Wow you even managed to get the prize, well done!");
+} else if (testbit($flags, 1) = ^true) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,happy>Amazing, you made it so far!");
+} else if (testbit($flags, 0) = ^true) {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>Well you didn't do too badly, but you didn't make it nearly as far as others have.");
+} else {
+    ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,sad>Oh dear, you really didn't get very far did you?");
+    return;
+}
+~mesbox("You gained: <tostring(divide($thv_xp, 10))> Thieving Experience. <tostring(divide($agi_xp, 10))> Agility Experience.");
+
+[proc,roguesden_take](obj $obj)
+def_int $n = inv_total(inv, $obj);
+if ($n > 0) inv_del(inv, $obj, $n);
+
+// ours: logged out in the maze, you log in back in the lobby, your levels as they were outside
+[proc,roguesden_login]
+if (%roguesden_state ! 1) return;
+~roguesden_leave(^rd_silent);
+mes("You find yourself back in the Rogues' Den."); // ours

@@ -1,0 +1,119 @@
+// EASCape: the Rogues' Den wall safes. Sources: OSRS wiki, Wall safe and Wall safe (lobby) (with
+// Mod Ash's posts they quote), Rogue kit, Rogue equipment and Rogue's equipment crate; RS wiki,
+// Rogue equipment and Rogues' Den (minigame).
+
+// ---------------------------------------------------------------- the eight safes at the centre
+// Mod Ash (OSRS wiki, Wall safe): "Pick a random number 0-199. If it's higher than your current
+// visible Thieving stat, you get: 50% chance of being ejected, and getting no roll. 50% chance of
+// your Thieving draining by 1, but continuing with the roll." The roll is 48/128 a rogue kit, the
+// rest equipment. In 2005 that was a piece of rogue equipment straight from the safe, picked at
+// random (the crate to choose from came 1 June 2017, the fixed order 18 May 2017; RS wiki, Rogue
+// equipment: "obtained as random rewards"). Which safe makes no difference.
+[oploc1,roguesden_walldecor_mazesafe]
+if (%roguesden_state ! 1) return;
+p_arrivedelay;
+mes("You start cracking the safe..."); // ours
+anim(rogue_player_crack_safe_start, 0);
+sound_synth(safeclick, 1, 0);
+p_delay(1);
+anim(rogue_player_crack_safe_mid, 0);
+sound_synth(safeclick, 1, 0);
+p_delay(1);
+if (random(200) > stat(thieving)) {
+    if (random(2) = 0) {
+        // OSRS wiki, Wall safe: "risks triggering a floor trap, ejecting the player without being
+        // awarded either reward"
+        mes("You slip and set off a trap!"); // ours
+        anim(agilityarena_player_spiked, 0); // ours
+        sound_synth(floor_spikes, 1, 0);
+        p_delay(2);
+        ~roguesden_leave(^rd_fail);
+        return;
+    }
+    if (stat(thieving) > 0) stat_sub(thieving, 1, 0);
+}
+anim(rogue_player_crack_safe_end, 0);
+sound_synth(safeopen, 1, 0);
+loc_change(roguesden_walldecor_safe_open, 5); // OSRS wiki, Wall safe: its open version; how long ours
+def_namedobj $prize = roguesden_kit;
+if (random(128) >= 48) {
+    switch_int (random(5)) {
+        case 0 : $prize = roguesden_helm;
+        case 1 : $prize = roguesden_body;
+        case 2 : $prize = roguesden_legs;
+        case 3 : $prize = roguesden_gloves;
+        case default : $prize = roguesden_boots;
+    }
+}
+inv_add(inv, $prize, 1);
+mes("You crack the safe open. Inside you find: <oc_name($prize)>."); // ours
+p_delay(1);
+~roguesden_leave(^rd_win);
+
+// ---------------------------------------------------------------- the four safes in the lobby
+// OSRS wiki, Wall safe (lobby): 50 Thieving; 70 experience; Mod Ash's success chances (33.2% at 50
+// to 62.9% at 99, 41% to 75.4% with a stethoscope in the inventory: its chart's 8/160 and 16/192
+// out of 256); "the player will automatically make another attempt ... every 4 ticks until they
+// either crack the safe or trigger a trap", the trap per attempt "(100% - success chance) / 2",
+// "dealing between 2 and 6 damage"; and its drop table (3230 cracks).
+[oploc1,roguesden_walldecor_safe]
+if (stat(thieving) < 50) {
+    mes("You need a Thieving level of 50 to crack this safe."); // ours
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+p_arrivedelay;
+mes("You start cracking the safe..."); // ours
+anim(rogue_player_crack_safe_start, 0);
+sound_synth(safeclick, 1, 0);
+p_delay(1);
+def_int $tries = 0;
+while ($tries < 1000) { // ours: a limit only so the loop has one
+    $tries = add($tries, 1);
+    anim(rogue_player_crack_safe_mid, 0);
+    sound_synth(safeclick, 1, 0);
+    p_delay(3);
+    def_boolean $cracked = false;
+    if (inv_total(inv, roguesden_stethoscope) > 0) {
+        $cracked = stat_random(thieving, 16, 192);
+    } else {
+        $cracked = stat_random(thieving, 8, 160);
+    }
+    if ($cracked = true) {
+        anim(rogue_player_crack_safe_end, 0);
+        sound_synth(safeopen, 1, 0);
+        loc_change(roguesden_walldecor_safe_open, 5); // how long: ours
+        ~roguesden_lobby_safe_loot;
+        stat_advance(thieving, 700);
+        mes("You get some loot."); // ours
+        return;
+    }
+    if (random(2) = 0) {
+        anim(null, 0);
+        sound_synth(floor_spikes, 1, 0);
+        mes("You slip and trigger a trap!"); // ours
+        ~damage_self(calc(randominc(4) + 2));
+        return;
+    }
+}
+
+[proc,roguesden_lobby_safe_loot]
+def_int $r = random(128);
+if ($r < 25) {
+    inv_add(inv, coins, 10);
+} else if ($r < 81) {
+    inv_add(inv, coins, 20);
+} else if ($r < 102) {
+    inv_add(inv, coins, 40);
+} else if ($r < 114) {
+    inv_add(inv, uncut_sapphire, 1);
+} else if ($r < 123) {
+    inv_add(inv, uncut_emerald, 1);
+} else if ($r < 127) {
+    inv_add(inv, uncut_ruby, 1);
+} else {
+    inv_add(inv, uncut_diamond, 1);
+}

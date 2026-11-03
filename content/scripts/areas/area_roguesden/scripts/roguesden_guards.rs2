@@ -1,0 +1,93 @@
+// EASCape: the Rogues' Den maze's Rogue Guards, flash powder and moving spin blades. OSRS wiki,
+// Rogue Guard and Flash powder ("Players are advised NOT to get too close to the guards, as these
+// guards might notice and bring them back to the waiting room ... use the powder on the guard and
+// RUN past him while he is stunned"; "the effects of the powder only last a few seconds": RS wiki),
+// and the Rogues' Den legend K (two moving spin blades going round the corridors in the north-east;
+// "The door in the western corridor blocks you from moving in the same direction as the spin
+// blades").
+
+// ---------------------------------------------------------------- Rogue Guards
+// ours: a guard who isn't blinded sees you within 2 squares, in his line of sight
+[proc,roguesden_guard_check](coord $cur)(boolean)
+if (~roguesden_guard_sees($cur, roguesden_guard1) = true) return(true);
+if (~roguesden_guard_sees($cur, roguesden_guard2) = true) return(true);
+if (~roguesden_guard_sees($cur, roguesden_guard3) = true) return(true);
+return(false);
+
+[proc,roguesden_guard_sees](coord $cur, npc $guard)(boolean)
+npc_findall($cur, $guard, 2, ^vis_lineofsight);
+while (npc_findnext = true) {
+    if (%roguesden_blind <= map_clock) {
+        npc_facesquare($cur);
+        npc_anim(rogue_karate_kick, 0);
+        p_stopaction;
+        mes("The guard spots you and knocks you out!"); // ours
+        anim(human_sidestep_fall, 0); // ours
+        p_delay(2);
+        ~roguesden_leave(^rd_fail);
+        return(true);
+    }
+}
+return(false);
+
+// Use the flash powder on a guard. Ours: thrown from up to 5 squares; he is blinded for 10 ticks.
+[apnpcu,roguesden_guard1] ~roguesden_flash;
+[apnpcu,roguesden_guard2] ~roguesden_flash;
+[apnpcu,roguesden_guard3] ~roguesden_flash;
+
+[proc,roguesden_flash]
+if (last_useitem ! roguesden_flash_powder) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (npc_range(coord) > 5) {
+    p_aprange(5);
+    return;
+}
+inv_del(inv, roguesden_flash_powder, 1);
+facesquare(npc_coord);
+anim(human_throw, 0);
+projanim_npc(coord, npc_uid, roguesden_flash_powder, 40, 30, 10, 30, 16, 64);
+p_delay(1);
+%roguesden_blind = add(map_clock, 10);
+npc_anim(human_stunned, 0);
+mes("You throw the flash powder at the guard and blind him!"); // ours
+
+// ---------------------------------------------------------------- the moving spin blades
+// ours, from the map: the corridors are a loop with corners at 3044,5105, 3044,5090, 3059,5090 and
+// 3059,5105 (the blades start at two of them); they go down the western corridor (the one with the
+// one-way grill going up), one square a tick.
+[ai_timer,roguesden_trap_floor_spinningblades_0] ~roguesden_spinblade_move;
+[ai_timer,roguesden_trap_floor_spinningblades_1] ~roguesden_spinblade_move;
+
+[proc,roguesden_spinblade_move]
+def_coord $c = npc_coord;
+def_int $x = coordx($c);
+def_int $z = coordz($c);
+def_coord $next;
+if ($x = 3044 & $z > 5090 & $z <= 5105) {
+    $next = movecoord($c, 0, 0, -1);
+} else if ($z = 5090 & $x >= 3044 & $x < 3059) {
+    $next = movecoord($c, 1, 0, 0);
+} else if ($x = 3059 & $z >= 5090 & $z < 5105) {
+    $next = movecoord($c, 0, 0, 1);
+} else if ($z = 5105 & $x > 3044 & $x <= 3059) {
+    $next = movecoord($c, -1, 0, 0);
+} else {
+    npc_tele(1_47_79_36_49);
+    return;
+}
+npc_tele($next);
+
+[proc,roguesden_spinblade_check](coord $cur)
+if (npc_find($cur, roguesden_trap_floor_spinningblades_0, 0, 0) = true | npc_find($cur, roguesden_trap_floor_spinningblades_1, 0, 0) = true) {
+    queue(roguesden_spinblade_hit, 0, 0);
+}
+
+[queue,roguesden_spinblade_hit]
+if (%roguesden_state ! 1) return;
+p_stopaction;
+mes("The spinning blades hit you!"); // ours
+anim(human_sidestep_fall, 0); // ours
+p_delay(2);
+~roguesden_leave(^rd_fail);

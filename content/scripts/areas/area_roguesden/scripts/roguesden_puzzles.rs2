@@ -1,0 +1,153 @@
+// EASCape: the Rogues' Den maze's two puzzle doors. OSRS wiki, Door (Rogues' Den), Tiles (Rogues'
+// Den) and the Rogues' Den legend (E, F, G, M); the 2006 cache's own interfaces for both.
+
+// ---------------------------------------------------------------- the mosaic door
+// "Opening the door opens an interface showing a mosaic with options to insert a tile. Only tiles
+// currently in the inventory will be shown in the interface. The correct tile ... will appear on
+// the bottom right of the interface. Selecting an incorrect tile will trigger a floor trap and cause
+// the player to exit the maze." The cache's mosaic is inter_279: com_4 (bottom right) shows the
+// Tile, com_5-7 the three wrong Tiles.
+[oploc1,roguesden_puzzle_door_mosaic]
+if (~check_axis(coord, loc_coord, loc_angle) = false) {
+    mes("The door won't open from this side."); // ours
+    return;
+}
+if_openmain(inter_279);
+
+[if_button,inter_279:com_4]
+if (inv_total(inv, roguesden_puzzle_mosaic_tile1) = 0) return;
+if_close;
+inv_del(inv, roguesden_puzzle_mosaic_tile1, 1);
+mes("The tile fits the mosaic and the door swings open."); // ours
+if (loc_find(^roguesden_mosaic_door, roguesden_puzzle_door_mosaic) = true) {
+    ~open_and_close_door(loc_type, true, false);
+}
+%roguesden_last = coord;
+
+[if_button,inter_279:com_5] ~roguesden_wrong_tile(roguesden_puzzle_mosaic_tile2);
+[if_button,inter_279:com_6] ~roguesden_wrong_tile(roguesden_puzzle_mosaic_tile3);
+[if_button,inter_279:com_7] ~roguesden_wrong_tile(roguesden_puzzle_mosaic_tile4);
+
+[proc,roguesden_wrong_tile](obj $tile)
+if (inv_total(inv, $tile) = 0) return;
+if_close;
+inv_del(inv, $tile, 1);
+mes("The tile doesn't fit..."); // ours
+if (%roguesden_state ! 1) return;
+// the floor trap under you (ours: the spike trap's animation on you)
+anim(agilityarena_player_spiked, 0);
+sound_synth(floor_spikes, 1, 0);
+~roguesden_trapped;
+
+// ---------------------------------------------------------------- the gear door
+// "Opening the door shows an interface with 9 dials which can be rotated either clockwise or
+// anticlockwise. The door opens when all 9 dials are pointing upwards. When the door is first opened
+// a short animation will show 3 rotations of the dials, which can then be entered in the reverse
+// order to easily open the door. There is no way to fail the gear door." The 2006 cache has the
+// dial screen (in our pack under the name questscroll_fluffs: the nine dials com_10-18 over a 3x3
+// inventory com_8 with Rotate-Clockwise and Rotate-AntiClockwise, the gears turning round them)
+// and the dials' varbits roguesden_puzzle_dial0-8. Ours: the dials as 0 up, 1 right, 2 down,
+// 3 left; each turn moves only the dial you click; the three turns are random.
+[oploc1,roguesden_puzzle_door_rotation]
+if (~check_axis(coord, loc_coord, loc_angle) = false) {
+    mes("The door won't open from this side."); // ours
+    return;
+}
+inv_clear(roguesden_puzzle_rotation);
+def_int $i = 0;
+while ($i < 9) {
+    inv_setslot(roguesden_puzzle_rotation, $i, roguesden_puzzle_rotation, 1);
+    ~roguesden_dial_set($i, 0);
+    if_setanim(~roguesden_dial_com($i), roguesden_dial_n);
+    $i = add($i, 1);
+}
+if_openmain(questscroll_fluffs);
+inv_transmit(roguesden_puzzle_rotation, questscroll_fluffs:com_8);
+p_delay(1);
+$i = 0;
+while ($i < 3) {
+    ~roguesden_dial_turn(random(9), random(2));
+    p_delay(1);
+    $i = add($i, 1);
+}
+
+[inv_button1,questscroll_fluffs:com_8] ~roguesden_dial_click(last_slot, 1);
+[inv_button2,questscroll_fluffs:com_8] ~roguesden_dial_click(last_slot, 0);
+
+[proc,roguesden_dial_click](int $dial, int $clockwise)
+if ($dial < 0 | $dial > 8) return;
+~roguesden_dial_turn($dial, $clockwise);
+if (%roguesden_puzzle_dial0 ! 0 | %roguesden_puzzle_dial1 ! 0 | %roguesden_puzzle_dial2 ! 0) return;
+if (%roguesden_puzzle_dial3 ! 0 | %roguesden_puzzle_dial4 ! 0 | %roguesden_puzzle_dial5 ! 0) return;
+if (%roguesden_puzzle_dial6 ! 0 | %roguesden_puzzle_dial7 ! 0 | %roguesden_puzzle_dial8 ! 0) return;
+p_delay(1);
+if_close;
+mes("The dials all point upwards and the door unlocks."); // ours
+if (loc_find(^roguesden_gear_door, roguesden_puzzle_door_rotation) = true) {
+    ~open_and_close_door(loc_type, true, false);
+}
+%roguesden_last = coord;
+
+// $clockwise 1 or 0
+[proc,roguesden_dial_turn](int $dial, int $clockwise)
+def_int $from = ~roguesden_dial_get($dial);
+def_int $to = modulo(add($from, 3), 4);
+if ($clockwise = 1) $to = modulo(add($from, 1), 4);
+~roguesden_dial_set($dial, $to);
+def_seq $turn;
+if ($clockwise = 1) {
+    switch_int ($from) {
+        case 0 : $turn = roguesden_dial_turn_ne;
+        case 1 : $turn = roguesden_dial_turn_es;
+        case 2 : $turn = roguesden_dial_turn_sw;
+        case default : $turn = roguesden_dial_turn_wn;
+    }
+} else {
+    switch_int ($from) {
+        case 0 : $turn = roguesden_dial_turn_nw;
+        case 3 : $turn = roguesden_dial_turn_ws;
+        case 2 : $turn = roguesden_dial_turn_se;
+        case default : $turn = roguesden_dial_turn_en;
+    }
+}
+if_setanim(~roguesden_dial_com($dial), $turn);
+sound_synth(safeclick, 1, 0); // ours
+
+[proc,roguesden_dial_com](int $dial)(component)
+switch_int ($dial) {
+    case 0 : return(questscroll_fluffs:com_10);
+    case 1 : return(questscroll_fluffs:com_11);
+    case 2 : return(questscroll_fluffs:com_12);
+    case 3 : return(questscroll_fluffs:com_13);
+    case 4 : return(questscroll_fluffs:com_14);
+    case 5 : return(questscroll_fluffs:com_15);
+    case 6 : return(questscroll_fluffs:com_16);
+    case 7 : return(questscroll_fluffs:com_17);
+    case default : return(questscroll_fluffs:com_18);
+}
+
+[proc,roguesden_dial_get](int $dial)(int)
+switch_int ($dial) {
+    case 0 : return(%roguesden_puzzle_dial0);
+    case 1 : return(%roguesden_puzzle_dial1);
+    case 2 : return(%roguesden_puzzle_dial2);
+    case 3 : return(%roguesden_puzzle_dial3);
+    case 4 : return(%roguesden_puzzle_dial4);
+    case 5 : return(%roguesden_puzzle_dial5);
+    case 6 : return(%roguesden_puzzle_dial6);
+    case 7 : return(%roguesden_puzzle_dial7);
+    case default : return(%roguesden_puzzle_dial8);
+}
+
+[proc,roguesden_dial_set](int $dial, int $v)
+switch_int ($dial) {
+    case 0 : %roguesden_puzzle_dial0 = $v;
+    case 1 : %roguesden_puzzle_dial1 = $v;
+    case 2 : %roguesden_puzzle_dial2 = $v;
+    case 3 : %roguesden_puzzle_dial3 = $v;
+    case 4 : %roguesden_puzzle_dial4 = $v;
+    case 5 : %roguesden_puzzle_dial5 = $v;
+    case 6 : %roguesden_puzzle_dial6 = $v;
+    case 7 : %roguesden_puzzle_dial7 = $v;
+    case default : %roguesden_puzzle_dial8 = $v;
+}

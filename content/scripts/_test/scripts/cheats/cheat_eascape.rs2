@@ -2150,3 +2150,45 @@ p_delay(1);
 ~fade_in;
 p_delay(2);
 if_openoverlay(null);
+
+// ::rdstage <n> (test): the Rogues' Den maze. 0 takes you to Brian O'Richard and lets you in
+// (as if you had talked to him); 1-12 start a game (you must carry and wear nothing, as the
+// doorway wants; already in the maze it just moves you) and put you at: 1 the doorway, 2 the first
+// contortion bars, 3 the first ledge,
+// 4 the floor blades, 5 the mosaic tiles, 6 the grill room, 7 the gear door, 8 the flash powder
+// and guards, 9 the last two pendulums, 10 the wall safes, 11 the spin blade corridors, 12 the
+// room of death. Thieving and Agility are at your own levels there, so drains start from them.
+[debugproc,rdstage](int $n)
+if (p_finduid(uid) = false) return;
+%roguesden_access = 1;
+if ($n <= 0) {
+    if (%roguesden_state = 1) ~roguesden_leave(^rd_silent);
+    p_telejump(^roguesden_brian);
+    mes("Rogues' Den: Brian O'Richard has let you into the maze.");
+    return;
+}
+if (%roguesden_state ! 1 & ~roguesden_carrying = true) {
+    mes("Bank or drop everything you carry and wear first: nothing goes into the maze.");
+    return;
+}
+def_coord $to;
+switch_int ($n) {
+    case 1 : $to = 1_47_78_48_0;
+    case 2 : $to = 1_47_78_42_5;
+    case 3 : $to = 1_46_78_50_12;
+    case 4 : $to = 1_46_78_25_26;
+    case 5 : $to = 1_47_79_10_24;
+    case 6 : $to = 1_47_79_22_23;
+    case 7 : $to = 1_47_78_38_22;
+    case 8 : $to = 1_47_79_1_7;
+    case 9 : $to = 1_47_79_20_0;
+    case 10 : $to = 1_47_78_10_55;
+    case 11 : $to = 1_47_79_36_33;
+    case default : $to = 1_46_79_48_11;
+}
+p_telejump($to);
+p_delay(0);
+if (%roguesden_state ! 1) ~roguesden_start;
+%roguesden_last = coord;
+%roguesden_flags = setbit(%roguesden_flags, 0);
+mes("Rogues' Den: stage <tostring($n)>.");
