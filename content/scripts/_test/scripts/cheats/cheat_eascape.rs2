@@ -701,6 +701,12 @@ if (compare($name, "runemysteries") = 0) {
     }
     if (inv_freespace(inv) > 0) inv_add(inv, blackjack_oak, 1);
     ~feud_complete; // 500 coins, experience and quest complete scroll (quest_feud/feud_world.rs2)
+} else if (compare($name, "losttribe") = 0) {
+    if (%lt_stage >= ^lt_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~lt_complete; // experience, ring and quest complete scroll (quest_lost_tribe/lt_lumbridge.rs2)
 } else if (compare($name, "zogre") = 0) {
     if (%zogre >= ^zogre_complete) {
         mes("You've already done that quest.");
@@ -822,7 +828,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -2004,3 +2010,22 @@ if (npc_find(coord, tog_light_creature, 10, 0) = false) {
     return;
 }
 @tog_light_carry;
+
+// ::ltpack - what The Lost Tribe needs (the OSRS wiki's list): a pickaxe and a lit light source
+// (a candle and a tinderbox); you need Goblin Diplomacy and Rune Mysteries done, 13 Agility, 13
+// Thieving and 17 Mining
+[debugproc,ltpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(bronze_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(lit_candle, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+~questpack_done("The Lost Tribe", $banked);
+
+// ::ltstage <n> - sets The Lost Tribe's stage (%lt_stage; lost_tribe.constant: 10 started, 20 Bob
+// told, 30 permission, 35 dug, 40 brooch shown, 41 Reldo, 43 book read, 44 generals, 45 Duke told,
+// 46 met Mistag, 47 silverware missing, 48 robes, 49 silverware found, 50 treaty, 100 complete)
+[debugproc,ltstage](int $n)
+if (p_finduid(uid) = false) return;
+~lt_set($n);
+mes("The Lost Tribe stage: <tostring($n)>");

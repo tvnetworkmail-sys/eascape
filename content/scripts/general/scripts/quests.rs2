@@ -301,6 +301,9 @@ if (%tog_juna_bowl = ^tog_complete) {
 if (%zogre >= ^zogre_complete) {
     $questpoints = add($questpoints, ^zogre_questpoints);
 }
+if (%lt_stage >= ^lt_complete) {
+    $questpoints = add($questpoints, ^lt_questpoints);
+}
 if (%onesmallfavour >= ^osf_complete) {
     $questpoints = add($questpoints, ^osf_questpoints);
 }
@@ -410,6 +413,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:ics_little, %ics_little_var, ^ics_complete);
 ~send_quest_progress_colour(questlist:tog, %tog_juna_bowl, ^tog_complete);
 ~send_quest_progress_colour(questlist:zogre, %zogre, ^zogre_complete);
+~send_quest_progress_colour(questlist:lost_tribe, %lt_stage, ^lt_complete);
 ~send_quest_progress_colour(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);

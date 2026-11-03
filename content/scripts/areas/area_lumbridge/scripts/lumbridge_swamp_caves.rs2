@@ -108,6 +108,8 @@ return(false);
 
 [proc,swamp_cave_in_dark](coord $coord)(boolean)
 if (coordy($coord) ! 0) return(false);
+// The Lost Tribe's tunnels and the Dorgeshuun mine (the OSRS wiki: both need a light)
+if (coordx($coord) >= 3221 & coordx($coord) <= 3330 & coordz($coord) >= 9600 & coordz($coord) <= 9661) return(true);
 if (coordx($coord) < 3136 | coordx($coord) > 3263) return(false);
 if (coordz($coord) < 9536 | coordz($coord) > 9602) return(false);
 return(true);
@@ -139,6 +141,7 @@ settimer(swamp_cave_dark, 1);
 
 [timer,swamp_cave_dark]
 ~swamp_cave_dark_refresh;
+~lt_trap_check; // The Lost Tribe (quest_lost_tribe/lt_caves.rs2)
 ~swamp_cave_wallbeast_check;
 if (%swamp_cave_dark = 2 & map_clock >= %swamp_cave_bites) {
     sound_synth(insect_bites, 1, 0);
@@ -153,6 +156,8 @@ if (%swamp_cave_dark = 2 & map_clock >= %swamp_cave_bites) {
 [mapzoneexit,0_50_149] ~swamp_cave_dark_refresh;
 [mapzoneexit,0_49_150] ~swamp_cave_dark_refresh;
 [mapzoneexit,0_50_150] ~swamp_cave_dark_refresh;
+[mapzone,0_51_150] ~swamp_cave_dark_refresh; @music_playbyregion(coord);
+[mapzoneexit,0_51_150] ~swamp_cave_dark_refresh;
 
 // ---------------------------------------------------------------- the candle seller
 [opnpc1,swamp_candle_guy]

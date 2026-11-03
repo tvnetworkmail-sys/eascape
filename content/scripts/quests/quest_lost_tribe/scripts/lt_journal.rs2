@@ -1,0 +1,39 @@
+// EASCape: The Lost Tribe's journal (2009scape's LostTribe.drawJournal words)
+[if_button,questlist:lost_tribe]
+def_int $s = %lt_stage;
+if ($s = ^lt_not_started) {
+    ~quest_journal("The Lost Tribe", "@dbl@I can start this quest by speaking to @dre@Sigmund@dbl@ in @dre@Lumbridge|@dre@Castle.|@dbl@I must have completed:|<~lt_req("Rune Mysteries", %runemysteries, ^runemysteries_complete)>|<~lt_req("Goblin Diplomacy", %goblinquest, ^gobdip_complete)>|@dbl@and have:|<~lt_req("Level 17 Mining", stat_base(mining), 17)>|<~lt_req("Level 13 Agility", stat_base(agility), 13)>|<~lt_req("Level 13 Thieving", stat_base(thieving), 13)>");
+    return;
+}
+def_string $t = "";
+$t = append($t, ~lt_line("Sigmund said I should ask around town and see", "if anyone had seen what happened in the cellar.", "", ~lt_done(^lt_bob_told)));
+if ($s >= ^lt_bob_told) $t = append($t, ~lt_line("I found out that someone had seen a goblin-like creature", "in the cellar. I should go speak to the Duke about this.", "", ~lt_done(^lt_permission)));
+if ($s >= ^lt_permission) $t = append($t, ~lt_line("The Duke gave me permission to investigate the tunnel. I should", "get down into the cellar and try to unblock the tunnel.", "", ~lt_done(^lt_brooch_shown)));
+if ($s >= ^lt_brooch_shown) $t = append($t, ~lt_line("The Duke asked me to speak with the librarian in Varrock", "and see if he can identify the brooch.", "", ~lt_done(^lt_book_read)));
+if ($s >= ^lt_book_read) $t = append($t, ~lt_line("I should go speak with some goblins who might be able", "to teach me more about the Dorgeshuun. Perhaps the", "generals in Goblin Village can help.", ~lt_done(^lt_generals)));
+if ($s >= ^lt_generals) $t = append($t, ~lt_line("I should return to Duke Horacio with my findings.", "", "", ~lt_done(^lt_duke_generals)));
+if ($s >= ^lt_duke_generals) $t = append($t, ~lt_line("I should try to make contact with the Dorgeshuun.", "", "", ~lt_done(^lt_contact)));
+if ($s >= ^lt_contact) $t = append($t, ~lt_line("I need to return to Duke Horacio and ask him to stop", "the war!", "", ~lt_done(^lt_silverware)));
+if ($s >= ^lt_silverware) $t = append($t, ~lt_line("Duke Horacio said the goblins stole some silverware.", "I need to find it if I want to stop the war.", "", ~lt_done(^lt_found)));
+if ($s >= ^lt_robes) $t = append($t, ~lt_line("I found H.A.M. robes in Sigmund's chest. Perhaps", "I should check the H.A.M. hideout behind the castle", "for the missing silverware.", ~lt_done(^lt_found)));
+if ($s >= ^lt_found) $t = append($t, ~lt_line("I found the silverware in the H.A.M. hideout.", "I should go inform Duke Horacio immediately!", "", ~lt_done(^lt_treaty)));
+if ($s >= ^lt_treaty) $t = append($t, ~lt_line("The Duke gave me a peace treaty to take to", "the cave goblins. I should do so at once!", "", ~lt_done(^lt_complete)));
+if ($s >= ^lt_complete) $t = append($t, "|@red@QUEST COMPLETE!");
+~quest_journal("The Lost Tribe", $t);
+
+// a done line is struck through
+[proc,lt_line](string $a, string $b, string $c, boolean $done)(string)
+def_string $col = "@dbl@";
+if ($done = true) $col = "@str@";
+def_string $t = "<$col><$a>|";
+if (string_length($b) > 0) $t = append($t, "<$col><$b>|");
+if (string_length($c) > 0) $t = append($t, "<$col><$c>|");
+return(append($t, "|"));
+
+[proc,lt_req](string $name, int $have, int $need)(string)
+if ($have >= $need) return("@str@<$name>");
+return("@dre@<$name>");
+
+[proc,lt_done](int $stage)(boolean)
+if (%lt_stage >= $stage) return(true);
+return(false);

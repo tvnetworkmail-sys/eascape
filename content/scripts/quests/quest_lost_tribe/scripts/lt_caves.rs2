@@ -1,0 +1,226 @@
+// EASCape: The Lost Tribe under Lumbridge - the tunnels, the symbols, the traps, Mistag, Kazgar,
+// the Dorgeshuun mine and the treaty's signing. Sources: the OSRS wiki's transcript, 2009scape
+// (CaveZone.kt: the trap squares and what they do; GoblinFollower.kt: where Mistag and Kazgar take
+// you; MistagDialogue, KazgarDialogue; LostTribeCutscene.kt: who stands where), the OSRS wiki's
+// symbol page (which symbol is which tribe). Ours is marked.
+
+// ---------------------------------------------------------------- the brooch
+// lies at the first fork of the tunnel (map obj spawn, m50_150); the OSRS wiki
+[opheld1,lost_tribe_brooch]
+~objbox(lost_tribe_brooch, "A stone brooch with a symbol on it.", 250, 0, 0); // ours: the cache's examine
+
+// ---------------------------------------------------------------- the symbols
+// the OSRS wiki: the Rekeshuun (north), Idithuun (south), Ekeleshuun (east) and Narogoshuun (west);
+// in the game it shows the symbol itself (ours: a line naming it)
+[oploc1,swamp_cavewall_northmarker] ~lt_symbol("Rekeshuun");
+[oploc1,swamp_cavewall_southmarker] ~lt_symbol("Idithuun");
+[oploc1,swamp_cavewall_eastmarker] ~lt_symbol("Ekeleshuun");
+[oploc1,swamp_cavewall_westmarker] ~lt_symbol("Narogoshuun");
+
+[proc,lt_symbol](string $tribe)
+~mesbox("A symbol is carved into the wall here. It is the symbol of the <$tribe> tribe.");
+
+// ---------------------------------------------------------------- the traps
+// 2009scape's trap squares: a third of the time the floor gives way and you land in the swamp
+// caves, otherwise rocks fall on you for 1-7 (the messages are ours)
+[proc,lt_trap_square](coord $c)(boolean)
+switch_coord ($c) {
+    case 0_50_150_41_14, 0_50_150_57_16, 0_50_150_58_33, 0_50_150_44_35, 0_50_150_33_26, 0_50_150_49_46, 0_50_150_60_38, 0_51_150_9_41, 0_51_150_11_31, 0_51_150_23_31, 0_51_150_38_18 : return(true);
+}
+return(false);
+
+// from the swamp caves' darkness timer, every tick
+[proc,lt_trap_check]
+if (~lt_trap_square(coord) = false) {
+    %lt_trap = null;
+    return;
+}
+if (%lt_trap = coord) return;
+%lt_trap = coord;
+if (random(3) = 0) {
+    mes("The floor gives way beneath you!");
+    anim(desert_comedy_fall, 0);
+    spotanim_pl(mole_mude_hole_spotanim, 0, 0);
+    queue(lt_trap_fall, 0, 0);
+    return;
+}
+mes("Rocks fall from the ceiling!");
+spotanim_pl(mm_roofcollapse, 0, 0);
+~damage_self(calc(random(7) + 1));
+
+[queue,lt_trap_fall]
+p_delay(4);
+p_telejump(0_49_149_23_10);
+anim(null, 0);
+~swamp_cave_dark_refresh;
+
+// ---------------------------------------------------------------- Mistag
+[opnpc1,lost_tribe_mistag]
+if (%lt_stage < ^lt_contact) {
+    ~chatnpc("<p,shock>Who...who are you? How did you get in here?");
+    ~chatnpc("<p,shock>Help! A surface-dweller this deep in our mines? We will all be destroyed!");
+    return;
+}
+~chatnpc("<p,quiz>Hello, friend?");
+if (%lt_stage = ^lt_treaty & inv_total(inv, lost_tribe_treaty) > 0) {
+    ~chatplayer("<p,neutral>I have a peace treaty from the Duke of Lumbridge.");
+    ~chatnpc("<p,quiz>A peace treaty? Then you will not invade?");
+    ~chatplayer("<p,neutral>No. As long as you stick to the terms of this treaty there will be no conflict. The Duke of Lumbridge wants to meet your ruler to sign it.");
+    ~chatnpc("<p,happy>I will summon Ur-tag, our headman, at once.");
+    @lt_signing;
+}
+def_int $choice;
+if (%lt_stage >= ^lt_silverware & %lt_stage < ^lt_complete) {
+    $choice = ~p_choice4("May I mine the rocks here?", 1, "Some silverware has gone missing from the castle cellar...", 2, "Where is the silverware you stole from the castle cellar?", 3, "Can you show me the way out of the mines?", 4);
+} else {
+    $choice = ~p_choice2("May I mine the rocks here?", 1, "Can you show me the way out of the mines?", 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>May I mine the rocks here?");
+        if (%lt_stage >= ^lt_complete) {
+            ~chatnpc("<p,happy>Certainly, friend!"); // 2009scape
+        } else {
+            ~chatnpc("<p,neutral>No offence, but we will not let you mine here until there is peace between the humans and the Dorgeshuun.");
+        }
+    case 2 :
+        ~chatplayer("<p,neutral>Some silverware has gone missing from the castle, and the Duke thinks you stole it!");
+        ~chatnpc("<p,shock>Oh no! We would never do such a thing!");
+        ~chatnpc("<p,sad>I assure you we took nothing from the cellar. You must convince the Duke we are innocent!");
+    case 3 :
+        ~chatplayer("<p,angry>Where's the silverware you stole from the castle cellar?");
+        ~chatnpc("<p,shock>What? We didn't take anything!");
+        ~chatplayer("<p,angry>You expect me to believe that? Perhaps Sigmund was right: you're just thieving little goblins!");
+        ~chatnpc("<p,neutral>Why would we want to steal silver? As you see we have much silver already in our mines!");
+        ~chatplayer("<p,neutral>Well, the Duke says he will attack you unless the silverware is returned.");
+        ~chatnpc("<p,sad>The last thing we want is war! If we had anything of yours, we would return it at once. But we don't!");
+    case 4 :
+        ~chatplayer("<p,quiz>Can you show me the way out of the mines?");
+        if (%lt_stage >= ^lt_complete) {
+            ~chatnpc("<p,happy>Certainly!"); // 2009scape
+        } else {
+            ~chatnpc("<p,neutral>Certainly. Please hurry, you must avert the war!");
+        }
+        mes("Mistag shows you the way through the tunnels.");
+        ~lt_guide_tele(0_50_150_32_10);
+}
+
+[opnpcu,lost_tribe_mistag]
+if (last_useitem ! lost_tribe_brooch) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,quiz>Is this your brooch?");
+if (%lt_stage < ^lt_complete) {
+    ~chatnpc("<p,neutral>We have more important things to think about than a brooch right now. We must prevent a war!");
+    return;
+}
+// the OSRS wiki: giving it back gets you a mining helmet (ours: the words)
+~chatnpc("<p,happy>Yes! I dropped it when I fled from your castle. Thank you, friend. Please take this helmet in return; it will light your way in the tunnels.");
+inv_del(inv, lost_tribe_brooch, 1);
+~lt_give(cave_goblin_mining_helmet_unlit);
+~objbox(cave_goblin_mining_helmet_unlit, "Mistag gives you a mining helmet.", 250, 0, 0);
+
+// the goblin bow in front of Mistag (the OSRS wiki); the salute frightens him
+[proc,lt_emote](boolean $bow)
+if (%lt_stage ! ^lt_duke_generals) return;
+if (npc_find(coord, lost_tribe_mistag, 4, 0) = false) return;
+if ($bow = true) {
+    queue(lt_mistag_bow, 0, 3);
+} else {
+    queue(lt_mistag_salute, 0, 3);
+}
+
+[queue,lt_mistag_salute]
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,shock>Eeek! The war-dance!");
+
+[queue,lt_mistag_bow]
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,shock>A human knows ancient greeting?");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,happy>Perhaps you are friend after all!");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,happy>Greetings, friend. I am sorry I panicked when I saw you.");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,neutral>Our legends tell of the surface as a place of horror and violence, where the gods forced us to fight in terrible battles.");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,neutral>When I saw a surface-dweller appear I was afraid it was a return to the old days!");
+~chatplayer("<p,quiz>Did you break in to the castle cellar?");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,neutral>It was an accident. We were following a seam of iron and suddenly we found ourselves in a room!");
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,sad>We blocked up our tunnel behind us and ran back here. Then we did what cave goblins always do when there is a problem: we hid and hoped it would go away.");
+~lt_set(^lt_contact);
+~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,sad>We meant no harm! Please tell the ruler of the above- people that we want to make peace.");
+
+// ---------------------------------------------------------------- Kazgar
+[opnpc1,lost_tribe_guide]
+switch_int (~p_choice2("Who are you?", 1, "Can you show me the way to the mine?", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,neutral>I'm Kazgar, I guide people through the mines.");
+    case 2 :
+        ~chatplayer("<p,quiz>Can you show me the way to the other side?");
+        ~chatnpc("<p,happy>Certainly!");
+        ~lt_guide_tele(0_51_150_55_16);
+}
+
+// 2009scape: a fade to black and you're there
+[proc,lt_guide_tele](coord $c)
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump($c);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~swamp_cave_dark_refresh;
+
+// ---------------------------------------------------------------- the mine
+// called by every mining swing: Mistag's people let no one mine until there's peace
+[proc,lt_mine_blocked]()(boolean)
+if (%lt_stage >= ^lt_complete) return(false);
+switch_loc (loc_type) {
+    case loc_6943, loc_6944, loc_6945, loc_6946 :
+        ~chatnpc_specific("Mistag", lost_tribe_mistag, "<p,neutral>We won't permit surface-dwellers to mine here until there is peace between our peoples.");
+        return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- the signing
+// 2009scape's LostTribeCutscene: the Lumbridge dining room (region 12850) with the Duke, Mistag,
+// Ur-tag and Sigmund outside the door. Ours: no instance, so the four stand in the real dining room
+// for the length of the scene.
+[label,lt_signing]
+if_close;
+~fade_out;
+p_delay(3);
+p_telejump(0_50_50_7_21);
+npc_add(0_50_50_6_23, lost_tribe_cutscene_duke, 60);
+npc_facesquare(0_50_50_7_21);
+npc_add(0_50_50_7_20, lost_tribe_cutscene_mistag, 60);
+npc_facesquare(0_50_50_6_23);
+npc_add(0_50_50_6_21, lost_tribe_cutscene_urtag, 60);
+npc_facesquare(0_50_50_6_23);
+npc_add(0_50_50_13_22, lost_tribe_cutscene_sigmund, 60);
+npc_facesquare(0_50_50_7_22);
+facesquare(0_50_50_6_23);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~mesbox("@dre@~ The Signing of the Lumbridge-Dorgeshuun Treaty ~");
+anim(emote_bow, 0);
+~chatplayer("<p,happy>Your grace, I present Ur-tag, headman of the Dorgeshuun.");
+~chatnpc_specific("Duke Horacio", lost_tribe_cutscene_duke, "<p,happy>Welcome, Ur-tag. I am sorry that your race came under suspicion.");
+~chatnpc_specific("Duke Horacio", lost_tribe_cutscene_duke, "<p,angry>I assure you that the warmongering element has been dealt with.");
+~chatnpc_specific("Ur-tag", lost_tribe_cutscene_urtag, "<p,neutral>I apologize for the damage to your cellar. I will send workers to repair the hole.");
+~chatnpc_specific("Duke Horacio", lost_tribe_cutscene_duke, "<p,happy>No, let it stay. It can be a route of commerce between our lands.");
+~chatnpc_specific("Duke Horacio", lost_tribe_cutscene_duke, "<p,happy><displayname>, Lumbridge is in your debt. Please accept this ring as a token of my thanks.");
+~chatnpc_specific("Duke Horacio", lost_tribe_cutscene_duke, "<p,neutral>It is enchanted to save you in your hour of need.");
+~chatnpc_specific("Ur-tag", lost_tribe_cutscene_urtag, "<p,happy>I too thank you. Accept the freedom of the Dorgeshuun mines.");
+~chatnpc_specific("Ur-tag", lost_tribe_cutscene_urtag, "<p,neutral>These are strange times. I never dreamed that I would see the surface, still less that I would be on friendly terms with its people.");
+~chatnpc_specific("Sigmund", lost_tribe_cutscene_sigmund, "<p,angry>Prattle on, goblin.");
+~chatnpc_specific("Sigmund", lost_tribe_cutscene_sigmund, "<p,angry>Soon you will be destroyed!");
+~lt_signing_clear;
+~lt_complete;
+
+[proc,lt_signing_clear]
+if (npc_find(0_50_50_7_21, lost_tribe_cutscene_duke, 12, 0) = true) npc_del;
+if (npc_find(0_50_50_7_21, lost_tribe_cutscene_mistag, 12, 0) = true) npc_del;
+if (npc_find(0_50_50_7_21, lost_tribe_cutscene_urtag, 12, 0) = true) npc_del;
+if (npc_find(0_50_50_7_21, lost_tribe_cutscene_sigmund, 12, 0) = true) npc_del;

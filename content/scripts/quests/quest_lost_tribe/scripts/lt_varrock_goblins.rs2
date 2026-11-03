@@ -1,0 +1,155 @@
+// EASCape: The Lost Tribe - Reldo, the goblin symbol book and the goblin generals. Sources: the
+// OSRS wiki's transcripts (the quest's and the book's), 2009scape (the bookcase gives the book
+// from the Reldo stage on). Ours is marked.
+
+// called first by Reldo's own Talk-to
+[proc,lt_ask_reldo]()(boolean)
+if (%lt_stage ! ^lt_brooch_shown | inv_total(inv, lost_tribe_brooch) = 0) return(false);
+if (~p_choice2("What can you tell me about this brooch?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>What can you tell me about this brooch?");
+~chatnpc("<p,neutral>I've never seen that symbol before. Where did you find it?");
+~chatplayer("<p,neutral>In a cave beneath Lumbridge.");
+~chatnpc("<p,quiz>Very odd. Have you any idea how it got there?");
+~chatplayer("<p,neutral>A goblin might have dropped it.");
+~chatnpc("<p,neutral>I've never heard of a goblin carrying a brooch like this. But just a minute...");
+~chatnpc("<p,neutral>The other day I filed a book about ancient goblin tribes. It's somewhere at the west end of the library, I think. Maybe that will be of some use.");
+~lt_set(^lt_reldo);
+return(true);
+
+[oploc1,lost_tribe_bookcase]
+if (%lt_stage >= ^lt_reldo & inv_total(inv, lost_tribe_book) = 0 & inv_total(bank, lost_tribe_book) = 0) {
+    ~chatplayer("<p,happy>'A History of the Goblin Race'. This must be it.");
+    ~lt_give(lost_tribe_book);
+    ~objbox(lost_tribe_book, "You take the book from the bookcase.", 250, 0, 0);
+    return;
+}
+mes("You search the bookcase but find nothing of interest."); // ours
+
+// ---------------------------------------------------------------- the book
+[opheld1,lost_tribe_book]
+if (%lt_stage = ^lt_reldo) {
+    // ours: the player's line comes before the pages rather than after
+    ~mesbox("You flip through the book's pages. Fortunately, there are pictures.");
+    ~chatplayer("<p,shock>Hey... The symbol of the 'Dorgeshuun' tribe looks just like the symbol on the brooch I found.");
+    ~lt_set(^lt_book_read);
+}
+%book_page = 0;
+%open_book = lost_tribe_book;
+@book_flip_page(0, 0, 4, lt_book);
+
+// the OSRS wiki's transcript; the symbols themselves are pictures in the game, ours are the names
+[proc,lt_book]
+switch_int (%book_page) {
+    case 0 : ~book("A History of the Goblin Race", "Goblin tradition holds that their race was created by a war-god in order to fight a war against other gods.||(They never name their god, so whether it is the same as any of the gods worshipped by the other races is unknown.)||The legends also speak of goblins fighting against goblins during the wars, so it is likely that gods other than their creators used them as footsoldiers.");
+    case 1 : ~book("A History of the Goblin Race", "Although goblins are still warlike, it is probable that in earlier ages they were more organised than they are now, especially if they were under the direct command of one or more gods.||This is corroborated by finds unearthed at various archaeological sites, including the large excavation east of Varrock.");
+    case 2 : ~book("A History of the Goblin Race", "Armour and weapons have been found, obviously made to fit goblins but far more well-made than their current equipment.||Almost every piece of ancient goblin equipment has one of a number of symbols on it, and by correlating these symbols with the sketchy records that survive from the Third Age it has been possible to identify twelve distinct goblin tribes or regiments.");
+    case 3 : ~book("A History of the Goblin Race", "The separate identities of the tribes have long since dissolved and no goblins remember the symbols, although their generals may still recognise the ancient tribal names.||In the following pages I present a list of the tribes and their symbols.||-Thorobshuun-|Goblins of the Hills|-Garagorshuun-|Goblins of the Sea|-Rekeshuun-|Goblins of the North");
+    case 4 : ~book("A History of the Goblin Race", "-Drogokishuun-|Goblins of the Fierce Blades|-Huzamogaarb-|Live-Flesh Eaters of the Chaos God|-Saragorgak-|Footsoldiers of Holy Wrath|-Ekeleshuun-|Goblins of the East|-Idithuun-|Goblins of the South|-Narogoshuun-|Goblins of the West|-Dorgeshuun-|Goblins of the Strong Spears|-Horogothgar-|Eaters of Manflesh|-Yurkolgokh-|The Flatulent");
+}
+
+// ---------------------------------------------------------------- the goblin generals
+// jumped to by either general's own Talk-to while the book has been read; $back is their usual talk
+[label,lt_generals_start](label $back)
+if (~p_choice2("Have you ever heard of the Dorgeshuun?", 1, "Something else.", 2) = 2) jump($back);
+~chatplayer("<p,quiz>Have you ever heard of the Dorgeshuun?");
+~lt_bentnoze("Dorgeshuun? That old goblin legend. Lost tribe.");
+~lt_wartface("In time of much-war there many tribes. Big High War-God send Dorgesh tribe to fight beardy-short-people in mountains.");
+~lt_bentnoze("No no, he send them to fight tall people with biting blades, that what I hear.");
+~lt_wartface("It was beardy-short-people, that how legend go.");
+@lt_generals_1;
+
+[proc,lt_bentnoze](string $line)
+~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat><$line>");
+
+[proc,lt_wartface](string $line)
+~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat><$line>");
+
+[label,lt_generals_1]
+switch_int (~p_choice3("Make up your minds!", 1, "Do you want me to decide for you again?", 2, "It doesn't really matter.", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>Make up your minds!");
+        ~lt_bentnoze("It was tall people! That what old storyteller say!");
+        ~lt_wartface("No, beardy-short-people. That how legend always go, stupid.");
+        ~lt_bentnoze("You stupid!");
+        @lt_generals_1;
+    case 2 :
+        ~chatplayer("<p,quiz>Do you want me to decide for you again?");
+        ~lt_bentnoze("That most stupid idea yet. If it happen it either happen one way or the other. You can't just decide which.");
+        ~lt_wartface("Yeah even goblins know that.");
+        @lt_generals_1;
+}
+~chatplayer("<p,quiz>It doesn't really matter. What happened to them?");
+~lt_wartface("Well, they say, 'We not want to fight,' so god punish them.");
+~lt_bentnoze("That silly. No goblin ever say that.");
+~lt_wartface("What happen then?");
+~lt_bentnoze("They lose battle, that why god punish them.");
+~lt_wartface("Ha ha! If they lost battle they all be dead!");
+~lt_bentnoze("No no, they losing so they run away, and Big High War-God punish them for running away.");
+@lt_generals_2;
+
+[label,lt_generals_2]
+switch_int (~p_choice3("Who were they fighting again?", 1, "What kind of god would punish them for refusing to fight?", 2, "Well either way they refused to fight.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who were they fighting again?");
+        ~lt_wartface("It was beardy-short-people in mountains.");
+        ~lt_bentnoze("No no, it was tall people.");
+        @lt_generals_2;
+    case 2 :
+        ~chatplayer("<p,quiz>What kind of god would punish them for refusing to fight?");
+        ~lt_bentnoze("Shh! Must not question Big High War-God!");
+        ~lt_wartface("No, because he much bigger than us.");
+        @lt_generals_2;
+}
+~chatplayer("<p,neutral>Well either way they refused to fight.");
+~lt_wartface("Yeah I suppose so.");
+~lt_bentnoze("Anyway then Big High War-God punish them. He turn their insides to stone.");
+~lt_wartface("Ha ha ha! That silly!");
+~lt_bentnoze("Not as silly as green armour! What happen then?");
+~lt_wartface("He put them inside stone! Big hole open in ground and they all go into cave.");
+~lt_bentnoze("That not punishment! Caves nice and cool.");
+~lt_wartface("But then he close cave so they not get out! You not want to stay in cave all the time.");
+@lt_generals_3;
+
+[label,lt_generals_3]
+switch_int (~p_choice3("Why were they punished again?", 1, "So do goblins make their own tunnels?", 2, "Well I found a brooch underground...", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why were they punished again?");
+        ~lt_wartface("It because they run away from fight.");
+        ~lt_bentnoze("No, it because they refuse to fight night before battle.");
+        @lt_generals_3;
+    case 2 :
+        ~chatplayer("<p,quiz>So do goblins make their own tunnels?");
+        ~lt_bentnoze("What? Make our own tunnels?");
+        ~lt_wartface("We hadn't thought of that.");
+        @lt_generals_3;
+}
+~chatplayer("<p,neutral>Well I found a brooch underground, and I looked up the symbol and it was the symbol of the Dorgeshuun.");
+~lt_bentnoze("That not look like goblin brooch.");
+~lt_wartface("Goblins not wear jewellery.");
+~lt_bentnoze("Well if it Dorgeshuun tribe they not know who won big wars. You should greet them with goblin victory dance!");
+~lt_wartface("No no, you greet them with goblin tribal bow.");
+~lt_bentnoze("Doing bow make you look like a wimp.");
+~lt_wartface("It how tribes greet each other in old days.");
+~lt_bentnoze("Only if they wimpy tribes! Goblin salute strong!");
+@lt_generals_4;
+
+[label,lt_generals_4]
+switch_int (~p_choice3("So why is the Dorgeshuun tribe underground?", 1, "Wait, you say YOU won the big wars?", 2, "Well why not show me both greetings?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>So why is the Dorgeshuun tribe underground?");
+        ~lt_bentnoze("They punished by Big High War-God.");
+        @lt_generals_4;
+    case 2 :
+        ~chatplayer("<p,quiz>Wait, you say YOU won the big wars?");
+        ~lt_bentnoze("Well we must have done! We goblins! Goblins always win!");
+        ~lt_wartface("Actually we not know who won.");
+        ~lt_bentnoze("It was goblins I say!");
+        @lt_generals_4;
+}
+~chatplayer("<p,quiz>Well why not show me both greetings?");
+~lt_wartface("That good idea. Watch.");
+~lt_set(^lt_generals);
+~mesbox("The goblins show you the Goblin Victory Salute and Goblin Bow.");
+~chatplayer("<p,happy>Thanks.");
+~lt_bentnoze("Bye then.");
+~lt_wartface("Bye.");

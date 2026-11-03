@@ -15,6 +15,7 @@
 [oploc3,gemrock] @mining_continue(get_ore_gem_rock);
 
 [label,mining_firstswing](label $get_ore)
+if (~lt_mine_blocked = true) return; // The Lost Tribe: the Dorgeshuun mine
 def_int $is_empty = loc_param(mining_rock_empty);
 if ($is_empty = ^true) {
     anim(null, 0);

@@ -1,0 +1,99 @@
+// EASCape: the Lumbridge Swamp Caves' fishing spots (New Appointment in Lumbridge, 31 May 2005).
+// Void (fishing_spots.tables: Net for frog spawn, Bait for slimy eels and cave eels; fishing.tables:
+// frog spawn 33 Fishing, 75 xp, cave eel 38 Fishing, 80 xp, and their catch chances), the OSRS wiki
+// (frog spawn heals 3-6, cave eel 8-12; cooking a cave eel: 38 Cooking, 115 xp). Ours is marked.
+
+[opnpc1,0_49_149_cavefish] @lt_fish_net;
+[opnpc1,0_50_149_cavefish] @lt_fish_net;
+[opnpc3,0_49_149_cavefish] @lt_fish_bait;
+[opnpc3,0_50_149_cavefish] @lt_fish_bait;
+
+[label,lt_fish_net]
+if (stat(fishing) < 33) {
+    anim(null, 0);
+    ~mesbox("You need at least 33 Fishing to catch frog spawn."); // ours
+    return;
+}
+if (~check_fish_equipment(net) = false) return;
+if (inv_freespace(inv) < 1) {
+    anim(null, 0);
+    ~mesbox("You can't carry any more fish.");
+    return;
+}
+if (%action_delay < map_clock) {
+    %action_delay = calc(map_clock + 5);
+    mes("You cast out your net...");
+    anim(human_smallnet, 0);
+} else if (%action_delay = map_clock) {
+    anim(human_smallnet, 0);
+    if (stat_random(fishing, 16, 96) = true) {
+        inv_add(inv, giant_frogspawn, 1);
+        stat_advance(fishing, 750);
+        mes("You catch some frog spawn."); // ours
+    }
+    %action_delay = calc(map_clock + 5);
+}
+p_opnpc(1);
+
+[label,lt_fish_bait]
+if (stat(fishing) < 28) {
+    anim(null, 0);
+    ~mesbox("You need at least 28 Fishing to catch these fish.");
+    return;
+}
+if (~check_fish_equipment(fishing_rod) = false) return;
+if (inv_total(inv, fishing_bait) = 0) {
+    anim(null, 0);
+    ~mesbox("You don't have any bait left.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    anim(null, 0);
+    ~mesbox("You can't carry any more fish.");
+    return;
+}
+if (%action_delay < map_clock) {
+    %action_delay = calc(map_clock + 5);
+    mes("You cast out your line...");
+    anim(human_fishing_casting, 0);
+} else if (%action_delay = map_clock) {
+    anim(human_fish_onspot, 0);
+    // a cave eel first when you're good enough, otherwise a slimy eel (Void rolls the best first)
+    if (stat(fishing) >= 38 & stat_random(fishing, 10, 80) = true) {
+        inv_del(inv, fishing_bait, 1);
+        inv_add(inv, raw_cave_eel, 1);
+        stat_advance(fishing, 800);
+        mes("You catch a cave eel."); // ours
+    } else if (stat_random(fishing, 10, 80) = true) {
+        inv_del(inv, fishing_bait, 1);
+        inv_add(inv, mort_slimey_eel, 1);
+        stat_advance(fishing, 650);
+        mes("You catch a slimey swamp eel.");
+    }
+    %action_delay = calc(map_clock + 5);
+}
+p_opnpc(3);
+
+// ---------------------------------------------------------------- eating
+[opheld1,cave_eel] @player_consume_item(lt_eat_cave_eel, 2, 3);
+[opheld1,giant_frogspawn] @player_consume_item(lt_eat_frogspawn, 2, 3);
+
+[label,lt_eat_cave_eel]
+mes("You eat the cave eel. It was a bit slimy."); // ours
+sound_synth(eat, 1, 0);
+anim(human_eat, 0);
+inv_delslot(inv, last_slot);
+if (stat(hitpoints) < stat_base(hitpoints)) {
+    stat_heal(hitpoints, calc(random(5) + 8), 0);
+    mes("It heals some health.");
+}
+
+[label,lt_eat_frogspawn]
+mes("You eat the frogspawn. Yuck."); // 2009scape
+sound_synth(eat, 1, 0);
+anim(human_eat, 0);
+inv_delslot(inv, last_slot);
+if (stat(hitpoints) < stat_base(hitpoints)) {
+    stat_heal(hitpoints, calc(random(4) + 3), 0);
+    mes("It heals some health.");
+}

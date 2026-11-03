@@ -1,0 +1,372 @@
+// EASCape: The Lost Tribe in Lumbridge. Sources: the OSRS wiki's transcript (every line said here
+// unless marked), 2009scape's quest (thelosttribe/: the stages, the cellar's coordinates, the chest
+// and crate, Sigmund's key) and the 377 cache (the cellar wall, Sigmund and Kazgar follow
+// %lost_tribe_quest). Ours is marked.
+
+// %lt_stage and the cache's %lost_tribe_quest together (2009scape's LostTribe.getConfig)
+[proc,lt_set](int $stage)
+%lt_stage = $stage;
+if ($stage >= ^lt_complete) %lost_tribe_quest = 11;
+else if ($stage >= ^lt_treaty) %lost_tribe_quest = 9;
+else if ($stage >= ^lt_contact) %lost_tribe_quest = 8;
+else if ($stage >= ^lt_generals) %lost_tribe_quest = 7;
+else if ($stage >= ^lt_dug) %lost_tribe_quest = 4;
+else if ($stage > 0) %lost_tribe_quest = 1;
+else %lost_tribe_quest = 0;
+
+[proc,lt_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+}
+
+[proc,lt_sigmund_says](string $line)
+~chatnpc_specific("Sigmund", lost_tribe_sigmund_there, $line);
+
+// ---------------------------------------------------------------- Sigmund
+[opnpc1,lost_tribe_sigmund]
+if (%lt_stage = ^lt_treaty) {
+    mes("Sigmund is ignoring you.");
+    return;
+}
+~chatnpc("<p,neutral>Can I help you?");
+def_string $topic = ~lt_sigmund_topic;
+if (string_length($topic) = 0) {
+    if (~p_choice2("Do you have any quests for me?", 1, "Who are you?", 2) = 2) @lt_sigmund_who;
+    ~chatplayer("<p,quiz>Do you have any quests for me?");
+    if (%lt_stage = ^lt_complete) {
+        ~chatnpc("<p,neutral>No, not right now."); // 2009scape
+        return;
+    }
+    if (%goblinquest < ^gobdip_complete | %runemysteries < ^runemysteries_complete) {
+        ~chatnpc("<p,neutral>I hear the Duke has a task for an adventurer. Otherwise, if you want to make yourself useful, there are always evil monsters to slay."); // 2009scape
+        ~chatplayer("<p,neutral>Okay, I might just do that.");
+        return;
+    }
+    ~chatnpc("<p,neutral>There was recently some damage to the castle cellar. Part of the wall has collapsed.");
+    ~chatnpc("<p,neutral>The Duke insists that it was an earthquake, but I think some kind of monsters are to blame.");
+    if (~p_choice2("Yes.", 1, "No.", 2) = 2) {
+        ~chatplayer("<p,neutral>Sorry, I'm not interested.");
+        return;
+    }
+    ~chatplayer("<p,quiz>So what do you need me to do?");
+    ~chatnpc("<p,neutral>You should ask people around the town about it. Maybe someone saw something.");
+    ~lt_set(^lt_started);
+    ~send_quest_progress(questlist:lost_tribe, %lt_stage, ^lt_complete);
+    return;
+}
+if (~p_choice2($topic, 1, "Who are you?", 2) = 2) @lt_sigmund_who;
+~lt_sigmund_answer;
+
+[label,lt_sigmund_who]
+~chatplayer("<p,quiz>Who are you?");
+~chatnpc("<p,neutral>I'm the Duke's advisor."); // 2009scape
+~chatplayer("<p,quiz>Can you give me any advice then?");
+~chatnpc("<p,neutral>I only advise the Duke. But if you want to make yourself useful, there are evil goblins to slay on the other side of the river.");
+
+[proc,lt_sigmund_topic]()(string)
+switch_int (%lt_stage) {
+    case ^lt_started, ^lt_permission : return("What was I doing again?");
+    case ^lt_bob_told : return("Bob says he saw something in the cellar.");
+    case ^lt_dug : return("I dug through the rubble...");
+    case ^lt_book_read : return("I found out about the symbol...");
+    case ^lt_generals : return("I spoke to the generals in the Goblin Village...");
+    case ^lt_silverware : return("Tell me about the silverware that was stolen.");
+    case ^lt_robes : return("You're a H.A.M. member, aren't you?");
+    case ^lt_found : return("Tell me about the silverware that was stolen.");
+}
+return("");
+
+[proc,lt_sigmund_answer]
+switch_int (%lt_stage) {
+    case ^lt_started :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>I asked you to talk to people around Lumbridge to see if any of them know what happened in the cellar.");
+    case ^lt_permission :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>The Duke asked you to investigate the damage in the cellar. I hope you can find the monsters that are behind this!");
+    case ^lt_bob_told :
+        ~chatplayer("<p,neutral>Bob says he saw something in the cellar. Like a goblin with big eyes.");
+        ~chatnpc("<p,shock>A goblin? This validates my suspicion! We should tell the Duke!");
+    case ^lt_dug :
+        ~chatplayer("<p,happy>I dug through the rubble in the cellar and found a tunnel!");
+        ~chatnpc("<p,angry>See, it was goblins! You should tell the Duke.");
+    case ^lt_book_read :
+        ~chatplayer("<p,neutral>I found out about the symbol. It was the symbol of one of the ancient goblin tribes!");
+        ~chatnpc("<p,angry>At last, proof that goblins are behind this! You should tell the Duke at once!");
+    case ^lt_generals :
+        ~chatplayer("<p,neutral>I spoke to the goblin generals in the Goblin Village. They told me about an ancient goblin tribe that went to live underground.");
+        ~chatnpc("<p,angry>I don't see how there can be any more doubt. You should tell the Duke at once!");
+    case ^lt_robes :
+        ~chatplayer("<p,neutral>You're a H.A.M member, aren't you?");
+        ~chatnpc("<p,shock>What?");
+        ~chatnpc("<p,angry>Well, so what if I am? It's not a crime.");
+    case ^lt_silverware, ^lt_found :
+        ~chatplayer("<p,quiz>Tell me about the silverware that was stolen.");
+        ~chatnpc("<p,neutral>The priceless Lumbridge Silverware! It comes out only on special occasions. It was kept in storage in the cellar, but now the goblins have stolen it.");
+        ~chatplayer("<p,quiz>So why did no one notice earlier?");
+        ~chatnpc("<p,angry>That doesn't matter. You'll never find it, because the goblins took it. So you can't stop the war!");
+        if (%lt_stage = ^lt_found) {
+            ~chatplayer("<p,happy>Actually I have found it! You put it in the H.A.M. cave!");
+            ~chatnpc("<p,shock>I... I... You're lying! I don't know what you're talking about.");
+        }
+}
+
+// pickpocketing Sigmund for the chest key (2009scape: only while the silverware is missing;
+// the OSRS wiki: 13 Thieving)
+[opnpc3,lost_tribe_sigmund]
+if (stat(thieving) < 13) {
+    mes("You need a Thieving level of 13 to pickpocket Sigmund."); // ours
+    return;
+}
+anim(human_pickpocket, 0);
+p_delay(2);
+if (%lt_stage = ^lt_silverware & inv_total(inv, lost_tribe_chest_key) = 0) {
+    ~lt_give(lost_tribe_chest_key);
+    ~objbox(lost_tribe_chest_key, "You steal a little key.", 250, 0, 0);
+    stat_advance(thieving, 100); // ours: a little for the pickpocket
+    return;
+}
+~chatnpc_specific("Sigmund", lost_tribe_sigmund_there, "<p,angry>What do you think you're doing?!"); // 2009scape
+
+[opnpc1,lost_tribe_sigmund_ham]
+~chatnpc("<p,angry>Prattle on, adventurer. The goblins will be destroyed soon enough."); // ours
+
+// Sigmund's chest in the spinning wheel room
+[oploc1,lost_tribe_chest]
+if (inv_total(inv, lost_tribe_chest_key) = 0) {
+    ~mesbox("You don't have the key to open this chest.");
+    return;
+}
+if (%lt_stage ! ^lt_silverware) {
+    mes("You find nothing of interest in the chest."); // ours
+    return;
+}
+inv_del(inv, lost_tribe_chest_key, 1);
+anim(human_openchest, 0);
+~lt_give(ham_shirt);
+~lt_give(ham_robe);
+~lt_give(ham_hood);
+~lt_set(^lt_robes);
+~objbox(ham_shirt, "In the chest you find a set of H.A.M. robes!", 250, 0, 0);
+~chatplayer("<p,shock>Sigmund must be a member of the Humans Against Monsters cult!");
+
+// the silverware in the H.A.M. hideout
+[oploc1,lost_tribe_crate]
+if (%lt_stage = ^lt_robes & inv_total(inv, lost_tribe_silverware) = 0) {
+    ~lt_give(lost_tribe_silverware);
+    ~lt_set(^lt_found);
+    ~objbox(lost_tribe_silverware, "You find the Lumbridge Silverware!", 250, 0, 0);
+    return;
+}
+mes("You find nothing."); // 2009scape
+
+// ---------------------------------------------------------------- the Duke
+// called first by the Duke's own Talk-to; true when the quest's topic was chosen
+[proc,lt_duke_topic]()(boolean)
+def_string $topic = "";
+switch_int (%lt_stage) {
+    case ^lt_started : $topic = "What happened in the cellar?";
+    case ^lt_bob_told : $topic = "Bob says he saw something in the cellar.";
+    case ^lt_permission, ^lt_brooch_shown, ^lt_reldo, ^lt_duke_generals, ^lt_silverware, ^lt_treaty : $topic = "What was I doing again?";
+    case ^lt_contact : $topic = "I've made contact with the cave goblins...";
+    case ^lt_dug : $topic = "I dug through the rubble...";
+    case ^lt_book_read : $topic = "I found out about the symbol...";
+    case ^lt_generals : $topic = "I spoke to the generals in the goblin village...";
+    case ^lt_robes : $topic = "Did you know Sigmund is a member of HAM?";
+    case ^lt_found : $topic = "I found the missing silverware in the HAM cave!";
+}
+if (string_length($topic) = 0) return(false);
+// ours: the quest's line, or the Duke's usual questions
+if (~p_choice2($topic, 1, "Something else.", 2) = 2) return(false);
+~lt_duke_answer;
+return(true);
+
+[proc,lt_duke_answer]
+switch_int (%lt_stage) {
+    case ^lt_started :
+        ~chatplayer("<p,quiz>What happened in the cellar?");
+        ~chatnpc("<p,neutral>The wall collapsed because of an earthquake. I'm waiting for a team of builders to come and repair it.");
+    case ^lt_bob_told :
+        ~chatplayer("<p,neutral>Bob says he saw something in the cellar. Like a goblin with big eyes.");
+        ~chatnpc("<p,neutral>Yes, he mentioned that to me. But I think he was imagining things. Goblins live in natural caves but everyone knows they don't have the wit to make their own tunnels.");
+        ~lt_sigmund_says("<p,angry>Yes your grace, but if there is any possibility that this is a goblin incursion then we should take that possibility very seriously!");
+        ~chatplayer("<p,neutral>I think we should at least investigate.");
+        if (%dragonquest >= ^dragon_complete) {
+            ~lt_sigmund_says("<p,neutral>Your grace, this is the adventurer who defeated the dragon Elvarg. I think you should listen to <~lt_him>.");
+        } else {
+            ~lt_sigmund_says("<p,neutral>Your grace, this adventurer took that talisman you discovered to Sedridor. I think you should listen to <~lt_him>.");
+        }
+        ~chatnpc("<p,neutral>Hmm, very well. I give you permission to investigate this mystery. If there is a blocked tunnel then perhaps you should try to un-block it.");
+        ~lt_set(^lt_permission);
+    case ^lt_permission :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>You were helping to investigate what happened in the cellar. Come back when you've found something out.");
+    case ^lt_dug :
+        ~chatplayer("<p,happy>I dug through the rubble in the cellar and found a tunnel!");
+        if (inv_total(inv, lost_tribe_brooch) = 0) {
+            ~lt_sigmund_says("<p,angry>You see, your grace? It is a goblin attack!");
+            ~chatnpc("<p,neutral>That tunnel could have many origins. I suggest you investigate further.");
+            return;
+        }
+        ~chatplayer("<p,neutral>On the ground I found this brooch.");
+        ~chatnpc("<p,neutral>I've never seen anything like that before. It doesn't come from Lumbridge. What do you think, Sigmund?");
+        ~lt_sigmund_says("<p,neutral>It is unknown to me, your grace. But the fact it is there is enough to prove Bob's story. It must have been dropped by a goblin as it fled.");
+        ~chatnpc("<p,neutral>I've never heard of a goblin wearing something so well-crafted.");
+        ~lt_sigmund_says("<p,angry>Then it must have been stolen!");
+        ~chatnpc("<p,quiz>But it wasn't stolen from us. Where could it be from?");
+        ~lt_sigmund_says("<p,angry>That doesn't matter! You said yourself that goblins couldn't have made that, so they must have stolen it from somewhere.");
+        ~lt_sigmund_says("<p,angry>Horrible, thieving goblins have broken into our cellar! We must retaliate immediately!");
+        ~lt_sigmund_says("<p,angry>First we should wipe out the goblins east of the river, then we can march on the goblin village to the north-west...");
+        ~chatnpc("<p,neutral>I will not commit troops until I have proof that goblins are behind this.");
+        ~chatnpc("<p,neutral><displayname>, please find out what you can about this brooch. The librarian in Varrock might be able to help identify the symbol.");
+        ~lt_set(^lt_brooch_shown);
+    case ^lt_brooch_shown, ^lt_reldo :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>Please find out what you can about the brooch. The librarian in Varrock might be able to help identify the symbol."); // ours, from the brooch scene
+    case ^lt_book_read :
+        ~chatplayer("<p,neutral>I found out about the symbol. It was the symbol of one of the ancient goblin tribes!");
+        ~lt_sigmund_says("<p,angry>You see, your grace? I told you goblins were behind this!");
+        ~chatnpc("<p,neutral>I still find it surprising that such a well-crafted brooch would have a goblin symbol on it. Perhaps you should find out more about this ancient tribe.");
+    case ^lt_generals :
+        ~chatplayer("<p,neutral>I spoke to the goblin generals in the goblin village. They told me about an ancient goblin tribe that went to live underground.");
+        ~lt_sigmund_says("<p,angry>What more proof do we need? Nasty, smelly goblins have been living under our feet all this time! We must crush them at once!");
+        ~chatnpc("<p,neutral>Hmm, perhaps you are right. I will send word to the army to prepare for an underground assault.");
+        ~chatnpc("<p,neutral><displayname>, I would still like you to find out more about this tribe. It cannot hurt to know one's enemy.");
+        ~lt_set(^lt_duke_generals);
+    case ^lt_duke_generals :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>I would like you to find out more about this ancient goblin tribe. It cannot hurt to know one's enemy."); // ours
+    case ^lt_contact :
+        ~chatplayer("<p,neutral>I've made contact with the cave goblins. They say they were following a seam and broke into the cellar by mistake.");
+        ~lt_sigmund_says("<p,angry>And I suppose you believe them, goblin-lover?");
+        ~chatplayer("<p,neutral>Well, they seemed friendlier than most goblins, and nothing was taken from the cellar.");
+        ~chatnpc("<p,neutral>Actually, something was taken. Sigmund has informed me that some of the castle silverware is missing from the cellar.");
+        ~chatnpc("<p,sad>Unless it is returned, I am afraid I will have no option but war.");
+        ~lt_set(^lt_silverware);
+    case ^lt_silverware :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>We are preparing to go to war with the underground goblins over the missing silverware. If you think the cave goblins are innocent you should present evidence quickly!");
+    case ^lt_robes :
+        ~chatplayer("<p,quiz>Did you know Sigmund is a member of HAM?");
+        ~chatnpc("<p,neutral>Hmm, I had suspected it. But however much I disapprove of the HAM movement it's not actually illegal. I'll keep an eye on him though.");
+    case ^lt_found :
+        if (inv_total(inv, lost_tribe_silverware) = 0) {
+            ~chatplayer("<p,neutral>I found the missing silverware in the HAM cave, but I don't have it with me."); // ours
+            return;
+        }
+        ~chatplayer("<p,happy>I found the missing silverware in the HAM cave!");
+        inv_del(inv, lost_tribe_silverware, 1);
+        ~chatnpc("<p,angry>Sigmund! Is this your doing?");
+        ~lt_sigmund_says("<p,shock>Of...of course not! The goblins must have, um, dropped the silverware as they ran away.");
+        ~chatnpc("<p,angry>Don't lie to me! I knew you were a HAM member but I didn't think you would stoop to this. You are dismissed from my service.");
+        ~lt_sigmund_says("<p,angry>But don't you see it was for the best? For goblins to be living under our feet like this... ugh. It doesn't matter how civilized they are: all sub-human species must be wiped out!");
+        ~chatnpc("<p,angry>That's enough! Get out of my castle now!");
+        ~chatnpc("<p,neutral>I see I was ill-advised. Unless there is an act of aggression by the cave goblins there is no need for war.");
+        ~objbox(lost_tribe_treaty, "The Duke writes a document and signs it.", 250, 0, 0);
+        ~lt_give(lost_tribe_treaty);
+        ~lt_set(^lt_treaty);
+        ~chatnpc("<p,neutral>This peace treaty specifies the border between Lumbridge and the Cave Goblin realm. Please take it to the cave goblins and tell them I would like to meet with their leader to sign it.");
+    case ^lt_treaty :
+        ~chatplayer("<p,quiz>What was I doing again?");
+        ~chatnpc("<p,neutral>You were taking the peace treaty to the cave goblins.");
+        if (inv_total(inv, lost_tribe_treaty) = 0 & inv_total(bank, lost_tribe_treaty) = 0) {
+            ~chatplayer("<p,sad>I, er, lost the treaty.");
+            ~chatnpc("<p,neutral>*sigh* All right, here's another copy.");
+            ~lt_give(lost_tribe_treaty);
+        }
+}
+
+[proc,lt_him]()(string)
+if (gender = ^gender_male) return("him");
+return("her");
+
+// ---------------------------------------------------------------- asking around Lumbridge
+// each called first by the person's own Talk-to; true when the quest's question was asked
+[proc,lt_ask_cook]()(boolean)
+if (%lt_stage ! ^lt_started) return(false);
+if (~p_choice2("Do you know what happened in the castle cellar?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>Do you know what happened in the castle cellar?");
+~chatnpc("<p,sad>Oh no, it's terrible, isn't it? There was rock dust everywhere, it got on all my ingredients!");
+return(true);
+
+[proc,lt_ask_hans]()(boolean)
+if (%lt_stage ! ^lt_started) return(false);
+if (~p_choice2("Do you know what happened in the cellar?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>Do you know what happened in the castle cellar?");
+~chatnpc("<p,neutral>The wall collapsed. I had to spend all day clearing it up! The Duke says it was an earthquake.");
+return(true);
+
+[proc,lt_ask_bob]()(boolean)
+if (%lt_stage ! ^lt_started & %lt_stage ! ^lt_bob_told) return(false);
+if (~p_choice2("Do you know what happened in the castle cellar?", 1, "Something else.", 2) = 2) return(false);
+~chatplayer("<p,quiz>Do you know what happened in the castle cellar?");
+if (%lt_stage = ^lt_bob_told) {
+    ~chatnpc("<p,neutral>I told you about the creature I saw. You should go and tell the Duke.");
+    return(true);
+}
+~chatnpc("<p,neutral>Last night I was in the kitchen and I heard a noise from the cellar. I opened the trapdoor and saw a creature dart into a hole in the wall.");
+~chatnpc("<p,neutral>It looked a bit like a goblin, but it had big bulging eyes. It wasn't wearing armour, but it had this odd helmet with a light on it.");
+~chatnpc("<p,sad>The tunnel was too dark for me to follow it, so I went to tell the Duke. But when we went down to the cellar the hole had been blocked up, and no one believes me.");
+~chatplayer("<p,neutral>I believe you.");
+~chatnpc("<p,happy>Thank you, <displayname>! If you can convince the Duke I'm telling the truth then we can get to the bottom of this mystery.");
+~lt_set(^lt_bob_told);
+return(true);
+
+// ---------------------------------------------------------------- the cellar wall
+// 2009scape: any pickaxe on the rubble once the Duke has given permission (the OSRS wiki: 17 Mining)
+[oplocu,lost_tribe_cellar_wall] @lt_dig;
+[oplocu,lost_tribe_cellar_wall_back] @lt_dig;
+
+[label,lt_dig]
+if (oc_param(last_useitem, mining_animation) = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%lt_stage >= ^lt_dug) {
+    mes("The tunnel is already open."); // ours
+    return;
+}
+if (%lt_stage < ^lt_permission) {
+    ~objbox(last_useitem, "I should probably figure out what happened before vandalizing the castle more.", 250, 0, 0); // 2009scape
+    return;
+}
+if (stat(mining) < 17) {
+    ~mesbox("You need a Mining level of 17 to dig through the rubble."); // ours
+    return;
+}
+def_obj $pick = last_useitem;
+anim(oc_param($pick, mining_animation), 0);
+p_delay(3);
+anim(null, 0);
+~lt_set(^lt_dug);
+~objbox($pick, "You dig a narrow tunnel through the rocks.", 250, 0, 0);
+
+// 2009scape: through the hole, from the cellar side to 3222,9618 and back to 3219,9618 (the OSRS
+// wiki: 13 Agility and a lit light)
+[oploc1,lost_tribe_cellar_wall] @lt_squeeze;
+[oploc1,lost_tribe_cellar_wall_back] @lt_squeeze;
+
+[label,lt_squeeze]
+if (%lost_tribe_quest < 4) return;
+if (stat(agility) < 13) {
+    ~mesbox("You need an Agility level of 13 to squeeze through the hole."); // ours
+    return;
+}
+def_coord $to = 0_50_150_22_18;
+if (coordx(coord) >= 3221) $to = 0_50_150_19_18;
+mes("You squeeze through the hole."); // 2009scape
+anim(human_pickupfloor, 0);
+p_delay(1);
+p_telejump($to);
+~swamp_cave_dark_refresh;
+
+// ---------------------------------------------------------------- the end
+[proc,lt_complete]
+inv_del(inv, lost_tribe_treaty, inv_total(inv, lost_tribe_treaty));
+~lt_set(^lt_complete);
+stat_advance(mining, 30000);
+~lt_give(ring_of_life);
+session_log(^log_adventure, "Quest complete: The Lost Tribe");
+~send_quest_complete(questlist:lost_tribe, lost_tribe_brooch, 250, ^lt_questpoints, "You have completed\\nThe Lost Tribe!", "1 Quest Point|3000 Mining XP|A Ring of Life|Freedom of the|Dorgeshuun mines.");
