@@ -1,0 +1,573 @@
+// EASCape: Recruitment Drive (27 June 2005): Sir Amik Varze, Sir Tiffy Cashien, the trip to the
+// Temple Knights' training grounds and back, the rewards. 2009scape is the source for how it works
+// (quest/recruitmentdrive: RecruitmentDrive.kt, RecruitmentDriveListeners.kt,
+// SirAmikVarzeDialogueFile.kt, SirTiffyCashienDialogueFile.kt; dialogue/SirTiffyCashienDialogue.kt);
+// the words are the OSRS wiki's (Transcript:Recruitment Drive, Transcript:Sir Tiffy Cashien) where
+// they and 2009scape's differ. The rooms are rd_rooms.rs2 and rd_cheevers.rs2. Ours is marked.
+//
+// State: %rd_main (the cache's, saved): 0, 1 started, 2 done. %rd_room1_initiated (saved): Sir Tiffy
+// has taken you to the grounds once. %rd_room1..7_complete (saved): the rooms passed on this run,
+// so five of them mean you only have to see Sir Tiffy. %rd_male_at_start (saved): for the makeover
+// voucher. %falador_spawn (saved): the Gaze of Saradomin. A run's own state is rcd_run (rd.varp).
+
+// ---------------------------------------------------------------- places
+// 2009scape's locations: the rooms' entrances and the squares you walk to, Falador Park
+[proc,rcd_room_start_coord](int $room)(coord)
+switch_int ($room) {
+    case ^rcd_spishyus : return(0_38_77_58_44); // 2490,4972
+    case ^rcd_table : return(0_38_77_28_51); // 2460,4979
+    case ^rcd_kuam : return(0_38_77_23_36); // 2455,4964
+    case ^rcd_tinley : return(0_38_77_39_28); // 2471,4956
+    case ^rcd_ren : return(0_38_77_7_28); // 2439,4956
+    case ^rcd_cheevers : return(0_38_77_35_12); // 2467,4940
+}
+return(0_38_77_19_7); // 2451,4935 Ms. Hynn Terprett
+
+[proc,rcd_room_walk_coord](int $room)(coord)
+switch_int ($room) {
+    case ^rcd_spishyus : return(0_38_77_57_44);
+    case ^rcd_table : return(0_38_77_27_51);
+    case ^rcd_kuam : return(0_38_77_24_36);
+    case ^rcd_tinley : return(0_38_77_40_28);
+    case ^rcd_ren : return(0_38_77_8_28);
+    case ^rcd_cheevers : return(0_38_77_36_12);
+}
+return(0_38_77_19_8);
+
+[proc,rcd_examiner](int $room)(npc)
+switch_int ($room) {
+    case ^rcd_spishyus : return(rd_observer_room_1);
+    case ^rcd_table : return(rd_observer_room_2);
+    case ^rcd_kuam : return(rd_observer_room_3);
+    case ^rcd_tinley : return(rd_observer_room_4);
+    case ^rcd_ren : return(rd_observer_room_5);
+    case ^rcd_cheevers : return(rd_observer_room_6);
+}
+return(rd_observer_room_7);
+
+// the training grounds are map square 38_77 (2009scape: region 9805)
+[proc,rcd_in_grounds](coord $c)(boolean)
+if (inzone(0_38_77_0_0, 3_38_77_63_63, $c) = true) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the run
+[proc,rcd_room](int $i)(int)
+return(getbit_range(%rcd_order, calc($i * 3), calc($i * 3 + 2)));
+
+[proc,rcd_current]()(int)
+return(~rcd_room(%rcd_index));
+
+[proc,rcd_passed](int $room)(boolean)
+def_int $v = 0;
+switch_int ($room) {
+    case ^rcd_spishyus : $v = %rd_room1_complete;
+    case ^rcd_table : $v = %rd_room2_complete;
+    case ^rcd_kuam : $v = %rd_room3_complete;
+    case ^rcd_tinley : $v = %rd_room4_complete;
+    case ^rcd_ren : $v = %rd_room5_complete;
+    case ^rcd_cheevers : $v = %rd_room6_complete;
+    case ^rcd_hynn : $v = %rd_room7_complete;
+}
+if ($v = 1) return(true);
+return(false);
+
+[proc,rcd_set_passed](int $room)
+switch_int ($room) {
+    case ^rcd_spishyus : %rd_room1_complete = 1;
+    case ^rcd_table : %rd_room2_complete = 1;
+    case ^rcd_kuam : %rd_room3_complete = 1;
+    case ^rcd_tinley : %rd_room4_complete = 1;
+    case ^rcd_ren : %rd_room5_complete = 1;
+    case ^rcd_cheevers : %rd_room6_complete = 1;
+    case ^rcd_hynn : %rd_room7_complete = 1;
+}
+
+[proc,rcd_passed_count]()(int)
+return(calc(%rd_room1_complete + %rd_room2_complete + %rd_room3_complete + %rd_room4_complete + %rd_room5_complete + %rd_room6_complete + %rd_room7_complete));
+
+// 2009scape shuffleStages: five of the seven rooms in a random order
+[proc,rcd_shuffle]
+def_int $chosen = 0;
+def_int $order = 0;
+def_int $i = 0;
+def_int $room = 0;
+while ($i < ^rcd_tests) {
+    $room = calc(random(7) + 1);
+    if (testbit($chosen, $room) = ^false) {
+        $chosen = setbit($chosen, $room);
+        $order = setbit_range_toint($order, $room, calc($i * 3), calc($i * 3 + 2));
+        $i = calc($i + 1);
+    }
+}
+%rcd_run = 0;
+%rcd_order = $order;
+%rcd_index = 0;
+
+// a room's puzzle back to the start (the cache's room vars, ours)
+[proc,rcd_reset_room]
+%rd_rooms_tempvar = 0;
+%rd_rooms_tempvar2 = 0;
+%rd_room_order = 0;
+%rcd_statue = 0;
+%rcd_placed = 0;
+%rcd_clue = 0;
+%rcd_clues_asked = 0;
+%rcd_riddle = 0;
+%rcd_run2 = 0;
+~rcd_leye_del;
+clearqueue(rcd_tinley_wait);
+
+[proc,rcd_leye_del]
+if (npc_finduid(%rcd_leye) = true) {
+    if (npc_type = rd_combat_npc_room_3) npc_del;
+}
+%rcd_leye = null;
+hint_stop;
+
+// the whole run cleared (failing, quitting, logging out): 2009scape clears your progress
+[proc,rcd_end_run]
+~rcd_reset_room;
+%rcd_run = 0;
+%rd_room1_complete = 0;
+%rd_room2_complete = 0;
+%rd_room3_complete = 0;
+%rd_room4_complete = 0;
+%rd_room5_complete = 0;
+%rd_room6_complete = 0;
+%rd_room7_complete = 0;
+
+// 2009scape: nothing comes in or goes out with you
+[proc,rcd_empty]
+inv_clear(inv);
+inv_clear(worn);
+buildappearance(worn);
+~update_all(null);
+
+[proc,rcd_carrying]()(boolean)
+if (inv_freespace(inv) < inv_size(inv)) return(true);
+def_int $slot = 0;
+while ($slot < inv_size(worn)) {
+    if (inv_getobj(worn, $slot) ! null) return(true);
+    $slot = calc($slot + 1);
+}
+return(false);
+
+// a line from someone who isn't the npc you clicked, without waiting for a click (2009scape's
+// cutscene dialogueLinesUpdate and Lady Table's sendNPCDialogueLines)
+[proc,rcd_npcsay](npc $npc, string $text)
+split_init($text, 380, 4, q8_full);
+~chatnpc_page(nc_name($npc), $npc, 0);
+
+[proc,rcd_say](npc $npc, string $text)
+~chatnpc_specific(nc_name($npc), $npc, $text);
+
+// Sir Tiffy takes you in (2009scape StartTestCutscene, the OSRS wiki's lines)
+[label,rcd_go_in]
+~rcd_end_run;
+~rcd_shuffle;
+%rd_room1_initiated = 1;
+@rcd_go_in_run;
+
+[label,rcd_go_in_run]
+if_close;
+~fade_out;
+p_delay(5);
+~rcd_npcsay(rd_teleporter_guy, "<p,happy>Here we go!|Mind your head!");
+p_delay(2);
+~rcd_npcsay(rd_teleporter_guy, "<p,happy>Oops, ignore the smell!|Nearly there!");
+p_delay(2);
+~rcd_npcsay(rd_teleporter_guy, "<p,happy>And...|Here we are!|Best of luck!");
+p_delay(2);
+if_close;
+~rcd_empty;
+@rcd_enter;
+
+// into the current room (2009scape: teleport to its entrance, fade in, walk a square in, the
+// examiner speaks)
+[label,rcd_enter]
+def_int $room = ~rcd_current;
+~rcd_reset_room;
+%rcd_busy = 1;
+p_telejump(~rcd_room_start_coord($room));
+p_delay(1);
+~fade_in;
+p_delay(1);
+p_walk(~rcd_room_walk_coord($room));
+p_delay(1);
+%rcd_busy = 0;
+@rcd_room_start($room);
+
+[label,rcd_room_start](int $room)
+switch_int ($room) {
+    case ^rcd_spishyus : @rcd_spishyus_start;
+    case ^rcd_table : @rcd_table_start;
+    case ^rcd_kuam : @rcd_kuam_start;
+    case ^rcd_tinley : @rcd_tinley_start;
+    case ^rcd_ren : @rcd_ren_start;
+    case ^rcd_cheevers : @rcd_cheevers_start;
+    case ^rcd_hynn : @rcd_hynn_start;
+}
+
+// on through the door to the next room (2009scape: the door of a passed room)
+[label,rcd_next]
+if_close;
+~rcd_reset_room;
+%rcd_index = calc(%rcd_index + 1);
+~rcd_empty;
+~fade_out;
+p_delay(5);
+@rcd_enter;
+
+// a room passed: the examiner's word, or the end of the test after the fifth (the OSRS wiki: Sir
+// Kuam Ferentse's fourth and fifth lines; the RS wiki gives the fifth to every examiner, the
+// fourth is ours for every examiner too)
+[label,rcd_praise](int $room)
+def_npc $npc = ~rcd_examiner($room);
+def_int $n = ~rcd_passed_count;
+if ($n >= ^rcd_tests) {
+    ~rcd_say($npc, "<p,happy>Excellent work! You have passed all five of the required tests! Please accept my congratulations!");
+    @rcd_finish;
+}
+if ($n = 4) {
+    ~rcd_say($npc, "<p,happy>Well done, that was your fourth test, you only have one more to go.");
+    ~rcd_say($npc, "<p,happy>Please step through the portal to your final test... ...and good luck, <displayname>.");
+    return;
+}
+~rcd_say($npc, "<p,happy>Excellent work, <displayname>. Please step through the portal to meet your next challenge.");
+
+// a room passed, and if it was the fifth the end at once (for rooms passed without a word, like
+// Sir Leye's and Sir Spishyus's)
+[label,rcd_passed_room](int $room)
+~rcd_set_passed($room);
+if (~rcd_passed_count >= ^rcd_tests) @rcd_praise($room);
+
+// a room failed: the examiner's line came first (2009scape FailTestCutscene)
+[label,rcd_fail]
+if_close;
+~rcd_end_run;
+~rcd_empty;
+~fade_out;
+p_delay(5);
+p_telejump(0_46_52_53_46); // 2997,3374
+facesquare(0_46_52_53_45); // Sir Tiffy at 2997,3373
+p_delay(0);
+~fade_in;
+p_delay(1);
+~rcd_say(rd_teleporter_guy, "<p,sad>Oh, jolly bad luck, what? Not quite the brainbox you thought you were, eh?");
+~rcd_say(rd_teleporter_guy, "<p,happy>Well, never mind! You have an open invitation to join our organisation, so when you're feeling a little smarter, come back and talk to me again.");
+
+// the five passed (2009scape CompleteTestCutscene)
+[label,rcd_finish]
+if_close;
+~rcd_reset_room;
+%rcd_run = 0;
+~rcd_empty;
+~fade_out;
+p_delay(5);
+p_telejump(0_46_52_52_47); // 2996,3375
+facesquare(0_46_52_53_45);
+p_delay(0);
+~fade_in;
+p_delay(1);
+@rcd_tiffy_finish;
+
+[label,rcd_tiffy_finish]
+~chatplayer("<p,happy>I believe I've managed to pass the tests!");
+~rcd_say(rd_teleporter_guy, "<p,happy>Oh, jolly well done! Your performance will need to be evaluated by Sir Vey personally, but I don't think it's going too far ahead of myself to welcome you to the team!");
+~rcd_complete;
+
+// the rewards (2009scape RecruitmentDrive.finish and SirTiffyCashienDialogueFile: 1 quest point,
+// 1000 Prayer, Herblore and Agility experience, the initiate sallet, and a makeover voucher and
+// 3000 coins if you started the quest a man and have changed since)
+[proc,rcd_complete]
+%rd_main = ^rcd_complete;
+%rd_room1_initiated = 0;
+~rcd_end_run;
+stat_advance(prayer, 10000);
+stat_advance(herblore, 10000);
+stat_advance(agility, 10000);
+~rcd_give(basic_tk_helm, 1);
+if (%rd_male_at_start = 1 & gender = 1) {
+    ~rcd_give(rd_makeover_ticket, 1);
+    ~rcd_give(coins, 3000);
+}
+%rd_male_at_start = 0;
+~send_quest_complete(questlist:rd, basic_tk_helm, 230, ^rcd_questpoints, "You have passed the Recruitment Drive!", "1000 Prayer, Herblore and|Agility XP|Gaze of Saradomin|Temple Knight's Initiate Helm");
+mes("Your respawn point has been left alone, but you can now speak to Sir Tiffy to change it to Falador."); // the OSRS wiki's transcript
+
+[proc,rcd_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- login, death, respawn
+// 2009scape LogoutRecruitmentDrive: logged out in the grounds, you're back in Falador Park with
+// nothing; the run is over unless all five were passed (then Sir Tiffy finishes it)
+[proc,rcd_login]
+if (~rcd_in_grounds(coord) = false) return;
+if (~rcd_passed_count < ^rcd_tests) ~rcd_end_run;
+~rcd_reset_room;
+%rcd_run = 0;
+~rcd_empty;
+p_telejump(0_46_52_52_47);
+
+// dying in the grounds (to Sir Leye): ours, the run is over and the room's things don't drop
+[proc,rcd_death]
+if (~rcd_in_grounds(coord) = false) return;
+~rcd_end_run;
+inv_clear(inv);
+inv_clear(worn);
+
+// the Gaze of Saradomin (2009scape: Falador at 2971,3340, Sir Tiffy switches it)
+[proc,rcd_respawn]()(coord)
+if (%falador_spawn = 1) return(0_46_52_27_12);
+return(0_50_50_21_18);
+
+// ---------------------------------------------------------------- Sir Amik Varze
+// After "Hello, friend!" (sir_amik_varze.rs2, Black Knights' Fortress done). The OSRS wiki's
+// Transcript:Recruitment Drive; the "Tell me about this organization..." choice is 2009scape's,
+// its words the RS wiki's.
+[label,rcd_amik]
+if (%rd_main = ^rcd_complete) return;
+~chatplayer("<p,quiz>Do you have any other quests for me to do?");
+if (%rd_main = ^rcd_started) {
+    ~chatnpc("<p,neutral>No, I am afraid not. I suggest you go meet Sir Tiffy in Falador Park, he will be expecting you.");
+    return;
+}
+if (%druidquest ! ^druid_complete) {
+    ~chatnpc("<p,neutral>Nothing I can think of at the moment...");
+    ~mesbox("You do not meet all of the requirements to start the Recruitment Drive quest.");
+    return;
+}
+~chatnpc("<p,neutral>Quests, eh? Well, I don't have anything on the go at the moment, but there is an organisation that is always looking for capable adventurers to assist them.");
+~chatnpc("<p,happy>Your excellent work sorting out those Black Knights means I will happily write you a letter of recommendation.");
+@rcd_amik_ask;
+
+[label,rcd_amik_ask]
+~chatnpc("<p,neutral>Would you like me to put your name forwards to them?");
+switch_int (~p_choice3("Yes please.", 1, "No thanks.", 2, "Tell me about this organisation...", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>Sure thing Sir Amik, sign me up!");
+        ~chatnpc("<p,shifty>Erm, well, this is a little embarrassing, I already HAVE put you forward as a potential member.");
+        ~chatnpc("<p,neutral>They are called the Temple Knights, and you are to meet Sir Tiffy Cashien in Falador park for testing immediately.");
+        ~chatplayer("<p,happy>Okey dokey, I'll go do that then.");
+        if (%rd_main = ^rcd_not_started) {
+            %rd_main = ^rcd_started;
+            %rd_male_at_start = 0;
+            if (gender = 0) %rd_male_at_start = 1;
+            ~send_quest_progress(questlist:rd, %rd_main, ^rcd_complete);
+        }
+    case 2 :
+        ~chatplayer("<p,neutral>No thanks, that doesn't sound like the kind of thing that would interest me...");
+        ~chatnpc("<p,neutral>As you wish adventurer, let's say no more about it.");
+    case 3 :
+        ~chatnpc("<p,shifty>I cannot tell you much... They are called the Temple Knights, and are an organisation that was founded by Saradomin personally many centuries ago.");
+        ~chatnpc("<p,neutral>There are many rumours and fables about their works and actions, but official records of their presence are non- existent.");
+        ~chatnpc("<p,neutral>It is a secret organisation of extraordinary power and resourcefulness...");
+        ~chatnpc("<p,neutral>Let me put it this way: Should you decide to take them up on their generous offer to join, you will find yourself in an advantageous position that many in this world would envy, and that few");
+        ~chatnpc("<p,neutral>are called to occupy.");
+        ~chatplayer("<p,confused>Well, that wasn't quite as helpful as I thought it would be...but thanks anyway, I guess.");
+}
+
+// ---------------------------------------------------------------- Sir Tiffy Cashien
+[opnpc1,rd_teleporter_guy]
+if (%rd_main = ^rcd_complete) @rcd_tiffy_member;
+if (%rd_main = ^rcd_started) {
+    if (~rcd_passed_count >= ^rcd_tests) @rcd_tiffy_finish;
+    if (%rd_room1_initiated = 1) @rcd_tiffy_again;
+    @rcd_tiffy_first;
+}
+// the OSRS wiki's standard dialogue
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,happy><text_gender("What ho, sir.", "What ho, milady.")> Spiffing day for a walk in the park, what?");
+~chatplayer("<p,confused>...spiffing?");
+~chatnpc("<p,happy>Absolutely, top-hole! Well, can't stay and chat all day, dontchaknow! Ta-ta for now!");
+~chatplayer("<p,confused>Erm... goodbye.");
+
+[label,rcd_tiffy_first]
+~chatplayer("<p,neutral>Sir Amik Varze sent me to meet you here for some sort of testing...?");
+~chatnpc("<p,happy>Ah, <displayname>! Amik told me all about you, dontchaknow! Spiffing job you did with the old Black Knights there, absolutely first class.");
+~chatplayer("<p,confused>...thanks, I think.");
+~chatnpc("<p,happy>Well, a top-notch <text_gender("fellow", "filly")> like yourself is just the right sort we've been seeking for our organisation.");
+~chatnpc("<p,happy>So, are you ready to begin testing?");
+@rcd_tiffy_menu;
+
+[label,rcd_tiffy_menu]
+switch_int (~p_choice4("Testing...?", 1, "Organisation...?", 2, "Yes, let's go!", 3, "No, I've changed my mind.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>...testing? What exactly do you mean by testing?");
+        ~chatnpc("<p,shock>Jolly bad show! Varze was supposed to have informed you about all this before sending you here!");
+        ~chatnpc("<p,neutral>Well, not your fault I suppose, what? Anywho, our organisation is looking for a certain specific type of person to join.");
+        ~chatplayer("<p,quiz>So... You want me to go kill some monster or something for you?");
+        ~chatnpc("<p,neutral>Not at all, old bean. There's plenty of warriors around should we require dumb muscle.");
+        ~chatnpc("<p,neutral>That's really not the kind of thing our organisation is after, what?");
+        ~chatplayer("<p,quiz>So you want me to go and fetch you some kind of common item, and then take it for delivery somewhere on the other side of the country?");
+        ~chatplayer("<p,angry>Because I really hate doing that!");
+        ~chatnpc("<p,laugh>Haw haw haw What a dull thing to ask of someone, what?");
+        ~chatnpc("<p,happy>I know what you mean though, I did my fair share of running errands when I was a young adventurer, myself!");
+        ~chatplayer("<p,quiz>So what exactly will this test consist of?");
+        ~chatnpc("<p,neutral>Can't let just any old riff-raff in, what? The mindless thugs and bully boys are best left in the White Knights or the Guards, we look for the top-shelf brains to join us.");
+        ~chatplayer("<p,quiz>So you want to test my brains? Will it hurt?");
+        ~chatnpc("<p,laugh>Haw Haw Haw That's a good one!");
+        ~chatnpc("<p,happy>Not in the slightest... Well, maybe a bit, but we all have to make sacrifices occasionally, what?");
+        ~chatplayer("<p,quiz>What do you want me to do then?");
+        ~chatnpc("<p,neutral>It's a test of wits, what? I'll take you to our secret training grounds, and you will have to pass through a series of five separate intelligence tests to prove you're our sort of adventurer.");
+        ~chatnpc("<p,neutral>Standard puzzle room rules will apply.");
+        ~chatplayer("<p,confused>Erm... what are 'standard puzzle room rules' exactly?");
+        ~chatnpc("<p,happy>Never done this sort of thing before, what?");
+        ~chatnpc("<p,neutral>The simple rules are: No items or equipment to be brought with you. Each room is a self contained puzzle. You may quit at any time.");
+        ~chatnpc("<p,neutral>Of course, if you quit a room, then all your progress up to that point will be cleared, and you'll have to start again from scratch.");
+        ~chatnpc("<p,happy>Our organisation manages to filter all the top-notch adventurers this way. So, are you ready to go?");
+        @rcd_tiffy_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>This organisation you keep mentioning... Perhaps you could tell me a little about it?");
+        ~chatnpc("<p,angry>Oh, that Amik! Jolly bad form, did he not tell you anything that he was supposed to?");
+        ~chatplayer("<p,neutral>No... He didn't really tell me anything except to come here and meet you...");
+        ~chatnpc("<p,happy>Well now old sport, let me give you the heads up and the low down, what?");
+        ~chatnpc("<p,neutral>I represent the Temple Knights. We are the premier order of Knights in Asgarnia, if not the world. Saradomin himself personally founded our order centuries ago, and we answer only to him.");
+        ~chatnpc("<p,neutral>Only the very best of the best are permitted to join, and the powers we command are formidable indeed.");
+        ~chatnpc("<p,happy>You might say that we are the front line of defence for the entire kingdom!");
+        ~chatplayer("<p,quiz>So what's the difference between you and the White Knights?");
+        ~chatnpc("<p,laugh>Well, in simple terms, we're better! Any fool with a sword can manage to get into the White Knights, which is mostly the reason they are so very, very incompetent, what?");
+        ~chatnpc("<p,neutral>The Temple Knights on the other hand have to be smarter, stronger, better than all others. We are the elite. No man controls us for our orders come directly from Saradomin himself!");
+        ~chatplayer("<p,happy>Cool, you mean I get to meet Saradomin?");
+        ~chatnpc("<p,shifty>Well, uh, not exactly... Sir Vey Lance, our head of operations, is the only one of our order who has ever personally met Saradomin, but everything he tells us to do is done with Saradomin's implicit permission.");
+        ~chatnpc("<p,happy>It's not every job where you have more authority than the king, now is it?");
+        ~chatplayer("<p,shock>Wait... You can order the King around?!?!");
+        ~chatnpc("<p,neutral>Well, not me personally, I'm only in the recruitment side of things dontchaknow, but the higher ranking members of the organisation have almost absolute power over this kingdom.");
+        ~chatnpc("<p,shifty>Plus a few others, so I hear....");
+        ~chatnpc("<p,neutral>Anyway, this is why we keep our organisation shrouded in secrecy, and why we demand such rigorous testing for all potential recruits. Speaking of which, are you ready to begin your testing?");
+        @rcd_tiffy_menu;
+    case 3 : @rcd_tiffy_go;
+    case 4 : @rcd_tiffy_no;
+}
+
+[label,rcd_tiffy_go]
+~chatplayer("<p,happy>Yeah, this sounds right up my street. Let's go!");
+if (~rcd_carrying = true) {
+    ~chatnpc("<p,neutral>Well, bad luck old <text_gender("boy", "gal")>, you'll need to have a completely empty inventory and you can't be wearing any equipment before we can accurately test you.");
+    ~chatnpc("<p,happy>Don't want people cheating by smuggling stuff in, what?");
+    ~chatnpc("<p,happy>Come and see me again after you've been to the old bank to drop your stuff off, what?");
+    return;
+}
+~chatnpc("<p,happy>Jolly good show! Now, the training grounds location is a secret so...");
+~send_quest_progress(questlist:rd, %rd_main, ^rcd_complete);
+@rcd_go_in;
+
+[label,rcd_tiffy_no]
+~chatplayer("<p,shifty>Well... I don't know... This doesn't really sound like my kind of thing...");
+~chatplayer("<p,neutral>To be honest, I'd rather go kill stuff for loot than use my mind to work things out...");
+~chatnpc("<p,neutral>Well, it takes all sorts to make the world spin, what? Maybe you'll find a nice job with the Guards sometime.");
+~chatnpc("<p,sad>Sad though, your intelligence file seemed quite promising. Should you change your mind, you come back and let me know, what?");
+
+[label,rcd_tiffy_again]
+~chatnpc("<p,happy>Ah, what ho! Back for another go at the old testing, what?");
+switch_int (~p_choice2("Yes, let's go!", 1, "No, I've changed my mind.", 2)) {
+    case 1 : @rcd_tiffy_go;
+    case 2 : @rcd_tiffy_no;
+}
+
+// after the quest (the OSRS wiki's Transcript:Sir Tiffy Cashien; "Do you have any jobs" is
+// 2009scape's, as Wanted! isn't in the game)
+[label,rcd_tiffy_member]
+~chatnpc("<p,happy><text_gender("What ho, sir.", "What ho, milady.")> Jolly good show on the old training grounds thingy, what?");
+@rcd_tiffy_member_menu;
+
+[label,rcd_tiffy_member_menu]
+switch_int (~p_choice5("Do you have any jobs for me yet?", 1, "Can you explain the Gaze of Saradomin to me?", 2, "Can I buy some armour?", 3, "Can I switch respawns please?", 4, "Goodbye.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Do you have any jobs for me yet?");
+        ~chatnpc("<p,neutral>Sorry dear <text_gender("boy", "gal")> but we are still in the process of organising.");
+        ~chatnpc("<p,happy>I'm sure that we will have something for you soon, so please feel free to check back later.");
+    case 2 :
+        ~chatplayer("<p,confused>I don't really understand this 'Gaze of Saradomin' thing... Do you think you could explain what it does for me?");
+        ~chatnpc("<p,happy>Certainly <text_gender("sirrah", "milady")>! As you know, we Temple Knights are personally favoured by Saradomin himself.");
+        ~chatnpc("<p,laugh>And when I say personally favoured, I don't mean that sometime off in the future he's going to buy us all a drink!");
+        ~chatnpc("<p,neutral>He watches over each of us, and when we die he catches us as we fall, and ensures we arrive back at Falador castle safe and sound.");
+        ~chatnpc("<p,neutral>We usually lose some equipment when he does so, but it's a small price to pay to be hale and hearty again, what?");
+        ~chatnpc("<p,neutral>Some lucky fellows have a similar system going already, but when they die they spawn in that squalid little swamp village Lumbridge.");
+        ~chatplayer("<p,shifty>Yeah, what kind of person would want to spawn there... Certainly not me, and I never have! Honest!");
+        ~chatnpc("<p,happy>Well, you should be glad that we offer you a step up then! Falador is clearly a far superior town to spend your time in!");
+        ~chatnpc("<p,happy>Was there something else you wanted to ask good old Tiffy, <text_gender("sirrah", "milady")>?");
+        @rcd_tiffy_member_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Can I buy some armour?");
+        ~chatnpc("<p,happy>Of course old bean. I can sell you up to Initiate level items only I'm afraid.");
+        ~openshop_activenpc;
+    case 4 :
+        ~chatplayer("<p,quiz>Can I switch respawns, please?");
+        if (%falador_spawn = 1) {
+            ~chatnpc("<p,shock>What? You're saying you want to respawn in Lumbridge? Are you sure?");
+            if (~p_choice2("Yes, I want to respawn in Lumbridge.", 1, "Actually, no thanks. I like my respawn point.", 2) = 1) {
+                ~chatplayer("<p,neutral>Yes, I want to respawn in Lumbridge.");
+                ~chatnpc("<p,neutral>Why anyone would want to visit that smelly little swamp village of oiks is quite beyond me, I'm afraid, but the deed is done now.");
+                %falador_spawn = 0;
+                return;
+            }
+        } else {
+            ~chatnpc("<p,happy>Ah, so you'd like to respawn in Falador, the good old homestead! Are you sure?");
+            if (~p_choice2("Yes, I want to respawn in Falador.", 1, "Actually, no thanks. I like my respawn point.", 2) = 1) {
+                ~chatplayer("<p,happy>Yes, I want to respawn in Falador.");
+                ~chatnpc("<p,happy>Top-hole, what? Good old Fally is definitely the hot-spot nowadays!");
+                %falador_spawn = 1;
+                return;
+            }
+        }
+        ~chatplayer("<p,neutral>Actually, no thanks. I like my respawn point.");
+        ~chatnpc("<p,happy>As you wish, what? Ta-ta for now.");
+    case 5 :
+        ~chatplayer("<p,happy>Well, see you around Tiffy.");
+        ~chatnpc("<p,happy>Ta-ta for now, old bean!");
+}
+
+// ---------------------------------------------------------------- the initiate armour
+// The OSRS wiki: Recruitment Drive, 20 Defence and 10 Prayer
+[opheld2,basic_tk_helm] @rcd_initiate_wear(last_slot);
+[opheld2,basic_tk_body] @rcd_initiate_wear(last_slot);
+[opheld2,basic_tk_legs] @rcd_initiate_wear(last_slot);
+
+[label,rcd_initiate_wear](int $slot)
+if (%rd_main >= ^rcd_complete & stat_base(prayer) < 10) {
+    mes("You are not a high enough level to use this item.");
+    mes("You need to have a Prayer level of 10.");
+    return;
+}
+@levelrequire_recruitmentdrive_defence(20, $slot);
+
+// ---------------------------------------------------------------- the journal
+// 2009scape RecruitmentDrive.drawJournal's words
+[if_button,questlist:rd]
+if (%rd_main = ^rcd_not_started) {
+    def_string $req = "@dbl@with the @dre@Druidic Ritual Quest@dbl@ completed,|";
+    if (%druidquest = ^druid_complete) $req = "@str@with the Druidic Ritual Quest completed,|";
+    if (%spy = ^blackknight_complete) {
+        $req = append($req, "@str@and since I have completed the Black Knights' Fortress|@str@Quest.");
+    } else {
+        $req = append($req, "@dbl@and after I have completed the @dre@Black Knights' Fortress|@dre@Quest.");
+    }
+    ~quest_journal("Recruitment Drive", "@dbl@I can start this quest by speaking to @dre@Sir Amik Varze@dbl@,|@dbl@upstairs in @dre@Falador Castle,|<$req>");
+    return;
+}
+def_boolean $done = false;
+if (%rd_main >= ^rcd_complete) $done = true;
+def_boolean $passed = $done;
+if (~rcd_passed_count >= ^rcd_tests) $passed = true;
+def_string $t = ~lt_line("Sir Amik Varze told me that he had put my name forward as", "a potential member of some mysterious organisation.", "", true);
+if ($passed = true) {
+    $t = append($t, ~lt_line("I went to Falador Park, and met a strange old man named", "Tiffy.", "", true));
+    $t = append($t, ~lt_line("He sent me to a secret training ground, where my wits", "were thoroughly tested.", "", true));
+    $t = append($t, ~lt_line("Luckily, I was too smart to fall for any of their little tricks,", "and passed the test with flying colours.", "", true));
+} else if (%rd_room1_initiated = 1) {
+    $t = append($t, "@dbl@A man named @dre@Tiffy@dbl@ brought me @dre@here, to the secret training|@dre@grounds@dbl@ so that I could be tested for the job.||@dbl@I should @dre@work out@dbl@ what I am supposed to do to complete|@dbl@these rooms...||");
+} else {
+    $t = append($t, "@dbl@I should head to @dre@Falador Park@dbl@ to meet my @dre@Contact@dbl@ so that I|@dbl@can begin my @dre@testing for the job||");
+}
+if ($done = true) {
+    $t = append($t, ~lt_line("I am now an official member of the Temple Knights,", "although I have to wait for the paperwork to go through", "before I can commence working for them.", true));
+    $t = append($t, "|@red@QUEST COMPLETE!");
+} else if ($passed = true) {
+    $t = append($t, "@dbl@I should talk to @dre@Tiffy@dbl@ to become a Temple Knight.");
+}
+~quest_journal("Recruitment Drive", $t);

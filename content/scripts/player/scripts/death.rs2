@@ -48,11 +48,12 @@ if (findhero = true) {
     ~pvp_death_lose_items;
     session_log(^log_moderator, "Player died to <.displayname>");
 } else {
+    ~rcd_death; // EASCape: Recruitment Drive: the training grounds' things don't drop (quest_rd)
     ~player_death_lose_items;
     // todo: what npc killed the player
     session_log(^log_moderator, "Player died");
 }
-p_teleport(map_findsquare(0_50_50_21_18, 0, 2, ^map_findsquare_lineofwalk));
+p_teleport(map_findsquare(~rcd_respawn, 0, 2, ^map_findsquare_lineofwalk)); // EASCape: Recruitment Drive's Gaze of Saradomin can make it Falador (quest_rd)
 buildappearance(worn);
 ~prayer_deactivate_all;
 ~follower_death;

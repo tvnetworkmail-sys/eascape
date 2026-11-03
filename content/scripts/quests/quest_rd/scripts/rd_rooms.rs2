@@ -1,0 +1,542 @@
+// EASCape: Recruitment Drive's test rooms but Miss Cheevers' (rd_cheevers.rs2). How each works is
+// 2009scape's (SirSpishyusDialogue.kt, LadyTableDialogue.kt, SirKuamFerentseDialogue.kt,
+// SirLeyeBehavior.kt, SirTinleyDialogue.kt, SirRenItchwoodDialogue.kt, MsHynnTerprettDialogue.kt);
+// the words the OSRS wiki's Transcript:Recruitment Drive where it and 2009scape differ, and the RS
+// wiki's transcript for what neither has (Sir Ren Itchood's final clues, the second talks). The
+// cache has the pieces: the multilocs for the fox, chicken and grain (rd_foxleft..rd_grainright)
+// and Lady Table's statues (rd_room_order), Sir Ren Itchood's combination lock (inter_23: its 4th
+// letter is the 2007 cache's interface 285 exactly). Ours is marked.
+
+// ---------------------------------------------------------------- doors and portals
+[oploc1,rd_room1_exitdoor] @rcd_door(^rcd_spishyus);
+[oploc1,rd_room2_exitdoor] @rcd_door(^rcd_table);
+[oploc1,rd_room3_exitdoor] @rcd_door(^rcd_kuam);
+[oploc1,rd_room4_exitdoor] @rcd_door(^rcd_tinley);
+[oploc1,rd_room5_exitdoor] @rcd_door(^rcd_ren);
+[oploc1,rd_room6_exitdoor] @rcd_door(^rcd_cheevers);
+[oploc1,rd_room7_exitdoor] @rcd_door(^rcd_hynn);
+
+// the portal behind each door (the OSRS wiki: "a yellow portal at the end of the room, which you
+// may use to travel to the next room after you pass the test"; 2009scape goes on at the door)
+[oploc1,rd_portal_room1_exit] @rcd_exit_portal(^rcd_spishyus);
+[oploc1,rd_portal_room2_exit] @rcd_exit_portal(^rcd_table);
+[oploc1,rd_portal_room3_exit] @rcd_exit_portal(^rcd_kuam);
+[oploc1,rd_portal_room4_exit] @rcd_exit_portal(^rcd_tinley);
+[oploc1,rd_portal_room5_exit] @rcd_exit_portal(^rcd_ren);
+[oploc1,rd_portal_room6_exit] @rcd_exit_portal(^rcd_cheevers);
+[oploc1,rd_portal_room7_exit] @rcd_exit_portal(^rcd_hynn);
+
+// the portal you came in by takes you back to Falador (2009scape's quitPortal; the RS wiki's
+// "Quit the training grounds?")
+[oploc1,rd_portal_room1_entrance] @rcd_quit;
+[oploc1,rd_portal_room2_entrance] @rcd_quit;
+[oploc1,rd_portal_room3_entrance] @rcd_quit;
+[oploc1,rd_portal_room4_entrance] @rcd_quit;
+[oploc1,rd_portal_room5_entrance] @rcd_quit;
+[oploc1,rd_portal_room6_entrance] @rcd_quit;
+[oploc1,rd_portal_room7_entrance] @rcd_quit;
+
+[label,rcd_quit]
+if (~p_choice2_header("YES", 1, "NO", 2, "Quit the training grounds?") = 2) return;
+@rcd_fail;
+
+[proc,rcd_in_room](int $room)(boolean)
+if (%rd_main ! ^rcd_started) return(false);
+if (%rcd_order = 0) return(false);
+if (~rcd_current ! $room) return(false);
+return(true);
+
+[label,rcd_door](int $room)
+if (~rcd_in_room($room) = false) {
+    mes("You have not completed this room's puzzle yet.");
+    return;
+}
+if (~rcd_passed($room) = true) @rcd_next;
+if ($room = ^rcd_ren) @rcd_lock_open;
+if ($room = ^rcd_cheevers) @rcd_cheevers_door;
+mes("You have not completed this room's puzzle yet.");
+
+[label,rcd_exit_portal](int $room)
+if (~rcd_in_room($room) = true & ~rcd_passed($room) = true) @rcd_next;
+mes("You have not completed this room's puzzle yet."); // ours
+
+[label,rcd_failed_line](int $room)
+~rcd_say(~rcd_examiner($room), "<p,sad>No... I am very sorry. Apparently you are not up to the challenge. I will return you where you came from, better luck in the future.");
+@rcd_fail;
+
+// ---------------------------------------------------------------- 1: Sir Spishyus
+[label,rcd_spishyus_start]
+~rcd_say(rd_observer_room_1, "<p,happy>Ah, welcome <displayname>.");
+~chatplayer("<p,neutral>Hello there. What am I supposed to be doing in this room?");
+~rcd_say(rd_observer_room_1, "<p,neutral>Well, your task is to take this fox, this chicken and this bag of grain across that bridge there to the other side of the room.");
+~rcd_say(rd_observer_room_1, "<p,neutral>When you have done that, your task is complete.");
+~chatplayer("<p,quiz>Is that it?");
+~rcd_say(rd_observer_room_1, "<p,neutral>Well, it is not quite as simple as that may sound.");
+~rcd_say(rd_observer_room_1, "<p,neutral>Firstly, you may only carry one of the objects across the room at a time, for the bridge is old and fragile.");
+~rcd_say(rd_observer_room_1, "<p,neutral>Secondly, the fox wants to eat the chicken, and the chicken wants to eat the grain. Should you ever leave the fox unattended with the chicken, or the grain unattended with the chicken, then");
+~rcd_say(rd_observer_room_1, "<p,neutral>one of them will be eaten, and you will be unable to complete the test.");
+~chatplayer("<p,neutral>Okay, I'll see what I can do.");
+
+[opnpc1,rd_observer_room_1]
+if (~rcd_in_room(^rcd_spishyus) = false) return;
+if (~rcd_passed(^rcd_spishyus) = true) @rcd_praise(^rcd_spishyus);
+if (%rcd_spish_talk = 0) {
+    ~chatplayer("<p,angry>Listen, this is really annoying me. Can't you just stop the fox eating the chicken or the chicken eating the grain for me, while I carry the other stuff across the bridge?");
+    ~chatnpc("<p,neutral>I am afraid not, <displayname>. My task is solely to observe your progress, we have explicit instructions not to assist you in any way..");
+    %rcd_spish_talk = 1;
+    return;
+}
+~chatplayer("<p,sad>No, but seriously, please? Think of the poor chicken and grain! Being eaten!");
+~chatnpc("<p,sad>I am truly sorry, but my hands are tied. I suggest you think carefully before taking any items across the bridge with you, to ensure nothing gets eaten while you are not paying attention.");
+~chatnpc("<p,neutral>This is the only help I may give you...");
+~chatplayer("<p,neutral>Well, thanks I guess...");
+
+// the two banks of the river (2009scape fromZoneBorder and toZoneBorder)
+[proc,rcd_spish_side]()(int)
+if (inzone(0_38_77_47_39, 0_38_77_58_49, coord) = true) return(1); // 2479-2490: the start
+if (inzone(0_38_77_39_39, 0_38_77_46_49, coord) = true) return(2); // 2471-2478: across
+return(0);
+
+// The cache's multilocs: the left one shows its animal at 0 (gone at 1, fed at 2), the right one at
+// 1 (fed at 3). 2009scape: you carry them as worn items (fox right hand, chicken left hand, grain
+// on your back), taking one off puts it down on that bank.
+[oploc1,rd_room2_fox_multi] @rcd_pick(rd_fox, 1);
+[oploc1,rd_room2_fox_multi_right] @rcd_pick(rd_fox, 2);
+[oploc1,rd_room2_chicken_multi] @rcd_pick(rd_chicken, 1);
+[oploc1,rd_room2_chicken_multi_right] @rcd_pick(rd_chicken, 2);
+[oploc1,rd_room2_grain_multi] @rcd_pick(rd_sack, 1);
+[oploc1,rd_room2_grain_multi_right] @rcd_pick(rd_sack, 2);
+
+[label,rcd_pick](obj $animal, int $side)
+if (~rcd_in_room(^rcd_spishyus) = false | ~rcd_passed(^rcd_spishyus) = true) return;
+if ($animal = rd_fox) {
+    if ($side = 1 & %rd_foxleft = 0) %rd_foxleft = 1;
+    else if ($side = 2 & %rd_foxright = 1) %rd_foxright = 0;
+    else return;
+    inv_setslot(worn, ^wearpos_rhand, rd_fox, 1);
+} else if ($animal = rd_chicken) {
+    if ($side = 1 & %rd_chickleft = 0) %rd_chickleft = 1;
+    else if ($side = 2 & %rd_chickright = 1) %rd_chickright = 0;
+    else return;
+    inv_setslot(worn, ^wearpos_lhand, rd_chicken, 1);
+} else {
+    if ($side = 1 & %rd_grainleft = 0) %rd_grainleft = 1;
+    else if ($side = 2 & %rd_grainright = 1) %rd_grainright = 0;
+    else return;
+    inv_setslot(worn, ^wearpos_back, rd_sack, 1);
+}
+anim(human_pickupfloor, 0);
+buildappearance(worn);
+~update_all(null);
+
+[proc,rcd_is_animal](obj $obj)(boolean)
+if ($obj = rd_fox | $obj = rd_chicken | $obj = rd_sack) return(true);
+return(false);
+
+// taking one off (player/scripts/equip.rs2)
+[label,rcd_putdown](int $slot)
+def_obj $animal = inv_getobj(worn, $slot);
+def_int $side = ~rcd_spish_side;
+if ($side = 0 | ~rcd_in_room(^rcd_spishyus) = false) {
+    // ours: out of the room they just go (they can't leave it anyway)
+    inv_delslot(worn, $slot);
+    buildappearance(worn);
+    ~update_all(null);
+    return;
+}
+inv_delslot(worn, $slot);
+buildappearance(worn);
+~update_all(null);
+if ($animal = rd_fox) {
+    if ($side = 1) %rd_foxleft = 0;
+    else %rd_foxright = 1;
+} else if ($animal = rd_chicken) {
+    if ($side = 1) %rd_chickleft = 0;
+    else %rd_chickright = 1;
+} else {
+    if ($side = 1) %rd_grainleft = 0;
+    else %rd_grainright = 1;
+}
+if (%rd_foxright = 1 & %rd_chickright = 1 & %rd_grainright = 1 & ~rcd_passed(^rcd_spishyus) = false) {
+    mes("Congratulations! You have solved this room's puzzle!");
+    @rcd_passed_room(^rcd_spishyus);
+}
+
+[proc,rcd_carried]()(int)
+def_int $n = 0;
+if (inv_getobj(worn, ^wearpos_rhand) = rd_fox) $n = calc($n + 1);
+if (inv_getobj(worn, ^wearpos_lhand) = rd_chicken) $n = calc($n + 1);
+if (inv_getobj(worn, ^wearpos_back) = rd_sack) $n = calc($n + 1);
+return($n);
+
+// the bridge: across from the start bank to 2476, back to 2484 (2009scape)
+[oploc1,rd_bridge_left] @rcd_cross(1);
+[oploc1,rd_bridge_right] @rcd_cross(2);
+
+[label,rcd_cross](int $from)
+if (~rcd_in_room(^rcd_spishyus) = true & ~rcd_passed(^rcd_spishyus) = false) {
+    if (~rcd_carried > 1) {
+        ~chatplayer("<p,neutral>I really don't think I should be carrying more than 5 Kg across that rickety bridge...");
+        return;
+    }
+    // 2009scape checkFail: what you leave behind on this bank. Ours: you see what got eaten (the
+    // cache's fed fox and empty sack).
+    if ($from = 1) {
+        if (%rd_foxleft = 0 & %rd_chickleft = 0) {
+            %rd_foxleft = 2;
+            %rd_chickleft = 1;
+            @rcd_failed_line(^rcd_spishyus);
+        }
+        if (%rd_chickleft = 0 & %rd_grainleft = 0) {
+            %rd_grainleft = 2;
+            %rd_chickleft = 2;
+            @rcd_failed_line(^rcd_spishyus);
+        }
+    } else {
+        if (%rd_foxright = 1 & %rd_chickright = 1) {
+            %rd_foxright = 3;
+            %rd_chickright = 0;
+            @rcd_failed_line(^rcd_spishyus);
+        }
+        if (%rd_chickright = 1 & %rd_grainright = 1) {
+            %rd_grainright = 3;
+            %rd_chickright = 3;
+            @rcd_failed_line(^rcd_spishyus);
+        }
+    }
+}
+mes("You carefully walk across the rickety bridge...");
+// ours: from the square at the bridge's end
+if ($from = 1) {
+    p_teleport(0_38_77_52_44);
+    p_delay(0);
+    ~forcemove(0_38_77_44_44);
+} else {
+    p_teleport(0_38_77_44_44);
+    p_delay(0);
+    ~forcemove(0_38_77_52_44);
+}
+
+// ---------------------------------------------------------------- 2: Lady Table
+// 2009scape: one of the twelve orders with a statue missing, 10 seconds, the lights dim, all twelve
+// back in the order rd_room_order 0 has. Its ticks: 5 between her lines, 16 to look.
+[label,rcd_table_start]
+%rcd_statue = calc(random(12) + 1);
+%rd_room_order = %rcd_statue;
+%rcd_placed = 0;
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>Welcome, <displayname>.|This room will test your observation skills.");
+p_delay(4);
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>Study the statues closely.|There is one missing statue in this room.");
+p_delay(4);
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>We will also mix the order up a little, to make things|interesting for you!");
+p_delay(4);
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>You have 10 seconds to memorise the statues... starting|NOW!");
+p_delay(4);
+if_close;
+p_delay(10);
+~fade_out;
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>We will now dim the lights and bring the missing statue|back in.");
+p_delay(2);
+%rd_room_order = 0;
+%rcd_placed = 1;
+~fade_in;
+~rcd_npcsay(rd_observer_room_2, "<p,neutral>Please touch the statue you think has been added.");
+
+// the twelve statue places (rd_statue_multi_1-12); for order n the one missing is (the cache's
+// multilocs, and 2009scape's statueArray)
+[proc,rcd_statue_answer](int $n)(int)
+switch_int ($n) {
+    case 1 : return(6);
+    case 2 : return(5);
+    case 3 : return(4);
+    case 4 : return(3);
+    case 5 : return(2);
+    case 6 : return(1);
+    case 7 : return(10);
+    case 8 : return(11);
+    case 9 : return(12);
+    case 10 : return(9);
+    case 11 : return(8);
+    case 12 : return(7);
+}
+return(0);
+
+[oploc1,rd_statue_multi_1] @rcd_statue(1);
+[oploc1,rd_statue_multi_2] @rcd_statue(2);
+[oploc1,rd_statue_multi_3] @rcd_statue(3);
+[oploc1,rd_statue_multi_4] @rcd_statue(4);
+[oploc1,rd_statue_multi_5] @rcd_statue(5);
+[oploc1,rd_statue_multi_6] @rcd_statue(6);
+[oploc1,rd_statue_multi_7] @rcd_statue(7);
+[oploc1,rd_statue_multi_8] @rcd_statue(8);
+[oploc1,rd_statue_multi_9] @rcd_statue(9);
+[oploc1,rd_statue_multi_10] @rcd_statue(10);
+[oploc1,rd_statue_multi_11] @rcd_statue(11);
+[oploc1,rd_statue_multi_12] @rcd_statue(12);
+
+[label,rcd_statue](int $k)
+if (~rcd_in_room(^rcd_table) = false) return;
+if (~rcd_passed(^rcd_table) = true) {
+    ~rcd_say(rd_observer_room_2, "<p,neutral>Please step through the portal to meet your next challenge.");
+    return;
+}
+if (%rcd_placed = 0) {
+    mes("Wait until all statues have been placed before selecting one."); // the RS wiki's transcript
+    return;
+}
+if ($k = ~rcd_statue_answer(%rcd_statue)) {
+    ~rcd_set_passed(^rcd_table);
+    @rcd_praise(^rcd_table);
+}
+@rcd_failed_line(^rcd_table);
+
+[opnpc1,rd_observer_room_2]
+if (~rcd_in_room(^rcd_table) = false) return;
+if (~rcd_passed(^rcd_table) = true) @rcd_praise(^rcd_table);
+~chatplayer("<p,quiz>What am I supposed to be doing again?");
+~chatnpc("<p,neutral>Touch the statue that was brought in after you entered.");
+~chatnpc("<p,neutral>If you touch the wrong one, you will fail this task, and will be escorted back to Falador.");
+
+// ---------------------------------------------------------------- 3: Sir Kuam Ferentse and Sir Leye
+// The 2005 test: no man may defeat Sir Leye (2009scape SirLeyeBehavior: a man's killing blow
+// leaves him at full health; the OSRS wiki: "Prior to an update on 9 November 2022, Sir Leye could
+// only be defeated by female characters"). You get 400 ticks with him.
+[label,rcd_kuam_start] @rcd_kuam_intro;
+
+[label,rcd_kuam_intro]
+~rcd_say(rd_observer_room_3, "<p,neutral>Ah, <displayname>, you're finally here. Your task for this room is to defeat Sir Leye. He has been blessed by Saradomin to be undefeatable by any man, so it should be quite the challenge for you.");
+~rcd_say(rd_observer_room_3, "<p,neutral>If you are having problems, remember A true warrior uses his wits as much as his brawn. Fight smarter, not harder.");
+~rcd_leye_del;
+npc_add(0_38_77_28_35, rd_combat_npc_room_3, 400); // 2009scape: 2460,4963
+%rcd_leye = npc_uid;
+hint_npc;
+npc_say("No man may defeat me!");
+
+[opnpc1,rd_observer_room_3]
+if (~rcd_in_room(^rcd_kuam) = false) return;
+if (~rcd_passed(^rcd_kuam) = true) @rcd_praise(^rcd_kuam);
+@rcd_kuam_intro;
+
+[opnpc1,rd_combat_npc_room_3]
+~chatnpc("<p,angry>AH-HA HA HA! You can NEVER defeat ME! I am blessed by Saradomin himself! NO MAN MAY DEFEAT ME!");
+
+[ai_queue2,rd_combat_npc_room_3]
+if (finduid(%npc_aggressive_player) = true) {
+    if (gender = 0 & last_int >= npc_stat(hitpoints)) {
+        npc_statheal(hitpoints, npc_basestat(hitpoints), 0);
+    }
+}
+~npc_default_damage(last_int);
+
+[ai_queue3,rd_combat_npc_room_3]
+if (finduid(%npc_aggressive_player) = true) {
+    if (npc_uid = %rcd_leye) {
+        hint_stop;
+        queue(rcd_leye_beaten, 0, 0);
+    }
+}
+gosub(npc_death);
+
+[queue,rcd_leye_beaten](int $arg)
+%rcd_leye = null;
+if (~rcd_in_room(^rcd_kuam) = false) return;
+@rcd_passed_room(^rcd_kuam);
+
+// ---------------------------------------------------------------- 4: Sir Tinley
+// 2009scape: stand still for 15 ticks after his clue; moving or talking to him first fails you
+[label,rcd_tinley_start]
+~rcd_say(rd_observer_room_4, "<p,neutral>Ah, <displayname>, you have arrived. Speak to me to begin your task.");
+
+[opnpc1,rd_observer_room_4]
+if (~rcd_in_room(^rcd_tinley) = false) return;
+if (~rcd_passed(^rcd_tinley) = true) @rcd_praise(^rcd_tinley);
+if (%rcd_waiting = 1) {
+    %rcd_waiting = 0;
+    @rcd_failed_line(^rcd_tinley);
+}
+~chatnpc("<p,neutral>Ah, welcome <displayname>. I have but one clue for you to pass this room's puzzle: 'Patience'.");
+if_close;
+%rcd_waiting = 1;
+%rcd_tinley_ticks = 0;
+%rcd_coord = coord;
+queue(rcd_tinley_wait, 1, 0);
+
+[queue,rcd_tinley_wait](int $arg)
+if (%rcd_waiting = 0 | ~rcd_in_room(^rcd_tinley) = false) return;
+if (coord ! %rcd_coord) {
+    %rcd_waiting = 0;
+    @rcd_failed_line(^rcd_tinley);
+}
+%rcd_tinley_ticks = calc(%rcd_tinley_ticks + 1);
+if (%rcd_tinley_ticks >= 15) {
+    %rcd_waiting = 0;
+    ~rcd_set_passed(^rcd_tinley);
+    @rcd_praise(^rcd_tinley);
+}
+queue(rcd_tinley_wait, 1, 0);
+
+// ---------------------------------------------------------------- 5: Sir Ren Itchood
+// the password is in the first letters of his lines (1 BITE, 2 FISH, 3 LAST, 4 MEAT, 5 RAIN, 6 TIME)
+[label,rcd_ren_start] @rcd_ren_talk;
+
+[opnpc1,rd_observer_room_5]
+if (~rcd_in_room(^rcd_ren) = false) return;
+@rcd_ren_talk;
+
+[label,rcd_ren_talk]
+if (~rcd_passed(^rcd_ren) = true) @rcd_praise(^rcd_ren);
+if (%rcd_clue = 0) %rcd_clue = calc(random(6) + 1);
+~rcd_say(rd_observer_room_5, "<p,happy>Greetings friend, and welcome here,|you'll find my puzzle not so clear.|Hidden amongst my words, it's true,|the password for the door as a clue.");
+def_int $choice = 0;
+if (%rcd_clues_asked = 0) {
+    $choice = ~p_choice2("Can I have the clue for the door?", 1, "Can I have a different clue?", 2);
+} else {
+    $choice = ~p_choice2("Can I have the clue for the door?", 1, "Can I have the final clue?", 3);
+}
+if ($choice = 1) {
+    ~chatplayer("<p,quiz>Can I have the clue for the door?");
+    switch_int (%rcd_clue) {
+        case 1 : ~rcd_say(rd_observer_room_5, "<p,happy>Better than me, you'll not find|In rhyming and in puzzles.|This clue so clear will tax your mind|Entirely as it confuzzles!");
+        case 2 : ~rcd_say(rd_observer_room_5, "<p,happy>Feel the aching of your mind|In puzzlement, confused.|See the clue hidden behind|His words, as you perused.");
+        case 3 : ~rcd_say(rd_observer_room_5, "<p,happy>Look closely at the words i speak;|And study closely every part.|See for yourself the word you seek|Trapped for you if you're smart.");
+        case 4 : ~rcd_say(rd_observer_room_5, "<p,happy>More than words, i have not for you|Except the things i say today.|Aware are you, this is a clue?|Take note of what i say!");
+        case 5 : ~rcd_say(rd_observer_room_5, "<p,happy>Rare it is that you will see|A puzzle such as this!|In many ways it tickles me|Now, watching you hit and miss!");
+        case 6 : ~rcd_say(rd_observer_room_5, "<p,happy>This riddle of mine may confuse,|I am quite sure of that.|Mayhap you should closely peruse|Every word i have spat?");
+    }
+    return;
+}
+if ($choice = 2) {
+    ~chatplayer("<p,confused>I don't get that riddle... Can I have a different one?");
+    %rcd_clues_asked = 1;
+    switch_int (%rcd_clue) {
+        case 1 : ~rcd_say(rd_observer_room_5, "<p,happy>Before you hurry through that door|Inspect the words i spoke.|There is a simple hidden flaw|Ere you think my rhyme a joke.");
+        case 2 : ~rcd_say(rd_observer_room_5, "<p,happy>First my clue you did not see,|I really wish you had.|Such puzzling wordplay devilry|Has left you kind of mad!");
+        case 3 : ~rcd_say(rd_observer_room_5, "<p,happy>Last time my puzzle did not help|Apparently, so you've bidden.|Study my speech carefully, whelp|To find the answer, hidden.");
+        case 4 : ~rcd_say(rd_observer_room_5, "<p,happy>Many types have passed through here|Even such as you amongst their sort.|And in the end, the puzzles clear;|The hidden word you saught.");
+        case 5 : ~rcd_say(rd_observer_room_5, "<p,happy>Repetition, once again|Against good sense it goes.|In my words, the answers plain|Now that you see rhyme flows.");
+        case 6 : ~rcd_say(rd_observer_room_5, "<p,happy>Twice it is now, i have stated|In a rhyme, what is the pass.|Maybe my words obfuscated|Entirely beyond your class.");
+    }
+    return;
+}
+~chatplayer("<p,confused>I don't get that riddle... Can I have the final clue for the door?");
+%rcd_clues_asked = 2;
+switch_int (%rcd_clue) {
+    case 1 : ~rcd_say(rd_observer_room_5, "<p,happy>Betrayed by words the answer is|In that what i say is the key|There is no more help after this|Especially no more from me.");
+    case 2 : ~rcd_say(rd_observer_room_5, "<p,happy>For the last time i will state|In simple words, the clue.|Such tricky words make you irate|Having no idea what to do...");
+    case 3 : ~rcd_say(rd_observer_room_5, "<p,happy>Lo! my final speech is now|Attended to by you.|Study my words, and find out how|To understand my clue!");
+    case 4 : ~rcd_say(rd_observer_room_5, "<p,happy>Maybe i will do my best;|Especially at giving clues.|Attempt to help you pass the test!|That should help me pay my dues.");
+    case 5 : ~rcd_say(rd_observer_room_5, "<p,happy>Repeat myself to give the clue|Again, i now do speak.|It's hidden in my words - hey you!|Now find the answer you seek.");
+    case 6 : ~rcd_say(rd_observer_room_5, "<p,happy>Three times now, my riddle said;|I hope you finally see the clue.|Maybe think on what you've read;|Easy when you know what to do.");
+}
+
+// the combination lock (2009scape DoorLockPuzzleInterfaceListener; the four letters as the
+// Fremennik seer's door keeps them, 5 bits each in %temp)
+[label,rcd_lock_open]
+if (%rcd_clue = 0) %rcd_clue = calc(random(6) + 1);
+%temp = 0;
+if_openmain(inter_23);
+if_settext(inter_23:com_43, "A");
+if_settext(inter_23:com_44, "A");
+if_settext(inter_23:com_45, "A");
+if_settext(inter_23:com_46, "A");
+
+[proc,rcd_lock_letter](int $i)(int)
+return(getbit_range(%temp, calc(5 * $i - 4), calc(5 * $i)));
+
+[label,rcd_lock_turn](int $i, int $change)
+def_int $v = ~calc_tribaldoor_value(~rcd_lock_letter($i), $change);
+%temp = setbit_range_toint(%temp, $v, calc(5 * $i - 4), calc(5 * $i));
+switch_int ($i) {
+    case 1 : if_settext(inter_23:com_43, enum(int, string, alphabet, $v));
+    case 2 : if_settext(inter_23:com_44, enum(int, string, alphabet, $v));
+    case 3 : if_settext(inter_23:com_45, enum(int, string, alphabet, $v));
+    case 4 : if_settext(inter_23:com_46, enum(int, string, alphabet, $v));
+}
+
+[if_button,inter_23:com_47] @rcd_lock_turn(1, -1);
+[if_button,inter_23:com_49] @rcd_lock_turn(2, -1);
+[if_button,inter_23:com_51] @rcd_lock_turn(3, -1);
+[if_button,inter_23:com_53] @rcd_lock_turn(4, -1);
+[if_button,inter_23:com_48] @rcd_lock_turn(1, 1);
+[if_button,inter_23:com_50] @rcd_lock_turn(2, 1);
+[if_button,inter_23:com_52] @rcd_lock_turn(3, 1);
+[if_button,inter_23:com_54] @rcd_lock_turn(4, 1);
+
+// the letters as numbers (A 0 ... Z 25)
+[proc,rcd_lock_word]()(int)
+return(calc(~rcd_lock_letter(1) * 17576 + ~rcd_lock_letter(2) * 676 + ~rcd_lock_letter(3) * 26 + ~rcd_lock_letter(4)));
+
+[proc,rcd_password](int $clue)(int)
+switch_int ($clue) {
+    case 1 : return(calc(1 * 17576 + 8 * 676 + 19 * 26 + 4)); // BITE
+    case 2 : return(calc(5 * 17576 + 8 * 676 + 18 * 26 + 7)); // FISH
+    case 3 : return(calc(11 * 17576 + 0 * 676 + 18 * 26 + 19)); // LAST
+    case 4 : return(calc(12 * 17576 + 4 * 676 + 0 * 26 + 19)); // MEAT
+    case 5 : return(calc(17 * 17576 + 0 * 676 + 8 * 26 + 13)); // RAIN
+    case 6 : return(calc(19 * 17576 + 8 * 676 + 12 * 26 + 4)); // TIME
+}
+return(-1);
+
+[if_button,inter_23:com_57]
+if_close;
+if (~rcd_in_room(^rcd_ren) = false) return;
+if (~rcd_lock_word = ~rcd_password(%rcd_clue)) {
+    ~rcd_set_passed(^rcd_ren);
+    ~rcd_say(rd_observer_room_5, "<p,happy>Your wit is sharp, your brains quite clear;|You solved my puzzle with no fear.|At puzzles I rank you quite the best,|now enter the portal for your next test.");
+    if (~rcd_passed_count >= ^rcd_tests) @rcd_praise(^rcd_ren);
+    return;
+}
+mes("You have failed to solve the riddle.");
+~rcd_say(rd_observer_room_5, "<p,sad>It's sad to say,|this test beat you.|I'll send you to Tiffy,|what to do?");
+@rcd_fail;
+
+// ---------------------------------------------------------------- 7: Ms. Hynn Terprett
+// 2009scape's five riddles (1 fingers, 2 false statements, 3 the daughter, 4 the fates, 5 buckets)
+[label,rcd_hynn_start] @rcd_hynn_talk;
+
+[opnpc1,rd_observer_room_7]
+if (~rcd_in_room(^rcd_hynn) = false) return;
+@rcd_hynn_talk;
+
+[label,rcd_hynn_talk]
+if (~rcd_passed(^rcd_hynn) = true) {
+    ~rcd_say(rd_observer_room_7, "<p,happy>You certainly have the wits to be a Temple Knight. Pass on through the portal to find your next challenge.");
+    return;
+}
+if (%rcd_riddle = 0) %rcd_riddle = calc(random(5) + 1);
+~rcd_say(rd_observer_room_7, "<p,neutral>Greetings, <displayname>. I am here to test your wits with a simple riddle.");
+def_boolean $right = false;
+switch_int (%rcd_riddle) {
+    case 1 :
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Here is my riddle: I estimate there to be 1 million inhabitants in the world of Gielinor, creatures and people both.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>What would be the number you would get if you multiply the number of fingers on everythings left hand, to the nearest million?");
+        p_countdialog;
+        if (last_int = 0) $right = true;
+    case 2 :
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Here is my riddle: Which of the following statements is true?");
+        if (~p_choice4_header("The number of false statements here is one.", 1, "The number of false statements here is two.", 2, "The number of false statements here is three.", 3, "The number of false statements here is four.", 4, "Which of the following is true?") = 3) $right = true;
+    case 3 :
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Here is my riddle: I have both a husband and daughter.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>My husband is four times older than my daughter. In twenty years time, he will be twice as old as my daughter.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>How old is my daughter now?");
+        p_countdialog;
+        if (last_int = 10) $right = true;
+    case 4 :
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Here is my riddle: Imagine that you have been captured by an enemy. You are to be killed, but in a moment of mercy, the enemy has allowed you to pick your own demise.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Your first choice is to be drowned in a lake of acid.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Your second choice is to be burned on a fire.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Your third choice is to be thrown to a pack of wolves that have not been fed in over a month.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Your final choice of fate is to be thrown from the walls of a castle, many hundreds of feet high.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Which fate would you be wise to choose?");
+        if (~p_choice4_header("The lake of acid.", 1, "The large fire.", 2, "The wolves.", 3, "The castle walls.", 4, "Select your fate") = 3) $right = true;
+    case 5 :
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Here is my riddle: I dropped four identical stones, into four identical buckets, each containing an identical amount of water.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>The first bucket's water was at 32 degrees Fahrenheit, the second was at 33 degrees, the third at 34 and the fourth was at 35 degrees.");
+        ~rcd_say(rd_observer_room_7, "<p,quiz>Which bucket's stone dropped to the bottom of the bucket last?");
+        if (~p_choice4_header("Bucket A (32 degrees)", 1, "Bucket B (33 degrees)", 2, "Bucket C (34 degrees)", 3, "Bucket D (35 degrees)", 4, "Which bucket's stone dropped last?") = 1) $right = true;
+}
+if ($right = true) {
+    ~rcd_set_passed(^rcd_hynn);
+    @rcd_praise(^rcd_hynn);
+}
+@rcd_failed_line(^rcd_hynn);

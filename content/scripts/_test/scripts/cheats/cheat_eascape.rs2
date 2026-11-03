@@ -716,6 +716,12 @@ if (compare($name, "runemysteries") = 0) {
     if (%giantdwarf_current_company = 0) %giantdwarf_current_company = %gd_chosen;
     %giantdwarf_model_state = 7;
     ~gd_complete; // experience, meeting notes and quest complete scroll (quest_giant_dwarf/gd_start.rs2)
+} else if (compare($name, "recruitmentdrive") = 0) {
+    if (%rd_main >= ^recruitmentdrive_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    ~rcd_complete; // experience, initiate sallet and quest complete scroll (quest_rd/rd_start.rs2)
 } else if (compare($name, "zogre") = 0) {
     if (%zogre >= ^zogre_complete) {
         mes("You've already done that quest.");
@@ -837,7 +843,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf), recruitmentdrive (Recruitment Drive)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
@@ -2192,3 +2198,99 @@ if (%roguesden_state ! 1) ~roguesden_start;
 %roguesden_last = coord;
 %roguesden_flags = setbit(%roguesden_flags, 0);
 mes("Rogues' Den: stage <tostring($n)>.");
+
+// ::rdrivepack (test): Recruitment Drive needs no items, and Sir Tiffy only takes you with nothing
+// in your pack and nothing worn, so everything you carry and wear goes to your bank. It also marks
+// Black Knights' Fortress and Druidic Ritual done if they aren't (without their rewards), so Sir
+// Amik will offer the quest.
+[debugproc,rdrivepack]
+if (p_finduid(uid) = false) return;
+def_int $slot = 0;
+def_obj $obj = null;
+while ($slot < inv_size(inv)) {
+    $obj = inv_getobj(inv, $slot);
+    if ($obj ! null) inv_moveitem(inv, bank, $obj, inv_getnum(inv, $slot));
+    $slot = calc($slot + 1);
+}
+$slot = 0;
+while ($slot < inv_size(worn)) {
+    $obj = inv_getobj(worn, $slot);
+    if ($obj ! null) inv_moveitem(worn, bank, $obj, inv_getnum(worn, $slot));
+    $slot = calc($slot + 1);
+}
+buildappearance(worn);
+~update_all(null);
+if (%spy < ^blackknight_complete) %spy = ^blackknight_complete;
+if (%druidquest < ^druid_complete) %druidquest = ^druid_complete;
+~update_questpoints;
+mes("Recruitment Drive needs no items: your pack and worn items are in your bank. Sir Amik Varze (Falador castle, top of the west tower) starts it; Sir Tiffy Cashien is in Falador Park.");
+mes("Sir Leye can only be beaten by a woman (2005): a makeover mage, or ::rdrivestage 21 to swap.");
+
+// ::rdrivestage <n> (test): Recruitment Drive (quest_rd). 0 not started, 1 Sir Amik has sent you
+// (talk to Sir Tiffy), 2 been to the grounds once (Sir Tiffy: "Back for another go"), 3 five rooms
+// passed (talk to Sir Tiffy to finish), 4 done without the rewards. 11-17 takes you straight into
+// that room (11 Sir Spishyus, 12 Lady Table, 13 Sir Kuam Ferentse, 14 Sir Tinley, 15 Sir Ren
+// Itchood, 16 Miss Cheevers, 17 Ms. Hynn Terprett) as the first of a run, the other four random:
+// bank everything first (::rdrivepack). 21 swaps your character between man and woman.
+[debugproc,rdrivestage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 21) {
+    if (gender = 0) setgender(1);
+    else setgender(0);
+    buildappearance(worn);
+    mes("Recruitment Drive: you are now a <text_gender("man", "woman")>.");
+    return;
+}
+if ($n >= 11 & $n <= 17) {
+    if (~rcd_carrying = true) {
+        mes("Bank everything first: nothing goes into the training grounds (::rdrivepack).");
+        return;
+    }
+    if (%rd_main ! ^rcd_started) %rd_main = ^rcd_started;
+    ~rcd_end_run;
+    ~rcd_shuffle;
+    def_int $room = calc($n - 10);
+    def_int $i = 0;
+    def_int $first = ~rcd_room(0);
+    // put the room asked for first, swapping it with the one that was (or with the first if it
+    // wasn't picked)
+    while ($i < ^rcd_tests) {
+        if (~rcd_room($i) = $room) {
+            %rcd_order = setbit_range_toint(%rcd_order, $first, calc($i * 3), calc($i * 3 + 2));
+        }
+        $i = calc($i + 1);
+    }
+    %rcd_order = setbit_range_toint(%rcd_order, $room, 0, 2);
+    %rd_room1_initiated = 1;
+    ~send_quest_progress(questlist:rd, %rd_main, ^rcd_complete);
+    mes("Recruitment Drive: into room <tostring($room)>.");
+    ~fade_out;
+    p_delay(2);
+    @rcd_enter;
+}
+~rcd_end_run;
+%rd_room1_initiated = 0;
+switch_int ($n) {
+    case 0 : %rd_main = ^rcd_not_started;
+    case 1 : %rd_main = ^rcd_started;
+    case 2 :
+        %rd_main = ^rcd_started;
+        %rd_room1_initiated = 1;
+    case 3 :
+        %rd_main = ^rcd_started;
+        %rd_room1_initiated = 1;
+        %rd_room1_complete = 1;
+        %rd_room2_complete = 1;
+        %rd_room3_complete = 1;
+        %rd_room4_complete = 1;
+        %rd_room5_complete = 1;
+    case 4 : %rd_main = ^rcd_complete;
+    case default :
+        mes("::rdrivestage 0-4, 11-17 (a room) or 21 (man/woman).");
+        return;
+}
+if ($n = 0) %rd_male_at_start = 0;
+if ($n >= 1 & $n <= 3 & gender = 0) %rd_male_at_start = 1;
+~update_questpoints;
+~send_quest_progress(questlist:rd, %rd_main, ^rcd_complete);
+mes("Recruitment Drive stage: <tostring($n)>.");

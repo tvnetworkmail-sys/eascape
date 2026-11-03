@@ -1,0 +1,492 @@
+// EASCape: Recruitment Drive, room 6: Miss Cheevers. 2009scape MissCheeversDialogue.kt (what's on
+// which shelf and in which crate, the mixes, the stone door, the key) and AlchemicalNotes.kt; the
+// words the OSRS and RS wikis' transcripts (Recruitment Drive). The RS wiki's transcript: a
+// bookshelf or crate gives its thing again once you no longer carry one, and the notes only turn up
+// after you've begged her for help. The cache's varbits keep which vials you took (rd_got_*,
+// rd_spare_water), the stone door (rd_room6_stone_door), the reaction (rd_react_on_spade), what's in
+// the tin (rd_gypsum_in_tin, rd_water_in_tin) and the hint (rd_room6_hint1). Ours is marked.
+
+[label,rcd_cheevers_start]
+~rcd_say(rd_observer_room_6, "<p,happy>Greetings, <displayname>. Welcome to my challenge.");
+~rcd_say(rd_observer_room_6, "<p,neutral>All you need to do is leave from the opposite door to where you came in by.");
+~rcd_say(rd_observer_room_6, "<p,neutral>I will warn you that this is more complicated than it may at first appear.");
+~rcd_say(rd_observer_room_6, "<p,neutral>I should also warn you that there are limited supplies of the items in this room, so think carefully before using them, or you may find yourself stuck, and have to leave to start again!");
+~rcd_say(rd_observer_room_6, "<p,happy>Best of luck!");
+
+[opnpc1,rd_observer_room_6]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (~rcd_passed(^rcd_cheevers) = true) @rcd_praise(^rcd_cheevers);
+if (%rcd_cheevers_talk = 0) {
+    ~chatplayer("<p,quiz>Can you give me any help?");
+    ~chatnpc("<p,neutral>No, I am sorry, but that is forbidden by our rules.");
+    ~chatnpc("<p,neutral>If you are having a particularly tough time of it, I suggest you leave and come back later when you are in a more receptive frame of mind.");
+    ~chatnpc("<p,neutral>Sometimes a break from concentration will yield fresh insight. Our aim is to test you, but not to the point of frustration!");
+    ~chatplayer("<p,happy>Okay, thanks!");
+    %rcd_cheevers_talk = 1;
+    return;
+}
+~chatplayer("<p,sad>Please... I am REALLY stuck... Isn't there ANYTHING you can do to help me...?");
+~chatnpc("<p,shifty>Well... Look, I really shouldn't say anything about this room, but...");
+~chatnpc("<p,neutral>When I was attempting to join the Temple Knights I myself had to do this puzzle myself.");
+~chatnpc("<p,neutral>It was slightly different, but the idea behind it was the same, and I left the notes I had made while doing it hidden in one of the bookcases.");
+~chatnpc("<p,neutral>If you look carefully you may find them, and they may be of some use to you.");
+~chatnpc("<p,neutral>I really can't be any more help than that I'm afraid, it is more than my job's worth to have given you the help I already have.");
+~chatplayer("<p,happy>Okay, thanks a lot, you've been very helpful!");
+~chatnpc("<p,happy>Best of luck with the test <displayname>, I hope your application is successful.");
+%rcd_cheevers_talk = 2;
+%rd_room6_hint1 = 1;
+
+// ---------------------------------------------------------------- searching
+[label,rcd_find](string $searching, namedobj $obj, string $found)
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+mes($searching);
+p_delay(1);
+if ($obj ! null) {
+    if (inv_total(inv, $obj) = 0) {
+        ~rcd_give($obj, 1);
+        mes($found);
+        return;
+    }
+}
+mes("You don't find anything interesting.");
+
+[oploc1,rd_bookshelf_old_tall] @rcd_find("You search the bookshelves...", rd_magnet, "Hidden amongst the books you find a magnet.");
+[oploc1,rd_bookshelf_old_tall2]
+if (%rd_room6_hint1 = 1) @rcd_find("You search the bookshelves...", rd_chem_book, "You find a book that looks like it might be helpful.");
+@rcd_find("You search the bookshelves...", null, "");
+[oploc1,rd_bookshelf_old_tall3] @rcd_find("You search the bookshelves...", rd_knife, "Hidden amongst the books you find a knife.");
+[oploc1,rd_bookshelf_old_tall4] @rcd_find("You search the bookshelves...", null, "");
+
+// 2009scape: the tin at 2476,4943, the chisel at 2476,4937, the wire at 2475,4943
+[oploc1,rd_large_crate]
+if (loc_coord = 0_38_77_44_15) @rcd_find("You search the crate...", rd_tin, "Inside the crate you find a tin.");
+@rcd_find("You search the crate...", null, "");
+[oploc1,rd_large_crates]
+if (loc_coord = 0_38_77_44_9) @rcd_find("You search the crate...", rd_chisel, "Inside the crate you find a chisel.");
+@rcd_find("You search the crate...", null, "");
+[oploc1,rd_small_crates]
+if (loc_coord = 0_38_77_43_15) @rcd_find("You search the crate...", rd_wire, "Inside the crate you find some wire.");
+@rcd_find("You search the crate...", null, "");
+
+[oploc1,rd_chest_closed] ~open_chest(rd_chest_open);
+[oploc2,rd_chest_open] ~close_chest(rd_chest_closed);
+[oploc1,rd_chest_open] @rcd_find("You search the chest...", rd_shears, "Inside the chest you find some shears.");
+
+// the metal spade on the table (a map spawn): the RS wiki's transcript
+[opobj3,rd_metal_spade]
+if (inv_total(inv, rd_metal_spade) > 0 | inv_total(inv, rd_metal_spade_no_handle) > 0) {
+    mes("You don't need another spade...");
+    return;
+}
+@pickup_obj;
+
+// ---------------------------------------------------------------- the shelves of vials
+// 2009scape: shelf 1 acetic acid and a vial of liquid, 2 cupric sulphate, 3 gypsum, 4 sodium
+// chloride, 5 nitrous oxide, 6 tin ore powder, 7 cupric ore powder, 8 three vials of liquid
+[oploc1,rd_shelves_chemicals_1]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_vinegar = 0 & %rd_got_water = 0) {
+    ~mesbox("There are two vials on this shelf.");
+    switch_int (~p_choice3_header("Take the first vial.", 1, "Take the second vial.", 2, "Take both vials.", 3, "Take the vials?")) {
+        case 1 :
+            %rd_got_vinegar = 1;
+            ~rcd_give(rd_acetic_acid, 1);
+        case 2 :
+            %rd_got_water = 1;
+            ~rcd_give(rd_dihydrogen_monoxide, 1);
+        case 3 :
+            %rd_got_vinegar = 1;
+            %rd_got_water = 1;
+            ~rcd_give(rd_acetic_acid, 1);
+            ~rcd_give(rd_dihydrogen_monoxide, 1);
+    }
+    return;
+}
+if (%rd_got_vinegar = 0) {
+    if (~rcd_take_vial = true) {
+        %rd_got_vinegar = 1;
+        ~rcd_give(rd_acetic_acid, 1);
+    }
+    return;
+}
+if (%rd_got_water = 0) {
+    if (~rcd_take_vial = true) {
+        %rd_got_water = 1;
+        ~rcd_give(rd_dihydrogen_monoxide, 1);
+    }
+    return;
+}
+~mesbox("There is nothing of interest on these shelves.");
+
+[proc,rcd_take_vial]()(boolean)
+~mesbox("There is a vial on this shelf.");
+if (~p_choice2_header("YES", 1, "NO", 2, "Take the vial?") = 1) return(true);
+return(false);
+
+[oploc1,rd_shelves_chemicals_2]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_copsulph = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_copsulph = 1;
+    ~rcd_give(rd_cupric_sulphate, 1);
+}
+
+[oploc1,rd_shelves_chemicals_3]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_gypsum = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_gypsum = 1;
+    ~rcd_give(rd_gypsum, 1);
+}
+
+[oploc1,rd_shelves_chemicals_4]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_salt = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_salt = 1;
+    ~rcd_give(rd_sodium_chloride, 1);
+}
+
+[oploc1,rd_shelves_chemicals_5]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_n2o = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_n2o = 1;
+    ~rcd_give(rd_nitorus_oxide, 1);
+}
+
+[oploc1,rd_shelves_chemicals_6]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_tin = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_tin = 1;
+    ~rcd_give(rd_tin_ore_powder, 1);
+}
+
+[oploc1,rd_shelves_chemicals_7]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_got_copore = 1) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+if (~rcd_take_vial = true) {
+    %rd_got_copore = 1;
+    ~rcd_give(rd_copper_ore_powder, 1);
+}
+
+// %rd_spare_water: how many of the three you've taken
+[oploc1,rd_shelves_chemicals_8]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+def_int $left = calc(3 - %rd_spare_water);
+if ($left <= 0) {
+    ~mesbox("There is nothing of interest on these shelves.");
+    return;
+}
+def_int $take = 0;
+if ($left = 3) {
+    ~mesbox("There are three vials on this shelf.");
+    $take = ~p_choice4_header("Take one vial.", 1, "Take two vials.", 2, "Take all three vials.", 3, "Don't take a vial.", 0, "Take the vials?");
+} else if ($left = 2) {
+    ~mesbox("There are two vials on this shelf.");
+    $take = ~p_choice3_header("Take the first vial.", 1, "Take the second vial.", 1, "Take both vials.", 2, "Take the vials?");
+} else {
+    if (~rcd_take_vial = true) $take = 1;
+}
+if ($take <= 0) return;
+%rd_spare_water = calc(%rd_spare_water + $take);
+~rcd_give(rd_dihydrogen_monoxide, 1);
+if ($take >= 2) ~rcd_give(rd_dihydrogen_monoxide, 1);
+if ($take >= 3) ~rcd_give(rd_dihydrogen_monoxide, 1);
+
+// ---------------------------------------------------------------- the notes and the laughing gas
+[opheld1,rd_chem_book]
+%book_page = 0;
+%open_book = rd_chem_book;
+@book_flip_page(0, 0, 10, rcd_notes);
+
+// 2009scape AlchemicalNotes.kt, a page of the book to each of its pairs of pages
+[proc,rcd_notes]
+switch_int (%book_page) {
+    case 0 : ~book("Alchemical Reactions Study", "Acetic acid and Cupric Sulphate:|Endothermic.|The Cupric is in insufficient quantities to cause any noticeable reaction.||Acetic acid and Gypsum:|Endothermic.|Made a particularly bad smell, but little else that was productive.");
+    case 1 : ~book("Alchemical Reactions Study", "Acetic acid and Sodium Chloride:|Endothermic.|Very tasty when combined with fried potatoes at room temperature.||Acetic acid and Dihydrogen Monoxide:|Endothermic.|The Dihydrogen Monoxide served only to dilute the Acetic acid at room temperature.");
+    case 2 : ~book("Alchemical Reactions Study", "Acetic acid and Cupric Ore Powder:|Endothermic.|The powdered form of Cupric Ore allowed a lower than usual melting temperature, but the end product was non-usable.||Acetic acid and Tin Ore powder:|Endothermic.|Similar results to those made using Cupric Ore.");
+    case 3 : ~book("Alchemical Reactions Study", "Cupric Sulphate and Dihyrdogen Monoxide:|Exothermic.|A blue compound was produced, along with heat.||Cupric Sulphate and Gypsum:|Endothermic.|At room temperature, no useful product was created.");
+    case 4 : ~book("Alchemical Reactions Study", "Cupric Sulphate and Sodium Chloride:|Endothermic.|A pungent odour was released when combined.||Cupric Sulphate and Cupric Ore powder:|Endothermic.|The Cupric did not react with each other at room temperature.");
+    case 5 : ~book("Alchemical Reactions Study", "Cupric Sulphate and Tin Ore powder:|Endothermic.|Similar results to those shown with Cupric Ore, despite the increased solubility involved with the powdered form.||Gypsum and Dihydrogen Monoxide:|Exothermic.|A white liquid compound was formed, that quickly cooled at room temperature to a white heat resistant solid very similar to plaster.|Heat was also produced, although not in the same");
+    case 6 : ~book("Alchemical Reactions Study", "quantity as Cupric Sulphate with Dihydrogen Monoxide||Gypsum and Sodium Chloride:|Endothermic.|The two did not seem to noticably mix together at room temperature.");
+    case 7 : ~book("Alchemical Reactions Study", "Gypsum and Culpric Ore:|Endothermic.|The gypsum seems quite resistant to most compounds at normal room temperature.||Gypsum and Tin Ore:|Endothermic.|Again, very similar results as those shown with Cupric Ore.");
+    case 8 : ~book("Alchemical Reactions Study", "Sodium Chloride and Dihydrogen Monoxide:|Endothermic.|At room temperature, the Sodium Chloride dissolves quite easily. Dissolution is faster at higher temperatures.||Sodium Chloride and Cupric Ore:|Endothermic.|No visible combination at room temperature.");
+    case 9 : ~book("Alchemical Reactions Study", "Sodium Chloride and Tin Ore:|Endothermic.|Another very similar result as with Cupric Ore.||Cupric Ore Powder and Tin Ore Powder:|Endothermic.|When both ores are in particulate form, a much lower than usual bonding temperature can be obtained.|When combined at a moderate heat, (my laboratory heating");
+    case 10 : ~book("Alchemical Reactions Study", "apparatus) I was able to form liquid Bronze quite easily, which cooled to form a standard Bronze Bar at a temperature far lower than that required to produce in mass at a furnace.||Nitrous Monoxide:|Was not able to perform an experimentation using this substance, as the gaseous form would always escape when the vial was opened.");
+}
+
+// the RS wiki's transcript; the OSRS wiki: the same when you try to mix it with anything
+[opheld1,rd_nitorus_oxide] @rcd_laugh;
+
+[label,rcd_laugh]
+inv_del(inv, rd_nitorus_oxide, 1);
+inv_add(inv, vial_empty, 1);
+mes("You uncork the vial...");
+mes("You smell a strange gas as it escapes from inside the vial.");
+say("hahahahahahaha!");
+
+// ---------------------------------------------------------------- mixing
+[opheldu,rd_cupric_sulphate] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_acetic_acid] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_gypsum] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_sodium_chloride] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_nitorus_oxide] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_dihydrogen_monoxide] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_tin_ore_powder] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_copper_ore_powder] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_cupric_sulphate2] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_plaster_vial] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_tin] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_tin_of_crap_empty] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_tinfull] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_keymould] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_full_keymould_tin] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_full_keymould_copper] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_full_keymould_unheated] @rcd_mix(last_item, last_useitem);
+[opheldu,rd_full_keymould_complete] @rcd_mix(last_item, last_useitem);
+
+[proc,rcd_chemical](obj $obj)(boolean)
+if ($obj = rd_cupric_sulphate | $obj = rd_acetic_acid | $obj = rd_gypsum | $obj = rd_sodium_chloride) return(true);
+if ($obj = rd_nitorus_oxide | $obj = rd_dihydrogen_monoxide | $obj = rd_tin_ore_powder | $obj = rd_copper_ore_powder) return(true);
+return(false);
+
+[proc,rcd_mould](obj $obj)(boolean)
+if ($obj = rd_tin | $obj = rd_tin_of_crap_empty | $obj = rd_tinfull | $obj = rd_keymould) return(true);
+if ($obj = rd_full_keymould_tin | $obj = rd_full_keymould_copper | $obj = rd_full_keymould_unheated) return(true);
+return(false);
+
+[proc,rcd_is](obj $a, obj $b, obj $x, obj $y)(boolean)
+if ($a = $x & $b = $y) return(true);
+if ($a = $y & $b = $x) return(true);
+return(false);
+
+// one thing becomes another, an empty vial left over
+[proc,rcd_swap](obj $vial, obj $from, namedobj $to)
+inv_del(inv, $vial, 1);
+inv_del(inv, $from, 1);
+inv_add(inv, $to, 1);
+inv_add(inv, vial_empty, 1);
+
+[label,rcd_mix](obj $a, obj $b)
+if ($a = rd_nitorus_oxide | $b = rd_nitorus_oxide) @rcd_laugh;
+// the tool on the tin with the key (any of the three: the OSRS wiki)
+if ($a = rd_full_keymould_complete | $b = rd_full_keymould_complete) {
+    if ($a = rd_knife | $a = rd_chisel | $a = rd_wire | $b = rd_knife | $b = rd_chisel | $b = rd_wire) {
+        inv_del(inv, rd_full_keymould_complete, 1);
+        inv_add(inv, rd_keymould, 1);
+        inv_add(inv, rd_puzzleroom_key, 1);
+        mes("You prise the duplicate key out of the tin.");
+        return;
+    }
+}
+// the plaster: gypsum and the liquid in the tin, either first (the OSRS and RS wikis give both
+// orders; the cache keeps both, rd_gypsum_in_tin and rd_water_in_tin)
+if (~rcd_is($a, $b, rd_gypsum, rd_tin) = true) {
+    ~rcd_swap(rd_gypsum, rd_tin, rd_tin_of_crap_empty);
+    %rd_gypsum_in_tin = 1;
+    %rd_water_in_tin = 0;
+    mes("You empty the vial into the tin.");
+    return;
+}
+if (~rcd_is($a, $b, rd_dihydrogen_monoxide, rd_tin) = true) {
+    ~rcd_swap(rd_dihydrogen_monoxide, rd_tin, rd_tin_of_crap_empty);
+    %rd_gypsum_in_tin = 0;
+    %rd_water_in_tin = 1;
+    mes("You empty the vial into the tin.");
+    return;
+}
+if (~rcd_is($a, $b, rd_dihydrogen_monoxide, rd_tin_of_crap_empty) = true & %rd_gypsum_in_tin = 1 & %rd_water_in_tin = 0) {
+    ~rcd_swap(rd_dihydrogen_monoxide, rd_tin_of_crap_empty, rd_tinfull);
+    @rcd_plaster;
+}
+if (~rcd_is($a, $b, rd_gypsum, rd_tin_of_crap_empty) = true & %rd_water_in_tin = 1 & %rd_gypsum_in_tin = 0) {
+    ~rcd_swap(rd_gypsum, rd_tin_of_crap_empty, rd_tinfull);
+    @rcd_plaster;
+}
+// the ores into the impression
+if (~rcd_is($a, $b, rd_tin_ore_powder, rd_keymould) = true) {
+    ~rcd_swap(rd_tin_ore_powder, rd_keymould, rd_full_keymould_tin);
+    mes("You pour the vial into the impression of the key.");
+    return;
+}
+if (~rcd_is($a, $b, rd_copper_ore_powder, rd_keymould) = true) {
+    ~rcd_swap(rd_copper_ore_powder, rd_keymould, rd_full_keymould_copper);
+    mes("You pour the vial into the impression of the key.");
+    return;
+}
+if (~rcd_is($a, $b, rd_copper_ore_powder, rd_full_keymould_tin) = true) {
+    ~rcd_swap(rd_copper_ore_powder, rd_full_keymould_tin, rd_full_keymould_unheated);
+    mes("You pour the vial into the impression of the key.");
+    return;
+}
+if (~rcd_is($a, $b, rd_tin_ore_powder, rd_full_keymould_copper) = true) {
+    ~rcd_swap(rd_tin_ore_powder, rd_full_keymould_copper, rd_full_keymould_unheated);
+    mes("You pour the vial into the impression of the key.");
+    return;
+}
+// anything else in a tin spoils it (the OSRS wiki: Tin, strange); the words are ours
+if (~rcd_chemical($a) = true & ~rcd_mould($b) = true) {
+    ~rcd_swap($a, $b, rd_tin_of_crap);
+    %rd_gypsum_in_tin = 0;
+    %rd_water_in_tin = 0;
+    mes("You empty the vial into the tin.");
+    return;
+}
+if (~rcd_chemical($b) = true & ~rcd_mould($a) = true) {
+    ~rcd_swap($b, $a, rd_tin_of_crap);
+    %rd_gypsum_in_tin = 0;
+    %rd_water_in_tin = 0;
+    mes("You empty the vial into the tin.");
+    return;
+}
+// vials together (the OSRS wiki: ??? mixture): cupric sulfate and the liquid make the hot one,
+// gypsum and the liquid the warm one, cupric sulfate with anything else or anything with the hot
+// one the horrible one. The words are ours.
+if (~rcd_is($a, $b, rd_cupric_sulphate, rd_dihydrogen_monoxide) = true) {
+    ~rcd_swap(rd_dihydrogen_monoxide, rd_cupric_sulphate, rd_cupric_sulphate2);
+    mes("You mix the two vials together."); // ours
+    return;
+}
+if (~rcd_is($a, $b, rd_gypsum, rd_dihydrogen_monoxide) = true) {
+    ~rcd_swap(rd_dihydrogen_monoxide, rd_gypsum, rd_plaster_vial);
+    mes("You mix the two vials together."); // ours
+    return;
+}
+if (($a = rd_cupric_sulphate & ~rcd_chemical($b) = true) | ($a = rd_cupric_sulphate2 & ~rcd_chemical($b) = true)) {
+    ~rcd_swap($b, $a, rd_spoilt_potion);
+    mes("You mix the two vials together."); // ours
+    return;
+}
+if (($b = rd_cupric_sulphate & ~rcd_chemical($a) = true) | ($b = rd_cupric_sulphate2 & ~rcd_chemical($a) = true)) {
+    ~rcd_swap($a, $b, rd_spoilt_potion);
+    mes("You mix the two vials together."); // ours
+    return;
+}
+mes("Nothing interesting happens.");
+
+[label,rcd_plaster]
+%rd_gypsum_in_tin = 1;
+%rd_water_in_tin = 1;
+mes("You empty the vial into the tin.");
+mes("You notice the tin gets quite warm as you do this.");
+mes("A lumpy white mixture is made, that seems to be hardening.");
+
+// ---------------------------------------------------------------- the Bunsen burner and the key
+[oplocu,rd_wooden_table_bunsen_burner]
+if (last_useitem = rd_metal_spade) {
+    inv_del(inv, rd_metal_spade, 1);
+    inv_add(inv, ashes, 1);
+    inv_add(inv, rd_metal_spade_no_handle, 1);
+    mes("You burn the wooden handle away from the spade...");
+    mes("...and are left with a metal spade with no handle.");
+    return;
+}
+if (last_useitem = rd_full_keymould_unheated) {
+    inv_del(inv, rd_full_keymould_unheated, 1);
+    inv_add(inv, rd_full_keymould_complete, 1);
+    mes("You heat the two powdered ores together in the tin.");
+    mes("You make a duplicate of the key in bronze.");
+    return;
+}
+mes("Nothing interesting happens.");
+
+[oplocu,rd_key_chained]
+if (last_useitem = rd_tinfull) {
+    inv_del(inv, rd_tinfull, 1);
+    inv_add(inv, rd_keymould, 1);
+    mes("You make an impression of the key as the white mixture hardens.");
+    return;
+}
+mes("Nothing interesting happens.");
+
+// ---------------------------------------------------------------- the stone door
+// %rd_room6_stone_door: 0 the slab, 1 the spade in it, 2 the spade has expanded, 3 open
+[oploc1,rd_stone_door]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (%rd_room6_stone_door = 0) {
+    ~mesbox("There is a stone slab here obstructing the door.|There is a small hole in the slab that looks like it might be for a handle.");
+    return;
+}
+if (%rd_room6_stone_door = 3) {
+    p_teleport(0_38_77_46_12); // ours: through to 2478,4940 (2009scape walks you there)
+    return;
+}
+mes("You pull on the spade...");
+if (%rd_react_on_spade = 1) {
+    mes("It works as a handle, and you swing the stone door open.");
+    %rd_room6_stone_door = 3;
+    return;
+}
+mes("It comes loose, and slides out of the hole in the stone.");
+~rcd_give(rd_metal_spade_no_handle, 1);
+%rd_room6_stone_door = 0;
+%rcd_spade_cupric = 0; // ours: what was poured on it goes with it
+%rcd_spade_water = 0;
+
+[oplocu,rd_stone_door]
+if (~rcd_in_room(^rcd_cheevers) = false) return;
+if (last_useitem = rd_metal_spade) {
+    ~chatplayer("<p,neutral>I don't think I'll be able to smash my way through the stone with a spade...");
+    return;
+}
+if (last_useitem = rd_metal_spade_no_handle & %rd_room6_stone_door = 0) {
+    inv_del(inv, rd_metal_spade_no_handle, 1);
+    mes("You slide the spade into the hole in the stone...");
+    mes("It's nearly a perfect fit!");
+    %rd_room6_stone_door = 1;
+    return;
+}
+if (%rd_room6_stone_door ! 1 & %rd_room6_stone_door ! 2) {
+    mes("Nothing interesting happens.");
+    return;
+}
+// 2009scape DoorVials: cupric sulphate and the liquid make it work, acetic acid and sodium chloride
+// go on it to no effect
+if (last_useitem = rd_cupric_sulphate) {
+    inv_del(inv, rd_cupric_sulphate, 1);
+    %rcd_spade_cupric = 1;
+} else if (last_useitem = rd_dihydrogen_monoxide | last_useitem = rd_acetic_acid | last_useitem = rd_sodium_chloride) {
+    inv_del(inv, last_useitem, 1);
+    inv_add(inv, vial_empty, 1);
+    if (last_useitem = rd_dihydrogen_monoxide) %rcd_spade_water = 1;
+} else {
+    mes("Nothing interesting happens.");
+    return;
+}
+mes("You pour the vial onto the flat part of the spade.");
+if (%rcd_spade_cupric = 1 & %rcd_spade_water = 1 & %rd_react_on_spade = 0) {
+    mes("Something caused a reaction when mixed!");
+    mes("The spade gets hotter, and expands slightly.");
+    %rd_react_on_spade = 1;
+    %rd_room6_stone_door = 2;
+}
+
+// the way out: the key you made (2009scape)
+[label,rcd_cheevers_door]
+if (inv_total(inv, rd_puzzleroom_key) > 0) {
+    mes("You use the duplicate key you made to unlock the door.");
+    ~rcd_set_passed(^rcd_cheevers);
+    if (~rcd_passed_count >= ^rcd_tests) @rcd_praise(^rcd_cheevers);
+    @rcd_next;
+}
+mes("You have not completed this room's puzzle yet.");

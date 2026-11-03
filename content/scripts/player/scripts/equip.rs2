@@ -4,6 +4,7 @@
 if_close;
 if (p_finduid(uid) = true) {
     p_clearpendingaction;
+    if (~rcd_is_animal(inv_getobj(worn, last_slot)) = true) @rcd_putdown(last_slot); // EASCape: Recruitment Drive's fox, chicken and grain go down (quest_rd)
     ~unequip(last_slot);
 }
 
