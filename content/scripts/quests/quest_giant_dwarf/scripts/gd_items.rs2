@@ -87,6 +87,7 @@ if (~p_choice2("No, I can't be bothered.", 1, "Yes, I will do this.", 2) = 1) {
 ~chatnpc("<p,happy>But it's a beautiful city, Keldagrim is, I'm sure you'll see many things while you do these tasks!");
 
 [label,gd_blasidar_items]
+~gd_pair_boots;
 ~chatnpc("<p,quiz>How are you getting along with those items, <displayname>?");
 def_boolean $boots = ~gd_riki_has(0);
 if ($boots = true) {
@@ -161,7 +162,7 @@ if_openoverlay(null);
 // ---------------------------------------------------------------- Riki the sculptor's model
 [opnpc1,dwarf_city_shop_sculpture_model_multi] @gd_riki;
 [opnpcu,dwarf_city_shop_sculpture_model_multi]
-if (%giantdwarf_quest = ^gd_items & (last_useitem = dwarf_perfect_pair_of_boots | last_useitem = dwarf_clothes | last_useitem = dwarf_battleaxe_new)) @gd_riki;
+if (%giantdwarf_quest = ^gd_items & (last_useitem = dwarf_perfect_pair_of_boots | last_useitem = dwarf_perfect_left_boot | last_useitem = dwarf_perfect_right_boot | last_useitem = dwarf_clothes | last_useitem = dwarf_battleaxe_new)) @gd_riki;
 ~displaymessage(^dm_default);
 
 [label,gd_riki]
@@ -203,6 +204,7 @@ if ($s = ^gd_items_given) {
 
 // gives Riki what you carry, boots then clothes then axe; returns how many
 [proc,gd_riki_give]()(int)
+~gd_pair_boots;
 def_int $n = 0;
 if (~gd_riki_has(0) = false & inv_total(inv, dwarf_perfect_pair_of_boots) > 0) {
     ~chatplayer("<p,happy>Here, I have these boots for you to wear.");
@@ -600,6 +602,21 @@ if (~gd_dromund_sees(obj_coord) = true) {
     return(false);
 }
 return(true);
+
+// ours: carrying both boots counts as the pair when you see Blasidar or Riki, and using one boot on
+// the other pairs them too (the original pairs them only through Wear)
+[proc,gd_pair_boots]
+if (inv_total(inv, dwarf_perfect_left_boot) > 0 & inv_total(inv, dwarf_perfect_right_boot) > 0) {
+    inv_del(inv, dwarf_perfect_left_boot, 1);
+    inv_del(inv, dwarf_perfect_right_boot, 1);
+    inv_add(inv, dwarf_perfect_pair_of_boots, 1);
+}
+[opheldu,dwarf_perfect_left_boot]
+if (last_useitem = dwarf_perfect_right_boot) @gd_wear_boot;
+~displaymessage(^dm_default);
+[opheldu,dwarf_perfect_right_boot]
+if (last_useitem = dwarf_perfect_left_boot) @gd_wear_boot;
+~displaymessage(^dm_default);
 
 [opheld1,dwarf_perfect_left_boot] @gd_wear_boot;
 [opheld1,dwarf_perfect_right_boot] @gd_wear_boot;
