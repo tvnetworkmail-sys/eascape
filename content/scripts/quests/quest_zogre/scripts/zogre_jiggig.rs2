@@ -300,3 +300,22 @@ if ($other ! null) {
     if (inv_freespace(inv) > 0 | oc_stackable($other) = true) inv_add(inv, $other, $count);
     else obj_add(coord, $other, $count, ^lootdrop_duration);
 }
+
+// ---------------------------------------------------------------- Slash Bash's two attacks
+// Void (slash_bash.melee and .range, equal chances): a crush hit next to you, a ranged hit from up
+// to 10 squares away; both carry his disease (npc_disease_player)
+[ai_queue1,zogre_slash_bash] ~npc_default_retaliate_ap;
+[ai_opplayer2,zogre_slash_bash]
+if (random(2) = 0) {
+    npc_setmode(applayer2);
+    return;
+}
+gosub(npc_default_attack);
+
+[ai_applayer2,zogre_slash_bash]
+if (%npc_action_delay > map_clock) return;
+if (distance(npc_coord, coord) <= 2 & random(2) = 0) {
+    npc_setmode(opplayer2);
+    return;
+}
+~npc_rangeattack;
