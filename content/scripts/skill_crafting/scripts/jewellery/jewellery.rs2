@@ -295,84 +295,114 @@ p_delay(2);
 
 
 [label,craft_silver]
-// EASCape: Creature of Fenkenstrain's lightning conductor (quest_fenkenstrain/fenk_castle.rs2)
-if (~fenk_cast_conductor = true) {
+// EASCape: the Silver Casting window (the cache's inter_282, as in the RuneCraft update of 13 June
+// 2005 onward): each mould held shows its item with Make 1/5/10, otherwise "You need a ... mould".
+// Silvthrill rod and demonic sigil belong to quests not in the game yet, so they always show the
+// mould message. Levels and xp: Void's silver_casting table.
+~silver_cast_slot(1, inter_282:com_90, inter_282:com_93, inter_282:com_91, inter_282:com_94, silver_cast1, holy_symbol_mould);
+~silver_cast_slot(2, inter_282:com_97, inter_282:com_100, inter_282:com_98, inter_282:com_101, silver_cast2, unholy_symbol_mould);
+~silver_cast_slot(3, inter_282:com_104, inter_282:com_107, inter_282:com_105, inter_282:com_108, silver_cast3, sickle_mould);
+~silver_cast_slot(4, inter_282:com_111, inter_282:com_114, inter_282:com_112, inter_282:com_115, silver_cast4, fenk_lightning_mould);
+~silver_cast_slot(5, inter_282:com_118, inter_282:com_121, inter_282:com_119, inter_282:com_122, silver_cast5, tiara_mould);
+~silver_cast_slot(6, inter_282:com_125, inter_282:com_129, inter_282:com_126, inter_282:com_130, silver_cast6, burgh_rod_clay);
+~silver_cast_slot(7, inter_282:com_133, inter_282:com_136, inter_282:com_134, inter_282:com_137, silver_cast7, agrith_sigil_mould);
+if_openmain(inter_282);
+
+[proc,silver_cast_slot](int $slot, component $make, component $need, component $invcom, component $model, inv $inv, namedobj $mould)
+def_namedobj $product = ~silver_cast_product($slot);
+if ($product ! null & inv_total(inv, $mould) > 0) {
+    if_sethide($make, false);
+    if_sethide($need, true);
+    inv_setslot($inv, 0, $product, 1);
+    inv_transmit($inv, $invcom);
     return;
 }
-// if multiple moulds are present, prompt user with dialogue
-// EASCape: the tiara mould added (RuneCraft Update and Tweaks, 13 June 2005); the menu is built
-// from whichever moulds are held, ours.
-def_namedobj $product = null;
-def_int $count = 0;
-def_namedobj $p1 = null;
-def_namedobj $p2 = null;
-def_namedobj $p3 = null;
-def_namedobj $p4 = null;
-if (inv_total(inv, holy_symbol_mould) > 0) {
-    $count = calc($count + 1);
-    $p1 = nostringstar;
+if_sethide($make, true);
+if_sethide($need, false);
+if_setobject($model, $mould, 400);
+
+[proc,silver_cast_product](int $slot)(namedobj)
+switch_int ($slot) {
+    case 1 : return(nostringstar);
+    case 2 : return(nostringsnake);
+    case 3 : return(silver_sickle);
+    case 4 : return(fenk_conductor);
+    case 5 : return(tiara);
 }
-if (inv_total(inv, unholy_symbol_mould) > 0 & map_members = ^true) {
-    $count = calc($count + 1);
-    if ($p1 = null) $p1 = nostringsnake; else $p2 = nostringsnake;
+return(null);
+
+[proc,silver_cast_mould](int $slot)(namedobj)
+switch_int ($slot) {
+    case 1 : return(holy_symbol_mould);
+    case 2 : return(unholy_symbol_mould);
+    case 3 : return(sickle_mould);
+    case 4 : return(fenk_lightning_mould);
+    case 5 : return(tiara_mould);
 }
-if (inv_total(inv, sickle_mould) > 0 & map_members = ^true) {
-    $count = calc($count + 1);
-    if ($p1 = null) $p1 = silver_sickle; else if ($p2 = null) $p2 = silver_sickle; else $p3 = silver_sickle;
-}
-if (inv_total(inv, tiara_mould) > 0) {
-    $count = calc($count + 1);
-    if ($p1 = null) $p1 = tiara; else if ($p2 = null) $p2 = tiara; else if ($p3 = null) $p3 = tiara; else $p4 = tiara;
-}
-if ($count = 0) {
-    ~mesbox("You require a mould to make that.");
+return(null);
+
+[inv_button1,inter_282:com_91] @silver_cast(1, 1);
+[inv_button2,inter_282:com_91] @silver_cast(1, 5);
+[inv_button3,inter_282:com_91] @silver_cast(1, 10);
+[inv_button1,inter_282:com_98] @silver_cast(2, 1);
+[inv_button2,inter_282:com_98] @silver_cast(2, 5);
+[inv_button3,inter_282:com_98] @silver_cast(2, 10);
+[inv_button1,inter_282:com_105] @silver_cast(3, 1);
+[inv_button2,inter_282:com_105] @silver_cast(3, 5);
+[inv_button3,inter_282:com_105] @silver_cast(3, 10);
+[inv_button1,inter_282:com_112] @silver_cast(4, 1);
+[inv_button2,inter_282:com_112] @silver_cast(4, 5);
+[inv_button3,inter_282:com_112] @silver_cast(4, 10);
+[inv_button1,inter_282:com_119] @silver_cast(5, 1);
+[inv_button2,inter_282:com_119] @silver_cast(5, 5);
+[inv_button3,inter_282:com_119] @silver_cast(5, 10);
+
+[label,silver_cast](int $slot, int $count)
+def_namedobj $product = ~silver_cast_product($slot);
+if ($product = null | inv_total(inv, ~silver_cast_mould($slot)) = 0) return;
+if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4)) {
+    mes(^mes_members_feature);
     return;
 }
-def_int $choice = 1;
-if ($count = 2) {
-    $choice = ~p_choice2_header(~silver_choice_name($p1), 1, ~silver_choice_name($p2), 2, "What would you like to make?");
-} else if ($count = 3) {
-    $choice = ~p_choice3_header(~silver_choice_name($p1), 1, ~silver_choice_name($p2), 2, ~silver_choice_name($p3), 3, "What would you like to make?");
-} else if ($count = 4) {
-    $choice = ~p_choice4_header(~silver_choice_name($p1), 1, ~silver_choice_name($p2), 2, ~silver_choice_name($p3), 3, ~silver_choice_name($p4), 4, "What would you like to make?");
+// the lightning conductor isn't a jewellery-table item: Creature of Fenkenstrain's numbers
+def_int $level = 20;
+def_int $exp = 500;
+if ($slot ! 4) {
+    def_struct $struct = oc_param($product, crafting_jewelry_struct);
+    $level = struct_param($struct, levelrequired);
+    $exp = struct_param($struct, productexp);
 }
-switch_int ($choice) {
-    case 1 : $product = $p1;
-    case 2 : $product = $p2;
-    case 3 : $product = $p3;
-    case 4 : $product = $p4;
-}
-
-def_struct $struct = oc_param($product, crafting_jewelry_struct);
-
-def_int $level = struct_param($struct, levelrequired);
 if (stat(crafting) < $level) {
+    if_close;
     ~mesbox("You need at least level <tostring($level)> Crafting to make that.");
     return;
 }
-
-// macro event
 if (afk_event = ^true) {
     ~macro_event_general_spawn(~macro_event_set_random);
     return;
 }
-
+if_close;
 anim(human_furnace, 0);
 sound_synth(furnace, 1, 0);
-if_close;
-// osrs is 4 ticks on first
-// openrsc uses delay(2); 2 ticks on first, 3 ticks on remaining
-// ill just make it 3 ticks for now
 p_delay(2);
+~silver_cast_make($product, $exp, $count);
+
+[proc,silver_cast_make](namedobj $product, int $exp, int $count)
+if (inv_total(inv, silver_bar) < 1) return;
 inv_del(inv, silver_bar, 1);
 inv_add(inv, $product, 1);
-stat_advance(crafting, struct_param($struct, productexp));
-// Confirmed, no period at the end. https://i.imgur.com/sCKRVO9.png
-mes("You make <~add_article(struct_param($struct, name))>");
-
-// weakqueue(crafting_silver, 1, $productexp, $product);
-//----------------------
-
+stat_advance(crafting, $exp);
+mes("You make <~add_article(lowercase(oc_name($product)))>.");
+$count = calc($count - 1);
+if ($count < 1) return;
+if (inv_total(inv, silver_bar) < 1) {
+    ~mesbox("You don't have enough silver bars to make any more.");
+    return;
+}
+anim(human_furnace, 0);
+sound_synth(furnace, 1, 0);
+p_delay(2);
+~silver_cast_make($product, $exp, $count);
 
 //******************* WEAKQUEUES NOT-USED UNTIL SEPT 2004 *******************
 // //--- weakqueue to craft gold jewelry, should craft jewelry at a rate of 3 ticks.
@@ -408,7 +438,3 @@ mes("You make <~add_article(struct_param($struct, name))>");
 // // plays the anim again
 // anim(human_furnace, 0);
 // //----------------------
-
-
-[proc,silver_choice_name](namedobj $obj)(string)
-return(struct_param(oc_param($obj, crafting_jewelry_struct), name));
