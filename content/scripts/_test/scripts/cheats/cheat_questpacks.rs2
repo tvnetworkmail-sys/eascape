@@ -846,3 +846,25 @@ mes("::scorpcatcherpack ::seaslugpack ::sheeppack ::sheepherderpack ::squirepack
 mes("::tbwtpack ::totempack ::treepack ::trollpack ::troll_lovepack ::upasspack");
 mes("::vampirepack ::vikingpack ::waterfallpack ::zanarispack ::zombiequeenpack");
 mes("::dtpack ::fairytale1pack ::fairytale2pack ::abysspack ::fenkenstrainpack ::rovingpack");
+mes("::rcupack");
+
+// EASCape: RuneCraft Update and Tweaks (13 June 2005) - tiaras, combination runes, binding necklace
+[debugproc,rcupack]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(tiara_mould, 1));
+$banked = calc($banked + ~questpack_give(silver_bar, 5));
+$banked = calc($banked + ~questpack_give(air_talisman, 1));
+$banked = calc($banked + ~questpack_give(water_talisman, 1));
+$banked = calc($banked + ~questpack_give(earth_talisman, 1));
+$banked = calc($banked + ~questpack_give(fire_talisman, 1));
+$banked = calc($banked + ~questpack_give(airrune, 100));
+$banked = calc($banked + ~questpack_give(waterrune, 100));
+$banked = calc($banked + ~questpack_give(earthrune, 100));
+$banked = calc($banked + ~questpack_give(firerune, 100));
+$banked = calc($banked + ~questpack_give(cosmicrune, 20));
+$banked = calc($banked + ~questpack_give(emerald_necklace, 2));
+$banked = calc($banked + ~questpack_give(blankrune_high, 10));
+~questpack_done("RuneCraft update", $banked);
