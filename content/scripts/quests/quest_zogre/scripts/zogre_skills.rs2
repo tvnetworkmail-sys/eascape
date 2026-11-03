@@ -38,7 +38,12 @@ mes("You make <tostring($n)> brutal arrows.");
 // ---------------------------------------------------------------- the comp ogre bow
 // a knife on achey logs: ogre arrow shafts, or, with wolf bones once Grish has shown you, the bow
 [label,zogre_achey_knife]
-if (%thzfe_makecompozogrebow = 0 | inv_total(inv, wolf_bones) = 0) @make_ogre_shafts;
+if (inv_total(inv, wolf_bones) = 0) @make_ogre_shafts;
+if (%thzfe_makecompozogrebow = 0) {
+    // ours: say why there's no bow on offer (Grish shows you how: ask him for an easier way to kill the zogres)
+    mes("You don't know how to make a composite bow yet. Grish might be able to show you.");
+    @make_ogre_shafts;
+}
 if (~p_choice2("Ogre arrow shafts.", 1, "Composite ogre bow.", 2) = 1) @make_ogre_shafts; // ours
 if (stat(fletching) < 30) {
     mes("You need a Fletching level of 30 to make this."); // ours
