@@ -4,6 +4,7 @@
 [opnpc1,headmourner] @headmourner_talk_to_player;
 
 [opnpc1,mournerstew3] 
+if (~me1_hq_mourner(1) = true) return; // EASCape: Mourning's End Part I (quest_mourning1/me1_hq.rs2)
 if(%biohazard < ^biohazard_complete) {
     if(inv_total(worn, doctor_gown) = 0) {
         ~chatnpc("<p,angry>How did you get in here?|This is a restricted area!");
@@ -16,6 +17,7 @@ if(%biohazard < ^biohazard_complete) {
 }
 
 [opnpc1,mournerstew1] 
+if (~me1_hq_mourner(0) = true) return; // EASCape: Mourning's End Part I (quest_mourning1/me1_hq.rs2)
 if(%biohazard = ^biohazard_poisoned_stew) {
     ~chatplayer("<p,neutral>Hello there.");
     ~chatnpc("<p,sad>Oh dear oh dear.|I feel terrible, I think it was the stew.");

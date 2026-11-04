@@ -1,0 +1,448 @@
+// EASCape: Mourning's End Part I - the Mourner Headquarters: the front door, the mourners, the
+// Head Mourner in the basement, his desk and chest, and the gnome on the rack. Words: the RS
+// wiki's transcript; the magic logs: the OSRS wiki (RS changed them to a mahogany log in 2026).
+
+// ---------------------------------------------------------------- the front door (doors.rs2 hands
+// over once Biohazard is done and this quest has begun)
+[proc,me1_hq_door]()(boolean)
+if (%mourning_quest < ^me1_arianwyn | %biohazard < ^biohazard_complete) return(false);
+def_int $gear = ~me1_disguise;
+if ($gear = 0) {
+    ~chatnpc_specific(nc_name(mourner_armed), mourner_armed, "<p,angry>Who are you? Go away!");
+    return(true);
+}
+if ($gear = 2) {
+    ~chatnpc_specific(nc_name(mourner_armed), mourner_armed, "<p,angry>You should know better than to wear non-regulation gear.");
+    ~chatplayer("<p,shifty>Sorry, I'm new around here.");
+    ~chatnpc_specific(nc_name(mourner_armed), mourner_armed, "<p,neutral>Well you know the drill - lose the gear, I will let it pass this time.");
+    return(true);
+}
+~open_and_close_door2(mournerstewdooropen, ~check_axis(coord, loc_coord, loc_angle), door_open);
+return(true);
+
+// ---------------------------------------------------------------- the mourners on the ground
+// floor (the RS wiki: one with a bottle, one without; ours: which of the two cache mourners is
+// which, and that they talk like this while you wear the disguise)
+[proc,me1_hq_mourner](int $bottle)(boolean)
+if (%mourning_quest < ^me1_arianwyn | ~me1_disguise = 0) return(false);
+if ($bottle = 1) {
+    ~chatplayer("<p,neutral>Good day.");
+    ~chatnpc("<p,happy>It is good to see so many new recruits, soon no one will be able to stand against the power of the Death Guard.");
+    ~chatplayer("<p,shifty>That sounds... err great.");
+    ~chatnpc("<p,happy>Indeed it is.");
+    return(true);
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,neutral>Hello, you must be one of the new guys.");
+~chatplayer("<p,neutral>That's right.");
+~chatnpc("<p,neutral>Watch yourself with the head, he has a bit of a temper.");
+~chatplayer("<p,neutral>Thanks for the warning.");
+return(true);
+
+// ---------------------------------------------------------------- the Head Mourner
+[opnpc1,mourner_hideout_head_mourner]
+def_int $s = %mourning_quest;
+if ($s < ^me1_arianwyn) {
+    ~chatnpc("<p,angry>GET OUT!"); // ours
+    return;
+}
+if ($s = ^me1_arianwyn) {
+    ~chatplayer("<p,neutral>Hello, I'm...");
+    ~chatnpc("<p,quiz>Ah... I take it you are one of the new recruits?");
+    ~chatplayer("<p,neutral>Well I'm...");
+    ~chatnpc("<p,neutral>Come on, let us have a look at your paper work then.");
+    if (inv_total(inv, mourning_mourner_message) = 0) {
+        ~chatplayer("<p,shifty>Erm... I seem to have misplaced it.");
+        ~chatnpc("<p,angry>GET OUT! Return to Prifddinas in shame.");
+        ~chatnpc("<p,angry>If the Death Guard see fit to re-issue you with a letter of recommendation then maybe we will find a use for you.");
+        return;
+    }
+    inv_del(inv, mourning_mourner_message, 1);
+    ~objbox(mourning_mourner_message, "You hand over the letter of recommendation.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,neutral>This seems to be all in order. Welcome to the Death Guard.");
+    ~chatnpc("<p,neutral>As you may know, part of what we do here is keep the people believing in a plague...");
+    ~chatplayer("<p,quiz>Why?");
+    ~chatnpc("<p,neutral>Hmm... This could take some time, do you really want me to explain it all?");
+    if (~p_choice2("No", 1, "Yes", 2) = 2) {
+        ~chatplayer("<p,neutral>Yes.");
+        ~chatnpc("<p,quiz>Are you sure?");
+        if (~p_choice2("No", 1, "Yes", 2) = 2) {
+            ~chatplayer("<p,neutral>Yes.");
+            ~chatnpc("<p,angry>Can you not just follow orders, without the need of an explanation?");
+            if (~p_choice2("Yes", 1, "No", 2) = 2) {
+                ~chatnpc("<p,neutral>Oh alright, if I must.");
+                ~chatnpc("<p,neutral>Well as you undoubtedly know the original aim of the Death Guard was to secure a foothold here in the east, in preparation for 'His' arrival.");
+                ~chatnpc("<p,neutral>Now though our objective has become little more...|how shall I put it...|proactive.");
+                ~chatnpc("<p,laugh>That fool King thinks we are here as his ally, we duped him into thinking that Iban was enough of a threat that he let us setup here.");
+                ~chatnpc("<p,laugh>Lathas even thinks 'He' will help him dispose of the Knights of Camelot.");
+                ~chatnpc("<p,neutral>The plague was actually fabricated by King Lathas to justify the building of the city wall. But it has also worked in our favour too.");
+                ~chatnpc("<p,neutral>We help him keep the people of Ardougne believing in the plague, but now after the discovery we have bigger fish to fry here.");
+                ~chatplayer("<p,quiz>Discovery?");
+                ~chatnpc("<p,neutral>Yes... I can say no more until you fully prove your commitment to the Death Guard.");
+                ~chatnpc("<p,quiz>Now... Are you ready to hear your first assignment?");
+                ~chatplayer("<p,neutral>I guess so.");
+            }
+        }
+    }
+    ~chatnpc("<p,neutral>Good... Now let us get on with it.|One of the things we do to keep the rumours of the plague active is to keep that old fool farmer Brumty believing his sheep are infected.");
+    ~chatnpc("<p,laugh>The old halfwit thinks just because his sheep are an abnormal colour, that they are all ill with plague. It's amazing what a bit of dye can do.");
+    ~chatplayer("<p,shock>You dyed them?!?");
+    ~chatnpc("<p,neutral>You do not think they end up those ridiculous colours naturally do you?|...");
+    ~chatnpc("<p,neutral>Anyway, shame of it is we have yet to find a way to stop the dye from washing out. So we need someone, i.e. you, to go and re-dye them.");
+    ~chatplayer("<p,quiz>Simple enough, you want me to give a blue rinse to a load of old sheep?");
+    ~chatnpc("<p,neutral>Not quite, for starters the sheep need to be dyed red, yellow, green and blue. But most important is that you are not seen doing this by anyone.");
+    ~chatnpc("<p,neutral>Also you will need to re-dye them the colours they already are or the farmer may notice the change.");
+    ~chatplayer("<p,quiz>That sounds a little more tricky. How did you do it before?");
+    ~chatnpc("<p,neutral>We have a Gnomic device that fires fat green parcels that rupture on impact.");
+    ~chatnpc("<p,sad>Unfortunately we have run out of the parcels and the device is broken.");
+    ~chatplayer("<p,quiz>Can I take a look at it?");
+    ~chatnpc("<p,neutral>Sure. We have a Gnome inventor here too, unfortunately he is not being very helpful about fixing it, but you can talk to him if you like. Here is the key, he is next door.");
+    ~me1_set(^me1_recruit);
+    ~me1_give(mourning_paint_gun_broken, 1);
+    ~me1_give(mourning_gnome_key, 1);
+    ~doubleobjbox(mourning_paint_gun_broken, mourning_gnome_key, "The Head Mourner hands you a strange object and a tarnished key.", 250);
+    return;
+}
+if ($s = ^me1_recruit | $s = ^me1_sheep_done) {
+    ~chatnpc("<p,quiz>Have you finished with those sheep yet?");
+    if ($s = ^me1_recruit) {
+        ~chatplayer("<p,neutral>Not yet, but I'm working on it.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Yes, it is done. What next?");
+    ~chatnpc("<p,happy>It is good to see your enthusiasm. I was going to get one of the others to do this job, but as you are here...");
+    ~chatnpc("<p,neutral>It has been quite a while since anyone got ill from the plague, so I would like you to see to it that people do!");
+    ~chatplayer("<p,confused>Err... But the plague doesn't exist, how am I meant to do that?!?");
+    ~me1_set(^me1_poison);
+    @me1_hm_plan;
+}
+if ($s = ^me1_poison) {
+    ~chatnpc("<p,quiz>You are back already? How is the epidemic going?");
+    ~chatplayer("<p,confused>The epidemic? Oh, you mean the poisoning?");
+    ~chatnpc("<p,angry>Subtle as a brick... Yes that, how is it going?");
+    if (calc(%mourning_food_poison1 + %mourning_food_poison2 + %mourning_food_poison3) < 2) {
+        ~chatplayer("<p,quiz>Can you explain to me again what it is I have to do?");
+        ~chatnpc("<p,neutral>Right, here is the plan...");
+        @me1_hm_plan;
+    }
+    ~chatplayer("<p,happy>That's all done and dusted!|...|Alright, sorry... that was a bad pun.");
+    ~chatnpc("<p,neutral>Yes right, well anyway...|This is good news, give it a few days and the slave pens will be full again.");
+    ~chatplayer("<p,quiz>What do you need slaves for anyway?");
+    ~chatnpc("<p,neutral>I guess you have proven yourself now, I will tell you of our discovery.");
+    ~chatnpc("<p,neutral>Not long after we convinced Lathas that it was a good idea to let us run West Ardougne, we found evidence that somewhere under the mountains to the West is a place of ancient power.");
+    ~chatnpc("<p,neutral>We have been using those we take from the city to help us dig down to it. Unfortunately we have opened up a few old caverns infested with beasts.");
+    ~chatnpc("<p,neutral>We lose a few slaves every day to them, we had better find this temple soon.");
+    ~chatplayer("<p,quiz>Temple?");
+    ~chatnpc("<p,neutral>Yes... A book recently found tells us of a temple built by the early Elven settlers. The temple was made around an altar of unknown origin. All we know about the altar is that it gives us access to some very powerful magic.");
+    ~chatplayer("<p,quiz>So that is the real purpose behind us being here?");
+    ~chatnpc("<p,neutral>Not really. Like I say, we are here to prepare the way for the Dark Lord, but gaining the power of the temple will speed things up a lot.");
+    ~chatplayer("<p,neutral>I see.");
+    ~chatnpc("<p,neutral>Now you know about the temple, I have a new task for you.");
+    ~chatnpc("<p,neutral>But it will have to wait, one of the guards has taken the excavation site key to the locksmith to be copied.");
+    ~chatnpc("<p,neutral>Report in regularly and I will see that you get a copy as soon as he gets back.");
+    ~me1_complete;
+    return;
+}
+~chatplayer("<p,quiz>Do you have the key to the excavation site yet?");
+~chatnpc("<p,neutral>No the guard is being a bit slow, but we should have it soon.");
+~chatplayer("<p,neutral>Alright, I'll report in again tomorrow.");
+
+[label,me1_hm_plan]
+~chatnpc("<p,neutral>We have never tried this before, but some joker put something in our food not too long ago that gave us all symptoms akin to those of the plague.");
+~chatnpc("<p,neutral>If you can find out what it was that we were poisoned with, you could reproduce the effects. If done right the poison should not be fatal and could help restock our dwindling supply of cheap labour.");
+~chatnpc("<p,neutral>We can have our men remove the 'infected' citizens.");
+~chatnpc("<p,neutral>Distribution should be easy enough, because of the city walls no one can grow their own food so all the food here comes from one of three government supply points.");
+~chatplayer("<p,neutral>Let me get this clear, you want me to;|a - Find out who poisoned you.|b - Find out what they poisoned you with.|c - Find out how to make the poison.");
+~chatplayer("<p,neutral>d - Produce enough poison to affect a lot of people.|e - And finally, contaminate the food stores with the poison.");
+~chatnpc("<p,neutral>Your assessment is correct, only two of the stores need to be affected. I would help you but I am not a biologist. Return when you have fulfilled the task.");
+~chatplayer("<p,neutral>Yes Sir.");
+
+// ---------------------------------------------------------------- his desk and chest
+[oploc1,loc_8799]
+if (%mourning_quest < ^me1_recruit) {
+    ~chatnpc_specific(nc_name(mourner_hideout_head_mourner), mourner_hideout_head_mourner, "<p,angry>Get away from my desk!");
+    return;
+}
+if (inv_total(inv, mourning_gnome_key) > 0) {
+    ~mesbox("The desk has a few copies of the tarnished key on it, but as you have one you leave them alone.");
+    return;
+}
+if (~p_choice2_header("Take one.", 1, "Leave them.", 2, "There are some keys here, do you wish to...") = 2) {
+    ~objbox(mourning_gnome_key, "You leave the keys on the desk.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+~me1_give(mourning_gnome_key, 1);
+~objbox(mourning_gnome_key, "You take one of the tarnished keys.", 250, 0, divide(^objbox_height, 2));
+
+[oploc1,mourning_office_chest_closed]
+loc_change(mourning_office_chest_open, 200); // ours: how long it stays open
+
+[oploc2,mourning_office_chest_open]
+loc_change(mourning_office_chest_closed, 200);
+
+[oploc1,mourning_office_chest_open]
+if (inv_total(inv, mourning_paint_gun_broken) > 0) {
+    ~mesbox("The chest is full of broken strange devices, but as you have one you leave them alone.");
+    return;
+}
+if (~p_choice2_header("Take it.", 1, "Leave it.", 2, "Inside you find a strange device, do you wish to...") = 2) {
+    ~objbox(mourning_paint_gun_broken, "You leave the strange device in the chest.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+~me1_give(mourning_paint_gun_broken, 1);
+~objbox(mourning_paint_gun_broken, "You take the strange device.", 250, 0, divide(^objbox_height, 2));
+
+// ---------------------------------------------------------------- the gnome's cell (ours: the
+// cache's gate on the north side of the south-west room; you can always get out)
+[oploc1,mourner_hideout_door3]
+if (coordz(coord) > coordz(loc_coord) & inv_total(inv, mourning_gnome_key) = 0) {
+    mes("This door is locked.");
+    return;
+}
+~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+
+// ---------------------------------------------------------------- the gnome on the rack
+[oploc1,mourning_gnome_rack]
+def_int $g = %mourning_gnome;
+if (%mourning_quest < ^me1_recruit | ($g >= ^me1_gnome_weakness & $g < ^me1_gnome_agreed)) {
+    ~me1_gnome("<p,angry>I've got nothing to say to you!");
+    return;
+}
+if ($g = ^me1_gnome_agreed) {
+    ~me1_gnome("<p,quiz>You got everything?|Magic logs, soft leather AND the crunchie you offered.");
+    if (~me1_gnome_missing = 0) {
+        ~chatplayer("<p,happy>I have it all here.");
+        ~me1_gnome("<p,neutral>Well, let me up off of this rack and I'll get started. I can't do anything while I'm all tied up.");
+        return;
+    }
+    ~chatplayer("<p,neutral>I still need <~me1_gnome_need_text(false)>.");
+    ~me1_gnome("<p,sad>Well when you have it all I'll fix that thing, but please don't tickle me any more.");
+    return;
+}
+if ($g = ^me1_gnome_none) {
+    ~chatplayer("<p,quiz>Hello, will you help me fix this...|err... thing?");
+    ~me1_gnome("<p,angry>I'm not helping you fix that, as if it hasn't caused enough trouble as it is.|Your friends have already tried every torture in the book!");
+    ~me1_gnome("<p,angry>I'm still not telling anyone squat.");
+    ~chatplayer("<p,quiz>Have they tried...|er...|Stretching your eyelids yet?");
+    ~me1_gnome("<p,neutral>Yes, it didn't work.");
+    ~chatplayer("<p,quiz>How about...|feeding you nail and prune stew?");
+    ~me1_gnome("<p,sad>That's all I've been living on since I got here.");
+    ~chatplayer("<p,quiz>Set fire to your nostril hair?|Let rabid rabbits nibble your toes?|Given you a chinese burn?");
+    ~me1_gnome("<p,neutral>Yes, yes and yes.|Tried them all, quite liked the toe nibbling.");
+    ~chatplayer("<p,quiz>Extracted your wisdom teeth?");
+    ~me1_gnome("<p,laugh>Us gnomes aren't wise so we don't get them.|Face it, you'll never put me in enough pain that I'll tell you what you wanna know.");
+    %mourning_gnome = ^me1_gnome_asked;
+}
+~me1_gnome("<p,laugh>I used to play gnomeball as a kid. This is a walk in the park in comparison.");
+~chatplayer("<p,neutral>Alright I get the picture.|What will work then?");
+~me1_gnome("<p,laugh>Ha!! You think I'm stupid enough to tell you that I've been craving toad crunchies or that I can't stand having my feet tickled!|You're just not going to find out my weakness.");
+~chatplayer("<p,confused>Err..|But you just told me?!?");
+~me1_gnome("<p,confused>I did? What did I say?");
+switch_int (~p_choice5("You said about going to the park and playing gnomeball.", 1, "You said about toad crunchies and a gnome ball.", 2, "You said about toad crunchies and being tickled.", 3, "You said about being tickled and a gnome ball.", 4, "You said about being tickled and going to the park.", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>You said about going to the park and playing gnomeball.");
+        ~me1_gnome("<p,laugh>Yes yes!! That was it, I'd HATE that, PLEASE don't do that. By Guthix's beard you Mourners are such idiots!");
+        ~me1_gnome("<p,angry>Leave me be, moron.");
+    case 2 :
+        ~chatplayer("<p,neutral>You said about toad crunchies and a gnome ball.");
+        ~me1_gnome("<p,confused>I used to play gnomeball yes....what's that got to do with anything? Nothing that can convince me to help you that's for sure.");
+        ~me1_gnome("<p,angry>Go away, imbecile.");
+    case 3 :
+        ~chatplayer("<p,neutral>You said about toad crunchies and being tickled.");
+        ~me1_gnome("<p,shock>Oops... I mean erm... No, that must have been some other err... Gnome...");
+        ~chatplayer("<p,neutral>You're not fooling me... So you'll help me in exchange for toad crunchies?");
+        ~me1_gnome("<p,angry>If you think you can just buy my co-operation, you're a bigger imbecile than I thought.");
+        ~chatplayer("<p,neutral>You will tell me, sooner or later.");
+        %mourning_gnome = ^me1_gnome_weakness;
+    case 4 :
+        ~chatplayer("<p,neutral>You said about being tickled and a gnome ball..");
+        ~me1_gnome("<p,laugh>Oooh... a big SCARY gnomeball.|I mean, it might crush me and my entire family, because were SOOOO small!! They have big teeth and everything don't they?");
+        ~me1_gnome("<p,laugh>Sheesh. You Mourners will have to try better than that. Now go away. I need some sleep after all these *yawn* scary threats.");
+    case 5 :
+        ~chatplayer("<p,neutral>You said about being tickled and going to the park.");
+        ~me1_gnome("<p,angry>No... I said being here is a walk in the park. Where do they get you guys?|You must all be Ogre rejects for being too thick.");
+        ~me1_gnome("<p,angry>Leave me be idiot.");
+}
+
+[proc,me1_gnome](string $text)
+~chatnpc_specific("Gnome on a rack", mourner_hideout_gnome_head, $text);
+
+[proc,me1_guard](string $text)
+~chatnpc_specific(nc_name(mourner_hideout_gnome_guard), mourner_hideout_gnome_guard, $text);
+
+// what you still need for the gnome: 1 magic logs, 2 soft leather, 4 toad crunchies, 8 the device
+[proc,me1_gnome_missing]()(int)
+def_int $m = 0;
+if (inv_total(inv, magic_logs) = 0) $m = calc($m + 1);
+if (inv_total(inv, leather) = 0) $m = calc($m + 2);
+if (inv_total(inv, toad_crunchies) = 0 & inv_total(inv, premade_toad_crunchies) = 0) $m = calc($m + 4);
+if (inv_total(inv, mourning_paint_gun_broken) = 0) $m = calc($m + 8);
+return($m);
+
+// the RS wiki's list (a magic log, as the OSRS wiki has it); $crunchies: name the toad crunchies too
+[proc,me1_gnome_need_text](boolean $crunchies)(string)
+def_int $m = ~me1_gnome_missing;
+def_string $t = "";
+if (testbit($m, 0) = ^true) $t = "a magic log";
+if (testbit($m, 1) = ^true) {
+    if (string_length($t) > 0) $t = append($t, " and ");
+    $t = append($t, "some soft leather");
+}
+if ($crunchies = true & testbit($m, 2) = ^true) {
+    if (string_length($t) > 0) $t = append($t, " and ");
+    $t = append($t, "the toad crunchies you promised");
+}
+if (string_length($t) = 0) $t = "nothing";
+return($t);
+
+[oploc2,mourning_gnome_rack]
+if (%mourning_gnome < ^me1_gnome_agreed) {
+    ~me1_guard("<p,angry>What do you think you're doing? You're meant to be getting information out of him, not making friends!");
+    ~chatplayer("<p,shifty>No, you misunderstand me. I was just going to slap him about a bit.");
+    ~me1_guard("<p,happy>Good good. Carry on.");
+    return;
+}
+def_int $m = ~me1_gnome_missing;
+if (testbit($m, 3) = ^true) {
+    ~mesbox("Before you release the Gnome you should have all the things required to fix the strange device."); // ours: also the device
+    return;
+}
+if ($m > 0) {
+    ~mesbox("Before you release the Gnome you should have all the things required to fix the strange device.");
+    ~mesbox("You need <~me1_gnome_need_text(true)>.");
+    return;
+}
+~me1_guard("<p,angry>What do you think you are doing? You are meant to be getting information out of him, not making friends!");
+~chatplayer("<p,neutral>I need to let him up if he's to fix this device.");
+~me1_guard("<p,neutral>Okay, but without the proper paperwork he stays in this room.");
+~me1_gnome_hand_over;
+~mesbox("You untie the bonds at the gnome's wrists and ankles and hand him the magic logs, soft leather and the strange device as well as the toad crunchies.");
+
+[proc,me1_gnome_hand_over]
+inv_del(inv, magic_logs, 1);
+inv_del(inv, leather, 1);
+if (inv_total(inv, toad_crunchies) > 0) {
+    inv_del(inv, toad_crunchies, 1);
+} else {
+    inv_del(inv, premade_toad_crunchies, 1);
+}
+inv_del(inv, mourning_paint_gun_broken, 1);
+%mourning_gnome = ^me1_gnome_fixing;
+%me1_gnome_clock = calc(map_clock + ^me1_wait);
+
+[oplocu,mourning_gnome_rack]
+def_int $g = %mourning_gnome;
+if ($g >= ^me1_gnome_fixing) {
+    ~displaymessage(^dm_default); // the rack is empty
+    return;
+}
+if (last_useitem = toad_crunchies | last_useitem = premade_toad_crunchies) {
+    inv_del(inv, last_useitem, 1);
+    if ($g = ^me1_gnome_agreed) {
+        ~me1_gnome("<p,happy>You're giving me toad crunchies even though I haven't helped yet?!? Thanks a lot. You know for a Mourner you're not too bad.");
+        return;
+    }
+    ~objbox(last_useitem, "You dangle the toad crunchie above the gnome's nose.", 250, 0, divide(^objbox_height, 2));
+    ~mesbox("The gnome cranes his neck and gulps down the toad crunchie before you can pull it away.");
+    ~me1_gnome("<p,happy>I told you you can't buy my cooperation... ... but thanks for the snack.");
+    return;
+}
+if (last_useitem ! feather) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($g < ^me1_gnome_weakness) {
+    ~me1_tickle_anim;
+    ~mesbox("You tickle the gnome's nose...");
+    sound_synth(mourning_sneeze, 1, 0);
+    ~me1_gnome("<p,shock>A.. ah... ACHOOO!!!");
+    ~mesbox("You get covered in gnome snot.");
+    return;
+}
+if ($g = ^me1_gnome_weakness) {
+    ~me1_tickle_anim;
+    ~objbox(feather, "You tickle the gnome's feet...", 250, 0, divide(^objbox_height, 2));
+    ~me1_gnome("<p,laugh>Ha ha ha... no stop... Heehee... please no more... Teehee... Hoho...");
+    ~chatplayer("<p,neutral>Now will you help me or do I have to tickle your feet some more?");
+    ~me1_gnome("<p,neutral>It's not like I'm going to get anything out of helping you, is it? As I figure, that 'artefact' is the only thing keeping me out of the slave pens, where I'd get fed a lot worse than nail and prune stew!");
+    ~chatplayer("<p,confused>Hmm... This isn't quite working!?");
+    %mourning_gnome = ^me1_gnome_tickled;
+    return;
+}
+if ($g = ^me1_gnome_tickled) {
+    if (inv_total(inv, toad_crunchies) = 0 & inv_total(inv, premade_toad_crunchies) = 0) {
+        ~chatplayer("<p,neutral>Now will you help me or do I have to tickle your feet some more?");
+        ~me1_gnome("<p,neutral>I told you, I'm not going to get anything out of helping you, am I? As I figure, that 'artefact' is the only thing keeping me out of the slave pens, where I'd get fed worse than nail and prune stew!");
+        return;
+    }
+    def_obj $crunchies = toad_crunchies;
+    if (inv_total(inv, toad_crunchies) = 0) $crunchies = premade_toad_crunchies;
+    ~doubleobjbox(feather, $crunchies, "You dangle the toad crunchie above the gnome's nose just out of reach and hold the feather menacingly close to his feet.", 250);
+    ~chatplayer("<p,neutral>Now will you help me or do I have to tickle your feet some more?");
+    ~me1_gnome("<p,sad>Alright... alright I'm beaten, bring me some soft leather and some magic logs and I'll see what I can do!");
+    %mourning_gnome = ^me1_gnome_agreed;
+    if (~me1_gnome_missing = 0) {
+        // the OSRS wiki
+        ~chatplayer("<p,happy>I have all of that here.");
+        ~me1_gnome("<p,neutral>Well let me up off of this rack and I'll get started, I can't do anything while I'm all tied up.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Very well, but you don't get the crunchies until I get back though.");
+    ~me1_gnome("<p,angry>You beastly little blighter!");
+    return;
+}
+// agreed
+~me1_gnome("<p,angry>Oi! There's no need for that, I already agreed to help.");
+~chatplayer("<p,laugh>That's all well and good but I'm enjoying doing it.");
+~me1_tickle_anim;
+~objbox(feather, "You tickle the gnome's feet...", 250, 0, divide(^objbox_height, 2));
+~me1_gnome("<p,laugh>Ho ho ho... no more... Teehee... please stop... Hoohoo... he he he...");
+~me1_gnome("<p,angry>I hate you!");
+
+// ours: the cache's tickling animations and sound
+[proc,me1_tickle_anim]
+anim(player_tickle, 0);
+loc_anim(gnome_tickle);
+sound_synth(mourning_tickle, 1, 0);
+
+// ---------------------------------------------------------------- the gnome off the rack
+[opnpc1,mourner_hideout_gnome]
+def_int $g = %mourning_gnome;
+if ($g = ^me1_gnome_fixing & ~me1_ready(%me1_gnome_clock) = false) {
+    ~chatplayer("<p,quiz>Have you fixed the device yet?");
+    ~chatnpc("<p,neutral>You're gonna have to wait a bit...");
+    return;
+}
+if ($g = ^me1_gnome_fixing | $g = ^me1_gnome_fixed) {
+    ~chatnpc("<p,neutral>Alright, alright... here you go, take it...");
+    %mourning_gnome = ^me1_gnome_free;
+    ~me1_give(mourning_paint_gun, 1);
+    ~objbox(mourning_paint_gun, "The gnome gives you a fixed device.", 250, 0, divide(^objbox_height, 2)); // the OSRS wiki
+    return;
+}
+~chatnpc("<p,quiz>What are you after now?");
+if (inv_total(inv, mourning_paint_gun_broken) > 0) {
+    ~chatplayer("<p,neutral>I need you to fix another of those devices for me. I lost the last one.");
+    ~chatnpc("<p,angry>You know what I need...|Some soft leather, a magic log and some toad crunchies. I refuse to eat anymore nail and prune stew!");
+    if (~me1_gnome_missing > 0) {
+        ~chatplayer("<p,neutral>I still need <~me1_gnome_need_text(true)>.");
+        ~chatnpc("<p,neutral>Well when you have it all I'll fix that thing for you.");
+        return;
+    }
+    // ours: with everything he takes it and gets to work
+    ~me1_gnome_hand_over;
+    ~mesbox("You hand the gnome the magic logs, soft leather and the strange device as well as the toad crunchies.");
+    return;
+}
+~chatplayer("<p,neutral>Nothing I'm just talking to people randomly in case it helps.");
+~chatnpc("<p,quiz>Does it?");
+~chatplayer("<p,sad>Not really, no.");
+~chatnpc("<p,happy>Maybe you should give me more toad crunchies. Ask any gnome, 'toad should be in everything' they'll tell you, mark my words.");
+
+[opnpcu,mourner_hideout_gnome]
+if (last_useitem = toad_crunchies | last_useitem = premade_toad_crunchies) {
+    inv_del(inv, last_useitem, 1);
+    ~chatnpc("<p,happy>Mmm Thanks...|Toads always hit the spot!");
+    return;
+}
+~chatnpc("<p,neutral>I got no need for that, keep it."); // the OSRS wiki

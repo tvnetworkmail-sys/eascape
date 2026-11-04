@@ -1,0 +1,117 @@
+// EASCape: test commands for Mourning's End Part I (quest_mourning1).
+
+// ::mepack - what the quest needs (the OSRS wiki's list, with the 2005 magic logs): 2 silk, bear
+// fur, a bucket of water, a feather, 2 toad crunchies, magic logs, leather, an ogre bellows, two of
+// each of the four dyes, a rotten apple, an empty barrel and a barrel of naphtha; and 1000 coins.
+// It also marks Roving Elves, Big Chompy Bird Hunting and Sheep Herder done (no rewards) if they
+// aren't, so Eluned will offer the quest. You need 60 Ranged and 50 Thieving (::maxstats).
+[debugproc,mepack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(silk, 2));
+$banked = calc($banked + ~questpack_give(fur, 1));
+$banked = calc($banked + ~questpack_give(bucket_water, 1));
+$banked = calc($banked + ~questpack_give(feather, 5));
+$banked = calc($banked + ~questpack_give(toad_crunchies, 2));
+$banked = calc($banked + ~questpack_give(magic_logs, 1));
+$banked = calc($banked + ~questpack_give(leather, 1));
+$banked = calc($banked + ~questpack_give(empty_ogre_bellows, 1));
+$banked = calc($banked + ~questpack_give(reddye, 2));
+$banked = calc($banked + ~questpack_give(yellowdye, 2));
+$banked = calc($banked + ~questpack_give(greendye, 2));
+$banked = calc($banked + ~questpack_give(bluedye, 2));
+$banked = calc($banked + ~questpack_give(rottenapples, 1));
+$banked = calc($banked + ~questpack_give(regicide_barrel_empty, 1));
+$banked = calc($banked + ~questpack_give(regicide_barrel_naphtha, 1));
+$banked = calc($banked + ~questpack_give(coins, 1000));
+if (%roving_elves_quest < ^roving_complete) %roving_elves_quest = ^roving_complete;
+if (%chompybird < ^chompybird_complete) %chompybird = ^chompybird_complete;
+if (%sheepherderquest < ^sheepherder_complete) %sheepherderquest = ^sheepherder_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Mourning's End Part I", $banked);
+mes("Eluned is in Isafdar (2289,3145, west of the Tyras Camp path). ::mestage sets the quest's stage.");
+
+// ::mestage <n> - sets Mourning's End Part I's stage (ours, quest_mourning1/mourning1.constant):
+// 0 not started (clears everything), 1 Eluned took you to Lletya (talk to Arianwyn), 2 Arianwyn
+// asked you to infiltrate the mourners, 3 a recruit (the Head Mourner gave you the broken device
+// and the key), 4 all four sheep dyed (report to the Head Mourner), 5 the poison task, 6 the poison
+// task with two food stores poisoned (talk to the Head Mourner to finish), 10 done (no rewards).
+// And: 11 the gnome has agreed to fix the device (stage 3), 12 the gnome has fixed it (stage 3:
+// the fixed device and one toad of each colour), 13 the full repaired mourner outfit and the letter
+// (stage 2), 14 the toxic naphtha (stage 5, Elena has told you how).
+[debugproc,mestage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 11) {
+    ~me1_set(^me1_recruit);
+    %mourning_gnome = ^me1_gnome_agreed;
+    if (inv_total(inv, mourning_paint_gun_broken) = 0) ~me1_give(mourning_paint_gun_broken, 1);
+    if (inv_total(inv, mourning_gnome_key) = 0) ~me1_give(mourning_gnome_key, 1);
+    mes("Mourning's End Part I: the gnome has agreed (bring magic logs, leather, toad crunchies and the device, then Release him).");
+    return;
+}
+if ($n = 12) {
+    ~me1_set(^me1_recruit);
+    %mourning_gnome = ^me1_gnome_free;
+    ~me1_give(mourning_paint_gun, 1);
+    ~me1_give(mourning_bloated_toad_red, 1);
+    ~me1_give(mourning_bloated_toad_yellow, 1);
+    ~me1_give(mourning_bloated_toad_green, 1);
+    ~me1_give(mourning_bloated_toad_blue, 1);
+    mes("Mourning's End Part I: the fixed device and a toad of each colour. The sheep are north of East Ardougne.");
+    return;
+}
+if ($n = 13) {
+    if (%mourning_quest < ^me1_arianwyn) ~me1_set(^me1_arianwyn);
+    ~me1_give(gasmask, 1);
+    ~me1_give(mourning_mourner_top, 1);
+    ~me1_give(mourning_mourner_legs, 1);
+    ~me1_give(mourning_mourner_gloves, 1);
+    ~me1_give(mourning_mourner_boots, 1);
+    ~me1_give(mourning_mourner_cloak, 1);
+    ~me1_give(mourning_mourner_message, 1);
+    mes("Mourning's End Part I: the mourner outfit and the letter. Wear all six (nothing else) for the Mourner HQ door.");
+    return;
+}
+if ($n = 14) {
+    ~me1_set(^me1_poison);
+    %mourning_sheep_red = 1;
+    %mourning_sheep_yellow = 1;
+    %mourning_sheep_green = 1;
+    %mourning_sheep_blue = 1;
+    %mourning_elena = ^me1_elena_told;
+    ~me1_give(mourning_toxic_naphtha, 1);
+    mes("Mourning's End Part I: toxic naphtha. Heat it on a range (the Mourner HQ has one) for the toxic powder.");
+    return;
+}
+if ($n = 0) {
+    %mourning_quest = ^me1_not_started;
+    %mourning_quest_bits = 0;
+    %me1_bits = 0;
+    ~send_quest_progress(questlist:mourning, 0, ^me1_complete);
+    ~update_questpoints;
+    mes("Mourning's End Part I: reset.");
+    return;
+}
+if ($n = 1 | $n = 2 | $n = 3 | $n = 4 | $n = 5 | $n = 6 | $n = 10) {
+    def_int $stage = $n;
+    if ($n = 6) $stage = ^me1_poison;
+    ~me1_set($stage);
+    def_int $sheep = 0;
+    if ($n >= 4) $sheep = 1;
+    %mourning_sheep_red = $sheep;
+    %mourning_sheep_yellow = $sheep;
+    %mourning_sheep_green = $sheep;
+    %mourning_sheep_blue = $sheep;
+    if ($n = 6 | $n = 10) {
+        %mourning_food_poison1 = 1;
+        %mourning_food_poison2 = 1;
+        %mourning_elena = ^me1_elena_told;
+    }
+    if ($n = 3 & inv_total(inv, mourning_paint_gun_broken) = 0) ~me1_give(mourning_paint_gun_broken, 1);
+    if ($n = 3 & inv_total(inv, mourning_gnome_key) = 0) ~me1_give(mourning_gnome_key, 1);
+    ~update_questpoints;
+    mes("Mourning's End Part I stage: <tostring($n)>");
+    return;
+}
+mes("::mestage 0-6, 10 (stages) or 11-14 (gnome agreed, device fixed, mourner outfit, toxic naphtha).");

@@ -1,0 +1,124 @@
+// EASCape: Mourning's End Part I - the mourner's disguise: the Arandar mourners, Tegid's soap.
+
+// ---------------------------------------------------------------- the level 11 mourners in the
+// Arandar pass (the OSRS wiki: they always throw a vial first, "The Mourner throws a vial at you.
+// You feel weakened.", draining your combat stats to 20, and shout "This will cut down you to
+// size!"; they always drop bones and the outfit, the bloody top and the letter only during the
+// quest). Ours: the vial comes when you attack, and Prayer is left alone.
+[opnpc2,mourning_overpass_mourner1] @me1_mourner_attack;
+[opnpc2,mourning_overpass_mourner2] @me1_mourner_attack;
+[opnpc2,mourning_overpass_mourner3] @me1_mourner_attack;
+[apnpc2,mourning_overpass_mourner1] @me1_mourner_attack_ap;
+[apnpc2,mourning_overpass_mourner2] @me1_mourner_attack_ap;
+[apnpc2,mourning_overpass_mourner3] @me1_mourner_attack_ap;
+
+[label,me1_mourner_attack]
+~me1_mourner_vial;
+@player_combat_start;
+
+[label,me1_mourner_attack_ap]
+~me1_mourner_vial;
+@player_combat_start_ap;
+
+[proc,me1_mourner_vial]
+if (%me1_vial = 1) return;
+%me1_vial = 1;
+npc_say("This will cut down you to size!");
+mes("The Mourner throws a vial at you. You feel weakened.");
+~me1_drain_to_20(attack);
+~me1_drain_to_20(strength);
+~me1_drain_to_20(defence);
+~me1_drain_to_20(ranged);
+~me1_drain_to_20(magic);
+~me1_drain_to_20(hitpoints);
+
+[proc,me1_drain_to_20](stat $stat)
+if (stat($stat) > 20) stat_sub($stat, calc(stat($stat) - 20), 0);
+
+[ai_queue3,mourning_overpass_mourner1] ~me1_mourner_death;
+[ai_queue3,mourning_overpass_mourner2] ~me1_mourner_death;
+[ai_queue3,mourning_overpass_mourner3] ~me1_mourner_death;
+
+[proc,me1_mourner_death]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+def_coord $c = npc_coord;
+obj_add($c, bones, 1, ^lootdrop_duration);
+obj_add($c, mourning_mourner_cloak, 1, ^lootdrop_duration);
+obj_add($c, mourning_mourner_boots, 1, ^lootdrop_duration);
+obj_add($c, mourning_mourner_gloves, 1, ^lootdrop_duration);
+obj_add($c, gasmask, 1, ^lootdrop_duration);
+obj_add($c, mourning_ripped_mourner_legs, 1, ^lootdrop_duration);
+if (%mourning_quest >= ^me1_started & %mourning_quest < ^me1_complete) {
+    obj_add($c, mourning_bloody_mourner_top, 1, ^lootdrop_duration);
+    obj_add($c, mourning_mourner_message, 1, ^lootdrop_duration);
+}
+
+// ---------------------------------------------------------------- the mourner letter (ours: its
+// words; no source has them)
+[opheld1,mourning_mourner_message]
+~mesbox("The letter is written in an elegant hand. It says the bearer has passed all the requirements to join the Death Guard of Prifddinas.");
+
+// ---------------------------------------------------------------- Tegid's soap (the RS wiki's
+// words; the first four lines are Eadgar's Ruse's, eadgar_druid_washing.rs2, which hands over
+// here)
+[proc,me1_tegid]()(boolean)
+if (%mourning_quest < ^me1_arianwyn | %mourning_quest >= ^me1_complete) return(false);
+if (~me1_has(mourning_bloody_mourner_top) = false) return(false);
+~chatplayer("<p,quiz>Do you know any way to remove blood stains?");
+~chatnpcnoturn("<p,neutral>Blood stains is it... Well, the soap I use can clean almost any stain.");
+~chatplayer("<p,happy>Really?!? That sounds like just the thing I need, can I use some?");
+~chatnpcnoturn("<p,neutral>No, I don't have very much soap left and I still have lots to get clean.");
+~chatplayer("<p,quiz>Alright can you tell me where I can buy some?");
+~chatnpcnoturn("<p,neutral>You can't... I make it to my own secret recipe.");
+~chatplayer("<p,angry>Could you be less helpful?");
+%me1_tegid = 1;
+if (%eadgar_quest >= ^eadgar_complete) {
+    ~chatnpcnoturn("<p,angry>Like you were, taking those clothes from my washing line??");
+    ~chatnpcnoturn("<p,angry>So yes, if you know a way I can be less helpful just tell me, I'll try it.");
+    return(true);
+}
+~chatnpcnoturn("<p,neutral>If you know a way just tell me, I'll give it a try.");
+return(true);
+
+[oploc1,eadgar_laundry_basket]
+if (%me1_tegid = 0 | inv_total(inv, mourning_soap) > 0) {
+    ~mesbox("You search the laundry basket... It's full of dirty robes.");
+    return;
+}
+~mesbox("You search the laundry basket... It's full of dirty robes, on top you see a bar of soap.");
+if (~p_choice2("Steal the soap.", 1, "Leave the soap.", 2) = 2) {
+    ~mesbox("You leave the soap where it is.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~mesbox("You don't have enough room to take the soap."); // the OSRS wiki
+    return;
+}
+~mesbox("You wait until Tegid is looking the other way... Yoink!");
+inv_add(inv, mourning_soap, 1);
+mes("You steal the soap.");
+
+[opheldu,mourning_soap]
+switch_obj (last_useitem) {
+    case mourning_bloody_mourner_top : @me1_wash_top(last_useslot);
+    case bucket_water : mes("Making soapy water isn't going to help here.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,mourning_bloody_mourner_top]
+switch_obj (last_useitem) {
+    case mourning_soap : @me1_wash_top(last_slot);
+    case bucket_water : mes("Just wetting the top will not remove the bloodstains.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,me1_wash_top](int $slot)
+if (inv_total(inv, bucket_water) = 0) {
+    mes("The dry soap has no effect.");
+    return;
+}
+inv_del(inv, bucket_water, 1);
+inv_add(inv, bucket_empty, 1);
+inv_setslot(inv, $slot, mourning_mourner_top, 1);
+~objbox(mourning_mourner_top, "You give the top a good scrub with the soap and rinse away the bloody suds with water.", 250, 0, divide(^objbox_height, 2));

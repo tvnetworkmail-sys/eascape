@@ -1,0 +1,347 @@
+// EASCape: Mourning's End Part I - Eluned, Lletya, Arianwyn, Oronwen and the teleport crystal.
+
+// ---------------------------------------------------------------- Eluned (roving_elves.rs2 hands
+// her over once Roving Elves is done). Words: the RS wiki's transcript; the recharge: Void
+// (Eluned.kt: 750 coins, 150 less each time down to 150, four charges).
+[proc,me1_eluned]()(boolean)
+if (%roving_elves_quest < ^roving_complete) return(false);
+if (%mourning_quest = ^me1_not_started) {
+    ~chatplayer("<p,neutral>Hi there.");
+    ~chatnpc("<p,happy>Hi! I hear you finished consecrating Glarial's tomb. Well done.");
+    ~chatplayer("<p,neutral>It was a worthy deed.");
+    def_int $choice = ~p_choice2("Talk about Mourning's End", 1, "Talk about enchanting crystal", 2);
+    if ($choice = 2) {
+        ~me1_eluned_recharge;
+        return(true);
+    }
+    ~chatnpc("<p,neutral>Oh... I have been asked to inform you, Arianwyn requests a meeting with you in Lletya.");
+    ~chatplayer("<p,quiz>Lletya? I know nothing of this place.");
+    ~chatnpc("<p,neutral>I will take you there if you like.");
+    if (~me1_can_start = false) {
+        ~mesbox("You do not meet the requirements to start : 'Mourning's Ends Part 1'.");
+        return(true);
+    }
+    // ours: a plain choice where RS3 shows its quest overview
+    $choice = ~p_choice2("Yes, I should go see him now.", 1, "I have a few things to do right now.", 2);
+    if ($choice = 2) {
+        ~chatplayer("<p,neutral>I have a few things to do right now.");
+        ~chatnpc("<p,neutral>Sure thing, but he will not wait for long.");
+        return(true);
+    }
+    ~chatplayer("<p,neutral>Yes, I should go see him now.");
+    ~chatnpc("<p,happy>Well, let us go then.");
+    ~me1_eluned_takes_you;
+    return(true);
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,happy>Hello again, how is it going?");
+~chatplayer("<p,happy>Not bad, thank you.");
+~me1_eluned_recharge;
+if (%mourning_quest = ^me1_started) {
+    ~chatnpc("<p,neutral>I understand you did not speak with Arianwyn while in the village, you really should.");
+    ~chatplayer("<p,neutral>I'll go and see him as soon as I have time.");
+    ~chatnpc("<p,neutral>As you wish.");
+}
+return(true);
+
+// the OSRS wiki's requirements, unboosted
+[proc,me1_can_start]()(boolean)
+if (stat_base(ranged) < 60 | stat_base(thieving) < 50) return(false);
+if (%roving_elves_quest < ^roving_complete | %chompybird < ^chompybird_complete | %sheepherderquest < ^sheepherder_complete) return(false);
+return(true);
+
+[proc,me1_eluned_takes_you]
+// the RS wiki: a fade, and you are in Lletya in front of Arianwyn and Eluned
+~fade_out;
+p_delay(2);
+%mourning_can_see_eluned = 1;
+p_telejump(0_36_49_49_35); // ours: the square beside Arianwyn
+~fade_in;
+p_delay(1);
+~me1_set(^me1_started);
+~me1_give(mourning_teleport_crystal_4, 1);
+~objbox(mourning_teleport_crystal_4, "Eluned hands you a tiny crystal seed.", 250, 0, divide(^objbox_height, 2));
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,happy>Here you go... If you ever need to get back to Lletya, you can use this. Use it sparingly as it only has a few uses but I can re- enchant it for you.");
+~chatplayer("<p,happy>Thanks a lot, Eluned!");
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,neutral>Now, I had better get going or Islwyn will get worried.");
+%mourning_can_see_eluned = 0;
+
+[opnpc1,roving_female_woodelf_temp]
+// the Eluned that stands by Arianwyn while she brings you
+~chatnpc("<p,neutral>Now, I had better get going or Islwyn will get worried.");
+%mourning_can_see_eluned = 0;
+
+[proc,me1_eluned_recharge]
+if (inv_total(inv, elf_crystal_tiny) = 0) {
+    ~chatnpc("<p,neutral>You don't have any crystals that I can re-enchant.");
+    return;
+}
+def_int $price = max(150, calc(750 - 150 * %mourning_eluned_chant));
+~chatnpc("<p,happy>Very well. I'll recharge your teleportation crystal for <tostring($price)> gold. What do you say?");
+if (~p_choice2("Recharge a crystal.", 1, "Nevermind, I really must be going.", 2) = 2) {
+    ~chatplayer("<p,neutral>Nevermind, I really must be going.");
+    return;
+}
+~chatplayer("<p,neutral>Recharge a crystal.");
+if (inv_total(inv, coins) < $price | inv_total(inv, elf_crystal_tiny) = 0) {
+    ~chatplayer("<p,sad>Actually, I don't have enough coins.");
+    return;
+}
+inv_del(inv, coins, $price);
+inv_del(inv, elf_crystal_tiny, 1);
+inv_add(inv, mourning_teleport_crystal_4, 1);
+if (%mourning_eluned_chant < 7) %mourning_eluned_chant = calc(%mourning_eluned_chant + 1);
+~mesbox("Eluned recharges your elven teleportation crystal for <tostring($price)> gold.");
+
+[opnpcu,roving_female_woodelf]
+if (last_useitem = elf_crystal_tiny) {
+    ~me1_eluned_recharge;
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- the teleport crystal (Void:
+// TeleportCrystal.kt's words; the square 2329,3172 and the "unresponsive" crystal above level 20
+// Wilderness: 2009scape's TeleportCrystalPlugin)
+[opheld1,mourning_teleport_crystal_4] @me1_crystal;
+[opheld1,mourning_teleport_crystal_3] @me1_crystal;
+[opheld1,mourning_teleport_crystal_2] @me1_crystal;
+[opheld1,mourning_teleport_crystal_1] @me1_crystal;
+
+[label,me1_crystal]
+def_int $slot = last_slot;
+if (~p_choice2("Teleport to Lletya.", 1, "Cancel.", 2) = 2) return;
+if (~wilderness_level(coord) > 20) {
+    mes("The crystal is unresponsive.");
+    return;
+}
+if (~pre_tele_checks(coord) = false) return;
+def_obj $item = inv_getobj(inv, $slot);
+def_namedobj $next = null;
+switch_obj ($item) {
+    case mourning_teleport_crystal_4 : $next = mourning_teleport_crystal_3;
+    case mourning_teleport_crystal_3 : $next = mourning_teleport_crystal_2;
+    case mourning_teleport_crystal_2 : $next = mourning_teleport_crystal_1;
+    case mourning_teleport_crystal_1 : $next = elf_crystal_tiny;
+    case default : return;
+}
+~player_teleport_normal(0_36_49_25_36);
+inv_setslot(inv, $slot, $next, 1);
+if ($next = elf_crystal_tiny) {
+    mes("Your teleportation crystal has degraded to a tiny elf crystal.");
+    mes("Eluned can re-enchant it.");
+} else {
+    mes("Your teleportation crystal has degraded from use.");
+}
+
+// ---------------------------------------------------------------- the trees into Lletya (Void:
+// LletyaTreeEntrance.kt: the two middle squares are the way through, two squares past the trees,
+// the trees open with treegate_open and treedoor_open. The RS wiki: before the quest "You can see
+// no way past the trees.")
+[oploc1,elf_village_treegate]
+if (%mourning_quest = ^me1_not_started) {
+    mes("You can see no way past the trees.");
+    return;
+}
+def_coord $tree = loc_coord;
+def_int $dir = 1;
+if (coordx(coord) > coordx($tree)) $dir = -1;
+def_int $z = max(3194, min(coordz(coord), 3195));
+loc_anim(treegate_open);
+def_int $partner_z = 3191;
+if (coordz($tree) = 3191) $partner_z = 3195;
+if (loc_find(movecoord($tree, 0, 0, calc($partner_z - coordz($tree))), elf_village_treegate) = true) {
+    loc_anim(treegate_open);
+}
+sound_synth(treedoor_open, 1, 0);
+if (coordz(coord) ! $z) ~forcemove(movecoord(coord, 0, 0, calc($z - coordz(coord))));
+~forcemove(movecoord($tree, calc(2 * $dir), 0, calc($z - coordz($tree))));
+
+// ---------------------------------------------------------------- Arianwyn (the RS wiki's words;
+// the bloody top and ripped trousers: the OSRS wiki's)
+[opnpc1,mourning_arianwyn]
+def_int $s = %mourning_quest;
+if ($s = ^me1_not_started) {
+    // ours: nobody gets into Lletya before the quest
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,neutral>Good day.");
+    return;
+}
+if ($s = ^me1_started) {
+    ~chatnpc("<p,neutral>Good day <displayname>, I have been hoping to see you. It has come to my attention that there are large numbers of those you know as 'Mourners' crossing the mountain pass through Arandar.");
+    ~chatplayer("<p,quiz>Mourners? Here in Tirannwn? But why?");
+    ~chatnpc("<p,neutral>Why? It is quite simple really and it is hardly a big secret. Those you know as Mourners are in fact Elves from the city.");
+    ~chatnpc("<p,neutral>The big question is: Why are they heading to Ardougne in such numbers?");
+    ~chatplayer("<p,confused>Mourners are Elves? But I thought they were the West Ardougne guard.");
+    ~chatnpc("<p,neutral>This is what King Lathas would have you believe.");
+    ~chatnpc("<p,neutral>We have been unable to infiltrate West Ardougne. The Mourner guard could identify us as enemy Elves before we could even get close to the walls. They must be up to something new, something we have not anticipated.");
+    ~chatplayer("<p,neutral>Alright, cut to the crux. What do you need me to do?");
+    ~chatnpc("<p,neutral>That which we are unable to do, penetrate the Mourners' hide-out in Ardougne without alerting them to your presence, find out why they are there and what they are up to.");
+    ~me1_set(^me1_arianwyn);
+    @me1_arianwyn_plan;
+}
+if ($s = ^me1_arianwyn) {
+    if (~me1_has(mourning_bloody_mourner_top) = true | ~me1_has(mourning_ripped_mourner_legs) = true) {
+        ~chatplayer("<p,neutral>I killed one of those mourners crossing the mountain pass and took their clothes.");
+        ~chatnpc("<p,happy>Ah, a disguise. Good thinking.");
+        ~chatplayer("<p,neutral>I do have a bit of an issue though. The top has blood on it and the trousers are ripped.");
+        ~chatnpc("<p,neutral>Hmm... Well you can try asking our local seamstress, Oronwen, about the trousers.");
+        ~chatnpc("<p,neutral>As for the top, you'll need to find a way to get it cleaned. Maybe you can find someone who does a lot of laundry. Someone who wears lots of white might be a good bet.");
+        ~chatplayer("<p,happy>Okay, thanks for the help.");
+        return;
+    }
+    if (~me1_has(mourning_mourner_top) = true & ~me1_has(mourning_mourner_legs) = true) {
+        ~chatplayer("<p,neutral>I killed one of those mourners crossing the mountain pass and took their clothes.");
+        ~chatnpc("<p,happy>Ah, a disguise. Good thinking. Use it to enter the Mourner Headquarters in West Ardougne. Once your in, see if you can find out what they are doing in the city.");
+        ~chatplayer("<p,neutral>Okay, will do.");
+        return;
+    }
+    @me1_arianwyn_plan;
+}
+if ($s < ^me1_complete) {
+    ~chatnpc("<p,quiz>How goes it <displayname>?");
+    if ($s = ^me1_poison & calc(%mourning_food_poison1 + %mourning_food_poison2 + %mourning_food_poison3) >= 2) {
+        ~chatplayer("<p,neutral>Alright, I have managed to infiltrate the Death Guard as they call themselves, I think they trust me now too. It's only a matter of time before they tell me their plans.");
+        ~chatnpc("<p,happy>Great work!! Keep up the good work <displayname>.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Alright, I have managed to infiltrate the Mourners, I just have to find out what they are up to now.");
+    ~chatnpc("<p,happy>Great work!! Stick with it <displayname>.");
+    return;
+}
+if (%me1_arianwyn_told = 0) {
+    ~chatnpc("<p,quiz>How goes it <displayname>?");
+    ~chatplayer("<p,neutral>I think I got the information you're after, it seems they're searching for an ancient temple of some sort under the mountains.");
+    ~chatnpc("<p,shock>Dear Seren no.|They have rediscovered the Temple of Light?");
+    ~chatplayer("<p,neutral>I don't think they've found this temple yet, but they know it's down there.");
+    ~chatnpc("<p,angry>You must stop them, at all costs!|If they harness the power secured in that temple, they will be able to start the end game before we can be ready.");
+    ~chatplayer("<p,quiz>What do you expect me to do about it?");
+    ~chatnpc("<p,angry>Whatever you can, we cannot allow that power to fall into their hands!");
+    %me1_arianwyn_told = 1;
+} else {
+    ~chatnpc("<p,angry>We cannot allow the power in the temple of light to fall into the Mourners' hands!|You must stop them.");
+}
+~chatplayer("<p,neutral>Right then, I'm on it. As soon as I can get a key to the excavation site. I should check in with the Head Mourner.");
+
+[label,me1_arianwyn_plan]
+~chatplayer("<p,quiz>So let me get this right. You want me to infiltrate the Mourners and find out their plans?");
+~chatnpc("<p,neutral>Yes.");
+~chatplayer("<p,quiz>And just how am I supposed to achieve that?");
+~chatnpc("<p,neutral>I have no idea, but I know we can count on you. If I had a plan I would share it with you, but I am lost for ideas. You have proved you are capable of such things in the past.");
+~chatnpc("<p,neutral>As I said before, there have been sightings of Mourners crossing the mountain pass.");
+~chatplayer("<p,neutral>Alright, I'll see what I can do.");
+
+// ---------------------------------------------------------------- Oronwen, the Lletya seamstress
+// (the RS wiki's words; her shop: 2009scape's two options, the cache's lletyaseamstressshop1;
+// ours: the shop's prices)
+[opnpc1,mourning_seamstress]
+if (%me1_oron = ^me1_oron_mending & ~me1_ready(%me1_oron_clock) = true) {
+    ~chatnpc("<p,happy>I have your trousers ready.");
+    %me1_oron = ^me1_oron_done;
+    ~me1_give(mourning_mourner_legs, 1);
+    ~objbox(mourning_mourner_legs, "Oronwen hands you the Mourner trousers, they look as good as new.", 250, 0, divide(^objbox_height, 2));
+    ~chatplayer("<p,happy>Thanks a lot.");
+    ~chatnpc("<p,happy>Any time.");
+    return;
+}
+~chatnpc("<p,happy>Hello, can I help?");
+def_string $third = "";
+if (%me1_oron = ^me1_oron_none & inv_total(inv, mourning_ripped_mourner_legs) > 0) {
+    $third = "Do you mend clothes?";
+} else if (%me1_oron = ^me1_oron_shown) {
+    $third = "What do you need to mend my trousers?";
+} else if (%me1_oron = ^me1_oron_allin) {
+    $third = "I have all I need to mend my trousers.";
+} else if (%me1_oron = ^me1_oron_mending) {
+    $third = "How are you doing with my trousers?";
+}
+def_int $choice = 0;
+if (string_length($third) > 0) {
+    $choice = ~p_choice3("Yes please. What are you selling?", 1, "No thanks.", 2, $third, 3);
+} else {
+    $choice = ~p_choice2("Yes please. What are you selling?", 1, "No thanks.", 2);
+}
+if ($choice = 1) {
+    ~chatplayer("<p,neutral>Yes please. What are you selling?");
+    ~me1_oronwen_shop;
+    return;
+}
+if ($choice = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+~chatplayer("<p,neutral><$third>");
+switch_int (%me1_oron) {
+    case ^me1_oron_none :
+        ~chatnpc("<p,neutral>I do, but human clothes are too hard to mend. They do not have the finesse of Elven garments.");
+        ~chatplayer("<p,neutral>I need you to repair some Elven clothing as it goes.");
+        ~chatnpc("<p,neutral>Let me take a look at it then.");
+        if (inv_total(inv, mourning_ripped_mourner_legs) = 0) return;
+        inv_del(inv, mourning_ripped_mourner_legs, 1);
+        %me1_oron = ^me1_oron_shown;
+        ~objbox(mourning_ripped_mourner_legs, "You show the seamstress the Mourner trousers.", 250, 0, divide(^objbox_height, 2));
+        ~chatnpc("<p,confused>There's something disturbingly familiar about the design of these trousers. They are made for an Elf, even if they are not made by an Elf.");
+        ~chatplayer("<p,quiz>But can you fix them?");
+        ~chatnpc("<p,neutral>Of course I can, but I will need 2 sheets of silk and some bear fur.");
+    case ^me1_oron_shown :
+        ~chatnpc("<p,neutral><~me1_oron_needs>");
+        ~chatplayer("<p,neutral>Alright.");
+        ~me1_oron_hand_in;
+    case ^me1_oron_allin :
+        ~chatnpc("<p,happy>Pass it all here then, and I will get started. Come back in a minute and I will have them done.");
+        %me1_oron = ^me1_oron_mending;
+        %me1_oron_clock = calc(map_clock + ^me1_wait);
+    case ^me1_oron_mending :
+        ~chatnpc("<p,neutral>They will be done soon.");
+}
+
+[opnpc3,mourning_seamstress] ~me1_oronwen_shop;
+
+[proc,me1_oronwen_shop]
+~openshop(lletyaseamstressshop1, 400, 1300, 30, "Lletya Seamstress");
+
+// what she still needs
+[proc,me1_oron_needs]()(string)
+def_int $silk = calc(2 - %me1_oron_silk);
+if (%me1_oron_fur = 0 & $silk = 2) return("I need bear fur and two sheets of silk.");
+if (%me1_oron_fur = 0 & $silk = 1) return("I need bear fur and one sheet of silk.");
+if (%me1_oron_fur = 0) return("I just need bear fur.");
+if ($silk = 2) return("I just need two sheets of silk.");
+return("I just need a sheet of silk.");
+
+// hand over whatever silk and fur you have that she still needs
+[proc,me1_oron_hand_in]
+def_int $gave = 0;
+if (%me1_oron_fur = 0 & inv_total(inv, fur) > 0) {
+    inv_del(inv, fur, 1);
+    %me1_oron_fur = 1;
+    ~objbox(fur, "You hand Oronwen some fur.", 250, 0, divide(^objbox_height, 2));
+    $gave = 1;
+}
+def_int $silk = min(calc(2 - %me1_oron_silk), inv_total(inv, silk));
+if ($silk > 0) {
+    inv_del(inv, silk, $silk);
+    %me1_oron_silk = calc(%me1_oron_silk + $silk);
+    ~objbox(silk, "You hand Oronwen some silk.", 250, 0, divide(^objbox_height, 2));
+    $gave = 1;
+}
+if ($gave = 0) return;
+if (%me1_oron_fur = 1 & %me1_oron_silk >= 2) {
+    %me1_oron = ^me1_oron_allin;
+    ~chatnpc("<p,happy>I have all I need to mend your trousers, hand them over and I will get started right away.");
+    return;
+}
+~chatnpc("<p,neutral><~me1_oron_needs>");
+
+// the OSRS wiki: using silk or fur on her
+[opnpcu,mourning_seamstress]
+if ((last_useitem = silk | last_useitem = fur) & %me1_oron = ^me1_oron_shown) {
+    ~me1_oron_hand_in;
+    return;
+}
+~displaymessage(^dm_default);
+
+// ours: map_clock starts again when the server does, so a wait from before a restart is over
+[proc,me1_ready](int $clock)(boolean)
+if (map_clock >= $clock | calc($clock - map_clock) > ^me1_wait) return(true);
+return(false);

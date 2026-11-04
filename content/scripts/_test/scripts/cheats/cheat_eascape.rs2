@@ -722,6 +722,26 @@ if (compare($name, "runemysteries") = 0) {
         return;
     }
     ~rcd_complete; // experience, initiate sallet and quest complete scroll (quest_rd/rd_start.rs2)
+} else if (compare($name, "mourning") = 0) {
+    if (%mourning_quest >= ^me1_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    %mourning_sheep_red = 1;
+    %mourning_sheep_yellow = 1;
+    %mourning_sheep_green = 1;
+    %mourning_sheep_blue = 1;
+    %mourning_gnome = ^me1_gnome_free;
+    %mourning_elena = ^me1_elena_told;
+    ~questdone_give(mourning_teleport_crystal_4, 1);
+    ~questdone_give(mourning_paint_gun, 1);
+    ~questdone_give(gasmask, 1);
+    ~questdone_give(mourning_mourner_top, 1);
+    ~questdone_give(mourning_mourner_legs, 1);
+    ~questdone_give(mourning_mourner_gloves, 1);
+    ~questdone_give(mourning_mourner_boots, 1);
+    ~questdone_give(mourning_mourner_cloak, 1);
+    ~me1_complete; // experience and quest complete scroll (quest_mourning1/me1_journal.rs2)
 } else if (compare($name, "zogre") = 0) {
     if (%zogre >= ^zogre_complete) {
         mes("You've already done that quest.");
@@ -843,7 +863,7 @@ mes("ballquest, murderquest, hazeelcultquest, heroquest, itgronigen, arenaquest,
 mes("biohazard, sheepherderquest, mcannon, grandtree, upass, zombiequeen, crestquest, itexamlevel");
 mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, troll_quest, troll_love, golem_a");
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
-mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf), recruitmentdrive (Recruitment Drive)");
+mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf), recruitmentdrive (Recruitment Drive), mourning (Mourning's Ends Part 1)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full

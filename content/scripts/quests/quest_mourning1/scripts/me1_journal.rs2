@@ -1,0 +1,108 @@
+// EASCape: Mourning's End Part I (19 July 2005, Plague City Series Continued). Sources: the RS
+// wiki's transcript (the older words: the Head Mourner, Oronwen's minute, the quest ending in the
+// Mourner basement), the OSRS wiki's guide and pages (magic logs, the level 11 mourners, the
+// fixed device, the four-charge teleport crystal), Void (the items, Eluned's recharge, the Lletya
+// trees and teleport square) and the cache (its varps and varbits, the gnome's rack, the sick
+// sheep, the aim and fire windows inter_286/287). Our own choices are marked "ours".
+
+// ---------------------------------------------------------------- the journal (ours: the words;
+// no source has the 2005 journal). Requirements: the OSRS wiki's quest details.
+[if_button,questlist:mourning]
+def_int $s = %mourning_quest;
+if ($s = ^me1_not_started) {
+    ~quest_journal("Mourning's Ends Part 1", "@dbl@I can start this quest by talking to @dre@Eluned@dbl@, a roving elf in the|@dre@woods of Isafdar@dbl@ in Tirannwn.|@dbl@To complete this quest I will need:|<~lt_req("Level 60 Ranged", stat_base(ranged), 60)>|<~lt_req("Level 50 Thieving", stat_base(thieving), 50)>|@dbl@and to have completed:|<~lt_req("Roving Elves", %roving_elves_quest, ^roving_complete)>|<~lt_req("Big Chompy Bird Hunting", %chompybird, ^chompybird_complete)>|<~lt_req("Sheep Herder", %sheepherderquest, ^sheepherder_complete)>");
+    return;
+}
+def_string $t = "";
+$t = append($t, ~lt_line("Eluned took me to Lletya, the hidden village of the", "elven resistance. Arianwyn wants to see me.", "", ~me1_done(^me1_arianwyn)));
+if ($s >= ^me1_arianwyn) {
+    $t = append($t, ~lt_line("Arianwyn told me the mourners are really elves. He wants", "me to infiltrate them and find out what they are doing in", "West Ardougne. Mourners cross the pass at Arandar.", ~me1_done(^me1_recruit)));
+    if ($s = ^me1_arianwyn) $t = append($t, ~me1_journal_gear);
+}
+if ($s >= ^me1_recruit) {
+    $t = append($t, ~lt_line("The Head Mourner took me for a new recruit. He wants me", "to re-dye Farmer Brumty's sheep red, yellow, green and", "blue without being seen, with a broken gnomish device.", ~me1_done(^me1_sheep_done)));
+    if ($s = ^me1_recruit) $t = append($t, ~me1_journal_sheep);
+}
+if ($s >= ^me1_sheep_done) $t = append($t, ~lt_line("The sheep are dyed. I should report to the Head Mourner.", "", "", ~me1_done(^me1_poison)));
+if ($s >= ^me1_poison) {
+    $t = append($t, ~lt_line("The Head Mourner wants me to poison two of the three", "food stores in West Ardougne, with whatever made the", "mourners ill. Elena might know how.", ~me1_done(^me1_complete)));
+    if ($s = ^me1_poison) $t = append($t, ~me1_journal_poison);
+}
+if ($s >= ^me1_complete) {
+    $t = append($t, "@str@The Head Mourner told me the mourners are digging for an|@str@ancient temple under the mountains, built around an altar|@str@of great power. I should tell Arianwyn.||@red@QUEST COMPLETE!");
+}
+~quest_journal("Mourning's Ends Part 1", $t);
+
+[proc,me1_done](int $stage)(boolean)
+if (%mourning_quest >= $stage) return(true);
+return(false);
+
+[proc,me1_journal_gear]()(string)
+def_string $t = "";
+if (~me1_has(mourning_bloody_mourner_top) = true) $t = append($t, "@dbl@The mourner top is covered in blood. Someone who does|@dbl@a lot of laundry might know how to clean it.|");
+if (~me1_has(mourning_ripped_mourner_legs) = true | (%me1_oron > ^me1_oron_none & %me1_oron < ^me1_oron_done)) $t = append($t, "@dbl@The trousers are ripped. @dre@Oronwen@dbl@, the seamstress in Lletya,|@dbl@can mend them with @dre@2 silk@dbl@ and @dre@bear fur@dbl@.|");
+if (string_length($t) > 0) $t = append($t, "|");
+return($t);
+
+[proc,me1_journal_sheep]()(string)
+def_string $t = "";
+if (%mourning_gnome < ^me1_gnome_fixing) $t = append($t, "@dbl@A @dre@gnome@dbl@ the mourners are torturing could fix the device.|");
+$t = append($t, "@dbl@Sheep re-dyed: <~me1_sheep_line("red", %mourning_sheep_red)> <~me1_sheep_line("yellow", %mourning_sheep_yellow)> <~me1_sheep_line("green", %mourning_sheep_green)> <~me1_sheep_line("blue", %mourning_sheep_blue)>||");
+return($t);
+
+[proc,me1_sheep_line](string $colour, int $done)(string)
+if ($done = 1) return("@str@<$colour>@dbl@");
+return("@dre@<$colour>@dbl@");
+
+[proc,me1_journal_poison]()(string)
+def_int $n = calc(%mourning_food_poison1 + %mourning_food_poison2 + %mourning_food_poison3);
+if ($n >= 2) return("@dbl@I have poisoned two of the food stores. I should tell the|@dbl@Head Mourner.||");
+return("@dbl@Food stores poisoned: <tostring($n)> of 2.||");
+
+// ---------------------------------------------------------------- shared
+// in your pack or worn
+[proc,me1_has](obj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+// 0 not the whole outfit, 1 the six mourner pieces and nothing else, 2 the six and something else
+// (the RS wiki's mourner at the door: "non-regulation gear")
+[proc,me1_disguise]()(int)
+if (inv_getobj(worn, ^wearpos_hat) ! gasmask
+    | inv_getobj(worn, ^wearpos_back) ! mourning_mourner_cloak
+    | inv_getobj(worn, ^wearpos_torso) ! mourning_mourner_top
+    | inv_getobj(worn, ^wearpos_legs) ! mourning_mourner_legs
+    | inv_getobj(worn, ^wearpos_hands) ! mourning_mourner_gloves
+    | inv_getobj(worn, ^wearpos_feet) ! mourning_mourner_boots) {
+    return(0);
+}
+if (inv_getobj(worn, ^wearpos_front) ! null | inv_getobj(worn, ^wearpos_rhand) ! null
+    | inv_getobj(worn, ^wearpos_lhand) ! null | inv_getobj(worn, ^wearpos_ring) ! null
+    | inv_getobj(worn, ^wearpos_quiver) ! null) {
+    return(2);
+}
+return(1);
+
+[proc,me1_set](int $stage)
+%mourning_quest = $stage;
+~send_quest_progress(questlist:mourning, %mourning_quest, ^me1_complete);
+
+// a quest item handed to you: in your pack, or on the ground when it's full (ours)
+[proc,me1_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+// ---------------------------------------------------------------- the end (the RS wiki: the Head
+// Mourner tells you about the temple). Rewards: 2 quest points, 25,000 Hitpoints and 25,000
+// Thieving experience (the RS wiki's 2005 amounts, before the 2018 lamps; the OSRS wiki's
+// Thieving went to 40,000 only in 2022).
+[proc,me1_complete]
+~me1_set(^me1_complete);
+stat_advance(hitpoints, 250000);
+stat_advance(thieving, 250000);
+session_log(^log_adventure, "Quest complete: Mourning's End Part I");
+~send_quest_complete(questlist:mourning, mourning_paint_gun, 250, ^me1_questpoints, "You have completed\\nMourning's Ends Part 1!", "2 Quest Points|25,000 Hitpoints XP|25,000 Thieving XP|Access to the Death Guard|headquarters and to Lletya");

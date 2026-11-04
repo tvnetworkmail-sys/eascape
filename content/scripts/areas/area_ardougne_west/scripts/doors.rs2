@@ -54,6 +54,7 @@ p_delay(1);
 mes("...But they will not open.");
 
 [label,west_ardougne_mourner_headquarters_doors]
+if (~me1_hq_door = true) return; // EASCape: Mourning's End Part I (quest_mourning1/me1_hq.rs2)
 switch_int(%biohazard) {
     case ^biohazard_poisoned_stew, ^biohazard_found_distillator :
         if(inv_total(worn, doctor_gown) > 0) {

@@ -1,0 +1,217 @@
+// EASCape: Mourning's End Part I - the dyed toads, the fixed device and Farmer Brumty's sheep.
+// Words: the RS wiki's transcript; the device (60 Ranged to wield, only when loaded, "aim at the
+// square it's on"): the OSRS wiki. The windows are the cache's: inter_286 (the device's combat
+// tab: Kick, Aim and Fire) and inter_287 (the aim and fire window: arrows, FIRE!, the loaded toad).
+
+// ---------------------------------------------------------------- dye into the ogre bellows
+// (dye_cape.rs2 hands over for the four dyes)
+[proc,me1_bellows_dye](obj $dye)
+def_namedobj $filled = null;
+def_string $colour = "";
+switch_obj ($dye) {
+    case reddye : $filled = mourning_ogre_bellows_red; $colour = "red";
+    case bluedye : $filled = mourning_ogre_bellows_blue; $colour = "blue";
+    case yellowdye : $filled = mourning_ogre_bellows_yellow; $colour = "yellow";
+    case greendye : $filled = mourning_ogre_bellows_green; $colour = "green";
+    case default : return;
+}
+inv_del(inv, empty_ogre_bellows, 1);
+inv_del(inv, $dye, 1);
+inv_add(inv, $filled, 1);
+anim(human_chompybird_ogrebellows, 0);
+sound_synth(mourning_bellowsfill, 1, 0);
+~objbox($filled, "You suck the <$colour> dye into the bellows.", 250, 0, divide(^objbox_height, 2));
+
+[opheldu,empty_ogre_bellows]
+switch_obj (last_useitem) {
+    case reddye, bluedye, yellowdye, greendye : ~me1_bellows_dye(last_useitem);
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- dye bellows on a swamp toad
+// (swamp_toad.rs2 hands over)
+[proc,me1_toad_dye](obj $bellows)
+def_namedobj $toad = null;
+def_string $colour = "";
+switch_obj ($bellows) {
+    case mourning_ogre_bellows_red : $toad = mourning_bloated_toad_red; $colour = "red";
+    case mourning_ogre_bellows_blue : $toad = mourning_bloated_toad_blue; $colour = "blue";
+    case mourning_ogre_bellows_yellow : $toad = mourning_bloated_toad_yellow; $colour = "yellow";
+    case mourning_ogre_bellows_green : $toad = mourning_bloated_toad_green; $colour = "green";
+    case default : return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have space to carry that.");
+    return;
+}
+mes("You manage to catch the toad and inflate it with the <$colour> dye.");
+~come_here_toady();
+sound_synth(mourning_toadfill, 1, 30);
+p_delay(3);
+inv_del(inv, $bellows, 1);
+inv_add(inv, empty_ogre_bellows, 1);
+mes("You add the bloated toad to your inventory.");
+inv_add(inv, $toad, 1);
+npc_del;
+
+// dropping a toad
+[opheld5,mourning_bloated_toad_red] @me1_toad_pop;
+[opheld5,mourning_bloated_toad_blue] @me1_toad_pop;
+[opheld5,mourning_bloated_toad_yellow] @me1_toad_pop;
+[opheld5,mourning_bloated_toad_green] @me1_toad_pop;
+
+[label,me1_toad_pop]
+inv_delslot(inv, last_slot);
+sound_synth(toad_burst, 1, 0); // ours
+mes("The toad pops as you drop it on the floor.");
+
+// ---------------------------------------------------------------- loading the device
+[opheldu,mourning_paint_gun] ~me1_load(last_useitem, last_useslot);
+[opheldu,mourning_bloated_toad_red] ~me1_load_other;
+[opheldu,mourning_bloated_toad_blue] ~me1_load_other;
+[opheldu,mourning_bloated_toad_yellow] ~me1_load_other;
+[opheldu,mourning_bloated_toad_green] ~me1_load_other;
+
+[proc,me1_load_other]
+if (last_useitem = mourning_paint_gun) {
+    ~me1_load(last_item, last_slot);
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,me1_load](obj $toad, int $slot)
+def_int $ammo = ~me1_ammo_of($toad);
+if ($ammo = ^me1_ammo_none) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%mourning_gun_ammo ! ^me1_ammo_none) {
+    mes("The device is already loaded."); // ours
+    return;
+}
+inv_delslot(inv, $slot);
+%mourning_gun_ammo = $ammo;
+~doubleobjbox(mourning_paint_gun, $toad, "You put the dye-filled toad in to the firing chamber. To use the device, select the Aim and Fire mode from your Combat Options.", 250);
+
+[proc,me1_ammo_of](obj $toad)(int)
+switch_obj ($toad) {
+    case mourning_bloated_toad_blue : return(^me1_ammo_blue);
+    case mourning_bloated_toad_red : return(^me1_ammo_red);
+    case mourning_bloated_toad_yellow : return(^me1_ammo_yellow);
+    case mourning_bloated_toad_green : return(^me1_ammo_green);
+}
+return(^me1_ammo_none);
+
+[proc,me1_toad_of](int $ammo)(namedobj)
+switch_int ($ammo) {
+    case ^me1_ammo_blue : return(mourning_bloated_toad_blue);
+    case ^me1_ammo_red : return(mourning_bloated_toad_red);
+    case ^me1_ammo_yellow : return(mourning_bloated_toad_yellow);
+    case ^me1_ammo_green : return(mourning_bloated_toad_green);
+}
+return(null);
+
+// Empty (ours: the toad comes back out)
+[opheld1,mourning_paint_gun]
+if (%mourning_gun_ammo = ^me1_ammo_none) {
+    mes("The device is empty."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough room to do that."); // ours
+    return;
+}
+inv_add(inv, ~me1_toad_of(%mourning_gun_ammo), 1);
+%mourning_gun_ammo = ^me1_ammo_none;
+mes("You take the toad out of the firing chamber."); // ours
+
+// Wield: 60 Ranged and only when loaded (the OSRS wiki; ours: the messages)
+[opheld2,mourning_paint_gun]
+if (stat_base(ranged) < 60) {
+    mes("You need a Ranged level of 60 to wield this.");
+    return;
+}
+if (%mourning_gun_ammo = ^me1_ammo_none) {
+    mes("You need to load the device with a dye-filled toad before you can wield it.");
+    return;
+}
+~equip(last_slot);
+
+// the device's combat tab (player_attackstyles.rs2 hands over while it is wielded)
+[proc,me1_weapon_tab](obj $obj)(boolean)
+if ($obj ! mourning_paint_gun) return(false);
+if_settext(inter_286:com_1, oc_name($obj));
+if_settab(inter_286, 0);
+return(true);
+
+// ---------------------------------------------------------------- aim and fire
+[if_button,inter_286:com_6]
+if (p_finduid(uid) = false) return;
+if (inv_getobj(worn, ^wearpos_rhand) ! mourning_paint_gun) return;
+if (%mourning_gun_ammo = ^me1_ammo_none) {
+    mes("The device is empty."); // ours
+    return;
+}
+%me1_aim = coord;
+mes("Use the arrows to aim at your target. Once you have it lined up, press the red 'Fire' button.");
+if_openmain(inter_287);
+~me1_aim_camera;
+
+// ours: the camera stands south of the square you aim at and looks at it, so up is north
+[proc,me1_aim_camera]
+cam_moveto(movecoord(%me1_aim, 0, 0, -7), 700, 10, 10);
+cam_lookat(%me1_aim, 100, 10, 10);
+
+[if_close,inter_287]
+if (p_finduid(uid) = true) cam_reset;
+
+[if_button,inter_287:com_2] if (p_finduid(uid) = true) ~me1_aim_move(-1, 0);
+[if_button,inter_287:com_3] if (p_finduid(uid) = true) ~me1_aim_move(1, 0);
+[if_button,inter_287:com_4] if (p_finduid(uid) = true) ~me1_aim_move(0, 1);
+[if_button,inter_287:com_5] if (p_finduid(uid) = true) ~me1_aim_move(0, -1);
+
+// ours: one square a press, no further than 10 squares from you
+[proc,me1_aim_move](int $dx, int $dz)
+def_coord $next = movecoord(%me1_aim, $dx, 0, $dz);
+if (distance(coord, $next) > 10) return;
+%me1_aim = $next;
+~me1_aim_camera;
+
+[if_button,inter_287:com_6]
+if (p_finduid(uid) = false) return;
+def_int $ammo = %mourning_gun_ammo;
+if ($ammo = ^me1_ammo_none | inv_getobj(worn, ^wearpos_rhand) ! mourning_paint_gun) {
+    if_close;
+    return;
+}
+def_coord $aim = %me1_aim;
+%mourning_gun_ammo = ^me1_ammo_none;
+if_close;
+anim(human_toadcannon_fire, 0);
+def_spotanim $travel = toad_cannon_travel_red;
+def_spotanim $impact = toad_cannon_impact_red;
+def_npc $sheep = plaguesheep_1;
+def_string $colour = "red";
+switch_int ($ammo) {
+    case ^me1_ammo_blue : $travel = toad_cannon_travel_blue; $impact = toad_cannon_impact_blue; $sheep = plaguesheep_3; $colour = "blue";
+    case ^me1_ammo_yellow : $travel = toad_cannon_travel_yellow; $impact = toad_cannon_impact_yellow; $sheep = plaguesheep_4; $colour = "yellow";
+    case ^me1_ammo_green : $travel = toad_cannon_travel_green; $impact = toad_cannon_impact_green; $sheep = plaguesheep_2; $colour = "green";
+}
+// ours: the flight and splash timings
+projanim_map(coord, $aim, $travel, 60, 0, 20, 50, 16, 64);
+spotanim_map($impact, $aim, 0, 50);
+p_delay(1);
+if (npc_find($aim, $sheep, 0, 0) = false) {
+    mes("The toad misses its target."); // ours
+    return;
+}
+switch_int ($ammo) {
+    case ^me1_ammo_blue : %mourning_sheep_blue = 1;
+    case ^me1_ammo_red : %mourning_sheep_red = 1;
+    case ^me1_ammo_yellow : %mourning_sheep_yellow = 1;
+    case ^me1_ammo_green : %mourning_sheep_green = 1;
+}
+~mesbox("You re-dye the <$colour> sheep.");
+if (%mourning_quest = ^me1_recruit & %mourning_sheep_blue = 1 & %mourning_sheep_red = 1 & %mourning_sheep_yellow = 1 & %mourning_sheep_green = 1) {
+    ~me1_set(^me1_sheep_done);
+}

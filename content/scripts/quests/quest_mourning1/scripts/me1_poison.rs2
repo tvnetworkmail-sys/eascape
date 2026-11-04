@@ -1,0 +1,334 @@
+// EASCape: Mourning's End Part I - Elena, the rotten apples, the toxin and the food stores.
+// Words: the RS wiki's transcript; Elena's minute and the 75% hit from naphtha on a fire: the RS
+// and OSRS wikis.
+
+// ---------------------------------------------------------------- Elena (elena.rs2 hands over
+// once this quest has begun)
+[proc,me1_elena]()(boolean)
+def_int $s = %mourning_quest;
+if ($s = ^me1_not_started) return(false);
+def_int $gear = ~me1_disguise;
+if ($s < ^me1_poison) {
+    ~chatplayer("<p,happy>Hello again Elena.");
+    if ($gear > 0 & %me1_elena_misid = 0) {
+        %me1_elena_misid = 1;
+        ~chatnpc("<p,angry>How dare you enter my house, Mourner! Get out!");
+        ~chatplayer("<p,shock>Elena, it's <displayname>!");
+        ~chatnpc("<p,shock><displayname>? I didn't recognise you in all that Mourner gear!");
+        ~chatplayer("<p,neutral>It's a long story.");
+    } else {
+        ~chatnpc("<p,happy><displayname>! How's it going? Have you found out any more about this plague?");
+        ~chatplayer("<p,neutral>As it goes, yes I have. It's a long story.");
+    }
+    ~chatnpc("<p,happy>Well I'm not going anywhere, so how about telling me all about it.");
+    if (~p_choice2("Well I'll start from...", 1, "I have some things to do, later maybe.", 2) = 2) {
+        ~chatplayer("<p,neutral>I have some things to do, later maybe.");
+        ~chatnpc("<p,sad>Alright then... But you're going to have to tell me some time.");
+        ~chatplayer("<p,neutral>I will.");
+        return(true);
+    }
+    ~me1_elena_story;
+    ~chatnpc("<p,neutral>Well if you need anything just ask.");
+    ~chatplayer("<p,neutral>Thanks, I'd better get back to the task at hand.");
+    ~chatnpc("<p,happy>Alright, well I hope we see each other again soon.");
+    ~chatplayer("<p,happy>We will, I'm sure. Bye Elena.");
+    return(true);
+}
+def_int $e = %mourning_elena;
+if ($s = ^me1_poison & $e = ^me1_elena_none) {
+    ~chatplayer("<p,happy>Hello again Elena.");
+    if ($gear > 0 & %me1_elena_misid = 0) {
+        %me1_elena_misid = 1;
+        ~chatnpc("<p,angry>How dare you enter my house, Mourner!|Get out!");
+        ~chatplayer("<p,shock>Elena, it's me...|<displayname>");
+        ~chatnpc("<p,sad>Oh, sorry <displayname>. I didn't recognise you in all that Mourner gear!|How's it going?");
+    } else {
+        ~chatnpc("<p,happy><displayname>!|How's it going?");
+    }
+    ~chatplayer("<p,neutral>Alright, but I could do with your help.");
+    ~chatnpc("<p,quiz>What's the problem?");
+    ~chatplayer("<p,neutral>I've been asked to produce a poison based on rotten apples.");
+    ~chatnpc("<p,confused>I doubt any poison based solely on apples, rotten or not, would be very effective.");
+    ~chatplayer("<p,neutral>Well I put a rotten apple in the Mourners' stew, I'm told that the effect was much like the symptoms of the plague.");
+    ~chatnpc("<p,neutral>Hmm... That sounds like they were ill from some sort of toxin, I should think it was a mould of some sort that had the effect, not the rotten apple itself. What do you need it for?");
+    ~chatplayer("<p,neutral>I need to poison a large food store, in order to get the Mourners' trust.");
+    ~chatnpc("<p,angry>That's awful! I can't help you in such an endeavour.");
+    ~chatplayer("<p,neutral>If I don't gain the trust of the Mourners then the people of West Ardougne will have a much worse time than the effects of that toxin...|Elena, trust me.");
+    ~chatnpc("<p,neutral>I think you should tell me just what's going on.");
+    if (%mourning_elena_plot_update = 0) {
+        ~me1_elena_story;
+        ~chatnpc("<p,neutral>Alright I'll help.");
+    }
+    ~chatnpc("<p,neutral>You'd better be right about this, and I'd better make sure you get this toxin right so no one dies!");
+    ~chatnpc("<p,neutral>Bring me a sample of rotten apple to examine. I'll also see if I can make a counteractant for the toxin.");
+    ~chatplayer("<p,neutral>Alright I'll be back shortly with a rotten apple for you.");
+    %mourning_elena = ^me1_elena_asked;
+    return(true);
+}
+if ($s = ^me1_poison & $e = ^me1_elena_asked) {
+    if ($gear > 0) {
+        ~chatnpc("<p,quiz>Is that you <displayname>?");
+        ~chatplayer("<p,neutral>Yes it's me.");
+    } else {
+        ~chatplayer("<p,neutral>I'm back.");
+    }
+    ~chatnpc("<p,quiz>You have a sample of rotten apple for me?");
+    if (inv_total(inv, rottenapples) = 0) {
+        ~chatplayer("<p,sad>No, I forgot to get one.");
+        ~chatnpc("<p,neutral>Well if you bring me one we can get started on this toxin.");
+        return(true);
+    }
+    ~chatplayer("<p,happy>Yes, I have it right here.");
+    inv_del(inv, rottenapples, 1);
+    ~objbox(rottenapples, "You hand Elena the rotten apple.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,neutral>Ick... Alright then let's get started.");
+    ~mesbox("Elena starts some tests on the apple.");
+    ~chatnpc("<p,neutral>This will take a while. Come back in a bit and I should be able to tell you all about this toxin.");
+    ~chatplayer("<p,neutral>Alright then. I'd better leave you to it.");
+    %mourning_elena = ^me1_elena_apple;
+    %me1_elena_clock = calc(map_clock + ^me1_wait);
+    return(true);
+}
+if ($s = ^me1_poison & $e = ^me1_elena_apple) {
+    ~chatplayer("<p,quiz>How's it going Elena?");
+    if (~me1_ready(%me1_elena_clock) = false) {
+        if ($gear > 0) {
+            ~chatnpc("<p,neutral>I do wish you wouldn't wear that gear. Anyway I'm getting there, just a few more tests to run.");
+        } else {
+            ~chatnpc("<p,neutral>I'm getting there, just a few more tests to run."); // ours: the RS wiki has only the words for the mourner gear
+        }
+        ~chatplayer("<p,neutral>Okay I'll come back in a bit.");
+        return(true);
+    }
+    if ($gear > 0) ~chatnpc("<p,neutral>You shouldn't creep up on people in all that gear... Where was I... Oh yes...");
+    ~chatnpc("<p,neutral>I've managed to isolate a small sample of the toxin, It's a byproduct of the mould that grows on these apples, it's not fatal so a counteractant shouldn't be necessary. How big is the store that you're going to affect?");
+    ~chatplayer("<p,neutral>Well I was instructed to contaminate the two distribution points.");
+    ~chatnpc("<p,shock>That's over half the food in West Ardougne!|You're going to need a huge amount of the toxin to do that. You're also going to need to refine it too, or people will notice rotten apples in amongst the food they're buying.");
+    ~chatplayer("<p,quiz>This is starting to sound a little tricky, can't you make it for me?");
+    ~chatnpc("<p,sad>I would but I don't have the right equipment here to do anything in bulk.");
+    ~chatplayer("<p,neutral>Alright then tell me the process and I'll get started.");
+    ~chatnpc("<p,neutral>Right then the first thing to do is mash up a lot of rotten apples, then you will need to dissolve the toxin into a liquid that has a very low evaporation point, some form of solvent.");
+    ~chatnpc("<p,neutral>I was told about a book on explosives that discussed a solvent perfect for this job, but I don't remember who told me about it! Sorry I can't be of more help.");
+    ~chatnpc("<p,neutral>Now, where was I? Oh yes - next, the useless solid can be strained out - this should leave you with a solution of the toxin in solvent. Finally, heat the mixture to evaporate off the solvent, be careful of naked flames as the solvent will be highly flammable.");
+    ~chatnpc("<p,neutral>Once all that's done you'll be left with a white powder, be very careful not to breathe in or ingest this as this is our toxin.");
+    ~chatplayer("<p,angry>And that's all is it?!? Why isn't anything ever easy?");
+    ~chatnpc("<p,neutral>Here this may help...");
+    %mourning_elena = ^me1_elena_told;
+    ~me1_give(mourning_sieve, 1);
+    ~objbox(mourning_sieve, "Elena hands you a large sieve.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,neutral>You may want to check out the orchard just north of the city. I hear no one has tended it since the blight infected the trees there.");
+    return(true);
+}
+~chatplayer("<p,happy>Hey ya Elena.");
+if ($gear > 0) ~chatnpc("<p,confused>Huh?... Oh... Hello, I just can't get used to a friend being dressed as a Mourner.");
+if ($s >= ^me1_complete) {
+    ~chatnpc("<p,quiz>Hello <displayname>, so have you found out what those Mourners are up to yet?");
+    ~chatplayer("<p,neutral>Sort of, they seem to be looking for an old temple buried deep under the mountain.");
+    ~chatplayer("<p,neutral>This temple is meant to give them access to great magical power, but I have no idea what that is yet.");
+    ~chatnpc("<p,neutral>Well let me know when you find out.");
+    ~chatplayer("<p,neutral>I will.");
+    ~me1_elena_sieve;
+    return(true);
+}
+~chatnpc("<p,quiz>So how's the poisoning going?");
+if (calc(%mourning_food_poison1 + %mourning_food_poison2 + %mourning_food_poison3) >= 2) {
+    ~chatplayer("<p,happy>It's all done.");
+    ~chatnpc("<p,quiz>So have you found out what those Mourners are up to yet?");
+    ~chatplayer("<p,neutral>I was just on my way back there.");
+    ~chatnpc("<p,neutral>Well let me know when you find out.");
+    ~chatplayer("<p,neutral>I will.");
+    return(true);
+}
+~chatplayer("<p,sad>Not too well, can you remind me how I should make it again?");
+~chatnpc("<p,neutral>Right, the first thing to do is mash up a lot of rotten apples, then you will need to dissolve the toxin into a liquid that has a very low evaporation point, some form of solvent.");
+~chatnpc("<p,neutral>Next, the useless solid can be strained out - this should leave you with a solution of the toxin in solvent. Finally, heat the mixture to evaporate off the solvent, be careful of naked flames as the solvent will be highly flammable.");
+~chatnpc("<p,neutral>Once all that's done you'll be left with a white powder,|This is the toxin you're after.");
+~chatplayer("<p,happy>Thanks Elena.");
+~chatnpc("<p,happy>No problem, you may want to check out the orchard just north of the city. I hear no one has tended it since the blight infected the trees there.");
+~me1_elena_sieve;
+return(true);
+
+[proc,me1_elena_sieve]
+if (%mourning_elena < ^me1_elena_told | ~me1_has(mourning_sieve) = true) return;
+if (~p_choice2_header("Yes", 1, "No", 2, "Do you wish to ask for a replacement sieve?") = 2) return;
+~chatplayer("<p,neutral>Do you have another sieve? I lost the last one.");
+~chatnpc("<p,happy>Well it just so happens that by freak accident, I had hundreds delivered the other day!");
+~me1_give(mourning_sieve, 1);
+~objbox(mourning_sieve, "Elena hands you a large sieve.", 250, 0, divide(^objbox_height, 2));
+~chatplayer("<p,happy>Thanks again.");
+
+// the long story (the RS wiki), told once (%mourning_elena_plot_update)
+[proc,me1_elena_story]
+~chatplayer("<p,neutral>Well I'll start from when we found out that the plague was a hoax. After returning to Ardougne I visited the King, to tell him of our discovery.");
+~chatplayer("<p,neutral>As you can guess he already knew about the plague being a deception.");
+~chatnpc("<p,angry>I knew it! But why?");
+~chatplayer("<p,neutral>King Lathas told me that while his brother was exploring the realm west of here, he was taken by the Dark Lord, who forced him to drink from the Chalice of Eternity. I'm told this corrupted him...");
+~chatnpc("<p,quiz>You don't sound too sure about that?");
+~chatplayer("<p,neutral>Where his alignment lay matters little now, you must understand I was acting on the best information I had at the time... but I jump ahead of myself...");
+~chatnpc("<p,sad>Sorry, I didn't mean to interrupt your story.");
+~chatplayer("<p,neutral>King Lathas explained to me that in order to stop the Dark Lord we needed to stop his brother and to do that we needed to find a way to the west realm.");
+~chatplayer("<p,neutral>I was led through a cave system packed full of traps, that led right under the mountains to the west. At its heart was an evil mage named Iban. He held the Well of Voyage, a way of travelling to the western realm.");
+~chatplayer("<p,neutral>My guide went a little mad and... well to cut a long story short I eventually had to destroy Iban.");
+~chatplayer("<p,neutral>This saved my guide and gave us access to the well. Unfortunately Iban had messed with the magic of the well and mages were needed to repair it.");
+~chatplayer("<p,neutral>I returned to King Lathas who told me he'd see to fixing the well. Some time later I received a summons to meet with Lathas.");
+~chatplayer("<p,neutral>The King informed me the well was repaired and that I was to finally go and deal with his brother. He said I could expect help from his ally when I got there.");
+~chatplayer("<p,neutral>Once more I passed through the warren of traps under the mountain, this time passing through the Well of Voyage.");
+~chatplayer("<p,neutral>This eventually led me to a land known by its inhabitants as Tirannwn.");
+~chatnpc("<p,shock>There are people beyond the mountain range?");
+~chatplayer("<p,neutral>People yes... But not like you or I. I was just coming to them.");
+~chatplayer("<p,neutral>Where was I... oh yes... I was only in the woods of Tirannwn a short while when I was caught in a fight between two factions of Elves.");
+~chatnpc("<p,shock>Elves! Really... I thought they'd gone from this land.");
+~chatplayer("<p,neutral>No, they're still here and in some form of civil war too it seems. Anyway getting back to the story...");
+~chatplayer("<p,neutral>Luckily the winning side in the fight was my contact.");
+~chatnpc("<p,shock>Lathas allied with one of the Elf factions??");
+~chatplayer("<p,neutral>Yes I didn't think about that at the time... But it did strike me as a little odd after I thought about it.");
+~chatplayer("<p,neutral>Anyway a plan was devised to blow up King Tyras. A plan I was successful in carrying out. As I said I was acting on the best information I had available at the time.");
+~chatplayer("<p,neutral>I left Tirannwn to return here and inform King Lathas that his brother was dealt with, carrying a magically sealed message from the Elves.");
+~chatplayer("<p,neutral>On my return journey to Lathas' castle I was confronted by an Elf from the rebel faction.");
+~chatplayer("<p,neutral>He knew a great deal about me and my deeds, he also knew of the message I carried. He cast a spell on the message, that let me open it.");
+~chatnpc("<p,quiz>What did it say?");
+~chatplayer("<p,neutral>It told of how King Lathas wants to reclaim the land given by his father to the Knights of Camelot and of a deal between the Elves and the King promising the help of The Dark Lord in this endeavour.");
+~chatnpc("<p,angry>I knew he was up to no good, but how could he side with anything that calls itself the Dark lord?");
+if (%mourning_quest < ^me1_arianwyn) {
+    ~chatplayer("<p,neutral>This was my thinking too, so I agreed to go and meet with the leader of the Elven rebellion but I've not made it there yet.");
+    ~chatplayer("<p,neutral>And so my story ends here.");
+    ~chatnpc("<p,quiz>That's some tale. So what now?");
+    ~chatplayer("<p,neutral>I guess I should go and talk with Arianwyn in the Elven village.");
+} else {
+    ~chatplayer("<p,neutral>This was my thinking too, so I agreed to go and meet with the leader of the Elven rebellion.");
+    ~chatplayer("<p,neutral>I was taken to a small village in a hidden valley, where I spoke with an Elf named Arianwyn. He revealed to me that our Mourners are not quite what we thought, in fact they're Elves who follow The Dark Lord.");
+    if (%mourning_quest < ^me1_recruit) {
+        ~chatplayer("<p,neutral>I have been asked by Arianwyn to infiltrate them and find out their plan, but have yet to try.");
+        ~chatplayer("<p,neutral>And so my story ends here.");
+        ~chatnpc("<p,quiz>That's some tale. So what now?");
+        ~chatplayer("<p,neutral>I guess I should find a way into the Mourner Hideout.");
+    } else {
+        ~chatplayer("<p,neutral>I was asked by Arianwyn to infiltrate them and find out their plan. I managed to fool them into thinking I was a new recruit which was no small task in itself.");
+        ~chatplayer("<p,neutral>I think I need to win the trust of the Head Mourner before they will tell me anything useful.");
+        ~chatplayer("<p,neutral>And so my story ends here.");
+        ~chatnpc("<p,quiz>That's some tale. So what now?");
+        ~chatplayer("<p,neutral>I guess I'll follow the Head Mourner's instructions until they let me in on the plan.");
+    }
+}
+%mourning_elena_plot_update = 1;
+
+// ---------------------------------------------------------------- the orchard north of the city
+[oploc1,mourning_orchard_applepile]
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough room to carry that."); // ours
+    return;
+}
+inv_add(inv, rottenapples, 1);
+~mesbox("You take a rotten apple.");
+
+[oplocu,mourning_orchard_applepile]
+switch_obj (last_useitem) {
+    case regicide_barrel_empty :
+        inv_del(inv, regicide_barrel_empty, 1);
+        inv_add(inv, applebarrel_full, 1);
+        ~objbox(applebarrel_full, "You scoop up a barrel full of the rotten apples.", 250, 0, divide(^objbox_height, 2));
+    case regicide_barrel_naphtha : ~mesbox("Maybe it's not a good idea to cover that in rotten apple matter.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// the apple press (the OSRS wiki's words)
+[oplocu,mourning_orchard_applebarrel_empty]
+switch_obj (last_useitem) {
+    case applebarrel_full :
+        ~mesbox("You use the apple press to crush your rotten apples.");
+        loc_change(mourning_orchard_applebarrel_mush, 5); // ours: the mush shows a moment
+        inv_del(inv, applebarrel_full, 1);
+        inv_add(inv, mourning_applebarrel_mush, 1);
+        ~objbox(mourning_applebarrel_mush, "You get a barrel full of crushed rotten apples.", 250, 0, divide(^objbox_height, 2));
+    case rottenapples : ~chatplayer("<p,neutral>It will take forever to fill like this. I need something that can transport lots of rotten apples in it.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- naphtha, the sieve, the range
+// (quest_regicide.rs2's barrel of naphtha hands over)
+[proc,me1_mix_naphtha]
+inv_del(inv, regicide_barrel_naphtha, 1);
+inv_del(inv, mourning_applebarrel_mush, 1);
+inv_add(inv, mourning_applebarrel_naphtha_mush, 1);
+inv_add(inv, regicide_barrel_empty, 1);
+~doubleobjbox(mourning_applebarrel_mush, mourning_applebarrel_naphtha_mush, "You mix the naphtha with the apple mush.", 250);
+
+[opheldu,mourning_applebarrel_mush]
+if (last_useitem = regicide_barrel_naphtha) {
+    ~me1_mix_naphtha;
+    return;
+}
+~displaymessage(^dm_default);
+
+[opheldu,mourning_applebarrel_naphtha_mush]
+if (last_useitem = mourning_sieve) {
+    ~me1_sieve;
+    return;
+}
+~displaymessage(^dm_default);
+
+[opheldu,mourning_sieve]
+if (last_useitem = mourning_applebarrel_naphtha_mush) {
+    ~me1_sieve;
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,me1_sieve]
+inv_del(inv, mourning_applebarrel_naphtha_mush, 1);
+inv_add(inv, mourning_toxic_naphtha, 1);
+~doubleobjbox(mourning_sieve, mourning_applebarrel_naphtha_mush, "You sieve the solids out of the mixture.", 250);
+
+// on a range (cooking.rs2 hands over): two heaps of toxic powder and the empty barrel
+[proc,me1_cook_naphtha]
+if (inv_freespace(inv) < 2) {
+    mes("You need two free inventory spaces to do that."); // ours
+    return;
+}
+anim(human_cooking, 0);
+p_delay(2);
+inv_del(inv, mourning_toxic_naphtha, 1);
+inv_add(inv, mourning_apple_toxin, 2);
+inv_add(inv, regicide_barrel_empty, 1);
+~doubleobjbox(mourning_apple_toxin, mourning_toxic_naphtha, "You evaporate the naphtha and you're left with a powdery residue on the inside of the barrel.", 250);
+
+// on a fire: it explodes (the OSRS wiki: 75% of your hitpoints)
+[proc,me1_burn_naphtha]
+inv_del(inv, mourning_toxic_naphtha, 1);
+spotanim_pl(devious_explosion, 0, 0); // ours
+sound_synth(explosion, 1, 0); // ours
+damage(uid, 1, scale(3, 4, stat(hitpoints)));
+~mesbox("You burn the naphtha on a fire and it explodes in your face!");
+
+// ---------------------------------------------------------------- the three food stores (the
+// cache's grain sacks: loc_8801/8804 east of the square, loc_8802/8805 by the church, loc_8803/
+// 8806 by the general store; ours: which sack is which store)
+[oplocu,loc_8801] ~me1_poison_store(1);
+[oplocu,loc_8804] ~me1_poison_store(1);
+[oplocu,loc_8802] ~me1_poison_store(2);
+[oplocu,loc_8805] ~me1_poison_store(2);
+[oplocu,loc_8803] ~me1_poison_store(3);
+[oplocu,loc_8806] ~me1_poison_store(3);
+
+[proc,me1_poison_store](int $store)
+if (last_useitem ! mourning_apple_toxin | %mourning_quest ! ^me1_poison) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $done = 0;
+switch_int ($store) {
+    case 1 : $done = %mourning_food_poison1;
+    case 2 : $done = %mourning_food_poison2;
+    case 3 : $done = %mourning_food_poison3;
+}
+if ($done = 1) {
+    ~objbox(mourning_apple_toxin, "I've already poisoned this store.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+inv_del(inv, mourning_apple_toxin, 1);
+switch_int ($store) {
+    case 1 : %mourning_food_poison1 = 1;
+    case 2 : %mourning_food_poison2 = 1;
+    case 3 : %mourning_food_poison3 = 1;
+}
+~objbox(mourning_apple_toxin, "You add the toxin to the wheat, after a few seconds of mixing you can't tell the difference.", 250, 0, divide(^objbox_height, 2));
