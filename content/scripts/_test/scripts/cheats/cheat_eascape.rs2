@@ -2389,16 +2389,16 @@ p_telejump($c);
 
 // ::dkset - a 2006 Dagannoth Kings setup (ours: the choice of gear; every item is from our 2006
 // cache). Worn: melee for Supreme (whip, dragon chain and legs, dragon square shield, berserker
-// helm). Pack: the ranged switch for Prime (magic shortbow, black d'hide), the magic switch for
-// Rex (mystic fire staff and robes, Fire Wave runes), super attack/strength/defence, a ranging
-// potion, 8 prayer potions, 7 sharks and a 4-charge enchanted lyre to get back to Rellekka.
-// What you had is banked first.
+// helm, fire cape). Pack: the ranged switch for Prime (crystal bow, black d'hide), the magic switch
+// for Rex (Ahrim's set, Blood Barrage runes; the spellbook is set to Ancient Magicks),
+// super attack/strength/defence, a ranging potion, 8 prayer potions, 5 sharks and a 4-charge
+// enchanted lyre to get back to Rellekka. What you had is banked first.
 [debugproc,dkset]
 if (p_finduid(uid) = false) return;
 ~eascape_bank_everything(inv);
 ~eascape_bank_everything(worn);
 inv_setslot(worn, ^wearpos_hat, dagganoth_melee_helm, 1);
-inv_setslot(worn, ^wearpos_back, cape_of_legends, 1);
+inv_setslot(worn, ^wearpos_back, tzhaar_cape_fire, 1);
 inv_setslot(worn, ^wearpos_front, amulet_of_glory_4, 1);
 inv_setslot(worn, ^wearpos_rhand, abyssal_whip, 1);
 inv_setslot(worn, ^wearpos_torso, dragon_chainbody, 1);
@@ -2407,27 +2407,30 @@ inv_setslot(worn, ^wearpos_legs, dragon_platelegs, 1);
 inv_setslot(worn, ^wearpos_hands, black_dragon_vambraces, 1);
 inv_setslot(worn, ^wearpos_feet, rune_armoured_boots, 1);
 inv_setslot(worn, ^wearpos_ring, ring_of_life, 1);
-inv_setslot(worn, ^wearpos_quiver, rune_arrow, 500);
 ~update_all(null);
-inv_add(inv, magic_shortbow, 1);
+%alternate_spells = 1;
+if_settab(inter_267, ^tab_magic);
+inv_add(inv, roving_crystal_bow_new, 1);
 inv_add(inv, black_dragonhide_body, 1);
 inv_add(inv, black_dragonhide_chaps, 1);
-inv_add(inv, mystic_fire_staff, 1);
-inv_add(inv, mystic_robe_top, 1);
-inv_add(inv, mystic_robe_bottom, 1);
-inv_add(inv, bloodrune, 300);
-inv_add(inv, airrune, 1500);
+inv_add(inv, barrows_ahrim_weapon, 1);
+inv_add(inv, barrows_ahrim_head, 1);
+inv_add(inv, barrows_ahrim_body, 1);
+inv_add(inv, barrows_ahrim_legs, 1);
+inv_add(inv, deathrune, 400);
+inv_add(inv, bloodrune, 400);
+inv_add(inv, soulrune, 100);
 inv_add(inv, magic_strung_lyre_4, 1);
 inv_add(inv, 4dose2attack, 1);
 inv_add(inv, 4dose2strength, 1);
 inv_add(inv, 4dose2defense, 1);
 inv_add(inv, 4doserangerspotion, 1);
 inv_add(inv, 4doseprayerrestore, 8);
-inv_add(inv, shark, 7);
+inv_add(inv, shark, 5);
 inv_add(bank, 4doseprayerrestore, 50);
 inv_add(bank, shark, 100);
 inv_add(bank, magic_strung_lyre_4, 5);
-mes("Dagannoth Kings setup: melee on for Supreme, the bow for Prime, Fire Wave for Rex. Spares are in your bank.");
+mes("Dagannoth Kings setup: melee on for Supreme, the crystal bow for Prime, Blood Barrage for Rex (Ancient Magicks set). Spares are in your bank.");
 mes("Lyre: Rellekka. ::wbtele 12 for the ladder down to the kings, ::wbtele 13 for the lair.");
 
 // ::rellekka - straight to Rellekka, where the enchanted lyre lands you
