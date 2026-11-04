@@ -1,0 +1,94 @@
+// EASCape: getting in and around the Waterbirth Island Dungeon (Waterbirth Island, 1 August 2005;
+// the lower levels and the Dagannoth Kings came with "Waterbirth Island - deeper, darker,
+// deadlier!", 7 November 2005). Where every entrance, step and ladder takes you is Void's
+// (data/area/fremennik_province/waterbirth_island/waterbirth_island.teles.toml).
+
+// the cave on the island's west side, and the steps back up
+[oploc1,dagannoth_caveentrance_rock] p_telejump(^wb_dungeon_entry);
+[oploc1,dagannoth_rocky_steps] p_telejump(^wb_steps_exit);
+
+// the cave by Askeladden, on top of the island's mountain: down into the ladder room
+[oploc1,dagannoth_caveentrance_ice] p_telejump(^wb_ladder_room);
+
+// the iron ladder in the ladder room: up the mountain, or down to the lower levels
+[oploc1,dagannoth_ladder_base_ext2] @ladder_options(^wb_mountain_top, ^wb_sublevel2);
+[oploc2,dagannoth_ladder_base_ext2] ~climb_ladder(^wb_mountain_top, true);
+[oploc3,dagannoth_ladder_base_ext2] ~climb_ladder(^wb_sublevel2, false);
+
+// the lower levels
+[oploc1,dagexp_entrance_ladder] ~climb_ladder(^wb_ladder_room, true);
+[oploc1,dagexp_bossroomladder_down] ~climb_ladder(^wb_kings_lair, false);
+[oploc1,dagexp_bossroomladder_up] ~climb_ladder(^wb_kings_ladder_top, true);
+
+// the way up to the Lighthouse's basement, for those who've done Horror from the Deep (2009scape)
+[oploc1,dagexp_exit_ladder]
+if (%horrorquest < ^horror_complete) {
+    mes("You don't know where this ladder leads, and decide against climbing it."); // ours
+    return;
+}
+~climb_ladder(^wb_lighthouse_basement, true);
+
+// the ladders between the lower levels (Void's waterbirth_ladder_up_1 to _17 and down_1 to _17)
+[oploc1,dagexp_ladder2] ~climb_ladder(3_28_68_15_53, true);
+[oploc1,dagexp_ladder1] ~climb_ladder(2_28_68_18_53, false);
+[oploc1,dagexp_ladder4] ~climb_ladder(3_28_68_33_52, true);
+[oploc1,dagexp_ladder3] ~climb_ladder(2_28_68_31_52, false);
+[oploc1,dagexp_ladder6] ~climb_ladder(3_28_68_42_38, true);
+[oploc1,dagexp_ladder5] ~climb_ladder(2_28_68_42_36, false);
+[oploc1,dagexp_ladder8] ~climb_ladder(2_28_68_20_42, true);
+[oploc1,dagexp_ladder7] ~climb_ladder(1_28_68_18_42, false);
+[oploc1,dagexp_ladder9] ~climb_ladder(2_28_68_7_34, true);
+[oploc1,dagexp_ladder10] ~climb_ladder(1_28_68_7_37, false);
+[oploc1,dagexp_ladder12] ~climb_ladder(2_28_68_4_30, true);
+[oploc1,dagexp_ladder11] ~climb_ladder(1_28_68_5_30, false);
+[oploc1,dagexp_ladder13] ~climb_ladder(2_28_68_8_17, true);
+[oploc1,dagexp_ladder14] ~climb_ladder(1_28_68_10_17, false);
+[oploc1,dagexp_ladder16] ~climb_ladder(2_28_68_33_10, true);
+[oploc1,dagexp_ladder15] ~climb_ladder(1_28_68_36_10, false);
+[oploc1,dagexp_ladder17] ~climb_ladder(2_29_68_7_21, true);
+[oploc1,dagexp_ladder18] ~climb_ladder(1_29_68_7_18, false);
+[oploc1,dagexp_ladder20] ~climb_ladder(2_29_68_8_35, true);
+[oploc1,dagexp_ladder19] ~climb_ladder(1_29_68_8_37, false);
+[oploc1,dagexp_ladder22] ~climb_ladder(1_29_68_34_54, true);
+[oploc1,dagexp_ladder21] ~climb_ladder(0_29_68_34_56, false);
+[oploc1,dagexp_ladder23] ~climb_ladder(1_30_68_37_21, true);
+[oploc1,dagexp_ladder24] ~climb_ladder(0_30_68_37_18, false);
+[oploc1,dagexp_ladder25] ~climb_ladder(3_28_68_32_27, true);
+[oploc1,dagexp_ladder26] ~climb_ladder(2_28_68_32_30, false);
+[oploc1,dagexp_ladder28] ~climb_ladder(3_28_68_46_25, true);
+[oploc1,dagexp_ladder27] ~climb_ladder(2_28_68_46_22, false);
+[oploc1,dagexp_ladder30] ~climb_ladder(2_28_68_58_35, true);
+[oploc1,dagexp_ladder29] ~climb_ladder(1_28_68_58_33, false);
+[oploc1,dagexp_ladder32] ~climb_ladder(2_30_68_12_28, true);
+[oploc1,dagexp_ladder31] ~climb_ladder(1_30_68_12_25, false);
+[oploc1,dagexp_ladder34] ~climb_ladder(3_30_68_41_41, true);
+[oploc1,dagexp_ladder33] ~climb_ladder(2_30_68_41_40, false);
+
+// ---------------------------------------------------------------------------------------------
+// The three round doors at the east end of the main cavern (2491,10130, 2491,10146 and
+// 2491,10162). Each has two pressure pads in front of it, on its west side; in 2005 it opens only
+// while a player stands on each pad, so it takes two (the wikis; a pet rock on a pad came in
+// 2016). From behind (east of the doors) one opens by itself. Opening and how long it stays open
+// (30 ticks) are 2009scape's (WaterBirthDungeonZone.java).
+[oploc1,dagannoth_pressure_door] @wb_pressure_door;
+[oploc1,dagannoth_pressure_door2] @wb_pressure_door;
+[oploc1,dagannoth_pressure_door3] @wb_pressure_door;
+
+[label,wb_pressure_door]
+def_coord $door = loc_coord;
+if (coordx(coord) < coordx($door)) {
+    if (~wb_pad_held(movecoord($door, -1, 0, 0)) = false | ~wb_pad_held(movecoord($door, -1, 0, 2)) = false) {
+        mes("You cannot see a way to open this door...");
+        return;
+    }
+}
+loc_change(loc_8962, ^wb_pressure_door_ticks);
+
+// someone stands on the pad
+[proc,wb_pad_held](coord $pad)(boolean)
+if (coord = $pad) return(true);
+huntall($pad, 0, ^vis_off);
+while (.huntnext = true) {
+    return(true);
+}
+return(false);

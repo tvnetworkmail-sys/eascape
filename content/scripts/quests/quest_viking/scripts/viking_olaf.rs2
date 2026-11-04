@@ -200,8 +200,13 @@ if(%viking = ^viking_complete) {
         npc_facesquare(coord);
         mes("Your lyre is now enchanted. You can use it to teleport to Rellekka.");
         mes("When the enchantment wears off you will need to re-enchant it.");
+        // EASCape: Waterbirth Island (1 August 2005): a raw shark gives 2 teleports, a sea turtle 3 and
+        // a manta ray 4 (the update's news); each teleport uses one (magic_strung_lyre is the last)
+        def_namedobj $lyre = magic_strung_lyre_2;
+        if (last_useitem = raw_seaturtle) $lyre = magic_strung_lyre_3;
+        if (last_useitem = raw_mantaray) $lyre = magic_strung_lyre_4;
         inv_del(inv, viking_strung_lyre, 1);
-        inv_setslot(inv, last_useslot, magic_strung_lyre, 1);
+        inv_setslot(inv, last_useslot, $lyre, 1);
         ~chatnpc("<p,happy>I offer you this enchantment for your worthy offering.");
         return;
     }
@@ -243,7 +248,13 @@ if(last_useitem = viking_golden_wool) {
 [opheld1,viking_strung_lyre]
 ~chatplayer("<p,sad>I really wouldn't know where to begin playing anything on this...");
 
-[opheld1,magic_strung_lyre]
+[opheld1,magic_strung_lyre] @viking_lyre_teleport(viking_strung_lyre);
+// EASCape: the lyres with more teleports left (Waterbirth Island, 1 August 2005)
+[opheld1,magic_strung_lyre_2] @viking_lyre_teleport(magic_strung_lyre);
+[opheld1,magic_strung_lyre_3] @viking_lyre_teleport(magic_strung_lyre_2);
+[opheld1,magic_strung_lyre_4] @viking_lyre_teleport(magic_strung_lyre_3);
+
+[label,viking_lyre_teleport](namedobj $next)
 def_int $slot = last_slot;
 if (~wilderness_level(coord) > 20) {
     mes("A mysterious force blocks your teleport spell!");
@@ -259,7 +270,7 @@ anim(viking_lyre_play_once, 0);
 p_delay(2);
 ~player_teleport_normal(map_findsquare(0_41_56_38_60, 0, 2, ^map_findsquare_lineofwalk));
 mes("Your lyre teleports you to Rellekka.");
-inv_setslot(inv, $slot, viking_strung_lyre, 1);
+inv_setslot(inv, $slot, $next, 1);
 
 [opheld1,viking_enchanted_strung_lyre]
 if(inzone(0_41_57_31_34, 0_41_57_38_37, coord) = true) {

@@ -1,0 +1,202 @@
+// EASCape: the people on and under Waterbirth Island: Askeladden on the mountain top (Waterbirth
+// Island, 1 August 2005) and Bardur down by the dagannoth fledgelings (7 November 2005).
+// Dialogue from the OSRS wiki's transcripts (Transcript:Askeladden, Transcript:Bardur).
+
+// ---------------------------------------------------------------------------------------------
+// Askeladden buys kegs of beer (500 coins each from an outerlander, 700 from a Fremennik) and
+// trades a tuna for each animal part from the dungeon.
+[opnpc1,viking_askelapen_dagganoth_mountain]
+def_int $keg_price = 500;
+if (%viking = ^viking_complete) {
+    $keg_price = 700;
+    ~chatnpc("<p,happy>Hi buddy! Or do ya want me to call ya <~get_viking_name> now?");
+    ~chatplayer("<p,quiz>Askeladden, what on Gielinor are you doing up here? And by the way, the name is <displayname>.");
+    ~chatnpc("<p,happy>Sure thing, buddy!");
+    ~chatnpc("<p,happy>I was down in that cave killing dagger-mouths! It was fun! But then I got thirsty, so came up here for a bit of a rest...");
+    ~chatnpc("<p,happy>Hey buddy, I'll tell you what, if you got any kegs of beer on ya, I'll buy them off ya for 700 gold coins each!");
+    ~chatnpc("<p,happy>If ya found any animal parts killing dagger-mouths I'll trade ya for them too!");
+} else {
+    ~chatplayer("<p,neutral>Hello there.");
+    ~chatnpc("<p,happy>Hey there, buddy. You're an outerlander, huh?");
+    ~chatnpc("<p,happy>Didn't think old Jarvald would let an outerlander come kill dagger-mouths with him!");
+    ~chatplayer("<p,neutral>Well, obviously he did. So what are you doing up here?");
+    ~chatnpc("<p,happy>Well buddy, let me tell you, killing those dagger-mouths is sure thirsty work!");
+    ~chatnpc("<p,happy>If you got a keg of beer on you I'll buy it off ya for 500 gold coins, buddy!");
+    ~chatnpc("<p,happy>Or if you got any animal parts, I'll trade ya something for 'em!");
+}
+def_boolean $kegs = false;
+if (inv_total(inv, keg_of_beer) > 0) $kegs = true;
+def_boolean $parts = false;
+if (~wb_parts_total > 0) $parts = true;
+if ($kegs = false & $parts = false) {
+    ~chatplayer("<p,neutral>No... I don't have anything like that with me...");
+    ~chatnpc("<p,neutral>Well, I'm not going back down there until I get a drink buddy! Come see me if you find me a keg, I pay good money!");
+    return;
+}
+if ($kegs = true & $parts = true) {
+    def_int $op = ~p_choice3_header("Kegs for money", 1, "Animal parts for food", 2, "Nothing", 3, "What would you like to trade?");
+    if ($op = 1) @wb_askeladden_kegs($keg_price);
+    if ($op = 2) @wb_askeladden_parts;
+    @wb_askeladden_nothing;
+}
+if ($kegs = true) @wb_askeladden_kegs($keg_price);
+@wb_askeladden_parts;
+
+[label,wb_askeladden_kegs](int $price)
+if ($price = 700) {
+    ~chatnpc("<p,quiz>Wanna sell me kegs of beer for 700 gold coins each buddy?");
+} else {
+    ~chatnpc("<p,quiz>Wanna sell me ya kegs of beer for 500 gold coins each outerlander?");
+    ~chatplayer("<p,confused>I don't know... Seems a little off to sell alcohol to a child...");
+    ~chatnpc("<p,angry>Hey, don't judge our customs outerlander! Now you want the cash or you want to bug me?");
+}
+if (~p_choice2_header("YES", 1, "NO", 2, "Would you like to sell your kegs of beer?") = 2) {
+    @wb_askeladden_nothing;
+}
+~chatnpc("<p,quiz>You wanna sell me the lot buddy, or one at a time?");
+if (~p_choice2("Sell all Kegs", 1, "Sell One Keg", 2) = 1) {
+    def_int $n = inv_total(inv, keg_of_beer);
+    inv_del(inv, keg_of_beer, $n);
+    inv_add(inv, coins, multiply($n, $price));
+    mes("You sell Askeladden your Kegs of Beer.");
+    return;
+}
+inv_del(inv, keg_of_beer, 1);
+inv_add(inv, coins, $price);
+~mesbox("You sell Askeladden a Keg of Beer.");
+def_boolean $more = true;
+while ($more = true) {
+    if (~p_choice2_header("YES", 1, "NO", 2, "Sell another Keg?") = 2) return;
+    if (inv_total(inv, keg_of_beer) = 0) {
+        ~chatplayer("<p,neutral>But I don't have any kegs of beer to sell...");
+        return;
+    }
+    inv_del(inv, keg_of_beer, 1);
+    inv_add(inv, coins, $price);
+    ~mesbox("You sell Askeladden a Keg of Beer.");
+}
+
+[label,wb_askeladden_parts]
+~chatnpc("<p,quiz>I'll trade ya animal parts for cooked tuna, ya interested outerlander?");
+if (~p_choice2_header("YES", 1, "NO", 2, "Would you like to trade animal parts for food?") = 2) {
+    @wb_askeladden_nothing;
+}
+~chatnpc("<p,quiz>You wanna trade me the lot buddy, or just one type?");
+if (~p_choice2("Trade all parts", 1, "Sell one type only", 2) = 1) {
+    ~wb_parts_for_tuna(1);
+    ~wb_parts_for_tuna(2);
+    ~wb_parts_for_tuna(3);
+    ~wb_parts_for_tuna(4);
+    mes("You trade Askeladden your animal parts for food.");
+    return;
+}
+~chatnpc("<p,quiz>What ya selling buddy?");
+def_int $d = 0;
+if (~wb_parts_kind_total(1) > 0) $d = 1;
+def_int $r = 0;
+if (~wb_parts_kind_total(2) > 0) $r = 2;
+def_int $l = 0;
+if (~wb_parts_kind_total(3) > 0) $l = 3;
+def_int $w = 0;
+if (~wb_parts_kind_total(4) > 0) $w = 4;
+def_int $kind = ~p_choice_some5("Darkened Hides", $d, "Rock Shells", $r, "Lightened Hides", $l, "Wallasalki Bones", $w, "Nothing", 5);
+if ($kind = 5) @wb_askeladden_nothing;
+~wb_parts_for_tuna($kind);
+mes("You trade the parts for food.");
+
+[label,wb_askeladden_nothing]
+~chatplayer("<p,shifty>No offence Askeladden, and it's not that I don't trust you... Er, actually it is that I don't trust you.");
+~chatnpc("<p,sad>Aw, buddy... What did I ever do to you?");
+~chatnpc("<p,neutral>Well, if ya change your mind, I'm gonna be here waiting for a drink, buddy!");
+
+// using a part on him
+[opnpcu,viking_askelapen_dagganoth_mountain]
+if (~wb_part_kind(last_useitem) = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_obj $part = last_useitem;
+def_int $slot = last_useslot;
+~chatnpc("<p,happy>Hey buddy, I'll trade ya that for some food! Ya interested?");
+if (~p_choice2("YES", 1, "NO", 2) = 2) {
+    ~chatnpc("<p,neutral>Okay buddy, suit yerself!");
+    return;
+}
+if (inv_getobj(inv, $slot) ! $part) return;
+inv_setslot(inv, $slot, tuna, 1);
+
+// the animal parts: 1 dagannoth hides, 2 rock-shell pieces, 3 spined (light) hides, 4 wallasalki bones
+[proc,wb_part_kind](obj $obj)(int)
+if ($obj = dagganoth_hide) return(1);
+if ($obj = dagganoth_melee_head_part | $obj = dagganoth_melee_body_part | $obj = dagganoth_melee_leg_part) return(2);
+if ($obj = dagganoth_range_head_part | $obj = dagganoth_range_body_part | $obj = dagganoth_range_leg_part) return(3);
+if ($obj = dagganoth_mage_head_part | $obj = dagganoth_mage_body_part | $obj = dagganoth_mage_leg_part) return(4);
+return(0);
+
+[proc,wb_parts_kind_total](int $kind)(int)
+switch_int ($kind) {
+    case 1 : return(inv_total(inv, dagganoth_hide));
+    case 2 : return(calc(inv_total(inv, dagganoth_melee_head_part) + inv_total(inv, dagganoth_melee_body_part) + inv_total(inv, dagganoth_melee_leg_part)));
+    case 3 : return(calc(inv_total(inv, dagganoth_range_head_part) + inv_total(inv, dagganoth_range_body_part) + inv_total(inv, dagganoth_range_leg_part)));
+    case 4 : return(calc(inv_total(inv, dagganoth_mage_head_part) + inv_total(inv, dagganoth_mage_body_part) + inv_total(inv, dagganoth_mage_leg_part)));
+}
+return(0);
+
+[proc,wb_parts_total]()(int)
+return(calc(~wb_parts_kind_total(1) + ~wb_parts_kind_total(2) + ~wb_parts_kind_total(3) + ~wb_parts_kind_total(4)));
+
+// one tuna for each part of the kind (each part leaves a slot for its tuna)
+[proc,wb_parts_for_tuna](int $kind)
+def_int $slot = 0;
+while ($slot < inv_size(inv)) {
+    if (inv_getobj(inv, $slot) ! null) {
+        if (~wb_part_kind(inv_getobj(inv, $slot)) = $kind) {
+            inv_setslot(inv, $slot, tuna, 1);
+        }
+    }
+    $slot = calc($slot + 1);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Bardur trades a shark for a Fremennik blade, helm or shield, once you're a Fremennik.
+[opnpc1,jb_viking_dude]
+if (%viking < ^viking_complete) {
+    ~chatnpc("<p,angry>Ah! Outerlander! Do not interrupt me in my business! I must cull these fiends!");
+    ~chatplayer("<p,quiz>What are you doing down here?");
+    ~chatnpc("<p,angry>Only an outerlander would ask such a question! Is it not obvious what I am doing?");
+    ~chatnpc("<p,happy>I kill the daggermouths for glory and for sport! When I have had my fill, I move on to the daggermouths' lair!");
+    ~chatplayer("<p,neutral>Erm... okay then. I'll leave you to it.");
+    return;
+}
+~chatplayer("<p,happy>Hello there Bardur. How's it going?");
+~chatnpc("<p,happy>I have been here all the long day, slaughtering the daggermouth spawns so that none may pass!");
+~chatnpc("<p,neutral>My sword arm grows weary, and the blood of my foes hangs heavy upon my clothing!");
+~chatplayer("<p,quiz>Can you tell me anything about the caves down here?");
+~chatnpc("<p,happy>Aye, that I can <~get_viking_name>! Yonder lies the lair of the daggermouth kings, the three beasts of legend!");
+~chatnpc("<p,happy>I train my skills upon its foul brood, to prepare myself for the fight ahead!");
+~chatplayer("<p,quiz>Okay, thanks Bardur. Do you have any food with you?");
+~chatnpc("<p,quiz>Ah, you did not come prepared <~get_viking_name>?");
+~chatnpc("<p,neutral>I have nothing to spare, but my equipment grows weaker under the onslaught of the dagger-mouth spawns!");
+~chatnpc("<p,neutral>I will trade you a finely cooked shark if you have a replacement for my helm, my shield or my blade...");
+~chatnpc("<p,neutral>Give me any equipment you wish to trade, and I will pay you a shark for it.");
+
+[opnpcu,jb_viking_dude]
+if (%viking < ^viking_complete) {
+    ~chatnpc("<p,angry>I do not trust you outerlander, I will not accept your gifts, no matter what your intention...");
+    return;
+}
+if (last_useitem ! viking_sword & last_useitem ! viking_helmet & last_useitem ! viking_shield) {
+    ~chatnpc("<p,neutral>No <~get_viking_name>, I will trade you my finely cooked shark for a trusty Fremennik blade, a sturdy Fremennik helm, or a mighty Fremennik shield...");
+    ~chatnpc("<p,angry>I have no interest in that... thing... you are trying to offload on me.");
+    return;
+}
+def_obj $item = last_useitem;
+def_int $slot = last_useslot;
+~chatnpc("<p,happy>Ah, just what I was looking for! You wish to trade me that for a cooked shark?");
+if (~p_choice2_header("YES", 1, "NO", 2, "Trade with Bardur?") = 2) {
+    ~chatnpc("<p,neutral>As you wish, <~get_viking_name> My weapons have lasted me this long, I will keep my trust in them yet.");
+    return;
+}
+if (inv_getobj(inv, $slot) ! $item) return;
+inv_setslot(inv, $slot, shark, 1);
+~chatnpc("<p,happy>Ah, this will serve me well as a backup! My thanks to you <~get_viking_name>, I trust we will one day sing songs together of glorious battles in the Rellekka longhall!");

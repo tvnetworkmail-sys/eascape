@@ -25,6 +25,8 @@ VOID, WRITE = sys.argv[1], '--write' in sys.argv
 EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
 # EASCape: Void items that are ours under another name (the 2007 cache's, ported by name)
 ITEM_AS = {'gorak_claws': 'ft2_gorak_claws'}
+# EASCape: Void items that need quest state we don't track (Rag and Bone Man's wish list): the slot drops nothing
+ITEM_SKIP = {'dagannoth_ribs'}
 EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak'}
 OUT = os.path.join(CONTENT, 'scripts', 'eascape_void')
 
@@ -230,6 +232,8 @@ def build_table(tname, depth=0):
         else:
             lo, hi = int(e.get('min', 1)), int(e.get('max', e.get('min', 1)))
         ours = ITEM_AS.get(iid) or objs.get(v_items.get(iid, -1))
+        if iid in ITEM_SKIP:
+            ours = None
         if iid == 'nothing' or ours is None or ours in dummy or lo <= 0:
             if iid != 'nothing':
                 skipped_items[iid] += 1  # not in the 2006 game: the slot stays, it just drops nothing

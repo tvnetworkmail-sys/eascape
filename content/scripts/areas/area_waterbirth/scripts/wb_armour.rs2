@@ -1,0 +1,183 @@
+// EASCape: the Fremennik armour from Waterbirth Island (1 August 2005): Skulgrimen makes rock-shell
+// armour, Sigli the Huntsman spined armour and Peer the Seer skeletal armour, each from a part off
+// the island's monsters, dagannoth hides and a fee: a helm is 1 hide and 5,000 coins, the leg
+// armour 2 hides and 7,500, the body 3 hides and 10,000 (the RuneScape wiki's Fremennik armour
+// page). Only for a Fremennik. Dialogue from the transcripts (Transcript:Skulgrimen,
+// Transcript:Sigli the Huntsman, Transcript:Peer the Seer); the lines they're missing say "ours".
+// Crafters: 1 Skulgrimen, 2 Sigli, 3 Peer. Pieces: 1 helm, 2 body, 3 legs.
+
+// asked from each crafter's Talk-to (quests/quest_viking): true if you have one of its parts
+[proc,wb_armour_has_parts](int $crafter)(boolean)
+if (inv_total(inv, ~wb_armour_part($crafter, 1)) > 0 | inv_total(inv, ~wb_armour_part($crafter, 2)) > 0 | inv_total(inv, ~wb_armour_part($crafter, 3)) > 0) {
+    return(true);
+}
+return(false);
+
+[proc,wb_armour_part](int $crafter, int $piece)(namedobj)
+if ($crafter = 1) {
+    if ($piece = 1) return(dagganoth_melee_head_part);
+    if ($piece = 2) return(dagganoth_melee_body_part);
+    return(dagganoth_melee_leg_part);
+}
+if ($crafter = 2) {
+    if ($piece = 1) return(dagganoth_range_head_part);
+    if ($piece = 2) return(dagganoth_range_body_part);
+    return(dagganoth_range_leg_part);
+}
+if ($piece = 1) return(dagganoth_mage_head_part);
+if ($piece = 2) return(dagganoth_mage_body_part);
+return(dagganoth_mage_leg_part);
+
+[proc,wb_armour_made](int $crafter, int $piece)(namedobj)
+if ($crafter = 1) {
+    if ($piece = 1) return(dagganoth_melee_helm);
+    if ($piece = 2) return(dagganoth_melee_body);
+    return(dagganoth_melee_legs);
+}
+if ($crafter = 2) {
+    if ($piece = 1) return(dagganoth_ranged_helm);
+    if ($piece = 2) return(dagganoth_ranged_body);
+    return(dagganoth_ranged_legs);
+}
+if ($piece = 1) return(dagganoth_mage_helm);
+if ($piece = 2) return(dagganoth_mage_body);
+return(dagganoth_mage_legs);
+
+[proc,wb_armour_hides](int $piece)(int)
+if ($piece = 2) return(3);
+if ($piece = 3) return(2);
+return(1);
+
+[proc,wb_armour_fee](int $piece)(int)
+if ($piece = 2) return(10000);
+if ($piece = 3) return(7500);
+return(5000);
+
+// the topic: "Rock Crab Armour", "Dagannoth Spined Armour" or "Wallasalki Bone Armour"
+[label,wb_armour_ask](int $crafter)
+if ($crafter = 1) {
+    ~chatplayer("<p,quiz>Hello there. I have these shards of rock crab shell, and believe you might be able to make them into armour for me...?");
+} else if ($crafter = 2) {
+    ~chatplayer("<p,quiz>Hello there. I have some spined dagannoth hides, and believe you might be able to make an armour of them for me...?");
+} else {
+    ~chatplayer("<p,quiz>Hello there. I have some wallasalki bone fragments, and I understand you may be able to use them to make some armour for me...?");
+}
+if (%viking < ^viking_complete) {
+    if ($crafter = 2) {
+        ~chatnpc("<p,neutral>My apologies outerlander, but we are forbidden by decree to communicate with those not of our tribe, and this includes making armour for you.");
+        ~chatnpc("<p,neutral>I suggest you speak to Brundt, our chieftain. He resides in the longhall and speaks for us all.");
+    } else {
+        ~chatnpc("<p,neutral>I see great things in your future outerlander, but I will not go against the wishes of the tribe, and will not make armour for an outerlander.");
+        ~chatnpc("<p,neutral>You may try and gain a dispensation from Chieftain Brundt, but I suspect you will be unsuccessful...");
+    }
+    return;
+}
+@wb_armour_menu($crafter);
+
+[label,wb_armour_menu](int $crafter)
+if ($crafter = 1) {
+    ~chatnpc("<p,neutral>No problem, <~get_viking_name>. What armour you want?");
+} else if ($crafter = 2) {
+    ~chatnpc("<p,neutral>That is fine, <~get_viking_name>. What type of armour were you looking for?");
+} else {
+    ~chatnpc("<p,neutral>As you wish, <~get_viking_name>. What kind of armour were you thinking of exactly?");
+}
+def_int $piece = ~p_choice4("A fine helm", 1, "Sturdy bodyarmour", 2, "Powerful leg armour", 3, "Nothing", 4);
+if ($piece = 4) {
+    ~chatplayer("<p,neutral>Actually, I don't want anything.");
+    if ($crafter = 3) {
+        ~chatnpc("<p,neutral>As you wish, <~get_viking_name>."); // ours: Peer's answer isn't in the transcript
+    } else {
+        ~chatnpc("<p,neutral>AS you wish.");
+    }
+    return;
+}
+def_string $fee = "5,000";
+if ($piece = 2) $fee = "10,000";
+if ($piece = 3) $fee = "7,500";
+if ($crafter = 1) {
+    ~chatnpc("<p,neutral>It'll cost <$fee> coins. That ok?");
+} else if ($crafter = 2) {
+    ~chatnpc("<p,neutral>It will cost you <$fee> coins to make that for you. Is that acceptable?");
+} else {
+    ~chatnpc("<p,neutral>I am afraid it will cost you <$fee> coins to make that for you... Is that okay?");
+}
+if (~p_choice2("YES", 1, "NO", 2) = 2) @wb_armour_menu($crafter);
+@wb_armour_make($crafter, $piece);
+
+[label,wb_armour_make](int $crafter, int $piece)
+def_namedobj $part = ~wb_armour_part($crafter, $piece);
+def_int $hides = ~wb_armour_hides($piece);
+def_int $fee = ~wb_armour_fee($piece);
+if (inv_total(inv, $part) < 1 | inv_total(inv, dagganoth_hide) < $hides | inv_total(inv, coins) < $fee) {
+    ~wb_armour_missing($crafter, $piece);
+    return;
+}
+inv_del(inv, $part, 1);
+inv_del(inv, dagganoth_hide, $hides);
+inv_del(inv, coins, $fee);
+inv_add(inv, ~wb_armour_made($crafter, $piece), 1);
+if ($crafter = 1) {
+    if ($piece = 1) ~chatnpc("<p,happy>There you go. Fine helm. You want another?");
+    else ~chatnpc("<p,happy>There you go. Sturdy armour. You need another piece?");
+} else if ($crafter = 2) {
+    if ($piece = 1) ~chatnpc("<p,happy>A fine helm for any hunter! Did you want me to make you another?"); // ours: the helm's line isn't in the transcripts
+    else if ($piece = 2) ~chatnpc("<p,happy>A fine piece of armour for any hunter! Did you want me to make you another?");
+    else ~chatnpc("<p,happy>That should do for any hunter! Did you want another set of hunters legs?");
+} else {
+    if ($piece = 1) ~chatnpc("<p,happy>Ah, a helm to make any seer proud! Did you want me to make you another while I am at it?");
+    else if ($piece = 2) ~chatnpc("<p,happy>The seers of legend all wore just such armour! Did you want me to craft you another piece?");
+    else ~chatnpc("<p,happy>Ah, I used to wear just such a piece of armour to battle in my youth... Do you want me to make you another pair of legs while I am doing it anyway?");
+}
+if (~p_choice2("YES", 1, "NO", 2) = 1) @wb_armour_make($crafter, $piece);
+@wb_armour_menu($crafter);
+
+[proc,wb_armour_missing](int $crafter, int $piece)
+if ($crafter = 1) {
+    if ($piece = 1) ~chatnpc("<p,neutral>Sorry. Need 1 piece of dark daggermouth hide, 1 rock-shell chunk and 5,000 coins to make you helmet. Come back when you got it.");
+    else if ($piece = 2) ~chatnpc("<p,neutral>Apologies. Need 3 pieces of dark daggermouth hide, 1 rock-shell shard and 10,000 coins to make you strong armour. Come back when you got it.");
+    else ~chatnpc("<p,neutral>Apologies. Need 2 pieces of dark daggermouth hide, 1 rock-shell splinter and 7,500 coins to make you leg armour. Come back when you got it.");
+    return;
+}
+if ($crafter = 2) {
+    if ($piece = 1) {
+        ~chatnpc("<p,neutral>Sorry, <~get_viking_name>. I will need 1 piece of dark dagger-mouth hide, 1 circular light dagger-mouth hide and 5,000 coins to make you a hunter's helmet.");
+        ~chatnpc("<p,neutral>When you have them, I will still be here.");
+    } else if ($piece = 2) {
+        ~chatnpc("<p,neutral>I'm sorry, but I need 3 pieces of dark dagger-mouth hide, 1 flattened hide and 10,000 coins to make you some hunter's body armour.");
+        ~chatnpc("<p,neutral>I will still be here when you have obtained it.");
+    } else {
+        ~chatnpc("<p,neutral>My apologies but I will need 2 pieces of dark dagger-mouth hide, 1 stretched hide and 7,500 coins to make you some leg armour...");
+    }
+    return;
+}
+if ($piece = 1) ~chatnpc("<p,neutral>My apologies <~get_viking_name>, but I will need you to bring me 1 piece of dark dagger-mouth hide, 1 skull piece and 5,000 coins before I can make this helm for you.");
+else if ($piece = 2) ~chatnpc("<p,neutral>I am sorry <~get_viking_name>, but I need 3 pieces of dark dagger-mouth hide, 1 ribcage piece and 10,000 coins to make you this armour...");
+else ~chatnpc("<p,neutral>I am very sorry <~get_viking_name>, but I will require 2 pieces of dark dagger-mouth hide, 1 fibula piece and 7,500 coins to make this type of leg armour.");
+
+// ---------------------------------------------------------------------------------------------
+// Wearing it: the helm, body and legs need 40 Defence (and 40 Ranged for spined, 40 Magic for
+// skeletal) and The Fremennik Trials done; the gloves and boots need nothing (the OSRS wiki).
+// The rings, the Seercull (50 Ranged) and the mud battlestaff (30 Attack and Magic) are the
+// Dagannoth Kings' (the OSRS wiki).
+[opheld2,dagganoth_melee_helm] @wb_wear_fremennik(1, last_slot);
+[opheld2,dagganoth_melee_body] @wb_wear_fremennik(1, last_slot);
+[opheld2,dagganoth_melee_legs] @wb_wear_fremennik(1, last_slot);
+[opheld2,dagganoth_ranged_helm] @wb_wear_fremennik(2, last_slot);
+[opheld2,dagganoth_ranged_body] @wb_wear_fremennik(2, last_slot);
+[opheld2,dagganoth_ranged_legs] @wb_wear_fremennik(2, last_slot);
+[opheld2,dagganoth_mage_helm] @wb_wear_fremennik(3, last_slot);
+[opheld2,dagganoth_mage_body] @wb_wear_fremennik(3, last_slot);
+[opheld2,dagganoth_mage_legs] @wb_wear_fremennik(3, last_slot);
+[opheld2,daganoth_cave_magic_shortbow] @levelrequire_ranged(50, last_slot);
+[opheld2,mud_battlestaff] @levelrequire_magic_and_attack(30, 30, last_slot);
+
+[label,wb_wear_fremennik](int $kind, int $slot)
+if (%viking < ^viking_complete) {
+    mes("Only Fremenniks are worthy of wearing this armour."); // ours: the helm's message (levelrequire_viking_quest) for the whole set
+    mes("You need to complete The Fremennik Trials first.");
+    return;
+}
+if ($kind = 2) @levelrequire_ranged_and_defence(40, 40, $slot);
+if ($kind = 3) @levelrequire_magic_and_defence(40, 40, $slot);
+@levelrequire_defence(40, $slot);

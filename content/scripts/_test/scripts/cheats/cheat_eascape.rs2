@@ -2332,3 +2332,57 @@ if ($n >= 1 & $n <= 3 & gender = 0) %rd_male_at_start = 1;
 ~update_questpoints;
 ~send_quest_progress(questlist:rd, %rd_main, ^rcd_complete);
 mes("Recruitment Drive stage: <tostring($n)>.");
+
+// ::wbpack - for Waterbirth Island (areas/area_waterbirth): 12,000 coins (Jarvald's fare and a
+// piece of armour), 20 rune thrownaxes (Chainhit knocks down all three door-supports), 5 sharks,
+// 4 prayer potions, a strung lyre with a raw shark, a sea turtle and a manta ray (the lyre's
+// teleports), 2 kegs of beer (Askeladden), a Fremennik helm (Bardur), and for each of the three
+// armour makers a helm's part and a dagannoth hide.
+[debugproc,wbpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 12000));
+$banked = calc($banked + ~questpack_give(rune_thrownaxe, 20));
+$banked = calc($banked + ~questpack_give(shark, 5));
+$banked = calc($banked + ~questpack_give(4doseprayerrestore, 4));
+$banked = calc($banked + ~questpack_give(viking_strung_lyre, 1));
+$banked = calc($banked + ~questpack_give(raw_shark, 1));
+$banked = calc($banked + ~questpack_give(raw_seaturtle, 1));
+$banked = calc($banked + ~questpack_give(raw_mantaray, 1));
+$banked = calc($banked + ~questpack_give(keg_of_beer, 2));
+$banked = calc($banked + ~questpack_give(viking_helmet, 1));
+$banked = calc($banked + ~questpack_give(dagganoth_melee_head_part, 1));
+$banked = calc($banked + ~questpack_give(dagganoth_range_head_part, 1));
+$banked = calc($banked + ~questpack_give(dagganoth_mage_head_part, 1));
+$banked = calc($banked + ~questpack_give(dagganoth_hide, 3));
+~questpack_done("Waterbirth Island", $banked);
+mes("Jarvald is on the north-western dock of Rellekka (::wbtele 1). The lyre's offerings need The Fremennik Trials done (::questdone viking).");
+
+// ::wbtele <n> - to the places on Waterbirth Island: 1 Jarvald in Rellekka, 2 Jarvald on the island,
+// 3 inside the cave, 4 the pressure doors (the middle one's pads), 5 the north path by its
+// door-support, 6 the middle path by its door-support, 7 the ladder room, 8 Askeladden on the
+// mountain, 9 the first of the lower levels, 10 Bardur, 11 the rock lobsters, 12 the ladder down to
+// the Dagannoth Kings, 13 the Dagannoth Kings' lair, 14 Fossegrimen's altar (the lyre).
+[debugproc,wbtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = 0_40_57_60_35;
+    case 2 : $c = ^wb_island_landing;
+    case 3 : $c = ^wb_dungeon_entry;
+    case 4 : $c = 0_38_158_58_34;
+    case 5 : $c = 0_39_158_49_34;
+    case 6 : $c = 0_39_158_45_31;
+    case 7 : $c = ^wb_ladder_room;
+    case 8 : $c = ^wb_mountain_top;
+    case 9 : $c = ^wb_sublevel2;
+    case 10 : $c = 1_28_68_56_40;
+    case 11 : $c = 0_29_68_30_50;
+    case 12 : $c = ^wb_kings_ladder_top;
+    case 13 : $c = ^wb_kings_lair;
+    case 14 : $c = 0_41_56_2_15;
+    case default :
+        mes("::wbtele 1-14: 1 Jarvald (Rellekka), 2 Jarvald (island), 3 the cave, 4 the pressure doors, 5 the north door-support, 6 the middle door-support, 7 the ladder room, 8 Askeladden, 9 the lower levels, 10 Bardur, 11 the rock lobsters, 12 the ladder to the kings, 13 the kings' lair, 14 Fossegrimen's altar.");
+        return;
+}
+p_telejump($c);

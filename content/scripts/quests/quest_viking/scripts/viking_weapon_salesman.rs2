@@ -1,4 +1,8 @@
 [opnpc1,viking_weapons_salesman]
+// EASCape: Fremennik armour from Waterbirth Island's parts (areas/area_waterbirth/wb_armour.rs2)
+if (%viking = ^viking_complete & ~wb_armour_has_parts(1) = true) {
+    if (~p_choice2_header("Rock Crab Armour", 1, "The Fremennik Trials", 2, "What would you like to ask about?") = 1) @wb_armour_ask(1);
+}
 def_int $op;
 if(%viking = ^viking_not_started) {
     ~chatplayer("<p,neutral>Hello!");

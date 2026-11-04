@@ -45,6 +45,16 @@ if ($duration = null) { // spec is over
 ~pvm_thrownaxe_drop_sa($rhand, divide($duration, 30));
 
 [proc,pvm_rune_thrownaxe_hunt](coord $origin, npc_uid $target1, npc_uid $target2, npc_uid $target3, npc_uid $target4)(npc_uid)
+// EASCape: Waterbirth's door-supports stand in their doorways, out of each other's sight, but the
+// axe bounces from one to the others all the same (the wikis; areas/area_waterbirth)
+if (~wb_door_support = true) {
+    npc_huntall($origin, 3, ^vis_off);
+    while (.npc_findnext = true) {
+        if (.npc_uid ! $target1 & .npc_uid ! $target2 & .npc_uid ! $target3 & .npc_uid ! $target4 & ~.wb_door_support = true) {
+            return(.npc_uid);
+        }
+    }
+}
 npc_huntall($origin, 3, ^vis_lineofsight);
 while (.npc_findnext = true) {
     if (.npc_uid ! $target1 & .npc_uid ! $target2 & .npc_uid ! $target3 & .npc_uid ! $target4) {
@@ -72,7 +82,11 @@ if ($target = null) {
 if (npc_finduid($target) = false) {
     return(null);
 }
-if (~npc_is_attackable = false) {
+// EASCape: a bounce isn't thrown from your side, so it knocks down Waterbirth's door-supports
+// from any side (areas/area_waterbirth/wb_monsters.rs2)
+if ($start ! coord & ~wb_door_support = true) {
+    // bounced onto a door-support
+} else if (~npc_is_attackable = false) {
     return(null);
 }
 if (~sa_enough_energy = false) {

@@ -119,6 +119,10 @@ return(false);
 
 // allows any npc with op2 defined to be attacked
 [proc,npc_is_attackable]()(boolean)
+// EASCape: Waterbirth's door-supports can't be knocked down from the front (areas/area_waterbirth)
+if (~wb_door_support = true) {
+    return(~wb_support_attackable);
+}
 // EASCape: the Warriors' Guild's animated armour fights only its owner
 if (npc_category = wg_animated_armour) {
     return(~wg_armour_attackable);
@@ -217,6 +221,10 @@ return (false);
 
 // this proc is used for magic (TODO 377: re-enable later!!)
 [proc,npc_is_attackable_opt]()(boolean)
+// EASCape: Waterbirth's door-supports can't be knocked down from the front (areas/area_waterbirth)
+if (~wb_door_support = true) {
+    return(~wb_support_attackable);
+}
 if (npc_type = wormbrain & (~quest_dragon_getting_map_parts = false | inv_total(inv, mappart2) > 0 | %dragon_goblin ! ^quest_dragon_knows_about_goblin)) {
     mes("The goblin is already in prison. You have no reason to attack him.");
     return (false);

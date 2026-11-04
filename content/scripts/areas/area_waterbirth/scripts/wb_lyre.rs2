@@ -1,0 +1,19 @@
+// EASCape: "All people with enchanted lyres before this update will have their lyre upgraded to have
+// 2 uses automatically when they next log in." (Waterbirth Island, 1 August 2005). Done once per
+// account, flagged in the cache's %fremmy_tele_fixy (on the Waterbirth varp). An Enchanted
+// lyre(1) from before then becomes an Enchanted lyre(2), in the pack, worn or in the bank.
+[proc,wb_login]
+if (%fremmy_tele_fixy ! 0) return;
+%fremmy_tele_fixy = 1;
+~wb_lyre_upgrade(inv);
+~wb_lyre_upgrade(worn);
+~wb_lyre_upgrade(bank);
+
+[proc,wb_lyre_upgrade](inv $inv)
+def_int $slot = 0;
+while ($slot < inv_size($inv)) {
+    if (inv_getobj($inv, $slot) = magic_strung_lyre) {
+        inv_setslot($inv, $slot, magic_strung_lyre_2, inv_getnum($inv, $slot));
+    }
+    $slot = calc($slot + 1);
+}

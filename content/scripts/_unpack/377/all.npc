@@ -58211,6 +58211,14 @@ turnspeed=0
 vislevel=hide
 minimap=no
 op2=Destroy
+// EASCape: one hitpoint, it never fights back (2009scape DoorSupportNPC); destroyed in area_waterbirth/wb_doors.rs2
+hitpoints=1
+attack=1
+strength=1
+defence=1
+magic=1
+ranged=1
+wanderrange=0
 
 [dagannoth_weak_door_falling_south]
 name=Door
@@ -58269,6 +58277,14 @@ turnspeed=0
 vislevel=hide
 minimap=no
 op2=Destroy
+// EASCape: one hitpoint, it never fights back (2009scape DoorSupportNPC); destroyed in area_waterbirth/wb_doors.rs2
+hitpoints=1
+attack=1
+strength=1
+defence=1
+magic=1
+ranged=1
+wanderrange=0
 
 [dagannoth_weak_door_falling_west]
 name=Door
@@ -58327,6 +58343,14 @@ turnspeed=0
 vislevel=hide
 minimap=no
 op2=Destroy
+// EASCape: one hitpoint, it never fights back (2009scape DoorSupportNPC); destroyed in area_waterbirth/wb_doors.rs2
+hitpoints=1
+attack=1
+strength=1
+defence=1
+magic=1
+ranged=1
+wanderrange=0
 
 [dagannoth_weak_door_falling_north]
 name=Door
@@ -58376,8 +58400,11 @@ turnspeed=0
 vislevel=hide
 minimap=no
 // EASCape: aggression from Void (dagannoth_egg: aggressive, range 3)
-huntmode=aggressive_melee
 huntrange=3
+// EASCape: hunts from range so its ap trigger (area_waterbirth/wb_hidden.rs2) fires as you come near
+huntmode=aggressive_ranged
+attackrange=3
+wanderrange=0
 
 [dungeon_dagganoth_egg2]
 name=Egg
@@ -58416,6 +58443,24 @@ vislevel=137
 // EASCape: aggression from Void (giant_rock_crab: aggressive, range 5)
 huntmode=aggressive_melee
 huntrange=5
+// EASCape: combat from Void (giant_rock_crab); hitpoints and hits are Void's divided by 10
+hitpoints=180
+attack=50
+strength=80
+defence=200
+magic=1
+ranged=1
+respawnrate=50
+param=damagetype,^crush_style
+// EASCape: Void's giant_rock_crab max_hit_crush (90), divided by 10; its rock_crab attack is the small crab's
+param=eascape_maxhit,9
+param=attack_anim,horror_crab_attack
+param=attack_sound,rock_crab_attack
+param=defend_anim,horror_crab_defend
+param=death_anim,crab_death
+param=defend_sound,rock_crab_hit
+param=death_sound,rock_crab_death
+param=eascape_drops,wb_drop_giant_rock_crab
 
 [giant_rockcrab_hidden]
 name=Boulder
@@ -58427,8 +58472,11 @@ resizeh=250
 resizev=250
 turnspeed=0
 // EASCape: aggression from Void (boulder: aggressive, range 3)
-huntmode=aggressive_melee
 huntrange=3
+// EASCape: hunts from range so its ap trigger (area_waterbirth/wb_hidden.rs2) fires as you come near
+huntmode=aggressive_ranged
+attackrange=3
+wanderrange=0
 
 [dagganoth_critter]
 name=Dagannoth spawn
@@ -58551,6 +58599,24 @@ vislevel=98
 // EASCape: aggression from Void (wallasalki: aggressive, range 5)
 huntmode=aggressive_melee
 huntrange=5
+// EASCape: combat from Void (wallasalki); hitpoints and hits are Void's divided by 10
+hitpoints=120
+attack=10
+strength=10
+defence=80
+magic=100
+ranged=1
+respawnrate=25
+param=damagetype,^magic_style
+// EASCape: the OSRS wiki's max hit (30); Void writes 30 too but unscaled (its other hits are x10)
+param=eascape_maxhit,30
+param=attack_anim,wallasalki_attack
+param=defend_anim,wallasalki_defend
+param=death_anim,wallasalki_death
+param=proj_travel,waterblast_travel
+param=eascape_impact_gfx,waterblast_impact
+attackrange=5
+param=eascape_drops,wb_drop_wallasalki
 
 [agilityarena_non_combat_bat]
 name=Giant bat
@@ -67563,6 +67629,12 @@ param=death_anim,dagannoth_meganoth_death
 param=proj_travel,dagannoth_spine_spotanim_travel
 attackrange=8
 param=eascape_drops,void_drop_dagannoth_supreme_drop_table
+// EASCape: defence bonuses from the OSRS wiki
+param=stabdefence,10
+param=slashdefence,10
+param=crushdefence,10
+param=rangedefence,550
+param=magicdefence,255
 
 [dagcave_magic_boss]
 name=Dagannoth Prime
@@ -67608,6 +67680,12 @@ param=proj_travel,waterwave_travel
 param=eascape_impact_gfx,waterwave_impact
 attackrange=8
 param=eascape_drops,void_drop_dagannoth_prime_drop_table
+// EASCape: defence bonuses from the OSRS wiki
+param=stabdefence,255
+param=slashdefence,255
+param=crushdefence,255
+param=rangedefence,10
+param=magicdefence,255
 
 [dagcave_melee_boss]
 name=Dagannoth Rex
@@ -67648,6 +67726,12 @@ param=attack_anim,dagannoth_meganoth_attack_melee
 param=defend_anim,dagannoth_meganoth_defend
 param=death_anim,dagannoth_meganoth_death
 param=eascape_drops,void_drop_dagannoth_rex_drop_table
+// EASCape: defence bonuses from the OSRS wiki
+param=stabdefence,255
+param=slashdefence,255
+param=crushdefence,255
+param=rangedefence,255
+param=magicdefence,10
 
 [dungeon_dagganoth_magic_monster_deeper]
 name=Wallasalki
@@ -67662,6 +67746,24 @@ vislevel=98
 // EASCape: aggression from Void (wallasalki_1: aggressive, range 5)
 huntmode=aggressive_melee
 huntrange=5
+// EASCape: combat from Void (wallasalki_1); hitpoints and hits are Void's divided by 10
+hitpoints=120
+attack=1
+strength=1
+defence=80
+magic=100
+ranged=1
+respawnrate=25
+param=damagetype,^magic_style
+// EASCape: the OSRS wiki's max hit (30); Void writes 30 too but unscaled (its other hits are x10)
+param=eascape_maxhit,30
+param=attack_anim,wallasalki_attack
+param=defend_anim,wallasalki_defend
+param=death_anim,wallasalki_death
+param=proj_travel,waterblast_travel
+param=eascape_impact_gfx,waterblast_impact
+attackrange=5
+param=eascape_drops,wb_drop_wallasalki
 
 [giant_rockcrab_deeper]
 name=Giant Rock Crab
@@ -67678,6 +67780,24 @@ vislevel=137
 // EASCape: aggression from Void (giant_rock_crab_light: aggressive, range 5)
 huntmode=aggressive_melee
 huntrange=5
+// EASCape: combat from Void (giant_rock_crab_light); hitpoints and hits are Void's divided by 10
+hitpoints=180
+attack=50
+strength=80
+defence=200
+magic=1
+ranged=1
+respawnrate=50
+param=damagetype,^crush_style
+// EASCape: Void's giant_rock_crab max_hit_crush (90), divided by 10; its rock_crab attack is the small crab's
+param=eascape_maxhit,9
+param=attack_anim,horror_crab_attack
+param=attack_sound,rock_crab_attack
+param=defend_anim,horror_crab_defend
+param=death_anim,crab_death
+param=defend_sound,rock_crab_hit
+param=death_sound,rock_crab_death
+param=eascape_drops,wb_drop_giant_rock_crab
 
 [giant_rockcrab_hidden_deeper]
 name=Boulder
@@ -67689,8 +67809,11 @@ resizeh=250
 resizev=250
 turnspeed=0
 // EASCape: aggression from Void (boulder_light: aggressive, range 3)
-huntmode=aggressive_melee
 huntrange=3
+// EASCape: hunts from range so its ap trigger (area_waterbirth/wb_hidden.rs2) fires as you come near
+huntmode=aggressive_ranged
+attackrange=3
+wanderrange=0
 
 [dungeon_dagganoth_lighter_deeper]
 name=Dagannoth
@@ -67791,6 +67914,24 @@ vislevel=127
 // EASCape: aggression from Void (rock_lobster: aggressive, range 3)
 huntmode=aggressive_melee
 huntrange=3
+// EASCape: combat from Void (rock_lobster); hitpoints and hits are Void's divided by 10
+hitpoints=150
+attack=100
+strength=100
+defence=100
+magic=1
+ranged=1
+param=damagetype,^crush_style
+param=eascape_maxhit,11
+param=attack_anim,dagannoth_rock_lobster_attack
+param=attack_sound,rock_lobster_attack
+param=defend_anim,dagannoth_rock_lobster_defend
+param=death_anim,dagannoth_rock_lobster_death
+param=defend_sound,rock_lobster_hit
+param=death_sound,rock_lobster_death
+param=eascape_drops,wb_drop_rock_lobster
+// EASCape: Void's rock_hidden_lobster respawn_delay (the hidden rock is the one that respawns)
+respawnrate=50
 
 [dagannoth_rock_lobster_2x2_loc]
 name=Rock
@@ -67805,8 +67946,11 @@ ambient=15
 turnspeed=0
 minimap=no
 // EASCape: aggression from Void (rock_hidden_lobster: aggressive, range 3)
-huntmode=aggressive_melee
 huntrange=3
+// EASCape: hunts from range so its ap trigger (area_waterbirth/wb_hidden.rs2) fires as you come near
+huntmode=aggressive_ranged
+attackrange=3
+wanderrange=0
 
 [dagannoth_water_creature_1x1_invisible]
 name=Suspicious water
@@ -67830,6 +67974,24 @@ vislevel=76
 // EASCape: aggression from Void (spinolyp: aggressive_intolerant, range 10)
 huntmode=aggressive_melee
 huntrange=10
+// EASCape: combat from Void (spinolyp); hitpoints and hits are Void's divided by 10
+hitpoints=100
+attack=10
+strength=10
+defence=10
+magic=1
+ranged=100
+respawnrate=10
+param=damagetype,^magic_style
+param=eascape_maxhit,10
+param=attack_anim,dagannoth_water_creature_attack
+param=defend_anim,dagannoth_water_creature_defend
+param=death_anim,dagannoth_water_creature_death
+param=poison_severity,10
+param=proj_travel,waterstrike_travel
+param=eascape_impact_gfx,waterstrike_impact
+attackrange=10
+param=eascape_drops,void_drop_bones_drop_table
 
 [dagannoth_water_creature_1x1_invisible2]
 name=Suspicious water
@@ -67853,6 +68015,24 @@ vislevel=76
 // EASCape: aggression from Void (spinolyp_2: aggressive_intolerant, range 10)
 huntmode=aggressive_melee
 huntrange=10
+// EASCape: combat from Void (spinolyp_2); hitpoints and hits are Void's divided by 10
+hitpoints=100
+attack=10
+strength=10
+defence=10
+magic=1
+ranged=100
+respawnrate=10
+param=damagetype,^magic_style
+param=eascape_maxhit,10
+param=attack_anim,dagannoth_water_creature_attack
+param=defend_anim,dagannoth_water_creature_defend
+param=death_anim,dagannoth_water_creature_death
+param=poison_severity,10
+param=proj_travel,waterstrike_travel
+param=eascape_impact_gfx,waterstrike_impact
+attackrange=10
+param=eascape_drops,void_drop_bones_drop_table
 
 [dagannoth_water_creature_1x1_invisible3]
 name=Suspicious water
@@ -67876,6 +68056,24 @@ vislevel=76
 // EASCape: aggression from Void (spinolyp_3: aggressive_intolerant, range 10)
 huntmode=aggressive_melee
 huntrange=10
+// EASCape: combat from Void (spinolyp_3); hitpoints and hits are Void's divided by 10
+hitpoints=100
+attack=10
+strength=10
+defence=10
+magic=1
+ranged=100
+respawnrate=10
+param=damagetype,^magic_style
+param=eascape_maxhit,10
+param=attack_anim,dagannoth_water_creature_attack
+param=defend_anim,dagannoth_water_creature_defend
+param=death_anim,dagannoth_water_creature_death
+param=poison_severity,10
+param=proj_travel,waterstrike_travel
+param=eascape_impact_gfx,waterstrike_impact
+attackrange=10
+param=eascape_drops,void_drop_bones_drop_table
 
 [agrith_reen_alkharid]
 walkanim=walk_walkingstick,human_walk_b,human_walk_l,human_walk_r

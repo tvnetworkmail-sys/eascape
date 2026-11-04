@@ -1,0 +1,135 @@
+// EASCape: the Waterbirth Island Dungeon's monsters that do more than fight (Waterbirth Island,
+// 1 August 2005, and its expansion of 7 November 2005).
+
+// ---------------------------------------------------------------------------------------------
+// Door-supports. Three props hold shut the doors into the ladder room (2543,10143 west,
+// 2545,10141 south, 2545,10145 north). One can't be knocked down from the path it blocks, only
+// from behind it: from the ladder room, or with a ranged or magic attack from another path
+// (2009scape WaterBirthDungeonZone.java's side rule; the message is Void's, DoorSupport.kt, and
+// the wikis'). A rune thrownaxe's Chainhit bounces off one to the others in the ladder room's
+// multiway area and knocks them all down (the wikis; skill_combat pvm_rune_thrownaxe.rs2 lets a
+// bounce hit a support from any side). A knocked-down support takes its door's invisible block
+// with it for 30 seconds (Void), then stands again.
+
+// true if the active player is on the front of the active npc's support (the side it blocks)
+[proc,wb_support_front]()(boolean)
+def_int $x = coordx(coord);
+def_int $z = coordz(coord);
+def_int $sx = coordx(npc_coord);
+def_int $sz = coordz(npc_coord);
+if (npc_type = dagannoth_weak_door_north & $z > $sz) return(true);
+if (npc_type = dagannoth_weak_door_west & $x < $sx) return(true);
+if (npc_type = dagannoth_weak_door_south & $z < $sz) return(true);
+return(false);
+
+[proc,wb_door_support]()(boolean)
+if (npc_type = dagannoth_weak_door_north | npc_type = dagannoth_weak_door_west | npc_type = dagannoth_weak_door_south) return(true);
+return(false);
+
+// from npc_is_attackable and npc_is_attackable_opt (skill_combat npc_combat.rs2)
+[proc,wb_support_attackable]()(boolean)
+if (~wb_support_front = true) {
+    mes("This door does not seem to be openable from this side...");
+    return(false);
+}
+return(true);
+
+[ai_queue1,dagannoth_weak_door_north] npc_setmode(none); // it never fights back
+[ai_queue1,dagannoth_weak_door_west] npc_setmode(none);
+[ai_queue1,dagannoth_weak_door_south] npc_setmode(none);
+
+[ai_queue3,dagannoth_weak_door_north] @wb_support_fall(dagannoth_weak_door_falling_north, dagannoth_weak_door_fallen_north);
+[ai_queue3,dagannoth_weak_door_west] @wb_support_fall(dagannoth_weak_door_falling_west, dagannoth_weak_door_fallen_west);
+[ai_queue3,dagannoth_weak_door_south] @wb_support_fall(dagannoth_weak_door_falling_south, dagannoth_weak_door_fallen_south);
+
+// the support falls (the cache's "falling" npc plays the fall), lies there as the "fallen" one,
+// and stands again when its time is up (npc_changetype reverts it)
+[label,wb_support_fall](npc $falling, npc $fallen)
+npc_setmode(none);
+if (loc_find(npc_coord, dagcave_invisibleblocking) = true) {
+    loc_del(^wb_support_down_ticks);
+}
+npc_changetype($falling, ^wb_support_down_ticks);
+npc_delay(2);
+npc_changetype($fallen, sub(^wb_support_down_ticks, 2));
+
+// ---------------------------------------------------------------------------------------------
+// Things that hide. Boulders are giant rock crabs and rocks are rock lobsters; when you come
+// within 3 squares they show themselves and attack (Void GiantRockCrabs.kt and RockLobster.kt:
+// hunt range 3, a 2-tick stand-up) and go back to hiding after 30 seconds out of a fight (Void).
+// Each attack and each hit keeps it out another 30 seconds.
+
+[ai_applayer2,giant_rockcrab_hidden] @wb_unhide(giant_rockcrab);
+[ai_applayer2,giant_rockcrab_hidden_deeper] @wb_unhide(giant_rockcrab_deeper);
+[ai_applayer2,dagannoth_rock_lobster_2x2_loc] @wb_unhide(dagannoth_rock_lobster_2x2);
+
+[label,wb_unhide](npc $type)
+def_player_uid $who = uid;
+npc_setmode(none);
+npc_changetype($type, ^wb_unhidden_ticks);
+npc_delay(1); // Void: stand up, then attack
+if (finduid($who) = false) return;
+%npc_aggressive_player = uid;
+~npc_set_attack_vars;
+npc_setmode(opplayer2);
+
+[ai_opplayer2,giant_rockcrab] @wb_unhidden_attack;
+[ai_opplayer2,giant_rockcrab_deeper] @wb_unhidden_attack;
+[ai_opplayer2,dagannoth_rock_lobster_2x2] @wb_unhidden_attack;
+[ai_queue1,giant_rockcrab] @wb_unhidden_retaliate;
+[ai_queue1,giant_rockcrab_deeper] @wb_unhidden_retaliate;
+[ai_queue1,dagannoth_rock_lobster_2x2] @wb_unhidden_retaliate;
+
+[label,wb_unhidden_attack]
+// (a crab spawned as itself stays itself: npc_changetype to its own type just keeps it)
+if (%npc_action_delay <= map_clock) npc_changetype(npc_type, ^wb_unhidden_ticks);
+gosub(npc_default_attack);
+
+[label,wb_unhidden_retaliate]
+npc_changetype(npc_type, ^wb_unhidden_ticks);
+gosub(npc_default_retaliate);
+
+// ---------------------------------------------------------------------------------------------
+// Eggs. Come within 3 squares and an egg opens, and two ticks later a dagannoth spawn comes out
+// of it and attacks you; the egg stays open and the spawn lives for 5 minutes (Void
+// DagannothEggHatch.kt; the 2-tick wait is 2009scape's).
+
+[ai_applayer2,dungeon_dagganoth_egg1]
+def_player_uid $who = uid;
+npc_setmode(none);
+npc_changetype(dungeon_dagganoth_egg2, ^wb_egg_open_ticks);
+npc_delay(1);
+npc_changetype(dungeon_dagganoth_egg3, sub(^wb_egg_open_ticks, 2));
+npc_add(npc_coord, dagganoth_critter, ^wb_egg_open_ticks);
+if (finduid($who) = false) return;
+%npc_aggressive_player = uid;
+~npc_set_attack_vars;
+npc_setmode(opplayer2);
+
+// ---------------------------------------------------------------------------------------------
+// Monsters that attack from range (imported from Void, as tools/void/slayer.py writes them for
+// the Slayer monsters it imports).
+[ai_queue1,dungeon_dagganoth_magic_monster] ~npc_default_retaliate_ap;
+[ai_opplayer2,dungeon_dagganoth_magic_monster] npc_setmode(applayer2);
+[ai_applayer2,dungeon_dagganoth_magic_monster] ~eascape_npc_projattack(^magic_style);
+
+[ai_queue1,dungeon_dagganoth_magic_monster_deeper] ~npc_default_retaliate_ap;
+[ai_opplayer2,dungeon_dagganoth_magic_monster_deeper] npc_setmode(applayer2);
+[ai_applayer2,dungeon_dagganoth_magic_monster_deeper] ~eascape_npc_projattack(^magic_style);
+
+[ai_queue1,dagannoth_water_creature_1x1] ~npc_default_retaliate_ap;
+[ai_opplayer2,dagannoth_water_creature_1x1] npc_setmode(applayer2);
+[ai_applayer2,dagannoth_water_creature_1x1] ~eascape_npc_projattack(^magic_style);
+
+[ai_queue1,dagannoth_water_creature_1x12] ~npc_default_retaliate_ap;
+[ai_opplayer2,dagannoth_water_creature_1x12] npc_setmode(applayer2);
+[ai_applayer2,dagannoth_water_creature_1x12] ~eascape_npc_projattack(^magic_style);
+
+[ai_queue1,dagannoth_water_creature_1x13] ~npc_default_retaliate_ap;
+[ai_opplayer2,dagannoth_water_creature_1x13] npc_setmode(applayer2);
+[ai_applayer2,dagannoth_water_creature_1x13] ~eascape_npc_projattack(^magic_style);
+
+// the same for the secondary npc (the thrownaxe's bounce search, pvm_rune_thrownaxe.rs2)
+[proc,.wb_door_support]()(boolean)
+if (.npc_type = dagannoth_weak_door_north | .npc_type = dagannoth_weak_door_west | .npc_type = dagannoth_weak_door_south) return(true);
+return(false);
