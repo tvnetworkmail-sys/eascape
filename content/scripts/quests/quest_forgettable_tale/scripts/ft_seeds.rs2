@@ -1,0 +1,332 @@
+// EASCape: Forgettable Tale: the other three Kelda seeds (the rowdy dwarf, Khorvak at White Wolf
+// Mountain and Gauss in the King's Axe) and the two bars' Kelda stout. The words are the OSRS
+// wiki's (Transcript:Forgettable Tale..., Transcript:Gauss, Transcript:Barman (King's Axe Inn)),
+// with the RuneScape wiki's extra lines where noted. Which given/told varbit is whose is ours:
+// %forget_seed2_* the rowdy dwarf, %forget_seed3_* Khorvak, %forget_seed4_* Gauss.
+
+[proc,ft_seed_time]()(boolean)
+if (%forget_quest = ^ft_seeds) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the rowdy dwarf
+// called first from his [opnpc1] (area_keldagrim/keldagrim_npcs.rs2)
+[proc,ft_rowdy]()(boolean)
+if (~ft_seed_time = false | %forget_seed2_given = 1) return(false);
+if (%forget_seed2_told = 0 | %ft_rowdy_item = 0) {
+    ~chatplayer("<p,quiz>Hold on a second there, I need your help!");
+    ~chatnpc("<p,drunk>Help, from me? You musht be more drunk than I am.");
+    ~chatplayer("<p,neutral>No, I try not to get drunk, it's not good for you. But I do need help in brewing some beer.");
+    ~chatnpc("<p,happy>Mmmm, beer.");
+    ~chatplayer("<p,neutral>I need to brew Kelda stout, but I haven't got enough seeds to grow the hops.");
+    ~chatnpc("<p,happy>Mmmm, Kelda stout.");
+    ~chatplayer("<p,quiz>Do you know where I can find any seeds?");
+    ~chatnpc("<p,drunk>I might... oh yeah, I jusht might have a sheed like that.");
+    ~chatplayer("<p,neutral>But you're not going to just give it to me, are you?");
+    ~chatnpc("<p,drunk>No.");
+    ~chatplayer("<p,neutral>Alright then, what do you want for it?");
+    ~ft_rowdy_pick;
+    ~chatnpc("<p,drunk>Lemme think... oh yesh. Get me... <~ft_rowdy_name(%ft_rowdy_item)>.");
+    ~chatplayer("<p,shock>What?? Where am I going to get that!");
+    ~chatnpc("<p,drunk>You can at least make the effort.");
+    %forget_seed2_told = 1;
+    return(true);
+}
+// ours: after a few minutes he wants something else (the OSRS wiki's "wait a few minutes and talk to
+// him again for a different request"), unless you have what he asked for
+if (inv_total(inv, ~ft_rowdy_obj(%ft_rowdy_item)) = 0 & (map_clock < %ft_rowdy_when | calc(map_clock - %ft_rowdy_when) > ^ft_rowdy_ticks)) {
+    ~ft_rowdy_pick;
+}
+~chatplayer("<p,quiz>Do you have any Kelda seeds?");
+~chatnpc("<p,drunk>Where's my ehm... What wash it again? Oh yesh... <~ft_rowdy_name(%ft_rowdy_item)>.");
+def_namedobj $want = ~ft_rowdy_obj(%ft_rowdy_item);
+if (inv_total(inv, $want) = 0) {
+    ~chatplayer("<p,neutral>I'm still looking for that.");
+    ~chatnpc("<p,drunk>Look a little harder!");
+    return(true);
+}
+~chatplayer("<p,happy>Look, I've got it here!");
+~chatnpc("<p,happy>Shplendid! Give that to me please!");
+inv_del(inv, $want, 1);
+%forget_seed2_given = 1;
+%ft_rowdy_item = 0;
+~ft_give(kelda_hop_seed, 1);
+~chatplayer("<p,quiz>Now how about those seeds?");
+~chatnpc("<p,happy>Well, I've got a Kelda hop seed right here! Pashed down generation after generation in my family...");
+~chatplayer("<p,shock>Wow, really?");
+~chatnpc("<p,laugh>Nah, I'm just kidding! Here, have the seed, you won't catch me farming in shome dirt patch anyway!");
+~chatplayer("<p,neutral>I suppose you wouldn't ever have a proper job or do some decent hard work, no.");
+~chatnpc("<p,angry>What wash that?");
+~chatplayer("<p,neutral>Nothing...");
+return(true);
+
+[proc,ft_rowdy_pick]
+def_int $old = %ft_rowdy_item;
+def_int $n = add(random(24), 1);
+if ($n = $old) $n = add(modulo($n, 24), 1);
+%ft_rowdy_item = $n;
+%ft_rowdy_when = map_clock;
+
+// the things he may want (the OSRS wiki's list; it notes he takes a right eye patch, not a left,
+// any flier but the Al Kharid and Gauntlet ones, and not the Draynor Manor cabbage). The words for
+// each are ours (the transcript has "[item]").
+[proc,ft_rowdy_obj](int $i)(namedobj)
+switch_int ($i) {
+    case 1 : return(acne_potion);
+    case 2 : return(amulet_mould);
+    case 3 : return(anchovie_pizza);
+    case 4 : return(ashes);
+    case 5 : return(banana);
+    case 6 : return(bat_bones);
+    case 7 : return(broken_glass);
+    case 8 : return(feud_camel_pooh_bucket);
+    case 9 : return(burnt_chicken);
+    case 10 : return(cabbage);
+    case 11 : return(eye_patch);
+    case 12 : return(feud_karidian_fakebeard);
+    case 13 : return(flier);
+    case 14 : return(king_worm);
+    case 15 : return(pink_skirt);
+    case 16 : return(potato);
+    case 17 : return(red_cape);
+    case 18 : return(spinning_plate);
+    case 19 : return(studded_chaps);
+    case 20 : return(steel_dart);
+    case 21 : return(swamp_tar);
+    case 22 : return(horsey_black);
+    case 23 : return(vampire_dust);
+    case 24 : return(white_apron);
+}
+return(acne_potion);
+
+[proc,ft_rowdy_name](int $i)(string)
+switch_int ($i) {
+    case 1 : return("an acne potion");
+    case 2 : return("an amulet mould");
+    case 3 : return("an anchovy pizza");
+    case 4 : return("some ashes");
+    case 5 : return("a banana");
+    case 6 : return("some bat bones");
+    case 7 : return("some broken glass");
+    case 8 : return("a bucket of camel poo");
+    case 9 : return("a burnt chicken");
+    case 10 : return("a cabbage");
+    case 11 : return("an eye patch");
+    case 12 : return("a fake beard");
+    case 13 : return("a flier");
+    case 14 : return("a king worm");
+    case 15 : return("a pink skirt");
+    case 16 : return("a potato");
+    case 17 : return("a red cape");
+    case 18 : return("a spinning plate");
+    case 19 : return("some studded chaps");
+    case 20 : return("a steel dart");
+    case 21 : return("some swamp tar");
+    case 22 : return("a toy horsey");
+    case 23 : return("some vampyre dust");
+    case 24 : return("a white apron");
+}
+return("something");
+
+// ---------------------------------------------------------------- Khorvak, White Wolf Mountain
+// called first from his [opnpc1] (quest_dwarfrock/dwarfrock_step2.rs2): the menu, and his seed
+[proc,ft_khorvak]()(boolean)
+if (~ft_seed_time = false | %forget_seed3_given = 1) return(false);
+if (~p_choice2("Talk about multicannon schematics.", 1, "Talk about Kelda hop seeds.", 2) = 1) return(false);
+if (%forget_seed3_told = 0) {
+    ~chatplayer("<p,neutral>Hello there. I'm looking for some Kelda hop seeds.");
+    ~chatnpc("<p,happy>Oh, we've got an expert here! Kelda shtout is delishious!");
+    ~chatplayer("<p,neutral>It sounds ghastly to me. But I want to brew some to help out, errr, a friend of mine.");
+    %forget_seed3_told = 1;
+} else {
+    ~chatplayer("<p,neutral>I'm still looking for some Kelda hop seeds.");
+}
+~chatnpc("<p,happy>Oh, I've got a sheed you might like to borrow!");
+~chatplayer("<p,confused>Borrow?? How can I borrow a seed? I can hardly give it back once I've grown it.");
+~chatnpc("<p,angry>Then we've got no deal!");
+if (~p_choice2("What if I offer you a drink?", 1, "No wait, I want to borrow it after all.", 2) = 1) {
+    ~chatplayer("<p,quiz>What if I offer you a drink?");
+    ~chatnpc("<p,quiz>Ah, err, are you offering?");
+    if (inv_total(inv, dwarven_stout) = 0) {
+        ~chatplayer("<p,sad>Er, well, I was going to offer you a dwarven stout, but I seem to have left it in my other pants.");
+        ~chatnpc("<p,laugh>Haha, you make me laugh human!");
+        ~chatnpc("<p,happy>Shtouts are just on the table over there, help yourshelf!");
+        return(true);
+    }
+    ~chatplayer("<p,neutral>I just thought I'd save myself the trouble of waiting for you to ask me this time.");
+    ~chatnpc("<p,angry>I've never ashked you for a drink in my life!");
+    ~chatplayer("<p,angry>No, but it seems just about everyone else has!");
+    ~chatnpc("<p,neutral>Well it'sh hardly a big deal, ish it? We've got a huge shupply of dwarven shtouts right here.");
+    ~chatplayer("<p,angry>That's not the point!");
+    ~chatnpc("<p,neutral>And a dwarven shtout against a Kelda hop seed? I'm not sure if that'sh a fair trade.");
+    ~chatplayer("<p,angry>Look!");
+    ~chatplayer("<p,angry>Dwarven stout, here!");
+    ~chatplayer("<p,angry>Now do you want it or not? I'm not asking you again!");
+    ~chatnpc("<p,happy>Alright, you talked me into it.");
+    if (inv_total(inv, dwarven_stout) = 0) return(true);
+    inv_del(inv, dwarven_stout, 1);
+    %forget_seed3_given = 1;
+    ~ft_give(kelda_hop_seed, 1);
+    ~chatnpc("<p,happy>Hmm, that shtout was delicious... here, have my invaluable Kelda hop sheed now, it wash my lasht one.");
+    return(true);
+}
+~chatplayer("<p,neutral>No wait, I want to borrow it after all.");
+~chatnpc("<p,quiz>You are going to give it back after you're done widdit, right?");
+~chatplayer("<p,happy>Of course, of course! After I've grown my Kelda seeds into hops, then harvested the hops and brewed my Kelda stout... sure, I'll give you back your seed!");
+~chatnpc("<p,happy>That'sh very deshent of you, human.");
+~chatplayer("<p,happy>Only too happy to help!");
+~chatnpc("<p,confused>Hey, err... wait... wait a second! Hey, wait!");
+~chatplayer("<p,quiz>Err, yes?");
+~chatnpc("<p,quiz>How are you goin' to give me back my sheed once you've made the Kelda stout? You'll be too drunk to find your way back here!");
+~chatplayer("<p,neutral>Oh, don't worry... like I said, it's not for myself, it's for a friend.");
+~chatnpc("<p,happy>That'sh alright then, here you go.");
+%forget_seed3_given = 1;
+~ft_give(kelda_hop_seed, 1);
+return(true);
+
+// ---------------------------------------------------------------- Gauss, the King's Axe
+// called first from his [opnpc1] (area_keldagrim/keldagrim_npcs.rs2)
+[proc,ft_gauss]()(boolean)
+if (~ft_seed_time = false | %forget_seed4_given = 1) return(false);
+if (%forget_seed4_told = 0) {
+    ~chatnpc("<p,happy>A good day to you, <text_gender("sir", "madam")>!");
+    ~chatplayer("<p,happy>And to you!");
+    ~chatplayer("<p,quiz>Say, you know a lot about beer, right?");
+    ~chatnpc("<p,happy>A fair bit if I say so myself, yes. What do you want to know?");
+    ~chatplayer("<p,quiz>Do you know anything about Kelda stout?");
+    ~chatnpc("<p,neutral>Ah, very rare that is! Very rare indeed. This place doesn't stock it. Don't think the Laughing Miner does either.");
+    ~chatplayer("<p,neutral>Yes, that's what I heard, so I'm going to brew it myself.");
+    ~chatnpc("<p,neutral>Then you'll probably need some seeds!");
+    ~chatplayer("<p,quiz>Have you got any?");
+    ~chatnpc("<p,happy>Have a toast to our good health with me and I'll tell you!");
+    %forget_seed4_told = 1;
+} else {
+    ~chatplayer("<p,quiz>So did you have any Kelda seeds?");
+    ~chatnpc("<p,quiz>Were you going to have a toast to our good health?");
+}
+if (inv_total(inv, beer) = 0 & inv_total(inv, beer_glass) = 0) {
+    ~chatplayer("<p,neutral>I don't have anything suitable to toast with.");
+    ~chatnpc("<p,neutral>Then go get something from the bar!");
+    return(true);
+}
+~chatplayer("<p,neutral>Drinking is bad for you, but I'll make an exception this time.");
+~chatnpc("<p,happy>Hurrah for the human!");
+~chatplayer("<p,happy>Cheers!");
+~chatnpc("<p,happy>Cheers!");
+~ft_gauss_toast;
+%forget_seed4_given = 1;
+~ft_give(kelda_hop_seed, 1);
+~chatnpc("<p,happy>That was fun! Here, I've got one Kelda seed left. A sociable <text_gender("chap", "lass")> like you is more than welcome to it.");
+return(true);
+
+// the clink (the cache's human_clink_beerglass and dwarf_clink_beerglass); the OSRS wiki: the quest's
+// toast doesn't use up the beer
+[proc,ft_gauss_toast]
+if_close;
+npc_facesquare(coord);
+facesquare(npc_coord);
+anim(human_clink_beerglass, 0);
+npc_anim(dwarf_clink_beerglass, 0);
+p_delay(3);
+
+// Transcript:Gauss, standard dialogue: the beer or dwarven stout is drunk and an empty glass is left
+[label,ft_gauss_standard]
+~chatnpc("<p,happy>I say, I say, a toast to this fine human!");
+~chatplayer("<p,confused>What? I mean, err... why?");
+~chatnpc("<p,happy>Why not!");
+if (inv_total(inv, beer) > 0 | inv_total(inv, dwarven_stout) > 0) {
+    ~chatplayer("<p,happy>Why not indeed! Cheers!");
+    ~chatnpc("<p,happy>Cheers!");
+    ~ft_gauss_toast;
+    if (inv_total(inv, beer) > 0) {
+        inv_del(inv, beer, 1);
+    } else {
+        inv_del(inv, dwarven_stout, 1);
+    }
+    inv_add(inv, beer_glass, 1);
+    return;
+}
+if (inv_total(inv, jug_wine) > 0) {
+    ~chatplayer("<p,neutral>Well, I have this jug of wine...");
+    ~chatnpc("<p,neutral>No no, get a pint of beer, jugs of wine aren't good to toast with! Wine stains are terribly hard to wash out of a beard.");
+    return;
+}
+~chatplayer("<p,neutral>I don't have anything suitable to toast with.");
+~chatnpc("<p,neutral>Then go get something from the bar!");
+
+// ---------------------------------------------------------------- the bars' Kelda stout
+// the Laughing Miner's barmaid, "I'd like a Kelda stout please." (area_keldagrim/keldagrim_npcs.rs2)
+[proc,ft_barmaid_stout]
+~chatplayer("<p,neutral>I'd like a Kelda stout please.");
+def_int $s = %forget_quest;
+if ($s = ^ft_stout) {
+    if (inv_total(inv, kelda_stout) > 0) {
+        ~chatnpc("<p,neutral>They're quite hard to come by, and I believe you've already got one.");
+        ~chatplayer("<p,neutral>Oh yes.");
+        return;
+    }
+    if (inv_freespace(inv) = 0) {
+        ~chatnpc("<p,neutral>I may have some for you, but you don't seem to be able to carry it."); // the RuneScape wiki
+        return;
+    }
+    ~chatnpc("<p,neutral>Here, I found a little left over Kelda stout, just enough for a glass. Take it.");
+    ~chatplayer("<p,shock>Wow, for free?");
+    inv_add(inv, kelda_stout, 1);
+    ~chatnpc("<p,neutral>I don't think I'd be able to sell it to anyone.");
+    ~chatnpc("<p,neutral>So yes, go ahead.");
+    return;
+}
+~chatnpc("<p,neutral>Sorry, we've stopped serving those. The seeds were too hard to get.");
+~chatplayer("<p,neutral>Yeah, tell me about it.");
+
+// the King's Axe's barman (Transcript:Barman (King's Axe Inn); the Kelda stout during the quest)
+[opnpc1,dwarf_city_barman_rich]
+if (inv_total(inv, coins) > 2000) {
+    ~chatnpc("<p,happy>And what will it be for you, fine friend?");
+} else {
+    ~chatnpc("<p,neutral>Yes? Can I help you with something?");
+}
+def_int $c;
+if (~ft_active = true) {
+    $c = ~p_choice5("A beer please.", 1, "A dwarven stout please.", 2, "A fine wine please.", 3, "A Kelda stout please.", 4, "Nothing, thanks.", 5);
+} else {
+    $c = ~p_choice4("A beer please.", 1, "A dwarven stout please.", 2, "A fine wine please.", 3, "Nothing, thanks.", 5);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,neutral>A beer please.");
+        ~chatnpc("<p,neutral>That'll be 1 gold coin please.");
+        @ft_barman_pay(beer, 1, "Here you go. One delicious pint of beer.");
+    case 2 :
+        ~chatplayer("<p,neutral>A dwarven stout please.");
+        ~chatnpc("<p,happy>It'll be yours for just 2 gold coins!");
+        @ft_barman_pay(dwarven_stout, 2, "One dwarven stout, best in all of Keldagrim!");
+    case 3 :
+        ~chatplayer("<p,neutral>A fine wine please.");
+        ~chatnpc("<p,happy>Ah, I see you have taste! A jug of wine will cost you 10 gold coins.");
+        @ft_barman_pay(jug_wine, 10, "I hope you enjoy it!");
+    case 4 :
+        ~chatplayer("<p,neutral>I'd like a Kelda stout please.");
+        if (%forget_quest = ^ft_stout & inv_total(inv, kelda_stout) > 0) {
+            ~chatnpc("<p,neutral>They're not easy to come by... and I believe you already have one?");
+            ~chatplayer("<p,neutral>Oh yes, you're right.");
+            return;
+        }
+        ~chatnpc("<p,angry>We don't serve that sort of brew here, this is a high class establishment!");
+        ~chatplayer("<p,sad>Oh, I'm sorry... perhaps you can tell me where to get some then?");
+        ~chatnpc("<p,neutral>If you insist. You might want to try the Laughing Miner in East. If anyone is selling that, it would be them.");
+        ~chatnpc("<p,neutral>But I doubt it. Kelda stout is very rare these days. Fortunately.");
+        ~chatplayer("<p,neutral>Alright, I'll check it out, thanks.");
+    case 5 :
+        ~chatplayer("<p,neutral>Nothing, thanks.");
+}
+
+[label,ft_barman_pay](namedobj $obj, int $cost, string $thanks)
+if (~p_choice2("Pay.", 1, "Don't pay.", 2) = 2) {
+    ~chatplayer("<p,neutral>Sorry, I changed my mind.");
+    return;
+}
+if (~keldagrim_buy($obj, $cost) = false) {
+    ~chatplayer("<p,sad>I'm sorry, I seem to have run out of money.");
+    return;
+}
+~chatnpc("<p,happy><$thanks>");

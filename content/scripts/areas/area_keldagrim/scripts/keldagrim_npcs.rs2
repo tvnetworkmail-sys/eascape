@@ -214,13 +214,9 @@ return;
 
 [opnpc1,dwarf_city_dwarf_man6] @keldagrim_talk_gauss;
 [label,keldagrim_talk_gauss]
-// Transcript:Gauss
-~chatnpc("<p,neutral>I say, I say, a toast to this fine human!");
-~chatplayer("<p,neutral>What? I mean, err... why?");
-~chatnpc("<p,neutral>Why not!");
-~chatplayer("<p,neutral>I don't have anything suitable to toast with.");
-~chatnpc("<p,neutral>Then go get something from the bar!");
-return;
+// Transcript:Gauss (EASCape: his seed in Forgettable Tale..., and the toast: quest_forgettable_tale/ft_seeds.rs2)
+if (~ft_gauss = true) return;
+@ft_gauss_standard;
 
 [opnpc1,dwarf_city_old_dwarf2] @keldagrim_talk_haera;
 [label,keldagrim_talk_haera]
@@ -264,6 +260,7 @@ return;
 [opnpc1,dwarf_city_gardener_dwarf] @keldagrim_talk_rind;
 [label,keldagrim_talk_rind]
 // Transcript:Rind the gardener
+if (~ft_rind = true) return; // EASCape: Forgettable Tale... (quest_forgettable_tale/ft_brew.rs2)
 ~chatnpc("<p,neutral>Come to visit my garden then, have you, human?");
 def_int $c1 = ~p_choice2("This is your garden?", 1, "Not really, no.", 2);
 if ($c1 = 1) {
@@ -527,9 +524,7 @@ if ($c1 = 1) {
         return;
     }
 } else if ($c1 = 4) {
-    ~chatplayer("<p,neutral>I'd like a Kelda stout please.");
-    ~chatnpc("<p,neutral>Sorry, we've stopped serving those. The seeds were too hard to get.");
-    ~chatplayer("<p,neutral>Yeah, tell me about it.");
+    ~ft_barmaid_stout; // EASCape: the lost Kelda stout in Forgettable Tale... (quest_forgettable_tale/ft_seeds.rs2)
     return;
 } else if ($c1 = 5) {
     ~chatplayer("<p,neutral>I have to go.");
@@ -721,6 +716,7 @@ return;
 [opnpc1,dwarf_city_rowdy_dwarf] @keldagrim_talk_rowdy;
 [label,keldagrim_talk_rowdy]
 // Transcript:Rowdy dwarf
+if (~ft_rowdy = true) return; // EASCape: his seed in Forgettable Tale... (quest_forgettable_tale/ft_seeds.rs2)
 ~chatnpc("<p,neutral>Get OUT of my WAY!");
 return;
 
@@ -775,6 +771,7 @@ if ($c1 = 1) {
 [opnpc1,dwarfrock_boatman_bruv2] @keldagrim_talk_brothers;
 [opnpc1,dwarfrock_boatman_bruv3] @keldagrim_talk_brothers;
 [label,keldagrim_talk_brothers]
+if (~ft_brothers = true) return; // EASCape: Forgettable Tale... (quest_forgettable_tale/ft_start.rs2)
 ~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Oh look, a human!");
 ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>A human? Can we eat it?");
 ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>No, you rock brain! Humans are our friends!");
@@ -799,8 +796,8 @@ if ($c1 = 1) {
 ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>We're very good at answering questions!");
 ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>Fire away!");
 
+// the King's Axe's barman: quest_forgettable_tale/ft_seeds.rs2 (Transcript:Barman (King's Axe Inn))
 // no transcript in any source (ours)
-[opnpc1,dwarf_city_barman_rich] ~chatnpc("<p,neutral>Welcome to the King's Axe. Have a seat, human.");
 [opnpc1,dwarf_city_library_assistant] ~chatnpc("<p,neutral>Please keep your voice down, this is a library.");
 
 [proc,keldagrim_buy](namedobj $obj, int $cost)(boolean)

@@ -13,7 +13,13 @@ mes("You cant eat it whole; maybe you should cut it up.");
 [opheld1,_alcoholic_drinks] @player_consume_item(consume_effect_stat, 2, 3);
 
 // Kebabs
-[opheld1,kebab] @player_consume_item(consume_effect_kebab, 2, 3);
+[opheld1,kebab]
+if (~ft_pub_ready = true) @ft_pub_feast; // EASCape: Forgettable Tale...'s last cutscene (quest_forgettable_tale/ft_end.rs2)
+@player_consume_item(consume_effect_kebab, 2, 3);
+// EASCape: beer as the other alcoholic drinks, but for Forgettable Tale...'s last cutscene
+[opheld1,beer]
+if (~ft_pub_ready = true) @ft_pub_feast;
+@player_consume_item(consume_effect_stat, 2, 3);
 [opheld1,ugthanki_kebab_bad] @player_consume_item(consume_effect_ugthanki_kebab_bad, 2, 3);
 [opheld1,ugthanki_kebab] @player_consume_item(consume_effect_stat_say, 2, 3);
 

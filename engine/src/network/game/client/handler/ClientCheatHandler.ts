@@ -38,7 +38,7 @@ import { printDebug } from '#/util/Logger.js';
 import { tryParseInt } from '#/util/TryParse.js';
 
 // EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
-const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff', 'questdone', 'clearinv', 'restore', 'herbset', 'slayertask', 'jewels', 'dtpack', 'spellbookswap', 'allrunes', 'warriorsguildpack', 'wgtokens', 'farmingpack', 'farmtreepack', 'farmspecialpack', 'farmgrow', 'farmtick', 'miscstatus', 'miscday', 'miscapproval', 'ft2look', 'ft2song', 'ft2place', 'fairyrings', 'combat07', 'crystalbow', 'crystalshield', 'osfstage', 'mdstage', 'barstage', 'feudstage', 'icsstage', 'icssupplies', 'ltstage', 'gdstage', 'gdcrash', 'togfly', 'togstage', 'zogrestage', 'womtask', 'womjunk', 'rdstage', 'rdrivepack', 'rdrivestage', 'mepack', 'mestage'];
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff', 'questdone', 'clearinv', 'restore', 'herbset', 'slayertask', 'jewels', 'dtpack', 'spellbookswap', 'allrunes', 'warriorsguildpack', 'wgtokens', 'farmingpack', 'farmtreepack', 'farmspecialpack', 'farmgrow', 'farmtick', 'miscstatus', 'miscday', 'miscapproval', 'ft2look', 'ft2song', 'ft2place', 'fairyrings', 'combat07', 'crystalbow', 'crystalshield', 'osfstage', 'mdstage', 'barstage', 'feudstage', 'icsstage', 'icssupplies', 'ltstage', 'gdstage', 'gdcrash', 'togfly', 'togstage', 'zogrestage', 'womtask', 'womjunk', 'rdstage', 'rdrivepack', 'rdrivestage', 'mepack', 'mestage', 'ftpack', 'ftstage'];
 
 export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
     handle(message: ClientCheat, player: Player): boolean {

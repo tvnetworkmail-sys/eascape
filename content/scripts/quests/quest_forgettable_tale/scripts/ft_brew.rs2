@@ -1,0 +1,460 @@
+// EASCape: Forgettable Tale: Rind the gardener and his letter to Elstan, the palace's Kelda hops
+// patch, and the Laughing Miner's brewery (vat, valve and barrel). The words are the OSRS wiki's
+// (Transcript:Forgettable Tale..., Transcript:Letter (Forgettable Tale...)) with the RuneScape
+// wiki's extra lines where noted. The brewing is 2009scape's (fermenting/BrewingListener.kt,
+// Vat.kt, KeldaStoutGrowth.kt: two buckets of water, two barley malt, the hops, ale yeast; its
+// animations, messages and vat and barrel values), for Kelda stout only: our 2006 world has no
+// brewing otherwise. Ours is marked.
+
+// ---------------------------------------------------------------- Rind the gardener
+// called first from his [opnpc1] (area_keldagrim/keldagrim_npcs.rs2)
+[proc,ft_rind]()(boolean)
+def_int $s = %forget_quest;
+if ($s = ^ft_seeds) {
+    if (inv_total(inv, kelda_hop_seed) < 4) return(false);
+    ~ft_rind_help;
+    ~chatplayer("<p,neutral>I have four Kelda seeds here, but need some advice on growing them.");
+    ~chatnpc("<p,happy>Marvelous, those seeds are quite rare don't you know!");
+    ~chatnpc("<p,neutral>First of all, you must remember that these seeds only grow underground. Sunlight is harmful to them, for some strange reason.");
+    ~chatnpc("<p,neutral>There is a patch in the palace garden that you're more than welcome to use.");
+    ~ft_set(^ft_planting);
+    ~chatplayer("<p,happy>Thanks! Is there anything else I need to know?");
+    ~chatnpc("<p,neutral>Just take care of the weed in the patch and plant your seeds. They'll grow into hops very quickly, if you're lucky. Kelda seeds have a remarkably fast grow rate.");
+    ~chatnpc("<p,neutral>Also, if you need a rake, you'll find one just south of here, I left it there 5 minutes ago."); // the RuneScape wiki
+    ~chatplayer("<p,happy>Thank you! Your advice is much appreciated!");
+    return(true);
+}
+if ($s = ^ft_planting) {
+    ~ft_rind_help;
+    def_int $task = %forget_gardener_task;
+    if ($task = ^ft_letter_none) {
+        ~chatplayer("<p,neutral>I think I need some more help with this whole farming business.");
+        ~chatnpc("<p,neutral>Just get rid of the weeds in the patch, plant you seeds and wait for the hops to grow. The miracle of nature will do the rest!");
+        ~chatplayer("<p,quiz>Do I have to wait here all this time then?");
+        ~chatnpc("<p,neutral>Yes and no. Yes, you do have to wait, but no, you don't have to stay here. You can help out people in the city, for instance, there's always someone who needs help with an urgent job.");
+        ~chatplayer("<p,neutral>You mean the mining companies? I did jobs for them, they're not very profitable.");
+        ~chatnpc("<p,neutral>No no, just people like shopkeepers and such, they're quite willing to teach you things in exchange for the jobs as well.");
+        ~chatnpc("<p,happy>But here, tell you what, I'll give you some seeds if you can deliver this letter to a friend in Falador.");
+        ~chatplayer("<p,quiz>Do I have to do that? I just want to grow my hops and get on with my quest for Veldaban.");
+        ~chatnpc("<p,neutral>Oh no, you don't have to do it all, I just thought you wanted something to do while you were waiting.");
+        if (~p_choice2("Alright, I'll deliver that letter for you.", 1, "I'd rather just sit here and stare at this patch, thanks.", 2) = 2) {
+            ~chatplayer("<p,neutral>I'd rather just sit here and stare at this patch, thanks.");
+            ~chatnpc("<p,neutral>Very well. That can be quite relaxing, actually, I often do it myself.");
+            %forget_gardener_task = ^ft_letter_refused;
+            return(true);
+        }
+        ~chatplayer("<p,happy>Alright, I'll deliver that letter for you.");
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>Oh, you don't have enough space to carry the letter. Speak to me when you do."); // the RuneScape wiki
+            return(true);
+        }
+        ~chatnpc("<p,happy>Happy to hear that! His name is Elstan, he lives just south of Falador.");
+        inv_add(inv, forget_gardener_letter, 1);
+        %forget_gardener_task = ^ft_letter_given;
+        ~chatplayer("<p,happy>I'll be right back!");
+        return(true);
+    }
+    if ($task = ^ft_letter_given) {
+        ~chatnpc("<p,quiz>Hello again, <displayname>! Have you been able to deliver that letter yet?");
+        if (~ft_has(forget_gardener_letter) = 0) {
+            switch_int (~p_choice3("No, I haven't been to Falador yet, but I will soon.", 1, "No, I've decided not to deliver it after all.", 2, "No, sorry, I've lost your letter.", 3)) {
+                case 1 : ~ft_rind_soon;
+                case 2 : ~ft_rind_refuse;
+                case 3 :
+                    ~chatplayer("<p,sad>No, sorry, I lost your letter.");
+                    if (inv_freespace(inv) = 0) {
+                        ~chatnpc("<p,neutral>That's not good. Fortunately I have a copy, I'll give it to you when you can carry it."); // the RuneScape wiki
+                        return(true);
+                    }
+                    ~chatnpc("<p,neutral>That's a little clumsy, <displayname>! Here, I've got a copy, please deliver this one instead.");
+                    inv_add(inv, forget_gardener_letter, 1);
+            }
+            return(true);
+        }
+        if (~p_choice2("No, I haven't been to Falador yet, but I will soon.", 1, "No, I've decided not to deliver it after all.", 2) = 1) {
+            ~ft_rind_soon;
+        } else {
+            ~ft_rind_refuse;
+        }
+        return(true);
+    }
+    if ($task = ^ft_letter_delivered) {
+        ~chatplayer("<p,happy>I've delivered your letter to Elstan, he told me to give you his regards.");
+        if (inv_freespace(inv) = 0 & inv_total(inv, marrentill_seed) = 0) {
+            ~chatnpc("<p,neutral>Well, I might have some for you, but you can't carry anything more."); // the RuneScape wiki
+            return(true);
+        }
+        ~chatnpc("<p,happy>Wonderful, that's just wonderful! Here, have these two seeds as a reward. They may not be Kelda hop seeds, but you should be able to grow a decent amount of herbs with them.");
+        inv_add(inv, marrentill_seed, 2);
+        %forget_gardener_task = ^ft_letter_rewarded;
+        return(true);
+    }
+    ~chatnpc("<p,quiz>How are you getting along with growing your seeds into hops, <displayname>?");
+    ~chatplayer("<p,neutral>Hmm, I'm not sure... let me check the patch.");
+    return(true);
+}
+if ($s = ^ft_hops) {
+    def_int $vat = %brewing_vat_varbit_1;
+    if ($vat = ^ft_vat_brewing1 | $vat = ^ft_vat_brewing2) {
+        ~ft_rind_help;
+        ~chatplayer("<p,sad>I'm brewing my hops into Kelda stout, but it seems to be taking an awfully long time.");
+        ~chatnpc("<p,happy>Just have patience, my young friend! Have a wander around town, see if anyone has jobs for you!");
+        return(true);
+    }
+    if ($vat = ^ft_vat_stout | %brewing_barrel_varbit_1 = ^ft_barrel_stout) {
+        ~ft_rind_help;
+        ~chatplayer("<p,angry>I'm just so angry, my hops aren't fermenting at all. I want my Kelda stout!");
+        ~chatnpc("<p,happy>Now now, my young human friend! Are you sure about that?");
+        ~chatnpc("<p,neutral>Perhaps you should go back to the brewery, I wouldn't be surprised if your stout has fermented by now.");
+        return(true);
+    }
+    if ($vat ! ^ft_vat_hops & ~ft_has(kelda_hops) = 0) {
+        ~ft_rind_help;
+        ~chatplayer("<p,sad>I've grown my seeds into hops, but I seem to have mislaid them.");
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>Well, I might have some for you, but you can't carry anything more."); // the RuneScape wiki
+            return(true);
+        }
+        inv_add(inv, kelda_hops, 1);
+        ~chatnpc("<p,happy>Ah! Fortunately I found some hops after your recent harvest. Here, I believe this belongs to you.");
+        return(true);
+    }
+    ~ft_rind_help;
+    ~chatplayer("<p,quiz>I've grown my seeds into hops, but I have no idea what to do with them. Can you turn them into stout for me please?");
+    ~chatnpc("<p,laugh>Haha, it doesn't quite work like that, I'm afraid!");
+    ~chatnpc("<p,neutral>You will have to bring your hops to a brewery.");
+    ~chatplayer("<p,quiz>Where's the nearest brewery then?");
+    ~chatnpc("<p,neutral>Oh, there's one in Keldagrim-East, upstairs in the Laughing Miner. They brew their own beer they do.");
+    ~chatplayer("<p,quiz>How does it work though?");
+    ~chatnpc("<p,neutral>I'm sure someone there will be able to help you out, it's not my specialty you see.");
+    ~chatplayer("<p,happy>Alright, thanks a lot!");
+    return(true);
+}
+return(false);
+
+[proc,ft_rind_help]
+~chatplayer("<p,neutral>I need some help.");
+~chatnpc("<p,quiz>Yes, <displayname>? What can a humble gardener like myself help you with?");
+
+[proc,ft_rind_soon]
+~chatplayer("<p,neutral>No, I haven't been to Falador yet, but I will soon.");
+~chatnpc("<p,happy>Much appreciated, <displayname>!");
+
+[proc,ft_rind_refuse]
+~chatplayer("<p,neutral>No, I've decided not to deliver it after all.");
+~chatnpc("<p,sad>Oh, I'm sad to hear that.");
+~chatnpc("<p,neutral>Oh well, I'll see if I can find someone else instead.");
+if (inv_total(inv, forget_gardener_letter) > 0) inv_del(inv, forget_gardener_letter, inv_total(inv, forget_gardener_letter));
+%forget_gardener_task = ^ft_letter_refused;
+
+// ---------------------------------------------------------------- the letter and Elstan
+[opheld1,forget_gardener_letter]
+def_string $text = "Dear Elstan,||I have followed with enthusiasm your recent series of papers on the subject of cross-pollinating flowers in the B-branch of the alpha sub-family of the specialist flowers. Especially your last presentation at the Annual Asgarnia Gardening Conference was impressive and inspirational, even if other attendants didn't show much interest. They must not share our vision.||After returning to my home, I started with some experiments of my own and have found that certain combinations of cross-pollination leads to triple herbicide resistance in cabbages. Practical applications of this discovery seem unlikely, but the theoretical implications are astounding! I'm looking foreward to publishing my results at the next conference. ";
+$text = append($text, "Perhaps it can be hosted in Keldagrim next time? Although I'm not sure how the underground setting would go down with the other farmers.||Kind Regards,||Rind, Gardener of the Palace of Keldagrim.");
+~book("Letter", $text);
+
+[opheld5,forget_gardener_letter]
+def_int $slot = last_slot;
+if (~destroy_confirm(forget_gardener_letter, "Rind the gardener in Keldagrim may have a copy.") = false) return; // ours: the OSRS wiki gives no destroy line for it
+inv_delslot(inv, $slot);
+
+// called first from Elstan's [opnpc1] (quest_fairy1/fairy1_gardeners.rs2)
+[proc,ft_elstan]()(boolean)
+if (%forget_gardener_task ! ^ft_letter_given | inv_total(inv, forget_gardener_letter) = 0) return(false);
+~chatplayer("<p,quiz>Hello there. Are you Elstan?");
+~chatnpc("<p,happy>Why yes, I am. Have I become that well known?");
+~chatplayer("<p,neutral>Well, I've got a letter here from your friend in Keldagrim.");
+~chatnpc("<p,happy>Ah, you mean Rind? Great to hear from the little fellow again. Can I see it please?");
+~chatplayer("<p,neutral>Of course.");
+inv_del(inv, forget_gardener_letter, 1);
+%forget_gardener_task = ^ft_letter_delivered;
+~chatnpc("<p,happy>Most enlightening. Please give him my regards next time you see him, I look forward to the next conference.");
+return(true);
+
+// ---------------------------------------------------------------- the Kelda hops patch
+// %forget_farming is the patch's multiloc (farming_hops_patch_keldagrim). Ours: raking, planting
+// and picking are farming's own way (skill_farming/farming.rs2: the rake's roll, a weed and 8 XP
+// for each weeding, a seed dibber to plant, level 17 Farming, boostable) without its XP for the
+// seeds and the hops (no source gives any); the hops grow one stage every ^ft_grow_ticks while you
+// are logged in (the OSRS wiki: "logging in and out will reset the timer").
+[oplocu,farming_hops_patch_keldagrim]
+switch_obj (last_useitem) {
+    case rake : ~ft_patch_rake;
+    case kelda_hop_seed : ~ft_patch_plant;
+    case bucket_compost, bucket_supercompost : mes("The soil in this patch is very rich - it's doesn't need compost.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[oploc1,farming_hops_patch_keldagrim]
+if (%forget_farming = ^ft_patch_grown) {
+    ~ft_patch_harvest;
+    return;
+}
+~displaymessage(^dm_default);
+
+[oploc2,farming_hops_patch_keldagrim]
+def_string $text = "This is a hops patch. The soil has not been treated.";
+def_int $p = %forget_farming;
+if ($p = ^ft_patch_grown) {
+    mes("<$text> The patch (Crop) is fully grown."); // the OSRS wiki's words, as the game has them
+    return;
+}
+mes($text);
+if ($p < ^ft_patch_weeded) {
+    mes("The patch needs weeding."); // ours: farming's words
+} else if ($p = ^ft_patch_weeded) {
+    mes("The patch is empty.");
+} else {
+    mes("The patch has something growing in it."); // ours
+}
+
+[proc,ft_patch_rake]
+if (%forget_farming >= ^ft_patch_weeded) {
+    mes("This hops patch doesn't need weeding right now."); // farming's words
+    return;
+}
+while (%forget_farming < ^ft_patch_weeded) {
+    anim(farming_raking, 0);
+    p_delay(2);
+    if (stat_random(farming, 180, 255) = true) {
+        %forget_farming = add(%forget_farming, 1);
+        if (inv_freespace(inv) > 0 | inv_total(inv, weeds) > 0) {
+            inv_add(inv, weeds, 1);
+        } else {
+            obj_add(coord, weeds, 1, ^lootdrop_duration);
+        }
+        stat_advance(farming, 80);
+    }
+}
+anim(null, 0);
+
+[proc,ft_patch_plant]
+if (%forget_quest < ^ft_planting | %forget_quest >= ^ft_hops) {
+    ~chatplayer("<p,neutral>I'd better ask the gardener for permission to use this patch first.");
+    return;
+}
+if (%forget_farming < ^ft_patch_weeded) {
+    ~mesbox("This patch needs weeding first."); // ours
+    return;
+}
+if (%forget_farming > ^ft_patch_weeded) {
+    ~mesbox("You can only plant kelda seeds in an empty patch."); // farming's words
+    return;
+}
+if (inv_total(inv, dibber) = 0) {
+    mes("You need a seed dibber to plant the seed in the dirt.");
+    return;
+}
+if (stat(farming) < 17) {
+    ~mesbox("You need to be a level 17 to plant that.");
+    return;
+}
+if (inv_total(inv, kelda_hop_seed) < 4) {
+    mes("You need 4 kelda seeds to grow those.");
+    return;
+}
+inv_del(inv, kelda_hop_seed, 4);
+anim(farming_seed_dibbing, 0);
+sound_synth(farming_dibbing, 1, 0);
+p_delay(2);
+mes("You plant 4 kelda seeds in the hops patch.");
+%forget_farming = ^ft_patch_seeds;
+settimer(ft_hops_grow, ^ft_grow_ticks);
+
+[timer,ft_hops_grow]
+if (%forget_farming < ^ft_patch_seeds | %forget_farming >= ^ft_patch_grown) {
+    cleartimer(ft_hops_grow);
+    return;
+}
+%forget_farming = add(%forget_farming, 1);
+if (%forget_farming = ^ft_patch_grown) {
+    cleartimer(ft_hops_grow);
+    mes("Perhaps I should take a look and see if my Kelda hops have grown...");
+}
+
+[proc,ft_patch_harvest]
+if (inv_freespace(inv) = 0) {
+    mes("You have run out of inventory space."); // farming's words
+    return;
+}
+anim(farming_pick_mushroom, 0); // ours
+p_delay(1);
+inv_add(inv, kelda_hops, 1);
+mes("You pick the Kelda hops."); // ours
+%forget_farming = ^ft_patch_weeded;
+if (%forget_quest < ^ft_hops) ~ft_set(^ft_hops);
+anim(null, 0);
+
+// the timers start again when you log in (ft_start.rs2 ~ft_login)
+[proc,ft_growth_login]
+if (%forget_farming >= ^ft_patch_seeds & %forget_farming < ^ft_patch_grown) settimer(ft_hops_grow, ^ft_grow_ticks);
+if (%brewing_vat_varbit_1 = ^ft_vat_brewing1 | %brewing_vat_varbit_1 = ^ft_vat_brewing2) settimer(ft_brew, ^ft_brew_ticks);
+
+// ---------------------------------------------------------------- the Laughing Miner's brewery
+[oplocu,brewing_vat_1]
+def_int $vat = %brewing_vat_varbit_1;
+switch_obj (last_useitem) {
+    case bucket_water :
+        if ($vat ! ^ft_vat_empty) {
+            ~displaymessage(^dm_default);
+            return;
+        }
+        if (inv_total(inv, bucket_water) < 2) {
+            ~mesbox("You need 2 buckets of water.");
+            return;
+        }
+        inv_del(inv, bucket_water, 2);
+        inv_add(inv, bucket_empty, 2);
+        anim(farming_pour_water, 0);
+        mes("You add some water to the vat.");
+        %brewing_vat_varbit_1 = ^ft_vat_water;
+        p_delay(2);
+    case barley_malt :
+        if ($vat ! ^ft_vat_water) {
+            ~displaymessage(^dm_default);
+            return;
+        }
+        if (inv_total(inv, barley_malt) < 2) {
+            ~mesbox("You need 2 barley malt.");
+            return;
+        }
+        inv_del(inv, barley_malt, 1);
+        anim(farming_ingredient_sprinkle, 0);
+        mes("You add some barley malt to the vat.");
+        p_delay(2);
+        inv_del(inv, barley_malt, 1);
+        anim(farming_ingredient_sprinkle, 0);
+        %brewing_vat_varbit_1 = ^ft_vat_barley;
+        p_delay(2);
+    case kelda_hops :
+        if ($vat ! ^ft_vat_barley) {
+            mes("This isn't the right time to be adding Kelda hops.");
+            return;
+        }
+        if (stat(cooking) < 22) {
+            ~mesbox("You need a Cooking level of at least 22 in order to brew Kelda Stout.");
+            return;
+        }
+        inv_del(inv, kelda_hops, 1);
+        mes("You add some Kelda hops to the vat.");
+        anim(farming_ingredient_sprinkle, 0);
+        %brewing_vat_varbit_1 = ^ft_vat_hops;
+        p_delay(2);
+    case ale_yeast :
+        if ($vat ! ^ft_vat_hops) {
+            mes("Nothing interesting happens.");
+            return;
+        }
+        inv_del(inv, ale_yeast, 1);
+        inv_add(inv, pot_empty, 1);
+        anim(farming_ingredient_sprinkle, 0);
+        mes("You add a pot of ale yeast to the vat.");
+        mes("The contents of the vat have begun to ferment.");
+        %brewing_vat_varbit_1 = ^ft_vat_brewing1;
+        settimer(ft_brew, ^ft_brew_ticks);
+        p_delay(2);
+    case default : mes("Nothing interesting happens.");
+}
+
+// the OSRS wiki: Kelda hops can't be brewed at Port Phasmatys
+[oplocu,brewing_vat_2]
+if (last_useitem = kelda_hops) {
+    mes("These special hops need to be brewed in the Keldagrim brewery. Oh well...");
+    return;
+}
+mes("Nothing interesting happens.");
+
+[timer,ft_brew]
+def_int $vat = %brewing_vat_varbit_1;
+if ($vat = ^ft_vat_brewing1) {
+    %brewing_vat_varbit_1 = ^ft_vat_brewing2;
+    return;
+}
+cleartimer(ft_brew);
+if ($vat = ^ft_vat_brewing2) {
+    %brewing_vat_varbit_1 = ^ft_vat_stout;
+    mes("Perhaps I should have a look and see if my Kelda Stout has brewed...");
+}
+
+// the valve: a full vat of Kelda stout fills the barrel with one pint (2009scape keldaTurnValve);
+// anything else in the vat goes into the barrel as unfermented liquid (2009scape fillBarrel)
+[oploc1,vat_valve_1]
+def_int $vat = %brewing_vat_varbit_1;
+if ($vat = ^ft_vat_empty) {
+    p_delay(0);
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%brewing_barrel_varbit_1 > 0) {
+    p_delay(0);
+    mes("The barrel is already full.");
+    return;
+}
+if ($vat = ^ft_vat_brewing1 | $vat = ^ft_vat_brewing2) {
+    mes("The contents of the vat haven't finished fermenting yet.");
+    return;
+}
+anim(farming_turn_valve, 0);
+mes("You turn the valve.");
+p_delay(2);
+if ($vat = ^ft_vat_stout) {
+    %brewing_barrel_varbit_1 = ^ft_barrel_stout;
+    %brewing_vat_varbit_1 = ^ft_vat_empty;
+    mes("The barrel now contains 1 pint of Kelda Stout.");
+    return;
+}
+%brewing_barrel_varbit_1 = ^ft_barrel_unfinished;
+%brewing_vat_varbit_1 = ^ft_vat_empty;
+
+[oploc1,brewing_barrel_1]
+def_int $b = %brewing_barrel_varbit_1;
+if ($b = ^ft_barrel_stout) {
+    if (inv_total(inv, beer_glass) = 0) {
+        mes("There is 1 pint of Kelda Stout in the barrel.");
+        return;
+    }
+    ~ft_barrel_pour;
+    return;
+}
+if ($b = ^ft_barrel_unfinished | $b = 1 | $b = 2) {
+    mes("You drain the barrel.");
+    %brewing_barrel_varbit_1 = 0;
+    return;
+}
+~displaymessage(^dm_default);
+
+[oplocu,brewing_barrel_1]
+if (last_useitem ! beer_glass | %brewing_barrel_varbit_1 ! ^ft_barrel_stout) {
+    mes("Nothing interesting happens.");
+    return;
+}
+~ft_barrel_pour;
+
+[proc,ft_barrel_pour]
+inv_del(inv, beer_glass, 1);
+anim(farming_fill_glass, 0);
+mes("You pour a glass of Kelda Stout.");
+inv_add(inv, kelda_stout, 1);
+mes("The barrel is now empty.");
+%brewing_barrel_varbit_1 = 0;
+if (%forget_quest = ^ft_hops) ~ft_set(^ft_stout);
+p_delay(1);
+
+// ---------------------------------------------------------------- the items
+[opheld1,kelda_stout] ~chatplayer("<p,sad>This stout seems absolutely vile and disgusting. Besides, I'm supposed to bring it to my drunken, kebab obsessed friend.");
+
+// the destroy lines are Void's (forgettable_tale.items.toml)
+[opheld5,kelda_stout]
+def_int $slot = last_slot;
+if (~destroy_confirm(kelda_stout, "Return to the Laughing Miner barmaid to get your stout back.") = false) return;
+inv_delslot(inv, $slot);
+
+[opheld5,kelda_hops]
+def_int $slot = last_slot;
+if (~destroy_confirm(kelda_hops, "Return to the Keldagrim palace gardener to get your hops back.") = false) return;
+inv_delslot(inv, $slot);
+
+[opheld5,kelda_hop_seed]
+def_int $slot = last_slot;
+if (~destroy_confirm(kelda_hop_seed, "Return to the drunken dwarf's drunken relative to get your seeds back.") = false) return;
+inv_delslot(inv, $slot);

@@ -210,6 +210,7 @@ if (npc_find(0_45_159_14_50, dwarf_city_berserker_cutscene, 0, 0) = true) {
 
 // ---------------------------------------------------------------- Commander Veldaban
 [opnpc1,dwarf_city_black_guard_leader]
+if (~ft_veldaban = true) return; // EASCape: Forgettable Tale... (quest_forgettable_tale/ft_start.rs2)
 def_int $s = %giantdwarf_quest;
 if ($s = ^gd_arrested) {
     if (%giantdwarf_veldaban_introduced = 0) @gd_veldaban_identify;
@@ -542,6 +543,12 @@ switch_int ($n) {
     case 0 : if_sethide(gd_titles:layer0, false);
     case 1 : if_sethide(gd_titles:layer1, false);
     case 2 : if_sethide(gd_titles:layer2, false);
+    // EASCape: the later titles, for Forgettable Tale... (3 Keldagrim Palace / Consortium Meeting, 4 A
+    // little while later, 5 Rise of the Red Axe / Part II, 6 Forgettable Tale of a Drunken Dwarf)
+    case 3 : if_sethide(gd_titles:layer3, false);
+    case 4 : if_sethide(gd_titles:layer4, false);
+    case 5 : if_sethide(gd_titles:layer5, false);
+    case 6 : if_sethide(gd_titles:layer6, false);
 }
 if_openoverlay(gd_titles);
 

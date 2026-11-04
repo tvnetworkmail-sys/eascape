@@ -313,6 +313,9 @@ if (%rd_main >= ^recruitmentdrive_complete) { // EASCape: Recruitment Drive (que
 if (%mourning_quest >= ^me1_complete) { // EASCape: Mourning's End Part I (quest_mourning1)
     $questpoints = add($questpoints, ^me1_questpoints);
 }
+if (%forget_quest >= ^ft_complete) { // EASCape: Forgettable Tale... (quest_forgettable_tale)
+    $questpoints = add($questpoints, ^ft_questpoints);
+}
 if (%onesmallfavour >= ^osf_complete) {
     $questpoints = add($questpoints, ^osf_questpoints);
 }
@@ -426,6 +429,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
 ~send_quest_progress_colour(questlist:rd, %rd_main, ^recruitmentdrive_complete); // EASCape: Recruitment Drive (quest_rd)
 ~send_quest_progress_colour(questlist:mourning, %mourning_quest, ^me1_complete); // EASCape: Mourning's End Part I (quest_mourning1)
+~send_quest_progress_colour(questlist:forget, %forget_quest, ^ft_complete); // EASCape: Forgettable Tale... (quest_forgettable_tale)
 ~send_quest_progress_colour(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);

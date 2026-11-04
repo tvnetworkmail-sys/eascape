@@ -1,0 +1,459 @@
+// EASCape: Forgettable Tale of a Drunken Dwarf (26 July 2005): Commander Veldaban, the opening, the
+// drunken dwarf and his tale, and Miodvetnir and his brothers. The words are the OSRS wiki's
+// (Transcript:Forgettable Tale..., Transcript:Drunken Dwarf (Keldagrim), Transcript:Miodvetnir,
+// Derni, and Dernu) with the RuneScape wiki's 2005 "farmer" line and its extra lines where noted;
+// the steps the OSRS wiki's walkthrough. The cutscenes are not the original's camera work (no source
+// has it): fades, the cache's titles (gd_titles) and jingles, and every camera place in them is
+// ours (worked out from the maps). Ours is marked.
+
+// ---------------------------------------------------------------- state
+[proc,ft_set](int $stage)
+%forget_quest = $stage;
+
+[proc,ft_done](int $stage)(boolean)
+if (%forget_quest >= $stage) return(true);
+return(false);
+
+[proc,ft_flag](int $bit)(boolean)
+if (testbit(%ft_flags, $bit) = ^true) return(true);
+return(false);
+
+[proc,ft_setflag](int $bit)
+%ft_flags = setbit(%ft_flags, $bit);
+
+// is the quest running (started, not finished)?
+[proc,ft_active]()(boolean)
+if (%forget_quest > ^ft_not_started & %forget_quest < ^ft_complete) return(true);
+return(false);
+
+[proc,ft_give](namedobj $obj, int $count)
+if ($count < 1) return;
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+[proc,ft_has](namedobj $obj)(int)
+return(calc(inv_total(inv, $obj) + inv_total(bank, $obj)));
+
+// the company you joined in The Giant Dwarf (the one you spoke for, if none is on record)
+[proc,ft_company]()(int)
+if (%giantdwarf_current_company >= 1 & %giantdwarf_current_company <= 7) return(%giantdwarf_current_company);
+if (%gd_chosen >= 1 & %gd_chosen <= 7) return(%gd_chosen);
+return(^gd_purple_pewter); // ours: no company on record
+
+// how many Kelda seeds you should have: the drunken dwarf's, and the rowdy dwarf's, Khorvak's and
+// Gauss's (ours: %forget_seed2/3/4_given)
+[proc,ft_seeds_earned]()(int)
+return(calc(1 + %forget_seed2_given + %forget_seed3_given + %forget_seed4_given));
+
+[proc,ft_login]
+// ours: logged out in the Red Axe's mines, you come back at the boarded-up tunnel in Keldagrim
+// (the OSRS wiki: "If you log out at anytime while in the cave, you will be transported out in the
+// city, and your progress will be saved")
+if (inzone(1_29_77_0_0, 3_29_77_63_63, coord) = true) {
+    ~ft_ride_clear;
+    p_telejump(0_45_158_46_47);
+}
+// ours: a cutscene cut short by logging out
+if (inzone(0_45_159_29_10, 0_45_159_38_21, coord) = true & %forget_quest = ^ft_kebab) {
+    if (inv_total(worn, forget_cutscene_chair) > 0) inv_del(worn, forget_cutscene_chair, 1);
+    if (inv_total(worn, forget_cutscene_beer) > 0) inv_del(worn, forget_cutscene_beer, 1);
+    buildappearance(worn);
+}
+~ft_growth_login;
+
+// ---------------------------------------------------------------- Commander Veldaban
+// called first from his own [opnpc1] (quest_giant_dwarf/gd_start.rs2): once The Giant Dwarf is done
+// he talks about this quest
+[proc,ft_veldaban]()(boolean)
+if (%giantdwarf_quest < ^gd_complete) return(false);
+def_int $s = %forget_quest;
+if ($s = ^ft_not_started) {
+    ~ft_veldaban_start;
+    return(true);
+}
+if ($s >= ^ft_complete) {
+    ~chatnpc("<p,quiz>What happened, <displayname>, did you finish your assignment?");
+    ~chatplayer("<p,confused>I think... I think I must have. It's so hard to remember.");
+    ~chatnpc("<p,neutral>Please, try to!");
+    ~chatplayer("<p,sad>I have this terrible headache.");
+    ~chatplayer("<p,sad>I don't know, I think something terrible has happened, but everyone seems to think I'm an idiot for some reason...");
+    ~chatnpc("<p,neutral>Don't worry, <displayname>, I believe you. You must have been put under a spell of some sort to make you forget.");
+    ~chatnpc("<p,neutral>I suppose we'll just have to wait and see what happens.");
+    return(true);
+}
+if ($s = ^ft_wiped) {
+    ~chatplayer("<p,shock>Veldaban, I must tell you something incredibly important!");
+    ~chatnpc("<p,quiz>What is it, <displayname>?");
+    ~chatplayer("<p,confused>I must tell you about... about...");
+    ~chatplayer("<p,happy>...about my incredible craving for a kebab. Mmm, kebabs. A kebab and a beer, that sounds great right now.");
+    ~chatnpc("<p,confused>Errr, are you alright? Don't you have any important information about the Red Axe?");
+    ~chatplayer("<p,happy>Mmm, yes, I'll be perfectly alright... just after I've had my beer and a kebab. Yes. I'll have a beer and a kebab in the Laughing Miner. Yum!");
+    ~chatplayer("<p,laugh>Watch out kebabs, I come for you!");
+    ~chatnpc("<p,sad>Poor <displayname>, I think you've been bewitched.");
+    ~ft_set(^ft_kebab);
+    return(true);
+}
+if ($s = ^ft_kebab) {
+    ~chatnpc("<p,quiz><displayname>, I thought you had something important to tell me?");
+    ~chatplayer("<p,confused>Yes... yes... Red... ehm. Red...");
+    ~chatplayer("<p,confused>Red Kebab? Red Ale?");
+    ~chatplayer("<p,laugh>I will feast on kebabs and beer! Ahahaha!");
+    return(true);
+}
+if ($s >= ^ft_boards) {
+    ~chatnpc("<p,quiz>And? What of the Red Axe?");
+    ~chatplayer("<p,happy>I will have lots to tell you soon, Veldaban!");
+    ~chatnpc("<p,happy>Happy to hear that!");
+    return(true);
+}
+if ($s = ^ft_conductor) {
+    ~chatnpc("<p,quiz>How goes the search for the Red Axe?");
+    ~chatplayer("<p,happy>I think I may have a good lead now!");
+    ~chatplayer("<p,neutral>But I need some boarding removed, I need to go through some disused mine cart tunnels.");
+    ~chatnpc("<p,neutral>I see... I cannot make that decision, I'm afraid. Speak to the director of the <~gd_company_name(~ft_company)>, he may be able to help you.");
+    ~chatplayer("<p,happy>Ah yes, I'm a member now, they must be able to help!");
+    %forget_veldaban_exposition = 1;
+    return(true);
+}
+if ($s = ^ft_tale) {
+    ~chatnpc("<p,quiz>How goes the search for the Red Axe?");
+    ~chatplayer("<p,happy>I think I'm on to something! Something about a disused mine tunnel southeast of town.");
+    ~chatnpc("<p,happy>Happy to hear that, <displayname>! Please go and check it out!");
+    return(true);
+}
+~chatnpc("<p,quiz>How goes the search for the Red Axe?");
+~chatplayer("<p,sad>Haven't found them yet, sorry.");
+return(true);
+
+[proc,ft_veldaban_start]
+if (%fishingcompo < ^fishingcompo_complete) {
+    ~chatplayer("<p,happy>Hi there, Veldaban! Have you got any new quests for me?");
+    ~chatnpc("<p,neutral>Not at the moment, no, <displayname>.");
+    ~chatplayer("<p,sad>That's too bad, I'm starting to get a little bored.");
+    ~chatnpc("<p,neutral>Then perhaps you should try your hand at the Hemenster Fishing Contest.");
+    ~chatplayer("<p,confused>Er, that's a bit of a random suggestion. Why would I go on a fishing contest?");
+    ~chatnpc("<p,neutral>We dwarves don't know much about fishing, but a couple of our brothers at White Wolf Mountain want to win the competition.");
+    ~chatplayer("<p,quiz>Why would they want to do that if they don't know much about fishing?");
+    ~chatnpc("<p,happy>Ah, you see, the trophy is made of pure gold. And these dwarves in particular love gold.");
+    ~chatplayer("<p,neutral>Alright, sounds interesting, I'll check it out. White Wolf mountain, you said?");
+    ~chatnpc("<p,neutral>Yes, you can speak to a dwarf at either side of the mountain.");
+    return;
+}
+~chatnpc("<p,shock><displayname>! Have you heard?");
+// the RuneScape wiki's 2005 line (the OSRS wiki's is the 2025 "sailor" one)
+~chatplayer("<p,confused>You mean, half the world has suddenly become a farmer?");
+~chatnpc("<p,angry>No, not that. It's the Red Axe!");
+~chatplayer("<p,quiz>What have those grumpy little guys done now?");
+~chatnpc("<p,neutral>They've left the city! They were already boycotting the trade floor, but now they've completely left the city.");
+~chatplayer("<p,shock>Oh dear, is that serious?");
+~chatnpc("<p,neutral>It's never happened before! At the moment it's unclear yet if they've left the Consortium as well. The directors are in turmoil!");
+~chatplayer("<p,quiz>So what happens now?");
+~chatnpc("<p,quiz>Well... I may require your services again. Are you interested in hearing more?");
+if (~p_choice2("Very interested!", 1, "Some other time, perhaps.", 2) = 2) {
+    ~chatplayer("<p,neutral>Some other time, perhaps.");
+    ~chatnpc("<p,neutral>Very well.");
+    return;
+}
+~chatplayer("<p,happy>Very interested!");
+~chatnpc("<p,neutral>We need some more information about what the Red Axe is up to.");
+~chatplayer("<p,shock>Are you asking me to... spy on them? Isn't that treason?");
+~chatnpc("<p,neutral>The other directors of the Consortium don't think so and are likely to expel the Red Axe completely anyway.");
+~chatplayer("<p,quiz>So where would you like me to go?");
+~chatnpc("<p,neutral>That's the problem. We don't know where they moved their headquarters to. But we may have one lead...");
+~chatplayer("<p,quiz>Yes?");
+~chatnpc("<p,quiz>There is a dwarf, all the way to the northeast in Keldagrim-East. He talks about kebabs a lot. Don't suppose you've met him?");
+if (~p_choice2("Yes.", 1, "No.", 2) = 1) {
+    ~chatplayer("<p,neutral>Yes, I do believe I have. Smashed glasses, wrecked house? Poor personal hygiene standards? Brother or cousin to that other drunken dwarf?");
+    ~chatnpc("<p,sad>That's him, poor fellow. He didn't always used to be like that.");
+} else {
+    ~chatplayer("<p,neutral>No, I don't believe so.");
+    ~chatnpc("<p,neutral>He lives in his brother's house.");
+    ~chatnpc("<p,confused>Or was it his cousin?");
+    ~chatnpc("<p,neutral>In any case, he's a bit of a drunk these days. Well, when I say a bit, he's actually smashed all the time.");
+}
+~chatnpc("<p,neutral>But he seems to know something about the Red Axe for some odd reason. He speaks of them sometimes in one of his many rants.");
+~chatnpc("<p,neutral>Problem is, no one believes him. Everyone thinks he's completely mad. And perhaps they're right.");
+~chatnpc("<p,neutral>But if he does indeed know something about the Red Axe or where their headquarters may be, we need to find out.");
+~chatnpc("<p,quiz>What do you say then, <displayname>? Do you want to help the Black Guard with this?");
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Forgettable Tale... quest?") = 2) {
+    ~chatplayer("<p,neutral>No, I try to stay away from drunken dwarves.");
+    ~chatplayer("<p,sad>Although I wish they would try to stay away from me too...");
+    ~chatnpc("<p,neutral>Very well. Come back when you change your mind.");
+    return;
+}
+~chatplayer("<p,happy>Sounds like just the job for me!");
+~chatnpc("<p,happy>Excellent, good luck to you in your quest! May Guthix protect you!");
+~ft_set(^ft_started);
+~send_quest_progress(questlist:forget, %forget_quest, ^ft_complete);
+~ft_opening_film;
+~chatplayer("<p,neutral>Well, here I am... at the drunken dwarf's relative's residence, who is also drunken. I wonder what drunken tales he can tell me.");
+
+// The opening (the OSRS wiki: the statue from The Giant Dwarf, "Rise of the Red Axe, Part II,
+// Forgettable Tale of a Drunken Dwarf", then the camera pans to the drunken dwarf's house and you
+// are in front of it). The jingle is the cache's "A Tale..." (midi_445: the 2007 cache's jingle 106,
+// the OSRS wiki's cache id for it; same notes). Ours: the camera's places, heights and speeds and
+// how long each title stays up (the statue at 2878-2881,10177-10180, the house at 2911-2916,
+// 10220-10225 with its door at 2913,10219). You wait out of sight west of the palace, as in The
+// Giant Dwarf's crash.
+[proc,ft_opening_film]
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(0_44_159_24_4);
+cam_moveto(0_44_159_55_14, 900, 0, 100);
+cam_lookat(0_44_159_63_2, 500, 0, 100);
+p_delay(1);
+midi_jingle("midi_445");
+cam_moveto(0_44_159_58_16, 850, 1, 0);
+~fade_in;
+p_delay(2);
+~gd_title(5);
+p_delay(7);
+~gd_title(6);
+p_delay(8);
+~gd_title(-1);
+// across the city to the north-east, to the drunken dwarf's house
+cam_moveto(0_45_159_20_30, 1000, 3, 0);
+cam_lookat(0_45_159_32_46, 300, 3, 0);
+p_delay(8);
+cam_moveto(0_45_159_33_36, 650, 2, 0);
+p_delay(4);
+~fade_out;
+p_delay(2);
+cam_reset;
+p_telejump(0_45_159_33_42);
+facesquare(0_45_159_33_43);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- the drunken dwarf
+[opnpc1,dwarf_city_drunken_dwarf_multi] @ft_dwarf_talk;
+
+[label,ft_dwarf_talk]
+def_int $s = %forget_quest;
+if ($s = ^ft_not_started | $s >= ^ft_complete) @ft_dwarf_chat;
+if (~p_choice2("Hello there! Are you alright?", 1, "I need to know about the Red Axe...", 2) = 1) @ft_dwarf_chat;
+~chatplayer("<p,quiz>I need to know about the Red Axe...");
+if ($s = ^ft_started) {
+    if (~ft_flag(^ftf_asked_dwarf) = false) {
+        ~ft_dd("<p,drunk>THE RED AXE WILL COME FOR YOU!");
+        ~chatplayer("<p,shock>What, what do you mean?");
+        ~ft_dd("<p,drunk>I don't know... I c-c-c-can't think shtraight when I'm *hic* sober.");
+        ~chatplayer("<p,confused>You don't look very sober to me!");
+        ~ft_dd("<p,drunk>DON'T contradict me! Or I won't tell you about ehm... about the... whatever it is you wanted to know.");
+        ~chatplayer("<p,neutral>Have you ever considered to stop drinking? It's bad for you.");
+        ~ft_dd("<p,drunk>I'll shtop, right after you get me shome of the good shtuff!");
+        ~ft_setflag(^ftf_asked_dwarf);
+        return;
+    }
+    ~ft_dd("<p,drunk>Did you get me shome of the good stuff yet?");
+    if (inv_total(inv, beer) = 0) {
+        ~chatplayer("<p,sad>No, sorry.");
+        ~ft_dd("<p,drunk>Jusht pop down to the Laughing Miner and get some, will you?");
+        ~chatplayer("<p,quiz>The Laughing Miner?");
+        ~ft_dd("<p,drunk>It'sh the pub to the... er. North. No, shouth. South.");
+        return;
+    }
+    ~chatplayer("<p,happy>Yes, here you go.");
+    inv_del(inv, beer, 1);
+    %forget_beer_given = 1;
+    ~ft_dd("<p,drunk>What wash that? *hic* No no no, this ish noooooo good! I want some of the REALLY good stuff.");
+    ~chatplayer("<p,quiz>What's the REALLY good stuff then?");
+    ~ft_dd("<p,drunk>Some of them original Kelda Stout! Ash blue ash the river! Ash strong ash ole Dondakan's rock. Ash foul tasting ash ash.");
+    ~chatplayer("<p,neutral>Hey, er, I don't think that's good for you.");
+    ~ft_dd("<p,drunk>I know, but get me shome of it anyway. 'ere, have a seed.");
+    ~ft_set(^ft_seeds);
+    ~ft_give(kelda_hop_seed, 1);
+    ~chatplayer("<p,confused>What am I supposed to do with a seed?");
+    ~ft_dd("<p,drunk>You silly human! Silly shilly silly *hic* hman. You need FOUR seeds, and grow them into hops.");
+    ~ft_dd("<p,drunk>Hop hop hop! *hic*");
+    ~chatplayer("<p,quiz>Where do I get the other seeds then?");
+    ~ft_dd("<p,drunk>Some of me drinking buddies might have 'em. They're quite rare, you shee. Oh yesh, quite rare.");
+    ~ft_dd("<p,drunk>Drinking buddies. Yes, find me some drinking buddies. No, find the other seeds. Yes.");
+    ~chatplayer("<p,neutral>Right, I think what you're trying to say is... I need to find some other drunken dwarves, collect Kelda seeds from them until I have four, then grow them into hops so I can make Kelda stout.");
+    ~ft_dd("<p,drunk>You're awfully shmart for a human!");
+    ~chatplayer("<p,neutral>Maybe that's just because I don't drink as much as you.");
+    return;
+}
+if ($s = ^ft_seeds | $s = ^ft_planting) {
+    ~ft_dd("<p,drunk>Got me my Kelda stout?");
+    def_int $earned = ~ft_seeds_earned;
+    if (%forget_farming < ^ft_patch_seeds & ~ft_has(kelda_hop_seed) < $earned) {
+        ~chatplayer("<p,sad>I'm having some problems with the seeds...");
+        if (inv_freespace(inv) = 0 & inv_total(inv, kelda_hop_seed) = 0) {
+            ~ft_dd("<p,drunk>You couldn't even... ah... eh... carry sheeds."); // the RuneScape wiki
+            return;
+        }
+        ~ft_dd("<p,drunk>Oh, you bothershome human. Here.");
+        inv_add(inv, kelda_hop_seed, calc($earned - ~ft_has(kelda_hop_seed)));
+        return;
+    }
+    if (%forget_farming >= ^ft_patch_seeds) {
+        ~chatplayer("<p,happy>Not yet, but I've planted the seeds. I should have your stout soon!"); // the RuneScape wiki
+        return;
+    }
+    if ($earned < 4) {
+        ~chatplayer("<p,neutral>Not yet, no. I'm still trying to collect all of the seeds.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Not yet, no. I need to grow my seeds into hops first.");
+    return;
+}
+if ($s = ^ft_hops) {
+    ~ft_dd("<p,drunk>I want my Kelda shtout!");
+    ~chatplayer("<p,sad>My hops still need fermenting, sorry.");
+    return;
+}
+if ($s = ^ft_stout) {
+    ~ft_dd("<p,drunk>I want my Kelda shtout!");
+    if (inv_total(inv, kelda_stout) = 0) {
+        ~chatplayer("<p,sad>Haven't got any on me, sorry.");
+        ~ft_dd("<p,drunk>Well hurry up! I'm dying of thirsht!");
+        return;
+    }
+    @ft_dwarf_tale;
+}
+~ft_dd("<p,drunk>I don't know anyshing about the Red Kebabs.");
+~chatplayer("<p,shock>But that tale you told me!");
+~ft_dd("<p,drunk>I don't know what you're *hic* talking 'bout.");
+
+// Transcript:Drunken Dwarf (Keldagrim), the initial and subsequent dialogue
+[label,ft_dwarf_chat]
+~chatplayer("<p,quiz>Hello there! Are you alright?");
+~ft_dd("<p,drunk>Of courshe! Why why why *hic* why shouldn't I be?");
+if (~ft_flag(^ftf_met_dwarf) = false) {
+    ~chatplayer("<p,confused>Hey, you look vaguely familiar... haven't I seen you somewhere before?");
+    ~ft_dd("<p,drunk>That'sh not likely... I've been here for eh...");
+    ~ft_dd("<p,drunk>I've been here for...");
+    ~ft_dd("<p,drunk>Yearsh!");
+    ~ft_setflag(^ftf_met_dwarf);
+} else {
+    ~chatplayer("<p,quiz>What are you doing here anyway?");
+}
+~ft_dd("<p,drunk>I've been looking after thish houshe for my... my coushin? Or wash it my brother? A family member anyway.");
+~chatplayer("<p,quiz>And where is this... family member of yours?");
+~ft_dd("<p,drunk>All over, all over... he shaish he went off to wander all over Gielinor. Don't remember why.");
+~chatplayer("<p,neutral>Hmm... I wonder, I may have met him...");
+~ft_dd("<p,drunk>He comesh back sometimesh... saysh he needsh more kebabsh.");
+~ft_dd("<p,drunk>Or ish that jusht a dream? Sometimesh I dream kebabsh invade Keldi... Keldu... Keldashomething.");
+~ft_dd("<p,drunk>When you eatsh them, they take over your mind, they do! An army of mindlesh kebab eating dwarvesh!");
+~chatplayer("<p,neutral>Er, yes, well, I think I should be off now.");
+~ft_dd("<p,drunk>THE KEBABSH WILL COME FOR YOU!");
+
+// the tale (the screen fades between its parts)
+[label,ft_dwarf_tale]
+~chatplayer("<p,happy>I've got some Kelda stout right here. I just brewed it in the Laughing Miner!");
+~ft_dd("<p,drunk>Now there'sh a good human, gimme that!");
+~chatplayer("<p,neutral>Are you sure? This is pretty bad stuff.");
+~ft_dd("<p,drunk>You want to hear about the Red Kebabsh or what? I mean... the Red Axe.");
+if (inv_total(inv, kelda_stout) = 0) return;
+inv_del(inv, kelda_stout, 1);
+~chatplayer("<p,neutral>Here you go then.");
+~ft_dd("<p,happy>Ooooh, THAT'sh the good shtuff!");
+~ft_dd("<p,neutral>The Red Axe? You want to know about them, do you? Then let me tell you my tale. It is long and quite unforgettable...");
+~ft_dd("<p,neutral>A long time ago, quite a while ago, yes... I resigned from my mining company, the Magenta Accordion.");
+~chatplayer("<p,confused>The what? The Magenta Accordion? That's not a mining company!");
+~ft_dd("<p,neutral>It is, it is! It's one of the many minor companies, not part of the Consortium.");
+~chatplayer("<p,neutral>Alright, if you say so...");
+~ft_dd("<p,neutral>Right, so I had just left my company. I'd had enough of slaving away in the mines and decided to become an explorer. Oh yes, like my cousin.");
+~ft_dd("<p,neutral>I explored this old mine, you know, just south of Keldagrim. I think it's boarded up now. Some amazing things I saw there.");
+~ft_dd("<p,neutral>First of all...");
+~ft_tale_fade;
+~ft_dd("<p,shock>...and then I nearly fell into the Abyss! But I...");
+~ft_tale_fade;
+~ft_dd("<p,scared>...so I had to run for my life, but then...");
+~ft_tale_fade;
+~ft_dd("<p,happy>...pink dragons...");
+~ft_tale_fade;
+~ft_dd("<p,sad>...and I don't really remember anything after that. People think I'm a drunken fool.");
+~ft_set(^ft_tale);
+~chatplayer("<p,neutral>That was very interesting! I'll ignore that part with the pink dragons though...");
+~chatplayer("<p,neutral>But I shall investigate that tunnel immediately! South of the cart station, just south of the carts to White Wolf mountain?");
+~ft_dd("<p,drunk>If you shay sho... I just want to smash up shome shtuff now.");
+
+// the drunken dwarf is a multinpc (dwarf_city_drunken_dwarf_multi) with no name of its own, so his
+// lines name him
+[proc,ft_dd](string $text)
+~chatnpc_specific("Drunken Dwarf", dwarf_city_drunken_dwarf, $text);
+
+// ours: how long the screen stays dark
+[proc,ft_tale_fade]
+if_close;
+~fade_out;
+p_delay(3);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- Miodvetnir, Derni and Dernu
+// called first from their [opnpc1] (area_keldagrim/keldagrim_npcs.rs2): during the quest, and the
+// first time after it, they have a line for it (Transcript:Miodvetnir, Derni, and Dernu, their
+// subsequent dialogue; ours: only these two of its topics are on the menu)
+[proc,ft_brothers]()(boolean)
+def_int $s = %forget_quest;
+if ($s = ^ft_not_started) return(false);
+if ($s >= ^ft_complete & %forget_brothers_toldsuccess = 1) return(false);
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,happy>Hello again, <displayname>!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,quiz>Are you lost down here?");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,quiz>Or were you just stopping by for a chat?");
+~chatplayer("<p,neutral>Just stopping by for a chat.");
+if ($s >= ^ft_complete) {
+    if (~p_choice2("I have this unforgettable tale to tell you!", 1, "I must be off now.", 2) = 2) {
+        ~ft_brothers_bye;
+        return(true);
+    }
+    ~chatplayer("<p,happy>I have this unforgettable tale to tell you!");
+    ~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,happy>A tale!");
+    ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,happy>We love tales!");
+    ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,happy>We live for tales!");
+    ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>Like, there was this one time when I lost my spanner in the mines...");
+    ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,angry><displayname> wants to tell a tale!");
+    ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,sad>But my spanner... it's a very interesting tale you know.");
+    ~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>I think we've heard it before.");
+    ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>It was pretty forgettable.");
+    ~chatplayer("<p,angry>Excuse me, do you want to hear my tale or not?");
+    ~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,happy>Happy to.");
+    ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,happy>Would love to hear it.");
+    ~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>As long as it's better than my spanner story.");
+    ~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,quiz>So, what's your tale like?");
+    ~chatplayer("<p,confused>Ah, I errrr...");
+    ~chatplayer("<p,confused>I seem to have forgotten.");
+    ~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>Must have been pretty forgettable as well then.");
+    %forget_brothers_toldsuccess = 1;
+    ~chatplayer("<p,neutral>Never mind.");
+    return(true);
+}
+if (~p_choice2("Do you know about this drunken dwarf...?", 1, "I must be off now.", 2) = 2) {
+    ~ft_brothers_bye;
+    return(true);
+}
+~chatplayer("<p,quiz>Do you know about this drunken dwarf...?");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,quiz>Drunken dwarf?");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,happy>Yeah, we know a drunken dwarf!");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,happy>In fact we know plenty!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,angry>There's this one really annoying dwarf though, he sometimes throws rocks at me for no reason.");
+~chatplayer("<p,neutral>Yeah, tell me about it.");
+~chatplayer("<p,neutral>The one I mean is his relative, living in the northeast of Keldagrim. I wonder if you could help me with him.");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Ah yes, him.");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,sad>Such a sad case, poor fellow.");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,quiz>Who is he?");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,angry>Don't you know anything?");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Now now, there's no reason to get angry.");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,neutral>I suppose you're right. Well, he's a drunk dwarf that talks about kebabs a lot.");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,neutral>Has some pretty odd tales to tell too.");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,neutral>And I understand he's the relative of that dwarf I mentioned earlier.");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,quiz>I hope that helped, <displayname>?");
+~chatplayer("<p,neutral>Never mind.");
+return(true);
+
+[proc,ft_brothers_bye]
+~chatplayer("<p,neutral>I must be off now, thanks for the chat.");
+~chatnpc_specific("Miodvetnir", dwarfrock_boatman_bruv1, "<p,happy>No problem!");
+~chatnpc_specific("Dernu", dwarfrock_boatman_bruv2, "<p,happy>Glad to be of service!");
+~chatnpc_specific("Derni", dwarfrock_boatman_bruv3, "<p,happy>Come back any time!");

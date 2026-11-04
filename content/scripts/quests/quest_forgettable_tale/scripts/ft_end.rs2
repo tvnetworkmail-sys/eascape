@@ -1,0 +1,179 @@
+// EASCape: Forgettable Tale: the beer and kebab in the Laughing Miner, the last cutscene, the
+// rewards and the journal. The words are the OSRS wiki's (Transcript:Forgettable Tale..., "Final
+// cutscene"); the rewards its quest page (2 quest points, 5,000 Cooking and 5,000 Farming XP, two
+// mature dwarven stouts). The jingle is "Beer & Kebabs..." (midi_446: the 2007 cache's jingle 104,
+// the OSRS wiki's cache id for it; same notes). The cutscene's actors are the cache's
+// (forget_cutscene_*, forget_redaxe_henchman4/3_cutscene), and you sit with the cache's chair and
+// beer glass in your hands (forget_cutscene_chair, forget_cutscene_beer) and its drunk sitting and
+// falling animations. Ours: who sits where, the camera, and how long things take.
+
+// the kebab's and the beer's [opheld1] (player/consumption/consume.rs2) come here: after telling
+// Veldaban, a beer or a kebab in the Laughing Miner starts it (the OSRS wiki; ours: with both on you)
+[proc,ft_pub_ready]()(boolean)
+if (%forget_quest ! ^ft_kebab) return(false);
+if (inzone(0_45_159_29_10, 0_45_159_38_21, coord) = false) return(false);
+if (inv_total(inv, kebab) = 0 | inv_total(inv, beer) = 0) return(false);
+return(true);
+
+[label,ft_pub_feast]
+if (inv_getobj(worn, ^wearpos_rhand) ! null | inv_getobj(worn, ^wearpos_lhand) ! null) {
+    ~mesbox("You'll need both hands free to enjoy your beer and kebab."); // ours
+    return;
+}
+inv_del(inv, kebab, 1);
+inv_del(inv, beer, 1);
+~ft_pub_film;
+
+[proc,ft_pub_film]
+if_close;
+~fade_out;
+p_delay(2);
+midi_jingle("midi_446");
+// the big table by the stairs (2916-2917,10188-10189) and its chairs
+p_telejump(0_45_159_37_11);
+facesquare(0_45_159_37_12);
+inv_setslot(worn, ^wearpos_lhand, forget_cutscene_chair, 1);
+inv_setslot(worn, ^wearpos_rhand, forget_cutscene_beer, 1);
+buildappearance(worn);
+~set_readywalk_bas(human_sitting_drunk_ready, human_sitting_drunk_ready);
+npc_add(0_45_159_38_12, forget_cutscene_drunken_dwarf, 150);
+npc_facesquare(0_45_159_37_11);
+npc_add(0_45_159_35_13, forget_cutscene_patron5, 150);
+npc_facesquare(0_45_159_37_11);
+npc_add(0_45_159_38_14, forget_cutscene_patron2, 150);
+npc_facesquare(0_45_159_37_11);
+npc_add(0_45_159_35_11, forget_cutscene_patron3, 150);
+npc_facesquare(0_45_159_37_11);
+npc_add(0_45_159_36_14, forget_cutscene_patron1, 150);
+npc_facesquare(0_45_159_37_11);
+npc_add(0_45_159_39_11, forget_cutscene_patron4, 150);
+npc_facesquare(0_45_159_37_11);
+// Grimsson, at the small table by the door, with his helmet off
+npc_add(0_45_159_30_17, forget_redaxe_henchman4_cutscene, 150);
+npc_facesquare(0_45_159_37_11);
+cam_moveto(0_45_159_33_8, 500, 0, 100);
+cam_lookat(0_45_159_37_12, 150, 0, 100);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatplayer("<p,drunk>I knew it were you matey! 'Ere, have some of the good stuff!");
+~chatnpc_specific("Drunken Dwarf", forget_cutscene_drunken_dwarf, "<p,drunk>Very kind ob you, <displayname>!");
+~chatnpc_specific("Nolar", forget_cutscene_patron2, "<p,happy>Tell us another tale, <displayname>!");
+~chatnpc_specific("Factory Worker", forget_cutscene_patron3, "<p,happy>Tell us more about your kebabs!");
+~chatnpc_specific("Gauss", forget_cutscene_patron5, "<p,laugh>Haha, kebabs!");
+~chatplayer("<p,drunk>Right, these kebabsh, right? *hic* A whole g-g-group of kebabs came marching in! I'm telling you! Marching in line!");
+if_close;
+~ft_pub_say(0_45_159_36_14, forget_cutscene_patron1, "Hahaha!");
+~ft_pub_say(0_45_159_35_11, forget_cutscene_patron3, "Tee hee hee!");
+p_delay(2);
+~chatplayer("<p,drunk>And then, I'll tell you... Then! Ehm...");
+~chatplayer("<p,drunk>Then I'll have another drink!");
+if_close;
+anim(human_sitting_drunk_fall, 0);
+p_delay(2);
+~ft_pub_say(0_45_159_38_14, forget_cutscene_patron2, "Hahaha!");
+~ft_pub_say(0_45_159_35_11, forget_cutscene_patron3, "Hahaha, idiot!");
+~ft_pub_say(0_45_159_36_14, forget_cutscene_patron1, "Tee hee hee!");
+p_delay(3);
+// you black out; Grimsson gets up and leaves
+~fade_out;
+p_delay(2);
+cam_moveto(0_45_159_33_13, 450, 0, 100);
+cam_lookat(0_45_159_30_17, 150, 0, 100);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatnpc_specific("Colonel Grimsson", forget_redaxe_henchman4_cutscene, "<p,evillaugh>Ha, the spell has worked its magic again.");
+if (npc_find(0_45_159_30_17, forget_redaxe_henchman4_cutscene, 2, 0) = true) {
+    npc_changetype(forget_redaxe_henchman3_cutscene, 150);
+}
+p_delay(1);
+~chatnpc_specific("Colonel Grimsson", forget_redaxe_henchman3_cutscene, "<p,evillaugh>No one will believe that drunken fool now!");
+if_close;
+if (npc_find(0_45_159_30_17, forget_redaxe_henchman3_cutscene, 2, 0) = true) {
+    npc_walk(0_45_159_34_21);
+}
+p_delay(4);
+~fade_out;
+p_delay(2);
+~ft_pub_clear;
+inv_delslot(worn, ^wearpos_lhand);
+inv_delslot(worn, ^wearpos_rhand);
+buildappearance(worn);
+~update_bas;
+anim(null, 0);
+cam_reset;
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~ft_complete;
+
+[proc,ft_pub_say](coord $c, npc $type, string $text)
+if (npc_find($c, $type, 2, 0) = true) npc_say($text);
+
+[proc,ft_pub_clear]
+def_coord $c = 0_45_159_35_14;
+if (npc_find($c, forget_cutscene_drunken_dwarf, 10, 0) = true) npc_del;
+if (npc_find($c, forget_cutscene_patron1, 10, 0) = true) npc_del;
+if (npc_find($c, forget_cutscene_patron2, 10, 0) = true) npc_del;
+if (npc_find($c, forget_cutscene_patron3, 10, 0) = true) npc_del;
+if (npc_find($c, forget_cutscene_patron4, 10, 0) = true) npc_del;
+if (npc_find($c, forget_cutscene_patron5, 10, 0) = true) npc_del;
+if (npc_find($c, forget_redaxe_henchman4_cutscene, 12, 0) = true) npc_del;
+if (npc_find($c, forget_redaxe_henchman3_cutscene, 12, 0) = true) npc_del;
+
+// ---------------------------------------------------------------- the end
+[proc,ft_complete]
+~ft_set(^ft_complete);
+stat_advance(cooking, 50000);
+stat_advance(farming, 50000);
+~ft_give(mature_dwarven_stout, 1);
+~ft_give(mature_dwarven_stout, 1);
+mes("Congratulations, you've completed a quest: Forgettable Tale...");
+session_log(^log_adventure, "Quest complete: Forgettable Tale of a Drunken Dwarf");
+~send_quest_complete(questlist:forget, kelda_stout, 200, ^ft_questpoints, "You have completed\\nForgettable Tale of a Drunken Dwarf!", "2 Quest Points|5,000 Cooking XP|5,000 Farming XP|2 mature dwarven stouts");
+
+// ---------------------------------------------------------------- the journal
+// Ours: the words (no source has the 2005 journal) but the lines it shows once Grunsh's spell has
+// worked (the OSRS wiki's trivia); the start and the requirements are the OSRS wiki's quest details.
+[if_button,questlist:forget]
+def_int $s = %forget_quest;
+if ($s = ^ft_not_started) {
+    ~quest_journal("Forgettable Tale...", "@dbl@I can start this quest by talking to @dre@Commander Veldaban@dbl@ in|@dbl@the Black Guard headquarters in @dre@Keldagrim@dbl@.|@dbl@To complete this quest I will need:|<~lt_req("Level 22 Cooking", stat(cooking), 22)>|<~lt_req("Level 17 Farming", stat(farming), 17)>|@dbl@and to have completed:|<~lt_req("The Giant Dwarf", %giantdwarf_quest, ^gd_complete)>|<~lt_req("Fishing Contest", %fishingcompo, ^fishingcompo_complete)>");
+    return;
+}
+if ($s >= ^ft_wiped & $s < ^ft_complete) {
+    ~quest_journal("Forgettable Tale...", "@dbl@Hi hi hi ha ha ha ha.||@dbl@Lalalalalalalalala.||@dbl@Rock hot nice butterfly bad wolf sing song down the river.||@dbl@I saw... I saw... I saw kebabs? Wearing silly hats! Yes!||@dbl@AHAHAHAHA, I've gone totally mad! AHAHAHAHA!");
+    return;
+}
+def_string $t = "";
+$t = append($t, ~lt_line("Commander Veldaban asked me to find out what the Red Axe", "is up to. His only lead is a drunken dwarf in the north-east", "of Keldagrim-East who talks about kebabs a lot.", ~ft_done(^ft_seeds)));
+if ($s >= ^ft_seeds) $t = append($t, ~lt_line("The drunken dwarf wants Kelda stout. He gave me a Kelda", "seed; his drinking buddies may have the other three.", "", ~ft_done(^ft_planting)));
+if ($s = ^ft_seeds) $t = append($t, ~ft_journal_seeds);
+if ($s >= ^ft_planting) $t = append($t, ~lt_line("Rind the gardener let me grow my Kelda seeds in the", "palace garden's hops patch. They only grow underground.", "", ~ft_done(^ft_hops)));
+if ($s >= ^ft_hops) $t = append($t, ~lt_line("I have my Kelda hops. The brewery is upstairs in the", "Laughing Miner, in Keldagrim-East.", "", ~ft_done(^ft_stout)));
+if ($s >= ^ft_stout) $t = append($t, ~lt_line("I brewed some Kelda stout for the drunken dwarf.", "", "", ~ft_done(^ft_tale)));
+if ($s >= ^ft_tale) $t = append($t, ~lt_line("The drunken dwarf told me about an old mine south of the", "city. It is boarded up, south of the cart station.", "", ~ft_done(^ft_boards)));
+if ($s >= ^ft_conductor & $s < ^ft_boards) $t = append($t, "@dbl@The cart conductor can't open it. Perhaps the director of|@dbl@the @dre@<~gd_company_name(~ft_company)>@dbl@ can.||");
+if ($s >= ^ft_boards) $t = append($t, ~lt_line("The boards have been taken away. I can ride a cart into", "the old mine from the cart station.", "", ~ft_done(^ft_listen)));
+if ($s >= ^ft_listen) $t = append($t, ~lt_line("I heard the Red Axe's director talking: they had the boatman", "crash into King Alvis' statue on purpose.", "", ~ft_done(^ft_archive)));
+if ($s >= ^ft_archive) $t = append($t, ~lt_line("I found the Red Axe's records, and the truth about the", "drunken dwarf: they wiped his memory.", "", ~ft_done(^ft_puzzle3)));
+if ($s >= ^ft_puzzle3) $t = append($t, ~lt_line("There's another chasm. I'm going deeper into the mines.", "", "", ~ft_done(^ft_wiped)));
+if ($s >= ^ft_complete) $t = append($t, "@str@I had a beer and a kebab in the Laughing Miner and told|@str@everyone a tale. I can't remember what about.||@red@QUEST COMPLETE!");
+~quest_journal("Forgettable Tale...", $t);
+
+[proc,ft_journal_seeds]()(string)
+def_string $t = "";
+def_int $n = inv_total(inv, kelda_hop_seed);
+if ($n >= 4) return("@dbl@I have four Kelda seeds. I should ask a gardener how to|@dbl@grow them.||");
+if (%forget_seed2_given = 1) {
+    $t = append($t, "@str@The rowdy dwarf gave me a seed.|");
+} else if (%forget_seed2_told = 1 & %ft_rowdy_item > 0) {
+    $t = append($t, "@dbl@The @dre@rowdy dwarf@dbl@ wants <~ft_rowdy_name(%ft_rowdy_item)> for his seed.|");
+}
+if (%forget_seed3_given = 1) $t = append($t, "@str@Khorvak lent me a seed.|");
+if (%forget_seed4_given = 1) $t = append($t, "@str@Gauss gave me a seed.|");
+return(append($t, "|"));

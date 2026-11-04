@@ -1,0 +1,110 @@
+// EASCape: test commands for Forgettable Tale of a Drunken Dwarf (quest_forgettable_tale).
+
+// ::ftpack - what the quest needs (the OSRS wiki's list): 400 coins, 2 barley malt, 2 buckets of
+// water, a seed dibber, a rake, ale yeast, a kebab, 2 beers and a beer glass. It also marks The Giant
+// Dwarf (with the Purple Pewter as your company) and Fishing Contest done (no rewards) if they
+// aren't. You need 22 Cooking and 17 Farming (::maxstats). The rowdy dwarf's thing isn't in it: he
+// picks it when you ask.
+[debugproc,ftpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 400));
+$banked = calc($banked + ~questpack_give(barley_malt, 2));
+$banked = calc($banked + ~questpack_give(bucket_water, 2));
+$banked = calc($banked + ~questpack_give(dibber, 1));
+$banked = calc($banked + ~questpack_give(rake, 1));
+$banked = calc($banked + ~questpack_give(ale_yeast, 1));
+$banked = calc($banked + ~questpack_give(kebab, 1));
+$banked = calc($banked + ~questpack_give(beer, 2));
+$banked = calc($banked + ~questpack_give(beer_glass, 1));
+if (%giantdwarf_quest < ^gd_complete) {
+    if (%gd_chosen = 0) %gd_chosen = ^gd_purple_pewter;
+    if (%giantdwarf_current_company = 0) %giantdwarf_current_company = %gd_chosen;
+    %giantdwarf_model_state = 7;
+    ~gd_set(^gd_complete);
+}
+if (%fishingcompo < ^fishingcompo_complete) %fishingcompo = ^fishingcompo_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Forgettable Tale...", $banked);
+mes("Commander Veldaban is in the Black Guard headquarters, west of the Keldagrim bank. ::ftstage sets the quest's stage.");
+
+// ::ftstage <n> - sets Forgettable Tale's stage (ours, quest_forgettable_tale/forgettable_tale.constant):
+// 0 not started (clears everything), 10 Veldaban sent you to the drunken dwarf, 20 the dwarf wants
+// Kelda stout (one seed), 21 all four seeds, 30 Rind let you use the patch (four seeds, the patch
+// weeded), 31 the hops grown in the patch, 40 the hops picked (Kelda hops), 41 the vat brewing,
+// 42 the vat's Kelda stout done (turn the valve), 50 the Kelda stout poured, 60 the tale told,
+// 65 the conductor asked, 70 the boards removed, 80 the first chasm, 90 the Red Axe talking,
+// 100 the second chasm, 110 the records room, 120 the third chasm, 130 Grunsh's spell (back at the
+// tunnel), 140 told Veldaban (a kebab and a beer, at the Laughing Miner), 200 done (no rewards).
+// From 80 to 130 it takes you there.
+[debugproc,ftstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 0) {
+    %forget_main_var = 0;
+    %forget_puzzle_var = 0;
+    %forget_puzzle_var2 = 0;
+    %ft_flags = 0;
+    %ft_rowdy_item = 0;
+    %ft_bookcase = null;
+    %brewing_vat_varbit_1 = 0;
+    %brewing_barrel_varbit_1 = 0;
+    ~ft_ride_clear;
+    ~send_quest_progress(questlist:forget, 0, ^ft_complete);
+    ~update_questpoints;
+    mes("Forgettable Tale...: reset.");
+    return;
+}
+def_int $stage = $n;
+switch_int ($n) {
+    case 21 : $stage = ^ft_seeds;
+    case 31 : $stage = ^ft_planting;
+    case 41, 42 : $stage = ^ft_hops;
+}
+if ($n >= ^ft_seeds) %forget_beer_given = 1;
+if ($n = 21 | $n >= ^ft_planting) {
+    %forget_seed2_given = 1;
+    %forget_seed3_given = 1;
+    %forget_seed4_given = 1;
+}
+if ($n = 20) ~ft_give(kelda_hop_seed, 1);
+if ($n = 21 | $n = 30) ~ft_give(kelda_hop_seed, calc(4 - inv_total(inv, kelda_hop_seed)));
+if ($n = 30) %forget_farming = ^ft_patch_weeded;
+if ($n = 31) %forget_farming = ^ft_patch_grown;
+if ($n = 40) ~ft_give(kelda_hops, 1);
+if ($n = 41) {
+    %brewing_vat_varbit_1 = ^ft_vat_brewing1;
+    settimer(ft_brew, ^ft_brew_ticks);
+}
+if ($n = 42) %brewing_vat_varbit_1 = ^ft_vat_stout;
+if ($n = 50) ~ft_give(kelda_stout, 1);
+if ($n >= ^ft_boards) %forget_boarding_removed = 1;
+if ($n >= ^ft_puzzle2) {
+    %forget_room1_once = 1;
+    %forget_tunnel_cutscene1 = 1;
+}
+if ($n >= ^ft_puzzle3) {
+    %forget_room2_bookcase = 1;
+    %forget_room2_paper1 = 1;
+    %forget_room2_paper2 = 1;
+    %forget_tunnel_cutscene2 = 1;
+}
+if ($n >= ^ft_wiped) %forget_tunnel_cutscene3 = 1;
+if ($n = 140) {
+    ~ft_give(kebab, 1);
+    ~ft_give(beer, 1);
+}
+~ft_set($stage);
+~send_quest_progress(questlist:forget, %forget_quest, ^ft_complete);
+~update_questpoints;
+mes("Forgettable Tale... stage: <tostring($n)>");
+if ($n = ^ft_puzzle1 | $n = ^ft_puzzle2 | $n = ^ft_puzzle3) {
+    ~ft_ride_clear;
+    ~ft_chasm_reset;
+    @ft_chasm_arrive;
+}
+if ($n = ^ft_listen | $n = ^ft_archive) ~ft_chasm_reset;
+if ($n = ^ft_listen) @ft_room_listen;
+if ($n = ^ft_archive) @ft_room_archive;
+if ($n = ^ft_wiped) p_telejump(0_45_158_46_47);
+if ($n = 140) p_telejump(0_45_159_34_13);

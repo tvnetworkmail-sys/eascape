@@ -1,0 +1,73 @@
+// Forgettable Tale of a Drunken Dwarf (Rise of the Red Axe part II, 26 July 2005). The quest's
+// stage is the cache's own %forget_quest (varbit 822, bits 0-7 of forget_main_var, which the
+// all.varp entry keeps). No source numbers the stages: the values are ours, the steps the OSRS
+// wiki's walkthrough and transcript.
+^ft_not_started = 0
+^ft_started = 10      // Veldaban sent you to the drunken dwarf
+^ft_seeds = 20        // he wants Kelda stout and gave you the first seed
+^ft_planting = 30     // Rind let you use the palace's Kelda hops patch
+^ft_hops = 40         // you picked the Kelda hops
+^ft_stout = 50        // you poured the Kelda stout
+^ft_tale = 60         // the drunken dwarf told his tale
+^ft_conductor = 65    // the cart conductor can't open the boarded-up tunnel
+^ft_boards = 70       // your company's director had the boards removed
+^ft_puzzle1 = 80      // the first chasm
+^ft_listen = 90       // the Red Axe talking
+^ft_puzzle2 = 100     // the second chasm
+^ft_archive = 110     // the Red Axe's records
+^ft_puzzle3 = 120     // the third chasm
+^ft_wiped = 130       // Grunsh's spell: you only remember that you must tell Veldaban something
+^ft_kebab = 140       // ...about kebabs and beer, in the Laughing Miner
+^ft_complete = 200
+^ft_questpoints = 2
+
+// %forget_gardener_task (ours): Rind's letter to Elstan
+^ft_letter_none = 0
+^ft_letter_given = 1
+^ft_letter_delivered = 2
+^ft_letter_rewarded = 3
+^ft_letter_refused = 4
+
+// %forget_farming: the cache's multiloc of the Keldagrim hops patch (0-2 weeds, 3 weeded, 4 seeds,
+// 5-7 growing, 8 fully grown)
+^ft_patch_weeded = 3
+^ft_patch_seeds = 4
+^ft_patch_grown = 8
+
+// %brewing_vat_varbit_1 / %brewing_barrel_varbit_1: the cache's multilocs of the Keldagrim vat and
+// barrel (brewing_vat_1, brewing_barrel_1); 2009scape's Kelda stout values (KeldaStoutGrowth.kt)
+^ft_vat_empty = 0
+^ft_vat_water = 1
+^ft_vat_barley = 2
+^ft_vat_hops = 68
+^ft_vat_brewing1 = 69
+^ft_vat_brewing2 = 70
+^ft_vat_stout = 71
+^ft_barrel_unfinished = 4
+^ft_barrel_stout = 3
+
+// 2009scape: Kelda stout ferments one step every 5 minutes (KeldaStoutGrowth, 5 * 100 ticks)
+^ft_brew_ticks = 500
+// ours: the hops grow one step every 4 minutes (the OSRS wiki: 15-20 minutes in all)
+^ft_grow_ticks = 400
+// ours: after this long the rowdy dwarf forgets what he asked for and asks for something else
+// (the OSRS wiki: "wait a few minutes and talk to him again for a different request")
+^ft_rowdy_ticks = 500
+
+// the junction stones: 1 green (turn left, the upper track), 2 yellow (turn right, the lower one).
+// The track maps are the cache's (inter_179, inter_180 and inter_288 draw each junction's two ways
+// as their own models; ft_puzzle.rs2 says how they were read).
+^ft_green = 1
+^ft_yellow = 2
+
+// where a cart ride ends (ft_tracks.rs2): a junction is 1-19
+^ft_exit = 100
+^ft_box1 = 101
+^ft_box2 = 102
+^ft_top = 103
+^ft_dead = 104
+^ft_blocked = 105
+
+// %ft_flags bits (ours)
+^ftf_met_dwarf = 0
+^ftf_asked_dwarf = 1
