@@ -226,7 +226,7 @@ switch_obj(last_useitem) {
 
         @show_toad;
 
-    case ogre_bow :
+    case ogre_bow, zogre_bow : // EASCape: Magic Carpet Ride (5 July 2005): the composite bow counts too
         ~chatnpc("<p,neutral>Yeah, it's a goodly stabbie chucker, but you's is too weedy to use it like Rantz.");
 
     case default :
@@ -457,14 +457,17 @@ if($op = 4) {
 [label,rantz_givehats]
 ~chatplayer("<p,neutral>Can I have a hat please?");
 ~chatnpc("<p,neutral>You's creature show me da bow den!");
-if(inv_total(inv, ogre_bow) = 0 & inv_total(worn, ogre_bow) = 0) {
+// EASCape: Magic Carpet Ride (5 July 2005): he'll check the composite ogre bow as well
+def_obj $bow = ogre_bow;
+if (inv_total(inv, ogre_bow) = 0 & inv_total(worn, ogre_bow) = 0) $bow = zogre_bow;
+if(inv_total(inv, $bow) = 0 & inv_total(worn, $bow) = 0) {
     ~chatplayer("<p,neutral>Sorry Rantz, I don't have the bow.");
     ~chatnpc("<p,neutral>Dat's da shame thing dat is! No flapper hat for you den!");
     return;
 }
 // https://www.youtube.com/watch?v=LtoYNXgM5Wg
 // this is always an ogre bow (for ref when changing this in 2005)
-~objbox(ogre_bow, "You show Rantz the marks on your bow.", 250, 0, divide(^objbox_height, 2));
+~objbox($bow, "You show Rantz the marks on your bow.", 250, 0, divide(^objbox_height, 2));
 if(%chompybird_kills = 0) {
     ~chatnpc("<p,happy>Hey, yous creature needs to hunt da chompie if you's wants der's flappy hat!");
     return;

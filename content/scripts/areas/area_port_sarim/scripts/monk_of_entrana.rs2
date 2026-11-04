@@ -47,7 +47,18 @@ if ((inv_totalcat(inv, armour_hands) > 0 | inv_totalcat(worn, armour_hands) > 0)
     | (inv_totalcat(inv, weapon_bow) > 0 | inv_totalcat(worn, weapon_bow) > 0)
     | (inv_totalcat(inv, weapon_claws) > 0 | inv_totalcat(worn, weapon_claws) > 0)
     | (inv_totalcat(inv, weapon_polearm) > 0 | inv_totalcat(worn, weapon_polearm) > 0)
-    | (inv_totalcat(inv, cannon_parts) > 0)) {
+    | (inv_totalcat(inv, cannon_parts) > 0)
+    | ~has_rogue_armour = true) {
     return(true);
 }
+return(false);
+
+// EASCape: Magic Carpet Ride (5 July 2005): "It will no longer be possible to take Rogue armour to
+// places where armour is restricted, such as Entrana." The rogue pieces have no armour category.
+[proc,has_rogue_armour]()(boolean)
+if (inv_total(inv, roguesden_helm) > 0 | inv_total(worn, roguesden_helm) > 0) return(true);
+if (inv_total(inv, roguesden_body) > 0 | inv_total(worn, roguesden_body) > 0) return(true);
+if (inv_total(inv, roguesden_legs) > 0 | inv_total(worn, roguesden_legs) > 0) return(true);
+if (inv_total(inv, roguesden_gloves) > 0 | inv_total(worn, roguesden_gloves) > 0) return(true);
+if (inv_total(inv, roguesden_boots) > 0 | inv_total(worn, roguesden_boots) > 0) return(true);
 return(false);
