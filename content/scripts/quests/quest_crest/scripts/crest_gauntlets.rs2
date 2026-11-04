@@ -1,0 +1,53 @@
+// EASCape: Garden Of Tranquillity (30 August 2005): "Players who have completed the Family Crest
+// quest will now be able to change their reward gauntlets. Just speak to Johnathon in the Jolly
+// Boar Inn, Caleb in Catherby or Avan in Al Kharid if you would like them to re-enchant your
+// gauntlets for you. They will, unfortunately, charge you for this service."
+// The fee and the lines: the OSRS wiki's Transcript:Avan, Caleb and Johnathon ("Yes certainly,
+// though it will cost you 25,000 coins.", each brother's own box as he does it; Caleb's lines for
+// gauntlets he's already treated or none to imbue, and "Oh, right." without the coins). The other
+// two brothers' lines for those: 2009scape's SwapGauntletsHelper ("You already have the ...", "You
+// do not have the gauntlets with you in your inventory."), which also wants the gauntlets in your
+// pack. Your first choice stays free, as before (the brothers' own scripts).
+
+[label,crest_change_gauntlets](namedobj $mine, int $bit)
+~chatnpc("<p,neutral>Yes well... Is there anything I can help you with?");
+if (~p_choice2("Can you change my gauntlets for me?", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+~chatplayer("<p,quiz>Can you change my gauntlets for me?");
+if (inv_total(inv, $mine) > 0) {
+    if ($mine = gauntlets_of_cooking) ~chatnpc("<p,neutral>Your gauntlets have already been treated with my potions.");
+    else ~chatnpc("<p,neutral>You already have the <oc_name($mine)>.");
+    return;
+}
+def_namedobj $other = null;
+if (inv_total(inv, gauntlets_of_cooking) > 0) $other = gauntlets_of_cooking;
+if (inv_total(inv, gauntlets_of_goldsmithing) > 0) $other = gauntlets_of_goldsmithing;
+if (inv_total(inv, gauntlets_of_chaos) > 0) $other = gauntlets_of_chaos;
+if ($other = null) {
+    if ($mine = gauntlets_of_cooking) ~chatnpc("<p,neutral>You don't have any gauntlets I can imbue.");
+    else ~chatnpc("<p,neutral>You do not have the gauntlets with you in your inventory.");
+    return;
+}
+~chatnpc("<p,neutral>Yes certainly, though it will cost you 25,000 coins.");
+if (inv_total(inv, coins) < 25000) {
+    ~chatplayer("<p,sad>Oh, right.");
+    return;
+}
+if (~p_choice2("Great thanks!", 1, "No that's okay thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No that's okay thanks.");
+    return;
+}
+~chatplayer("<p,happy>Great thanks!");
+if (inv_total(inv, coins) < 25000 | inv_total(inv, $other) = 0) return;
+inv_del(inv, coins, 25000);
+inv_del(inv, $other, 1);
+inv_add(inv, $mine, 1);
+%crest_spells_levers_gauntlets = setbit_range_toint(%crest_spells_levers_gauntlets, 0, ^crest_cooking_gauntlets_chosen, ^crest_chaos_gauntlets_chosen);
+%crest_spells_levers_gauntlets = setbit(%crest_spells_levers_gauntlets, $bit);
+switch_obj ($mine) {
+    case gauntlets_of_cooking : ~mesbox("Caleb takes the gauntlets from you, pours some herbs and seasonings on them, bakes them on his range for a short time, then hands them back to you.");
+    case gauntlets_of_chaos : ~mesbox("Johnathon takes your gauntlets from you, and begins a low chant over them. You see them begin to glow and sparkle, before he returns them to you.");
+    case default : ~mesbox("Avan takes your gauntlets, takes out a small hammer, and pounds them into a slightly new shape, then hands them back to you.");
+}

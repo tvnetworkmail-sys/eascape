@@ -1,0 +1,397 @@
+// EASCape: Garden of Tranquillity (30 August 2005): the queen's garden east of Varrock palace.
+// The patches, plant pots and plinths are the map's own (the 377 cache's garden_* locs, already
+// laid out), each with its own varbit (garden_varp_2): 0-2 weeds, 3 weeded, 4 sown, 5-6 growing,
+// 7 grown; the orchid pots 0 empty, 1 compost; the White Tree 4 the sapling, 5-7 growing, 8 grown,
+// 9-12 one to four fruit. The lines are the RuneScape wiki's Transcript:Garden of Tranquillity
+// ("Back in the Garden") and the OSRS wiki's copy of it. Ours: the times (the wiki: "these plants
+// should not take long to grow", 10-15 minutes, the White Tree the longest): the flowers grow a stage
+// at every Farming growth tick (5 minutes, 15 minutes in all), the White Tree every second one
+// (40 minutes), and its fruit one at a time every eighth (40 minutes) once the quest is done;
+// level 10 Farming to sow them (the wiki's trivia); the rake's 8 XP a weed as any patch.
+
+// ---------------------------------------------------------------- the patches by number
+// 1 White Tree, 2 delphiniums, 3 snowdrops, 4 vines, 5 red, 6 pink, 7 white rosebush,
+// 8 pink orchids, 9 yellow orchids
+[proc,got_patch_get](int $p)(int)
+switch_int ($p) {
+    case 1 : return(%garden_white_tree_varbit);
+    case 2 : return(%garden_delphiniums_varbit);
+    case 3 : return(%garden_snowdrops_varbit);
+    case 4 : return(%garden_vines_varbit);
+    case 5 : return(%garden_rosebush_red_varbit);
+    case 6 : return(%garden_rosebush_pink_varbit);
+    case 7 : return(%garden_rosebush_white_varbit);
+    case 8 : return(%garden_orchids_pink_varbit);
+    case 9 : return(%garden_orchids_yellow_varbit);
+}
+return(0);
+
+[proc,got_patch_set](int $p, int $v)
+switch_int ($p) {
+    case 1 : %garden_white_tree_varbit = $v;
+    case 2 : %garden_delphiniums_varbit = $v;
+    case 3 : %garden_snowdrops_varbit = $v;
+    case 4 : %garden_vines_varbit = $v;
+    case 5 : %garden_rosebush_red_varbit = $v;
+    case 6 : %garden_rosebush_pink_varbit = $v;
+    case 7 : %garden_rosebush_white_varbit = $v;
+    case 8 : %garden_orchids_pink_varbit = $v;
+    case 9 : %garden_orchids_yellow_varbit = $v;
+}
+
+[proc,got_patch_of_loc](loc $loc)(int)
+switch_loc ($loc) {
+    case garden_white_tree_patch : return(1);
+    case garden_delphinium_patch : return(2);
+    case garden_snowdrop_patch : return(3);
+    case garden_vine_patch : return(4);
+    case garden_rosebush_patch_red : return(5);
+    case garden_rosebush_patch_pink : return(6);
+    case garden_rosebush_patch_white : return(7);
+    case garden_orchid_pink_patch : return(8);
+    case garden_orchid_yellow_patch : return(9);
+}
+return(0);
+
+// what goes in it (the seed you sow) and how many
+[proc,got_patch_seed](int $p)(namedobj, int)
+switch_int ($p) {
+    case 1 : return(garden_white_tree_plantpot_sapling, 1);
+    case 2 : return(garden_delphinium_seed, 4);
+    case 3 : return(garden_snowdrop_seed, 4);
+    case 4 : return(garden_vine_seed, 4);
+    case 5 : return(garden_rosebush_seed_red, 4);
+    case 6 : return(garden_rosebush_seed_pink, 4);
+    case 7 : return(garden_rosebush_seed_white, 4);
+    case 8 : return(garden_orchid_pink_seed, 3);
+    case 9 : return(garden_orchid_yellow_seed, 3);
+}
+return(null, 0);
+
+[proc,got_seed_patch](obj $obj)(int)
+switch_obj ($obj) {
+    case garden_white_tree_plantpot_sapling : return(1);
+    case garden_delphinium_seed : return(2);
+    case garden_snowdrop_seed : return(3);
+    case garden_vine_seed : return(4);
+    case garden_rosebush_seed_red : return(5);
+    case garden_rosebush_seed_pink : return(6);
+    case garden_rosebush_seed_white : return(7);
+    case garden_orchid_pink_seed : return(8);
+    case garden_orchid_yellow_seed : return(9);
+}
+return(0);
+
+// the plant's name as Ellamaria says it, and has/have (Transcript: "I see that the [plant name]
+// [hasn't/haven't] finished growing"; "I want you to grow ... there")
+[proc,got_patch_name](int $p)(string, string)
+switch_int ($p) {
+    case 1 : return("White Tree", "hasn't");
+    case 2 : return("delphiniums", "haven't");
+    case 3 : return("snowdrops", "haven't");
+    case 4 : return("Burthorpe Vines", "haven't");
+    case 5 : return("red rosebush", "hasn't");
+    case 6 : return("pink rosebush", "hasn't");
+    case 7 : return("white rosebush", "hasn't");
+    case 8 : return("pink orchids", "haven't");
+    case 9 : return("yellow orchids", "haven't");
+}
+return("plants", "haven't");
+
+// the planting message's patch name ("You plant [3-4] seeds in the [grapevine/delphinium/
+// snowdrop/[white/red/yellow] rosebush/white tree] patch.")
+[proc,got_patch_plantname](int $p)(string)
+switch_int ($p) {
+    case 1 : return("white tree");
+    case 2 : return("delphinium");
+    case 3 : return("snowdrop");
+    case 4 : return("grapevine");
+    case 5 : return("red rosebush");
+    case 6 : return("pink rosebush");
+    case 7 : return("white rosebush");
+    case 8 : return("pink orchid");
+    case 9 : return("yellow orchid");
+}
+return("");
+
+[proc,got_patch_grown](int $p)(boolean)
+if ($p = 1) {
+    if (~got_patch_get(1) >= ^got_tree_grown) return(true);
+    return(false);
+}
+if (~got_patch_get($p) >= ^got_patch_grown) return(true);
+return(false);
+
+// every patch sown and both statues on their plinths: "Well, I think that's everything..."
+[proc,got_all_sown]()(boolean)
+def_int $p = 1;
+while ($p <= 9) {
+    if (~got_patch_get($p) < ^got_patch_sown) return(false);
+    $p = calc($p + 1);
+}
+if (%garden_king_statue_varbit ! ^got_statue_placed | %garden_saradomin_statue_varbit ! ^got_statue_placed) return(false);
+return(true);
+
+[proc,got_all_grown]()(boolean)
+def_int $p = 1;
+while ($p <= 9) {
+    if (~got_patch_grown($p) = false) return(false);
+    $p = calc($p + 1);
+}
+return(true);
+
+// ---------------------------------------------------------------- growing
+// called at every Farming growth tick (skill_farming/farming.rs2 ~farming_grow), offline too
+[proc,got_grow](int $minute)
+if (%garden_quest < ^got_started) return;
+def_int $p = 2;
+def_int $v;
+while ($p <= 9) {
+    $v = ~got_patch_get($p);
+    if ($v >= ^got_patch_sown & $v < ^got_patch_grown) ~got_patch_set($p, calc($v + 1));
+    $p = calc($p + 1);
+}
+$v = %garden_white_tree_varbit;
+if ($v >= ^got_patch_sown & $v < ^got_tree_grown & calc($minute % 10) = 0) {
+    %garden_white_tree_varbit = calc($v + 1);
+} else if (%garden_quest >= ^got_complete & $v >= ^got_tree_grown & $v < ^got_tree_fruit4 & calc($minute % 40) = 0) {
+    %garden_white_tree_varbit = calc($v + 1); // ours: a fruit grows back
+}
+
+// ---------------------------------------------------------------- the patches' options
+[oplocu,garden_white_tree_patch] ~got_patch_use(1);
+[oplocu,garden_delphinium_patch] ~got_patch_use(2);
+[oplocu,garden_snowdrop_patch] ~got_patch_use(3);
+[oplocu,garden_vine_patch] ~got_patch_use(4);
+[oplocu,garden_rosebush_patch_red] ~got_patch_use(5);
+[oplocu,garden_rosebush_patch_pink] ~got_patch_use(6);
+[oplocu,garden_rosebush_patch_white] ~got_patch_use(7);
+[oplocu,garden_orchid_pink_patch] ~got_patch_use(8);
+[oplocu,garden_orchid_yellow_patch] ~got_patch_use(9);
+
+[oploc2,garden_white_tree_patch] ~got_patch_inspect(1);
+[oploc2,garden_delphinium_patch] ~got_patch_inspect(2);
+[oploc2,garden_snowdrop_patch] ~got_patch_inspect(3);
+[oploc2,garden_vine_patch] ~got_patch_inspect(4);
+[oploc2,garden_rosebush_patch_red] ~got_patch_inspect(5);
+[oploc2,garden_rosebush_patch_pink] ~got_patch_inspect(6);
+[oploc2,garden_rosebush_patch_white] ~got_patch_inspect(7);
+[oploc2,garden_orchid_pink_patch] ~got_patch_inspect(8);
+[oploc2,garden_orchid_yellow_patch] ~got_patch_inspect(9);
+
+[oploc2,garden_king_statue_multi] ~got_plinth_inspect(1);
+[oploc2,garden_saradomin_statue_multi] ~got_plinth_inspect(2);
+
+// Ellamaria tells you what goes there
+[proc,got_ellamaria_says](string $text)
+~chatnpc_specific("Ellamaria", queen_ellamaria, $text);
+
+[proc,got_patch_wants](int $p)
+switch_int ($p) {
+    case 8 : ~got_ellamaria_says("<p,neutral>I want you to grow pink orchids there.");
+    case 9 : ~got_ellamaria_says("<p,neutral>I want you to grow yellow orchids there.");
+    case 1 : ~got_ellamaria_says("<p,neutral>I want you to grow a White Tree there.");
+    case 2 : ~got_ellamaria_says("<p,neutral>I want you to grow delphiniums there.");
+    case 3 : ~got_ellamaria_says("<p,neutral>I want you to grow snowdrops there.");
+    case 4 : ~got_ellamaria_says("<p,neutral>I want you to grow Burthorpe Vines there.");
+    case 5 : ~got_ellamaria_says("<p,neutral>I want you to grow red rosebushes there.");
+    case 6 : ~got_ellamaria_says("<p,neutral>I want you to grow pink rosebushes there.");
+    case 7 : ~got_ellamaria_says("<p,neutral>I want you to grow white rosebushes there.");
+}
+
+[proc,got_patch_inspect](int $p)
+if (%garden_quest = ^got_not_started) {
+    ~chatplayer("<p,quiz>This patch looks like it's the property of Varrock palace. Maybe I should go and speak to Queen Ellamaria about it.");
+    return;
+}
+~got_patch_wants($p);
+
+[proc,got_plinth_inspect](int $which)
+if (%garden_quest = ^got_not_started) {
+    ~chatplayer("<p,quiz>This plinth looks like it's the property of Varrock palace. Maybe I should go and speak to Queen Ellamaria about it.");
+    return;
+}
+if ($which = 1) ~got_ellamaria_says("<p,neutral>I want you to place a statue of a Misthalin king there.");
+else ~got_ellamaria_says("<p,neutral>I want you to place a statue of Saradomin there.");
+
+[proc,got_patch_use](int $p)
+def_obj $item = last_useitem;
+if (%garden_quest = ^got_not_started) {
+    if ($item = rake) {
+        ~got_ellamaria_says("<p,angry>Hey - what are you doing with that patch, peasant?!? One demands that you speak to one's self immediately!!");
+        ~mesbox("[Roughly translated, this means that Queen Ellamaria would like a word.]");
+        return;
+    }
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $v = ~got_patch_get($p);
+switch_obj ($item) {
+    case garden_list :
+        ~got_patch_wants($p);
+        return;
+    case rake :
+        ~got_patch_rake($p);
+        return;
+    case watering_can_1, watering_can_2, watering_can_3, watering_can_4, watering_can_5, watering_can_6, watering_can_7, watering_can_8, watering_can_0 :
+        ~mesbox("These don't really need watering - the soil seems to be extremely fertile.");
+        return;
+    case bucket_compost, bucket_supercompost :
+        if ($p >= 8 & $v = 0) {
+            ~got_pot_compost($p, $item);
+            return;
+        }
+        ~mesbox("This patch doesn't really need treating with compost - the soil seems to be extremely fertile.");
+        return;
+    case plantpot_compost :
+        if ($p >= 8) {
+            mes("You need to fill it with compost rather than soil.");
+            return;
+        }
+    case spade :
+        if ($v >= ^got_patch_sown) {
+            ~got_ellamaria_says("<p,angry>Hey, why are you digging that up? Leave it alone!");
+            ~chatplayer("<p,sad>Oh, sorry, didn't mean to...");
+            return;
+        }
+}
+def_int $sp = ~got_seed_patch($item);
+if ($sp = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($p >= 8 & $v = 0) {
+    mes("This plantpot needs some compost in it first.");
+    return;
+}
+if ($sp ! $p) {
+    if ($p >= 8 & $sp >= 8) {
+        mes("These seeds need to be planted in the other plantpot.");
+        return;
+    }
+    mes("This seed can't be planted in this patch.");
+    return;
+}
+~got_patch_plant($p);
+
+[proc,got_patch_rake](int $p)
+if ($p >= 8) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, rake) = 0) {
+    mes("You need a rake to weed a farming patch.");
+    return;
+}
+def_int $v = ~got_patch_get($p);
+if ($v >= ^got_patch_weeded) {
+    mes("This patch doesn't need weeding right now."); // ours, as Farming's
+    return;
+}
+while ($v < ^got_patch_weeded) {
+    anim(farming_raking, 0);
+    p_delay(2);
+    if (stat_random(farming, 180, 255) = true) {
+        ~got_patch_set($p, calc($v + 1));
+        if (inv_freespace(inv) > 0 | inv_total(inv, weeds) > 0) {
+            inv_add(inv, weeds, 1);
+        } else {
+            obj_add(coord, weeds, 1, ^lootdrop_duration);
+        }
+        stat_advance(farming, 80);
+    }
+    $v = ~got_patch_get($p);
+}
+anim(null, 0);
+
+// the orchid pots want compost first (compost's 18 XP, supercompost's 26, as Farming's)
+[proc,got_pot_compost](int $p, obj $bucket)
+anim(farming_pour_water, 0);
+p_delay(1);
+if (inv_total(inv, $bucket) = 0) return;
+inv_del(inv, $bucket, 1);
+inv_add(inv, bucket_empty, 1);
+~got_patch_set($p, 1);
+if ($bucket = bucket_supercompost) {
+    mes("You fill the plantpot with supercompost."); // ours
+    stat_advance(farming, 260);
+    return;
+}
+mes("You fill the plantpot with compost."); // ours
+stat_advance(farming, 180);
+
+[proc,got_patch_plant](int $p)
+def_int $v = ~got_patch_get($p);
+if ($p < 8 & $v < ^got_patch_weeded) {
+    mes("This patch needs weeding first."); // ours, as Farming's
+    return;
+}
+if ($v >= ^got_patch_sown) {
+    mes("Something is already growing there."); // ours
+    return;
+}
+if (stat_base(farming) < 10) {
+    ~mesbox("You need to be a level 10 to plant that."); // the wiki: level 10 Farming
+    return;
+}
+def_namedobj $seed;
+def_int $n;
+$seed, $n = ~got_patch_seed($p);
+if ($p = 1) {
+    if (inv_total(inv, spade) = 0) {
+        mes("You need a spade to do that."); // Void, as a tree patch
+        return;
+    }
+    inv_del(inv, $seed, 1);
+    inv_add(inv, plantpot_empty, 1);
+    anim(human_dig, 0);
+    sound_synth(digspade, 1, 0);
+    p_delay(2);
+    mes("You plant the white tree sapling in the white tree patch."); // ours, after the wiki's
+    ~got_patch_set($p, ^got_patch_sown);
+    return;
+}
+if (inv_total(inv, dibber) = 0) {
+    mes("You need a seed dibber to plant the seed in the dirt.");
+    return;
+}
+if (inv_total(inv, $seed) < $n) $n = inv_total(inv, $seed);
+inv_del(inv, $seed, $n);
+anim(farming_seed_dibbing, 0);
+sound_synth(farming_dibbing, 1, 0);
+p_delay(2);
+if ($n = 1) mes("You plant 1 seed in the <~got_patch_plantname($p)> patch.");
+else mes("You plant <tostring($n)> seeds in the <~got_patch_plantname($p)> patch.");
+~got_patch_set($p, ^got_patch_sown);
+
+// ---------------------------------------------------------------- the White Tree's fruit
+// After the quest: "feel free to pick fruit from the White Tree" (Ellamaria). The RuneScape wiki:
+// 12 Farming XP a fruit; ours: one at a time, as a fruit tree, while you have room
+[oploc1,garden_white_tree_patch]
+def_int $v = %garden_white_tree_varbit;
+if ($v <= ^got_tree_grown) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space to do that.");
+    return;
+}
+anim(garden_picking, 0);
+p_delay(1);
+if (%garden_white_tree_varbit <= ^got_tree_grown) return;
+inv_add(inv, garden_white_tree_fruit, 1);
+stat_advance(farming, 120);
+%garden_white_tree_varbit = calc(%garden_white_tree_varbit - 1);
+mes("You pick a White Tree fruit."); // ours
+
+// "Each fruit restores about 8% of energy" (the OSRS wiki's quest page); Void heals = 30 (3 of
+// our hitpoints)
+[opheld1,garden_white_tree_fruit]
+def_int $slot = last_slot;
+anim(human_eat, 0);
+sound_synth(eat, 1, 0);
+inv_delslot(inv, $slot);
+mes("You eat the White Tree fruit."); // ours
+healenergy(800);
+stat_heal(hitpoints, 3, 0);

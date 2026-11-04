@@ -233,8 +233,19 @@ if (%fenk_quest < ^fenk_creature_convinced | inv_total(inv, ring_of_charos) > 0 
     ~chatnpc("<p,quiz>What do you think you're doing???");
     return;
 }
+// EASCape: Garden of Tranquillity: once the Wise Old Man has opened it, a destroyed ring comes back
+// opened ("You'll have to pick his pocket again", Void's destroy line); one down the well doesn't
+// (the OSRS wiki: "it is NOT possible to pickpocket a new one") (quest_garden)
+if (%garden_quest >= ^got_ring & (%garden_ring_in_well_varbit = 1 | ~got_has(ring_of_charos_unlocked) = true)) {
+    ~chatnpc("<p,quiz>What do you think you're doing???");
+    return;
+}
 anim(human_pickpocket, 0);
 mes("You steal the Ring of Charos from Fenkenstrain.");
+if (%garden_quest >= ^got_ring) {
+    ~fenk_give(ring_of_charos_unlocked);
+    return;
+}
 if (%fenk_quest >= ^fenk_complete) {
     ~fenk_give(ring_of_charos);
     return;

@@ -60,6 +60,7 @@ return(true);
 
 [proc,farming_empty](int $patch)
 def_boolean $ok = ~farming_set_state($patch, 0, 0, 0);
+~got_farming_emptied($patch); // EASCape: Garden of Tranquillity's crops for Lyra, Kragen and Elstan (quest_garden/got_farmers.rs2)
 ~farming_set_compost($patch, 0);
 ~farming_set_claimed($patch, false);
 ~farming_set_protected($patch, false);
@@ -246,6 +247,7 @@ if (%eascape_farming_offset > 0) %eascape_farming_clock = $now;
 
 [proc,farming_grow](int $minute)
 ~farming_grow_saplings;
+~got_grow($minute); // EASCape: Garden of Tranquillity's garden (quest_garden/got_garden.rs2)
 ~farming_grow_compost($minute);
 def_int $patch = 1;
 def_int $count = ~farming_patch_count;
@@ -327,6 +329,7 @@ if (~farming_set_state($patch, $crop, 1, calc($stage + 1)) = false) {
         return;
     }
     $ok = ~farming_set_state($patch, $crop, 5, 1);
+    ~got_farming_grown($patch); // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
 }
 
 // Void's chance: a roll of 128 at or under the crop's chance, halved with compost and a fifth
@@ -389,6 +392,10 @@ switch_obj (last_useitem) {
 db_find(farming_crop:seed, last_useitem);
 def_dbrow $row = db_findnext;
 if ($row = null) {
+    if (~got_seed_patch(last_useitem) > 0) {
+        mes("You can only plant those in the Varrock Palace garden."); // EASCape: Garden of Tranquillity (quest_garden)
+        return;
+    }
     ~displaymessage(^dm_default);
     return;
 }
@@ -486,6 +493,7 @@ if ($amount = 1) {
     mes("You plant <tostring($amount)> <$seeds> in the <$patchname>.");
 }
 def_boolean $ok = ~farming_set_state($patch, db_getfield($row, farming_crop:index, 0), 1, 0);
+~got_farming_planted($patch, db_getfield($row, farming_crop:index, 0)); // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
 stat_advance(farming, db_getfield($row, farming_crop:plantxp, 0));
 
 [proc,farming_water](int $patch)
@@ -668,6 +676,7 @@ while (~farming_harvestable($patch, ~farming_state($patch)) = true) {
     anim(human_dig, 0);
     p_delay(1);
     inv_add(inv, $produce, 1);
+    ~got_farming_picked($patch); // EASCape: Garden of Tranquillity: Elstan's marigolds (quest_garden/got_farmers.rs2)
     stat_advance(farming, db_getfield($row, farming_crop:harvestxp, 0));
     if ($high = 0 | stat_random(farming, $low, $high) = false) {
         $key = ~farming_state($patch);

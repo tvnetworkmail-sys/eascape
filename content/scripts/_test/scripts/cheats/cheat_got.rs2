@@ -1,0 +1,174 @@
+// EASCape: test commands for Garden of Tranquillity (quest_garden).
+
+// ::gotpack - what the quest needs (the OSRS wiki's list): the Ring of Charos (if you have none),
+// a rake, a seed dibber, a spade, secateurs, a gardening trowel, a watering can, a filled plant pot,
+// 2 buckets of compost, 2 plant cures, rune essence, a hammer, a pestle and mortar, a fishing rod,
+// 3 onion seeds, 3 cabbage seeds and a marigold seed. It also marks Creature of Fenkenstrain done (no
+// rewards) if it isn't. You need 25 Farming (::setstat farming 99).
+[debugproc,gotpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+if (~got_has(ring_of_charos) = false & ~got_has(ring_of_charos_unlocked) = false) {
+    if (%garden_quest >= ^got_ring) $banked = calc($banked + ~questpack_give(ring_of_charos_unlocked, 1));
+    else $banked = calc($banked + ~questpack_give(ring_of_charos, 1));
+}
+$banked = calc($banked + ~questpack_give(rake, 1));
+$banked = calc($banked + ~questpack_give(dibber, 1));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(secateurs, 1));
+$banked = calc($banked + ~questpack_give(gardening_trowel, 1));
+$banked = calc($banked + ~questpack_give(watering_can_8, 1));
+$banked = calc($banked + ~questpack_give(plantpot_compost, 1));
+$banked = calc($banked + ~questpack_give(bucket_compost, 2));
+$banked = calc($banked + ~questpack_give(plant_cure, 2));
+$banked = calc($banked + ~questpack_give(blankrune, 1));
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(pestle_and_mortar, 1));
+$banked = calc($banked + ~questpack_give(fishing_rod, 1));
+$banked = calc($banked + ~questpack_give(onion_seed, 3));
+$banked = calc($banked + ~questpack_give(cabbage_seed, 3));
+$banked = calc($banked + ~questpack_give(marigold_seed, 1));
+if (%fenk_quest < ^fenk_complete) %fenk_quest = ^fenk_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Garden of Tranquillity", $banked);
+mes("Queen Ellamaria is in the garden east of Varrock palace (::gottele 1). ::gotstage sets the stage.");
+
+// ::gotstage <n> - sets Garden of Tranquillity's stage (garden.constant): 0 not started (clears
+// everything), 10 Ellamaria gave you the list, 20 the Wise Old Man opened the ring (you wear it),
+// 21 every gardener done: all the seeds, the sapling and a trolley in your pack, the garden weeded,
+// 22 all sown and both statues placed (not grown), 25 all grown (talk to Ellamaria), 30 fetch King
+// Roald, 60 done (no rewards).
+[debugproc,gotstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 0) {
+    %garden_varp_1 = 0;
+    %garden_varp_2 = 0;
+    %got_flags = 0;
+    ~got_trolley_reset;
+    cleartimer(got_statue_timer);
+    ~send_quest_progress(questlist:garden, 0, ^got_complete);
+    ~update_questpoints;
+    mes("Garden of Tranquillity: reset.");
+    return;
+}
+def_int $stage = $n;
+if ($n >= 20 & $n < 30) $stage = ^got_ring;
+if ($n >= ^got_ring) {
+    %got_flags = setbit(%got_flags, ^gotf_wom_told);
+    if (inv_total(worn, ring_of_charos_unlocked) = 0 & inv_total(inv, ring_of_charos_unlocked) = 0) {
+        inv_del(inv, ring_of_charos, 1);
+        inv_del(worn, ring_of_charos, 1);
+        if (inv_getobj(worn, ^wearpos_ring) = null) inv_setslot(worn, ^wearpos_ring, ring_of_charos_unlocked, 1);
+        else ~got_give(ring_of_charos_unlocked, 1);
+    }
+}
+if ($n >= 21) {
+    %garden_elstan_varbit = ^got_elstan_done;
+    %garden_lyra_varbit = ^got_grow_done;
+    %garden_kragen_varbit = ^got_grow_done;
+    %garden_dantaera_varbit = ^got_dantaera_cut;
+    %garden_althric_varbit = ^got_althric_allowed;
+    %garden_bernald_varbit = ^got_bernald_done;
+    %got_flags = setbit(%got_flags, ^gotf_alain);
+    def_int $p = 1;
+    while ($p <= 7) {
+        if (~got_patch_get($p) < ^got_patch_weeded) ~got_patch_set($p, ^got_patch_weeded);
+        $p = calc($p + 1);
+    }
+}
+if ($n = 21) {
+    ~got_give(garden_white_tree_plantpot_sapling, 1);
+    ~got_give(garden_delphinium_seed, 4);
+    ~got_give(garden_snowdrop_seed, 4);
+    ~got_give(garden_vine_seed, 4);
+    ~got_give(garden_rosebush_seed_red, 4);
+    ~got_give(garden_rosebush_seed_pink, 4);
+    ~got_give(garden_rosebush_seed_white, 4);
+    ~got_give(garden_orchid_pink_seed, 3);
+    ~got_give(garden_orchid_yellow_seed, 3);
+    if (~got_has(garden_trolley_obj) = false) ~got_give(garden_trolley_obj, 1);
+}
+if ($n >= 22) {
+    def_int $v = ^got_patch_sown;
+    def_int $t = ^got_patch_sown;
+    if ($n >= 25) {
+        $v = ^got_patch_grown;
+        $t = ^got_tree_grown;
+    }
+    %garden_white_tree_varbit = $t;
+    def_int $q = 2;
+    while ($q <= 9) {
+        ~got_patch_set($q, $v);
+        $q = calc($q + 1);
+    }
+    %garden_king_statue_varbit = ^got_statue_placed;
+    %garden_saradomin_statue_varbit = ^got_statue_placed;
+    if ($n >= ^got_complete) %garden_white_tree_varbit = ^got_tree_fruit4;
+}
+%garden_quest = $stage;
+~send_quest_progress(questlist:garden, %garden_quest, ^got_complete);
+~update_questpoints;
+mes("Garden of Tranquillity stage: <tostring($n)>");
+
+// ::gottele <n> - the quest's places: 1 Ellamaria's garden, 2 the Wise Old Man, 3 Elstan (Falador),
+// 4 Lyra (Port Phasmatys), 5 Kragen (Ardougne), 6 Dantaera (Catherby), 7 the White Tree (Ice
+// Mountain), 8 Brother Althric (Edgeville Monastery), 9 the Edgeville well, 10 Bernald
+// (Burthorpe), 11 Alain (Taverley), 12 Falador's statue of Saradomin, 13 Lumbridge's statue of a
+// king, 14 King Roald, 15 the palace's northern courtyard
+[debugproc,gottele](int $n)
+if (p_finduid(uid) = false) return;
+def_int $x = 0;
+def_int $z = 0;
+switch_int ($n) {
+    case 1 :
+        $x = 3229;
+        $z = 3484;
+    case 2 :
+        $x = 3088;
+        $z = 3253;
+    case 3 :
+        $x = 3053;
+        $z = 3307;
+    case 4 :
+        $x = 3601;
+        $z = 3525;
+    case 5 :
+        $x = 2668;
+        $z = 3372;
+    case 6 :
+        $x = 2808;
+        $z = 3462;
+    case 7 :
+        $x = 3007;
+        $z = 3496;
+    case 8 :
+        $x = 3049;
+        $z = 3505;
+    case 9 :
+        $x = 3086;
+        $z = 3503;
+    case 10 :
+        $x = 2918;
+        $z = 3532;
+    case 11 :
+        $x = 2933;
+        $z = 3436;
+    case 12 :
+        $x = 2965;
+        $z = 3380;
+    case 13 :
+        $x = 3232;
+        $z = 3217;
+    case 14 :
+        $x = 3222;
+        $z = 3474;
+    case 15 :
+        $x = 3226;
+        $z = 3494;
+    case default :
+        mes("::gottele 1-15: 1 Ellamaria, 2 Wise Old Man, 3 Elstan, 4 Lyra, 5 Kragen, 6 Dantaera, 7 White Tree, 8 Brother Althric");
+        mes("9 Edgeville well, 10 Bernald, 11 Alain, 12 Falador statue, 13 Lumbridge statue, 14 King Roald, 15 palace courtyard");
+        return;
+}
+p_telejump(movecoord(0_0_0_0_0, $x, 0, $z));

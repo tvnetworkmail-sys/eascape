@@ -1,0 +1,837 @@
+// EASCape: Garden of Tranquillity: the seeds for the queen's garden. Elstan's delphiniums (Falador),
+// Lyra's orchids (Port Phasmatys), Kragen's snowdrops (Ardougne), Dantaera's White Tree (Catherby and
+// Ice Mountain), Brother Althric's roses (Edgeville Monastery), Bernald's Burthorpe vines (with
+// Alain's strong plant cure). Their words are the RuneScape wiki's Transcript:Garden of
+// Tranquillity and the OSRS wiki's copy; the steps the OSRS wiki's walkthrough. Each gardener's
+// progress is the cache's own varbit for them (garden_elstan_varbit and so on; the values ours,
+// garden.constant). The (Charm) lines are only offered while you wear the Ring of Charos (the
+// Wise Old Man: "it will only work whilst you are wearing it").
+// Ours:
+//   - while a gardener has something for you, talking to them asks first whether it's about the
+//     queen's garden or something else (their usual menu): the wiki shows the Fairy Tale I
+//     "which quest?" choice, and Lyra and Kragen's "look after them" answer, so both menus are there;
+//   - the facial expressions;
+//   - the well: a 1 in 4 chance a cast to hook the ring back.
+
+[proc,got_ring_worn]()(boolean)
+if (inv_total(worn, ring_of_charos_unlocked) > 0) return(true);
+return(false);
+
+// anywhere you have it
+[proc,got_has](obj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(bank, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+// a seed for the garden that you've lost: not carried, banked or sown
+[proc,got_lost_seed](int $p)(boolean)
+if (~got_patch_get($p) >= ^got_patch_sown) return(false);
+def_namedobj $seed;
+def_int $n;
+$seed, $n = ~got_patch_seed($p);
+if (~got_has($seed) = true) return(false);
+return(true);
+
+// ---------------------------------------------------------------- Farming's hooks
+// (skill_farming/farming.rs2): what you sow after the gardeners ask, and when it's grown
+[proc,got_farming_planted](int $patch, int $crop)
+if (%garden_quest < ^got_started) return;
+if ($crop = ^farming_crop_onion & %garden_lyra_varbit = ^got_grow_agreed) {
+    if ($patch = 7) %garden_patch_7_varbit = 1;
+    if ($patch = 8) %garden_patch_8_varbit = 1;
+}
+if ($crop = ^farming_crop_cabbage & %garden_kragen_varbit = ^got_grow_agreed) {
+    if ($patch = 5) %garden_kragen_patch_5_varbit = 1;
+    if ($patch = 6) %garden_kragen_patch_6_varbit = 1;
+}
+if ($crop = ^farming_crop_marigold & $patch = 9 & %garden_elstan_varbit = ^got_elstan_agreed) {
+    %garden_elstan_varbit = ^got_elstan_planted;
+}
+
+[proc,got_farming_grown](int $patch)
+if (%garden_quest < ^got_started) return;
+if (%garden_lyra_varbit = ^got_grow_agreed & (($patch = 7 & %garden_patch_7_varbit = 1) | ($patch = 8 & %garden_patch_8_varbit = 1))) {
+    %garden_lyra_varbit = ^got_grow_grown;
+    mes("Perhaps I should check the onions that I planted for Lyra...");
+}
+if (%garden_kragen_varbit = ^got_grow_agreed & (($patch = 5 & %garden_kragen_patch_5_varbit = 1) | ($patch = 6 & %garden_kragen_patch_6_varbit = 1))) {
+    %garden_kragen_varbit = ^got_grow_grown;
+    mes("Perhaps I should check the cabbages that I planted for Kragen...");
+}
+
+[proc,got_farming_picked](int $patch)
+if ($patch = 9 & %garden_elstan_varbit = ^got_elstan_planted) %garden_elstan_varbit = ^got_elstan_picked;
+
+[proc,got_farming_emptied](int $patch)
+switch_int ($patch) {
+    case 5 : %garden_kragen_patch_5_varbit = 0;
+    case 6 : %garden_kragen_patch_6_varbit = 0;
+    case 7 : %garden_patch_7_varbit = 0;
+    case 8 : %garden_patch_8_varbit = 0;
+    case 9 : if (%garden_elstan_varbit = ^got_elstan_planted) %garden_elstan_varbit = ^got_elstan_agreed;
+}
+
+// "Would you look after my crops for me?" while you're growing them their crop
+[proc,got_farmer_wont_look]()(boolean)
+if (npc_type = lyra & %garden_lyra_varbit = ^got_grow_agreed) {
+    ~chatnpc("<p,angry>I can't believe you're asking me to do that! I asked you to grow some onions for me, not for me to look after them for you! No, I won't look after them!");
+    return(true);
+}
+if (npc_type = kragen & %garden_kragen_varbit = ^got_grow_agreed) {
+    ~chatnpc("<p,angry>I can't believe you're asking me to do that! I asked you to grow some cabbages for me, not for me to look after them for you! No, I won't look after them!");
+    return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- the gardeners
+// called first from their [opnpc1] (quest_fairy1/fairy1_gardeners.rs2): true when you chose the
+// queen's garden (then @got_farmer_talk)
+[proc,got_farmer]()(boolean)
+if (%garden_quest < ^got_started | %garden_quest >= ^got_complete) return(false);
+def_string $line = ~got_farmer_line;
+if (string_length($line) = 0) return(false);
+if (~p_choice2($line, 1, "Something else.", 2) = 2) return(false);
+return(true);
+
+[label,got_farmer_talk]
+switch_npc (npc_type) {
+    case elstan : @got_elstan;
+    case lyra : @got_lyra;
+    case kragen : @got_kragen;
+    case dantaera : @got_dantaera;
+    case farming_gardener_tree_1 : @got_alain;
+}
+
+// the garden's line for this gardener ("" when there's nothing to say)
+[proc,got_farmer_line]()(string)
+switch_npc (npc_type) {
+    case elstan :
+        if (%garden_elstan_varbit = 0) return("Do you have any delphinium seeds to spare?");
+        if (%garden_elstan_varbit < ^got_elstan_done) return("What did I agree to do for delphinium seeds?");
+        if (~got_lost_seed(2) = true) return("Can I have some more delphinium seeds?");
+    case lyra :
+        if (%garden_lyra_varbit = 0) return("Do you have any orchid seeds to spare?");
+        if (%garden_lyra_varbit = ^got_grow_agreed) return("What did you ask me to do?");
+        if (%garden_lyra_varbit = ^got_grow_grown) return("Okay, I've grown those onions like you asked.");
+        if (~got_lost_seed(8) = true | ~got_lost_seed(9) = true) return("Can I have some more orchid seeds?");
+    case kragen :
+        if (%garden_kragen_varbit = 0) return("Do you have any snowdrop seeds to spare?");
+        if (%garden_kragen_varbit = ^got_grow_agreed) return("What did you ask me to do?");
+        if (%garden_kragen_varbit = ^got_grow_grown) return("Okay, I've grown those cabbages like you asked.");
+        if (~got_lost_seed(3) = true) return("Can I have some more snowdrop seeds?");
+    case dantaera :
+        if (%garden_white_tree_varbit >= ^got_patch_sown) return("");
+        if (%garden_dantaera_varbit = 0) return("Do you know how I could grow a White Tree?");
+        if (%garden_dantaera_varbit = ^got_dantaera_allowed) return("Can you remind me what we agreed about the White Tree?");
+        if (~got_has_shoot = true) return("I have taken the cutting from the White Tree.");
+        return("I have lost the cutting from the White Tree.");
+    case farming_gardener_tree_1 :
+        if (%garden_bernald_varbit >= ^got_bernald_tried & %garden_bernald_varbit < ^got_bernald_cured & testbit(%got_flags, ^gotf_alain) = ^false) return("I need to ask you about strong plant cures.");
+}
+return("");
+
+[proc,got_has_shoot]()(boolean)
+if (~got_has(garden_white_tree_shoot) = true | ~got_has(garden_white_tree_plantpot_shoot) = true | ~got_has(garden_white_tree_plantpot_shoot_watered) = true | ~got_has(garden_white_tree_plantpot_sapling) = true) return(true);
+return(false);
+
+// a gardener's seeds, if you have room (the transcript's lines)
+[proc,got_farmer_give](namedobj $seed, int $n, string $mes)(boolean)
+if (inv_freespace(inv) = 0 & inv_total(inv, $seed) = 0) {
+    ~chatnpc("<p,neutral>I would give you some, but you don't appear to have room to carry them.");
+    return(false);
+}
+~chatnpc("<p,happy>Yes, here you go - I hope they grow for you.");
+inv_add(inv, $seed, $n);
+~objbox($seed, $mes, 250, 0, divide(^objbox_height, 2));
+return(true);
+
+// ---------------------------------------------------------------- Elstan (Falador)
+[label,got_elstan]
+def_int $s = %garden_elstan_varbit;
+if ($s = 0) @got_elstan_ask;
+if ($s = ^got_elstan_done) {
+    ~chatplayer("<p,quiz>Can I have some more delphinium seeds?");
+    def_boolean $ok = ~got_farmer_give(garden_delphinium_seed, 4, "Elstan gives you some delphinium seeds.");
+    return;
+}
+if ($s = ^got_elstan_picked & inv_total(inv, marigold) > 0) {
+    ~chatplayer("<p,happy>I have those marigolds for you.");
+    inv_del(inv, marigold, 1);
+    ~chatnpc("<p,happy>Ah, fantastic - Lyra will surely be mine now! Here you go mate, here's those delphinium seeds you were after.");
+    if (~got_farmer_give(garden_delphinium_seed, 4, "Elstan gives you some delphinium seeds.") = true) %garden_elstan_varbit = ^got_elstan_done;
+    else %garden_elstan_varbit = ^got_elstan_done; // the seeds can be asked for again
+    return;
+}
+if ($s < ^got_elstan_picked & inv_total(inv, marigold) > 0) {
+    ~chatnpc("<p,angry>Hang on, I didn't see you growing any marigolds! I want them grown here, in this patch.");
+    ~chatplayer("<p,confused>But they'll be no different to any other marigolds!");
+    ~chatnpc("<p,angry>Do you want those seeds or not?");
+    ~chatplayer("<p,angry>If you're going to be like that, it'll take more than flowers to make Lyra want to date you.");
+    return;
+}
+~chatplayer("<p,quiz>What did I agree to do for delphinium seeds?");
+~chatnpc("<p,neutral>I need some marigolds so that I can woo Lyra. Grow them from seed to flower in this flower patch here, pick them and give them to me, and I'll give you some delphinium seeds.");
+
+[label,got_elstan_ask]
+~chatplayer("<p,quiz>Do you have any delphinium seeds to spare?");
+~chatnpc("<p,neutral>I do have delphinium seeds, yes - but to spare, I'm not so sure. You don't look like that much of a gardener to me.");
+if (~got_ring_worn = false) {
+    ~chatplayer("<p,angry>I'll have you know I'm a pretty good farmer, actually!");
+    return;
+}
+if (~p_choice2("I'll have you know I'm a pretty good farmer, actually!", 1, "(Charm) That is why I have come to an expert for advice.", 2) = 1) {
+    ~chatplayer("<p,angry>I'll have you know I'm a pretty good farmer, actually!");
+    return;
+}
+~chatplayer("<p,happy>That is why I have come to an expert for advice.");
+~chatnpc("<p,happy>Ah, now that I like the sound of. So people are saying I'm an expert, then?");
+switch_int (~p_choice3("No, I just said that to get you to give me some seeds.", 1, "Yeah, carry on - milk it for all it's worth.", 2, "(Charm) Not just AN expert, Elstan - they say you are THE expert.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>No, I just said that to get you to give me some seeds.");
+        ~chatnpc("<p,angry>Really?!? Well, give me any more of that kind of talk and I'll give you something to remember me by, and I'll tell you now it ain't seeds!!");
+        return;
+    case 2 :
+        ~chatplayer("<p,shifty>Yeah, carry on - milk it for all it's worth.");
+        ~chatnpc("<p,angry>What?!? Any more of that talk and it'll be curtains for you, mate!");
+        return;
+}
+~chatplayer("<p,happy>Not just AN expert, Elstan - they say you are THE expert.");
+~chatnpc("<p,happy>I can't say that I'm surprised, really - I do seem to have the golden touch with the old gardening lark. Only just the other day I managed to grow a - I'm not boring you, am I?");
+if (~p_choice2("Yes, please stop right now.", 1, "(Charm) Oh no, I love listening to gardening stories...", 2) = 1) {
+    ~chatplayer("<p,bored>Yes, please stop right now.");
+    ~chatnpc("<p,angry>As a matter of fact I will! I'm not wasting my time on the likes of you!");
+    return;
+}
+~chatplayer("<p,happy>Oh no, I love listening to gardening stories...");
+~chatnpc("<p,happy>You do! That's the first person I've ever met has said that! Well, don't you worry mate, I've got millions of 'em!");
+if (~p_choice2("Somebody kill me now.", 1, "(Charm) Millions? Ah, just what I wanted to hear...", 2) = 1) {
+    ~chatplayer("<p,bored>Somebody kill me now.");
+    return;
+}
+~chatplayer("<p,happy>Millions? Ah, just what I wanted to hear...");
+~chatnpc("<p,happy>Ah, but there's plenty of time for stories. You wanted delphinium seeds, did you say?");
+~chatplayer("<p,confused>Er ... what ... er...");
+~chatplayer("<p,happy>Yes, delphinium seeds!");
+~chatnpc("<p,happy>As I'm in an especially good mood I think I will let you have some. But you have to do something for me first.");
+~chatplayer("<p,quiz>And what's that?");
+~chatnpc("<p,neutral>I need some marigolds to give to Lyra, one of my fellow gardeners over in Morytania. She's a bit mysterious, and has some - well - sinister ways to be sure, but she's just my type.");
+~chatplayer("<p,quiz>So, a bunch of marigolds then?");
+~chatnpc("<p,neutral>Yes, and while I'm at it I can see how good a gardener you are. Grow those marigolds in this flower patch here from seed to flower, pick them and give them to me, and I'll give you some delphinium seeds.");
+@got_elstan_deal;
+
+[label,got_elstan_deal]
+switch_int (~p_choice3("Okay, I'll grow you some marigolds.", 1, "No, I don't have time to do that.", 2, "(Charm) Are you sure you don't just want to give me the seeds now?", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>Okay, I'll grow you some marigolds.");
+        %garden_elstan_varbit = ^got_elstan_agreed;
+    case 2 :
+        ~chatplayer("<p,neutral>No, I don't have time to do that.");
+        ~chatnpc("<p,neutral>Have it your own way, mate. No seeds for you then.");
+    case 3 :
+        ~chatplayer("<p,shifty>Are you sure you don't just want to give me the seeds now?");
+        ~chatnpc("<p,confused>Strange - there is this funny buzzing in my head that says that I should - but I don't think I will. I need those marigolds for Lyra.");
+        @got_elstan_deal;
+}
+
+// ---------------------------------------------------------------- Lyra (Port Phasmatys)
+[label,got_lyra]
+def_int $s = %garden_lyra_varbit;
+if ($s = 0) @got_lyra_ask;
+if ($s = ^got_grow_agreed) {
+    ~chatplayer("<p,quiz>What did you ask me to do?");
+    ~chatnpc("<p,neutral>I need you to grow some onions in one of these vegetable patches, from seed until they are fully grown - then I will give you some orchid seeds.");
+    return;
+}
+if ($s = ^got_grow_grown) {
+    ~chatplayer("<p,happy>Okay, I've grown those onions like you asked.");
+    ~chatnpc("<p,neutral>Yes, you have demonstrated that you have some moderate skills as a farmer. Take these seeds, and do with them that you will.");
+    %garden_lyra_varbit = ^got_grow_done;
+    ~got_lyra_give;
+    return;
+}
+~chatplayer("<p,quiz>Can I have some more orchid seeds?");
+~got_lyra_give;
+
+[proc,got_lyra_give]
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>I would give you some orchid seeds, but I fear that you would not have the space to carry them.");
+    return;
+}
+inv_add(inv, garden_orchid_pink_seed, 3);
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, garden_orchid_yellow_seed, 3);
+} else {
+    obj_add(coord, garden_orchid_yellow_seed, 3, ^lootdrop_duration);
+    mes("The yellow orchid seeds fall to the floor.");
+}
+~objbox(garden_orchid_pink_seed, "Lyra gives you some orchid seeds.", 250, 0, divide(^objbox_height, 2));
+
+[label,got_lyra_ask]
+~chatplayer("<p,quiz>Do you have any orchid seeds to spare?");
+~chatnpc("<p,sad>Please, do not bother me - I have problems to attend to.");
+if (~got_ring_worn = false) {
+    ~chatplayer("<p,neutral>Oh sorry, I didn't mean to take up your valuable time.");
+    return;
+}
+if (~p_choice2("Oh sorry, I didn't mean to take up your valuable time.", 1, "(Charm) If you tell me your problems, I may be able to help you.", 2) = 1) {
+    ~chatplayer("<p,neutral>Oh sorry, I didn't mean to take up your valuable time.");
+    return;
+}
+~chatplayer("<p,happy>If you tell me your problems, I may be able to help you.");
+~chatnpc("<p,sad>As you ask so nicely I will relate my problems to you, but I very much doubt that you may help me at all.");
+~chatplayer("<p,happy>Try me.");
+~chatnpc("<p,sad>You must think it strange that a girl such as myself would choose to ply her trade in a place such as this, this darkest of lands.");
+if (~p_choice2("No, not really - you fit in here a treat.", 1, "(Charm) Yes, I was wondering about that.", 2) = 1) {
+    ~chatplayer("<p,shifty>No, not really - you fit in here a treat.");
+    ~chatnpc("<p,angry>Then begone simple fool and halt your churlish tongue. There are things about me that would leave you with nightmares for the rest of your life.");
+    return;
+}
+~chatplayer("<p,quiz>Yes, I was wondering about that.");
+~chatnpc("<p,sad>My mother, Alice, tends to our farming shop in yonder farmhouse, while I tend to this small allotment. Passing trade has quite literally died off in recent years, and with it our income.");
+if (~p_choice2("I can only say one thing to you - move.", 1, "(Charm) Times must be very hard for you.", 2) = 1) {
+    ~chatplayer("<p,neutral>I can only say one thing to you - move.");
+    ~chatnpc("<p,angry>And leave behind all that we possess?!? Never!!!");
+    return;
+}
+~chatplayer("<p,sad>Times must be very hard for you.");
+~chatnpc("<p,sad>It is but the smallest of our worries. We get by, we survive, on the miserable harvests that I grow here. The price of our survival is what pains me, as it is a price I have paid with the souls of others.");
+if (~p_choice2("Ah, it all makes sense now - you're a psychopath.", 1, "(Charm) Whatever you've done, I'm sure you had just cause.", 2) = 1) {
+    ~chatplayer("<p,shock>Ah, it all makes sense now - you're a psychopath.");
+    return;
+}
+~chatplayer("<p,neutral>Whatever you've done, I'm sure you had just cause.");
+~chatnpc("<p,sad>You say this, but you know nothing of my crimes. I cannot tell you all, but this much I will say - that being allowed to exist in this land is a privilege that must be paid for, and the cost is dear.");
+if (~p_choice2("*Yawn* Could you get to the point please?", 1, "(Charm) And what is the nature of this fee that you pay?", 2) = 1) {
+    ~chatplayer("<p,bored>*Yawn* Could you get to the point please?");
+    ~chatnpc("<p,angry>If your time is so pressing then leave me be and go about your business!");
+    return;
+}
+~chatplayer("<p,quiz>And what is the nature of this fee that you pay?");
+~chatnpc("<p,sad>Mother and I must pay a tithe of blood to the vampyres. Father would have protected us, but he is no longer with us, although his presence still walks among us in the fields. We pay with the blood of others.");
+if (~p_choice2("Er, can I withdraw my offer of help now?", 1, "(Charm) If not yours, then whose blood are you offering?", 2) = 1) {
+    ~chatplayer("<p,scared>Er, can I withdraw my offer of help now?");
+    return;
+}
+~chatplayer("<p,quiz>If not yours, then whose blood are you offering?");
+~chatnpc("<p,shifty>Sometimes I travel to market fairs in distant lands, and I use my feminine arts to lure young farmers back to this land; then the vampyres come for them and I see them no more.");
+if (~p_choice2("Something tells me that you actually enjoy it, really.", 1, "(Charm) How can you deal with so much guilt?", 2) = 1) {
+    ~chatplayer("<p,shifty>Something tells me that you actually enjoy it, really.");
+    ~chatnpc("<p,angry>I would not talk so if I were you - I know a secret call that will bring the vampires here right now, and then you may live only long enough to feel regret for your impertinence.");
+    return;
+}
+~chatplayer("<p,sad>How can you deal with so much guilt?");
+~chatnpc("<p,sad>Please - ask me no more. You said that you were looking for some orchid seeds? I do have some as a matter of fact, and you may as well have them because they do not grow well in this grim land.");
+~chatplayer("<p,happy>Okay, can I have them then...");
+~chatnpc("<p,neutral>You must pass a test first. These are no ordinary flowers, and no ordinary farmer can grow them. You must grow onions here in one of these patches, and when they are fully grown I will give you the seeds.");
+@got_lyra_deal;
+
+[label,got_lyra_deal]
+switch_int (~p_choice3("That's a deal - I'll grow a patch of onions for you.", 1, "I think not - I've loitered too long in this land.", 2, "(Charm) Oh for Saradomin's sake, just give me the seeds!", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>That's a deal - I'll grow a patch of onions for you.");
+        ~chatnpc("<p,neutral>Speak to me when they are fully grown. You need not pick them for me, I will be able to assess your skills by simply watching you.");
+        %garden_lyra_varbit = ^got_grow_agreed;
+    case 2 :
+        ~chatplayer("<p,neutral>I think not - I've loitered too long in this land.");
+        ~chatnpc("<p,neutral>Yes, I agree - far too long.");
+    case 3 :
+        ~chatplayer("<p,angry>Oh for Saradomin's sake, just give me the seeds!");
+        ~chatnpc("<p,confused>This feeling in my head - it is so strange - and it is a feeling I have felt before, although I cannot explain it. If you are trying to use some unnatural power over me, you have failed.");
+        @got_lyra_deal;
+}
+
+// ---------------------------------------------------------------- Kragen (Ardougne)
+[label,got_kragen]
+def_int $s = %garden_kragen_varbit;
+if ($s = 0) @got_kragen_ask;
+if ($s = ^got_grow_agreed) {
+    ~chatplayer("<p,quiz>What did you ask me to do?");
+    ~chatnpc("<p,neutral>You said that you would grow me some cabbages in one of these allotments. When they're ready for harvest come and talk to me, and I'll give you those snowdrop seeds that you're after.");
+    return;
+}
+if ($s = ^got_grow_grown) {
+    ~chatplayer("<p,happy>Okay, I've grown those cabbages like you asked.");
+    ~chatnpc("<p,happy>Yes, I saw - what fine farming prowess! Nobody has ever done anything like that for me before; here you go, these are the seeds you were after I believe.");
+    %garden_kragen_varbit = ^got_grow_done;
+    def_boolean $ok = ~got_farmer_give(garden_snowdrop_seed, 4, "Kragen gives you some snowdrop seeds.");
+    return;
+}
+~chatplayer("<p,quiz>Can I have some more snowdrop seeds?");
+def_boolean $ok2 = ~got_farmer_give(garden_snowdrop_seed, 4, "Kragen gives you some snowdrop seeds.");
+
+[label,got_kragen_ask]
+~chatplayer("<p,quiz>Do you have any snowdrop seeds to spare?");
+~chatnpc("<p,angry>No I don't, as it happens. Sorry.");
+if (~got_ring_worn = false) {
+    ~chatplayer("<p,confused>But I was told that you did!");
+    ~chatnpc("<p,angry>Well, you were told wrong then! Goodbye!");
+    return;
+}
+if (~p_choice2("But I was told that you did!", 1, "(Charm) You seem to be a little irritable, my friend.", 2) = 1) {
+    ~chatplayer("<p,confused>But I was told that you did!");
+    ~chatnpc("<p,angry>Well, you were told wrong then! Goodbye!");
+    return;
+}
+~chatplayer("<p,neutral>You seem to be a little irritable, my friend.");
+~chatnpc("<p,angry>Oh, you think so?!? And what concern is it of yours?");
+if (~p_choice2("I'm not concerned, I just want you to give me some snowdrop seeds.", 1, "(Charm) I don't like to see a fellow human being so upset.", 2) = 1) {
+    ~chatplayer("<p,neutral>I'm not concerned, I just want you to give me some snowdrop seeds.");
+    ~chatnpc("<p,angry>Is that right?!? Well, I do actually have some snowdrop seeds, but you would be the last person I would give them to.");
+    return;
+}
+~chatplayer("<p,sad>I don't like to see a fellow human being so upset.");
+~chatnpc("<p,neutral>I must say, you don't often meet people who show concern the way you have done.");
+if (~p_choice2("I can't take it anymore - just give me the seeds.", 1, "(Charm) So what ails you, my friend?", 2) = 1) {
+    ~chatplayer("<p,angry>I can't take it anymore - just give me the seeds.");
+    ~chatnpc("<p,angry>And to think I listened to you! I was right after all - there is no kindness between human beings anymore.");
+    return;
+}
+~chatplayer("<p,quiz>So what ails you, my friend?");
+~chatnpc("<p,angry>All these people, asking me to look after their crops! And no-one ever asking me how I feel, or if there's something they can do for me!");
+if (~p_choice2("Oh stop whining, it's not like you do it for free.", 1, "(Charm) Well, is there anything I can do for you?", 2) = 1) {
+    ~chatplayer("<p,angry>Oh stop whining, it's not like you do it for free.");
+    ~mesbox("Kragen stares at you in silence, in such a manner that says to you that it's probably best to end this conversation right now.");
+    return;
+}
+~chatplayer("<p,quiz>Well, is there anything I can do for you?");
+~chatnpc("<p,happy>Oh, that's very kind of you! And here I was, thinking of giving it all up and heading off across the seas to find my fortune!");
+if (~p_choice2("Don't let me stop you, there are plenty of ships missing cabin boys.", 1, "(Charm) So what can I do for you?", 2) = 1) {
+    ~chatplayer("<p,shifty>Don't let me stop you, there are plenty of ships missing cabin boys.");
+    ~chatnpc("<p,angry>If you carry on speaking to me like that I might just put this spade to good use, and I'm not talking about digging!");
+    return;
+}
+~chatplayer("<p,quiz>So what can I do for you?");
+~chatnpc("<p,happy>I'd like just for once for somebody to grow something for me. Just something simple; some vegetables would be nice.");
+~chatplayer("<p,quiz>How about some onions?");
+~chatnpc("<p,neutral>I don't have any particular use for onions, so how about cabbages, then?");
+~chatplayer("<p,quiz>Cabbages? Sounds good to me. Where do you want me to grow them?");
+~chatnpc("<p,neutral>Oh, in one of these allotments here. Plant them from seed, and when they're ready for harvesting let me know, I'll give you your seeds.");
+@got_kragen_deal;
+
+[label,got_kragen_deal]
+switch_int (~p_choice3("That's a deal - I'll let you know when your cabbages are ready.", 1, "I'm not wasting my time growing cabbages.", 2, "(Charm) Aarrrrrghhhh! I hate cabbages!!!! Give me the seeds!!!!!", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>That's a deal - I'll let you know when your cabbages are ready.");
+        %garden_kragen_varbit = ^got_grow_agreed;
+    case 2 :
+        ~chatplayer("<p,neutral>I'm not wasting my time growing cabbages.");
+        ~chatnpc("<p,angry>And I'm not wasting my seeds on an upstart like you!");
+    case 3 :
+        ~chatplayer("<p,angry>Aarrrrrghhhh! I hate cabbages!!!! Give me the seeds!!!!!");
+        ~chatnpc("<p,confused>Give ... you ... the ...");
+        ~chatnpc("<p,confused>... yes I should ...");
+        ~chatnpc("<p,confused>... no I won't ...");
+        ~chatnpc("<p,angry>Not after speaking to me like that you upstart!!! Is it a deal or not?!?");
+        @got_kragen_deal;
+}
+
+// ---------------------------------------------------------------- Dantaera (Catherby)
+[label,got_dantaera]
+def_int $s = %garden_dantaera_varbit;
+if ($s = ^got_dantaera_allowed) {
+    ~chatplayer("<p,quiz>Can you remind me what we agreed about the White Tree?");
+    ~chatnpc("<p,sad>The last of the White Trees stands dying atop Ice Mountain. I would greatly desire that you take her last cutting - although she is then certain to die - and cultivate her offspring.");
+    ~chatplayer("<p,neutral>Oh yes, that was it. Off to Ice Mountain then, I suppose.");
+    return;
+}
+if ($s = ^got_dantaera_cut) {
+    if (~got_has_shoot = true) {
+        ~chatplayer("<p,neutral>I have taken the cutting from the White Tree.");
+        ~chatnpc("<p,sad>Then it is done now, whatever happens. Though I am eager for offspring to be planted I am doubly sorrowful that she will now die.");
+        ~chatplayer("<p,happy>Don't worry - this White Tree cutting is safe with me.");
+        return;
+    }
+    ~chatplayer("<p,sad>I have lost the cutting from the White Tree.");
+    ~chatnpc("<p,angry>I do not believe what I am hearing, after everything you said to me before!");
+    ~chatplayer("<p,sad>Er, yes I know ... sorry ...");
+    ~chatnpc("<p,neutral>Maybe - just maybe - there might be another shoot somewhere on the Tree that you can take as a cutting. Go and have a look, before she dies without offspring!");
+    return;
+}
+~chatplayer("<p,quiz>Do you know how I could grow a White Tree?");
+~chatnpc("<p,sad>There are no more White Trees left in the world - they have all been chopped down, and their beauty has forever left this world.");
+if (~got_ring_worn = false) {
+    ~chatplayer("<p,sad>Then my quest is over - I cannot grow a White Tree.");
+    ~chatnpc("<p,sad>Even if there were a White Tree somewhere I would not tell you, for as soon as it would grow then it would be slaughtered in its prime. Man's hunger for fire is greater than his admiration of beauty.");
+    return;
+}
+if (~p_choice2("Then my quest is over - I cannot grow a White Tree.", 1, "(Charm) I think that there is something that you are not telling me.", 2) = 1) {
+    ~chatplayer("<p,sad>Then my quest is over - I cannot grow a White Tree.");
+    ~chatnpc("<p,sad>Even if there were a White Tree somewhere I would not tell you, for as soon as it would grow then it would be slaughtered in its prime. Man's hunger for fire is greater than his admiration of beauty.");
+    return;
+}
+~chatplayer("<p,shifty>I think that there is something that you are not telling me.");
+~chatnpc("<p,sad>Am I so transparent? You have seen through me; there is something I would rather not tell you.");
+if (~p_choice2("You need to chill out and stop taking yourself so seriously.", 1, "(Charm) A secret is a dreadful burden to have to keep to yourself.", 2) = 1) {
+    ~chatplayer("<p,neutral>You need to chill out and stop taking yourself so seriously.");
+    ~chatnpc("<p,sad>Leave me in peace then, if you are so unable to understand my grief.");
+    return;
+}
+~chatplayer("<p,neutral>A secret is a dreadful burden to have to keep to yourself.");
+~chatnpc("<p,sad>It is not hard to keep this secret - to give it away would cause me great sorrow.");
+~chatplayer("<p,neutral>I don't see how. Tell me your secret, and I will keep it as well as you have done.");
+~chatnpc("<p,sad>Very well - I feel deep trust in you for some reason. It is the White Tree, last survivor of a race of Trees that have disappeared from our landscape. Once they covered the land; now there is only one.");
+~chatplayer("<p,quiz>What happened to them?");
+~chatnpc("<p,sad>Man desired the wood of the White Tree, because of its wood of pure white. Need I tell you more?");
+~chatplayer("<p,neutral>I can fill in the rest. So where is the remaining White Tree?");
+~chatnpc("<p,sad>She stands atop Ice Mountain, alone and sorrowful; and, I fear, that she is dying.");
+~chatplayer("<p,neutral>If I took a cutting from ... her ... then I could grow another one.");
+~chatnpc("<p,sad>Yes, but she only has life enough to produce one shoot. Cut this shoot, and she will die, last of her kind gone forever. If you failed to grow this shoot, there would be no more White Trees.");
+if (~p_choice2("You should get out a bit more and quit worrying about trees.", 1, "(Charm) Unless you allow me to do this she will die anyway.", 2) = 1) {
+    ~chatplayer("<p,neutral>You should get out a bit more and quit worrying about trees.");
+    ~chatnpc("<p,sad>No, I am afraid I cannot do that. She is the last White Tree, and I am the last to care about her. I will not let her pass away alone and unloved.");
+    return;
+}
+~chatplayer("<p,sad>Unless you allow me to do this she will die anyway.");
+~chatnpc("<p,sad>I know, but I try not to think about that. You speak truly - she does not have much time left.");
+~chatplayer("<p,quiz>Then will you allow me to take this cutting?");
+~chatnpc("<p,neutral>Do so with my blessing. I wish you good fortune, <displayname>. Go now, and save the beauty of the White Tree.");
+%garden_dantaera_varbit = ^got_dantaera_allowed;
+
+// the White Tree on Ice Mountain: secateurs cut her shoot (anim garden_cut_shoot)
+[oplocu,garden_white_tree_dead]
+if (last_useitem ! secateurs & last_useitem ! fairy_enchanted_secateurs) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%garden_dantaera_varbit = 0 | %garden_quest < ^got_started) {
+    ~chatplayer("<p,sad>There is one shoot on this tree that I might cut off, but I don't have the heart to do it. If I cut this shoot off, this tree will probably die.");
+    return;
+}
+if (~got_has_shoot = true | %garden_white_tree_varbit >= ^got_patch_sown) {
+    ~chatplayer("<p,neutral>I have already cut the shoot from the White Tree. I should quickly grow a new tree in Queen Ellamaria's garden.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space to do that.");
+    return;
+}
+anim(garden_cut_shoot, 0);
+p_delay(1);
+inv_add(inv, garden_white_tree_shoot, 1);
+if (%garden_dantaera_varbit = ^got_dantaera_allowed) {
+    ~chatplayer("<p,sad>Here is the shoot that Dantaera spoke of. Everything she told me is true - this tree will die once I cut this shoot. Well, here goes...");
+    mes("You cut a shoot from the White Tree.");
+    %garden_dantaera_varbit = ^got_dantaera_cut;
+    return;
+}
+~chatplayer("<p,happy>Ah, luckily there is another shoot here that I can cut. Better not lose this one...");
+
+// ---------------------------------------------------------------- Alain (Taverley's tree patch)
+[label,got_alain]
+~chatplayer("<p,quiz>I need to ask you about strong plant cures.");
+~chatnpc("<p,happy>Well, then, you've come to the right person - I researched exotic plant diseases as part of my druidic training. What is the affliction that you need to cure?");
+~chatplayer("<p,neutral>Bernald has got some seriously diseased grapevines. I tried plant cure on them, but it didn't seem to have any positive effect.");
+~chatnpc("<p,quiz>Ah, so is this the famous Burthorpe Vine?");
+~chatplayer("<p,neutral>The very one.");
+~chatnpc("<p,neutral>I'm afraid that my research did not extend to Burthorpe vine. Bernald and his ancestors have always closely guarded their heritage. In fact, I'm surprised that he has involved you.");
+~chatnpc("<p,neutral>Although I am pretty sure that it is a sign of how desperate he must be. Those vines were all burned or eaten by the trolls when they invaded, after all. If the vine is sick he must be at the end of his tether.");
+~chatplayer("<p,shifty>Er, I did have some...assistance with persuading him.");
+~chatnpc("<p,neutral>I see. Well, if it involves some unnatural power I would rather not know. I prefer the use of power that can be brought forth from the plants around us.");
+def_int $c = 1;
+if (~got_ring_worn = true) $c = ~p_choice2("Are you sure there's nothing you can suggest?", 1, "(Charm) You're hiding something from me.", 2);
+if ($c = 2) {
+    ~chatplayer("<p,shifty>You're hiding something from me.");
+    ~chatnpc("<p,angry>This is the power you are abusing!! I feel it now - it emanates from the ring you wear, a festering fountain of corruption that appalls my very soul!!!");
+    ~chatplayer("<p,sad>Oh, sorry. I forgot that it only works on the weak-minded.");
+    ~chatnpc("<p,angry>You, <displayname>, are the one who must be weak-minded, if you consider using such a dreadful weapon. Beware - it may one day be your downfall.");
+    return;
+}
+~chatplayer("<p,quiz>Are you sure there's nothing you can suggest?");
+~chatnpc("<p,neutral>Well...");
+~chatnpc("<p,neutral>There is one thing you could try. One of the most potent cures I have discovered involves using the natural power held within a very special mineral, but it is a very closely guarded secret.");
+~chatplayer("<p,quiz>Do you mean the rune essence?");
+~chatnpc("<p,shock>You know of that?!? Then I can do no further harm here. You can make a potent plant cure by mixing some crumbled rune essence into a normal plant cure. This may possibly cure Bernald's vines.");
+~chatplayer("<p,happy>Thank you Alain, I will try it out immediately!");
+%got_flags = setbit(%got_flags, ^gotf_alain);
+
+// the strong plant cure (the OSRS wiki walkthrough: a hammer on rune or pure essence makes rune
+// shards, a pestle and mortar on the shards rune dust, the dust in a plant cure the strong cure;
+// the messages the RuneScape transcript's). Ours: only once Alain has told you how.
+[proc,got_cure_known]()(boolean)
+if (testbit(%got_flags, ^gotf_alain) = ^true) return(true);
+return(false);
+
+// from the hammer's [opheldu] (general_use/hammer.rs2)
+[proc,got_crush_essence](obj $essence)
+if (~got_cure_known = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, $essence, 1);
+inv_add(inv, rune_shards, 1);
+mes("You break up the rune essence into shards.");
+
+[opheldu,rune_shards]
+if (last_useitem ! pestle_and_mortar) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(human_herbing_grind, 0);
+inv_del(inv, rune_shards, 1);
+inv_add(inv, rune_dust, 1);
+mes("You grind the rune shards into dust.");
+
+[opheldu,rune_dust]
+if (last_useitem ! plant_cure) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, rune_dust, 1);
+inv_del(inv, plant_cure, 1);
+inv_add(inv, plant_cure_strong, 1);
+mes("You mix the rune dust into the plant cure.");
+
+// ---------------------------------------------------------------- Bernald (Burthorpe)
+// Not in the quest: 2009scape's BernaldDialogue.
+[opnpc1,bernald]
+def_int $s = %garden_bernald_varbit;
+if (%garden_quest < ^got_started) {
+    ~chatnpc("<p,sad>Do you know anything about grapevine diseases?");
+    ~chatplayer("<p,neutral>No, I'm afraid I don't.");
+    ~chatnpc("<p,sad>Oh, that's a shame. I hope I find someone soon, otherwise I could lose all of this year's crop.");
+    return;
+}
+if ($s = 0) @got_bernald_ask;
+if ($s = ^got_bernald_deal) {
+    ~chatplayer("<p,quiz>Can you suggest any way that I can cure these grapevines?");
+    ~chatnpc("<p,neutral>I thought you were the one with horticultural knowledge here. How would you normally cure plant diseases?");
+    return;
+}
+if ($s = ^got_bernald_tried) {
+    ~chatnpc("<p,neutral>Plant cure not doing the trick, eh?");
+    ~chatplayer("<p,confused>I don't understand - it's worked with everything else.");
+    ~chatnpc("<p,neutral>That grapevine disease must be much stronger than the usual. You'll need something a bit more potent to cut out that infection.");
+    ~chatplayer("<p,quiz>Do you know of any stronger cures?");
+    ~chatnpc("<p,neutral>No, I don't - but I know of a man who might. Not far from here there's a druid gardener who goes by the name of Alain. He's an expert on things like this, so they tell me.");
+    ~chatplayer("<p,quiz>Why didn't you just go and ask him yourself?");
+    ~chatnpc("<p,neutral>These vines are very precious indeed. I could not hazard the risk that someone would steal my grapes while I was away - they may be diseased, but they still contain Burthorpe vine seeds.");
+    %garden_bernald_varbit = ^got_bernald_alain;
+    return;
+}
+if ($s = ^got_bernald_alain) {
+    ~chatnpc("<p,quiz>Have you spoken to Alain yet?");
+    if (~got_cure_known = true) {
+        ~chatplayer("<p,happy>Yes. He has given me some knowledge so that I can make a more potent plant cure.");
+        ~chatnpc("<p,happy>Let's hope that it does the job, then.");
+        return;
+    }
+    // ours: the transcript has only the answer after Alain
+    ~chatplayer("<p,neutral>Not yet.");
+    ~chatnpc("<p,neutral>Not far from here there's a druid gardener who goes by the name of Alain. He's an expert on things like this, so they tell me.");
+    return;
+}
+if ($s = ^got_bernald_cured) {
+    ~chatnpc("<p,happy>My vines are cured! You have worked a wonder here, <displayname>! Here, you can have those seeds like I promised.");
+    if (~got_farmer_give(garden_vine_seed, 4, "Bernald gives you some Burthorpe Vine seeds.") = true) %garden_bernald_varbit = ^got_bernald_done;
+    return;
+}
+if (~got_lost_seed(4) = true & %garden_quest < ^got_complete) {
+    ~chatplayer("<p,quiz>Do you have any more Burthorpe Vine seeds?");
+    ~chatnpc("<p,quiz>What did you do with the ones I gave you?");
+    ~chatplayer("<p,shifty>Erm...");
+    def_boolean $ok = ~got_farmer_give(garden_vine_seed, 4, "Bernald gives you some Burthorpe Vine seeds.");
+    return;
+}
+~chatplayer("<p,quiz>How are your grapes coming along?");
+~chatnpc("<p,happy>Marvellously, thanks to your help, <displayname>.");
+
+[label,got_bernald_ask]
+~chatnpc("<p,sad>Do you know anything about grapevine diseases?");
+~chatplayer("<p,neutral>I might - what's the problem?");
+~chatnpc("<p,neutral>You see those grapevines over there?");
+~chatplayer("<p,neutral>Yes. They don't look too happy at the moment.");
+~chatnpc("<p,sad>They've come down with some strange disease that I've never encountered before. I've tried everything with them, but nothing seems to work. If it carries on like this I will lose all this year's crops.");
+~chatplayer("<p,neutral>I could probably help you with that, but I'd need something in return.");
+~chatnpc("<p,happy>Anything, you just need to ask!");
+~chatplayer("<p,neutral>Well, I'd like a supply of Burthorpe Vine seeds.");
+~chatnpc("<p,sad>I'm afraid I can't do that.");
+def_int $c = 1;
+if (~got_ring_worn = true) $c = ~p_choice2("I thought you said anything!", 1, "(Charm) But it is the only way that these vines will be cured.", 2);
+if ($c = 1) {
+    ~chatplayer("<p,angry>I thought you said anything!");
+    ~chatnpc("<p,sad>I'm afraid that is the one thing I cannot give you. Burthorpe vine has been bred over many years and many generations of my family. I could never give away something so special.");
+    ~chatnpc("<p,sad>I mean, we almost lost the plant to the troll invasion. I have worked as hard as I can to keep these vines alive down here, but the soil is all wrong.");
+    return;
+}
+~chatplayer("<p,neutral>But it is the only way that these vines will be cured.");
+~chatnpc("<p,neutral>Hmm, you may be right. If I lose these crops what use are more seeds to me, when I have gone out of business? Very well then, this is the deal - cure my vines and I will give you some Burthorpe Vine seeds.");
+if (~p_choice2("I accept the deal.", 1, "Actually, it seems like a lot of hard work for nothing.", 2) = 2) {
+    ~chatplayer("<p,neutral>Actually, it seems like a lot of hard work for nothing.");
+    ~chatnpc("<p,angry>I wouldn't call the last living example of this rare plant 'nothing' if I were you. Very well, I shall find someone else to assist me.");
+    return;
+}
+~chatplayer("<p,happy>I accept the deal.");
+~chatnpc("<p,happy>Oh, thank you! Please speak to me again when you've cured the vines and, hence, saved my livelihood and an important part of Burthorpe's history.");
+%garden_bernald_varbit = ^got_bernald_deal;
+
+// the diseased grapevines (garden_burthorpe_vines, its multiloc the varbit's)
+[oplocu,garden_burthorpe_vines]
+if (%garden_bernald_varbit >= ^got_bernald_cured) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (last_useitem = plant_cure) {
+    anim(farming_plant_cure, 0);
+    p_delay(1);
+    if (inv_total(inv, plant_cure) = 0) return;
+    inv_del(inv, plant_cure, 1);
+    inv_add(inv, vial_empty, 1);
+    mes("You treat the diseased grapevines with plant cure...");
+    mes("...but it doesn't seem to make any difference.");
+    if (%garden_bernald_varbit = ^got_bernald_deal) %garden_bernald_varbit = ^got_bernald_tried;
+    return;
+}
+if (last_useitem = plant_cure_strong) {
+    if (%garden_bernald_varbit < ^got_bernald_deal) {
+        ~displaymessage(^dm_default); // ours: not until Bernald lets you
+        return;
+    }
+    anim(farming_plant_cure, 0);
+    p_delay(1);
+    if (inv_total(inv, plant_cure_strong) = 0) return;
+    inv_del(inv, plant_cure_strong, 1);
+    inv_add(inv, vial_empty, 1);
+    mes("You treat the diseased grapevines with strong plant cure...");
+    mes("...and they blossom with new-found life!");
+    %garden_bernald_varbit = ^got_bernald_cured;
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- Brother Althric (Edgeville Monastery)
+// Talk-to, and Take-seed on his roses while he won't let you
+[opnpc1,brother_althric]
+if (%garden_quest < ^got_started | %garden_quest >= ^got_complete) {
+    ~chatnpc("<p,neutral>Why are you messing about with my rosebushes?"); // ours: the transcript has only the quest's
+    ~chatplayer("<p,neutral>Um..I'm just... savouring their sweet perfume...");
+    ~chatnpc("<p,neutral>Ah, they are beautiful, aren't they? Now leave me in peace."); // ours
+    return;
+}
+if (%garden_althric_varbit >= ^got_althric_told) @got_althric_again;
+@got_althric;
+
+[label,got_althric]
+~chatnpc("<p,angry>Why are you messing about with my rosebushes?");
+def_int $c = 1;
+if (~got_ring_worn = true) $c = ~p_choice2("Um..I'm just... savouring their sweet perfume...", 1, "(Charm) These are the most beautiful rosebushes I've ever seen.", 2);
+if ($c = 1) {
+    ~chatplayer("<p,shifty>Um..I'm just... savouring their sweet perfume...");
+    ~chatnpc("<p,angry>No you're not - you're trying to steal some seeds. Well, you can leave them alone. It's taken me many months of tending to bring them to this fine state of near-perfection.");
+    ~chatplayer("<p,sad>Please?");
+    ~chatnpc("<p,angry>No. Now leave me in peace.");
+    return;
+}
+~chatplayer("<p,happy>These are the most beautiful rosebushes I've ever seen.");
+~chatnpc("<p,angry>Nice of you to say so, but I sense the use of some unnatural power underneath your fine words. You are concealing something of great evil, an evil that cannot touch someone of my purity.");
+~chatplayer("<p,shifty>Oh ... no, that's not true ...");
+~chatnpc("<p,angry>Nonsense, you reek of this evil power! I suggest that you throw whatever dark talisman it is that you are using down the Edgeville well, and never think of it again! Either that or just simply destroy it!");
+%garden_althric_varbit = ^got_althric_told;
+
+[label,got_althric_again]
+~chatnpc("<p,quiz>Are you messing about with my rosebushes again?");
+~chatplayer("<p,shifty>Er ... no ... I was just admiring them.");
+if (~got_has(ring_of_charos_unlocked) = true) {
+    ~chatnpc("<p,angry>You still have not gotten rid of the evil thing that you carried! Do as I said to you before, and throw the thing down the Edgeville well, or simply destroy it!");
+    return;
+}
+~chatnpc("<p,happy>Ah, I sense that you speak so without the use of the evil power you carried before. That is good. As you have taken the road back towards the light, you may take any seeds that you wish.");
+if (%garden_althric_varbit < ^got_althric_allowed) {
+    %garden_althric_varbit = ^got_althric_allowed;
+    if (%garden_ring_in_well_varbit = 1) {
+        ~chatplayer("<p,neutral>I threw it down the Edgeville well like you told me.");
+        ~chatnpc("<p,neutral>That is good. Although it could always be regained by someone using an implement long enough to reach the bottom of the well, something with a hook on the end to catch the ring with.");
+        ~chatnpc("<p,shifty>I hope I haven't put any ideas into your head.");
+    } else {
+        ~chatplayer("<p,neutral>I destroyed it like you told me.");
+        ~chatnpc("<p,neutral>That is good. Although I sense that an evil talisman like that cannot truly be destroyed - it will probably try to find it's way back to it's master. I pray that you don't try and seek it out again.");
+    }
+    ~chatplayer("<p,shifty>Oh no, I definitely wouldn't try something like that...");
+}
+
+// his roses (Take-seed): four seeds a bush
+[oploc1,garden_roses_red] @got_take_roses(garden_rosebush_seed_red, "red");
+[oploc1,garden_roses_pink] @got_take_roses(garden_rosebush_seed_pink, "pink");
+[oploc1,garden_roses_white] @got_take_roses(garden_rosebush_seed_white, "white");
+
+[label,got_take_roses](namedobj $seed, string $colour)
+if (%garden_quest < ^got_started | %garden_althric_varbit < ^got_althric_allowed | ~got_has(ring_of_charos_unlocked) = true) {
+    if (npc_find(coord, brother_althric, 10, 0) = true) {
+        if (%garden_quest >= ^got_started & %garden_quest < ^got_complete & %garden_althric_varbit >= ^got_althric_told) @got_althric_again;
+        if (%garden_quest >= ^got_started & %garden_quest < ^got_complete) @got_althric;
+        ~chatnpc("<p,angry>Why are you messing about with my rosebushes?"); // ours, before the quest
+        return;
+    }
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_freespace(inv) = 0 & inv_total(inv, $seed) = 0) {
+    mes("You don't have enough inventory space to do that.");
+    return;
+}
+anim(human_pickuptable, 0);
+inv_add(inv, $seed, 4);
+~objbox($seed, "You take some seeds from the <$colour> rosebush.", 250, 0, divide(^objbox_height, 2));
+
+// the Edgeville well: throw the ring down, fish it back up
+[oplocu,well]
+if (loc_coord ! ^got_edgeville_well) {
+    switch_obj (last_useitem) {
+        case bucket_empty : @fill_bucket_well;
+        case default : ~displaymessage(^dm_default);
+    }
+    return;
+}
+switch_obj (last_useitem) {
+    case bucket_empty : @fill_bucket_well;
+    case ring_of_charos_unlocked :
+        if (%garden_althric_varbit < ^got_althric_told) {
+            ~displaymessage(^dm_default); // ours: not until Brother Althric says
+            return;
+        }
+        inv_del(inv, ring_of_charos_unlocked, 1);
+        %garden_ring_in_well_varbit = 1;
+        sound_synth(watersplash, 1, 0);
+        ~mesbox("You throw the Ring of Charos down the well.");
+        ~mesbox("You hear a splash from down below.");
+    case fishing_rod, fly_fishing_rod :
+        if (%garden_ring_in_well_varbit = 0) {
+            ~displaymessage(^dm_default);
+            return;
+        }
+        @got_fish_well;
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,got_fish_well]
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space, even if you did catch something.");
+    return;
+}
+mes("You cast out your line into the well...");
+anim(garden_cast_well, 0);
+sound_synth(fishing_cast, 1, 0);
+p_delay(2);
+def_int $i = 0;
+while ($i < 4) {
+    anim(garden_fish_well, 0);
+    switch_int ($i) {
+        case 0 : say("la-de-da");
+        case 1 : say("dum-de-dum");
+        case 2 : say("Nice day for it.");
+        case 3 : say("(whistles a happy tune)");
+    }
+    p_delay(2);
+    $i = calc($i + 1);
+}
+anim(null, 0);
+~mesbox("The hook catches onto something...");
+if (random(4) ! 0) {
+    ~mesbox("But it drops back into the water with a splash.");
+    return;
+}
+inv_add(inv, ring_of_charos_unlocked, 1);
+%garden_ring_in_well_varbit = 0;
+~objbox(ring_of_charos_unlocked, "You retrieve the Ring of Charos!", 250, 0, divide(^objbox_height, 2));
+
+// ---------------------------------------------------------------- the White Tree shoot in a pot
+// Its own sow, water and grow (skill_farming's sapling enums: farming_saplings.enum)
+[opheldu,garden_white_tree_plantpot_shoot] ~farming_water_seedling(last_item, last_useitem);

@@ -1,0 +1,197 @@
+// EASCape: Garden of Tranquillity: the Wise Old Man of Draynor Village opens the Ring of Charos
+// after a test of your diplomacy. His lines are the RuneScape wiki's Transcript:Garden of
+// Tranquillity ("Activating the Ring of Charos"); the test is the 377 cache's own chatbox
+// interface (inter_304: the question's number, two lines of question and three answers [A] [B]
+// [C]). You pass with the first six right; the seventh has two right answers and any will do (the
+// OSRS wiki's trivia). Ours: the facial expressions; where the questions' lines break.
+
+// the line on his menu ("" for none)
+[proc,got_wom_line]()(string)
+if (%garden_quest = ^got_started) {
+    if (testbit(%got_flags, ^gotf_wom_failed) = ^true) return("Can I retake the diplomacy test?");
+    if (testbit(%got_flags, ^gotf_wom_told) = ^true) {
+        if (~got_has(ring_of_charos) = true) return("I've brought the Ring of Charos, as instructed.");
+        return("How can I re-obtain the Ring of Charos?");
+    }
+    return("Queen Ellamaria has sent me to seek your guidance.");
+}
+if (%garden_quest >= ^got_ring & %garden_quest < ^got_complete) return("Thanks for your help, Wise Old Man.");
+return("");
+
+[proc,got_wom_charm]()(boolean)
+if (%garden_quest >= ^got_ring & %garden_quest < ^got_complete & ~got_ring_worn = true) return(true);
+return(false);
+
+[label,got_wom]
+if (%garden_quest >= ^got_ring) {
+    ~chatplayer("<p,happy>Thanks for your help, Wise Old Man.");
+    ~chatnpc("<p,laugh>Funny, I thought you would take the chance to test the power of the ring on me! No matter - leave me be now, I have important surveillance duties to carry out.");
+    return;
+}
+if (testbit(%got_flags, ^gotf_wom_failed) = ^true) {
+    ~chatplayer("<p,quiz>Can I retake the diplomacy test?");
+    if (inv_total(inv, ring_of_charos) = 0 & inv_total(worn, ring_of_charos) = 0) {
+        // ours: the test wants the ring with you
+        ~chatnpc("<p,neutral>I don't see it on you - do you have it in your bag?");
+        return;
+    }
+    ~chatnpc("<p,neutral>Well, if you think it will do any good ... here goes then-");
+    @got_wom_test;
+}
+if (testbit(%got_flags, ^gotf_wom_told) = ^true) {
+    if (~got_has(ring_of_charos) = false) @got_wom_reobtain;
+    ~chatplayer("<p,neutral>I have the Ring of Charos and have returned to you as instructed. Now will you reveal its 'hidden power beyond belief'?");
+    if (inv_total(inv, ring_of_charos) = 0 & inv_total(worn, ring_of_charos) = 0) {
+        ~chatnpc("<p,quiz>I don't see it on you - do you have it in your bag?");
+        ~chatplayer("<p,shifty>Er, no - I've left it in the bank.");
+        ~chatnpc("<p,neutral>Well go and get it then, and I will tell you its secrets.");
+        return;
+    }
+    ~chatnpc("<p,confused>The Ring of Charos? What's that?");
+    ~chatplayer("<p,confused>I thought you told me to-");
+    ~chatnpc("<p,laugh>Just joking, <displayname> - good good, I will now tell you what this ring is capable of.");
+    @got_wom_power;
+}
+~chatplayer("<p,neutral>I have been sent by Queen Ellamaria of Varrock to seek your guidance.");
+~chatnpc("<p,laugh>Ellamaria? Well, if you're in her service my guidance is this: do the fastest run that you can off the shortest pier you can find.");
+~chatplayer("<p,quiz>You know Queen Ellamaria?");
+~chatnpc("<p,neutral>Oh yes, we go way back, long before she married that fool the King of Varrock. She wasn't always royal you know.");
+~chatplayer("<p,quiz>Really?");
+~chatnpc("<p,neutral>No, in her youth she was a barmaid at the Blue Moon Inn. All that fancy talk, that's just for show. No, the Ellamaria I knew was as common as muck, until she lucked onto good King Roald.");
+~chatplayer("<p,shifty>I'll certainly look at her in a different light when I return to Varrock.");
+~chatnpc("<p,quiz>So what sort of guidance has Little-Miss-Hoity-Toity sent you to seek?");
+~chatplayer("<p,neutral>I am supposed to gain some knowledge of diplomacy and persuasion from you.");
+~chatnpc("<p,neutral>That is an area that - luckily for you, young <displayname> - I have studied. Have you heard of the diplomat known as Charos?");
+~chatplayer("<p,confused>Charos? I must say the name rings a bell...");
+~chatplayer("<p,confused>Charos...");
+~chatplayer("<p,happy>Yes, I remember! Once, during my travels to Morytania, I came upon an item of magical jewellery called the Ring of Charos.");
+~chatnpc("<p,shock>You have found the Ring of Charos?!? Tell me - do you still have it in your possession?");
+%got_flags = setbit(%got_flags, ^gotf_wom_told);
+if (inv_total(worn, ring_of_charos) > 0) {
+    ~chatplayer("<p,quiz>Yes, I'm wearing it at the moment. Is it important, then?");
+    @got_wom_power;
+}
+if (inv_total(inv, ring_of_charos) > 0) {
+    ~chatplayer("<p,quiz>Yes, I have it in my bag. Is it important, then?");
+    @got_wom_power;
+}
+if (inv_total(bank, ring_of_charos) > 0) {
+    ~chatplayer("<p,quiz>Yes, I have it stored in the bank. Is it important, then?");
+    ~chatnpc("<p,shock>Important?!? The ring possesses hidden power beyond belief! Go and get it, and I will tell you its secrets.");
+    return;
+}
+~chatplayer("<p,sad>No, I'm afraid that I lost it at some point.");
+~chatnpc("<p,shock>Lost the Ring of Charos?!? That is indeed a disastrous turn of events. This ring that you have so casually thrown away possesses hidden power beyond belief.");
+@got_wom_reobtain;
+
+[label,got_wom_reobtain]
+~chatplayer("<p,quiz>How can I re-obtain the Ring of Charos?");
+~chatnpc("<p,neutral>If everything I have heard about Charos's ring is true, it will not stay lost forever. Where did you originally find it?");
+~chatplayer("<p,shifty>I ... um ... 'borrowed' it from a rather shady character called Fenkenstrain.");
+~chatnpc("<p,neutral>In order to find the ring it may be wise to return to Fenkenstrain - he may have found a way to regain it. If you manage to reobtain the ring, return to me and I will reveal its secrets to you.");
+
+[label,got_wom_power]
+~chatnpc("<p,neutral>Charos rose to power under the rule of Lord Drakan of Morytania; Charos was his only living servant. The vampyre lord suffered the existence of Charos because of the talents that this sophisticated diplomat had to offer.");
+~chatplayer("<p,quiz>The art of persuasion?");
+~chatnpc("<p,neutral>Indeed. Charos had many uses - spy, assassin, negotiator - because he could convince anyone to do his wishes. These talents were in some part Charos's own, but greatly enhanced by the ring that he fashioned.");
+~chatplayer("<p,neutral>The Ring of Charos.");
+~chatnpc("<p,neutral>Exactly. One who wears the ring must possess some innate ability of their own, which the ring enhances so that the wearer can convince all but the most strong-minded to do their bidding.");
+~chatplayer("<p,quiz>What happened to Charos? And why did Fenkenstrain have the ring?");
+~chatnpc("<p,neutral>Charos had a castle built on the northern coast of Morytania, where he dwelt for many years in service to Drakan. None really know what became of him, but some say that he became too certain of his abilities,");
+~chatnpc("<p,neutral>and turned them on his master. This would have been his ultimate downfall, for the ring's power would have had little or no effect upon Drakan.");
+~chatnpc("<p,neutral>Fenkenstrain probably found the ring many years later, buried somewhere within the depths of his castle.");
+~chatplayer("<p,scared>So what you are telling me is that nobody really knows what happened to Charos? That he could still be alive? And if he is still alive...");
+~chatnpc("<p,neutral>...he would naturally come looking for the ring that is his by right. But I don't believe that you should worry about that - it has been many years since his disappearance, and the likelyhood is that he is dead.");
+~chatplayer("<p,sad>Still - it doesn't inspire me with much confidence.");
+~chatnpc("<p,neutral>I could activate the power within this ring for you, but for me to do that I must know that you will use it wisely. To do that I must ask you a few questions, to see how good a diplomat you can be.");
+~chatplayer("<p,neutral>Okay, go ahead...");
+@got_wom_test;
+
+// one question: its number, its two lines and its three answers; the answer chosen (1-3)
+[proc,got_wom_question](int $n, string $q1, string $q2, string $a, string $b, string $c)(int)
+if_settext(inter_304:com_8, "<tostring($n)>/7");
+if_settext(inter_304:com_6, $q1);
+if_settext(inter_304:com_7, $q2);
+if_settext(inter_304:com_0, $a);
+if_settext(inter_304:com_1, $b);
+if_settext(inter_304:com_2, $c);
+if_openchat(inter_304);
+if_addresumebutton(inter_304:com_0);
+if_addresumebutton(inter_304:com_1);
+if_addresumebutton(inter_304:com_2);
+p_pausebutton;
+switch_component (last_com) {
+    case inter_304:com_0 : return(1);
+    case inter_304:com_1 : return(2);
+}
+return(3);
+
+[label,got_wom_test]
+def_int $right = 0;
+if (~got_wom_question(1, "Two goblins are fighting over the colour of their armour.", "What do you do?", "Show them a range of colours so that they can come to a compromise.", "Leave them to it. Armour's not going to help - any noob can take them.", "Kill them both and steal their bronze spears.") = 1) $right = calc($right + 1);
+if (~got_wom_question(2, "A Drunken dwarf offers you a kebab. What do you do?", "", "Run away leaving the lonely dwarf on his own.", "Take his generous gift even though you have no need for it.", "Stand there until he gets annoyed and attacks you.") = 2) $right = calc($right + 1);
+if (~got_wom_question(3, "Are you enjoying your experience of Farming?", "", "It's absolutely, unquestionably the most interesting thing I've ever done!", "Yes.", "Definitely.") = 1) $right = calc($right + 1);
+if (~got_wom_question(4, "A dwarf asks you to put on a silly golden helmet so that you can", "be fired from a cannon into a wall. What do you do?", "Put the helmet on the dwarf and fire him into the wall.", "Put on the silly helmet and jump into the cannon.", "Refuse this crazy request blankly.") = 2) $right = calc($right + 1);
+if (~got_wom_question(5, "You meet Pkmaster0036 in the Wilderness. He asks you who is", "the greatest player killer in the world. How do you reply?", "I am, prepare to meet your doom Pkmaster0036!", "Cower in fear and quickly cast teleport to Varrock.", "You of course Pkmaster0036, no one could ever challenge your greatness!") = 3) $right = calc($right + 1);
+if (~got_wom_question(6, "Queen Ellamaria orders you to go on a foolish quest without any", "offer of reward. What do you say?", "Stop ordering me about and get back behind the bar where you belong!", "Ask me nicely and I might consider it.", "I'll do whatever you ask - I just love the monarchy!") = 2) $right = calc($right + 1);
+def_int $last = ~got_wom_question(7, "A Draynor bank guard asks you if you've seen any suspicious", "characters lately, because the bank has been robbed. What do you say?", "If I do I'll let you know.", "Yes, that wise old man over there looks incredibly dodgy.", "No, especially not that wise old man, who doesn't look at all suspicious.");
+~chatplayer("<p,quiz>Okay, I've answered your questions - what's the verdict?");
+~chatnpc("<p,neutral>Mmmm, it was close but...");
+if ($right < 6) {
+    %got_flags = setbit(%got_flags, ^gotf_wom_failed);
+    ~chatnpc("<p,sad>... but I'm afraid that you don't seem to have the aptitude. To you, the Ring of Charos is but a worthless trinket.");
+    if (~p_choice2("I can't believe that - can I have another go?", 1, "Oh well, that's that I suppose.", 2) = 1) {
+        ~chatplayer("<p,sad>I can't believe that - can I have another go?");
+        ~chatnpc("<p,neutral>Well, if you think it will do any good ... here goes then-");
+        @got_wom_test;
+    }
+    ~chatplayer("<p,sad>Oh well, that's that I suppose.");
+    ~chatnpc("<p,neutral>Now look, don't start making me feel sorry for you...");
+    ~chatplayer("<p,sad>No, I'm just a dull-headed moron, you're right about that.");
+    ~chatnpc("<p,neutral>I didn't say that - look, if you want another try, come back and speak to me again.");
+    return;
+}
+~chatnpc("<p,happy>... Congratulations! You have clearly got what it takes to use the Ring of Charos. Wait a moment, <displayname>...");
+%got_flags = clearbit(%got_flags, ^gotf_wom_failed);
+if (~got_open_ring = true) {
+    ~objbox(ring_of_charos_unlocked, "The wise old man passes his hand slowly over the Ring of Charos that encircles your ring-finger. Gradually, you feel the ring begin to vibrate with gentle energy.", 250, 0, divide(^objbox_height, 2));
+} else {
+    ~objbox(ring_of_charos_unlocked, "The wise old man passes his hand slowly over the Ring of Charos that lies in your outstretched palm. Gradually, you feel the ring begin to vibrate with gentle energy.", 250, 0, divide(^objbox_height, 2));
+}
+~got_set(^got_ring);
+~chatnpc("<p,neutral>The Ring of Charos has now been opened to you, <displayname>. You may use its power to charm the weak-minded, but it will only work whilst you are wearing it.");
+if (~got_ring_worn = true) {
+    if (~p_choice2("Thanks for your help, Wise Old Man.", 1, "(Charm) I think you wanted to give me a thousand coins...", 2) = 2) @got_wom_coins;
+}
+~chatplayer("<p,happy>Thanks for your help, Wise Old Man.");
+~chatnpc("<p,laugh>Funny, I thought you would take the chance to test the power of the ring on me! No matter - leave me be now, I have important surveillance duties to carry out.");
+
+[label,got_wom_coins]
+~chatplayer("<p,shifty>I think you wanted to give me a thousand coins...");
+~chatnpc("<p,laugh>Ha ha! I thought you might try that!! But remember, <displayname> - the power of the Ring of Charos will not work with everybody, especially not a wise old bird like me!");
+
+// the ring worn or carried becomes the opened ring where it is; true when it was worn
+[proc,got_open_ring]()(boolean)
+def_int $slot = 0;
+while ($slot < inv_size(worn)) {
+    if (inv_getobj(worn, $slot) = ring_of_charos) {
+        inv_setslot(worn, $slot, ring_of_charos_unlocked, 1);
+        return(true);
+    }
+    $slot = calc($slot + 1);
+}
+$slot = 0;
+while ($slot < inv_size(inv)) {
+    if (inv_getobj(inv, $slot) = ring_of_charos) {
+        inv_setslot(inv, $slot, ring_of_charos_unlocked, 1);
+        return(false);
+    }
+    $slot = calc($slot + 1);
+}
+return(false);
+
+// the opened ring: destroy it and it goes back to Fenkenstrain (Void's destroy line)
+[opheld5,ring_of_charos_unlocked]
+def_int $slot = last_slot;
+if (~destroy_confirm(ring_of_charos_unlocked, "The ring will return to Fenkenstrain, its owner. You'll have to pick his pocket again.") = false) return;
+inv_delslot(inv, $slot);

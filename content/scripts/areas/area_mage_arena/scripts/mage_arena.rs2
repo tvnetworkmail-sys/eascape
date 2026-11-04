@@ -97,10 +97,9 @@ if (coordz(coord) > coordz(loc_coord)) {
         ~mesbox("You cannot enter without the permission of Kolodion."); // rsc, might be mes
         return;
     }
-    if (~can_enter_mage_arena = false) {
-        ~mesbox("You cannot enter the arena while carrying weapons or armour."); // rsc, might be mes
-        return;
-    }
+    // EASCape: armour and weapons allowed since 30 August 2005 (Garden Of Tranquillity); only magic
+    // in the arena itself ("Kolodion allows only magical combat within the arena.", pvp_combat.rs2
+    // and npc_combat.rs2)
     p_teleport(movecoord(coord, 0, 0, -1));
 } else {
     p_teleport(movecoord(loc_coord, 0, 0, 1));
@@ -108,6 +107,7 @@ if (coordz(coord) > coordz(loc_coord)) {
 mes("You pass through the mystical barrier."); //rsc
 
 
+// EASCape: no longer used: the pre-30 August 2005 rule (no armour or weapons in the arena)
 [proc,can_enter_mage_arena]()(boolean)
 if ((inv_totalcat(inv, armour_hands) > 0 | inv_totalcat(worn, armour_hands) > 0)
     | (inv_totalcat(inv, armour_helmet) > 0 | inv_totalcat(worn, armour_helmet) > 0) 

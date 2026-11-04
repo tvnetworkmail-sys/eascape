@@ -100,6 +100,12 @@ if ($item = spade) {
     ~farming_bin_dump($bin);
     return;
 }
+// EASCape: Garden of Tranquillity's compost potion (Void CompostBin: on a full bin of compost)
+switch_obj ($item) {
+    case supercompost_potion_4, supercompost_potion_3, supercompost_potion_2, supercompost_potion_1 :
+        ~farming_bin_potion($bin, $item);
+        return;
+}
 def_int $kind = enum(obj, int, farming_compostable, $item);
 if ($kind = 0) {
     ~displaymessage(^dm_default);
@@ -224,3 +230,53 @@ if (~p_choice2_header("Yes, throw it all away.", 1, "No, keep it.", 2, "Dump the
 anim(human_pickuptable, 0);
 sound_synth(farming_putin, 1, 0);
 ~farming_bin_set($bin, 0);
+
+// EASCape: Garden of Tranquillity's compost potion (Void CompostBin.kt: only a full bin of normal
+// compost; its messages); a dose a go
+[proc,farming_bin_potion](int $bin, obj $potion)
+def_int $key = ~farming_bin_get($bin);
+def_int $c = calc($key / 100);
+if ($key = 0) {
+    ~mesbox("The compost bin is empty.");
+    return;
+}
+if ($c = 3 | $c = 4 | $c = 7 | $c = 8 | $c = 11 | $c = 12) {
+    ~mesbox("The compost bin is closed.");
+    return;
+}
+if ($c ! 2 | calc($key % 100) ! 15) {
+    ~mesbox("You can only apply supercompost potion to a bin containing normal compost.");
+    return;
+}
+anim(garden_apply_potion, 0);
+sound_synth(drink, 1, 0);
+inv_del(inv, $potion, 1);
+inv_add(inv, ~farming_potion_less($potion), 1);
+~farming_bin_set($bin, 615);
+p_delay(2);
+mes("You apply the potion to the compost in the compost bin.");
+mes("The compost transforms into supercompost.");
+
+[proc,farming_potion_less](obj $potion)(namedobj)
+switch_obj ($potion) {
+    case supercompost_potion_4 : return(supercompost_potion_3);
+    case supercompost_potion_3 : return(supercompost_potion_2);
+    case supercompost_potion_2 : return(supercompost_potion_1);
+}
+return(vial_empty);
+
+// EASCape: on a bucket of compost ("You can do this with a bucket of compost", Ellamaria in Garden
+// of Tranquillity; the message ours)
+[opheldu,bucket_compost]
+switch_obj (last_useitem) {
+    case supercompost_potion_4, supercompost_potion_3, supercompost_potion_2, supercompost_potion_1 :
+        def_obj $potion = last_useitem;
+        anim(garden_apply_potion, 0);
+        sound_synth(drink, 1, 0);
+        inv_del(inv, $potion, 1);
+        inv_add(inv, ~farming_potion_less($potion), 1);
+        inv_del(inv, bucket_compost, 1);
+        inv_add(inv, bucket_supercompost, 1);
+        mes("The compost transforms into supercompost.");
+    case default : ~displaymessage(^dm_default);
+}

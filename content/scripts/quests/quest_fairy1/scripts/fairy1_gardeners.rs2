@@ -11,10 +11,17 @@
 
 [opnpc1,elstan]
 if (~ft_elstan = true) return; // EASCape: Rind's letter in Forgettable Tale... (quest_forgettable_tale/ft_brew.rs2)
+if (~got_farmer = true) @got_farmer_talk; // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
 ~fairy1_gardener;
-[opnpc1,dantaera] ~fairy1_gardener;
-[opnpc1,kragen] ~fairy1_gardener;
-[opnpc1,lyra] ~fairy1_gardener;
+[opnpc1,dantaera]
+if (~got_farmer = true) @got_farmer_talk; // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
+~fairy1_gardener;
+[opnpc1,kragen]
+if (~got_farmer = true) @got_farmer_talk; // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
+~fairy1_gardener;
+[opnpc1,lyra]
+if (~got_farmer = true) @got_farmer_talk; // EASCape: Garden of Tranquillity (quest_garden/got_farmers.rs2)
+~fairy1_gardener;
 [opnpc1,francis] ~fairy1_gardener;
 [opnpc1,farming_gardener_fruit_1] ~fairy1_gardener;
 [opnpc1,farming_gardener_fruit_2] ~fairy1_gardener;
@@ -27,7 +34,9 @@ if (~ft_elstan = true) return; // EASCape: Rind's letter in Forgettable Tale... 
 [opnpc1,farming_gardener_bush_2] ~fairy1_gardener;
 [opnpc1,farming_gardener_bush_3] ~fairy1_gardener;
 [opnpc1,farming_gardener_bush_4] ~fairy1_gardener;
-[opnpc1,farming_gardener_tree_1] ~fairy1_gardener;
+[opnpc1,farming_gardener_tree_1]
+if (~got_farmer = true) @got_farmer_talk; // EASCape: Garden of Tranquillity: Alain (quest_garden/got_farmers.rs2)
+~fairy1_gardener;
 [opnpc1,farming_gardener_tree_2] ~fairy1_gardener;
 [opnpc1,farming_gardener_tree_3] ~fairy1_gardener;
 [opnpc1,farming_gardener_tree_4] ~fairy1_gardener;
@@ -100,6 +109,7 @@ switch_int ($choice) {
 // "Would you look after my crops for me?": the allotment farmers ask which patch (Void)
 [proc,farming_gardener_look_after]
 ~chatplayer("<p,quiz>Would you look after my crops for me?");
+if (~got_farmer_wont_look = true) return; // EASCape: Garden of Tranquillity: Lyra's onions, Kragen's cabbages (quest_garden/got_farmers.rs2)
 def_int $a;
 def_int $b;
 $a, $b = ~farming_gardener_patches(npc_type);

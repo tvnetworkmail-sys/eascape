@@ -1,0 +1,444 @@
+// EASCape: Garden of Tranquillity (30 August 2005): Queen Ellamaria in the garden east of Varrock
+// palace, King Roald, the unveiling and the rewards; the list; the journal. Lines: the RuneScape
+// wiki's Transcript:Garden of Tranquillity and the OSRS wiki's copy (the older wording where they
+// differ), and 2009scape's EllamariaDialogue for her first lines. Requirements (the OSRS wiki):
+// 25 Farming, not boostable, and Creature of Fenkenstrain. Rewards (both wikis' quest pages): 2
+// quest points, 5,000 Farming XP, an acorn, an apple tree seed, 5 guam seeds and a compost potion
+// (4); the Ring of Charos stays opened. Ours: the journal's words; the quest scroll's item; the
+// "Well, I think that's everything..." option only once everything is sown and both statues are
+// placed; the unveiling's camera and the place you stand.
+
+[proc,got_reqs]()(boolean)
+if (stat_base(farming) >= 25 & %fenk_quest >= ^fenk_complete) return(true);
+return(false);
+
+[proc,got_set](int $stage)
+%garden_quest = $stage;
+~send_quest_progress_colour(questlist:garden, %garden_quest, ^got_complete);
+
+// something for you, or on the floor ("The list falls to the floor.")
+[proc,got_give](namedobj $obj, int $n)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $n);
+    return;
+}
+obj_add(coord, $obj, $n, ^lootdrop_duration);
+mes("The <lowercase(oc_name($obj))> falls to the floor.");
+
+// ---------------------------------------------------------------- Ellamaria
+[opnpc1,queen_ellamaria]
+switch_int (%garden_quest) {
+    case ^got_not_started : @got_ellamaria_start;
+    case ^got_roald :
+        ~chatnpc("<p,quiz>So are you going to get Rollie then?");
+        ~chatplayer("<p,shifty>No, I haven't spoken to Roll ... King Roald ... yet.");
+        ~chatnpc("<p,happy>Well hurry along peasant. This garden will be such a wonderful surprise!");
+    case ^got_complete : @got_ellamaria_after;
+    case default : @got_ellamaria_menu;
+}
+
+[label,got_ellamaria_start]
+~chatplayer("<p,quiz>What's going on here? I see a lot of farming patches with nothing growing in them.");
+~chatnpc("<p,neutral>No, one has just had them installed. One has had the most marvellous idea to bring renewed happiness to one's own dearest husband.");
+~chatplayer("<p,confused>One? I'm not sure I understand you-");
+~chatnpc("<p,angry>Oh dear - the common classes, oh how they fill one with intolerable levels of exasperation, I swear to be most true.");
+~chatplayer("<p,shifty>Ri-ight ... if you say so, my lady. I'll be off then, if you don't mind-");
+~chatnpc("<p,angry>Yes, be off with you, before I call the guards.");
+~chatplayer("<p,neutral>No problem, sorry to have bothered you.");
+if (~got_reqs = false) return; // 2009scape: the talk ends here
+~chatnpc("<p,angry>Peasant - WAIT!!!");
+~chatplayer("<p,quiz>Are you speaking to me?");
+if (gender = 1) ~chatnpc("<p,angry>Who else would I be speaking to, you funny little woman? Of course you.");
+else ~chatnpc("<p,angry>Who else would I be speaking to, you funny little man? Of course you.");
+~chatplayer("<p,shifty>Well for a moment there I thought there was a dog around here somewhere...");
+~chatnpc("<p,neutral>Oh yes, sarcasm - how amusing. No, no, peasant - I have a question to ask of you, and you are required to answer.");
+~chatplayer("<p,shifty>Well, seeing as you put it so nicely...");
+~chatnpc("<p,quiz>Do you know of anyone who might have some degree of horticultural experience?");
+~chatplayer("<p,happy>If you're asking me do I know a gardener, then yes I do. I happen to be quite handy at farming myself, as it happens.");
+~chatnpc("<p,happy>Oh, marvellous! Peasant, I hereby order you to assist me with a little project I have planned.");
+~chatplayer("<p,neutral>You'll have to ask me nicely first.");
+if (gender = 1) ~chatnpc("<p,sad>Oh, what I have to deal with these days - to think this is what being a Queen has become. Very well then: would you ... good lady help me with a little project of mine?");
+else ~chatnpc("<p,sad>Oh, what I have to deal with these days - to think this is what being a Queen has become. Very well then: would you ... good sir help me with a little project of mine?");
+if (~p_choice2("I'd rather jump off the docks at Port Sarim.", 1, "I would be happy to help someone who is so in touch with the people.", 2) = 1) {
+    ~chatplayer("<p,angry>I'd rather jump off the docks at Port Sarim.");
+    ~chatnpc("<p,neutral>Well don't allow one to delay you - it is probably the most constructive thing you could do with your life, to be honest.");
+    return;
+}
+~chatplayer("<p,shifty>I would be happy to help someone who is so in touch with the people.");
+~chatnpc("<p,neutral>Ah, more sarcasm - wonderful. Well, it is nice to have a master of the fine art of gardening to assist me; in the absence of any such person, I gladly accept your service.");
+~got_set(^got_started);
+~chatplayer("<p,quiz>I'm not sure if that's a compliment or not. Anyway, what would you like me to do, and what do I get out of it?");
+~chatnpc("<p,neutral>To answer your first question, you have noticed the new farming patches that we have had installed around us. We wish to grow many varied and exotic plants in them, to bring happiness back to my husband.");
+~chatplayer("<p,quiz>King Roald?");
+~chatnpc("<p,neutral>The very same, and that's 'His Most Royal Majesty' to you. Now we come to the plants that one wishes you to grow in these patches. I would tell you all at once, but I fear that your small mind would not cope.");
+~chatplayer("<p,quiz>Thanks, I'm sure. So tell me Queeny, how do I know which plants I am to get for you?");
+~got_give(garden_list, 1);
+~chatnpc("<p,neutral>I have given you a list of the items that I need in each patch. One is sure that you will know how to use the list with each patch to find out what needs to go in each one. There is one more thing, though.");
+~chatplayer("<p,neutral>One listens with bated breath...");
+~chatnpc("<p,neutral>Obtaining the seeds may prove difficult if you go about it by hacking and slashing everything that moves. No, to gather these items you will need to employ a finer tactic; the art of persuasion.");
+~chatnpc("<p,neutral>You must go at once and converse with the wise old man who is said to dwell in Draynor Village; he may guide you in mastering this delicate and sophisticated ability.");
+
+[label,got_ellamaria_menu]
+def_boolean $list = false;
+if (~got_has(garden_list) = false) $list = true;
+def_string $everything = "";
+if (~got_all_sown = true) $everything = "Well, I think that's everything...";
+def_int $c;
+if ($list = true & string_length($everything) > 0) {
+    $c = ~p_choice5("Can I have another list?", 1, "How am I supposed to move statues all the way here?", 2, "What am I supposed to be getting again?", 3, "Will these patches need much in the way of watering?", 4, $everything, 5);
+} else if ($list = true) {
+    $c = ~p_choice4("Can I have another list?", 1, "How am I supposed to move statues all the way here?", 2, "What am I supposed to be getting again?", 3, "Will these patches need much in the way of watering?", 4);
+} else if (string_length($everything) > 0) {
+    $c = ~p_choice4("How am I supposed to move statues all the way here?", 2, "What am I supposed to be getting again?", 3, "Will these patches need much in the way of watering?", 4, $everything, 5);
+} else {
+    $c = ~p_choice3("How am I supposed to move statues all the way here?", 2, "What am I supposed to be getting again?", 3, "Will these patches need much in the way of watering?", 4);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can I have another list?");
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>One would give you another, but you do not appear to have room for it.");
+            return;
+        }
+        ~chatnpc("<p,angry>Take better care with this one.");
+        inv_add(inv, garden_list, 1);
+    case 2 :
+        ~chatplayer("<p,quiz>How am I supposed to move statues all the way here?");
+        ~chatnpc("<p,neutral>You use the dormant object that lies between your ears, that's how. A statue may be far too heavy to carry, but simplicity itself to push.");
+        ~chatplayer("<p,confused>Push?");
+        if (~got_has(garden_trolley_obj) = true | %garden_trolley_varbit > 0) {
+            ~chatnpc("<p,angry>What are you talking about?!? You still have the one I gave you!");
+            return;
+        }
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>Yes peasant, push. One would give you something to help with this task, but you do not appear to have room enough to carry it.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Yes peasant, push. Here - take this trolley. You can use it to push the statues here.");
+        inv_add(inv, garden_trolley_obj, 1);
+    case 3 :
+        ~chatplayer("<p,quiz>What am I supposed to be getting again?");
+        ~chatnpc("<p,angry>Haven't you got that list I gave you?");
+        if (inv_total(inv, garden_list) > 0) {
+            ~chatplayer("<p,shifty>Er ... yes I do have a list...");
+            ~chatnpc("<p,angry>Well read it then! That should tell you everything you need to know!!");
+            return;
+        }
+        ~chatplayer("<p,sad>Er ... no ... I seem to have lost it.");
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,angry>Oh dear, what a pathetic creature you are. One would give you another list, but you do not appear to have room enough to carry it.");
+            return;
+        }
+        ~chatnpc("<p,angry>Oh dear, what a pathetic creature you are. Here, have another one.");
+        inv_add(inv, garden_list, 1);
+    case 4 :
+        ~chatplayer("<p,quiz>Will these patches need much in the way of watering?");
+        ~chatnpc("<p,neutral>Well, you are supposed to be the gardener here, but I would say not. One had the soil imported from an extremely fertile area at great cost - watering should not be necessary one would have thought.");
+    case 5 : @got_ellamaria_everything;
+}
+
+[label,got_ellamaria_everything]
+~chatplayer("<p,happy>Well, I think that's everything...");
+~chatnpc("<p,neutral>One finds that hard to believe. Out of my way, let me see for myself.");
+if (~got_all_grown = true) {
+    ~chatnpc("<p,happy>Oh yes, very nice, if a little yobbish. Rollie will be so pleased-");
+    ~chatplayer("<p,shock>Rollie?!?");
+    ~chatnpc("<p,angry>You will address my husband by his proper title!!!!! Speaking of whom, I think it is time that we brought him to see his new garden. And when one says we, one means you.");
+    ~chatplayer("<p,neutral>Oh, you want me to go and get Roald - sorry ... King Roald ... and bring him here. Fair enough, wait here then, I'll be back in a mo.");
+    ~got_set(^got_roald);
+    return;
+}
+~chatnpc("<p,angry>One was right not to trust your word, common as it is. The garden is not yet complete.");
+~chatplayer("<p,quiz>Really? What haven't I finished yet?");
+def_int $n = 0;
+def_int $p = 1;
+def_string $name;
+def_string $has;
+def_string $start;
+while ($p <= 9) {
+    if (~got_patch_grown($p) = false) {
+        $name, $has = ~got_patch_name($p);
+        switch_int ($n) {
+            case 0 : $start = "I see that";
+            case 1 : $start = "Also,";
+            case 2 : $start = "Thirdly,";
+            case 3 : $start = "Oh look,";
+            case 4 : $start = "To add to that,";
+            case 5 : $start = "And what a surprise,";
+            case 6 : $start = "Oh you are doing so well,";
+            case 7 : $start = "To add insult to injury,";
+            case default : $start = "And finally,";
+        }
+        ~chatnpc("<p,angry><$start> the <$name> <$has> finished growing.");
+        $n = calc($n + 1);
+    }
+    $p = calc($p + 1);
+}
+~chatnpc("<p,neutral>One suggest you learn a little patience. These plants should not take long to grow - these patches have been filled with extremely fertile soil that was very expensive to import.");
+
+[label,got_ellamaria_after]
+switch_int (~p_choice2("What's the supercompost potion for?", 1, "Can I use this garden for my own farming?", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's the supercompost potion for?");
+        ~chatnpc("<p,shifty>Oh, let one see peasant - perhaps it is a potion for making supercompost?");
+        ~chatplayer("<p,confused>No, I didn't mean that-");
+        ~chatnpc("<p,neutral>You wish to know how to use it? Pour it on some normal compost and it will transform into supercompost. You can do this with a bucket of compost, although it is possibly wiser to use it on a full compost bin.");
+    case 2 :
+        ~chatplayer("<p,quiz>Can I use this garden for my own farming?");
+        if (gender = 1) ~chatnpc("<p,angry>What, you want to dig up the plants that took one so long to grow? Don't be ridiculous, you silly little woman.");
+        else ~chatnpc("<p,angry>What, you want to dig up the plants that took one so long to grow? Don't be ridiculous, you silly little man.");
+        ~chatplayer("<p,sad>All right then, sorry I asked.");
+        ~chatnpc("<p,angry>Impertinent peasant! Oh, if you promise to leave one alone then feel free to pick fruit from the White Tree. One is told that they are a great natural energy restorative.");
+}
+
+// things shown to her
+[opnpcu,queen_ellamaria]
+if (%garden_quest < ^got_started) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $p = ~got_seed_patch(last_useitem);
+if ($p > 1) {
+    def_string $what;
+    switch_int ($p) {
+        case 2 : $what = "delphiniums that one wishes, not seeds. Plant it in the delphinium patch";
+        case 3 : $what = "snowdrops that one wishes, not seeds. Plant it in the snowdrop patch";
+        case 4 : $what = "Burthorpe vine that one wishes, not seeds. Plant it in the Burthorpe vine patch";
+        case 5 : $what = "a red rosebush that one wishes, not seeds. Plant it in the red rosebush patch";
+        case 6 : $what = "a pink rosebush that one wishes, not seeds. Plant it in the pink rosebush patch";
+        case 7 : $what = "a white rosebush that one wishes, not seeds. Plant it in the white rosebush patch";
+        case default : $what = "orchids that one wishes, not seeds. Plant it in the orchid patch";
+    }
+    ~chatnpc("<p,neutral>Yes, very good peasant, you've got the seed; but it's <$what>, and let it grow.");
+    return;
+}
+switch_obj (last_useitem) {
+    case garden_list, garden_trolley_obj, garden_white_tree_shoot, garden_white_tree_plantpot_shoot, garden_white_tree_plantpot_shoot_watered, garden_white_tree_plantpot_sapling :
+        ~chatnpc("<p,neutral>Very good peasant, thank you for showing one that, but one has given you a job to do. Do it.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- the list (inter_303, the 377
+// cache's own: eleven lines; ours: its arrows hidden, a line struck through once it's done)
+[opheld1,garden_list]
+~got_list_line(inter_303:com_2, "Delphiniums (see Elstan near Falador)", ~got_patch_grown(2));
+~got_list_line(inter_303:com_3, "Pink orchids (see Lyra near Port Phasmatys)", ~got_patch_grown(8));
+~got_list_line(inter_303:com_4, "Yellow orchids (see Lyra near Port Phasmatys)", ~got_patch_grown(9));
+~got_list_line(inter_303:com_5, "Snowdrops (see Kragen near Ardougne)", ~got_patch_grown(3));
+~got_list_line(inter_303:com_6, "Burthorpe vine (see Bernald in Burthorpe)", ~got_patch_grown(4));
+~got_list_line(inter_303:com_7, "White rosebush (go to Edgeville Monastery)", ~got_patch_grown(7));
+~got_list_line(inter_303:com_8, "Pink rosebush (go to Edgeville monastery)", ~got_patch_grown(6));
+~got_list_line(inter_303:com_9, "Red rosebush (go to Edgeville monastery)", ~got_patch_grown(5));
+~got_list_line(inter_303:com_10, "A White Tree (see Cantaera in Catherby).", ~got_patch_grown(1));
+def_boolean $sara = false;
+if (%garden_saradomin_statue_varbit = ^got_statue_placed) $sara = true;
+def_boolean $king = false;
+if (%garden_king_statue_varbit = ^got_statue_placed) $king = true;
+~got_list_line(inter_303:com_11, "A statue of Saradomin from Falador.", $sara);
+~got_list_line(inter_303:com_12, "A statue of a king from outside Lumbridge Castle.", $king);
+if_sethide(inter_303:com_13, true);
+if_sethide(inter_303:com_16, true);
+if_sethide(inter_303:com_19, true);
+if_sethide(inter_303:com_22, true);
+if_sethide(inter_303:com_25, true);
+if_sethide(inter_303:com_28, true);
+if_sethide(inter_303:com_31, true);
+if_sethide(inter_303:com_34, true);
+if_sethide(inter_303:com_37, true);
+if_sethide(inter_303:com_40, true);
+if_sethide(inter_303:com_43, true);
+if_openmain(inter_303);
+
+[proc,got_list_line](component $com, string $text, boolean $done)
+if ($done = true) if_settext($com, "@str@<$text>");
+else if_settext($com, $text);
+
+[opheld5,garden_list]
+def_int $slot = last_slot;
+if (~destroy_confirm(garden_list, "You can get another list from Queen Ellamaria.") = false) return; // ours
+inv_delslot(inv, $slot);
+
+[opheld5,garden_trolley_obj]
+def_int $slot = last_slot;
+if (~destroy_confirm(garden_trolley_obj, "You can get another trolley from Queen Ellamaria.") = false) return; // ours
+inv_delslot(inv, $slot);
+
+// ---------------------------------------------------------------- King Roald
+// called from his [opnpc1] (area_varrock/king_roald.rs2) once the garden is done
+[label,got_roald]
+~chatnpc("<p,neutral>Yes, citizen. Do you need something?");
+if (~p_choice2("Would you like to follow me for a minute?", 1, "Not really.", 2) = 2) {
+    ~chatplayer("<p,neutral>Not really.");
+    ~chatnpc("<p,neutral>You will have to excuse me then. I am very busy as I have a kingdom to run!");
+    return;
+}
+~chatplayer("<p,quiz>Would you like to follow me for a minute?");
+~chatnpc("<p,angry>Follow you?!? I am the King! I am the followed, not the follower!!");
+if (~got_ring_worn = true) {
+    if (~p_choice2("Well, if you can't be bothered then neither can I.", 1, "(Charm) Of course, your majesty - please forgive me.", 2) = 2) @got_roald_charm;
+}
+~chatplayer("<p,angry>Well, if you can't be bothered then neither can I.");
+~chatnpc("<p,neutral>Suit yourself.");
+~chatplayer("<p,angry>No, you suit yourself.");
+~chatnpc("<p,angry>You're quite argumentative for a peasant.");
+~chatplayer("<p,angry>I'm not the one who's arguing, you are.");
+~chatnpc("<p,angry>Then why do you keep answering me back?");
+~chatplayer("<p,angry>No, you're answering me back.");
+~chatplayer("<p,angry>Well, stop talking and I'll stop answering.");
+~chatnpc("<p,angry>No, you stop talking.");
+~chatplayer("<p,angry>I have stopped talking.");
+~chatnpc("<p,angry>No you haven't, you're doing it now.");
+~chatplayer("<p,angry>No, I'm just answering what you're saying.");
+~chatnpc("<p,neutral>Okay, so if I don't say anything, you won't answer me back.");
+~chatplayer("<p,neutral>Suits me.");
+~chatnpc("<p,neutral>Go on, then.");
+~chatplayer("<p,neutral>No, you first.");
+~mesbox("King Roald doesn't say anything to you.");
+~mesbox("You don't say anything back.");
+~chatnpc("<p,happy>See, that's better.");
+~chatplayer("<p,happy>Yes, much better.");
+~chatnpc("<p,quiz>What were you saying about me following you somewhere?");
+~chatplayer("<p,neutral>I can't remember, it was such a long time ago.");
+~chatnpc("<p,sad>Ah, that's a shame - I could have done with a breath of fresh air.");
+~chatplayer("<p,neutral>Oh well.");
+~chatnpc("<p,neutral>Yes, never mind.");
+~chatplayer("<p,neutral>See you around.");
+~chatnpc("<p,neutral>Yes, see you later.");
+~chatnpc("<p,quiz>I thought you were going.");
+~chatplayer("<p,angry>I was until you spoke to me again.");
+~chatnpc("<p,neutral>I'm sorry, I'll stop speaking to you then.");
+~chatplayer("<p,neutral>See you around.");
+~chatnpc("<p,neutral>Yes, see you later.");
+
+[label,got_roald_charm]
+~chatplayer("<p,neutral>Of course, your majesty - please forgive me.");
+~chatnpc("<p,angry>Forgiveness is something that cannot be earned so easily. And I'm certainly not following you off on some wild goose chase when I have important matters of state to attend to.");
+if (~p_choice2("That's it - I've had it with royalty.", 1, "(Charm) The Queen asked me to bring you.", 2) = 1) {
+    ~chatplayer("<p,angry>That's it - I've had it with royalty.");
+    ~chatnpc("<p,angry>And I've had enough of peasantry! Get out of my castle!");
+    return;
+}
+~chatplayer("<p,neutral>The Queen asked me to bring you.");
+~chatnpc("<p,confused>Ellie?");
+~chatnpc("<p,happy>Now that's a different matter. Lead on, peasant - let's see what my darling wife has been up to now.");
+@got_unveiling;
+
+// ---------------------------------------------------------------- the unveiling (the OSRS wiki's
+// copy of the transcript; the 2005 slap, removed from RuneScape in 2023)
+[label,got_unveiling]
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(0_50_54_29_33);
+def_coord $roald_at = 0_50_54_30_33;
+npc_add($roald_at, king_roald_cutscene, 200);
+def_npc_uid $roald = npc_uid;
+npc_facesquare(coord);
+minimap_toggle(2);
+cam_moveto(0_50_54_29_25, 600, 100, 100);
+cam_lookat(0_50_54_29_30, 200, 100, 100);
+~fade_in;
+p_delay(2);
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,sad>This is murder on my hay fever you know...");
+~got_ellamaria_says("<p,happy>Ah, Rollie my love!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,quiz>What have you been up to now, pumpkin?");
+~got_ellamaria_says("<p,happy>Behold your new garden!!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,angry>Have you been spending my money again?");
+~chatplayer("<p,happy>Here's some orchids from Morytania.");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,sad>Orchids bring me out in a rash.");
+~chatplayer("<p,happy>Vines from Burthorpe!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,neutral>Oh great, let's hope they don't eat into the walls.");
+~chatplayer("<p,happy>Snowdrops from Ardougne!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,bored>What a boring colour.");
+~chatplayer("<p,happy>The last surviving White Tree!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,neutral>Should make a nice table and chairs.");
+~chatplayer("<p,happy>Delphiniums from Falador!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,angry>I hate delphiniums.");
+~got_ellamaria_says("<p,angry>Rollie?");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,quiz>Yes pumpkin?");
+if_close;
+if (npc_find(coord, queen_ellamaria, 15, 0) = true) {
+    npc_facesquare($roald_at);
+    npc_anim(garden_queen_slap, 0);
+}
+if (npc_finduid($roald) = true) {
+    npc_anim(garden_slap_hit, 0);
+    npc_say("Ow!");
+}
+p_delay(2);
+~got_ellamaria_says("<p,angry>One has gone to great pains to provide you with this beautiful garden!");
+~got_ellamaria_says("<p,angry>YOU CAN SHOW ONE A LITTLE GRATITUDE!!");
+~chatplayer("<p,neutral>Actually I think I did most of-");
+~got_ellamaria_says("<p,angry>SILENCE!!");
+~got_ellamaria_says("<p,angry>Well? Are you going to thank one, Rollie?");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,sad>Pumpkin I-");
+~got_ellamaria_says("<p,angry>SPEAK UP, I CAN'T HEAR YOU!!");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,sad>Thank you very much my darling.");
+~got_ellamaria_says("<p,neutral>Much better. Now get back to the castle and rule our kingdom.");
+~chatnpc_specific("King Roald", king_roald_cutscene, "<p,sad>Yes pumpkin.");
+if_close;
+~fade_out;
+p_delay(2);
+if (npc_finduid($roald) = true) npc_del;
+cam_reset;
+minimap_toggle(0);
+~fade_in;
+if_close;
+~got_ellamaria_says("<p,neutral>Excuse my husband, he can be so rude sometimes.");
+~chatplayer("<p,shifty>Only sometimes?");
+~got_ellamaria_says("<p,angry>Are you being rude again ... ?");
+~got_ellamaria_says("<p,neutral>Yes, and that's all he deserves! Here you go, your help here has proved invaluable.");
+~got_complete;
+
+[proc,got_complete]
+~got_give(acorn, 1);
+~got_give(apple_tree_seed, 1);
+~got_give(guam_seed, 5);
+~got_give(supercompost_potion_4, 1);
+%garden_quest = ^got_complete;
+stat_advance(farming, 50000);
+session_log(^log_adventure, "Quest complete: Garden of Tranquillity");
+~send_quest_complete(questlist:garden, ring_of_charos_unlocked, 250, ^got_questpoints, "You have completed the\\nGarden of Tranquillity Quest!", "2 Quest Points|5000 Farming XP|An acorn and an apple tree seed|5 guam seeds|A compost potion");
+
+// ---------------------------------------------------------------- the journal (ours)
+[if_button,questlist:garden]
+def_int $s = %garden_quest;
+if ($s = ^got_not_started) {
+    ~quest_journal("Garden of Tranquillity", "@dbl@I can start this quest by talking to @dre@Queen Ellamaria@dbl@ in the|@dbl@garden to the east of @dre@Varrock palace@dbl@.|@dbl@To complete this quest I will need:|<~lt_req("Level 25 Farming", stat_base(farming), 25)>|@dbl@and to have completed:|<~lt_req("Creature of Fenkenstrain", %fenk_quest, ^fenk_complete)>");
+    return;
+}
+def_string $t = "";
+$t = append($t, ~lt_line("Queen Ellamaria wants a garden of peace and serenity for", "King Roald. She gave me a list, and told me to learn the art", "of persuasion from the Wise Old Man in Draynor Village.", ~got_done(^got_ring)));
+if ($s >= ^got_ring) $t = append($t, ~lt_line("The Wise Old Man opened the power of the Ring of Charos.", "It only works whilst I am wearing it.", "", ~got_done(^got_roald)));
+if ($s >= ^got_ring & $s < ^got_roald) $t = append($t, ~got_journal_tasks);
+if ($s >= ^got_roald) $t = append($t, ~lt_line("The garden is finished. Queen Ellamaria wants me to fetch", "King Roald to see it.", "", ~got_done(^got_complete)));
+if ($s >= ^got_complete) $t = append($t, "@str@King Roald saw his new garden, and the Queen rewarded me.||@red@QUEST COMPLETE!");
+~quest_journal("Garden of Tranquillity", $t);
+
+[proc,got_done](int $stage)(boolean)
+if (%garden_quest >= $stage) return(true);
+return(false);
+
+[proc,got_journal_tasks]()(string)
+def_string $t = "";
+$t = append($t, ~got_jline("Delphiniums, from Elstan near Falador.", ~got_patch_grown(2)));
+def_boolean $done = false;
+if (~got_patch_grown(8) = true & ~got_patch_grown(9) = true) $done = true;
+$t = append($t, ~got_jline("Pink and yellow orchids, from Lyra near Port Phasmatys.", $done));
+$t = append($t, ~got_jline("Snowdrops, from Kragen near Ardougne.", ~got_patch_grown(3)));
+$t = append($t, ~got_jline("Burthorpe vine, from Bernald in Burthorpe.", ~got_patch_grown(4)));
+$done = false;
+if (~got_patch_grown(5) = true & ~got_patch_grown(6) = true & ~got_patch_grown(7) = true) $done = true;
+$t = append($t, ~got_jline("Rosebushes, from Edgeville Monastery.", $done));
+$t = append($t, ~got_jline("A White Tree, from Dantaera in Catherby.", ~got_patch_grown(1)));
+$done = false;
+if (%garden_saradomin_statue_varbit = ^got_statue_placed) $done = true;
+$t = append($t, ~got_jline("A statue of Saradomin from Falador.", $done));
+$done = false;
+if (%garden_king_statue_varbit = ^got_statue_placed) $done = true;
+$t = append($t, ~got_jline("A statue of a king from outside Lumbridge Castle.", $done));
+return(append($t, "|"));
+
+[proc,got_jline](string $text, boolean $done)(string)
+if ($done = true) return("@str@<$text>|");
+return("@dbl@<$text>|");

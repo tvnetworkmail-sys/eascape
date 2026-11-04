@@ -99,7 +99,8 @@ else {
 [label,johnathon_fitzharmon_gauntlets]
 ~chatnpc("<p,neutral>Hello again. My family now considers you a hero.");
 if(getbit_range(%crest_spells_levers_gauntlets, ^crest_cooking_gauntlets_chosen, ^crest_chaos_gauntlets_chosen) > 0) {
-    return;
+    ~chatplayer("<p,happy>Maybe because... I am."); // EASCape: changing them (crest_gauntlets.rs2)
+    @crest_change_gauntlets(gauntlets_of_chaos, ^crest_chaos_gauntlets_chosen);
 }
 if (inv_total(inv, steel_gauntlets) >= 1) {
     ~chatplayer("<p,quiz>Your father tells me you can improve these gauntlets for me...");

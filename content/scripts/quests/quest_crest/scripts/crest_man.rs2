@@ -103,7 +103,8 @@ inv_add(inv, caleb_crest, 1);
 [label,avan_gauntlets]
 ~chatnpc("<p,happy>I have received word from my father of your assistance to our family in this matter. You have my thanks for restoring our honour.");
 if(getbit_range(%crest_spells_levers_gauntlets, ^crest_cooking_gauntlets_chosen, ^crest_chaos_gauntlets_chosen) > 0) {
-    return;
+    ~chatplayer("<p,happy>Not a problem."); // EASCape: changing them (crest_gauntlets.rs2)
+    @crest_change_gauntlets(gauntlets_of_goldsmithing, ^crest_goldsmithing_gauntlets_chosen);
 }
 if (inv_total(inv, steel_gauntlets) >= 1) {
     ~chatplayer("<p,quiz>Your father mentioned that you could improve these gauntlets in some way for me...");

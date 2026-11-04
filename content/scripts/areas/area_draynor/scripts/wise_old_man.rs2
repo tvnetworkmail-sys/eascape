@@ -64,7 +64,18 @@ if ($choice = 5) ~chatplayer("<p,shifty>Thanks, maybe some other time.");
 [label,wom_menu]
 def_string $task = "Is there anything I can do for you?";
 if (~wom_has_task = true) $task = "What did you ask me to do?";
-def_int $choice = ~p_choice3($task, 1, "Could you check my items for junk, please?", 2, "I'd just like to ask you something.", 3);
+def_int $choice;
+// EASCape: Garden of Tranquillity's lines first while you have them (quest_garden/got_wom.rs2)
+def_string $got = ~got_wom_line;
+if (string_length($got) > 0 & ~got_wom_charm = true) {
+    $choice = ~p_choice5($got, 4, "(Charm) I think you wanted to give me a thousand coins...", 5, $task, 1, "Could you check my items for junk, please?", 2, "I'd just like to ask you something.", 3);
+} else if (string_length($got) > 0) {
+    $choice = ~p_choice4($got, 4, $task, 1, "Could you check my items for junk, please?", 2, "I'd just like to ask you something.", 3);
+} else {
+    $choice = ~p_choice3($task, 1, "Could you check my items for junk, please?", 2, "I'd just like to ask you something.", 3);
+}
+if ($choice = 4) @got_wom;
+if ($choice = 5) @got_wom_coins;
 if ($choice = 1) {
     if (~wom_has_task = true) @wom_what_task;
     @wom_anything;

@@ -1,0 +1,285 @@
+// EASCape: Garden of Tranquillity: the statues. Ellamaria's trolley used on the statue of Saradomin
+// in Falador's square or the statue of a former king outside Lumbridge Castle loads it (the
+// statue's own varbit: 1 on your trolley, its home plinth empty); the trolley is the cache's
+// garden_trolley npc, whose multinpc shows the statue it carries (garden_trolley_varbit), with
+// Push, Pull, Big-push and Place. Out of Falador's north gate, or onto the bridge over the River
+// Lum, "much huffing and puffing later" you and the statue are in Varrock palace's northern
+// courtyard; Place it beside its plinth in the garden (king north, Saradomin south). Take too long
+// and the guards take it back (and the trolley). Falador's first time: Billy and Bob, a cutscene.
+// Lines and steps: the RuneScape wiki's Transcript:Garden of Tranquillity ("Statue Heist") and the
+// OSRS wiki's copy and walkthrough (Big-push: four squares). Ours: where the trolley and you stand
+// as it's loaded; that you push from behind it (not from its side or a corner); the cutscene's
+// camera, places and timing; five minutes (the walkthrough: "more than five minutes"); loading
+// nothing while you're carrying the other statue; a statue on your trolley when you log out goes
+// home again.
+
+[oplocu,falador_statue_saradomin]
+if (last_useitem ! garden_trolley_obj | %garden_quest < ^got_started | %garden_quest >= ^got_complete | %garden_saradomin_statue_varbit ! ^got_statue_home) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%garden_cutscene_billybob = 0) {
+    ~chatplayer("<p,shifty>(Hmmm ... better not let those guards see me...)");
+    ~got_billy_bob;
+    %garden_cutscene_billybob = 1;
+}
+~got_load(^got_trolley_saradomin, loc_coord);
+
+[oplocu,garden_lumbridge_statue]
+if (last_useitem ! garden_trolley_obj | %garden_quest < ^got_started | %garden_quest >= ^got_complete | %garden_king_statue_varbit ! ^got_statue_home) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~got_load(^got_trolley_king, loc_coord);
+
+[oplocu,garden_queen_statue]
+if (last_useitem ! garden_trolley_obj | %garden_quest < ^got_started) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,confused>I'm supposed to be getting a statue of a KING from Lumbridge. I'm no expert, but that looks like a QUEEN to me.");
+
+// the trolley comes out where you stand, and you step back from the statue
+[proc,got_load](int $which, coord $statue)
+if (inv_total(inv, garden_trolley_obj) = 0 | %garden_trolley_varbit ! 0) return;
+inv_del(inv, garden_trolley_obj, 1);
+def_coord $at = coord;
+anim(garden_statue_push, 0);
+npc_add($at, garden_trolley, calc(^got_statue_ticks + 50));
+npc_setmode(none); // it stays where it's pushed
+%got_trolley_npc = npc_uid;
+%garden_trolley_varbit = $which;
+if ($which = ^got_trolley_king) %garden_king_statue_varbit = ^got_statue_trolley;
+else %garden_saradomin_statue_varbit = ^got_statue_trolley;
+def_int $dx = 0;
+def_int $dz = 0;
+if (coordz($at) > coordz($statue)) $dz = 1;
+else if (coordz($at) < coordz($statue)) $dz = -1;
+else if (coordx($at) > coordx($statue)) $dx = 1;
+else $dx = -1;
+def_coord $back = movecoord($at, $dx, 0, $dz);
+if (lineofwalk($at, $back) = true) p_teleport($back);
+settimer(got_statue_timer, ^got_statue_ticks);
+
+[timer,got_statue_timer]
+cleartimer(got_statue_timer);
+if (%garden_trolley_varbit = 0) return;
+if (%garden_trolley_varbit = ^got_trolley_king) mes("The guards have recaptured the statue of a king, and placed it back in Lumbridge.");
+else mes("The guards have recaptured the statue of Saradomin, and placed it back in Falador.");
+~got_trolley_reset;
+
+// the statue goes home, the trolley with the guards
+[proc,got_trolley_reset]
+if (%garden_trolley_varbit = ^got_trolley_king & %garden_king_statue_varbit = ^got_statue_trolley) %garden_king_statue_varbit = ^got_statue_home;
+if (%garden_trolley_varbit = ^got_trolley_saradomin & %garden_saradomin_statue_varbit = ^got_statue_trolley) %garden_saradomin_statue_varbit = ^got_statue_home;
+%garden_trolley_varbit = 0;
+if (%got_trolley_npc ! null) {
+    if (npc_finduid(%got_trolley_npc) = true) npc_del;
+}
+%got_trolley_npc = null;
+
+// called at login (login_logout/login.rs2)
+[proc,got_login]
+if (%garden_trolley_varbit ! 0 | %garden_king_statue_varbit = ^got_statue_trolley | %garden_saradomin_statue_varbit = ^got_statue_trolley) {
+    if (%garden_king_statue_varbit = ^got_statue_trolley) %garden_king_statue_varbit = ^got_statue_home;
+    if (%garden_saradomin_statue_varbit = ^got_statue_trolley) %garden_saradomin_statue_varbit = ^got_statue_home;
+    %garden_trolley_varbit = 0;
+    %got_trolley_npc = null;
+}
+
+// ---------------------------------------------------------------- the trolley's options
+[opnpc1,garden_trolley] @got_trolley_move(1);
+[opnpc3,garden_trolley] @got_trolley_move(-1);
+[opnpc4,garden_trolley] @got_trolley_move(4);
+[opnpc5,garden_trolley] @got_trolley_place;
+
+[proc,got_trolley_mine]()(boolean)
+if (%got_trolley_npc = null | %garden_trolley_varbit = 0) return(false);
+if (npc_uid ! %got_trolley_npc) return(false);
+return(true);
+
+// $n: 1 a push, -1 a pull, 4 a big push
+[label,got_trolley_move](int $n)
+if (~got_trolley_mine = false) {
+    mes("That isn't your trolley."); // ours
+    return;
+}
+def_int $dx = calc(coordx(npc_coord) - coordx(coord));
+def_int $dz = calc(coordz(npc_coord) - coordz(coord));
+if (calc(abs($dx) + abs($dz)) ! 1) {
+    mes("You need to stand behind the trolley to move it."); // ours
+    return;
+}
+def_int $i = 0;
+def_int $steps = $n;
+if ($n < 0) $steps = 1;
+while ($i < $steps) {
+    def_coord $from = npc_coord;
+    def_coord $me = coord;
+    def_coord $to;
+    def_coord $me_to;
+    if ($n < 0) {
+        $to = $me;
+        $me_to = movecoord($me, calc(0 - $dx), 0, calc(0 - $dz));
+        if (lineofwalk($me, $me_to) = false) {
+            mes("The statue doesn't move.");
+            return;
+        }
+        anim(garden_pull_trolley, 0);
+    } else {
+        $to = movecoord($from, $dx, 0, $dz);
+        $me_to = $from;
+        if (lineofwalk($from, $to) = false | map_blocked($to) = true) {
+            if ($i = 0) mes("The statue doesn't move.");
+            return;
+        }
+        anim(garden_push_trolley, 0);
+    }
+    npc_walk($to);
+    p_walk($me_to);
+    p_delay(1);
+    if (npc_finduid(%got_trolley_npc) = false) return;
+    if (~got_trolley_away = true) return;
+    $i = calc($i + 1);
+}
+
+// out of Falador's north gate, or onto the bridge over the Lum: to Varrock
+[proc,got_trolley_away]()(boolean)
+def_int $x = coordx(npc_coord);
+def_int $z = coordz(npc_coord);
+def_boolean $away = false;
+if (%garden_trolley_varbit = ^got_trolley_saradomin & $x >= 2955 & $x <= 2975 & $z >= 3395 & $z <= 3405) $away = true;
+if (%garden_trolley_varbit = ^got_trolley_king & $x >= 3240 & $x <= 3255 & $z >= 3220 & $z <= 3232) $away = true;
+if ($away = false) return(false);
+if_close;
+~fade_out;
+p_delay(2);
+npc_tele(^got_courtyard_trolley);
+p_telejump(^got_courtyard_player);
+p_delay(1);
+~fade_in;
+~mesbox("Much huffing and puffing later...");
+return(true);
+
+[label,got_trolley_place]
+if (~got_trolley_mine = false) {
+    mes("That isn't your trolley."); // ours
+    return;
+}
+def_int $king = ~got_dist(npc_coord, 3233, 3233, 3487);
+def_int $sara = ~got_dist(npc_coord, 3229, 3230, 3479);
+def_boolean $is_king = false;
+if (%garden_trolley_varbit = ^got_trolley_king) $is_king = true;
+if (($is_king = true & $king > 1 & $sara = 1) | ($is_king = false & $sara > 1 & $king = 1)) {
+    mes("This statue needs to go on the other plinth.");
+    return;
+}
+if (($is_king = true & $king ! 1) | ($is_king = false & $sara ! 1)) {
+    ~mesbox("You need to move the trolley next to a plinth before you can place the statue - it's too heavy to carry very far.");
+    return;
+}
+anim(garden_statue_push, 0);
+cleartimer(got_statue_timer);
+npc_del;
+%got_trolley_npc = null;
+%garden_trolley_varbit = 0;
+inv_add(inv, garden_trolley_obj, 1);
+if ($is_king = true) {
+    %garden_king_statue_varbit = ^got_statue_placed;
+    mes("You place the statue of a king on the plinth.");
+    return;
+}
+%garden_saradomin_statue_varbit = ^got_statue_placed;
+mes("You place the statue of Saradomin on the plinth.");
+
+// squares from $c to the rectangle x1-x2 at z (level 0)
+[proc,got_dist](coord $c, int $x1, int $x2, int $z)(int)
+if (coordy($c) ! 0) return(99);
+def_int $dx = 0;
+if (coordx($c) < $x1) $dx = calc($x1 - coordx($c));
+if (coordx($c) > $x2) $dx = calc(coordx($c) - $x2);
+def_int $dz = abs(calc(coordz($c) - $z));
+return(max($dx, $dz));
+
+// ---------------------------------------------------------------- Billy and Bob (Falador's north
+// gate; the OSRS wiki's copy of the transcript, the cache's garden_cutscene_guard_1 and _2 and
+// garden_cutscene_aggressor, PKMaster0036)
+[proc,got_billy_bob]
+if_close;
+~fade_out;
+p_delay(2);
+minimap_toggle(2);
+def_coord $billy_at = 0_46_53_20_1;
+def_coord $bob_at = 0_46_53_22_1;
+npc_add($billy_at, garden_cutscene_guard_1, 150);
+def_npc_uid $billy = npc_uid;
+npc_facesquare($bob_at);
+npc_add($bob_at, garden_cutscene_guard_2, 150);
+def_npc_uid $bob = npc_uid;
+npc_facesquare($billy_at);
+cam_moveto(0_46_52_21_58, 500, 100, 100);
+cam_lookat(0_46_53_21_1, 150, 100, 100);
+~fade_in;
+~mesbox("Meanwhile, Billy - a new recruit of the Falador Guard - has just arrived for his first shift, guarding the Northern Falador gates...");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,quiz>So what are you doing this weekend?");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,neutral>This weekend?");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,neutral>You haven't been here long I take it.");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,confused>What do you mean?");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,quiz>Do you know the life expectancy of a Falador guard?");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,neutral>No...");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,sad>About thirty seconds, I reckon.");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,shock>Thirty seconds???");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,shock>They didn't tell me that when I signed up!!!");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,sad>Any second now someone is going to try and kill us, for no apparent reason, completely unprovoked.");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,scared>But why, Bob???");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,scared>What have we ever done to them?");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,sad>I don't know, Billy.");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,sad>But I'm not wasting my final seconds worrying about it.");
+~mesbox("Meanwhile...");
+def_coord $pk_from = 0_46_53_21_8;
+npc_add($pk_from, garden_cutscene_aggressor, 150);
+def_npc_uid $pk = npc_uid;
+npc_walk(0_46_53_21_2);
+cam_lookat(0_46_53_21_4, 150, 100, 100);
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,scared>Uh-oh, someone's coming...");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,scared>Bob???");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,neutral>Steady, Billy - remember you are a guard of Falador.");
+~chatnpc_specific("Billy, a guard of Falador", garden_cutscene_guard_1, "<p,scared>But...");
+~chatnpc_specific("Bob, another guard of Falador", garden_cutscene_guard_2, "<p,sad>See you in the next world...");
+if_close;
+if (npc_finduid($pk) = true) {
+    npc_facesquare($bob_at);
+    npc_anim(human_sword_slash, 0);
+}
+p_delay(1);
+if (npc_finduid($bob) = true) {
+    npc_say("Aaarrrgghhh!!!!");
+    npc_anim(human_death, 0);
+}
+if (npc_finduid($billy) = true) npc_say("NOOOOO!!!!!!!!!");
+p_delay(2);
+if (npc_finduid($bob) = true) npc_del;
+if (npc_finduid($billy) = true) npc_say("Why are you doing this?!?");
+p_delay(2);
+if (npc_finduid($pk) = true) {
+    npc_facesquare($billy_at);
+    npc_anim(human_sword_slash, 0);
+}
+p_delay(1);
+if (npc_finduid($billy) = true) {
+    npc_say("Aaarrrgghhh!!!!");
+    npc_anim(human_death, 0);
+}
+p_delay(2);
+if (npc_finduid($billy) = true) npc_del;
+if (npc_finduid($pk) = true) npc_anim(human_pickuptable, 0); // he buries their bones
+p_delay(2);
+if (npc_finduid($pk) = true) npc_walk(0_46_52_21_60);
+p_delay(3);
+~fade_out;
+p_delay(2);
+if (npc_finduid($pk) = true) npc_del;
+cam_reset;
+minimap_toggle(0);
+~fade_in;
+if_close;
