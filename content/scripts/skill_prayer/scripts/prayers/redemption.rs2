@@ -1,0 +1,32 @@
+// EASCape: the 6 Sep 2005 prayer, wired as the others (protectfrommelee.rs2)
+[if_button,prayer:prayer_redemption]
+if_close;
+if (p_finduid(uid) = true) {
+    @activate_prayer_redemption;
+}
+%prayer16 = %prayer16;
+
+[label,activate_prayer_redemption]
+p_clearpendingaction;
+def_dbrow $data = ~get_prayer_data(^prayer_redemption);
+if ($data = null) {
+    return;
+}
+if (%prayer16 = ^true) {
+    %prayer16 = ^false;
+    ~prayer_deactivate(^prayer_redemption);
+    return;
+}
+if (~prayer_checks($data) = false) {
+    %prayer16 = ^false;
+    return;
+}
+def_int $levelreq = db_getfield($data, prayers:level, 0);
+if (stat_base(prayer) < $levelreq){
+    %prayer16 = ^false;
+    sound_synth(prayer_off, 1, 0);
+    ~mesbox("You need a @dbl@Prayer level of <tostring($levelreq)> to use <db_getfield($data, prayers:name, 0)>.");
+    return;
+}
+%prayer16 = ^true;
+~prayer_activate($data);

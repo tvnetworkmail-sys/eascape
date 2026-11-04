@@ -183,6 +183,10 @@ if ($damage < 0) {
     return;
 }
 .queue(pvp_damage, $delay, $damage);
+// EASCape: Smite (6 Sep 2005) drains the player hit, skill_prayer/scripts/prayer_effects.rs2
+if (%prayer17 = ^true & $damage > 0) {
+    .queue(pvp_smite, $delay, $damage);
+}
 
 // needs to be a queue
 [queue,pvp_damage](int $damage)

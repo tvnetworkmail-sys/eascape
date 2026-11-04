@@ -1376,6 +1376,15 @@ export default class Player extends PathingEntity {
             prayer = 1;
         } else if ((this.headicons & (1 << 5)) !== 0) {
             prayer = 2;
+        } else if ((this.headicons & (1 << 9)) !== 0) {
+            // EASCape: Retribution, Smite and Redemption (6 Sep 2005) are bits 9/10/11; the 377
+            // cache's headicons_prayer sprites 3 (retribution), 4 (smite), 5 (redemption), the
+            // same order as 2009scape's PrayerType icon table
+            prayer = 3;
+        } else if ((this.headicons & (1 << 10)) !== 0) {
+            prayer = 4;
+        } else if ((this.headicons & (1 << 11)) !== 0) {
+            prayer = 5;
         }
         stream.p1(skull & 0xff);
         stream.p1(prayer & 0xff);

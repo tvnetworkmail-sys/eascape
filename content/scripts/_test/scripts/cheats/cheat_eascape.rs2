@@ -2470,3 +2470,43 @@ if (p_finduid(uid) = false) return;
 %bankpin_tries = 0;
 %bankpin_lockout = 0;
 mes("This login's PIN entry is forgotten; the next bank will ask for it.");
+
+// ::sctele <n> - the New shortcuts and prayers shortcuts (6 Sep 2005) and the other shortcuts
+// that update lists: each one puts you on the square you start from
+[debugproc,sctele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = 0_45_153_6_7;
+    case 2 : $c = 0_44_153_62_21;
+    case 3 : $c = 0_49_154_13_50;
+    case 4 : $c = 0_50_52_40_8;
+    case 5 : $c = 0_40_48_15_40;
+    case 6 : $c = 0_46_51_4_45;
+    case 7 : $c = 0_49_54_52_37;
+    case 8 : $c = 0_49_52_13_35;
+    case 9 : $c = 0_50_49_40_55;
+    case 10 : $c = 0_47_153_20_14;
+    case 11 : $c = 0_51_51_38_51;
+    case 12 : $c = 0_42_156_42_24;
+    case 13 : $c = 0_43_156_16_18;
+    case 14 : $c = 0_42_56_34_8;
+    case 15 : $c = 0_53_54_31_20;
+    case 16 : $c = 0_45_57_35_24;
+    case 17 : $c = 0_46_57_2_30;
+    case 18 : $c = 0_44_57_53_23;
+    case 19 : $c = 0_45_52_56_27;
+    case 20 : $c = 0_36_51_40_30;
+    case 21 : $c = 0_53_55_30_29;
+    case 22 : $c = 2_57_154_23_32;
+    case 23 : $c = 0_38_54_54_59;
+    case 24 : $c = 0_40_52_42_8;
+    case 25 : $c = 0_40_54_38_21;
+    case default :
+        mes("::sctele 1-25 (6 Sep 2005 shortcuts): 1 Taverley pipe, 2 Taverley spiked blades, 3 Edgeville-Varrock sewers pipe, 4 Varrock south fence, 5 Yanille underwall tunnel,");
+        mes("6 Falador underwall tunnel, 7 Varrock underwall tunnel, 8 Draynor-Champions' Guild stepping stones, 9 Lumbridge fence, 10 Dwarven Mine crevice, 11 Al Kharid mine rocks,");
+        mes("12 Slayer Dungeon crevice, 13 Slayer Dungeon chasm, 14 Sinclair log balance, 15 Morytania railing and rocks, 16 Trollheim Wilderness route, 17 its last (one-way) step,");
+        mes("18 Trollheim easy rocks, 19 Falador crumbling wall, 20 Elven Overpass easy rocks, 21 Slayer Tower chain, 22 the ectopool wall, 23 Gnome Stronghold rocks, 24 Ardougne log, 25 coal truck log.");
+        return;
+}
+p_telejump($c);

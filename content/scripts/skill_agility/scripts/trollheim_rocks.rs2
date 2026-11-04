@@ -83,3 +83,36 @@ if (loc_coord = 0_45_57_28_34) {
 ~forcemove(0_45_57_27_34);
 ~update_bas;
 stat_advance(agility, 80);
+
+// EASCape: the Trollheim Wilderness route (loc_9327, New shortcuts and prayers, 6 Sep 2005: "Quick
+// shortcut into the level 20 Wilderness from Trollheim (but not back again!)"). 2009scape
+// (TrollheimPlugin.java): Agility 64 and its message, the first two climbs both ways (2916,3672 up
+// to 2918; 2917,3672 down to 2915; 2923,3673 up to 2921,3672; 2922,3672 down to 2924,3673). The
+// OSRS wiki: three steps, the last one way, no experience. The last step is the three rocks at
+// 2947,3678, 2948,3679, 2949,3680, which 2009scape doesn't handle. Ours: that step's path, over
+// the three rocks from 2946,3678 to 2950,3681 (the map: the only open squares either side), and
+// its message from the Wilderness side. Climbs as the other Trollheim rocks here.
+[oploc1,loc_9327]
+if (stat(agility) < 64) {
+    mes("You need an Agility level of 64 in order to climb this mountain side.");
+    return;
+}
+p_arrivedelay;
+switch_coord (loc_coord) {
+    case 0_45_57_36_24 : ~trollheim_rocks_up(0_45_57_38_24, 0);
+    case 0_45_57_37_24 : ~trollheim_rocks_down(0_45_57_35_24, ^exact_east, 0);
+    case 0_45_57_43_25 : ~trollheim_rocks_up(0_45_57_41_24, 0);
+    case 0_45_57_42_24 : ~trollheim_rocks_down(0_45_57_44_25, ^exact_west, 0);
+    case default :
+        if (coordx(coord) > 2949) {
+            mes("You cannot climb the rocks from this side."); // ours
+            return;
+        }
+        ~set_forcemove_bas(human_climbing);
+        ~forcemove(0_46_57_2_30);
+        ~forcemove(0_46_57_3_30);
+        ~forcemove(0_46_57_4_31);
+        ~forcemove(0_46_57_5_32);
+        ~forcemove(0_46_57_6_33);
+        ~update_bas;
+}

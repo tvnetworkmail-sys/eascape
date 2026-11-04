@@ -1,0 +1,405 @@
+// EASCape: the shortcuts of "New shortcuts and prayers" (6 Sep 2005) that had no script. Each one
+// names its source; sources in order Void, 2006Scape, 2009scape, the OSRS/RS wikis, the caches.
+// Paths were checked against our 377 maps (content/maps). Timings of exact moves that no source
+// gives are ours, in the style of the other shortcuts here (trollheim_rocks.rs2, agility.rs2).
+// Members only: the OSRS and RS wikis' Shortcuts pages ("All shortcuts ... are members-only");
+// checked here for the ones in free areas.
+
+[proc,shortcut_members]()(boolean)
+if (map_members = ^false) {
+    mes(^mes_members_feature);
+    return(false);
+}
+return(true);
+
+// ---------------------------------------------------------------- pipes
+// Taverley Dungeon pipe (loc_9293, 2887 and 2890, 9799): Void (TaverleyDungeon.kt): Agility 70,
+// its message, 2886 -> 2889 -> 2892 (and back), 10 XP. Edgeville Dungeon to the Varrock Sewers
+// (loc_9295, 3150 and 3153, 9906; Void's varrock_dungeon_pipe at the same place in its later map):
+// Void (Pipes.kt): Agility 51, 10 XP, 3149 -> 3152 -> 3155. Both are a pair of pipes three squares
+// apart, as the Yanille Agility dungeon's (2009scape's PipeShortcut moves 2290 and 9293 the same
+// way), so they go as our Yanille pipe does (area_yanille/agility_dungeon.rs2: the double pipe
+// squeeze anim, its timings and sound).
+[oploc1,loc_9293] ~shortcut_double_pipe(70, 0_45_153_6_7, 0_45_153_12_7, 100);
+[oploc1,loc_9295]
+if (~shortcut_members = false) {
+    return;
+}
+~shortcut_double_pipe(51, 0_49_154_13_50, 0_49_154_19_50, 100);
+
+[proc,shortcut_double_pipe](int $level, coord $west, coord $east, int $xp)
+if (stat(agility) < $level) {
+    mes("You need an Agility level of <tostring($level)> to squeeze through the pipe.");
+    return;
+}
+def_coord $start = $west;
+def_coord $end = $east;
+def_int $mod = 1;
+def_int $dir = ^exact_east;
+if (coordx(coord) > coordx(loc_coord)) {
+    $start = $east;
+    $end = $west;
+    $mod = -1;
+    $dir = ^exact_west;
+}
+def_coord $other_pipe = movecoord(loc_coord, calc(3 * $mod), 0, 0);
+~forcewalk2($start);
+def_coord $mid = movecoord($start, calc(3 * $mod), 0, 0);
+~agility_exactmove(human_doublepipesqueeze, 30, 3, coord, $mid, 30, 126, $dir, true);
+sound_synth(squeeze_in, 1, 0);
+p_delay(0);
+~change_merged_loc($other_pipe);
+~agility_exactmove(human_doublepipesqueeze, 30, 3, $mid, $end, 30, 126, $dir, true);
+sound_synth(squeeze_in, 1, 0);
+stat_advance(agility, $xp);
+
+// ---------------------------------------------------------------- strange floors
+// Taverley Dungeon's spiked blades (loc_9294, 2879, 9813): 2006Scape (AgilityShortcut.java):
+// Agility 80 and its message, 2878 <-> 2880 with the gap jump anim (3067), "You jump over the
+// strange wall."; no experience (2006Scape, 2009scape).
+[oploc1,loc_9294]
+if (stat(agility) < 80) {
+    mes("You need 80 agility to use this shortcut.");
+    return;
+}
+p_arrivedelay;
+if (coordx(coord) > coordx(loc_coord)) {
+    ~shortcut_floor_jump(0_45_153_0_21, 0_44_153_62_21, ^exact_west);
+} else {
+    ~shortcut_floor_jump(0_44_153_62_21, 0_45_153_0_21, ^exact_east);
+}
+mes("You jump over the strange wall.");
+
+// The Fremennik Slayer Dungeon's chasms (loc_9326, 2769,10002 and 2774,10003): 2006Scape: Agility
+// 81 and its message, 2768 <-> 2770 and 2773 <-> 2775 with the gap jump anim, "You jump over the
+// strange floor."; no experience. The trap is 2009scape's (FremennikDungeon.java): its fail
+// roll (AgilityHandler.hasFailed(player, 20, 0.1): never above 89 Agility), up to 5 damage and
+// "You trigger the trap as you jump over it."
+[oploc1,loc_9326]
+if (stat(agility) < 81) {
+    mes("You need 81 agility to use this shortcut.");
+    return;
+}
+p_arrivedelay;
+if (loc_coord = 0_43_156_17_18) {
+    if (coordx(coord) > coordx(loc_coord)) {
+        ~shortcut_floor_jump(0_43_156_18_18, 0_43_156_16_18, ^exact_west);
+    } else {
+        ~shortcut_floor_jump(0_43_156_16_18, 0_43_156_18_18, ^exact_east);
+    }
+} else {
+    if (coordx(coord) > coordx(loc_coord)) {
+        ~shortcut_floor_jump(0_43_156_23_19, 0_43_156_21_19, ^exact_west);
+    } else {
+        ~shortcut_floor_jump(0_43_156_21_19, 0_43_156_23_19, ^exact_east);
+    }
+}
+mes("You jump over the strange floor.");
+def_int $diff = sub(stat(agility), 20);
+if ($diff <= 69 & multiply(add($diff, 1), random(10000)) <= multiply(10, random(10000))) {
+    mes("You trigger the trap as you jump over it.");
+    ~damage_self(random(6));
+}
+
+[proc,shortcut_floor_jump](coord $from, coord $to, int $dir)
+if (coord ! $from) {
+    ~forcewalk2($from);
+}
+anim(agility_pyramid_gap_jump, 0);
+p_exactmove(coord, $to, 15, 45, $dir); // ours: the timing
+p_delay(1);
+
+// ---------------------------------------------------------------- fence
+// Varrock's south fence (loc_9300, 3240, 3335; the "quicker access to Varrock" from Lumbridge):
+// 2006Scape (ObjectsActions.java) for the way across, 3335 <-> 3334; 2009scape
+// (FenceJumpShortcut.java) for Agility 13, its message and the hurdle jump anim (1603); no
+// experience (2009scape; the OSRS wiki 0).
+[oploc1,loc_9300]
+if (~shortcut_members = false) {
+    return;
+}
+if (stat(agility) < 13) {
+    ~mesbox("You need an Agility level of at least 13 to negotiate this obstacle.");
+    return;
+}
+def_coord $from = movecoord(coord, calc(3240 - coordx(coord)), 0, calc(3335 - coordz(coord)));
+def_coord $to = movecoord($from, 0, 0, -1);
+def_int $dir = ^exact_south;
+if (coordz(coord) < 3335) {
+    $from = movecoord($from, 0, 0, -1);
+    $to = movecoord($from, 0, 0, 1);
+    $dir = ^exact_north;
+}
+p_arrivedelay;
+if (coord ! $from) {
+    ~forcewalk2($from);
+}
+anim(human_jump_hurdle, 0);
+p_exactmove(coord, $to, 10, 40, $dir); // ours: the timing
+p_delay(1);
+
+// ---------------------------------------------------------------- underwall tunnels
+// Void (UnderWallTunnels.kt): walk to the start, face the wall, climb into the hole, crawl under,
+// climb out on the far side (377 seqs 2589, 2590, 2591, the same ids as Void's), its message and
+// its Agility levels: Yanille 15, the Varrock one 21, Falador 26. No experience (Void).
+// Yanille (loc_9302 the hole at 2575,3111; loc_9301 the castle wall at 2575,3108): Void's squares.
+[oploc1,loc_9302] ~underwall_tunnel(15, 0_40_48_15_40, 0_40_48_15_36, 0, -1, ^exact_south);
+[oploc1,loc_9301] ~underwall_tunnel(15, 0_40_48_15_35, 0_40_48_15_39, 0, 1, ^exact_north);
+
+[proc,underwall_tunnel](int $level, coord $start, coord $end, int $dx, int $dz, int $dir)
+if (stat(agility) < $level) {
+    mes("You need an Agility level of <tostring($level)> to negotiate this tunnel.");
+    return;
+}
+if (coord ! $start) {
+    ~forcewalk2($start);
+}
+facesquare(movecoord($start, $dx, 0, $dz));
+p_delay(0);
+anim(agilty_shortcut_enter_hole, 0);
+p_exactmove(coord, movecoord($start, $dx, 0, $dz), 0, 50, $dir);
+p_delay(1);
+anim(agilty_shortcut_tunnel_walk, 0);
+p_exactmove(coord, $end, 0, 100, $dir);
+p_delay(3);
+p_delay(0);
+anim(agilty_shortcut_exit_hole, 0);
+p_exactmove(coord, movecoord($end, $dx, 0, $dz), 15, 33, $dir);
+p_delay(1);
+
+// ---------------------------------------------------------------- stepping stones
+// The River Lum between Draynor Manor and the Champions' Guild (loc_9315, 3150-3153, 3363):
+// Void (SteppingStones.kt, draynorCross): one stone at a time from the square next to it, Agility
+// 31 and its messages, the stepping stone jump (769), Void's success roll (51-252, which it marks
+// "unknown rate"), 3 XP. A slip: the short wobble-and-fall (2581 left, 2582 right, Void's
+// fall_off_log_*), the splash (68) and pool_plop, drowning then swimming to the bank, 2 damage
+// (Void's 20 on its x10 hitpoints), 1 XP.
+[oploc1,loc_9315]
+if (coord = loc_coord) {
+    mes("You're already standing there.");
+    return;
+}
+if (~shortcut_members = false) {
+    return;
+}
+if (stat(agility) < 31) {
+    mes("You need level 31 Agility to tackle this obstacle.");
+    return;
+}
+if (distance(coord, loc_coord) > 1) {
+    mes("I can't reach that!");
+    return;
+}
+p_delay(0);
+def_int $dir = ^exact_east;
+if (coordx(loc_coord) < coordx(coord)) {
+    $dir = ^exact_west;
+}
+mes("You attempt to balance on the stepping stone.");
+anim(human_steppingstonejump, 30);
+def_coord $stone = loc_coord;
+p_exactmove(coord, $stone, 58, 70, $dir);
+p_delay(1);
+if (stat_random(agility, 51, 252) = true) {
+    mes("You manage to make the jump.");
+    stat_advance(agility, 30);
+    return;
+}
+p_delay(0);
+def_coord $water = movecoord($stone, 0, 0, -1);
+if ($dir = ^exact_east) {
+    anim(human_wobbleandfall_short_r, 0);
+} else {
+    anim(human_wobbleandfall_short_l, 0);
+}
+mes("You slip and fall...");
+spotanim_map(watersplash, $water, 0, 25);
+sound_synth(pool_plop, 1, 25);
+p_exactmove(coord, $water, 22, 35, $dir);
+p_delay(0);
+~set_walkbas(human_drowning);
+p_delay(2);
+~set_readywalkturn_bas(human_swim_ready, human_swim_ready, human_swim);
+p_delay(0);
+if ($dir = ^exact_east) {
+    ~forcemove(0_49_52_18_34);
+    ~update_bas;
+    ~forcemove(0_49_52_19_35);
+} else {
+    ~forcemove(0_49_52_14_34);
+    ~update_bas;
+    // ours: Void ends on 3149,3362, which is river in our map; one square north is the bank
+    ~forcemove(0_49_52_13_35);
+}
+mes("You get washed up on the side of the river, after being nearly half drowned");
+~damage_self(2);
+stat_advance(agility, 10);
+
+// ---------------------------------------------------------------- crevices
+// The Fremennik Slayer Dungeon's crevice (loc_9321, 2731 and 2734, 10008): Void
+// (FremennikSlayerDungeon.kt): Agility 62 and its message, the crack enter (2594), the tunnel walk
+// (2590) and the crack leave (2595), through to the far side, "You climb your way through the
+// narrow crevice.", 7.5 XP.
+[oploc1,loc_9321]
+if (stat(agility) < 62) {
+    mes("You need level 62 agility in order to contort your body through this crack.");
+    return;
+}
+~shortcut_crevice(0_42_156_43_24, 0_42_156_46_24, 75);
+
+// The Dwarven Mine's narrow crevice (loc_9325, 3029 and 3034, 9806): no source has a script for
+// it. Its level is the OSRS and RS wikis' 42 (2006Scape's skill guide says 41, but that guide is
+// one or more under 2006Scape's own scripts elsewhere, e.g. the Slayer Dungeon crevice 61 for 62);
+// no experience (both wikis). Ours: it goes as the Slayer Dungeon crevice (the same crack anims),
+// 3028 -> 3029 -> 3034 -> 3035 from the map, with Void's message for that crevice.
+[oploc1,loc_9325]
+if (~shortcut_members = false) {
+    return;
+}
+if (stat(agility) < 42) {
+    mes("You need level 42 agility in order to contort your body through this crack."); // ours (Void's Slayer Dungeon line)
+    return;
+}
+~shortcut_crevice(0_47_153_21_14, 0_47_153_26_14, 0);
+
+// $west and $east are the two crevice locs; you come out one square past the far one
+[proc,shortcut_crevice](coord $west, coord $east, int $xp)
+def_coord $in = $west;
+def_coord $out = $east;
+def_int $mod = 1;
+def_int $dir = ^exact_east;
+if (coordx(coord) > coordx(loc_coord)) {
+    $in = $east;
+    $out = $west;
+    $mod = -1;
+    $dir = ^exact_west;
+}
+p_arrivedelay;
+def_coord $start = movecoord($in, calc(0 - $mod), 0, 0);
+if (coord ! $start) {
+    ~forcewalk2($start);
+}
+facesquare($in);
+p_delay(0);
+anim(agility_shortcut_crack_enter, 0);
+p_exactmove(coord, $in, 0, 30, $dir);
+p_delay(0);
+anim(agilty_shortcut_tunnel_walk, 0);
+p_exactmove(coord, $out, 0, 30, $dir);
+p_delay(0);
+anim(agility_shortcut_crack_leave, 0);
+p_exactmove(coord, movecoord($out, $mod, 0, 0), 0, 30, $dir);
+p_delay(0);
+mes("You climb your way through the narrow crevice.");
+if ($xp > 0) {
+    stat_advance(agility, $xp);
+}
+
+// ---------------------------------------------------------------- log balance
+// The log north of the Sinclair Mansion (loc_9322-9324, 2722, 3593-3595): 2009scape
+// (LogBalanceShortcut.java): Agility 48 and its message, 2722,3592 to 2722,3596 (the log's ends,
+// bridge squares in our map) with 1 XP. Ours: walked as our Ardougne log (eascape_ardougne_log.rs2:
+// the log-balance walk and its sound). No fall: 2009scape has none (the RS wiki's "chance of
+// taking a few points of damage" gives no numbers).
+[oploc1,loc_9322] ~sinclair_log_balance;
+[oploc1,loc_9323] ~sinclair_log_balance;
+[oploc1,loc_9324] ~sinclair_log_balance;
+
+[proc,sinclair_log_balance]
+if (stat(agility) < 48) {
+    ~mesbox("You need an Agility level of at least 48 to negotiate this obstacle.");
+    return;
+}
+def_coord $start = 0_42_56_34_8;
+def_coord $end = 0_42_56_34_12;
+if (coordz(coord) > 3594) {
+    $start = 0_42_56_34_12;
+    $end = 0_42_56_34_8;
+}
+p_arrivedelay;
+if (coord ! $start) {
+    ~forcewalk2($start);
+}
+~set_readywalk_bas(human_walk_logbalance_ready, human_walk_logbalance);
+sound_synth(log_balance, 2, 0);
+~forcemove($end);
+~update_bas;
+stat_advance(agility, 10);
+
+// ---------------------------------------------------------------- Al Kharid mine
+// The rocks at the north end of the Al Kharid mine (loc_9332 the bottom at 3303,3315; loc_9331
+// the top at 3305,3315): Void (AlKharidMine.kt): Agility 38 and its message; from the bottom walk
+// onto 3303,3315 and climb over to 3307,3315; from the top step onto 3305,3315 and climb down
+// backwards to 3303,3315 (the 1148 climb-down, as 2009scape's AlKharidPitShortcut). No experience.
+[oploc1,loc_9332]
+if (~shortcut_members = false) {
+    return;
+}
+if (stat(agility) < 38) {
+    mes("You need an Agility level of 38 to negotiate these rocks.");
+    return;
+}
+facesquare(movecoord(coord, 1, 0, 0));
+p_delay(0);
+~forcewalk(0_51_51_39_51);
+~set_forcemove_bas(human_climbing);
+~forcemove(0_51_51_43_51);
+~update_bas;
+
+[oploc1,loc_9331]
+if (~shortcut_members = false) {
+    return;
+}
+if (stat(agility) < 38) {
+    mes("You need an Agility level of 38 to negotiate these rocks.");
+    return;
+}
+facesquare(movecoord(coord, 1, 0, 0));
+p_delay(0);
+~forcemove(0_51_51_41_51);
+facesquare(movecoord(coord, -1, 0, 0));
+p_delay(0);
+anim(death_human_climbing_down, 10);
+p_exactmove(coord, 0_51_51_39_51, 0, 120, ^exact_east);
+p_delay(3);
+anim(null, 0);
+
+// ---------------------------------------------------------------- Morytania
+// The way round the temple on the Salve (the update's "avoid the intricate tomb walkways"): the
+// ornate railing (loc_9334, 3424,3476) then the rocks (loc_9335 3425,3476 up to 3427,3478; loc_9336
+// 3426,3477 down to 3424,3476), and loc_9337 further on (eascape_rocks_railing.rs2). 2009scape
+// (BarSqueezeShortcut.java): Agility 66 and Priest in Peril for the railing, one square through it
+// with the squeeze anim (2240), the experience as our loc_9337 (1 XP); (RockClimbShortcut.kt):
+// no level for the rocks, 740 up and 1148 down, facing west. Ours: the rocks' timing.
+[oploc1,loc_9334]
+if (%priestperil < ^priestperil_complete) {
+    ~mesbox("You need to have completed Priest in Peril in order to do this.");
+    return;
+}
+if (stat(agility) < 66) {
+    ~mesbox("You need an Agility level of at least 66 to negotiate this obstacle.");
+    return;
+}
+p_arrivedelay;
+def_int $dx = 1;
+if (coordx(coord) >= coordx(loc_coord)) {
+    $dx = -1;
+}
+anim(roguesden_contortion, 0);
+~forcemove(movecoord(coord, $dx, 0, 0));
+anim(null, 0);
+stat_advance(agility, 10);
+
+[oploc1,loc_9335]
+p_arrivedelay;
+anim(human_climbing_down, 0);
+p_exactmove(coord, 0_53_54_35_22, 0, 60, ^exact_west);
+p_delay(1);
+anim(null, 0);
+
+[oploc1,loc_9336]
+p_arrivedelay;
+anim(death_human_climbing_down, 0);
+p_exactmove(coord, 0_53_54_32_20, 0, 60, ^exact_west);
+p_delay(1);
+anim(null, 0);

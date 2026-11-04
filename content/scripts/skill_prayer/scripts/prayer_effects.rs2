@@ -1,0 +1,128 @@
+// EASCape: what Retribution, Redemption and Smite do (New shortcuts and prayers, 6 Sep 2005).
+// The update: Retribution "deals damage for up to 25% of your max-prayer to all nearby enemies"
+// when you die, "won't hurt other players outside of PvP areas, and it won't hit multiple targets
+// in non-multiway combat zones"; Redemption heals 25% of your max prayer "when your health drops
+// below 10% (if you don't immediately die)"; Smite takes 1 prayer point for every 4 damage you do
+// to another player, whatever their protection prayers.
+
+// ---------------------------------------------------------------- Retribution
+// Called first thing in the death queue (player/scripts/death.rs2), as Void does it before the
+// death animation (PlayerDeath.kt) and 2009scape on commenceDeath (Prayer.startRetribution).
+// The spotanim on the player (437) and the eight projectiles out to the squares around (438) are
+// Void's and 2009scape's ids, the 377 cache's retribution_spotanim and retfirebreath_travel; the
+// sound is 2009scape's (FIREBREATH), the 377 cache's firebreath. Projectile heights are Void's
+// (30), its timing 2009scape's (delay 10, speed 20, offset 11). The hit is Void's: 0 to one under
+// the maximum; the maximum is 25% of the Prayer level (the update's "max-prayer"; 2009scape uses
+// the level, Void the points left). Every attackable monster or PvP player on the eight squares
+// in a multiway area (Void); in a single-way area only the one fighting you (Void, 2009scape).
+[proc,prayer_retribution]
+if (%prayer15 ! ^true) {
+    return;
+}
+def_coord $centre = coord;
+spotanim_pl(retribution_spotanim, 0, 0);
+sound_synth(firebreath, 1, 0);
+def_int $dx = -1;
+while ($dx <= 1) {
+    def_int $dz = -1;
+    while ($dz <= 1) {
+        if ($dx ! 0 | $dz ! 0) {
+            projanim_map($centre, movecoord($centre, $dx, 0, $dz), retfirebreath_travel, 30, 30, 10, 30, 0, 11);
+        }
+        $dz = add($dz, 1);
+    }
+    $dx = add($dx, 1);
+}
+def_int $max = scale(25, 100, stat_base(prayer));
+if ($max < 1) {
+    return;
+}
+def_boolean $multi = map_multiway($centre);
+// monsters
+npc_huntall($centre, 1, 0);
+while (npc_findnext = true) {
+    if (npc_stat(hitpoints) > 0 & npc_hasop(2) = true) {
+        if ($multi = true | npc_uid = %aggressive_npc) {
+            def_int $damage = random($max);
+            npc_heropoints($damage);
+            npc_queue(2, $damage, 1);
+        }
+    }
+}
+// players, only where they could be fought
+huntall($centre, 1, 0);
+while (.huntnext = true) {
+    if (.uid ! uid & .stat(hitpoints) > 0) {
+        if ($multi = true | .uid = %pk_predator1) {
+            if (~retribution_pvp_target = true) {
+                .queue(damage_player, 1, random($max));
+            }
+        }
+    }
+}
+
+// Is the other (secondary) player somewhere the two of you could be fighting? Wilderness levels as
+// pvp_level_check, the Duel Arena opponent, the Fight Pit during a round, the other Castle Wars
+// team. Ours: the same rules as attacking, without their messages (the dying player sees none).
+[proc,retribution_pvp_target]()(boolean)
+if (~in_fightpit_arena(coord) = true | ~in_fightpit_arena(.coord) = true) {
+    return(~fightpit_attackable);
+}
+if (~in_duel_arena(coord) = true | ~in_duel_arena(.coord) = true) {
+    if (.uid = %duel2accept & %duelstatus >= ^duelstatus_start & .%duelstatus >= ^duelstatus_start) {
+        return(true);
+    }
+    return(false);
+}
+if (~in_castlewars_game(coord) = true | ~in_castlewars_game(.coord) = true) {
+    if (~in_castlewars_game(coord) = true & ~in_castlewars_game(.coord) = true & %castlewars_team ! .%castlewars_team) {
+        return(true);
+    }
+    return(false);
+}
+def_int $wilderness_level = min(~wilderness_level(coord), ~wilderness_level(.coord));
+if ($wilderness_level < 1) {
+    return(false);
+}
+if ($wilderness_level < abs(sub(~player_combat_level, ~.player_combat_level))) {
+    return(false);
+}
+return(true);
+
+// ---------------------------------------------------------------- Redemption
+// Called from damage_self after a hit that leaves you alive. Void (Redemption.kt) and 2009scape
+// (ImpactHandler, Prayer.startRedemption): below a tenth of your Hitpoints level, heal a quarter of
+// your Prayer level and your prayer points go to nothing; 2006Scape and 2009scape then turn every
+// prayer off. The spotanim (436) is all three's, the 377 cache's redemption_spotanim; the sound is
+// 2009scape's REDEMPTION_HEAL, the 377 cache's redemption_heal.
+[proc,prayer_redemption_check]
+if (%prayer16 ! ^true) {
+    return;
+}
+def_int $hp = stat(hitpoints);
+if ($hp < 1 | multiply($hp, 10) >= stat_base(hitpoints)) {
+    return;
+}
+spotanim_pl(redemption_spotanim, 0, 0);
+sound_synth(redemption_heal, 1, 0);
+stat_heal(hitpoints, scale(25, 100, stat_base(prayer)), 0);
+stat_sub(prayer, stat(prayer), 0);
+~prayer_deactivate_all;
+~player_combat_stat;
+
+// ---------------------------------------------------------------- Smite
+// Queued on the player you hit, at the same delay as the hit (pvp_combat.rs2, .pvp_damage).
+// 1 point for every 4 damage: 2006Scape (applySmite: damage / 4), 2009scape (a quarter of the
+// hit), Void (damage / 40 on its x10 hitpoints). Running out is the drain timer's (prayer.rs2).
+[queue,pvp_smite](int $damage)
+def_int $drain = divide($damage, 4);
+if ($drain < 1 | stat(prayer) < 1) {
+    return;
+}
+stat_sub(prayer, $drain, 0);
+if (stat(prayer) = 0) {
+    sound_synth(prayer_drain, 1, 0);
+    mes("You have run out of prayer points, you must recharge at an altar.");
+    ~prayer_deactivate_all;
+    ~player_combat_stat;
+}
