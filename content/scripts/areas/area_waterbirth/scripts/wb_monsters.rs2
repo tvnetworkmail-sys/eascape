@@ -133,3 +133,12 @@ npc_setmode(opplayer2);
 [proc,.wb_door_support]()(boolean)
 if (.npc_type = dagannoth_weak_door_north | .npc_type = dagannoth_weak_door_west | .npc_type = dagannoth_weak_door_south) return(true);
 return(false);
+
+[proc,wb_spinolyp](npc $type)(boolean)
+if ($type = dagannoth_water_creature_1x1 | $type = dagannoth_water_creature_1x12 | $type = dagannoth_water_creature_1x13) return(true);
+return(false);
+
+[queue,spinolyp_attack_sound](int $unused)
+if (%spinolyp_sound_clock = map_clock) return;
+%spinolyp_sound_clock = map_clock;
+sound_synth(water_creature_attack, 1, 0);

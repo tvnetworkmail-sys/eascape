@@ -28,7 +28,12 @@ def_int $defence_roll = ~player_defence_roll_specific($style);
 
 npc_anim(npc_param(attack_anim), 0);
 if (npc_param(rangeattack_sound) ! null) {
-    sound_synth(npc_param(rangeattack_sound), 1, 0);
+    if (~wb_spinolyp(npc_type) = false) {
+        sound_synth(npc_param(rangeattack_sound), 1, 0);
+    } else {
+        // EASCape: one spinolyp attack sound a tick, however many of them fire at you
+        queue(spinolyp_attack_sound, 0, 0);
+    }
 }
 %npc_action_delay = add(map_clock, npc_param(attackrate));
 def_int $duration = 30;
