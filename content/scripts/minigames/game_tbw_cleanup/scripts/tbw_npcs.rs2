@@ -1,0 +1,290 @@
+// Tai Bwo Wannai Clean-Up (9 August 2005): the threats in the jungle, the broodoo victims and their
+// shields.
+//
+// Favour for each kill (the OSRS wiki): mosquito and swarms 1%, bush snake 1%, tribesman and
+// jungle spider 1-2% (ours: 1.5%), broodoo victim about 3%. The killer gets it. Wild jungle
+// spiders round the village count too, once you've had sticks from Murcaily (both wikis).
+// Drops: spider carcass, snake hide, bones (the cleanup's tribesman), a proboscis for each
+// mosquito (1, 3 or 5) with 17.5/35/75 Agility xp, and the broodoo victim's tribal mask.
+
+[ai_queue3,tbwcu_jungle_spider] ~tbw_threat_death(village_spider_carcass, 1, 15, 0);
+[ai_queue3,tbwcu_spider_appear] ~tbw_threat_death(village_spider_carcass, 1, 15, 0);
+[ai_queue3,tbwcu_village_snake] ~tbw_threat_death(village_snake_hide, 1, 10, 0);
+[ai_queue3,tbwcu_snakejungle_appear] ~tbw_threat_death(village_snake_hide, 1, 10, 0);
+[ai_queue3,tbwcu_tribesman] ~tbw_threat_death(bones, 1, 15, 0);
+[ai_queue3,tbwcu_tribesman_instant] ~tbw_threat_death(bones, 1, 15, 0);
+[ai_queue3,tbwcu_mosquito_single] ~tbw_threat_death(mosquito_proboscis, 1, 10, 175);
+[ai_queue3,tbwcu_mosquito_swarm3] ~tbw_threat_death(mosquito_proboscis, 3, 10, 350);
+[ai_queue3,tbwcu_mosquito_swarm5] ~tbw_threat_death(mosquito_proboscis, 5, 10, 750);
+[ai_queue3,tbwcu_broodoo_combat] ~tbw_threat_death(broodoomask_combat, 1, 30, 0);
+[ai_queue3,tbwcu_broodoo_poison] ~tbw_threat_death(broodoomask_poison, 1, 30, 0);
+[ai_queue3,tbwcu_broodoo_disease] ~tbw_threat_death(broodoomask_disease, 1, 30, 0);
+
+[proc,tbw_threat_death](namedobj $drop, int $count, int $favour, int $agility)
+gosub(npc_death);
+if (npc_findhero = ^false) {
+    return;
+}
+obj_add(npc_coord, $drop, $count, ^lootdrop_duration);
+queue(tbw_favour_kill, 0, $favour);
+if ($agility > 0) {
+    queue(tbw_agility_kill, 0, $agility);
+}
+
+[queue,tbw_agility_kill](int $xp)
+stat_advance(agility, $xp);
+
+// a wild jungle spider (npc_combat.rs2's default death calls this)
+[proc,tbw_wild_spider_death]
+if (npc_type ! jungle_spider) {
+    return;
+}
+if (inzone(^tbw_area_lo, ^tbw_area_hi, npc_coord) = false) {
+    return;
+}
+if (npc_findhero = ^true) {
+    queue(tbw_wild_spider_favour, 0, 0);
+}
+
+[queue,tbw_wild_spider_favour]
+if (%cleanup_progress >= ^tbw_progress_sticks) {
+    ~tbw_favour(15);
+}
+
+// --------------------------------------------------------------------------- broodoo victims
+// Magic attackers (max hit 7, every 6 ticks: the OSRS wiki) whose spells drain your combat stats
+// (both wikis; ours: they cast Confuse, Weaken or Curse, and a Water Strike once all three are
+// drained). Normal hits do at most 3 (the OSRS wiki). Use the right thing on one instead: food on
+// the white one, an antipoison on the green, Relicym's balm on the yellow; one dose at a time.
+
+[ai_queue1,tbwcu_broodoo_combat] ~npc_default_retaliate_ap;
+[ai_queue1,tbwcu_broodoo_poison] ~npc_default_retaliate_ap;
+[ai_queue1,tbwcu_broodoo_disease] ~npc_default_retaliate_ap;
+[ai_applayer2,tbwcu_broodoo_combat] ~tbw_broodoo_attack;
+[ai_applayer2,tbwcu_broodoo_poison] ~tbw_broodoo_attack;
+[ai_applayer2,tbwcu_broodoo_disease] ~tbw_broodoo_attack;
+[ai_opplayer2,tbwcu_broodoo_combat] ~tbw_broodoo_attack;
+[ai_opplayer2,tbwcu_broodoo_poison] ~tbw_broodoo_attack;
+[ai_opplayer2,tbwcu_broodoo_disease] ~tbw_broodoo_attack;
+[ai_queue2,tbwcu_broodoo_combat] ~npc_default_damage(min(last_int, 3));
+[ai_queue2,tbwcu_broodoo_poison] ~npc_default_damage(min(last_int, 3));
+[ai_queue2,tbwcu_broodoo_disease] ~npc_default_damage(min(last_int, 3));
+
+[proc,tbw_broodoo_attack]
+if (%npc_action_delay > map_clock) {
+    npc_setmode(applayer2);
+    return;
+}
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) {
+    return;
+}
+npc_setmode(applayer2);
+if (stat(attack) >= stat_base(attack)) {
+    ~npc_cast_spell_with_forced_max_hit(^confuse, 6, 7);
+} else if (stat(strength) >= stat_base(strength)) {
+    ~npc_cast_spell_with_forced_max_hit(^weaken, 6, 7);
+} else if (stat(defence) >= stat_base(defence)) {
+    ~npc_cast_spell_with_forced_max_hit(^curse, 6, 7);
+} else {
+    ~npc_cast_spell_with_forced_max_hit(^water_strike, 6, 7);
+}
+
+[opnpcu,tbwcu_broodoo_combat]
+// food: the OSRS wiki gives fruit and vegetables 10-35; ours: every food does that. Food is what
+// consume.rs2 eats: its food categories, and the cleanup's own foods
+if (~tbw_is_food(last_useitem) = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+def_int $damage = add(10, random(26));
+inv_delslot(inv, last_useslot);
+if (oc_param(last_useitem, next_obj_stage) ! null) {
+    inv_setslot(inv, last_useslot, oc_param(last_useitem, next_obj_stage), 1);
+}
+~tbw_broodoo_hurt($damage, cooking);
+
+[opnpcu,tbwcu_broodoo_poison]
+// antipoisons (not mixes): antipoison up to 20, superantipoison 30, antidote+ 40, antidote++ 50
+def_int $max = 0;
+switch_obj (last_useitem) {
+    case 4doseantipoison, 3doseantipoison, 2doseantipoison, 1doseantipoison : $max = 20;
+    case 4dose2antipoison, 3dose2antipoison, 2dose2antipoison, 1dose2antipoison : $max = 30;
+    case antidote+4, antidote+3, antidote+2, antidote+1 : $max = 40;
+    case antidote++4, antidote++3, antidote++2, antidote++1 : $max = 50;
+}
+if ($max = 0) {
+    mes("Nothing interesting happens.");
+    return;
+}
+~tbw_broodoo_dose(randominc($max), herblore);
+
+[opnpcu,tbwcu_broodoo_disease]
+// Relicym's balm; ours: up to 30, like a superantipoison
+switch_obj (last_useitem) {
+    case relicyms_balm4, relicyms_balm3, relicyms_balm2, relicyms_balm1 : ~tbw_broodoo_dose(randominc(30), herblore);
+    case default : mes("Nothing interesting happens.");
+}
+
+[proc,tbw_is_food](obj $obj)(boolean)
+switch_obj ($obj) {
+    case tbw_spider_on_stick_cooked, tbw_spider_on_shaft_cooked, village_rare_tuber : return(true);
+}
+switch_category (oc_category($obj)) {
+    case category_5, category_58, category_59, category_86, category_120, category_129, category_130, category_131 : return(true);
+}
+return(false);
+
+// one dose used
+[proc,tbw_broodoo_dose](int $damage, stat $stat)
+def_namedobj $next = oc_param(last_useitem, next_obj_stage);
+inv_delslot(inv, last_useslot);
+if ($next ! null) {
+    inv_setslot(inv, last_useslot, $next, 1);
+}
+~tbw_broodoo_hurt($damage, $stat);
+
+// twice the damage as xp; Herblore needs Druidic Ritual (the OSRS wiki)
+[proc,tbw_broodoo_hurt](int $damage, stat $stat)
+if (npc_stat(hitpoints) = 0) {
+    return;
+}
+anim(human_pickupfloor, 0);
+$damage = min($damage, npc_stat(hitpoints));
+if ($stat = cooking | %druidquest >= ^druid_complete) {
+    stat_advance($stat, multiply($damage, 20));
+}
+npc_heropoints($damage);
+~npc_retaliate(0);
+npc_damage(^hitmark_damage, $damage);
+if (npc_stat(hitpoints) = 0) {
+    npc_queue(3, 0, 0);
+}
+
+// ------------------------------------------------------------------------- broodoo shields
+// A tribal mask, two snakeskins, eight nails and a hammer, 35 Crafting, 100 xp (the OSRS wiki).
+// Each starts with 10 charges: hit by something, one time in ten it uses a charge to drain 1 + 5%
+// of that something's Attack (the combat/white shield), Strength (disease/yellow) or Defence
+// (poison/green), if it has at least half its hitpoints and that stat isn't drained already. Needs
+// 25 Defence and 25 Magic.
+
+[opheldu,broodoomask_combat] @tbw_make_shield(broodoomask_combat, broodoo_combatshield_10, last_slot, last_useitem);
+[opheldu,broodoomask_poison] @tbw_make_shield(broodoomask_poison, broodoo_poisonshield_10, last_slot, last_useitem);
+[opheldu,broodoomask_disease] @tbw_make_shield(broodoomask_disease, broodoo_diseaseshield_10, last_slot, last_useitem);
+
+[label,tbw_make_shield](namedobj $mask, namedobj $shield, int $slot, obj $used)
+if ($used ! hammer) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (map_members = ^false) {
+    mes(^mes_members_feature);
+    return;
+}
+if (stat(crafting) < 35) {
+    ~mesbox("You need a Crafting level of 35 to make a broodoo shield."); // ours
+    return;
+}
+def_obj $nails = ~tbw_nails;
+if (inv_total(inv, village_snake_skin) < 2 | $nails = null) {
+    ~mesbox("You need two snakeskins and eight nails to make a broodoo shield."); // ours
+    return;
+}
+inv_del(inv, village_snake_skin, 2);
+inv_del(inv, $nails, 8);
+inv_delslot(inv, $slot);
+inv_add(inv, $shield, 1);
+anim(human_hammer_hit, 0);
+stat_advance(crafting, 1000);
+mes("You make a broodoo shield."); // ours
+
+[proc,tbw_nails]()(obj)
+if (inv_total(inv, nails_bronze) >= 8) return(nails_bronze);
+if (inv_total(inv, nails_iron) >= 8) return(nails_iron);
+if (inv_total(inv, nails) >= 8) return(nails);
+if (inv_total(inv, nails_black) >= 8) return(nails_black);
+if (inv_total(inv, nails_mithril) >= 8) return(nails_mithril);
+if (inv_total(inv, nails_adamant) >= 8) return(nails_adamant);
+if (inv_total(inv, nails_rune) >= 8) return(nails_rune);
+return(null);
+
+// called from npc_combat.rs2's combat_damage_player
+[proc,tbw_broodoo_shield_hit](int $damage)
+if ($damage < 1 | map_members = ^false | random(10) ! 0) {
+    return;
+}
+def_obj $shield = inv_getobj(worn, ^wearpos_lhand);
+def_int $charges = ~tbw_shield_charges($shield);
+if ($charges < 1) {
+    return;
+}
+if (npc_finduid(%aggressive_npc) = false) {
+    return;
+}
+if (multiply(npc_stat(hitpoints), 2) < npc_basestat(hitpoints)) {
+    return;
+}
+def_npc_stat $stat = defence;
+switch_obj ($shield) {
+    case broodoo_combatshield_10, broodoo_combatshield_9, broodoo_combatshield_8, broodoo_combatshield_7, broodoo_combatshield_6, broodoo_combatshield_5, broodoo_combatshield_4, broodoo_combatshield_3, broodoo_combatshield_2, broodoo_combatshield_1 : $stat = attack;
+    case broodoo_diseaseshield_10, broodoo_diseaseshield_9, broodoo_diseaseshield_8, broodoo_diseaseshield_7, broodoo_diseaseshield_6, broodoo_diseaseshield_5, broodoo_diseaseshield_4, broodoo_diseaseshield_3, broodoo_diseaseshield_2, broodoo_diseaseshield_1 : $stat = strength;
+}
+if (npc_stat($stat) < npc_basestat($stat)) {
+    return;
+}
+npc_statsub($stat, 1, 5);
+anim(tbw_broodoo_shield_block, 0);
+spotanim_npc(tbw_shield_attack, 92, 0);
+inv_setslot(worn, ^wearpos_lhand, ~tbw_shield_next($shield), 1);
+
+[proc,tbw_shield_charges](obj $shield)(int)
+switch_obj ($shield) {
+    case broodoo_combatshield_10, broodoo_poisonshield_10, broodoo_diseaseshield_10 : return(10);
+    case broodoo_combatshield_9, broodoo_poisonshield_9, broodoo_diseaseshield_9 : return(9);
+    case broodoo_combatshield_8, broodoo_poisonshield_8, broodoo_diseaseshield_8 : return(8);
+    case broodoo_combatshield_7, broodoo_poisonshield_7, broodoo_diseaseshield_7 : return(7);
+    case broodoo_combatshield_6, broodoo_poisonshield_6, broodoo_diseaseshield_6 : return(6);
+    case broodoo_combatshield_5, broodoo_poisonshield_5, broodoo_diseaseshield_5 : return(5);
+    case broodoo_combatshield_4, broodoo_poisonshield_4, broodoo_diseaseshield_4 : return(4);
+    case broodoo_combatshield_3, broodoo_poisonshield_3, broodoo_diseaseshield_3 : return(3);
+    case broodoo_combatshield_2, broodoo_poisonshield_2, broodoo_diseaseshield_2 : return(2);
+    case broodoo_combatshield_1, broodoo_poisonshield_1, broodoo_diseaseshield_1 : return(1);
+}
+return(0);
+
+[proc,tbw_shield_next](obj $shield)(namedobj)
+switch_obj ($shield) {
+    case broodoo_combatshield_10 : return(broodoo_combatshield_9);
+    case broodoo_combatshield_9 : return(broodoo_combatshield_8);
+    case broodoo_combatshield_8 : return(broodoo_combatshield_7);
+    case broodoo_combatshield_7 : return(broodoo_combatshield_6);
+    case broodoo_combatshield_6 : return(broodoo_combatshield_5);
+    case broodoo_combatshield_5 : return(broodoo_combatshield_4);
+    case broodoo_combatshield_4 : return(broodoo_combatshield_3);
+    case broodoo_combatshield_3 : return(broodoo_combatshield_2);
+    case broodoo_combatshield_2 : return(broodoo_combatshield_1);
+    case broodoo_combatshield_1 : return(broodoo_combatshield);
+    case broodoo_poisonshield_10 : return(broodoo_poisonshield_9);
+    case broodoo_poisonshield_9 : return(broodoo_poisonshield_8);
+    case broodoo_poisonshield_8 : return(broodoo_poisonshield_7);
+    case broodoo_poisonshield_7 : return(broodoo_poisonshield_6);
+    case broodoo_poisonshield_6 : return(broodoo_poisonshield_5);
+    case broodoo_poisonshield_5 : return(broodoo_poisonshield_4);
+    case broodoo_poisonshield_4 : return(broodoo_poisonshield_3);
+    case broodoo_poisonshield_3 : return(broodoo_poisonshield_2);
+    case broodoo_poisonshield_2 : return(broodoo_poisonshield_1);
+    case broodoo_poisonshield_1 : return(broodoo_poisonshield);
+    case broodoo_diseaseshield_10 : return(broodoo_diseaseshield_9);
+    case broodoo_diseaseshield_9 : return(broodoo_diseaseshield_8);
+    case broodoo_diseaseshield_8 : return(broodoo_diseaseshield_7);
+    case broodoo_diseaseshield_7 : return(broodoo_diseaseshield_6);
+    case broodoo_diseaseshield_6 : return(broodoo_diseaseshield_5);
+    case broodoo_diseaseshield_5 : return(broodoo_diseaseshield_4);
+    case broodoo_diseaseshield_4 : return(broodoo_diseaseshield_3);
+    case broodoo_diseaseshield_3 : return(broodoo_diseaseshield_2);
+    case broodoo_diseaseshield_2 : return(broodoo_diseaseshield_1);
+}
+return(broodoo_diseaseshield);

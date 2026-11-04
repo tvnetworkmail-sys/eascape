@@ -95,6 +95,7 @@ npc_queue(3, 0, 0);
 // a default death script.
 [proc,npc_default_death]
 gosub(npc_death);
+~tbw_wild_spider_death; // EASCape: Tai Bwo Wannai's jungle spiders give favour (minigames/game_tbw_cleanup/tbw_npcs.rs2)
 if (npc_type = scorpion & npc_findhero = ^true) queue(bar_scorpion_page, 0, 0); // EASCape: Between a Rock... (quest_dwarfrock)
 // EASCape: monsters imported from Void roll Void's drop table (eascape_void/scripts/eascape_drops.rs2)
 if (npc_param(eascape_drops) ! null) {
@@ -384,6 +385,7 @@ if (inv_getobj(worn, ^wearpos_ring) = ring_of_recoil & map_members = ^true & npc
     ~ring_of_recoil_lose_charge($recoil_damage);
 }
 ~crystal_shield_hit; // EASCape: every hit wears the crystal shield (crystal_equipment.rs2)
+~tbw_broodoo_shield_hit($damage); // EASCape: a broodoo shield's drain (minigames/game_tbw_cleanup/tbw_npcs.rs2)
 ~damage_self($damage);
 
 [proc,npc_retaliate](int $queue_delay)

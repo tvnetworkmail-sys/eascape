@@ -1,0 +1,374 @@
+// Tai Bwo Wannai Clean-Up (9 August 2005): favour, the favour counter, the villagers who hand out
+// trading sticks, and their cooldowns.
+//
+// Sources: the RS and OSRS wikis' Tai Bwo Wannai Cleanup and Trading sticks pages, the villagers'
+// Transcript: pages, Mod Ash (the cooldown's six steps of 300 ticks). The 377 cache has every
+// piece: the villagers (tbwcu_*_multinpc, shown by %chat_<name>: 1 holding sticks, 2-7 cooling
+// down, 0 not back yet), %vill_comm_points (favour), %cleanup_progress, %favour_percentage and the
+// favour counter (inter_292).
+//
+// Favour only goes down when it's turned into sticks: the RS wiki's talk page (2008-09) says it
+// doesn't drop while you're away. Each villager turns at most 10% into sticks at once (ours), 1
+// stick for each 0.1% (the RS wiki: 10 sticks per 1%; the OSRS wiki: 100 sticks for about 10%).
+// Villager clothing makes each claim bigger (both wikis; how much is ours: 2% a piece).
+
+// -------------------------------------------------------------------------------- favour
+
+// add favour in tenths of a per cent; 100% is the most (Murcaily)
+[proc,tbw_favour](int $tenths)
+if ($tenths <= 0 | %vill_comm_points >= ^tbw_favour_max) {
+    return;
+}
+%vill_comm_points = min(^tbw_favour_max, add(%vill_comm_points, $tenths));
+~tbw_favour_show;
+
+// a threat killed by this player (the killer gets it, not who found it: the OSRS wiki)
+[queue,tbw_favour_kill](int $tenths)
+~tbw_favour($tenths);
+
+[proc,tbw_favour_show]
+%favour_percentage = divide(%vill_comm_points, 10);
+~tbw_overlay_update;
+
+// the "Tai Bwo Favour" counter by the minimap (inter_292): shown in the village once you've started
+[proc,tbw_overlay_update]
+if (%cleanup_progress >= ^tbw_progress_told & inzone(^tbw_area_lo, ^tbw_area_hi, coord) = true) {
+    if (%tbw_overlayopen = 0) {
+        if_openoverlay(inter_292);
+        %tbw_overlayopen = 1;
+    }
+    return;
+}
+if (%tbw_overlayopen = 1) {
+    if_openoverlay(null);
+    %tbw_overlayopen = 0;
+}
+
+[mapzoneexit,0_43_47] ~tbw_overlay_update;
+[mapzoneexit,0_43_48] ~tbw_overlay_update;
+[mapzoneexit,0_44_47] ~tbw_overlay_update;
+[mapzoneexit,0_44_48] ~tbw_overlay_update;
+
+// called from login.rs2
+[proc,tbw_login]
+%tbw_overlayopen = 0;
+if (%junglepotion >= ^junglepotion_complete & %chat_control = 0) {
+    ~tbw_villagers_return; // finished Jungle Potion before the update
+}
+%favour_percentage = divide(%vill_comm_points, 10);
+~tbw_overlay_update;
+if (~tbw_any_cooling = true) {
+    settimer(tbw_villager_cooldown, ^tbw_cooldown_step);
+}
+
+// the villagers come back once Jungle Potion is done (the update's news post); each comes back
+// holding sticks
+[proc,tbw_villagers_return]
+def_int $v = 1;
+while ($v <= 10) {
+    if (~tbw_v_state($v) = 0) {
+        ~tbw_v_setstate($v, 1);
+    }
+    $v = add($v, 1);
+}
+
+// -------------------------------------------------------------------------------- the villagers
+// 1 Sharimika, 2 Mamma Bufetta, 3 Layleen, 4 Karaday, 5 Safta Doc, 6 Gabooty, 7 Fanellaman,
+// 8 Jagbakoba, 9 Murcaily, 10 Rionasta
+
+[proc,tbw_v_state](int $v)(int)
+switch_int ($v) {
+    case 1 : return(%chat_sharimika);
+    case 2 : return(%chat_mamma);
+    case 3 : return(%chat_layleen);
+    case 4 : return(%chat_karaday);
+    case 5 : return(%chat_safta);
+    case 6 : return(%chat_gabooty);
+    case 7 : return(%chat_fanellaman);
+    case 8 : return(%chat_jag);
+    case 9 : return(%chat_murc);
+    case 10 : return(%chat_rion);
+}
+return(0);
+
+[proc,tbw_v_setstate](int $v, int $state)
+switch_int ($v) {
+    case 1 : %chat_sharimika = $state;
+    case 2 : %chat_mamma = $state;
+    case 3 : %chat_layleen = $state;
+    case 4 : %chat_karaday = $state;
+    case 5 : %chat_safta = $state;
+    case 6 : %chat_gabooty = $state;
+    case 7 : %chat_fanellaman = $state;
+    case 8 : %chat_jag = $state;
+    case 9 : %chat_murc = $state;
+    case 10 : %chat_rion = $state;
+}
+
+[proc,tbw_v_name](int $v)(string)
+switch_int ($v) {
+    case 1 : return("Sharimika");
+    case 2 : return("Mamma Bufetta");
+    case 3 : return("Layleen");
+    case 4 : return("Karaday");
+    case 5 : return("Safta Doc");
+    case 6 : return("Gabooty");
+    case 7 : return("Fanellaman");
+    case 8 : return("Jagbakoba");
+    case 9 : return("Murcaily");
+    case 10 : return("Rionasta");
+}
+return("Villager");
+
+// the one you see: holding sticks or not (their chatheads are the same)
+[proc,tbw_v_npc](int $v)(npc)
+switch_int ($v) {
+    case 1 : return(tbwcu_sharimika);
+    case 2 : return(tbwcu_mamma_bufetta);
+    case 3 : return(tbwcu_layleen);
+    case 4 : return(tbwcu_karaday);
+    case 5 : return(tbwcu_safta_doc);
+    case 6 : return(tbwcu_gabooty);
+    case 7 : return(tbwcu_fanellaman);
+    case 8 : return(tbwcu_jagbakoba);
+    case 9 : return(tbwcu_murcaily);
+    case 10 : return(tbwcu_rionasta);
+}
+return(tbwcu_gabooty);
+
+// the villagers are multinpcs with no name or chathead of their own: the lines name them
+[proc,tbw_say](int $v, string $text)
+~chatnpc_specific(~tbw_v_name($v), ~tbw_v_npc($v), $text);
+
+[proc,tbw_any_cooling]()(boolean)
+def_int $v = 1;
+while ($v <= 10) {
+    if (~tbw_v_state($v) > 1) {
+        return(true);
+    }
+    $v = add($v, 1);
+}
+return(false);
+
+// every 300 ticks each villager who has given you sticks is one step nearer having more
+[timer,tbw_villager_cooldown]
+def_int $v = 1;
+def_int $state;
+while ($v <= 10) {
+    $state = ~tbw_v_state($v);
+    if ($state > 1) {
+        ~tbw_v_setstate($v, sub($state, 1));
+    }
+    $v = add($v, 1);
+}
+if (~tbw_any_cooling = false) {
+    cleartimer(tbw_villager_cooldown);
+}
+
+// wearing a tribal mask, the villagers think you're a broodoo victim (both wikis; the four lines
+// are the transcripts')
+[proc,tbw_masked]()(boolean)
+switch_obj (inv_getobj(worn, ^wearpos_hat)) {
+    case broodoomask_poison, broodoomask_disease, broodoomask_combat : return(true);
+}
+return(false);
+
+[label,tbw_mask_scream](int $v)
+switch_int (random(4)) {
+    case 0 : ~tbw_say($v, "<p,scared>Ahhhhhhhh - Get away from me you beast!");
+    case 1 : ~tbw_say($v, "<p,scared>Waahhhhh! - It's da evil broodoo beast come ta eat my very soul!");
+    case 2 : ~tbw_say($v, "<p,scared>Ahhhhhhhh - It's a monster!");
+    case default : ~tbw_say($v, "<p,scared>Ahhhhhhhh!!");
+}
+~chatplayer("<p,confused>What's the problem....oh, I'm wearing this big scary mask! I'd better take it off before I start talking to the natives.");
+
+// how many pieces of villager clothing are worn
+[proc,tbw_villager_pieces]()(int)
+def_int $n = 0;
+if (~tbw_is_villager_clothing(inv_getobj(worn, ^wearpos_hat)) = true) $n = add($n, 1);
+if (~tbw_is_villager_clothing(inv_getobj(worn, ^wearpos_torso)) = true) $n = add($n, 1);
+if (~tbw_is_villager_clothing(inv_getobj(worn, ^wearpos_legs)) = true) $n = add($n, 1);
+if (~tbw_is_villager_clothing(inv_getobj(worn, ^wearpos_hands)) = true) $n = add($n, 1);
+if (~tbw_is_villager_clothing(inv_getobj(worn, ^wearpos_feet)) = true) $n = add($n, 1);
+return($n);
+
+[proc,tbw_is_villager_clothing](obj $obj)(boolean)
+switch_obj ($obj) {
+    case tbw_villager_shirt_cream, tbw_villager_robe_cream, tbw_villager_hat_cream, tbw_villager_armband_cream, tbw_villager_sandals_cream,
+        tbw_villager_shirt_blue, tbw_villager_robe_blue, tbw_villager_hat_blue, tbw_villager_armband_blue, tbw_villager_sandals_blue,
+        tbw_villager_shirt_yellow, tbw_villager_robe_yellow, tbw_villager_hat_yellow, tbw_villager_armband_yellow, tbw_villager_sandals_yellow,
+        tbw_villager_shirt_purple, tbw_villager_robe_purple, tbw_villager_hat_purple, tbw_villager_armband_purple, tbw_villager_sandals_purple :
+        return(true);
+}
+return(false);
+
+// can this villager give you sticks right now?
+[proc,tbw_can_claim](int $v)(boolean)
+if (%cleanup_progress < ^tbw_progress_sticks | ~tbw_v_state($v) ! 1 | %vill_comm_points < 1) {
+    return(false);
+}
+return(true);
+
+// "I've been doing some work around the village."
+[label,tbw_claim](int $v)
+~chatplayer("<p,neutral>I've been doing some work around the village.");
+if ($v = 9 & %cleanup_progress = ^tbw_progress_fenced) {
+    @tbw_murcaily_first_sticks;
+}
+if (%cleanup_progress < ^tbw_progress_sticks) {
+    // ours: the wikis only say the first sticks come from Murcaily
+    ~tbw_say($v, "<p,neutral>Hmm, I think you should talk to Murcaily first Bwana, he'll see you right for what you've done.");
+    return;
+}
+if (~tbw_v_state($v) ! 1) {
+    ~tbw_say($v, "<p,neutral>I've already given you some trading sticks and I don't have any more on me at the moment. Why not go and talk to some of the other villagers and get some contributions?");
+    return;
+}
+if (%vill_comm_points < 1) {
+    // ours: the transcripts are missing this line
+    ~tbw_say($v, "<p,neutral>You haven't done any work around here lately Bwana. Help out around the village and come back to me.");
+    return;
+}
+~tbw_say($v, "<p,happy>Yeah, you've been doing a lot of good work around here. Let me give you something for your time and effort.");
+~tbw_give_sticks($v);
+
+// "Occasionally with unclaimed favour" (the transcripts): a villager holding sticks may hand them
+// over as soon as you talk to them (how often is ours: one time in four)
+[proc,tbw_auto_claim](int $v)(boolean)
+if (~tbw_can_claim($v) = false | random(4) ! 0) {
+    return(false);
+}
+~tbw_say($v, "<p,happy>Hey, I've seen you working around the village. You've been doing a lot of good work around here for us. Let me give you something for your trouble.");
+~tbw_give_sticks($v);
+return(true);
+
+[proc,tbw_give_sticks](int $v)
+def_int $cap = add(^tbw_claim_base, multiply(~tbw_villager_pieces, ^tbw_claim_per_piece));
+def_int $amount = min(%vill_comm_points, $cap);
+if (inv_itemspace(inv, village_trade_sticks, $amount, inv_size(inv)) = false) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+inv_add(inv, village_trade_sticks, $amount);
+%vill_comm_points = sub(%vill_comm_points, $amount);
+def_boolean $running = ~tbw_any_cooling;
+~tbw_v_setstate($v, ^tbw_cooldown_full);
+if ($running = false) {
+    settimer(tbw_villager_cooldown, ^tbw_cooldown_step);
+}
+~tbw_favour_show;
+// the "You are left with N% favour." part came with the 13 January 2009 patch
+~objbox(village_trade_sticks5, "You get <tostring($amount)> trading sticks.", 250, 0, divide(^objbox_height, 2));
+
+// "Is there anything interesting to do here?" (the same five answers from everyone)
+[label,tbw_anything_interesting](int $v)
+~chatplayer("<p,quiz>Is there anything interesting to do around here?");
+switch_int (random(5)) {
+    case 0 : ~tbw_say($v, "<p,angry>Bwana, if anyone else asks me that question today, I'll explode! Go and ask someone else!");
+    case 1 : ~tbw_say($v, "<p,happy>Not that I'm aware of, just sit back and enjoy the sunshine bwana!");
+    case 2 : ~tbw_say($v, "<p,neutral>Sorry Bwana, I'm already busy, why not go and talk to Murcaily! He's around the village somewhere.");
+    case 3 : ~tbw_say($v, "<p,neutral>Well, I think that there's some work to be done...perhaps Murcaily can help you. He usually tends to the hardwood grove to the east of Trufitus's hut.");
+    case default : ~tbw_say($v, "<p,happy>It's just village life as normal around here Bwana, always something interesting to find to occupy your time if you look hard enough.");
+}
+
+[proc,tbw_greet](int $v)
+~tbw_say($v, "<p,happy>Hello there...thanks for helping out Trufitus commune with the gods Bwana. We've been able to return to the village thanks to your help.");
+
+// ----------------------------------------------------------- the villagers with no shop or service
+
+[opnpc1,tbwcu_sharimika_multinpc] @tbw_villager(1);
+[opnpc1,tbwcu_mamma_bufetta_multinpc] @tbw_villager(2);
+[opnpc1,tbwcu_layleen_multinpc] @tbw_villager(3);
+[opnpc1,tbwcu_karaday_multinpc] @tbw_villager(4);
+[opnpc1,tbwcu_fanellaman_multinpc] @tbw_villager(7);
+[opnpc1,tbwcu_jagbakoba_multinpc] @tbw_villager(8);
+
+[label,tbw_villager](int $v)
+if (~tbw_masked = true) @tbw_mask_scream($v);
+if (~tbw_auto_claim($v) = true) return;
+// Sharimika, Layleen and Jagbakoba greet you every time; Fanellaman the first time (transcripts)
+if ($v = 1 | $v = 3 | $v = 8 | ($v = 7 & %cleanup_progress = ^tbw_progress_none)) {
+    ~tbw_greet($v);
+}
+@tbw_villager_menu($v);
+
+[label,tbw_villager_menu](int $v)
+def_int $choice;
+if (%cleanup_progress >= ^tbw_progress_told) {
+    $choice = ~p_choice4("What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else {
+    $choice = ~p_choice3("What do you do here?", 1, "Is there anything interesting to do here?", 2, "Ok, thanks.", 4);
+}
+switch_int ($choice) {
+    case 1 : @tbw_villager_what($v);
+    case 2 : @tbw_anything_interesting($v);
+    case 3 : @tbw_claim($v);
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_villager_what](int $v)
+if ($v ! 7) {
+    ~chatplayer("<p,quiz>What do you do here?");
+}
+switch_int ($v) {
+    case 1 : @tbw_sharimika_what;
+    case 2 : @tbw_mamma_what;
+    case 3 : ~tbw_say($v, "<p,neutral>Oh, I just walk around a bit...I have to help my Mum and Dad a lot though because I'm still only young. I'd love to visit the mainland one day though and get out of this boring village.");
+    case 4 : ~tbw_say($v, "<p,neutral>Oh, I'm a fisherman by trade and I sometimes help out my father, Safta Doc.");
+    case 7 : ~tbw_say($v, "<p,happy>Ha, well I'm retired now, but in my heyday I was quite the expert fisherman! These days I just help out around the village where I can, my old bones don't allow me to do any more than that.");
+    case 8 : ~tbw_say($v, "<p,angry>Why, it should be clear to even the most ignorant of people that I am a fearless jungle hunter...out of my way you sanitised civilian!");
+}
+@tbw_villager_menu($v);
+
+[label,tbw_sharimika_what]
+~tbw_say(1, "<p,neutral>I's not doing a great deal now Bwana, as I'm no spring chicken. I do my fair share around the village bwana, though, I could tell you a thing or two about the jungle slashing.");
+if (~p_choice2("Ok, tell me about jungle slashing!", 1, "Previous questions.", 2) = 2) {
+    @tbw_villager_menu(1);
+}
+~chatplayer("<p,happy>Ok, tell me about jungle slashing!");
+~tbw_say(1, "<p,happy>Ok Bwana, I will! To begin with you'll need a machete in order to hack your way through the jungle. There are some better gem edged weapons which you may be able to purchase from Gabooty.");
+~tbw_say(1, "<p,neutral>Safta Doc makes them for him. You should be aware that hacking away at the jungle is not without its dangers though Bwana. Many times you may find some scary creatures lurking inside.");
+~chatplayer("<p,quiz>What sort of creatures?");
+~tbw_say(1, "<p,neutral>Ok, to start with there are spiders! These are pretty tough but if you defeat it, you can get a good meal from it, if you know how to cook it that is. My wife cooks them to a turn - Mmmm, delicious.");
+~chatplayer("<p,happy>Ok go on!");
+~tbw_say(1, "<p,neutral>Yes Bwana, of course. Then there are snakes...these are dangerous because they're poisonous - so be prepared! However, they're not without their uses. A bush snake is large enough to have a useful hide.");
+~tbw_say(1, "<p,neutral>Once the hide is tanned you get a snakeskin and you're able to make things from it, the same way that mainlanders use normal leather! However, it's actually still quite small.");
+~tbw_say(1, "<p,neutral>You may need several skins in order to make something useful.");
+~chatplayer("<p,happy>Hmm, sounds interesting!");
+~tbw_say(1, "<p,neutral>Then there are giant mosquitoes bwana, they're fast and agile. You'll need to be quick if you're to hit them at all! However, it certainly does train your reactions. They're not very tough, just difficult to hit.");
+~tbw_say(1, "<p,neutral>I also believe that their proboscis is useful in someway, I believe Timfraku's sons sometimes use them for hunting.");
+~chatplayer("<p,quiz>Ok, that sounds helpful...anything else?");
+~tbw_say(1, "<p,neutral>Yes Bwana, much much more! What next...Oh yes, the tribesmen...you've probably seen them scouting around the village, sometimes sneaking inside the enclosure to steal our chickens!");
+~tbw_say(1, "<p,neutral>They sometimes hide in the jungle bushes waiting for an opportunity to strike when we least expect it! Take care Bwana, these treacherous jungle natives use poison on their spears!");
+~chatplayer("<p,neutral>Right Ok, good advice... 'poison on spears....' Anything else I should know about?");
+~tbw_say(1, "<p,neutral>Yes Bwana... and this is serious... The jungle is very ancient and many unspeakable acts have been witnessed on these lands. Bizarre supernatural curses were placed on criminals and then they were buried alive!");
+~tbw_say(1, "<p,neutral>These strange creatures have the curse of the Broodoo on them! They'll rise from their grave with their heads in their chests and move like crazy spirits of the afterlife.");
+~tbw_say(1, "<p,neutral>If they're disturbed they will attack anything in the area with their magical abilities! They suffer little from being attacked as they seem to be protected by some form of defence.");
+~tbw_say(1, "<p,neutral>However... it is said that the means of their death provides the clue to their destruction. So far three distinct Broodoo have been identified. The Broodoo with a green hued skin is said to have died from poison.");
+~tbw_say(1, "<p,neutral>There is a broodoo of yellow hue and a pale skinned broodoo, but little is known of these two!");
+~chatplayer("<p,scared>Erk! Well that sounds pretty scary!");
+~tbw_say(1, "<p,neutral>Yes Bwana...");
+~chatplayer("<p,happy>Ok, thanks a lot....");
+~tbw_say(1, "<p,neutral>Wait Bwana, there's more!");
+~chatplayer("<p,neutral>More... Blimey! Ok carry on...");
+~tbw_say(1, "<p,neutral>Some of the local villagers have found strange plants which grow here-abouts. If you cut away at the jungle and find one, it's considered a blessing, though the useful part of the plant is usually buried underground.");
+~tbw_say(1, "<p,neutral>And also, you may find an uncommon rock type which is impregnated with mineral wealth! Well that concludes all the help I can give you regarding the jungle in Tai Bwo Wannai!");
+~chatplayer("<p,happy>I have to say, that's quite a lot of information...thanks very much!");
+~tbw_say(1, "<p,happy>You're more than welcome bwana!");
+
+[label,tbw_mamma_what]
+~tbw_say(2, "<p,happy>I's been cooking up some roasted spiders....I can show you how to make 'em if you like?");
+switch_int (~p_choice4("Errrr..yuck, roasted spiders, that sounds gross!", 1, "Hmm, I guess it could be considered a delicacy, so yes please?", 2, "I'd like to ask another question.", 3, "Sorry, I have to go.", 4)) {
+    case 1 :
+        ~chatplayer("<p,shock>Errrr..yuck, roasted spiders, that sounds gross!");
+        ~tbw_say(2, "<p,neutral>Well, you can suit yourself my friend, but I have to tell you they're delicious!");
+        ~tbw_say(2, "<p,happy>Mmmm, mmm, mmmmmm!");
+    case 2 :
+        ~chatplayer("<p,neutral>Hmm, I guess it could be considered a delicacy, so yes please?");
+        ~tbw_say(2, "<p,happy>Ok my friend, you simply need to get a suitable stick to skewer the spider carcass on and then roast it on a fire!");
+        ~chatplayer("<p,quiz>What sort of stick and where would I get one?");
+        ~tbw_say(2, "<p,neutral>Well, I prefer to use a skewer stick, you can make one from a thatching spar using a machete. Or, if you're stuck, you could always use an arrow shaft, though they tend to be useless once you've finished eating the spider.");
+        ~chatplayer("<p,happy>Ok, thanks!");
+    case 3 : @tbw_villager_menu(2);
+    case 4 : ~chatplayer("<p,neutral>Sorry, I have to go.");
+}

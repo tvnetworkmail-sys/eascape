@@ -1,0 +1,427 @@
+// Tai Bwo Wannai Clean-Up (9 August 2005): hacking the jungle, what's hidden in it, and the
+// village fence.
+//
+// Hacking (the OSRS wiki's Light/Medium/Dense Jungle pages, from Mod Ash): wield a machete; level
+// 10/20/35 Woodcutting; each cycle is 16 ticks at level 10, a tick less every 10 levels, 8 from 90;
+// the roll comes 4 ticks before the end (low/high chances per machete below), then a 3-tick
+// success or fail animation. A success gives a thatch spar and 32/55/80 xp and takes one of the
+// jungle's four sections; a fail gives 1 xp. Favour per section 0.3/0.5/1% (the OSRS wiki).
+// Events: every roll adds 1 (up to 7) to %eventchance; each tick between the start of a cycle and
+// its roll, an event comes with %eventchance in 101, and the count goes back to 0. An event is a
+// gout tuber plant 1 in 100 (2005: the level scaling is a 2025 change), else 22/99 jungle spider,
+// 21 tribesman, 21 bush snake, 8 large mosquito, 7 and 6 the two mosquito swarms, 5 a gem rock,
+// 4/3/2 the white, green and yellow broodoo victims (Mod Ash).
+
+[oploc4,tai_bwo_jungle_vegetation_easy_1] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_easy_2] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_easy_3] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_easy_4] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_med_1] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_med_2] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_med_3] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_med_4] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_hard_1] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_hard_2] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_hard_3] @tbw_hack_start;
+[oploc4,tai_bwo_jungle_vegetation_hard_4] @tbw_hack_start;
+
+[oploc3,tai_bwo_jungle_vegetation_easy_1] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_easy_2] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_easy_3] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_easy_4] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_med_1] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_med_2] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_med_3] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_med_4] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_hard_1] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_hard_2] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_hard_3] @tbw_hack_continue;
+[oploc3,tai_bwo_jungle_vegetation_hard_4] @tbw_hack_continue;
+// chopped away: nothing left to hack (op3 is the hidden op the loop uses)
+[oploc3,tai_bwo_jungle_vegetation_easy_5] anim(null, 0);
+[oploc3,tai_bwo_jungle_vegetation_med_5] anim(null, 0);
+[oploc3,tai_bwo_jungle_vegetation_hard_5] anim(null, 0);
+
+// 1 light, 2 medium, 3 dense, 0 not jungle that can be hacked
+[proc,tbw_jungle_tier](loc $loc)(int)
+switch_loc ($loc) {
+    case tai_bwo_jungle_vegetation_easy_1, tai_bwo_jungle_vegetation_easy_2, tai_bwo_jungle_vegetation_easy_3, tai_bwo_jungle_vegetation_easy_4 : return(1);
+    case tai_bwo_jungle_vegetation_med_1, tai_bwo_jungle_vegetation_med_2, tai_bwo_jungle_vegetation_med_3, tai_bwo_jungle_vegetation_med_4 : return(2);
+    case tai_bwo_jungle_vegetation_hard_1, tai_bwo_jungle_vegetation_hard_2, tai_bwo_jungle_vegetation_hard_3, tai_bwo_jungle_vegetation_hard_4 : return(3);
+}
+return(0);
+
+[proc,tbw_jungle_next](loc $loc)(loc)
+switch_loc ($loc) {
+    case tai_bwo_jungle_vegetation_easy_1 : return(tai_bwo_jungle_vegetation_easy_2);
+    case tai_bwo_jungle_vegetation_easy_2 : return(tai_bwo_jungle_vegetation_easy_3);
+    case tai_bwo_jungle_vegetation_easy_3 : return(tai_bwo_jungle_vegetation_easy_4);
+    case tai_bwo_jungle_vegetation_easy_4 : return(tai_bwo_jungle_vegetation_easy_5);
+    case tai_bwo_jungle_vegetation_med_1 : return(tai_bwo_jungle_vegetation_med_2);
+    case tai_bwo_jungle_vegetation_med_2 : return(tai_bwo_jungle_vegetation_med_3);
+    case tai_bwo_jungle_vegetation_med_3 : return(tai_bwo_jungle_vegetation_med_4);
+    case tai_bwo_jungle_vegetation_med_4 : return(tai_bwo_jungle_vegetation_med_5);
+    case tai_bwo_jungle_vegetation_hard_1 : return(tai_bwo_jungle_vegetation_hard_2);
+    case tai_bwo_jungle_vegetation_hard_2 : return(tai_bwo_jungle_vegetation_hard_3);
+    case tai_bwo_jungle_vegetation_hard_3 : return(tai_bwo_jungle_vegetation_hard_4);
+    case tai_bwo_jungle_vegetation_hard_4 : return(tai_bwo_jungle_vegetation_hard_5);
+}
+return(null);
+
+// the machete you're wielding (any of the four)
+[proc,tbw_wielded_machete]()(obj)
+def_obj $obj = inv_getobj(worn, ^wearpos_rhand);
+switch_obj ($obj) {
+    case machette, machette_opal, machette_jade, machette_redtopaz : return($obj);
+}
+return(null);
+
+// a machete wielded or carried, for the fence and the spars
+[proc,tbw_any_machete]()(obj)
+def_obj $obj = ~tbw_wielded_machete;
+if ($obj ! null) return($obj);
+if (inv_total(inv, machette_redtopaz) > 0) return(machette_redtopaz);
+if (inv_total(inv, machette_jade) > 0) return(machette_jade);
+if (inv_total(inv, machette_opal) > 0) return(machette_opal);
+if (inv_total(inv, machette) > 0) return(machette);
+return(null);
+
+[proc,tbw_jungle_level](int $tier)(int)
+switch_int ($tier) {
+    case 1 : return(10);
+    case 2 : return(20);
+}
+return(35);
+
+[proc,tbw_cycle]()(int)
+return(max(8, sub(17, divide(stat(woodcutting), 10))));
+
+// the OSRS wiki's cut chances (low at level 1, high at 99)
+[proc,tbw_hack_chance](int $tier, obj $machete)(int, int)
+switch_int ($tier) {
+    case 1 :
+        switch_obj ($machete) {
+            case machette_opal : return(54, 174);
+            case machette_jade : return(70, 190);
+            case machette_redtopaz : return(85, 205);
+        }
+        return(49, 169);
+    case 2 :
+        switch_obj ($machete) {
+            case machette_opal : return(39, 90);
+            case machette_jade : return(54, 105);
+            case machette_redtopaz : return(70, 121);
+        }
+        return(34, 85);
+}
+switch_obj ($machete) {
+    case machette_opal : return(21, 49);
+    case machette_jade : return(36, 64);
+    case machette_redtopaz : return(52, 80);
+}
+return(16, 44);
+
+// checks before every swing; false stops
+[proc,tbw_hack_checks](int $tier)(boolean)
+if (map_members = ^false) {
+    mes(^mes_members_feature);
+    return(false);
+}
+if (%cleanup_progress < ^tbw_progress_told) {
+    // the OSRS wiki: talk to Murcaily first (ours: the message)
+    mes("You should speak to Murcaily before hacking away at the village's jungle.");
+    return(false);
+}
+def_int $level = ~tbw_jungle_level($tier);
+if (stat(woodcutting) < $level) {
+    mes("You need a Woodcutting level of <tostring($level)> to hack this jungle."); // ours
+    return(false);
+}
+if (~tbw_wielded_machete = null) {
+    mes("You need to be wielding a machete to hack away at this jungle."); // ours
+    return(false);
+}
+if (inv_freespace(inv) < 1) {
+    mes("Your inventory is too full to hold any more thatch spars."); // ours
+    return(false);
+}
+return(true);
+
+[label,tbw_hack_start]
+def_int $tier = ~tbw_jungle_tier(loc_type);
+if ($tier = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~tbw_hack_checks($tier) = false) {
+    anim(null, 0);
+    return;
+}
+// the roll is 4 ticks before the end of the cycle
+%action_delay = add(map_clock, sub(~tbw_cycle, 4));
+anim(tbw_cleanup_player_hack, 0);
+sound_synth(machete_slash, 1, 0);
+p_oploc(3);
+
+[label,tbw_hack_continue]
+def_int $tier = ~tbw_jungle_tier(loc_type);
+if ($tier = 0 | ~tbw_hack_checks($tier) = false) {
+    anim(null, 0);
+    return;
+}
+def_int $cycle = ~tbw_cycle;
+if (map_clock < %action_delay) {
+    def_int $start = sub(%action_delay, sub($cycle, 4));
+    if (map_clock = $start) {
+        anim(tbw_cleanup_player_hack, 0);
+        sound_synth(machete_slash, 1, 0);
+    } else if (map_clock > $start & random(101) < %eventchance) {
+        %eventchance = 0;
+        ~tbw_jungle_event;
+        return;
+    }
+    p_oploc(3);
+    return;
+}
+// the roll
+%eventchance = min(7, add(%eventchance, 1));
+def_obj $machete = ~tbw_wielded_machete;
+def_int $low;
+def_int $high;
+$low, $high = ~tbw_hack_chance($tier, $machete);
+%action_delay = add(map_clock, add(3, sub($cycle, 4)));
+if (stat_random(woodcutting, $low, $high) = false) {
+    anim(tbw_cleanup_player_hack_fail, 0);
+    sound_synth(machete_fail, 1, 0);
+    stat_advance(woodcutting, 10);
+    p_oploc(3);
+    return;
+}
+anim(tbw_cleanup_player_hack_success, 0);
+switch_int ($tier) {
+    case 1 :
+        inv_add(inv, thatching_spar_light, 1);
+        stat_advance(woodcutting, 320);
+        ~tbw_favour(3);
+    case 2 :
+        inv_add(inv, thatching_spar_med, 1);
+        stat_advance(woodcutting, 550);
+        ~tbw_favour(5);
+    case 3 :
+        inv_add(inv, thatching_spar_dense, 1);
+        stat_advance(woodcutting, 800);
+        ~tbw_favour(10);
+}
+if (%cleanup_progress = ^tbw_progress_told) {
+    %cleanup_progress = ^tbw_progress_hacked;
+}
+spotanim_map(tbw_chippings, loc_coord, 0, 0);
+def_loc $next = ~tbw_jungle_next(loc_type);
+loc_change($next, ^tbw_jungle_regrow);
+if (~tbw_jungle_tier($next) = 0) {
+    // all four sections gone
+    return;
+}
+p_oploc(3);
+
+// ----------------------------------------------------------------------------- the events
+
+[proc,tbw_jungle_event]
+// 1 in 100: a gout tuber plant takes the jungle's place
+if (random(100) = 0) {
+    anim(null, 0);
+    loc_change(village_gout_tuber, ^tbw_event_loc_duration);
+    mes("You hack away at the remaining bush to reveal an unusual plant.");
+    return;
+}
+def_int $roll = random(99);
+if ($roll < 22) {
+    ~tbw_spawn_event(1, loc_coord);
+} else if ($roll < 43) {
+    ~tbw_spawn_event(2, loc_coord);
+} else if ($roll < 64) {
+    ~tbw_spawn_event(3, loc_coord);
+} else if ($roll < 72) {
+    ~tbw_spawn_event(4, loc_coord);
+} else if ($roll < 79) {
+    ~tbw_spawn_event(5, loc_coord);
+} else if ($roll < 85) {
+    ~tbw_spawn_event(6, loc_coord);
+} else if ($roll < 90) {
+    anim(null, 0);
+    loc_change(village_gem_rock1, ^tbw_event_loc_duration);
+    mes("The jungle parts to reveal a gem-rich rock.");
+} else if ($roll < 94) {
+    ~tbw_spawn_event(7, loc_coord);
+} else if ($roll < 97) {
+    ~tbw_spawn_event(8, loc_coord);
+} else {
+    ~tbw_spawn_event(9, loc_coord);
+}
+
+// 1 jungle spider, 2 tribesman, 3 bush snake, 4 large mosquito, 5 and 6 the swarms, 7 white (food),
+// 8 green (poison) and 9 yellow (disease) broodoo victims
+[proc,tbw_spawn_event](int $n, coord $from)
+switch_int ($n) {
+    case 1 : ~tbw_spawn(tbwcu_jungle_spider, tbw_cleanup_spider_surprise_attack, TBCU_spider, $from);
+    case 2 : ~tbw_spawn(tbwcu_tribesman, tbw_cleanup_tribesmen_surprise, null, $from);
+    case 3 : ~tbw_spawn(tbwcu_village_snake, tbw_cleanup_snake_surprise_attack, TBCU_snake, $from);
+    case 4 : ~tbw_spawn(tbwcu_mosquito_single, null, TBCU_mosquito, $from);
+    case 5 : ~tbw_spawn(tbwcu_mosquito_swarm3, null, TBCU_mosquito, $from);
+    case 6 : ~tbw_spawn(tbwcu_mosquito_swarm5, null, TBCU_mosquito, $from);
+    case 7 : ~tbw_spawn(tbwcu_broodoo_combat, tbw_cleanup_tribesmen_surprise, null, $from);
+    case 8 : ~tbw_spawn(tbwcu_broodoo_poison, tbw_cleanup_tribesmen_surprise, null, $from);
+    case 9 : ~tbw_spawn(tbwcu_broodoo_disease, tbw_cleanup_tribesmen_surprise, null, $from);
+}
+
+// a creature jumps out of the jungle at you. Ours: it comes out as the creature itself playing the
+// cache's surprise animation (the cache's "_appear"/"_instant" copies aren't used), and the
+// player's step-back animation.
+[proc,tbw_spawn](npc $npc, seq $surprise, synth $sound, coord $from)
+def_coord $at = map_findsquare($from, 0, 1, ^map_findsquare_lineofwalk);
+if ($at = null) {
+    $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+}
+if ($at = null) {
+    return;
+}
+anim(tbw_cleanup_player_surprise_stepback, 0);
+if ($sound ! null) {
+    sound_synth($sound, 1, 0);
+}
+def_int $duration = ^tbw_npc_duration;
+if ($npc = tbwcu_broodoo_combat | $npc = tbwcu_broodoo_poison | $npc = tbwcu_broodoo_disease) {
+    $duration = ^tbw_broodoo_duration;
+}
+npc_add($at, $npc, $duration);
+if ($surprise ! null) {
+    npc_anim($surprise, 0);
+}
+npc_facesquare(coord);
+%aggressive_npc = npc_uid;
+%npc_aggressive_player = uid;
+if ($duration = ^tbw_broodoo_duration) {
+    npc_setmode(applayer2);
+} else {
+    npc_setmode(opplayer2);
+}
+
+// ----------------------------------------------------------------------------- gout tuber plant
+// dig it up with a spade (both wikis); the jungle grows back
+
+[oplocu,village_gout_tuber]
+if (last_useitem ! spade) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+anim(human_dig, 0);
+p_delay(1);
+inv_add(inv, village_rare_tuber, 1);
+mes("You dig up a gout tuber."); // ours
+loc_del(^tbw_jungle_regrow);
+
+// --------------------------------------------------------------------------------- gem rock
+// mined as a gem rock (skill_mining's gem_rock row and table): one gem each, three in all
+
+[oploc1,village_gem_rock1] @mining_firstswing(get_ore_gem_rock);
+[oploc1,village_gem_rock2] @mining_firstswing(get_ore_gem_rock);
+[oploc1,village_gem_rock3] @mining_firstswing(get_ore_gem_rock);
+[oploc3,village_gem_rock1] @mining_continue(get_ore_gem_rock);
+[oploc3,village_gem_rock2] @mining_continue(get_ore_gem_rock);
+[oploc3,village_gem_rock3] @mining_continue(get_ore_gem_rock);
+[oploc2,village_gem_rock1] @prospect_rock(finish_prospect_normal);
+[oploc2,village_gem_rock2] @prospect_rock(finish_prospect_normal);
+[oploc2,village_gem_rock3] @prospect_rock(finish_prospect_normal);
+
+// ------------------------------------------------------------------------------ the village fence
+// Rotten -> partial -> short -> medium -> village fence: four spars and a machete; then reinforce
+// it with as many as you like; it rots again after about 16 minutes (the RS wiki). Favour and xp
+// per spar from the OSRS wiki (light 0.1%/28.1, medium 0.3%/42.1, dense 0.5%/65.1).
+
+[oploc1,village_fence_rotten] @tbw_fence;
+[oploc1,village_fence_fixed1] @tbw_fence;
+[oploc1,village_fence_fixed2] @tbw_fence;
+[oploc1,village_fence_fixed3] @tbw_fence;
+[oploc1,village_fence_fixedcomplete] @tbw_fence;
+[oplocu,village_fence_rotten] @tbw_fence_use;
+[oplocu,village_fence_fixed1] @tbw_fence_use;
+[oplocu,village_fence_fixed2] @tbw_fence_use;
+[oplocu,village_fence_fixed3] @tbw_fence_use;
+[oplocu,village_fence_fixedcomplete] @tbw_fence_use;
+
+[label,tbw_fence_use]
+switch_obj (last_useitem) {
+    case thatching_spar_light, thatching_spar_med, thatching_spar_dense, machette, machette_opal, machette_jade, machette_redtopaz : @tbw_fence;
+}
+~displaymessage(^dm_default);
+
+[label,tbw_fence]
+if (map_members = ^false) {
+    mes(^mes_members_feature);
+    return;
+}
+if (%cleanup_progress < ^tbw_progress_told) {
+    mes("You should speak to Murcaily before you start repairing the village fence."); // ours
+    return;
+}
+def_obj $machete = ~tbw_any_machete;
+if ($machete = null) {
+    mes("You need a machete to repair the fence."); // ours
+    return;
+}
+// ours: the best spar you have goes in first
+def_obj $spar = null;
+def_int $xp;
+def_int $favour;
+if (inv_total(inv, thatching_spar_dense) > 0) {
+    $spar = thatching_spar_dense;
+    $xp = 651;
+    $favour = 5;
+} else if (inv_total(inv, thatching_spar_med) > 0) {
+    $spar = thatching_spar_med;
+    $xp = 421;
+    $favour = 3;
+} else if (inv_total(inv, thatching_spar_light) > 0) {
+    $spar = thatching_spar_light;
+    $xp = 281;
+    $favour = 1;
+}
+if ($spar = null) {
+    mes("You need some thatching spars to repair the fence."); // ours
+    sound_synth(TBCU_fencefail, 1, 0);
+    return;
+}
+def_seq $start = tbw_cleanup_player_fixfence_start;
+def_seq $end = tbw_cleanup_player_fixfence_end;
+switch_obj ($machete) {
+    case machette_opal :
+        $start = tbw_cleanup_player_fixfence_start_opal;
+        $end = tbw_cleanup_player_fixfence_end_opal;
+    case machette_jade :
+        $start = tbw_cleanup_player_fixfence_start_jade;
+        $end = tbw_cleanup_player_fixfence_end_jade;
+    case machette_redtopaz :
+        $start = tbw_cleanup_player_fixfence_start_redtopaz;
+        $end = tbw_cleanup_player_fixfence_end_redtopaz;
+}
+anim($start, 0);
+p_delay(1);
+anim($end, 0);
+sound_synth(TBCU_repair_fence, 1, 0);
+inv_del(inv, $spar, 1);
+stat_advance(woodcutting, $xp);
+~tbw_favour($favour);
+if (%cleanup_progress < ^tbw_progress_fenced) {
+    %cleanup_progress = ^tbw_progress_fenced;
+}
+switch_loc (loc_type) {
+    case village_fence_rotten : loc_change(village_fence_fixed1, ^tbw_fence_decay);
+    case village_fence_fixed1 : loc_change(village_fence_fixed2, ^tbw_fence_decay);
+    case village_fence_fixed2 : loc_change(village_fence_fixed3, ^tbw_fence_decay);
+    // ours: reinforcing starts the 16 minutes again
+    case default : loc_change(village_fence_fixedcomplete, ^tbw_fence_decay);
+}

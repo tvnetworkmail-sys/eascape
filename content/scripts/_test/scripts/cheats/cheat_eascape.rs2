@@ -2510,3 +2510,136 @@ switch_int ($n) {
         return;
 }
 p_telejump($c);
+
+// ---------------------------------------------------------------- Tai Bwo Wannai Clean-Up (9 Aug 2005)
+// minigames/game_tbw_cleanup. ::tbwpack - the inputs: the four machetes, 3 of each opal/jade/red topaz
+// (cut and uncut), a gout tuber, a spade, a rune pickaxe, 2,000 trading sticks, a needle and thread,
+// 15 snakeskins and 2 snake hides (Ellis tans them, 15 coins each), the three tribal masks, a
+// hammer and 8 bronze nails, a spider carcass, skewer sticks and arrow shafts, 4 of each thatch
+// spar, an antipoison(4), a Relicym's balm(4), 5 sharks and 1,000 coins. It also marks Jungle
+// Potion done (no rewards) so the villagers are back. Dense jungle needs 35 Woodcutting
+// (::setstat woodcutting 35).
+[debugproc,tbwpack]
+if (p_finduid(uid) = false) return;
+if (%junglepotion < ^junglepotion_complete) {
+    %junglepotion = ^junglepotion_complete;
+    ~tbw_villagers_return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(machette, 1));
+$banked = calc($banked + ~questpack_give(machette_opal, 1));
+$banked = calc($banked + ~questpack_give(machette_jade, 1));
+$banked = calc($banked + ~questpack_give(machette_redtopaz, 1));
+$banked = calc($banked + ~questpack_give(village_trade_sticks, 2000));
+$banked = calc($banked + ~questpack_give(coins, 1000));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(village_rare_tuber, 1));
+$banked = calc($banked + ~questpack_give(uncut_opal, 3));
+$banked = calc($banked + ~questpack_give(needle, 1));
+$banked = calc($banked + ~questpack_give(thread, 5));
+$banked = calc($banked + ~questpack_give(cert_village_snake_skin, 15));
+$banked = calc($banked + ~questpack_give(village_snake_hide, 2));
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(nails_bronze, 8));
+$banked = calc($banked + ~questpack_give(broodoomask_combat, 1));
+$banked = calc($banked + ~questpack_give(village_spider_carcass, 1));
+$banked = calc($banked + ~questpack_give(tbw_skewer_stick, 5));
+$banked = calc($banked + ~questpack_give(arrow_shaft, 5));
+$banked = calc($banked + ~questpack_give(thatching_spar_light, 4));
+$banked = calc($banked + ~questpack_give(4doseantipoison, 1));
+$banked = calc($banked + ~questpack_give(relicyms_balm4, 1));
+$banked = calc($banked + ~questpack_give(shark, 3));
+// the rest go straight to the bank
+inv_add(bank, opal, 3);
+inv_add(bank, uncut_jade, 3);
+inv_add(bank, jade, 3);
+inv_add(bank, uncut_red_topaz, 3);
+inv_add(bank, red_topaz, 3);
+inv_add(bank, village_rare_tuber, 2);
+inv_add(bank, village_snake_skin, 15);
+inv_add(bank, broodoomask_poison, 1);
+inv_add(bank, broodoomask_disease, 1);
+inv_add(bank, thatching_spar_med, 4);
+inv_add(bank, thatching_spar_dense, 4);
+inv_add(bank, nails_bronze, 16);
+~questpack_done("Tai Bwo Wannai Clean-Up", $banked);
+mes("The rest (more gems, tubers, masks, spars, unnoted snakeskins, nails) is in your bank. 15 snakeskins come noted.");
+mes("::tbwtele 1 for Murcaily (start), ::tbwstage 4 to skip ahead, ::tbwfavour <n> for favour.");
+
+// ::tbwtele <n> - 1 Murcaily and the hardwood grove doors, 2 Gabooty, 3 light jungle, 4 medium
+// jungle, 5 dense jungle, 6 a rotten fence, 7 Safta Doc, 8 Rionasta, 9 inside the hardwood grove,
+// 10 the wild jungle spiders, 11 the calquat patch, 12 Jiminua's store, 13 Ellis the tanner
+[debugproc,tbwtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = 0_43_48_63_11;
+    case 2 : $c = 0_43_47_43_57;
+    case 3 : $c = 0_43_47_18_53;
+    case 4 : $c = 0_43_47_14_49;
+    case 5 : $c = 0_43_48_19_3;
+    case 6 : $c = 0_43_47_20_56;
+    case 7 : $c = 0_43_48_38_28;
+    case 8 : $c = 0_43_48_30_22;
+    case 9 : $c = 0_44_48_6_11;
+    case 10 : $c = 0_43_48_44_32;
+    case 11 : $c = 0_43_48_41_29;
+    case 12 : $c = 0_43_48_15_50;
+    case 13 : $c = 0_51_49_12_57;
+    case default :
+        mes("::tbwtele 1-13: 1 Murcaily (grove doors), 2 Gabooty, 3 light jungle, 4 medium jungle, 5 dense jungle, 6 a rotten fence, 7 Safta Doc,");
+        mes("8 Rionasta, 9 inside the hardwood grove, 10 wild jungle spiders, 11 the calquat patch, 12 Jiminua's store, 13 Ellis the tanner (Al Kharid).");
+        return;
+}
+p_telejump(map_findsquare($c, 1, 3, ^map_findsquare_lineofwalk));
+
+// ::tbwstage <n> - %cleanup_progress: 0 not started, 1 Murcaily has told you (you can hack and
+// repair), 2 hacked some jungle, 3 repaired a fence (Murcaily gives the first sticks), 4 had them
+// (every villager gives sticks). Every villager also gets sticks to give again, and Jungle Potion
+// is marked done (no rewards).
+[debugproc,tbwstage](int $n)
+if (p_finduid(uid) = false) return;
+if (%junglepotion < ^junglepotion_complete) {
+    %junglepotion = ^junglepotion_complete;
+}
+%cleanup_progress = max(0, min(4, $n));
+def_int $v = 1;
+while ($v <= 10) {
+    ~tbw_v_setstate($v, 1);
+    $v = add($v, 1);
+}
+~tbw_favour_show;
+mes("Tai Bwo Wannai Clean-Up stage <tostring(%cleanup_progress)>; every villager has sticks for you. Favour <tostring(%favour_percentage)>%.");
+
+// ::tbwfavour <n> - sets your Tai Bwo Wannai favour to n per cent (0-100)
+[debugproc,tbwfavour](int $n)
+if (p_finduid(uid) = false) return;
+%vill_comm_points = multiply(max(0, min(100, $n)), 10);
+~tbw_favour_show;
+mes("Tai Bwo Wannai favour: <tostring(%favour_percentage)>%.");
+
+// ::tbwsticks <n> - gives you n trading sticks (0 takes them all away)
+[debugproc,tbwsticks](int $n)
+if (p_finduid(uid) = false) return;
+if ($n <= 0) {
+    if (inv_total(inv, village_trade_sticks) > 0) {
+        inv_del(inv, village_trade_sticks, inv_total(inv, village_trade_sticks));
+    }
+    mes("Your trading sticks are gone.");
+    return;
+}
+inv_add(inv, village_trade_sticks, $n);
+mes("You get <tostring($n)> trading sticks.");
+
+// ::tbwspawn <n> - what comes out of the jungle, next to you: 1 jungle spider, 2 tribesman, 3 bush
+// snake, 4 large mosquito, 5 and 6 the two mosquito swarms, 7 white (food), 8 green (antipoison)
+// and 9 yellow (Relicym's balm) broodoo victims
+[debugproc,tbwspawn](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 1 | $n > 9) {
+    mes("::tbwspawn 1-9: 1 jungle spider, 2 tribesman, 3 bush snake, 4 large mosquito, 5 swarm of 3, 6 swarm of 5,");
+    mes("7 white broodoo victim (use food), 8 green (antipoison), 9 yellow (Relicym's balm).");
+    return;
+}
+~tbw_spawn_event($n, coord);

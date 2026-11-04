@@ -1,0 +1,516 @@
+// Tai Bwo Wannai Clean-Up (9 August 2005): Murcaily and the hardwood grove, Gabooty and his two
+// shops, Safta Doc's gem machetes and Rionasta's parcel service. Lines are the RS and OSRS wikis'
+// Transcript: pages; anything else is marked "ours".
+
+// =============================================================================== Murcaily (9)
+
+[opnpc1,tbwcu_murcaily_multinpc]
+@tbw_murcaily;
+
+[label,tbw_murcaily]
+if (~tbw_masked = true) @tbw_mask_scream(9);
+if (%cleanup_progress = ^tbw_progress_none) {
+    ~tbw_greet(9);
+} else if (%cleanup_progress = ^tbw_progress_hacked) {
+    ~tbw_say(9, "<p,happy>I see that you've been hacking away at the jungle...good, now if you have some thatching spars you can go and fix the fence. It's just to the south near the jungle, again, you'll need a machete for this.");
+} else if (%cleanup_progress = ^tbw_progress_fenced) {
+    @tbw_murcaily_first_sticks;
+} else if (~tbw_auto_claim(9) = true) {
+    return;
+}
+@tbw_murcaily_menu;
+
+[label,tbw_murcaily_first_sticks]
+~tbw_say(9, "<p,happy>Great, I saw you were fixing the fence earlier, it looks like you've got the hang of this now! Let me give you something for your effort!");
+%cleanup_progress = ^tbw_progress_sticks;
+if (%vill_comm_points > 0) {
+    ~tbw_give_sticks(9);
+}
+
+[label,tbw_murcaily_menu]
+def_int $choice;
+if (%cleanup_progress >= ^tbw_progress_fenced) {
+    $choice = ~p_choice4("What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else {
+    $choice = ~p_choice3("What do you do here?", 1, "Is there anything interesting to do here?", 2, "Ok, thanks.", 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you do here?");
+        ~tbw_say(9, "<p,neutral>Well, I tend the hardwood grove nearby, you can enter if you like and harvest some of the very fine hardwood that grows within.");
+        ~tbw_say(9, "<p,neutral>Apart from that I'm a simple Tai Bwo Wannai villager...I like to try and find out what's going on in the mainland and the rest of the known world.");
+        @tbw_murcaily_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Is there anything interesting to do around here?");
+        if (%cleanup_progress < ^tbw_progress_hacked) {
+            ~tbw_say(9, "<p,neutral>Well Bwana, if you're stuck for something to do, you could always do a bit of handymanship about the village and cut away the jungle that lies here about.");
+            ~tbw_say(9, "<p,neutral>If you's is good with da machete Bwana, you's can get's some thatching spars and put them to use repairing the run-down village fence.");
+            @tbw_murcaily_jungle;
+        }
+        ~tbw_say(9, "<p,happy>Apart from cutting back the jungle and repairing the fence, I think we've got most things covered now Bwana.");
+        if (~p_choice2("Ask about cutting back the jungle.", 1, "Ok, thanks.", 2) = 1) {
+            @tbw_murcaily_jungle;
+        }
+        ~chatplayer("<p,neutral>Ok, thanks.");
+    case 3 : @tbw_claim(9);
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_murcaily_jungle]
+switch_int (~p_choice5("Do I get anything for doing this?", 1, "Where can I get a machete from?", 2, "Where is this jungle?", 3, "Where is the fence that needs to be repaired?", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Do I get anything for doing this?");
+        ~tbw_say(9, "<p,happy>Yes Bwana, you gain experience in woodcutting. In addition many members of the community will reward you with trading sticks, our local currency, for your efforts.");
+        ~chatplayer("<p,confused>Trading sticks?");
+        ~tbw_say(9, "<p,happy>Correct Bwana, trading sticks! It's our form of local currency! Everything you do to help out in the village will give you some favour, but there's a maximum limit!");
+        ~tbw_say(9, "<p,neutral>When you've reached one hundred percent, you cannot gain any more favour, you need to cash in your favour for trading sticks before you can increase your favour again.");
+        // the minigame starts once someone has told you what it involves (both wikis)
+        if (%cleanup_progress = ^tbw_progress_none) {
+            %cleanup_progress = ^tbw_progress_told;
+            ~tbw_favour_show;
+        }
+        // ours: an "Ok, thanks." beside the transcript's one option
+        if (~p_choice2("Who do I get trading sticks from?", 1, "Ok, thanks.", 2) = 1) {
+            ~chatplayer("<p,quiz>Who do I get trading sticks from?");
+            ~tbw_say(9, "<p,neutral>Well Bwana, there's a good ten villagers I know of who would show their appreciation for your effort. Who do you want to ask about?");
+            @tbw_murcaily_who1;
+        }
+        ~chatplayer("<p,neutral>Ok, thanks.");
+    case 2 :
+        ~chatplayer("<p,quiz>Where can I get a machete from?");
+        ~tbw_say(9, "<p,neutral>You can purchase a standard machete from Jiminua's store. Gabooty has a selection of local items which you may like to purchase, including better machetes. Also, you may like to chat to Safta Doc, he may have a deal you'll find interesting.");
+        @tbw_murcaily_jungle;
+    case 3 :
+        ~chatplayer("<p,quiz>Where is this jungle?");
+        ~tbw_say(9, "<p,neutral>You'll find much of it to the southern end of Tai Bwo Wannai, outside of the village. Some is tougher than others so you may have difficulties cutting it back.");
+        ~tbw_say(9, "<p,neutral>Beware though Bwana, those bushes can conceal a great many dangers or trophies, it could be the death... or the making of you!");
+        ~chatplayer("<p,confused>What do you mean by that?");
+        ~tbw_say(9, "<p,happy>It means that you may find something you wish you hadn't but then discover something you never thought you could! If you find me too vague, go and have a chat with Sharimika about it!");
+        @tbw_murcaily_jungle;
+    case 4 :
+        ~chatplayer("<p,quiz>Where is the fence that needs to be repaired?");
+        ~tbw_say(9, "<p,neutral>This is to the South Bwana, you should see that there are sections which are rotten, but some other passers-by sometimes help out repairing it.");
+        ~tbw_say(9, "<p,neutral>You'll need some thatching spars and a machete in order to repair the fence though Bwana.");
+        @tbw_murcaily_jungle;
+    case 5 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_murcaily_who1]
+switch_int (~p_choice5("Sharimika.", 1, "Mamma Bufetta.", 2, "Layleen.", 3, "Karaday.", 4, "-- Villager Menu 2 --", 5)) {
+    case 1 : ~tbw_say(9, "<p,neutral>Sharimika is married to Mamma Bufetta, Bwana. They live in the houses just in front of the tribal statue.");
+    case 2 : ~tbw_say(9, "<p,neutral>Mamma Bufetta lives with her family in the building that faces the stone statue, she lives there with her husband Sharimika and her daughter Layleen.");
+    case 3 : ~tbw_say(9, "<p,neutral>Layleen is a young girl, the daughter of Mamma Bufetta and Sharimika, she lives with her parents.");
+    case 4 : ~tbw_say(9, "<p,neutral>Karaday is a young man and his chosen profession is fishing, he follows after his father Safta Doc in that respect. You can find him usually around the center of the village, that is when he's not off fishing.");
+    case 5 : @tbw_murcaily_who2;
+}
+@tbw_murcaily_who1;
+
+[label,tbw_murcaily_who2]
+switch_int (~p_choice5("Safta Doc.", 1, "Gabooty.", 2, "Fanellaman.", 3, "Jagbakoba.", 4, "-- Villager Menu 3 --", 5)) {
+    case 1 :
+        ~tbw_say(9, "<p,neutral>Safta Doc used to be a fisherman, but he's just about retired now. He has an interesting profession which you might like to talk to him about. You'll find him usually near the building with the anvil in it.");
+        ~tbw_say(9, "<p,neutral>It's just slightly north of the village statue.");
+    case 2 : ~tbw_say(9, "<p,neutral>Gabooty is a bit of a mystery, no one's sure where he came from! He's quite helpful though, you can find him in the middle of the village enclosure, to the south of Sharimika's house.");
+    case 3 : ~tbw_say(9, "<p,neutral>Fanellaman was a fisherman, he's retired now, but he'll try and regale you with tales of his salty sea dog days. He's often walking up and down the western beach.");
+    case 4 : ~tbw_say(9, "<p,neutral>Jagbakoba is a wild hunter. He can be a bit aggressive but he'll reward anyone who helps to keep the village in good order. You'll find him to the south of the enclosure, near the fires.");
+    case 5 : @tbw_murcaily_who3;
+}
+@tbw_murcaily_who2;
+
+[label,tbw_murcaily_who3]
+switch_int (~p_choice5("Rionasta.", 1, "Murcaily.", 2, "* Back to original questions *", 3, "* Ask another question *", 4, "-- Villager Menu 1 --", 5)) {
+    case 1 : ~tbw_say(9, "<p,happy>Ah Rionasta! He's an enterprising man! Had a very good idea and is now much in demand, you'll find him between the blacksmith's and Timfraku's hut.");
+    case 2 : ~tbw_say(9, "<p,happy>Murcaily! That's me! Well, what do you want to know?! I look after the teak and mahogany trees and make sure that we get payment of anyone who uses the facility. And I'm usually standing just about here!");
+    case 3 : @tbw_murcaily_jungle;
+    case 4 :
+        if (~tbw_can_claim(9) = true) {
+            ~tbw_say(9, "<p,happy>Hey, I've seen you working around the village. You've been doing a lot of good work around here for us. Let me give you something for your trouble.");
+            ~tbw_give_sticks(9);
+            return;
+        }
+        @tbw_murcaily_menu;
+    case 5 : @tbw_murcaily_who1;
+}
+@tbw_murcaily_who3;
+
+// ------------------------------------------------------------------------- the hardwood grove
+// 100 trading sticks each time you go in (both wikis); leaving is free. Before the update the
+// doors just opened (eascape_world.rs2).
+
+[oploc1,tbwcu_bamboo_door_l] @tbw_grove_door(false);
+[oploc1,tbwcu_bamboo_door_r] @tbw_grove_door(false);
+[oploc2,tbwcu_bamboo_door_l] @tbw_grove_door(true);
+[oploc2,tbwcu_bamboo_door_r] @tbw_grove_door(true);
+
+[label,tbw_grove_door](boolean $quick)
+if (inzone(^tbw_grove_lo, ^tbw_grove_hi, coord) = true) {
+    ~eascape_door_walk;
+    return;
+}
+if ($quick = false) {
+    ~tbw_say(9, "<p,neutral>Hey there, you wanna go in there to chop da special wood, it's gonna cost you's 100 trading sticks my friend.");
+    if (~p_choice2("Ok, I'll pay 100 trading sticks to enter.", 1, "Nah thanks, I'll give it a miss at the moment I think.", 2) = 2) {
+        ~chatplayer("<p,neutral>Nah thanks, I'll give it a miss at the moment I think.");
+        ~tbw_say(9, "<p,neutral>Fair enough, pop back if you change your mind.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Ok, I'll pay 100 trading sticks to enter.");
+}
+if (inv_total(inv, village_trade_sticks) < ^tbw_grove_fee) {
+    mes("You don't have enough trading sticks to enter the hardwood grove."); // ours
+    return;
+}
+inv_del(inv, village_trade_sticks, ^tbw_grove_fee);
+mes("You pay 100 trading sticks and gain access to the hardwood grove.");
+~eascape_door_walk;
+
+// ============================================================================== Gabooty (6)
+
+[opnpc1,tbwcu_gabooty_multinpc]
+@tbw_gabooty;
+
+[label,tbw_gabooty]
+if (~tbw_masked = true) @tbw_mask_scream(6);
+if (~tbw_auto_claim(6) = true) return;
+@tbw_gabooty_menu;
+
+[opnpc3,tbwcu_gabooty_multinpc]
+if (~tbw_masked = true) @tbw_mask_scream(6);
+~tbw_open_shop(tai_bwo_wannai_cooperative, "Gabooty's Tai Bwo Wannai Cooperative");
+
+[opnpc4,tbwcu_gabooty_multinpc]
+if (~tbw_masked = true) @tbw_mask_scream(6);
+~tbw_open_shop(tai_bwo_wannai_drinksies, "Gabooty's Tai Bwo Wannai Drinky Store");
+
+// both shops trade in trading sticks: they sell at the item's value and buy at 30% (the RS
+// wiki's prices; e.g. a tribal top 300, bought back for 90). The change per item in stock is ours
+// (the usual 2%).
+[proc,tbw_open_shop](inv $shop, string $title)
+%shop = $shop;
+%shop_currency = village_trade_sticks;
+%shop_buy = 300;
+%shop_sell = 1000;
+%shop_haggle = 20;
+if_settext(shop_template:com_76, $title);
+inv_transmit(inv, shop_template_side:inv);
+inv_transmit($shop, shop_template:inv);
+if_openmain_side(shop_template, shop_template_side);
+
+[label,tbw_gabooty_menu]
+def_int $choice;
+if (%gabootyshopchat = 1) {
+    $choice = ~p_choice5("Can you open the shop please?", 5, "What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else if (%cleanup_progress >= ^tbw_progress_told) {
+    $choice = ~p_choice4("What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else {
+    $choice = ~p_choice3("What do you do here?", 1, "Is there anything interesting to do here?", 2, "Ok, thanks.", 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you do here?");
+        ~tbw_say(6, "<p,neutral>Not much really... I run a local shop which earns me a few trading sticks, but that's about it. I keep myself to myself really.");
+        %gabootyshopchat = 1;
+        @tbw_gabooty_q1;
+    case 2 :
+        ~chatplayer("<p,quiz>Is there anything interesting to do around here?");
+        ~tbw_say(6, "<p,neutral>Sorry Bwana, I'm already busy, why not go and talk to Murcaily! He's around the village somewhere.");
+    case 3 : @tbw_claim(6);
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+    case 5 : ~tbw_open_shop(tai_bwo_wannai_cooperative, "Gabooty's Tai Bwo Wannai Cooperative");
+}
+
+[label,tbw_gabooty_q1]
+switch_int (~p_choice4("What are trading sticks?", 1, "You run a shop?", 2, "I want to ask another question.", 3, "Ok, thanks.", 4)) {
+    case 1 : @tbw_gabooty_sticks;
+    case 2 : @tbw_gabooty_shop;
+    case 3 : @tbw_gabooty_another;
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_gabooty_another]
+~chatplayer("<p,neutral>I want to ask another question.");
+~tbw_say(6, "<p,neutral>Sure, what do you want to ask?");
+@tbw_gabooty_menu;
+
+[label,tbw_gabooty_sticks]
+~chatplayer("<p,quiz>What are trading sticks?");
+~tbw_say(6, "<p,neutral>They're the local currency Bwana, it's used in Tai Bwo Wannai, there's usually some odd jobs that need doing around the village which you could do to earn some trading sticks.");
+~tbw_say(6, "<p,neutral>Or, if you have something which the local villagers might like, you could sell it to me and I'll pay you for it in trading sticks.");
+switch_int (~p_choice4("What sort of things do the local villagers like?", 1, "You run a shop?", 2, "I want to ask another question.", 3, "Ok, thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What sort of things do the local villagers like?");
+        ~tbw_say(6, "<p,happy>Gnome cocktails! It's amazing but we all just love them! Luckily I've managed to get stocks of the gnome made cocktails and I supply those to my favourite customers. However, many of the customers really like the cocktails");
+        ~tbw_say(6, "<p,happy>made by the adventurers passing through this way. If you ever happen to have any, bring them my way! I'll give you a good deal on it that's for sure!");
+        ~chatplayer("<p,quiz>How did the villagers ever get to try any gnome cocktails?");
+        ~tbw_say(6, "<p,neutral>I think it was that gnome pilot who crashed his glider, perhaps he had a little mini-bar on board? Come to think about it, you'd expect the little guy to get his stuff together and move on out of here wouldn't you? He");
+        ~tbw_say(6, "<p,neutral>must love the jungle to have stayed here so long!");
+        @tbw_gabooty_menu;
+    case 2 : @tbw_gabooty_shop;
+    case 3 : @tbw_gabooty_another;
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_gabooty_shop]
+~chatplayer("<p,quiz>You run a shop?");
+~tbw_say(6, "<p,happy>Yes, it's the Tai Bwo cooperative... catchy name huh! We sell a few local village trinkets and tools. Also, there are a few items that we're actually looking to stock for the locals' sake.");
+~tbw_say(6, "<p,neutral>If you happen across any of them please bring them to me, I'll pay a good price for them. I'm sure you'll find the prices very reasonable.");
+@tbw_gabooty_shopq;
+
+[label,tbw_gabooty_shopq]
+switch_int (~p_choice5("What are trading sticks?", 1, "You run a shop?", 2, "Can I take a look at what you have to sell?", 3, "Why do you only take one sort of Gnome cocktail?", 4, "I want to ask another question.", 5)) {
+    case 1 : @tbw_gabooty_sticks;
+    case 2 : @tbw_gabooty_shop;
+    case 3 :
+        ~chatplayer("<p,quiz>Can I take a look at what you have to sell?");
+        ~tbw_say(6, "<p,happy>Sure you can...which shop would you like to see? The Cooperative or Drinks store?");
+        switch_int (~p_choice3("The Cooperative", 1, "The Drinks Store", 2, "None thanks...", 3)) {
+            case 1 : ~tbw_open_shop(tai_bwo_wannai_cooperative, "Gabooty's Tai Bwo Wannai Cooperative");
+            case 2 : ~tbw_open_shop(tai_bwo_wannai_drinksies, "Gabooty's Tai Bwo Wannai Drinky Store");
+            case 3 : ~chatplayer("<p,neutral>None thanks...");
+        }
+    case 4 :
+        ~chatplayer("<p,quiz>Why do you only take one sort of Gnome cocktail?");
+        ~tbw_say(6, "<p,neutral>It's funny that actually. I've managed to get a good deal with the pilot of that gnome glider. He can supply me directly now. However, it's really interesting that the local villagers really like the gnome cocktails made by the");
+        ~tbw_say(6, "<p,neutral>adventurers passing through this way.");
+        ~chatplayer("<p,quiz>Why, what's the difference?");
+        ~tbw_say(6, "<p,happy>I think it may just be that they're made fresher, or there is a slight twist in the flavour of the drink, you know, a little more of this, a little less of that, it all adds up and makes for an interesting tipple!");
+        @tbw_gabooty_shopq;
+    case 5 : @tbw_gabooty_another;
+}
+
+// =============================================================================== Safta Doc (5)
+// He makes the gem machetes: 3 opals/jades/red topaz (cut or uncut), a gout tuber and 300/600/1200
+// trading sticks.
+
+[opnpc1,tbwcu_safta_doc_multinpc]
+@tbw_safta;
+
+[label,tbw_safta]
+if (~tbw_masked = true) @tbw_mask_scream(5);
+if (~tbw_auto_claim(5) = true) return;
+@tbw_safta_menu;
+
+[label,tbw_safta_menu]
+def_int $choice;
+if (%cleanup_progress >= ^tbw_progress_told) {
+    $choice = ~p_choice4("What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else {
+    $choice = ~p_choice3("What do you do here?", 1, "Is there anything interesting to do here?", 2, "Ok, thanks.", 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you do here?");
+        ~tbw_say(5, "<p,happy>I's been making da machetes for Gabooty's shop Bwana!");
+        ~tbw_say(5, "<p,neutral>If you want me to make you a machete we can do a deal if you like.");
+        switch_int (~p_choice3("Yes, I'd like to get a machete.", 1, "No thanks, but I'd like to ask another question.", 2, "No thanks, I have to go.", 3)) {
+            case 1 :
+                ~chatplayer("<p,happy>Yes, I'd like to get a machete.");
+                ~tbw_say(5, "<p,neutral>Ok Bwana, here's the deal. There are three gem bladed machete types, in order of quality and hacking proficiency, they're ordered from low to high as follows.");
+                @tbw_safta_machetes;
+            case 2 : @tbw_safta_menu;
+            case 3 : ~chatplayer("<p,neutral>No thanks, I have to go.");
+        }
+    case 2 : @tbw_anything_interesting(5);
+    case 3 : @tbw_claim(5);
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_safta_machetes]
+switch_int (~p_choice4("Opal machete.", 1, "Jade machete.", 2, "Red Topaz machete.", 3, "Talk to Safta-doc", 4)) {
+    case 1 : @tbw_safta_offer(machette_opal);
+    case 2 : @tbw_safta_offer(machette_jade);
+    case 3 : @tbw_safta_offer(machette_redtopaz);
+    case 4 :
+        ~tbw_say(5, "<p,quiz>So Bwana, do you like the look of the machetes?");
+        @tbw_safta_why;
+}
+
+[label,tbw_safta_why]
+switch_int (~p_choice5("Why do you need gems?", 1, "Why do you need a gout plant tuber?", 2, "Why is it so expensive?", 3, "Let me see the machetes again.", 4, "Ok, thanks.", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why do you need gems?");
+        ~tbw_say(5, "<p,neutral>They're tougher than just metal on its own, plus it's the only such resource naturally available in this region.");
+        @tbw_safta_why;
+    case 2 :
+        ~chatplayer("<p,quiz>Why do you need a gout plant tuber?");
+        ~tbw_say(5, "<p,neutral>It's one of the harder to find resources which I mix with other ingredients in order to bind the ground down gem dust to the surface of the metal bladed machete.");
+        ~tbw_say(5, "<p,neutral>You can sometimes, if you're lucky, find the plant if you hack away at the jungle around here. You'll need to find a way to dig up the tubers though, they're the important part of the plant.");
+        @tbw_safta_why;
+    case 3 :
+        ~chatplayer("<p,quiz>Why is it so expensive?");
+        ~tbw_say(5, "<p,angry>Expensive bwana, it's quite reasonably priced if you ask me. I can make it cheaper than Gabooty charges for it, that's for sure. And after all, I have to earn a living around here as well you know, I have children to feed!");
+        @tbw_safta_why;
+    case 4 : @tbw_safta_machetes;
+    case 5 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_safta_offer](namedobj $machete)
+def_string $gem_name;
+def_int $sticks;
+def_string $text;
+switch_obj ($machete) {
+    case machette_opal :
+        $gem_name = "Opal";
+        $sticks = 300;
+        $text = "Opal bladed machete - Safta doc needs the following to make this machete : 3 opals - cut or uncut, 1 gout tuber plant and 300 trading sticks.";
+    case machette_jade :
+        $gem_name = "Jade";
+        $sticks = 600;
+        $text = "Jade bladed machete - Safta doc needs the following to make this machete : 3 Jades - cut or uncut, 1 gout tuber plant and 600 trading sticks.";
+    case default :
+        $gem_name = "Red Topaz";
+        $sticks = 1200;
+        $text = "Red Topaz bladed machete - Safta doc needs the following to make this machete : 3 Red Topaz - cut or uncut, 1 gout tuber plant and 1200 trading sticks.";
+}
+~objbox($machete, $text, 250, 0, divide(^objbox_height, 2));
+if (~p_choice2("Order the <$gem_name> machete.", 1, "Go back to machete descriptions", 2) = 2) {
+    @tbw_safta_machetes;
+}
+switch_obj ($machete) {
+    case machette_opal : ~tbw_say(5, "<p,neutral>Ok Bwana, if you want to order the opal machete, I need 3 opals, either cut or uncut, 1 gout plant tuber and 300 trading sticks please.");
+    case machette_jade : ~tbw_say(5, "<p,neutral>Ok Bwana, if you want to order the Jade machete, I need 3 jades, either cut or uncut, 1 gout plant tuber and 600 trading sticks please.");
+    case default : ~tbw_say(5, "<p,neutral>Ok Bwana, if you want to order the Red Topaz machete, I need 3 Red Topaz, either cut or uncut, 1 gout plant tuber and 1200 trading sticks please.");
+}
+def_obj $cut;
+def_obj $uncut;
+switch_obj ($machete) {
+    case machette_opal : $cut = opal; $uncut = uncut_opal;
+    case machette_jade : $cut = jade; $uncut = uncut_jade;
+    case default : $cut = red_topaz; $uncut = uncut_red_topaz;
+}
+if (inv_total(inv, village_trade_sticks) < $sticks | add(inv_total(inv, $cut), inv_total(inv, $uncut)) < 3 | inv_total(inv, village_rare_tuber) < 1) {
+    // the transcripts only have the sticks line; ours for missing gems or a tuber too
+    ~chatplayer("<p,sad>I don't have enough trading sticks, sorry.");
+    ~tbw_say(5, "<p,neutral>Ok Bwana, come back when you have them.");
+    return;
+}
+// uncut gems go first (ours)
+def_int $from_uncut = min(3, inv_total(inv, $uncut));
+if ($from_uncut > 0) {
+    inv_del(inv, $uncut, $from_uncut);
+}
+if ($from_uncut < 3) {
+    inv_del(inv, $cut, sub(3, $from_uncut));
+}
+inv_del(inv, village_rare_tuber, 1);
+inv_del(inv, village_trade_sticks, $sticks);
+inv_add(inv, $machete, 1);
+// the RS transcript has the red topaz line; the others follow it
+~tbw_say(5, "<p,happy>There you go Bwana, a nice new <$gem_name> machete for you.");
+
+// =============================================================================== Rionasta (10)
+// The parcel service: 10 trading sticks an item (stacks pay for every item, the OSRS wiki), straight
+// into your bank. No currency, and no Karamjan rum.
+
+[opnpc1,tbwcu_rionasta_multinpc]
+@tbw_rionasta;
+
+[label,tbw_rionasta]
+if (~tbw_masked = true) @tbw_mask_scream(10);
+if (~tbw_auto_claim(10) = true) return;
+@tbw_rionasta_menu;
+
+[label,tbw_rionasta_menu]
+def_int $choice;
+if (%cleanup_progress >= ^tbw_progress_told) {
+    $choice = ~p_choice4("What do you do here?", 1, "Is there anything interesting to do here?", 2, "I've been doing some work around the village.", 3, "Ok, thanks.", 4);
+} else {
+    $choice = ~p_choice3("What do you do here?", 1, "Is there anything interesting to do here?", 2, "Ok, thanks.", 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do you do here?");
+        ~tbw_say(10, "<p,happy>Well, it's funny you should ask that actually, I run the local parcel service to the mainland.");
+        ~chatplayer("<p,confused>Parcel service?");
+        ~tbw_say(10, "<p,neutral>Yes, we sometimes get asked to send items back to the mainland. We can send items to individuals' bank accounts, for a small fee of course.");
+        @tbw_rionasta_parcel_menu;
+    case 2 : @tbw_anything_interesting(10);
+    case 3 : @tbw_claim(10);
+    case 4 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_rionasta_parcel_menu]
+switch_int (~p_choice3("How much does it cost?", 1, "Can I send a parcel please?", 2, "Ok, thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>How much does it cost?");
+        ~tbw_say(10, "<p,neutral>It costs 10 trading sticks per item, unfortunately, even stackable items cost the same.");
+        @tbw_rionasta_cost_menu;
+    case 2 : @tbw_rionasta_send;
+    case 3 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_rionasta_cost_menu]
+switch_int (~p_choice3("What are trading sticks and how do I get some?", 1, "Can I send a parcel please?", 2, "Ok, thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What are trading sticks and how do I get some?");
+        ~tbw_say(10, "<p,neutral>Trading sticks are our local currency, you could perhaps earn some trading sticks by doing some work around the village.");
+        ~tbw_say(10, "<p,neutral>Have a chat with Murcaily, I think he was looking for someone to help him, he works near the hardwood grove to the east of Trufitus' hut.");
+        @tbw_rionasta_cost_menu;
+    case 2 : @tbw_rionasta_send;
+    case 3 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,tbw_rionasta_send]
+~chatplayer("<p,quiz>Can I send a parcel please?");
+if (inv_total(inv, village_trade_sticks) < ^tbw_parcel_fee) {
+    ~tbw_say(10, "<p,sad>It costs at least 10 trading sticks to use this service. Sorry but you don't have enough.");
+    switch_int (~p_choice2("What are trading sticks and how do I get some?", 1, "Ok, thanks.", 2)) {
+        case 1 :
+            ~chatplayer("<p,quiz>What are trading sticks and how do I get some?");
+            ~tbw_say(10, "<p,neutral>Trading sticks are our local currency, you could perhaps earn some trading sticks by doing some work around the village.");
+            ~tbw_say(10, "<p,neutral>Have a chat with Murcaily, I think he was looking for someone to help him, he works near the hardwood grove to the east of Trufitus' hut.");
+        case 2 : ~chatplayer("<p,neutral>Ok, thanks.");
+    }
+    return;
+}
+~tbw_say(10, "<p,happy>Of course...which items would you like to send to your bank?");
+inv_transmit(inv, inter_290:com_2);
+if_openmain(inter_290);
+
+[if_close,inter_290]
+inv_stoptransmit(inter_290:com_2);
+
+[inv_button1,inter_290:com_2]
+// ours: what "Value" says
+def_obj $obj = inv_getobj(inv, last_slot);
+if ($obj = null) return;
+mes("<oc_name($obj)>: sending this costs <tostring(multiply(^tbw_parcel_fee, inv_total(inv, $obj)))> trading sticks (10 an item).");
+[inv_button2,inter_290:com_2] @tbw_parcel(last_slot, 1);
+[inv_button3,inter_290:com_2] @tbw_parcel(last_slot, 5);
+[inv_button4,inter_290:com_2] @tbw_parcel(last_slot, ^max_32bit_int);
+[inv_button5,inter_290:com_2]
+def_int $slot = last_slot;
+p_countdialog;
+if (last_int <= 0) return;
+@tbw_parcel($slot, last_int);
+
+[label,tbw_parcel](int $slot, int $wanted)
+def_obj $obj = inv_getobj(inv, $slot);
+if ($obj = null) return;
+switch_obj (oc_uncert($obj)) {
+    case coins, village_trade_sticks, tzhaar_token, fake_coins :
+        mes("You cannot send any form of currency through the parcel service");
+        return;
+    case karamja_rum :
+        mes("The villager refuses to send this through the parcel system.");
+        return;
+}
+if (~bank_check_nobreak($obj) = true) {
+    return;
+}
+def_int $count = min($wanted, inv_total(inv, $obj));
+def_int $affordable = divide(inv_total(inv, village_trade_sticks), ^tbw_parcel_fee);
+if ($affordable < 1) {
+    mes("You don't have enough trading sticks to send anything."); // ours
+    return;
+}
+if ($count > $affordable) {
+    $count = $affordable;
+    mes("You only have enough trading sticks to send <tostring($count)>."); // ours
+}
+def_int $before = inv_total(inv, $obj);
+~bank_deposit_request(inv, $obj, $count, $slot);
+def_int $sent = sub($before, inv_total(inv, $obj));
+if ($sent > 0) {
+    inv_del(inv, village_trade_sticks, multiply($sent, ^tbw_parcel_fee));
+}

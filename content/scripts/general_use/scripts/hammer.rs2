@@ -2,5 +2,9 @@
 switch_obj (last_useitem) {
     case red_topaz, opal, jade, uncut_red_topaz, uncut_opal, uncut_jade : mes("You can't think of any reason to do this.");
     case coconut : ~coconut_break(last_useslot); // EASCape
+    // EASCape: broodoo shields (Tai Bwo Wannai Clean-Up, minigames/game_tbw_cleanup/tbw_npcs.rs2)
+    case broodoomask_combat : @tbw_make_shield(broodoomask_combat, broodoo_combatshield_10, last_useslot, hammer);
+    case broodoomask_poison : @tbw_make_shield(broodoomask_poison, broodoo_poisonshield_10, last_useslot, hammer);
+    case broodoomask_disease : @tbw_make_shield(broodoomask_disease, broodoo_diseaseshield_10, last_useslot, hammer);
     case default : ~displaymessage(^dm_default);
 }
