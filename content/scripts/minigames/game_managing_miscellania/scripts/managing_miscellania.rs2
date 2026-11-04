@@ -122,6 +122,10 @@ if ($deposit_amt > 0) {
 
 // Withdraw
 [if_button,inter_210:com_89]
+// EASCape: the coffers want the Bank PIN too (OSRS and RS wikis; ours: that it was so in 2005)
+if (~bankpin_needed = true) {
+    @bankpin_request(^bankpin_after_coffers);
+}
 if (%misc_coffers = 0) {
     ~mesbox("There are no coins to withdraw.");
     ~open_manage_miscellania_interface;

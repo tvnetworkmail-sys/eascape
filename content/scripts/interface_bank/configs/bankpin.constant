@@ -1,0 +1,25 @@
+// EASCape: Bank PIN (19 September 2005). %bankpin_status (cache varbit, 2 bits of the perm varp bankpin)
+^bankpin_none = 0
+^bankpin_pending = 1 // a requested PIN (or a requested change, when %bankpin_true is set) is waiting
+^bankpin_active = 2
+^bankpin_deleting = 3 // "I don't know it": the PIN goes when the recovery delay is up
+
+// what the entry screen (bankpin_main) is asking for: %bankpin_mode (ours)
+^bankpin_mode_unlock = 1
+^bankpin_mode_change_check = 2
+^bankpin_mode_delete_check = 3
+^bankpin_mode_new_first = 4
+^bankpin_mode_new_second = 5
+^bankpin_mode_change_first = 6
+^bankpin_mode_change_second = 7
+
+// the settings screen's "Do you really wish to do that?" box: %bankpin_confirm (ours)
+^bankpin_confirm_set = 1
+^bankpin_confirm_delete = 2
+^bankpin_confirm_pending = 3
+
+// what happens after the PIN is right: %bankpin_after (ours)
+^bankpin_after_bank = 1
+^bankpin_after_coffers = 2
+
+^bankpin_new_wait = 10080 // minutes: 7 days, from the 19 September 2005 news post

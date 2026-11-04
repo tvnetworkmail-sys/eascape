@@ -2437,3 +2437,36 @@ mes("Lyre: Rellekka. ::wbtele 12 for the ladder down to the kings, ::wbtele 13 f
 [debugproc,rellekka]
 if (p_finduid(uid) = false) return;
 p_telejump(map_findsquare(0_41_56_38_60, 0, 2, ^map_findsquare_lineofwalk));
+
+// ---------------------------------------------------------------- Bank PIN checks (bank_pin.rs2)
+// ::pinactive - whatever is pending happens now: a requested PIN (or change) goes live, a
+// forgotten PIN's deletion goes through. ::pinclear - no PIN at all. ::pinsession - forgets that
+// you entered your PIN this login (and any wrong-try lockout), so the next bank asks again.
+[debugproc,pinactive]
+if (p_finduid(uid) = false) return;
+def_int $status = %bankpin_status;
+if ($status ! ^bankpin_pending & $status ! ^bankpin_deleting) {
+    mes("Nothing is pending (status <tostring($status)>: 0 none, 2 active).");
+    return;
+}
+%bankpin_time = date_minutes;
+def_boolean $activated = ~bankpin_update;
+if ($status = ^bankpin_deleting) {
+    mes("Your Bank PIN has been deleted (the recovery delay is up).");
+    return;
+}
+mes("Your Bank PIN is active now. It'll be asked for at the next bank (::pinsession to forget this login's entry).");
+
+[debugproc,pinclear]
+if (p_finduid(uid) = false) return;
+~bankpin_clear;
+%bankpin_tries = 0;
+%bankpin_lockout = 0;
+mes("Bank PIN removed.");
+
+[debugproc,pinsession]
+if (p_finduid(uid) = false) return;
+%bankpin_unlocked = 0;
+%bankpin_tries = 0;
+%bankpin_lockout = 0;
+mes("This login's PIN entry is forgotten; the next bank will ask for it.");

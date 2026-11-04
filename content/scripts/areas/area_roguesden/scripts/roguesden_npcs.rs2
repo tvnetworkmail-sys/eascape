@@ -1,6 +1,6 @@
 // EASCape: the Rogues' Den people (Rogues' Den + Tweaks, 22 June 2005). Dialogue from Void
 // (BrianORichard.kt, MartinThwait.kt, EmeraldBenedict.kt); Martin's stock is the cache's own
-// roguesden_shop. Void's skillcape and bank PIN options came later and are left out. Brian's level
+// roguesden_shop. Void's skillcape option came later and is left out; its PIN option is in (Bank PIN, Sep 2005). Brian's level
 // checks and his lines once you have been let in are the OSRS wiki's (Transcript:Brian O'Richard);
 // the maze is roguesden_maze.rs2.
 
@@ -90,8 +90,13 @@ if (npc_range(coord) > 2) {
     return;
 }
 ~chatnpcrange("<p,shifty>Got anything you don't want to lose?");
-if (~p_choice2("Yes actually, can you help?", 1, "Yes thanks, and I'll keep hold of it too.", 2) = 1) {
+// EASCape: Void's PIN option (Bank PIN, 19 September 2005)
+def_int $choice = ~p_choice3("Yes actually, can you help?", 1, "Yes, but can you show me my PIN settings?", 3, "Yes thanks, and I'll keep hold of it too.", 2);
+if ($choice = 1) {
     ~chatplayer("<p,quiz>Yes actually, can you help?");
     @openbank;
+}
+if ($choice = 3) {
+    @open_bank_pin_setting;
 }
 ~chatplayer("<p,shock>Yes thanks, and I'll keep hold of it too.");

@@ -2,7 +2,12 @@
 ~chatplayer("<p,quiz>Hello, what are you doing out here?");
 ~chatnpc("<p,happy>I'm a banker, the only one around these dangerous parts.");
 
-def_int $choice = ~p_choice2("Cool, I'd like to access my bank account please.", 1, "Well, now I know.", 2);
+// EASCape: Void's PIN option (Bank PIN, 19 September 2005)
+def_int $choice = ~p_choice3("Cool, I'd like to access my bank account please.", 1, "Right, so can I check my PIN settings?", 3, "Well, now I know.", 2);
+if ($choice = 3) {
+    ~chatplayer("<p,quiz>Right, so can I check my PIN settings?");
+    @open_bank_pin_setting;
+}
 if ($choice = 2) {
     ~chatplayer("<p,neutral>Well, now I know.");
     ~chatnpc("<p,neutral>Knowledge is power my friend.");

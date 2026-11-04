@@ -37,6 +37,9 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::miscstatus` | Managing Miscellania check: approval % (and out of 127), coffer, resource points, minutes to the next daily update, how the 10 workers are split (herbs or flax) and what Advisor Ghrim would hand over if you collected now. |
 | `::miscday 3` | Pretends that many days (1-30) have passed, runs the kingdom's daily update and shows the coffer and approval before and after, then `::miscstatus`. Needs Throne of Miscellania done (`::questdone misc`). |
 | `::miscapproval 75` | Sets your kingdom approval to that percentage. |
+| `::pinactive` | Bank PIN: whatever is waiting happens now. A requested PIN (7 days) or a changed PIN goes live; a forgotten PIN's deletion (3 or 7 days) goes through |
+| `::pinclear` | Bank PIN: removes your PIN and anything pending, and lifts a wrong-PIN lockout |
+| `::pinsession` | Bank PIN: forgets that you entered your PIN this login (and lifts a wrong-PIN lockout), so the next bank asks for it again, as if you'd logged out and back in |
 | `::farmgrow` | Grows every planted patch straight to harvest, with no disease |
 | `::farmtick 16` | Runs that many 5-minute growth ticks now (most 128), disease chances included. 16 ticks is 80 minutes: herbs go from seed to grown |
 | `::jewels` | One of each 2006 enchanted jewellery piece in your pack, fully charged (glory, dueling, games necklace, wealth, life, recoil, forging) |

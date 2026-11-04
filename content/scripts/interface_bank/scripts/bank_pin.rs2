@@ -1,6 +1,583 @@
+// EASCape: Bank PIN (19 September 2005, "Security feature - Bank PIN"). A 4-digit PIN on the bank,
+// asked for before the bank opens, at most once each login. A requested PIN only goes live 7 days
+// later; "I don't know it" deletes the PIN after the recovery delay (3 or 7 days).
+// Sources: Void (BankPin.kt, BankPinSettings.kt, BankPinEntry.kt) first, then 2009scape
+// (BankPinManager.java) and 2006Scape (BankPin.java: the digit hints and the interface ids), the
+// update's news post and the RS/OSRS wiki "Bank PIN" pages. The interfaces bankpin_main and
+// bankpin_settings are the 377 cache's; they have no client scripts, so every text is sent from here.
+//
+// State: %bankpin_true (the PIN, 0 = none; 0000 can never be chosen, it's an easy guess),
+// %bankpin_next (a requested PIN), %bankpin_status (^bankpin_*), %bankpin_delay (0: 3 days,
+// 1: 7 days), %bankpin_time (when a pending PIN or a deletion comes due), all saved. This login only:
+// %bankpin_unlocked, the keypad %bankpin_a..j, %bankpin_counter (digits clicked), %bankpin_guess.
+
+// ---------------------------------------------------------------- state
+
+// a pending PIN, change or deletion that's come due takes effect; true if a PIN has just gone live
+[proc,bankpin_update]()(boolean)
+if (%bankpin_status = ^bankpin_pending & date_minutes >= %bankpin_time) {
+    %bankpin_true = %bankpin_next;
+    %bankpin_next = 0;
+    %bankpin_time = 0;
+    %bankpin_status = ^bankpin_active;
+    return(true);
+}
+if (%bankpin_status = ^bankpin_deleting & date_minutes >= %bankpin_time) {
+    ~bankpin_clear;
+}
+return(false);
+
+[proc,bankpin_clear]
+%bankpin_true = 0;
+%bankpin_next = 0;
+%bankpin_time = 0;
+%bankpin_status = ^bankpin_none;
+%bankpin_unlocked = 0;
+
+// a PIN is in force and hasn't been entered this login (a PIN still waiting its 7 days counts too:
+// 2009scape asks whether you asked for it)
+[proc,bankpin_needed]()(boolean)
+def_boolean $activated = ~bankpin_update;
+if (%bankpin_status ! ^bankpin_none & %bankpin_unlocked = 0) {
+    return(true);
+}
+return(false);
+
+[proc,bankpin_recovery_days]()(int)
+if (%bankpin_delay = 1) return(7);
+return(3);
+
+// whole days (rounded up) until %bankpin_time
+[proc,bankpin_days]()(int)
+def_int $left = calc(%bankpin_time - date_minutes);
+if ($left <= 0) return(0);
+return(calc(($left + 1439) / 1440));
+
+[proc,bankpin_days_text](int $days)(string)
+if ($days = 1) return("1 day");
+return("<tostring($days)> days");
+
+// Void and 2009scape: four of a kind, or each digit one up or down from the last (1234, 8767)
+[proc,bankpin_easy_guess](int $pin)(boolean)
+def_int $d1 = calc($pin / 1000);
+def_int $d2 = calc($pin / 100 % 10);
+def_int $d3 = calc($pin / 10 % 10);
+def_int $d4 = calc($pin % 10);
+if ($d1 = $d2 & $d2 = $d3 & $d3 = $d4) return(true);
+if (abs(calc($d2 - $d1)) = 1 & abs(calc($d3 - $d2)) = 1 & abs(calc($d4 - $d3)) = 1) return(true);
+return(false);
+
+// ---------------------------------------------------------------- asking for the PIN
+
+// [label,openbank] (and the Miscellania coffers) come here when ~bankpin_needed is true
+[label,bankpin_request](int $after)
+%bankpin_after = $after;
+if (%bankpin_status = ^bankpin_pending & %bankpin_true = 0) {
+    // 2009scape: a PIN that hasn't gone live yet: "did you ask for this?"
+    ~bankpin_settings_open;
+    ~bankpin_settings_refresh;
+    ~bankpin_confirm(^bankpin_confirm_pending, "A PIN will be set on your bank account in another <~bankpin_days_text(~bankpin_days)>.", "Yes, I asked for this. I want this PIN.", "No, I didn't ask for this. Cancel it.");
+    return;
+}
+if (map_clock < %bankpin_lockout) {
+    @bankpin_lockout_statement;
+}
+~bankpin_entry_open(^bankpin_mode_unlock);
+
+[label,bankpin_lockout_statement]
+if_close;
+// Void: seconds left, shown as minutes
+def_int $seconds = calc((%bankpin_lockout - map_clock) * 6 / 10);
+if ($seconds <= 60) {
+    ~mesbox("You will be able to access your bank in less than 1 minute.");
+} else {
+    ~mesbox("You will be able to access your bank pin in <tostring(calc(($seconds + 59) / 60))> minutes.");
+}
+
+[label,bankpin_after]
+def_int $after = %bankpin_after;
+%bankpin_after = 0;
+if ($after = ^bankpin_after_coffers) {
+    // ours: the coffers' window comes back; click Withdraw again
+    ~open_manage_miscellania_interface;
+    return;
+}
+@openbank;
+
+// ---------------------------------------------------------------- the entry screen (bankpin_main)
+
+[proc,bankpin_entry_open](int $mode)
+if_openmain(bankpin_main);
+%bankpin_confirm = 0;
+if (%bankpin_status = ^bankpin_deleting) {
+    def_int $days = ~bankpin_days;
+    if ($days = 1) {
+        if_settext(bankpin_main:title, "YOUR PIN WILL BE DELETED IN 1 DAY");
+    } else {
+        if_settext(bankpin_main:title, "YOUR PIN WILL BE DELETED IN <tostring($days)> DAYS");
+    }
+} else {
+    if_settext(bankpin_main:title, ""); // 2006Scape: blank unless a deletion is on its way
+}
+// "I don't know it." is only there when asking for the PIN you have (Void)
+if ($mode = ^bankpin_mode_unlock | $mode = ^bankpin_mode_change_check | $mode = ^bankpin_mode_delete_check) {
+    if_sethide(bankpin_main:forgotten, false);
+} else {
+    if_sethide(bankpin_main:forgotten, true);
+}
+~bankpin_entry_stage($mode);
+
+// a fresh set of four digits for $mode
+[proc,bankpin_entry_stage](int $mode)
+%bankpin_mode = $mode;
+%bankpin_counter = 0;
+%bankpin_guess = 0;
+if ($mode = ^bankpin_mode_new_first | $mode = ^bankpin_mode_change_first) {
+    if_settext(bankpin_main:instruction, "Please choose a new FOUR DIGIT PIN using the buttons below.");
+} else if ($mode = ^bankpin_mode_new_second | $mode = ^bankpin_mode_change_second) {
+    if_settext(bankpin_main:instruction, "Now please enter that number again!");
+} else {
+    if_settext(bankpin_main:instruction, "Please enter your PIN using the buttons below.");
+}
+if_settext(bankpin_main:digit1, "?");
+if_settext(bankpin_main:digit2, "?");
+if_settext(bankpin_main:digit3, "?");
+if_settext(bankpin_main:digit4, "?");
+~bankpin_hint;
+~bankpin_shuffle;
+
+// 2006Scape's hints
+[proc,bankpin_hint]
+switch_int (%bankpin_counter) {
+    case 0 : if_settext(bankpin_main:digithint, "First click the FIRST digit");
+    case 1 : if_settext(bankpin_main:digithint, "Now click the SECOND digit");
+    case 2 : if_settext(bankpin_main:digithint, "Now click the THIRD digit");
+    case default : if_settext(bankpin_main:digithint, "Now click the LAST digit");
+}
+
+[proc,bankpin_entry_reset]
+%bankpin_mode = 0;
+%bankpin_counter = 0;
+%bankpin_guess = 0;
+%bankpin_first = 0;
+
+// the ten buttons get the digits 0-9 in a new random order (the cache's bankpin_a..j hold which
+// digit is on which button), and each digit sits somewhere new on its button (the wikis: "the
+// numbers move around within their red boxes"; ours: how far, inside the 64x64 button)
+[proc,bankpin_shuffle]
+def_int $i = 0;
+while ($i < 10) {
+    ~bankpin_setslot($i, $i);
+    $i = calc($i + 1);
+}
+def_int $j = 0;
+def_int $swap = 0;
+$i = 9;
+while ($i > 0) {
+    $j = random(calc($i + 1));
+    $swap = ~bankpin_getslot($i);
+    ~bankpin_setslot($i, ~bankpin_getslot($j));
+    ~bankpin_setslot($j, $swap);
+    $i = calc($i - 1);
+}
+~bankpin_drawslot(bankpin_main:a_text, %bankpin_a, 33, 103);
+~bankpin_drawslot(bankpin_main:b_text, %bankpin_b, 127, 103);
+~bankpin_drawslot(bankpin_main:c_text, %bankpin_c, 221, 103);
+~bankpin_drawslot(bankpin_main:d_text, %bankpin_d, 305, 103);
+~bankpin_drawslot(bankpin_main:e_text, %bankpin_e, 33, 175);
+~bankpin_drawslot(bankpin_main:f_text, %bankpin_f, 127, 175);
+~bankpin_drawslot(bankpin_main:g_text, %bankpin_g, 221, 175);
+~bankpin_drawslot(bankpin_main:h_text, %bankpin_h, 33, 247);
+~bankpin_drawslot(bankpin_main:i_text, %bankpin_i, 127, 247);
+~bankpin_drawslot(bankpin_main:j_text, %bankpin_j, 221, 247);
+
+// $x, $y: the button's corner (bankpin_main.if); the 9x14 digit stays inside it
+[proc,bankpin_drawslot](component $com, int $digit, int $x, int $y)
+if_settext($com, tostring($digit));
+if_setposition($com, calc($x + 4 + random(47)), calc($y + 4 + random(43)));
+
+[proc,bankpin_getslot](int $slot)(int)
+switch_int ($slot) {
+    case 0 : return(%bankpin_a);
+    case 1 : return(%bankpin_b);
+    case 2 : return(%bankpin_c);
+    case 3 : return(%bankpin_d);
+    case 4 : return(%bankpin_e);
+    case 5 : return(%bankpin_f);
+    case 6 : return(%bankpin_g);
+    case 7 : return(%bankpin_h);
+    case 8 : return(%bankpin_i);
+    case default : return(%bankpin_j);
+}
+
+[proc,bankpin_setslot](int $slot, int $digit)
+switch_int ($slot) {
+    case 0 : %bankpin_a = $digit;
+    case 1 : %bankpin_b = $digit;
+    case 2 : %bankpin_c = $digit;
+    case 3 : %bankpin_d = $digit;
+    case 4 : %bankpin_e = $digit;
+    case 5 : %bankpin_f = $digit;
+    case 6 : %bankpin_g = $digit;
+    case 7 : %bankpin_h = $digit;
+    case 8 : %bankpin_i = $digit;
+    case default : %bankpin_j = $digit;
+}
+
+[if_button,bankpin_main:a_button] @bankpin_digit(%bankpin_a);
+[if_button,bankpin_main:b_button] @bankpin_digit(%bankpin_b);
+[if_button,bankpin_main:c_button] @bankpin_digit(%bankpin_c);
+[if_button,bankpin_main:d_button] @bankpin_digit(%bankpin_d);
+[if_button,bankpin_main:e_button] @bankpin_digit(%bankpin_e);
+[if_button,bankpin_main:f_button] @bankpin_digit(%bankpin_f);
+[if_button,bankpin_main:g_button] @bankpin_digit(%bankpin_g);
+[if_button,bankpin_main:h_button] @bankpin_digit(%bankpin_h);
+[if_button,bankpin_main:i_button] @bankpin_digit(%bankpin_i);
+[if_button,bankpin_main:j_button] @bankpin_digit(%bankpin_j);
+
+[label,bankpin_digit](int $digit)
+if (%bankpin_mode = 0 | %bankpin_counter >= 4) {
+    return;
+}
+%bankpin_guess = calc(%bankpin_guess * 10 + $digit);
+%bankpin_counter = calc(%bankpin_counter + 1);
+switch_int (%bankpin_counter) {
+    case 1 : if_settext(bankpin_main:digit1, "*");
+    case 2 : if_settext(bankpin_main:digit2, "*");
+    case 3 : if_settext(bankpin_main:digit3, "*");
+    case default : if_settext(bankpin_main:digit4, "*");
+}
+if (%bankpin_counter < 4) {
+    sound_synth(PIN_beep, 1, 0);
+    ~bankpin_hint;
+    ~bankpin_shuffle;
+    return;
+}
+@bankpin_entered(%bankpin_guess);
+
+[label,bankpin_entered](int $pin)
+def_int $mode = %bankpin_mode;
+if ($mode = ^bankpin_mode_new_first | $mode = ^bankpin_mode_change_first) {
+    %bankpin_first = $pin;
+    sound_synth(PIN_pending, 1, 0); // 2009scape
+    ~bankpin_entry_stage(calc($mode + 1));
+    return;
+}
+if ($mode = ^bankpin_mode_new_second | $mode = ^bankpin_mode_change_second) {
+    @bankpin_chosen($mode, $pin);
+}
+// checking the PIN you have
+if ($pin ! %bankpin_true) {
+    @bankpin_wrong;
+}
+%bankpin_unlocked = 1;
+%bankpin_tries = 0;
+%bankpin_lockout = 0;
+if ($mode = ^bankpin_mode_change_check) {
+    ~bankpin_entry_stage(^bankpin_mode_change_first);
+    if_sethide(bankpin_main:forgotten, true);
+    return;
+}
+if ($mode = ^bankpin_mode_delete_check) {
+    ~bankpin_entry_reset;
+    @bankpin_delete_now;
+}
+~bankpin_entry_reset;
+sound_synth(pillory_success, 1, 0); // 2009scape (the later PIN_success)
+mes("You have correctly entered your PIN.");
+@bankpin_after;
+
+[label,bankpin_chosen](int $mode, int $pin)
+def_int $first = %bankpin_first;
+~bankpin_entry_reset;
+~bankpin_settings_open;
+if (~bankpin_easy_guess($first) = true) {
+    ~bankpin_settings_refresh;
+    ~bankpin_messages("That number wouldn't be very", "hard to guess. Please try", "something different!", "", "", "", "", "", "");
+    return;
+}
+if ($pin ! $first) {
+    ~bankpin_settings_refresh;
+    ~bankpin_messages("Those numbers did not", "match.", "", "Your PIN has not been set;", "please try again if you wish", "to set a new PIN.", "", "", "");
+    return;
+}
+if ($mode = ^bankpin_mode_change_second) {
+    if ($pin = %bankpin_true) {
+        mes("Your current PIN matches your new one.");
+        ~bankpin_settings_refresh;
+        ~bankpin_default_messages;
+        return;
+    }
+    // Void: a new PIN in place of an old one waits out the recovery delay; the old one works till then
+    %bankpin_next = $pin;
+    %bankpin_status = ^bankpin_pending;
+    %bankpin_time = calc(date_minutes + ~bankpin_recovery_days * 1440);
+    mes("Your PIN change will take effect in <~bankpin_days_text(~bankpin_recovery_days)>.");
+    ~bankpin_settings_refresh;
+    ~bankpin_default_messages;
+    return;
+}
+// a first PIN: 7 days (the news post), then it's live
+%bankpin_true = 0;
+%bankpin_next = $pin;
+%bankpin_status = ^bankpin_pending;
+%bankpin_time = calc(date_minutes + ^bankpin_new_wait);
+~bankpin_settings_refresh;
+~bankpin_default_messages;
+
+[label,bankpin_wrong]
+if_close;
+sound_synth(pillory_wrong, 1, 0); // 2009scape (the later PIN_wrong)
+mes("The PIN you entered is incorrect.");
+%bankpin_tries = calc(%bankpin_tries + 1);
+if (%bankpin_tries < 2) {
+    return;
+}
+// Void and 2009scape: 10 seconds after two wrong tries, 15 after three, 1000 after four or more
+def_int $seconds = 1000;
+if (%bankpin_tries = 2) {
+    $seconds = 10;
+} else if (%bankpin_tries = 3) {
+    $seconds = 15;
+}
+%bankpin_lockout = calc(map_clock + ($seconds * 10 + 5) / 6);
+@bankpin_lockout_statement;
+
+[if_button,bankpin_main:forgotten]
+if (%bankpin_mode ! ^bankpin_mode_unlock & %bankpin_mode ! ^bankpin_mode_change_check & %bankpin_mode ! ^bankpin_mode_delete_check) {
+    return;
+}
+// Void: a pending change is dropped and the PIN is deleted once the recovery delay is up
+if (%bankpin_status ! ^bankpin_deleting) {
+    %bankpin_next = 0;
+    %bankpin_status = ^bankpin_deleting;
+    %bankpin_time = calc(date_minutes + ~bankpin_recovery_days * 1440);
+}
+if_close;
+~mesbox("Your PIN will be deleted in <~bankpin_days_text(~bankpin_days)>. If you remember it, you can cancel the deletion from your Bank PIN settings.");
+
+[if_button,bankpin_main:cancel] if_close;
+
+// no [if_close] scripts: they run without the player (no varp writes); every opening sets its state afresh
+
+// ---------------------------------------------------------------- the settings screen (bankpin_settings)
+
 [label,open_bank_pin_setting]
+def_boolean $activated = ~bankpin_update;
+~bankpin_settings_open;
+~bankpin_settings_refresh;
+~bankpin_default_messages;
+
+[proc,bankpin_settings_open]
 if_openmain(bankpin_settings);
+sound_synth(PIN_pending, 1, 0); // Void and 2009scape: the settings open with this
+%bankpin_confirm = 0;
+
+// status, delay and which buttons show (2009scape's PinStatus.draw)
+[proc,bankpin_settings_refresh]
+%bankpin_confirm = 0;
+if_settext(bankpin_settings:com_112, "Messages");
+if_settext(bankpin_settings:com_236, "Use the buttons below to change your PIN settings");
+if_settext(bankpin_settings:com_177, "<tostring(~bankpin_recovery_days)> days");
+def_int $status = %bankpin_status;
+if ($status = ^bankpin_none) {
+    if_settext(bankpin_settings:com_175, "NO PIN set");
+} else if ($status = ^bankpin_active) {
+    if_settext(bankpin_settings:com_175, "You have a PIN");
+} else {
+    if_settext(bankpin_settings:com_175, "PIN coming soon");
+}
+if_sethide(bankpin_settings:com_143, false);
+if_sethide(bankpin_settings:com_147, true);
+if_sethide(bankpin_settings:com_148, true);
+if_sethide(bankpin_settings:com_149, true);
+if_sethide(bankpin_settings:com_150, true);
+if_sethide(bankpin_settings:com_151, true);
+if_sethide(bankpin_settings:com_152, true);
+if ($status = ^bankpin_none) {
+    if_sethide(bankpin_settings:com_147, false);
+    if_sethide(bankpin_settings:com_148, false);
+} else if ($status = ^bankpin_active) {
+    if_sethide(bankpin_settings:com_149, false);
+    if_sethide(bankpin_settings:com_150, false);
+    if_sethide(bankpin_settings:com_151, false);
+} else {
+    if_sethide(bankpin_settings:com_152, false);
+}
+if_sethide(bankpin_settings:com_237, true);
+if_sethide(bankpin_settings:com_242, true);
+if_sethide(bankpin_settings:com_247, true);
+
+// what the Messages box says when nothing has just happened
+[proc,bankpin_default_messages]
+def_string $days = ~bankpin_days_text(~bankpin_days);
+if (%bankpin_status = ^bankpin_deleting) {
+    // Void
+    ~bankpin_messages("You have requested that", "your PIN be deleted. This", "will take effect in another", "<$days>.", "", "Your PIN stays active until", "then. To cancel, use the", "button on the left.", "");
+} else if (%bankpin_status = ^bankpin_pending & %bankpin_true ! 0) {
+    // Void
+    ~bankpin_messages("You have requested that", "your PIN be changed. This", "will take effect in another", "<$days>.", "", "Your old PIN stays active", "until then. To cancel, use", "the button on the left.", "");
+} else if (%bankpin_status = ^bankpin_pending) {
+    // 2009scape
+    ~bankpin_messages("You have requested that a", "PIN be set on your bank", "account. This will take effect", "in another <$days>.", "", "If you wish to cancel this", "PIN, please use the button", "on the left.", "");
+} else {
+    // Void and 2009scape
+    ~bankpin_messages("Customers are reminded that", "they should NEVER tell", "anyone their Bank PINs or", "passwords, nor should they", "ever enter their PINs on any", "website form.", "", "Have you read the PIN guide", "on the website?");
+}
+
+// the twelve lines of the Messages box (com_113..com_124); the last three are always blank
+[proc,bankpin_messages](string $m1, string $m2, string $m3, string $m4, string $m5, string $m6, string $m7, string $m8, string $m9)
+if_settext(bankpin_settings:com_113, $m1);
+if_settext(bankpin_settings:com_114, $m2);
+if_settext(bankpin_settings:com_115, $m3);
+if_settext(bankpin_settings:com_116, $m4);
+if_settext(bankpin_settings:com_117, $m5);
+if_settext(bankpin_settings:com_118, $m6);
+if_settext(bankpin_settings:com_119, $m7);
+if_settext(bankpin_settings:com_120, $m8);
+if_settext(bankpin_settings:com_121, $m9);
+if_settext(bankpin_settings:com_122, "");
+if_settext(bankpin_settings:com_123, "");
+if_settext(bankpin_settings:com_124, "");
+
+// the "Do you really wish to do that?" box over the settings (2009scape's toggleConfirmInterface)
+[proc,bankpin_confirm](int $confirm, string $question, string $yes, string $no)
+if_sethide(bankpin_settings:com_147, true);
+if_sethide(bankpin_settings:com_148, true);
+if_sethide(bankpin_settings:com_149, true);
+if_sethide(bankpin_settings:com_150, true);
+if_sethide(bankpin_settings:com_151, true);
+if_sethide(bankpin_settings:com_152, true);
+if_sethide(bankpin_settings:com_237, false);
+if_sethide(bankpin_settings:com_242, false);
+if_sethide(bankpin_settings:com_247, false);
+if_settext(bankpin_settings:com_179, $question);
+if_settext(bankpin_settings:com_242, $yes);
+if_settext(bankpin_settings:com_247, $no);
 sound_synth(PIN_pending, 1, 0);
-if_settext(bankpin_settings:com_113, "Customers are reminded that they should NEVER tell anyone their Bank PINs or passwords, nor should they ever enter their PINs on any website form.");
-if_settext(bankpin_settings:com_175, "No PIN set");
-if_settext(bankpin_settings:com_177, "7 Days");
+%bankpin_confirm = $confirm;
+
+// Set a PIN
+[if_button,bankpin_settings:com_147]
+if (%bankpin_status ! ^bankpin_none) return;
+~bankpin_confirm(^bankpin_confirm_set, "Do you really wish to set a PIN on your bank account?", "Yes, I really want a Bank PIN. I will never forget it!", "No, I might forget it!");
+
+// Change your recovery delay (no PIN / with a PIN)
+[if_button,bankpin_settings:com_148] @bankpin_toggle_delay;
+[if_button,bankpin_settings:com_151] @bankpin_toggle_delay;
+
+[label,bankpin_toggle_delay]
+if (%bankpin_status ! ^bankpin_none & %bankpin_status ! ^bankpin_active) return;
+if (%bankpin_delay = 1) {
+    %bankpin_delay = 0;
+} else {
+    %bankpin_delay = 1;
+}
+~bankpin_settings_refresh;
+// Void
+def_string $last = "haven't got one...";
+if (%bankpin_status = ^bankpin_active) $last = "do have one.";
+~bankpin_messages("Your recovery delay has", "now been set to <tostring(~bankpin_recovery_days)> days.", "", "You would have to wait this", "long to delete your PIN if", "you forgot it. But you", $last, "", "");
+
+// Change your PIN: the PIN you have first, every time (Void, 2009scape)
+[if_button,bankpin_settings:com_149]
+if (%bankpin_status ! ^bankpin_active) return;
+if (map_clock < %bankpin_lockout) {
+    @bankpin_lockout_statement;
+}
+~bankpin_entry_open(^bankpin_mode_change_check);
+
+// Delete your PIN
+[if_button,bankpin_settings:com_150]
+if (%bankpin_status ! ^bankpin_active) return;
+~bankpin_confirm(^bankpin_confirm_delete, "Do you really wish to delete your Bank PIN?", "Yes, I don't need a PIN anymore.", "No thanks, I'd rather keep the extra security.");
+
+// Cancel the PIN that's pending
+[if_button,bankpin_settings:com_152]
+def_int $status = %bankpin_status;
+if ($status = ^bankpin_pending & %bankpin_true = 0) {
+    @bankpin_cancel_new;
+}
+if ($status ! ^bankpin_pending & $status ! ^bankpin_deleting) return;
+%bankpin_next = 0;
+%bankpin_time = 0;
+%bankpin_status = ^bankpin_active;
+sound_synth(PIN_cancel, 1, 0);
+~bankpin_settings_refresh;
+// Void
+if ($status = ^bankpin_deleting) {
+    ~bankpin_messages("The PIN deletion has been", "cancelled.", "", "Your PIN remains active.", "", "", "", "", "");
+} else {
+    ~bankpin_messages("The PIN change has been", "cancelled.", "", "Your old PIN remains", "active.", "", "", "", "");
+}
+
+// 2009scape
+[label,bankpin_cancel_new]
+~bankpin_clear;
+%bankpin_after = 0;
+sound_synth(PIN_cancel, 1, 0);
+~bankpin_settings_refresh;
+~bankpin_messages("The PIN has been cancelled", "and will NOT be set.", "", "You still do not have a Bank", "PIN.", "", "", "", "");
+
+// Yes
+[if_button,bankpin_settings:com_242]
+def_int $confirm = %bankpin_confirm;
+%bankpin_confirm = 0;
+if ($confirm = ^bankpin_confirm_set) {
+    if (%bankpin_status ! ^bankpin_none) return;
+    ~bankpin_entry_open(^bankpin_mode_new_first);
+} else if ($confirm = ^bankpin_confirm_delete) {
+    if (%bankpin_status ! ^bankpin_active) return;
+    if (%bankpin_unlocked = 1) {
+        @bankpin_delete_now;
+    }
+    if (map_clock < %bankpin_lockout) {
+        @bankpin_lockout_statement;
+    }
+    ~bankpin_entry_open(^bankpin_mode_delete_check);
+} else if ($confirm = ^bankpin_confirm_pending) {
+    // 2009scape: yes, it's yours; on to the bank for this login
+    %bankpin_unlocked = 1;
+    @bankpin_after;
+}
+
+// No
+[if_button,bankpin_settings:com_247]
+def_int $confirm = %bankpin_confirm;
+%bankpin_confirm = 0;
+if ($confirm = ^bankpin_confirm_pending) {
+    @bankpin_cancel_new;
+}
+~bankpin_settings_refresh;
+~bankpin_messages("No changes made.", "", "", "", "", "", "", "", "");
+
+[label,bankpin_delete_now]
+~bankpin_clear;
+sound_synth(PIN_cancel, 1, 0);
+~bankpin_settings_open;
+~bankpin_settings_refresh;
+// Void and 2009scape
+~bankpin_messages("Your Bank PIN has now been", "deleted.", "", "This means that there is no", "PIN protection on your bank", "account.", "", "", "");
+
+// ---------------------------------------------------------------- login
+
+// the welcome screen's Bank PIN line (2009scape's PinStatus login messages)
+[proc,bankpin_welcome_text]()(string)
+def_boolean $activated = ~bankpin_update;
+if ($activated = true) {
+    return("Your Bank PIN has just\\nbecome active.");
+}
+def_string $days = ~bankpin_days_text(~bankpin_days);
+if (%bankpin_status = ^bankpin_pending & %bankpin_true = 0) {
+    return("Your Bank PIN will become\\nactive in another <$days>.");
+}
+if (%bankpin_status = ^bankpin_pending) {
+    return("Your new Bank PIN will become\\nactive in another <$days>."); // ours
+}
+if (%bankpin_status = ^bankpin_deleting) {
+    return("Your Bank PIN will be deleted\\nin another <$days>."); // ours
+}
+if (%bankpin_status = ^bankpin_active) {
+    return("You currently have a Bank PIN.");
+}
+return("You do not have a Bank PIN. Please visit a bank\\nif you would like one.");

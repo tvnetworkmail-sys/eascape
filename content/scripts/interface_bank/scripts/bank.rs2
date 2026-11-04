@@ -16,6 +16,10 @@ if(%bankinsert = 1) {
 [if_close,bank_main] @closebank;
 
 [label,openbank]
+// EASCape: Bank PIN (19 September 2005): every way into the bank asks for the PIN first, once a login
+if (~bankpin_needed = true) {
+    @bankpin_request(^bankpin_after_bank);
+}
 %bankcert = 0;
 ~reorganize_inv(bank);
 inv_transmit(inv, bank_side:inv);
