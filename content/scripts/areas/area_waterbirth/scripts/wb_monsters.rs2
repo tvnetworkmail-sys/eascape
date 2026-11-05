@@ -148,7 +148,8 @@ sound_synth(water_creature_attack, 1, 0);
 // Spinolyps have two attacks (OSRS wiki, Spinolyp; Mod Ash 3 Sep 2015: "Both attacks roll the
 // ranged accuracy against your ranged defence, but one deals magic damage and drains prayer"):
 // - a Water Strike-looking magic attack: a successful hit drains 1 prayer point
-// - a ranged attack like the ranged dagannoths' spines, which poisons
+// - a ranged attack like the ranged dagannoths' spines, which can poison
+// Stats are the OSRS wiki's (all.npc): 100 hp, 10/10/10 melee, 1 magic, 100 ranged, no attack bonuses.
 // Each hits up to 10 (eascape_maxhit), attack speed 4.
 // Which attack is used each time is 50/50 (ours; no source gives the split). Protect from Magic
 // blocks the magic one and Protect from Missiles the ranged one (ours: by the damage type).
@@ -184,10 +185,12 @@ if (randominc($attack_roll) > randominc($defence_roll)) {
     if ($magic = true) {
         if (~check_protect_prayer(^magic_style) = true) $damage = 0;
         spotanim_pl(waterstrike_impact, 92, $duration);
-        stat_sub(prayer, 1, 0);
+        // 2009scape SpinolypNPC: only a hit that does damage drains the prayer point
+        if ($damage > 0) stat_sub(prayer, 1, 0);
     } else {
         if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
-        ~npc_poison_player;
+        // 2009scape SpinolypNPC: a damaging ranged hit poisons 1 time in 20
+        if ($damage > 0 & random(20) = 0) ~npc_poison_player;
     }
     anim(%com_defendanim, $duration);
     queue(combat_damage_player, calc($duration / 30), $damage);
