@@ -50,6 +50,7 @@ if (loc_find(npc_coord, dagcave_invisibleblocking) = true) {
     loc_del(^wb_support_down_ticks);
 }
 npc_changetype($falling, ^wb_support_down_ticks);
+~sound_area(dagganoth_support_door, 0, npc_coord, 10); // EASCape: the cache's door-support sound
 npc_delay(2);
 npc_changetype($fallen, sub(^wb_support_down_ticks, 2));
 
@@ -98,6 +99,7 @@ gosub(npc_default_retaliate);
 def_player_uid $who = uid;
 npc_setmode(none);
 npc_changetype(dungeon_dagganoth_egg2, ^wb_egg_open_ticks);
+~sound_area(dagganoth_egg_open, 0, npc_coord, 5); // EASCape: the cache's egg-opening sound
 npc_delay(1);
 npc_changetype(dungeon_dagganoth_egg3, sub(^wb_egg_open_ticks, 2));
 npc_add(npc_coord, dagganoth_critter, ^wb_egg_open_ticks);
