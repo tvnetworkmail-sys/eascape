@@ -31,7 +31,8 @@ if ($hit = true) {
     if (npc_type = count_draynor & inv_total(inv, garlic) > 0) {
         $maxhit = add($maxhit, 1);
     }
-    if (npc_param(demonbane_vulnerable) = true & inv_total(worn, silverlight) > 0) {
+    // EASCape: Shadow of the Storm's dyed Silverlight and Darklight are demonbane too (Void: Weapon.isDemonbane)
+    if (npc_param(demonbane_vulnerable) = true & (inv_total(worn, silverlight) > 0 | inv_total(worn, agrith_silverlight_dyed) > 0 | inv_total(worn, darklight) > 0)) {
         $maxhit = scale(160, 100, %com_maxhit);
     }
     if((npc_param(slayer_category) = ^slayer_kurask | npc_param(slayer_category) = ^slayer_turoth) & inv_total(worn, slayer_leafbladed_spear) = 0) {

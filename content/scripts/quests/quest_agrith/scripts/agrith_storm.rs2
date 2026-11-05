@@ -1,0 +1,268 @@
+// EASCape: Shadow of the Storm - after the backwards ritual: Tanya and the ghosts, Evil Dave and
+// Eric's rubble in the passage, the falling rocks and the sandstorm, and bringing Father Badden,
+// Father Reen and the clay golem to the ritual. Words: the OSRS wiki's quest transcript (the RS
+// wiki's where it says so). The NPCs and locs are the 377 cache's own: agrith_tanya_falling and
+// agrith_tanya_ghost (their agrith_tanya and ghost at stage 90), agrith_dave_in_passage
+// (%agrith_convinced_dave 1, the map's spawn), agrith_wizard_rubble (Eric, at 90-110, the map's),
+// the sandstorms (agrith_sandstorm at 90-110, the map's), and the walking Evil Dave, Badden, Reen
+// (their varbits at 2) and golem (golem_clay 5). Ours: where Tanya falls and how many ghosts, how
+// much the rocks and the sandstorm hurt, and where the walkers go.
+
+// ---------------------------------------------------------------- Tanya
+[label,agrith_tanya_falls]
+def_coord $at = ^agrith_tanya_fall;
+npc_add($at, agrith_tanya_falling, 20);
+def_npc_uid $tanya = npc_uid;
+npc_add(movecoord($at, -1, 0, 0), agrith_tanya_ghost, 20);
+npc_facesquare($at);
+npc_anim(ghost_attack, 0);
+npc_add(movecoord($at, 1, 0, 1), agrith_tanya_ghost, 20);
+npc_facesquare($at);
+npc_anim(ghost_attack, 0);
+p_delay(1);
+if (npc_finduid($tanya) = true) npc_anim(human_death, 0);
+mes("You see Tanya killed by ghosts!");
+p_delay(3);
+// the OSRS wiki: her sigil (and bones) are left for you
+obj_add($at, agrith_sigil, 1, 300);
+obj_add($at, bones, 1, 300);
+~agrith_set(^agrith_gathering); // the cache's Tanya and ghosts are gone after 90
+
+// ---------------------------------------------------------------- Evil Dave in the passage
+[opnpc1,agrith_dave_in_passage] @agrith_dave_passage_talk;
+
+[label,agrith_dave_passage_talk]
+~agrith_dave("<p,scared>Eric's dead! Agrith-Naar killed him! That's EVIL!");
+~agrith_dave("<p,angry>I mean, it's bad! In a BAD way!");
+@agrith_dave_passage_menu(1, 1);
+
+[label,agrith_dave_passage_menu](int $what, int $praise)
+switch_int (~p_choice_some5("What happened?", $what, "You've got to get back to the throne room!", 2, "By using 'evil' as a term of praise...", calc($praise * 3), "", 0, "", 0)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What happened?");
+        ~agrith_dave("<p,scared>The ceiling collapsed without warning! When I moved towards the staircase the walls started to shake.");
+        ~agrith_dave("<p,scared>I'm scared of what will happen to me if I try to leave!");
+        @agrith_dave_passage_menu(0, $praise);
+    case 2 :
+        ~chatplayer("<p,angry>You've got to get back to the throne room!");
+        ~agrith_dave("<p,scared>But the portal is closing! We'll be trapped!");
+        ~chatplayer("<p,neutral>Our only hope is to summon Agrith-Naar again so I can kill him! But I need eight people.");
+        ~agrith_dave("<p,quiz>You can kill him?");
+        ~agrith_dave("<p,neutral>You'd better take this then. It was Eric's sigil. Everyone in the ritual will need one!");
+        if (inv_freespace(inv) = 0) {
+            ~agrith_dave("<p,neutral>But you'll need to free some inventory space first!"); // the RS wiki's
+            return;
+        }
+        inv_add(inv, agrith_sigil, 1);
+        // Evil Dave re-enters the portal into the throne room
+        ~agrith_walk(^agrith_dave_passage_spot, agrith_dave_walking, ^agrith_portal_door);
+        %agrith_convinced_dave = ^agrith_dave_walking;
+        queue(agrith_dave_inside, 8, 0);
+    case 3 :
+        ~chatplayer("<p,neutral>By using 'evil' as a term of praise you have left yourself without a word to describe real evil!");
+        ~agrith_dave("<p,angry>There's no time for that! Eric's DEAD!");
+        @agrith_dave_passage_menu($what, 0);
+}
+
+[queue,agrith_dave_inside]
+if (%agrith_convinced_dave = ^agrith_dave_walking) %agrith_convinced_dave = ^agrith_dave_inside;
+
+// ours: one of the cache's walking npcs (seen only by you, through its varbit) walks from $from to $to
+[proc,agrith_walk](coord $from, npc $type, coord $to)
+npc_add($from, $type, 10);
+npc_walk($to);
+
+// ---------------------------------------------------------------- the stairs in the storm
+// golem_insidestairs_base (quest_golem.rs2) while the sandstorm blows; the RS wiki's transcript
+[label,agrith_storm_stairs]
+mes("You are hit by falling rocks!");
+~agrith_storm_hurt;
+p_arrivedelay;
+p_teleport(^agrith_surface_arrive);
+p_delay(0);
+mes("You must fight your way against a sandstorm!");
+sound_synth(agrith_sandstorm, 1, 0);
+~agrith_storm_hurt;
+
+// ours: a small hit each time (the RS wiki: "small amounts of damage")
+[proc,agrith_storm_hurt]
+def_int $damage = calc(1 + random(3));
+if ($damage >= stat(hitpoints)) $damage = calc(stat(hitpoints) - 1);
+if ($damage > 0) damage(uid, ^hitmark_damage, $damage);
+
+// ---------------------------------------------------------------- Father Badden in the storm
+[label,agrith_badden_storm]
+~agrith_badden("<p,shock>What's happening? The wind suddenly picked up! It's a desert sandstorm!");
+~chatplayer("<p,neutral>Denath was Agrith-Naar all along! We've just sent him back to his own dimension!");
+~agrith_badden("<p,scared>Saradomin protect us! From his own dimension he'll be able to wreak havoc!");
+~chatplayer("<p,neutral>You've got to help me summon him again, so I can slay him with Silverlight!");
+~agrith_badden("<p,neutral>All right!");
+if (inv_total(inv, agrith_sigil) < 2) {
+    // ours: you keep one sigil for yourself
+    ~chatplayer("<p,neutral>But first I'll need to get you a demonic sigil.");
+    ~agrith_badden("<p,neutral>All right, I'll wait here.");
+    return;
+}
+~chatplayer("<p,neutral>You'll need to hold this sigil for the ritual.");
+inv_del(inv, agrith_sigil, 1);
+// Father Badden walks into the building
+~agrith_walk(^agrith_badden_spot, agrith_badden_walking, ^agrith_stairs_top);
+%agrith_badden_uzer = ^agrith_priest_walking;
+queue(agrith_badden_inside, 8, 0);
+
+[queue,agrith_badden_inside]
+if (%agrith_badden_uzer = ^agrith_priest_walking) %agrith_badden_uzer = ^agrith_priest_inside;
+
+// ---------------------------------------------------------------- Father Reen in the storm
+[label,agrith_reen_storm]
+~agrith_reen("<p,shock>What's happening? This sandstorm came out of nowhere!");
+~chatplayer("<p,neutral>Denath was Agrith-Naar all along! Now he's back in his own dimension!");
+~agrith_reen("<p,scared>Oh no! What can we do?");
+~chatplayer("<p,neutral>You've got to help me perform the ritual again so I can kill him!");
+~agrith_reen("<p,scared>Oh! Oh dear! I don't think I could take part in a demonic ritual!");
+if (inv_total(inv, agrith_sigil) < 2) {
+    ~chatplayer("<p,neutral>I'll need to get you a demonic sigil anyway.");
+    ~agrith_reen("<p,shock>A demonic sigil?!");
+    return;
+}
+@agrith_reen_storm_menu(1, 1);
+
+[label,agrith_reen_storm_menu](int $asked, int $die)
+switch_int (~p_choice_some5("But isn't that what you and Badden asked me to do?", $asked, "But the wizards will all die!", calc($die * 2), "Oh, don't be so simple-minded!", 3, "", 0, "", 0)) {
+    case 1 :
+        ~chatplayer("<p,quiz>But isn't that what you and Badden asked me to do?");
+        ~agrith_reen("<p,scared>But things are different for me! I'm a monk! What if my order found out?");
+        @agrith_reen_storm_menu(0, $die);
+    case 2 :
+        ~chatplayer("<p,angry>But the wizards will all die! Now Agrith-Naar is in his own dimension he's killing them one by one!");
+        ~agrith_reen("<p,angry>They should have known better than to join Denath in his evil schemes!");
+        @agrith_reen_storm_menu($asked, 0);
+    case 3 :
+        ~chatplayer("<p,angry>Oh, don't be so simple-minded! You'll be summoning a demon in order to kill it, to rid the world of great evil!");
+        ~agrith_reen("<p,sad>Well... all right.");
+        ~chatplayer("<p,neutral>Now take this demonic sigil, and hurry inside!");
+        inv_del(inv, agrith_sigil, 1);
+        // Father Reen walks into the building
+        ~agrith_walk(^agrith_reen_spot, agrith_reen_walking, ^agrith_stairs_top);
+        %agrith_reen_uzer = ^agrith_priest_walking;
+        queue(agrith_reen_inside, 8, 0);
+}
+
+[queue,agrith_reen_inside]
+if (%agrith_reen_uzer = ^agrith_priest_walking) %agrith_reen_uzer = ^agrith_priest_inside;
+
+// ---------------------------------------------------------------- the clay golem in the storm
+[label,agrith_golem_storm]
+~agrith_golem("<p,sad>I sensed a great darkness, as of a demon revelling in its moment of triumph.");
+~agrith_golem("<p,confused>And now this sandstorm appears, the likes of which I have not seen in three thousand years. What can it mean?");
+~chatplayer("<p,neutral>Denath was Agrith-Naar all along! We've accidentally helped him get back to his own dimension!");
+~agrith_golem("<p,sad>It is a terrible thing for a demon to be victorious. I wish there was something I could do to rectify the situation.");
+~chatplayer("<p,neutral>You could help me summon the demon again so I could kill him!");
+if (%agrith_convinced_golem < ^agrith_golem_reprogrammed) {
+    ~agrith_golem("<p,neutral>I cannot do that. It is forbidden for a golem to enter the portal.");
+    @agrith_golem_storm_menu(1, 1, 1);
+}
+~agrith_golem("<p,happy>What are we waiting for? What do I need to do?");
+if (inv_total(inv, agrith_sigil) < 2) {
+    ~chatplayer("<p,neutral>I need to get you a demonic sigil.");
+    ~agrith_golem("<p,neutral>I will wait.");
+    return;
+}
+~chatplayer("<p,neutral>Take this demonic sigil and go through the portal.");
+inv_del(inv, agrith_sigil, 1);
+// the clay golem walks up to the stairs
+~agrith_walk(^agrith_golem_spot, agrith_golem_walking, ^agrith_stairs_top);
+%golem_clay = ^agrith_golem_clay_walking;
+queue(agrith_golem_inside, 8, 0);
+
+[queue,agrith_golem_inside]
+if (%golem_clay = ^agrith_golem_clay_walking) {
+    %golem_clay = ^agrith_golem_clay_gone;
+    %agrith_convinced_golem = ^agrith_golem_inside;
+}
+
+[label,agrith_golem_storm_menu](int $need, int $why, int $reprogram)
+switch_int (~p_choice_some5("But I really need you to.", $need, "Why is it forbidden?", calc($why * 2), "I could just reprogram you again.", calc($reprogram * 3), "", 0, "", 0)) {
+    case 1 :
+        ~chatplayer("<p,angry>But I really need you to!");
+        ~agrith_golem("<p,neutral>A golem cannot disobey the commands in its mind!");
+        @agrith_golem_storm_menu(0, $why, $reprogram);
+    case 2 :
+        ~chatplayer("<p,quiz>Why is it forbidden?");
+        ~agrith_golem("<p,neutral>I do not know. I was not privy to the thoughts of my designers, and now they cannot be asked.");
+        @agrith_golem_storm_menu($need, 0, $reprogram);
+    case 3 :
+        ~chatplayer("<p,neutral>I could just reprogram you again.");
+        ~agrith_golem("<p,neutral>That is true. Perhaps if you opened my head and removed the instruction concerning the portal I would be able to help you.");
+        ~agrith_golem("<p,sad>But there must have been a reason why my builders imposed this restriction. I do not know what would happen to me if I went through the portal.");
+        @agrith_golem_storm_menu($need, $why, 0);
+}
+
+// the strange implement on the golem (golem_golem.rs2's opnpcu)
+[label,agrith_golem_reprogram]
+if (%agrith_convinced_golem >= ^agrith_golem_reprogrammed) {
+    mes("You have already removed that instruction."); // ours
+    return;
+}
+anim(human_pickpocket, 0);
+sound_synth(golem_program, 1, 0);
+~mesbox("You open the golem's head and search through the dusty scrolls inside...");
+~mesbox("You find one that says @dre@'THOU SHALT NOT ENTER THE PORTAL OF THAMMARON'@bla@, and remove it.");
+%agrith_convinced_golem = ^agrith_golem_reprogrammed;
+
+// ---------------------------------------------------------------- the four in the throne room
+[opnpc1,agrith_badden] @agrith_badden_inside_talk;
+[opnpc1,agrith_badden_sigil] @agrith_badden_inside_talk;
+
+[label,agrith_badden_inside_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_summoned) {
+    ~agrith_badden("<p,scared>So that's Agrith-Naar's true form! Quickly, slay him with Silverlight!");
+    return;
+}
+if ($s >= ^agrith_slain) {
+    ~agrith_badden("<p,happy>I thought golems were servants of evil, but that one helped us to slay a demon. Perhaps golems aren't so bad after all!");
+    return;
+}
+~agrith_badden("<p,angry>Let's get this ritual over with! I don't want to spend any more time with that golem than I have to!");
+~chatplayer("<p,quiz>What's your problem with the golem? It doesn't mind you!");
+~agrith_badden("<p,angry>Bah!");
+
+[opnpc1,agrith_reen] @agrith_reen_inside_talk;
+[opnpc1,agrith_reen_sigil] @agrith_reen_inside_talk;
+
+[label,agrith_reen_inside_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_summoned) {
+    ~agrith_reen("<p,scared>Help! Quickly, use Silverlight!");
+    return;
+}
+if ($s = ^agrith_ready) {
+    ~agrith_reen("<p,neutral>We'd better get on with the ritual. Let's get this over with!");
+    return;
+}
+~agrith_reen("<p,confused>So Agrith-Naar was trapped in our dimension all along, and didn't have any influence until the wizards un-summoned him?");
+if ($s >= ^agrith_slain) {
+    ~agrith_reen("<p,sad>I thought slaying him would make the world better, but we've just returned it to how it was before!");
+} else {
+    ~agrith_reen("<p,sad>I thought slaying him would make the world better, but now we're fighting to return it to how it was before!");
+}
+~chatplayer("<p,neutral>Perhaps we can't blame demons for everything that's wrong with the world. Sometimes it's just not that simple.");
+
+[opnpc1,agrith_golem_throneroom] @agrith_golem_inside_talk;
+[opnpc1,agrith_golem_sigil] @agrith_golem_inside_talk;
+
+[label,agrith_golem_inside_talk]
+def_int $s = %agrith_quest;
+if ($s >= ^agrith_slain) {
+    ~agrith_golem("<p,sad>Demon is dead... regret... could not assist.");
+    ~chatplayer("<p,neutral>Don't worry, Golem, you've done enough demon-slaying!");
+    return;
+}
+~agrith_golem("<p,sad>Strength low...");
+~agrith_golem("<p,sad>This realm... sapping strength... combat capability impaired...");
+if ($s = ^agrith_ready) return;
+~agrith_golem("<p,sad>This must be... reason... portal forbidden...");
+if ($s = ^agrith_summoned) return;
+~chatplayer("<p,neutral>I just need your help with the ritual. Do you think you can do that?");
+~agrith_golem("<p,neutral>Speech functions not impaired.");

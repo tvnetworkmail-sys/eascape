@@ -1,0 +1,521 @@
+// EASCape: Shadow of the Storm - Father Reen, Father Badden, the clay golem and Evil Dave before
+// the ritual; dyeing Silverlight and the desert clothes black; the broken kilns and Josef's book.
+// Words: the OSRS wiki's quest transcript (the RS wiki's where it says so). The NPCs are the 377
+// cache's own: agrith_reen_alkharid (south of Al Kharid bank at stages 0-20), agrith_reen_uzer and
+// agrith_badden_uzer (in Uzer while %agrith_reen_uzer / %agrith_badden_uzer is 1), The Golem's
+// golem_golem, agrith_dave_at_portal (at stages 10-70). The facial expressions are ours.
+
+[proc,agrith_reen](string $text) ~chatnpc_specific("Father Reen", agrith_reen, $text);
+[proc,agrith_badden](string $text) ~chatnpc_specific("Father Badden", agrith_badden, $text);
+[proc,agrith_golem](string $text) ~chatnpc_specific("Clay golem", golem_fixed_golem, $text);
+[proc,agrith_dave](string $text) ~chatnpc_specific("Evil Dave", agrith_dave, $text);
+
+[proc,agrith_him]()(string)
+if (gender() = 1) return("her");
+return("him");
+
+[proc,agrith_he]()(string)
+if (gender() = 1) return("She");
+return("He");
+
+[proc,agrith_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+mes("Your pack is full: <oc_name($obj)> is on the ground."); // ours
+
+[proc,agrith_set](int $stage)
+%agrith_quest = $stage;
+~send_quest_progress(questlist:agrith, %agrith_quest, ^agrith_complete);
+
+// ---------------------------------------------------------------- Father Reen in Al Kharid
+[opnpc1,agrith_reen_alkharid] @agrith_reen_alkharid_talk;
+
+[label,agrith_reen_alkharid_talk]
+if (%agrith_quest = ^agrith_not_started) @agrith_reen_start;
+if (~agrith_owns_silverlight = true) {
+    ~agrith_reen("<p,quiz>Did you go to Uzer to see Badden?");
+    ~chatplayer("<p,neutral>Not yet.");
+    ~agrith_reen("<p,angry>You must hurry!");
+    return;
+}
+// the RS wiki's transcript: he gives it back
+~agrith_reen("<p,angry>You idiot! You lost Silverlight! I found it on the sand!");
+~agrith_give(silverlight, 1);
+~agrith_reen("<p,neutral>You need to take it with you and see Badden in Uzer.");
+
+[label,agrith_reen_start]
+~agrith_reen("<p,quiz>Excuse me, I'm looking for <displayname>. I have an urgent job for <~agrith_him>.");
+if (~agrith_requirements = false) {
+    // ours: no source has his words when you can't start it yet
+    ~mesbox("To start this quest you need to have completed The Golem and Demon Slayer, and have a Crafting level of 30.");
+    return;
+}
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Shadow of the Storm quest?") = 2) {
+    ~chatplayer("<p,neutral>I'll let you know if I see <~agrith_him>.");
+    return;
+}
+~chatplayer("<p,happy>That's me!");
+~agrith_set(^agrith_started);
+%agrith_badden_uzer = ^agrith_priest_uzer; // the cache: Badden shows in Uzer at 1 (ours: from now)
+~agrith_reen("<p,happy>Thank Saradomin I found you!");
+if (~agrith_has_plain_silverlight = true) {
+    ~agrith_reen("<p,quiz>I believe you still have the magical sword Silverlight?");
+    ~chatplayer("<p,neutral>The sword I used to defeat the demon Delrith? Yes, I still have it.");
+} else {
+    ~agrith_reen("<p,quiz>Now, do you recognise this sword?");
+    ~agrith_give(silverlight, 1);
+    ~objbox(silverlight, "Reen hands you a shining silver sword.", 250, 0, ^objbox_height);
+    ~chatplayer("<p,shock>Silverlight! That's the sword I used to defeat the demon Delrith!");
+}
+~agrith_reen("<p,neutral>There is an urgent task that only you can do - and only with Silverlight!");
+~agrith_reen("<p,neutral>My partner Badden and I have been observing the dark wizard Denath, who we believe has been preparing to summon the powerful demon Agrith-Naar.");
+~agrith_reen("<p,neutral>A week ago he took a group of apprentice dark wizards and moved to Uzer, the lost city in the desert. We think he's going to use the city's ancient temple to summon the demon!");
+~chatplayer("<p,quiz>So you want me to stop him?");
+~agrith_reen("<p,shock>Stop him? No! We want you to wait until Agrith-Naar is summoned and then kill him once and for all!");
+~agrith_reen("<p,neutral>Let me explain. Agrith-Naar is not an ordinary demon. He has immense magical powers, and he can use these powers to influence the mortal plane.");
+~agrith_reen("<p,neutral>This summoning is our chance to rid the world of his evil influence!");
+~agrith_reen("<p,neutral>You should go to Uzer and find Badden at once. I'll follow once I've finished some business here.");
+
+// ---------------------------------------------------------------- Father Reen in Uzer
+[opnpc1,agrith_reen_uzer] @agrith_reen_uzer_talk;
+
+[label,agrith_reen_uzer_talk]
+if (%agrith_quest >= ^agrith_desummoned) @agrith_reen_storm; // agrith_storm.rs2
+~agrith_reen("<p,neutral>Phew! It's too hot for me out here. But at least I found my way through the desert!");
+switch_int (~p_choice3("Why didn't you take the magic carpet?", 1, "Why don't you change out of your heavy robes?", 2, "Don't worry, soon I'll have killed the demon and we can all go home!", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why didn't you take the magic carpet?");
+        ~agrith_reen("<p,shock>Oh dear no, you won't get me up in one of those things! What if the magic failed?");
+    case 2 :
+        ~chatplayer("<p,quiz>Why don't you change out of your heavy robes?");
+        ~agrith_reen("<p,neutral>But the rules of my order say I must wear them!");
+        ~chatplayer("<p,neutral>Perhaps the rules were made in a colder place than this?");
+        ~agrith_reen("<p,angry>Saradomin's rules are once and for all! It is not our place to question them!");
+    case 3 :
+        ~chatplayer("<p,happy>Don't worry, soon I'll have killed the demon and we can all go home!");
+        ~agrith_reen("<p,angry>Summoning a demon! Those wizards make me sick! What kind of sad people would call on a supernatural being to solve their problems for them?");
+        ~chatplayer("<p,quiz>Um, isn't that like what you do when you pray?");
+        ~agrith_reen("<p,shock>What? No, that's totally different, because... um... because we always give thanks to Saradomin, even when he doesn't do anything!");
+        ~agrith_reen("<p,angry>Not like those wizards! They're so full of themselves, with their fancy robes and their rituals!");
+        ~chatplayer("<p,quiz>Um, isn't that like...");
+        ~agrith_reen("<p,angry>No, it's totally different!");
+        ~agrith_reen("<p,neutral>Anyway, there must be something wrong with the way they live in their little group and separate themselves from the rest of society. It can't be healthy.");
+        ~chatplayer("<p,neutral>And that's *nothing* like you being a monk, of course.");
+        ~agrith_reen("<p,neutral>No, nothing like that.");
+        ~agrith_reen("<p,angry>Wait, are you being sarcastic? Because you should know that sarcasm is specifically forbidden in the holy book of Saradomin!");
+        ~chatplayer("<p,quiz>Are you sure Saradomin was being serious about that bit?");
+        ~agrith_reen("<p,angry>Shut up!");
+}
+
+// ---------------------------------------------------------------- Father Badden
+[opnpc1,agrith_badden_uzer] @agrith_badden_uzer_talk;
+
+[label,agrith_badden_uzer_talk]
+if (%agrith_quest >= ^agrith_desummoned) @agrith_badden_storm; // agrith_storm.rs2
+if (%agrith_quest = ^agrith_started) @agrith_badden_first;
+~agrith_badden("<p,quiz>How is it going?");
+def_int $s = %agrith_quest;
+def_string $first = "I haven't managed to infiltrate the group yet.";
+if ($s >= ^agrith_joined) $first = "I managed to get into the group.";
+if ($s >= ^agrith_josef) $first = "Did you see anything happen here last night?";
+if ($s >= ^agrith_ritual) $first = "I don't think Denath is being honest with his wizards.";
+def_int $choice;
+if ($s = ^agrith_badden) {
+    $choice = ~p_choice4($first, 1, "Tell me more about Agrith-Naar.", 2, "Tell me more about Denath.", 3, "I'd never take part in a demonic ritual!", 4);
+} else {
+    $choice = ~p_choice3($first, 1, "Tell me more about Agrith-Naar.", 2, "Tell me more about Denath.", 3);
+}
+switch_int ($choice) {
+    case 1 :
+        if ($s >= ^agrith_ritual) {
+            ~chatplayer("<p,neutral>I don't think Denath is being honest with his wizards.");
+            ~agrith_badden("<p,laugh>Of course he isn't! You expect an evil sorcerer to be honest with anyone?");
+        } else if ($s >= ^agrith_josef) {
+            ~chatplayer("<p,quiz>Did you see anything happen last night?");
+            ~agrith_badden("<p,neutral>I was sleeping last night. I'm only human after all!");
+            ~agrith_badden("<p,confused>But I had this odd dream, about fear and panic, and... fire...");
+        } else if ($s >= ^agrith_joined) {
+            ~chatplayer("<p,happy>I managed to get into the group.");
+            ~agrith_badden("<p,happy>Oh, that is good! Make sure you are in place when they summon the demon!");
+        } else {
+            ~chatplayer("<p,sad>I haven't managed to infiltrate the group yet.");
+            ~agrith_badden("<p,sad>Oh dear. Do try again. You must be in place when they summon the demon!");
+        }
+    case 2 : @agrith_badden_agrith(false);
+    case 3 : @agrith_badden_denath(false);
+    case 4 : @agrith_badden_never;
+}
+
+[label,agrith_badden_first]
+~agrith_badden("<p,quiz>What brings you to this godsforsaken desert?");
+if (~p_choice2("Reen sent me.", 1, "Just passing through.", 2) = 2) {
+    ~chatplayer("<p,neutral>Just passing through.");
+    ~agrith_badden("<p,sad>Oh dear. I was hoping <displayname> would arrive.");
+    return;
+}
+~chatplayer("<p,neutral>Reen sent me.");
+if (~agrith_carries_silverlight = false) {
+    ~agrith_badden("<p,happy>Saradomin be praised!");
+    ~agrith_badden("<p,neutral>But you will need Silverlight for this task. You should go back and get it.");
+    return;
+}
+~agrith_badden("<p,happy>Saradomin be praised! And you have Silverlight! You're willing to help us, then?");
+@agrith_badden_menu;
+
+[label,agrith_badden_menu]
+switch_int (~p_choice3("Tell me more about Agrith-Naar.", 1, "Tell me more about Denath.", 2, "So what do you want me to do?", 3)) {
+    case 1 : @agrith_badden_agrith(true);
+    case 2 : @agrith_badden_denath(true);
+    case 3 : @agrith_badden_what;
+}
+
+// $first: from Father Badden's first talk, which goes back to its menu
+[label,agrith_badden_agrith](boolean $first)
+~chatplayer("<p,quiz>Tell me more about Agrith-Naar.");
+~agrith_badden("<p,neutral>Agrith-Naar is not so much a demon as a force of nature. While he is in his own dimension his evil magics can reach everywhere in the world.");
+~agrith_badden("<p,neutral>No one knows how far his power extends, but Reen and I believe that much of the suffering in the world is due to him.");
+~agrith_badden("<p,angry>The accident that cripples a man, the storm that sweeps a ship under the sea, the sudden fire in the blood that makes a wolf pack attack a town - all that is Agrith-Naar!");
+if ($first = true) @agrith_badden_menu;
+
+[label,agrith_badden_denath](boolean $first)
+~chatplayer("<p,quiz>Tell me more about Denath.");
+~agrith_badden("<p,neutral>We've been keeping an eye on Denath for some years now, but we've never been able to move against him.");
+~agrith_badden("<p,neutral>He was part of the group that summoned Delrith, but he left Varrock before you arrived and defeated the demon.");
+~agrith_badden("<p,neutral>He's been studying Agrith-Naar for years, but when he brought his group here we knew he was about to make his move.");
+if ($first = false) return;
+switch_int (~p_choice3("Tell me more about Agrith-Naar.", 1, "Why has he come to Uzer?", 2, "So what do you want me to do?", 3)) {
+    case 1 : @agrith_badden_agrith(true);
+    case 2 : @agrith_badden_uzer_why;
+    case 3 : @agrith_badden_what;
+}
+
+[label,agrith_badden_uzer_why]
+~chatplayer("<p,quiz>Why has he come to Uzer?");
+~agrith_badden("<p,neutral>I'm not sure. This city is very ancient, and its builders were powerful workers of evil magic.");
+~agrith_badden("<p,angry>As that foul construct over there proves.");
+~agrith_badden("<p,quiz>Perhaps there's something here he needs. Do you know what happened here?");
+switch_int (~p_choice4("Tell me more about Agrith-Naar.", 1, "Foul construct? Do you mean the golem?", 2, "Well I came here and opened a portal to a demon's realm.", 3, "So what do you want me to do?", 4)) {
+    case 1 : @agrith_badden_agrith(true);
+    case 2 :
+        ~chatplayer("<p,quiz>Foul construct? Do you mean the golem?");
+        ~agrith_badden("<p,angry>The golem, yes! An abomination in the eyes of holy Saradomin! A mockery of life! Right now Denath is more important, but once he is dealt with I should find some way to destroy it.");
+        ~chatplayer("<p,shock>But the golem was created to fight a demon! You're on the same side!");
+        ~chatplayer("<p,neutral>Thousands of years ago a demon attacked this city, but the golem army drove it off.");
+        ~chatplayer("<p,neutral>When I last came here I opened the portal, and the demon was already dead - it had died of the wounds the golems inflicted.");
+        @agrith_badden_portal;
+    case 3 :
+        ~chatplayer("<p,neutral>Well I came here and opened a portal to a demon's realm...");
+        @agrith_badden_portal;
+    case 4 : @agrith_badden_what;
+}
+
+[label,agrith_badden_portal]
+~agrith_badden("<p,shock>You opened a portal to a demon's realm? That must be why Denath is here!");
+~agrith_badden("<p,neutral>It would be much easier to reach Agrith-Naar's realm from another demon's realm than from the mortal plane.");
+~agrith_badden("<p,neutral>Denath must have heard that the portal here was open and decided to make his move!");
+@agrith_badden_menu;
+
+[label,agrith_badden_what]
+~chatplayer("<p,quiz>So what do you want me to do?");
+~agrith_badden("<p,neutral>You have to be in position to kill Agrith-Naar as soon as he is summoned. The best way to do that is to infiltrate the group that is summoning him!");
+if (%agrith_quest = ^agrith_started) ~agrith_set(^agrith_badden);
+if (~p_choice2("How can I do that?", 1, "I'd never take part in a demonic ritual!", 2) = 2) @agrith_badden_never;
+~chatplayer("<p,quiz>How can I do that?");
+~agrith_badden("<p,neutral>I don't know. You'll have to find some way to convince them you're one of them.");
+
+[label,agrith_badden_never]
+~chatplayer("<p,angry>I'd never take part in a demonic ritual!");
+~agrith_badden("<p,angry>Oh, don't be so simple-minded! You'll be summoning a demon in order to kill it, to rid the world of great evil! You won't really be joining the group, just infiltrating it.");
+~chatplayer("<p,quiz>How can I do that?");
+~agrith_badden("<p,neutral>I don't know. You'll have to find some way to convince them you're one of them.");
+
+// ---------------------------------------------------------------- the clay golem
+// golem_golem.rs2 jumps here while Shadow of the Storm is going on (before the ritual)
+[label,agrith_golem_talk]
+if (%agrith_quest >= ^agrith_desummoned) @agrith_golem_storm; // agrith_storm.rs2
+~agrith_golem("<p,happy>It is good to see a friendly face here. The priest has said nothing to me but 'Get ye away, foul construct!'");
+def_int $choice;
+if (%agrith_quest >= ^agrith_josef) {
+    $choice = ~p_choice3("Why does Badden hate you?", 1, "Do you know anything about the dark wizards who arrived here?", 2, "Did you see anything happen last night?", 3);
+} else {
+    $choice = ~p_choice2("Why does Badden hate you?", 1, "Do you know anything about the dark wizards who arrived here?", 2);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>Why does Badden hate you?");
+        ~agrith_golem("<p,sad>I do not know. I heard him say that Saradomin hates all artificial creatures.");
+        ~agrith_golem("<p,neutral>It was not always so. When I was new, the priests of Saradomin praised the ingenuity of the golem-builders.");
+        ~agrith_golem("<p,neutral>I paraded through the city with my siblings, all painted in bright colours, and they blessed us with holy water as we prepared for battle.");
+        ~agrith_golem("<p,sad>He should know that I could never hurt him. The first command in a golem's mind is that it cannot allow a human being to come to harm.");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you know anything about the dark wizards who arrived here?");
+        ~agrith_golem("<p,neutral>Some of them were curious about me when they arrived, but since then they have ignored me.");
+        ~agrith_golem("<p,sad>As they passed me I felt a sense of dark foreboding, something I have not felt since the great enemy was nearby. I fear they are planning some great evil.");
+    case 3 :
+        ~chatplayer("<p,quiz>Did you see anything happen last night?");
+        ~agrith_golem("<p,neutral>I saw one of the men in dark robes run out of the temple. He looked very frightened and I feared for his safety.");
+        ~agrith_golem("<p,neutral>He was carrying a large book. He started to head out into the desert, but then turned back and hid the book in one of the broken kilns in which my kind were created long ago.");
+        ~agrith_golem("<p,sad>Then another man came out of the temple. He said magical words and threw a fireball at the first man, turning him to dust!");
+        ~agrith_golem("<p,sad>I should have saved him, but I was not fast enough to throw myself in the path of the fireball.");
+        if (%agrith_quest = ^agrith_josef) {
+            %agrith_kiln = random(4); // ours: which of the four kilns, a different one for everyone
+            ~agrith_set(^agrith_kilns);
+        }
+        ~chatplayer("<p,quiz>Which kiln did he hide the book in?");
+        ~agrith_golem("<p,sad>I cannot remember. The shock of seeing a human being killed wiped the details of the incident from my memory.");
+}
+
+// ---------------------------------------------------------------- Evil Dave at the portal
+[opnpc1,agrith_dave_at_portal] @agrith_dave_portal_talk;
+
+[label,agrith_dave_portal_talk]
+if (%agrith_quest >= ^agrith_joined) {
+    ~agrith_dave("<p,happy>Welcome, <~wg_gender("brother", "sister")>! Soon we'll summon the great demon! Aren't we evil?");
+    switch_int (~p_choice4("Yeah!", 1, "But isn't evil, you know, bad?", 2, "Do you have the demonic sigil mould?", 3, "Do you know what happened to Josef?", 4)) {
+        case 1 :
+            ~chatplayer("<p,happy>Yeah!");
+            ~agrith_dave("<p,happy>Yeah!");
+            if (%golem_throne_gems = 1) {
+                ~agrith_dave("<p,happy>And we've got such an evil throne room to do our ritual in!");
+                ~agrith_dave("<p,angry>It's just a pity someone's removed the gems from the throne. That kind of vandalism is TOTALLY NOT EVIL.");
+                ~chatplayer("<p,shifty>Um... Yeah, who would do a thing like that?");
+            }
+        case 2 :
+            ~chatplayer("<p,quiz>But isn't evil, you know, bad?");
+            ~agrith_dave("<p,happy>Yeah! We're BAD!");
+        case 3 :
+            ~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+            ~agrith_dave("<p,neutral>No. Last I heard, Matthew had it.");
+        case 4 :
+            ~chatplayer("<p,quiz>Do you know what happened to Josef?");
+            ~agrith_dave("<p,neutral>I didn't see anything. He left last night, and Denath only posted me here this morning.");
+    }
+    return;
+}
+~agrith_dave("<p,angry>What do you want?");
+def_int $choice;
+if (%agrith_quest >= ^agrith_badden) {
+    $choice = ~p_choice4("I want to go through the portal.", 1, "I want to join your group.", 4, "Oh, nothing.", 2, "Where did you get those robes?", 3);
+} else {
+    $choice = ~p_choice3("I want to go through the portal.", 1, "Oh, nothing.", 2, "Where did you get those robes?", 3);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,neutral>I want to go through the portal.");
+        ~agrith_dave("<p,angry>Go away! This is OUR portal now!");
+    case 2 :
+        ~chatplayer("<p,neutral>Oh, nothing.");
+        ~agrith_dave("<p,angry>Go away then!");
+    case 3 :
+        ~chatplayer("<p,quiz>Where did you get those robes?");
+        ~agrith_dave("<p,happy>Yeah, evil, aren't they? One of the group made them. He said he found some mushrooms in the ruins that could dye things really black.");
+    case 4 : @agrith_dave_join;
+}
+
+[label,agrith_dave_join]
+~chatplayer("<p,neutral>I want to join your group.");
+~agrith_dave("<p,neutral>Well we do need one more person now, since... um.");
+~agrith_dave("<p,happy>But we're an evil group! To join, you have to be evil!");
+if (~p_choice2("I'm evil!", 1, "Never mind, I'm not evil.", 2) = 2) {
+    ~chatplayer("<p,neutral>Never mind, I'm not evil.");
+    ~agrith_dave("<p,angry>Well get out of our evil temple then!");
+    return;
+}
+~chatplayer("<p,evillaugh>I'm evil!");
+if (~agrith_evil_count < 3) {
+    ~agrith_dave("<p,quiz>You don't look evil. You certainly don't dress evil!");
+    ~chatplayer("<p,shifty>I'm evil in disguise?");
+    ~agrith_dave("<p,angry>There's no need for the disguise here! We're all evil!");
+    return;
+}
+~agrith_dave("<p,happy>Yeah, I can see that. That outfit is totally evil!");
+if (inv_total(inv, silverlight) > 0 | inv_total(worn, silverlight) > 0) {
+    ~agrith_dave("<p,angry>But what's that sword? It's far too shiny to be evil. We won't have any silver glowing swords in here!");
+    return;
+}
+if (inv_total(inv, agrith_silverlight_dyed) > 0 | inv_total(worn, agrith_silverlight_dyed) > 0) {
+    ~agrith_dave("<p,happy>And I love that evil black sword! Okay, I'll take you through to see Denath."); // the RS wiki's
+} else {
+    ~agrith_dave("<p,happy>Okay, I'll take you through to see Denath.");
+}
+@agrith_dave_cutscene; // agrith_throne.rs2
+
+// the black clothes you wear that Evil Dave thinks evil. Ours: the OSRS and RS wikis' lists, cut to
+// what both lists allow and the 377 cache has, without what the wikis say was added later
+// (Darklight, the black d'hide shield, black masks, holiday items) and without what either
+// says doesn't count (trimmed and heraldic black armour, spiky vambraces, desert boots).
+[proc,agrith_evil_count]()(int)
+def_int $n = 0;
+def_int $slot = 0;
+while ($slot < inv_size(worn)) {
+    if (~agrith_evil(inv_getobj(worn, $slot)) = true) $n = calc($n + 1);
+    $slot = calc($slot + 1);
+}
+return($n);
+
+[proc,agrith_evil](obj $obj)(boolean)
+if ($obj = null) return(false);
+switch_obj ($obj) {
+    case agrith_desert_shirt_dyed, agrith_desert_robe_dyed : return(true);
+    case black_full_helm, black_med_helm, black_platebody, black_chainbody, black_platelegs, black_plateskirt, black_kiteshield, black_sq_shield : return(true);
+    case black_cape : return(true);
+    case black_dragonhide_body, black_dragonhide_chaps, black_dragon_vambraces : return(true);
+    case mystic_hat_dark, mystic_robe_top_dark, mystic_robe_bottom_dark, mystic_gloves_dark, mystic_boots_dark : return(true);
+    case priest_gown, priest_robe : return(true);
+    case blackrobetop, blackrobebottom : return(true);
+    case secret_ghost_hat, secret_ghost_top, secret_ghost_bottom, secret_ghost_gloves, secret_ghost_boots, secret_ghost_cloak : return(true);
+    case blackwizhat : return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- black dye
+// Silverlight: the OSRS wiki's transcript (a black mushroom on it) and the RS wiki's (black
+// mushroom ink on it; the vial comes back). The OSRS wiki: every Silverlight in your pack becomes
+// the one dyed sword.
+[opheldu,silverlight]
+def_obj $used = last_useitem;
+if ($used = golem_mushroom) {
+    inv_del(inv, golem_mushroom, 1);
+    ~agrith_dye_silverlight;
+    ~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, ^objbox_height);
+    return;
+}
+if ($used = golem_ink) {
+    inv_del(inv, golem_ink, 1);
+    inv_add(inv, vial_empty, 1);
+    ~agrith_dye_silverlight;
+    ~objbox(agrith_silverlight_dyed, "You pour the ink over Silverlight and it stains the blade black.", 250, 0, ^objbox_height);
+    return;
+}
+~displaymessage(^dm_default);
+
+// a black mushroom with Silverlight used on it (quest_golem.rs2's opheldu)
+[label,agrith_mushroom_on_silverlight]
+inv_del(inv, golem_mushroom, 1);
+~agrith_dye_silverlight;
+~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, ^objbox_height);
+
+[proc,agrith_dye_silverlight]
+inv_del(inv, silverlight, inv_total(inv, silverlight));
+inv_add(inv, agrith_silverlight_dyed, 1);
+
+// the desert shirt and robe (the OSRS wiki: black dye on them; they no longer keep off the heat).
+// Ours: the words.
+[opheldu,desert_shirt] @agrith_dye_clothes(desert_shirt, agrith_desert_shirt_dyed);
+[opheldu,desert_robe] @agrith_dye_clothes(desert_robe, agrith_desert_robe_dyed);
+
+[label,agrith_dye_clothes](namedobj $from, namedobj $to)
+if (last_useitem ! golem_ink) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, golem_ink, 1);
+inv_add(inv, vial_empty, 1);
+inv_del(inv, $from, 1);
+inv_add(inv, $to, 1);
+~objbox($to, "You dye the <lowercase(oc_name($from))> black. It won't keep the desert's heat off you any more.", 250, 0, ^objbox_height);
+
+// ---------------------------------------------------------------- the broken kilns
+// The cache gives them Look-in at stage 60 only; %agrith_kiln (ours: 0-3) is the one with the book.
+[oploc1,agrith_kiln_1] @agrith_kiln(0);
+[oploc1,agrith_kiln_2] @agrith_kiln(1);
+[oploc1,agrith_kiln_3] @agrith_kiln(2);
+[oploc1,agrith_kiln_4] @agrith_kiln(3);
+
+[label,agrith_kiln](int $n)
+if (%agrith_quest ! ^agrith_kilns) return;
+anim(human_pickuptable, 0);
+p_delay(1);
+if ($n ! %agrith_kiln) {
+    ~mesbox("You look in the kiln but you see only sand and fragments of ancient golems.");
+    return;
+}
+if (inv_total(inv, agrith_book) > 0) {
+    ~mesbox("You have already found the book.");
+    return;
+}
+~agrith_give(agrith_book, 1);
+~agrith_set(^agrith_tome);
+~objbox(agrith_book, "You find a book in the kiln.", 250, 0, ^objbox_height);
+
+// ---------------------------------------------------------------- the demonic tome
+[opheld1,agrith_book]
+%book_page = 0;
+%open_book = agrith_book;
+@book_flip_page(0, 0, 7, agrith_tome);
+
+// The Confession of Ellemar: the OSRS wiki's Transcript:Demonic tome; the incantation is yours,
+// the reverse of Denath's. Ours: where the pages turn.
+[proc,agrith_tome]
+def_string $t = "The Confession of Ellemar";
+switch_int (%book_page) {
+    case 0 : ~book($t, "I know that it is too late to prevent my execution, and I do not dispute the letter of the charges against me. I did read forbidden books, and I did perform unholy rituals forbidden by the Church of Saradomin. But I hope to show by this account that I did not blaspheme against holy Saradomin but rather acted in his spirit.");
+    case 1 : ~book($t, "For as long as we know, those who worship Saradomin have fallen prey to demons, both those that are summoned by dark wizards and those that live wild in the desolate north. But even priests of Saradomin know little about these creatures, for all knowledge of them is suppressed by the Church.");
+    case 2 : ~book($t, "Should we not know our enemies? If we were to read the tomes of demon-lore, and yet keep the light of Saradomin in our hearts, might we not find new and better ways to fight these beasts?||It was with that thought in mind that I performed the actions for which I have been convicted. And, as I read about the various types of demon, I did indeed strike upon a way that unholy magic could be used for a holy purpose.");
+    case 3 : ~book($t, "Not all demons are most dangerous when they are on our plane as physical beings. There is also a more subtle demonic influence that pervades our world, with demons working behind the scenes to cause natural disasters and accidents. The chief among these demons is Agrith-Naar.");
+    case 4 : ~book($t, "If Agrith-Naar were to be removed from his own dimension he would be unable to work his magic on the world, and so I came to believe that summoning him would not be an evil act, but a good one. Therefore I secretly studied the forbidden books and conducted magical experiments, until I had discovered the means by which Agrith-Naar could be summoned.");
+    case 5 : ~book($t, append("The process of preparation was complex, but the most important part was the construction of a sigil of the demon out of silver. The final act was for eight persons, each holding such a sigil, to recite the following incantation:||'", append(~agrith_incantation_text(true), "'")));
+    case 6 : ~book($t, "The ritual was a success, and the great demon Agrith-Naar appeared before us. We had prepared a magical cage, and with difficulty we imprisoned the demon. However, we were unable to destroy him, though we tried every physical and magical means.");
+    case 7 : ~book($t, "Furthermore, the magical cage was weakening, and we feared it would not be able to contain him for long. Therefore we decided to||[The last pages of the book have been torn out]");
+}
+
+// ---------------------------------------------------------------- the incantation
+[proc,agrith_word](int $w)(string)
+switch_int ($w) {
+    case ^agrith_word_caldar : return("Caldar");
+    case ^agrith_word_nahudu : return("Nahudu");
+    case ^agrith_word_agrith : return("Agrith-Naar");
+    case ^agrith_word_camerinthum : return("Camerinthum");
+    case ^agrith_word_tarren : return("Tarren");
+}
+return("");
+
+// the $n-th word (1-5) of Denath's incantation
+[proc,agrith_denath_word](int $n)(int)
+switch_int ($n) {
+    case 1 : return(%agrith_incantation_1);
+    case 2 : return(%agrith_incantation_2);
+    case 3 : return(%agrith_incantation_3);
+    case 4 : return(%agrith_incantation_4);
+    case 5 : return(%agrith_incantation_5);
+}
+return(0);
+
+// $book: the book's order (Denath's backwards)
+[proc,agrith_incantation_text](boolean $book)(string)
+def_string $t = "";
+def_int $i = 1;
+while ($i <= 5) {
+    def_int $n = $i;
+    if ($book = true) $n = calc(6 - $i);
+    if ($i > 1) $t = append($t, " ");
+    $t = append($t, ~agrith_word(~agrith_denath_word($n)));
+    $i = calc($i + 1);
+}
+return($t);
+
+// ours: a different order of the five words for everyone (the OSRS wiki: "different for everyone")
+[proc,agrith_new_incantation]
+%agrith_incantation_1 = 0;
+%agrith_incantation_2 = 0;
+%agrith_incantation_3 = 0;
+%agrith_incantation_4 = 0;
+%agrith_incantation_5 = 0;
+def_int $w = 1;
+while ($w <= 5) {
+    def_int $place = calc(random(5) + 1);
+    while (~agrith_denath_word($place) ! 0) {
+        $place = calc($place % 5 + 1);
+    }
+    switch_int ($place) {
+        case 1 : %agrith_incantation_1 = $w;
+        case 2 : %agrith_incantation_2 = $w;
+        case 3 : %agrith_incantation_3 = $w;
+        case 4 : %agrith_incantation_4 = $w;
+        case 5 : %agrith_incantation_5 = $w;
+    }
+    $w = calc($w + 1);
+}

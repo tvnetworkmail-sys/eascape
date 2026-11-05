@@ -297,8 +297,8 @@ p_delay(2);
 [label,craft_silver]
 // EASCape: the Silver Casting window (the cache's inter_282, as in the RuneCraft update of 13 June
 // 2005 onward): each mould held shows its item with Make 1/5/10, otherwise "You need a ... mould".
-// Silvthrill rod and demonic sigil belong to quests not in the game yet, so they always show the
-// mould message. Levels and xp: Void's silver_casting table.
+// The Silvthrill rod belongs to a quest not in the game yet, so it always shows the mould message.
+// The demonic sigil is Shadow of the Storm's (quest_agrith): Void's 30 Crafting and 50 xp. Levels and xp: Void's silver_casting table.
 ~silver_cast_slot(1, inter_282:com_90, inter_282:com_93, inter_282:com_91, inter_282:com_94, silver_cast1, holy_symbol_mould);
 ~silver_cast_slot(2, inter_282:com_97, inter_282:com_100, inter_282:com_98, inter_282:com_101, silver_cast2, unholy_symbol_mould);
 ~silver_cast_slot(3, inter_282:com_104, inter_282:com_107, inter_282:com_105, inter_282:com_108, silver_cast3, sickle_mould);
@@ -328,6 +328,7 @@ switch_int ($slot) {
     case 3 : return(silver_sickle);
     case 4 : return(fenk_conductor);
     case 5 : return(tiara);
+    case 7 : return(agrith_sigil); // EASCape: Shadow of the Storm
 }
 return(null);
 
@@ -338,6 +339,7 @@ switch_int ($slot) {
     case 3 : return(sickle_mould);
     case 4 : return(fenk_lightning_mould);
     case 5 : return(tiara_mould);
+    case 7 : return(agrith_sigil_mould);
 }
 return(null);
 
@@ -356,7 +358,11 @@ return(null);
 [inv_button1,inter_282:com_119] @silver_cast(5, 1);
 [inv_button2,inter_282:com_119] @silver_cast(5, 5);
 [inv_button3,inter_282:com_119] @silver_cast(5, 10);
+[inv_button1,inter_282:com_134] @silver_cast(7, 1);
+[inv_button2,inter_282:com_134] @silver_cast(7, 5);
+[inv_button3,inter_282:com_134] @silver_cast(7, 10);
 [inv_button4,inter_282:com_91] @silver_cast_x(1);
+[inv_button4,inter_282:com_134] @silver_cast_x(7);
 [inv_button4,inter_282:com_98] @silver_cast_x(2);
 [inv_button4,inter_282:com_105] @silver_cast_x(3);
 [inv_button4,inter_282:com_112] @silver_cast_x(4);
@@ -369,14 +375,15 @@ if (last_int > 0) @silver_cast($slot, last_int);
 [label,silver_cast](int $slot, int $count)
 def_namedobj $product = ~silver_cast_product($slot);
 if ($product = null | inv_total(inv, ~silver_cast_mould($slot)) = 0) return;
-if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4)) {
+if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4 | $slot = 7)) {
     mes(^mes_members_feature);
     return;
 }
 // the lightning conductor isn't a jewellery-table item: Creature of Fenkenstrain's numbers
 def_int $level = 20;
 def_int $exp = 500;
-if ($slot ! 4) {
+if ($slot = 7) $level = 30; // the demonic sigil: Void's silver_casting table (30 Crafting, 50 xp)
+if ($slot ! 4 & $slot ! 7) {
     def_struct $struct = oc_param($product, crafting_jewelry_struct);
     $level = struct_param($struct, levelrequired);
     $exp = struct_param($struct, productexp);

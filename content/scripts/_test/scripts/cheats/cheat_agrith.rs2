@@ -1,0 +1,115 @@
+// EASCape: test commands for Shadow of the Storm (quest_agrith).
+
+// ::sotspack - what the quest needs (the OSRS and RS wikis): Silverlight, a silver bar, an empty
+// vial and a pestle and mortar (black dye), a desert shirt and robe to dye and a black cape (three
+// black pieces), lobsters. It also marks The Golem and Demon Slayer done (no rewards); 30 Crafting
+// still has to come from ::setstat crafting 30.
+[debugproc,sotspack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+if (~agrith_owns_silverlight = false) $banked = calc($banked + ~questpack_give(silverlight, 1));
+$banked = calc($banked + ~questpack_give(silver_bar, 2));
+$banked = calc($banked + ~questpack_give(vial_empty, 2));
+$banked = calc($banked + ~questpack_give(pestle_and_mortar, 1));
+$banked = calc($banked + ~questpack_give(desert_shirt, 1));
+$banked = calc($banked + ~questpack_give(desert_robe, 1));
+$banked = calc($banked + ~questpack_give(black_cape, 1));
+$banked = calc($banked + ~questpack_give(lobster, 5));
+if (%golem_a ! ^golem_complete) {
+    %golem_a = ^golem_complete;
+    %golem_clay = 4;
+}
+if (%demonstart < ^demon_complete) %demonstart = ^demon_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Shadow of the Storm", $banked);
+mes("Crafting: <tostring(stat(crafting))> (30 needed). Father Reen: ::sotstele 1. ::sotsstage sets the stage.");
+
+// ::sotsstage <n> - sets Shadow of the Storm's stage (agrith.constant): 0 not started (clears
+// everything), 10 Reen's errand, 20 Badden's plan, 30 joined, 40 the incantation, 50 Josef,
+// 60 the kilns, 70 the tome (you get it), 80 the ritual (Matthew has read it), 90 Denath gone,
+// 100 find four more (you get three sigils as well as yours), 101-103 the same with Evil Dave,
+// then Badden, then Reen already in the throne room, 104 as 103 with the golem's portal
+// instruction already taken out, 110 all eight in the circle, 120 Agrith-Naar summoned (he waits in the throne room),
+// 124 slain (the reward still to choose), 125 done (no rewards). `::questdone agrith` finishes it
+// with its rewards.
+[debugproc,sotsstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n <= 0) {
+    %agrith_quest_varp = 0;
+    if (%golem_clay > 4) %golem_clay = 4;
+    ~agrith_cast_clear;
+    ~send_quest_progress(questlist:agrith, 0, ^agrith_complete);
+    ~update_questpoints;
+    mes("Shadow of the Storm: reset.");
+    return;
+}
+def_int $main = $n;
+if ($n > 100 & $n < 110) $main = ^agrith_gathering;
+%agrith_quest = $main;
+%agrith_badden_uzer = 0;
+%agrith_reen_uzer = 0;
+%agrith_convinced_dave = 0;
+%agrith_convinced_golem = 0;
+if (%golem_clay > 4) %golem_clay = 4;
+if ($main >= ^agrith_started) %agrith_badden_uzer = ^agrith_priest_uzer;
+if ($main >= ^agrith_joined) %agrith_reen_uzer = ^agrith_priest_uzer;
+if ($main >= ^agrith_incantation & %agrith_incantation_1 = 0) ~agrith_new_incantation;
+if ($main >= ^agrith_kilns) %agrith_kiln = random(4);
+if ($main = ^agrith_tome & inv_total(inv, agrith_book) = 0) ~questdone_give(agrith_book, 1);
+if ($main >= ^agrith_desummoned) %agrith_convinced_dave = ^agrith_dave_passage;
+if ($main = ^agrith_gathering) {
+    def_int $want = 4;
+    if ($n >= 101) { %agrith_convinced_dave = ^agrith_dave_inside; }
+    if ($n >= 102) { %agrith_badden_uzer = ^agrith_priest_inside; $want = 3; }
+    if ($n >= 103) { %agrith_reen_uzer = ^agrith_priest_inside; $want = 2; }
+    if ($n >= 104) %agrith_convinced_golem = ^agrith_golem_reprogrammed;
+    if (inv_total(inv, agrith_sigil) < $want) ~questdone_give(agrith_sigil, calc($want - inv_total(inv, agrith_sigil)));
+}
+if ($main >= ^agrith_ready) {
+    %agrith_convinced_dave = ^agrith_dave_inside;
+    %agrith_badden_uzer = ^agrith_priest_inside;
+    %agrith_reen_uzer = ^agrith_priest_inside;
+    %agrith_convinced_golem = ^agrith_golem_inside;
+    %golem_clay = ^agrith_golem_clay_gone;
+    if ($main < ^agrith_slain & inv_total(inv, agrith_sigil) = 0) ~questdone_give(agrith_sigil, 1);
+}
+if (inzone(^agrith_throne_sw, ^agrith_throne_ne, coord) = true) {
+    ~agrith_cast_spawn;
+    if ($main = ^agrith_summoned) ~agrith_naar_spawn;
+}
+~send_quest_progress(questlist:agrith, %agrith_quest, ^agrith_complete);
+~update_questpoints;
+mes("Shadow of the Storm: stage <tostring(%agrith_quest)>.");
+if ($main >= ^agrith_incantation & $main < ^agrith_slain) mes("Denath's incantation: <~agrith_incantation_text(false)>. The book's: <~agrith_incantation_text(true)>.");
+if ($main = ^agrith_kilns) mes("The book is in kiln <tostring(calc(%agrith_kiln + 1))> (::sotstele <tostring(calc(%agrith_kiln + 6))>).");
+
+// ::sotstele <n> - 1 Father Reen (Al Kharid), 2 Father Badden (Uzer), 3 the clay golem, 4 Evil Dave
+// at the portal (the temple's basement), 5 the throne room (its people added as at your stage),
+// 6-9 the four broken kilns, 10 Evil Dave in the passage, 11 the head of the circle
+[debugproc,sotstele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^agrith_reen_alkharid;
+    case 2 : $to = ^agrith_badden_spot;
+    case 3 : $to = ^agrith_golem_spot;
+    case 4 : $to = movecoord(^agrith_portal_door, 1, 0, -2);
+    case 5 : $to = ^agrith_throne_arrive;
+    case 6 : $to = 0_54_48_11_51;
+    case 7 : $to = 0_54_48_22_10;
+    case 8 : $to = 0_54_48_16_20;
+    case 9 : $to = 0_54_48_44_12;
+    case 10 : $to = ^agrith_dave_passage_spot;
+    case 11 : $to = ^agrith_head;
+    case default :
+        mes("::sotstele 1-11: 1 Reen, 2 Badden, 3 golem, 4 Evil Dave's portal, 5 throne room, 6-9 kilns 1-4, 10 Dave in the passage, 11 head of the circle");
+        return;
+}
+if ($n = 5 | $n = 11) {
+    p_telejump($to);
+    ~agrith_cast_spawn;
+    if (%agrith_quest = ^agrith_summoned) ~agrith_naar_spawn;
+    return;
+}
+p_telejump(map_findsquare($to, 1, 2, ^map_findsquare_lineofwalk));

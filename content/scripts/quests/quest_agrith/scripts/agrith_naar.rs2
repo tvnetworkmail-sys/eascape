@@ -1,0 +1,144 @@
+// EASCape: Shadow of the Storm - summoning Agrith-Naar, the fight and his death.
+// Words: the OSRS wiki's quest transcript (the drenched blade: the RS wiki's). His stats: Void
+// (shadow_of_the_storm.npcs.toml: 95 hitpoints, 83 Attack, 90 Strength, 82 Defence, 100 Magic and
+// Ranged); his attacks: the OSRS wiki (level 100, crush and Fire Blast, max hit 10 each, speed 4;
+// "remains in the same position"; melee by default, Fire Blast if you pray against melee or step
+// out of reach, and, out of reach with Protect from Magic, a Telekinetic Grab that pulls you next
+// to him). Silverlight (dyed or not, the OSRS wiki) must be wielded, in melee distance, as he
+// dies, or he is back at 12 hitpoints (the OSRS wiki). A cannon won't fire on him (cannon_fire.rs2).
+// The cache's demon_summon seq and agrith_summon, agrith_appear sounds bring him in.
+// Ours: how often he grabs (1 in 4 of those turns), the line when Silverlight wasn't used, and
+// that he waits in the throne room for you if you leave or die and come back.
+
+[proc,agrith_naar](string $text) ~chatnpc_specific("Agrith Naar", agrith_naar, $text); // the cache's name
+
+// the incantation as the book has it (agrith_throne.rs2's Chant)
+[label,agrith_summon]
+if_close;
+loc_add(^agrith_circle, summon_floor_spotanim_loc, 0, centrepiece_straight, 20);
+sound_synth(agrith_summon, 1, 0);
+p_delay(2);
+npc_add(^agrith_naar_spot, agrith_naar, 3000);
+%npc_aggressive_player = uid;
+def_npc_uid $naar = npc_uid;
+npc_anim(demon_summon, 0);
+npc_facesquare(^agrith_circle_4);
+sound_synth(agrith_appear, 1, 0);
+~agrith_play("Grip of the Talon", "grip of the talon", 12, 12); // agrith_journal.rs2: the cache's unlock 12,12
+p_delay(2);
+~agrith_naar("<p,angry>Matthew!");
+~agrith_naar("<p,angry>How dare you summon me?");
+// Agrith-Naar kills Matthew
+if (npc_finduid($naar) = true) npc_anim(demon_attack, 0);
+sound_synth(black_demon_attack, 1, 0);
+~agrith_anim_as(agrith_matthew_sigil, human_death, 15);
+~agrith_matthew("<p,scared>Aaaargh!");
+~agrith_del_as(agrith_matthew_sigil);
+~chatplayer("<p,angry>He didn't summon you.");
+anim(emote_beckon, 0); // the RS wiki: the player beckons Agrith-Naar
+~chatplayer("<p,angry>I did!");
+~agrith_naar("<p,angry>Then prepare to die!");
+~agrith_set(^agrith_summoned);
+if (npc_finduid($naar) = true) ~agrith_naar_attack_you;
+
+[proc,agrith_naar_attack_you]
+npc_facesquare(coord);
+%npc_aggressive_player = uid;
+%npc_attacking_uid = uid;
+npc_setmode(applayer2);
+hint_npc;
+
+// back in the throne room while he's here (agrith_throne.rs2's portal)
+[proc,agrith_naar_spawn]
+if (~agrith_find(agrith_naar) = true) return;
+npc_add(^agrith_naar_spot, agrith_naar, 3000);
+~agrith_naar_attack_you;
+
+[proc,agrith_naar_clear]
+~agrith_del_as(agrith_naar);
+
+// ---------------------------------------------------------------- the fight
+[opnpc2,agrith_naar]
+if (%npc_aggressive_player ! uid) {
+    mes("That is not your enemy!");
+    return;
+}
+@player_combat_start;
+
+[apnpc2,agrith_naar]
+if (%npc_aggressive_player ! uid) {
+    mes("That is not your enemy!");
+    return;
+}
+@player_combat_start_ap;
+
+[ai_timer,agrith_naar]
+if (finduid(%npc_aggressive_player) = false) {
+    npc_del;
+    return;
+}
+if (inzone(^agrith_throne_sw, ^agrith_throne_ne, coord) = false) npc_del;
+
+[ai_queue1,agrith_naar] ~npc_default_retaliate_ap;
+[ai_opplayer2,agrith_naar] npc_setmode(applayer2);
+[ai_applayer2,agrith_naar]
+if (%npc_action_delay > map_clock) return;
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) return;
+if (npc_range(coord) <= 1) {
+    if (~check_protect_prayer(^crush_style) = false) {
+        ~npc_default_attack;
+        return;
+    }
+    ~npc_cast_spell_with_forced_max_hit(^fire_blast, 4, 10);
+    return;
+}
+if (~check_protect_prayer(^magic_style) = true & random(4) = 0) {
+    // Telekinetic Grab: pulls you next to him
+    npc_anim(demon_casting, 0);
+    %npc_action_delay = add(map_clock, 4);
+    def_int $duration = ~player_projectile(npc_coord, coord, uid, telegrab_travel, 43, 31, 51, 16, -5, 64, 10);
+    queue*(agrith_naar_grab, calc($duration / 30))(map_findsquare(movecoord(npc_coord, 1, 0, -1), 0, 1, ^map_findsquare_lineofwalk));
+    return;
+}
+~npc_cast_spell_with_forced_max_hit(^fire_blast, 4, 10);
+
+[queue,agrith_naar_grab](coord $to)
+spotanim_pl(telegrab_impact, 124, 0);
+p_telejump($to);
+
+// ---------------------------------------------------------------- his death
+[ai_queue3,agrith_naar]
+if (finduid(%npc_aggressive_player) = true) {
+    def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+    if (($weapon = silverlight | $weapon = agrith_silverlight_dyed) & npc_range(coord) <= 1) {
+        gosub(npc_death);
+        obj_add(npc_coord, ashes, 1, ^lootdrop_duration); // the OSRS wiki: ashes (vile ashes from 2021)
+        if (finduid(%npc_aggressive_player) = true) queue(agrith_naar_slain, 0, 0);
+        return;
+    }
+    queue(agrith_naar_survives, 0, 0);
+}
+npc_statheal(hitpoints, 12, 0);
+
+[queue,agrith_naar_survives]
+mes("Agrith-Naar can only be slain with Silverlight!"); // ours
+
+[queue,agrith_naar_slain]
+if (%agrith_quest ! ^agrith_summoned) return;
+hint_stop;
+// the OSRS wiki: only the Silverlight you wield turns into Darklight
+def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+if ($weapon = silverlight | $weapon = agrith_silverlight_dyed) {
+    inv_setslot(worn, ^wearpos_rhand, darklight, 1);
+    ~update_all($weapon);
+} else {
+    ~agrith_give(darklight, 1); // ours: it came off as he fell
+}
+~agrith_set(^agrith_slain);
+~agrith_cast_spawn;
+~mesbox("As you strike the final blow, Silverlight is drenched with Agrith-Naar's foul-smelling ichor!"); // the RS wiki's
+queue(agrith_reward, 0, 0); // agrith_journal.rs2

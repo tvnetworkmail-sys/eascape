@@ -10,6 +10,8 @@ return (golem_fixed_golem);
 return (nc_name(~get_golem_state));
 
 [opnpc1,golem_golem]
+// EASCape: Shadow of the Storm (quest_agrith/agrith_start.rs2) once it has started
+if (%golem_a = ^golem_complete & %agrith_quest >= ^agrith_started & %agrith_quest < ^agrith_slain) @agrith_golem_talk;
 def_string $golem_name = ~get_golem_name;
 def_npc $golem_npc = ~get_golem_state;
 if(%golem_a = ^golem_not_started) {
@@ -66,6 +68,8 @@ if(%golem_a = ^golem_not_started) {
 }
 
 [opnpcu,golem_golem]
+// EASCape: Shadow of the Storm: the strange implement takes out the portal instruction (quest_agrith/agrith_storm.rs2)
+if (last_useitem = golem_golemkey & %agrith_quest >= ^agrith_gathering & %agrith_quest < ^agrith_slain) @agrith_golem_reprogram;
 if(stat(crafting) < 20) {
     mes("You need level 20 crafting to repair the golem.");
     return;

@@ -1,0 +1,689 @@
+// EASCape: Shadow of the Storm - the demonic throne room: Evil Dave's escort to Denath, the dark
+// wizards, Matthew and Josef's book, and the two rituals. Words: the OSRS wiki's quest transcript
+// (the RS wiki's where it says so). The wizards are the 377 cache's agrith_* npcs, each with its
+// own _sigil version for the circle; the magic circle is the cache's summon_floor_spotanim_loc,
+// the closing portal its agrith_portal_closing, Denath's exit its denath_leave seq, the sounds its
+// agrith_circle, agrith_portalclose, agrith_summon and agrith_appear.
+// Ours: the 377 maps have no one in the throne room, so the wizards are added for you when you
+// step through the portal (and taken away when you leave; anyone else in the room sees them too);
+// where everyone stands; that you lead the incantation from the head of the circle; the timing.
+// No source has the "Evil Introduction" jingle in our cache, so the escort has no music of its own.
+
+// ---------------------------------------------------------------- the cast
+[proc,agrith_cast_add](coord $coord, npc $npc)
+npc_add($coord, $npc, 1500);
+%npc_aggressive_player = uid;
+npc_setmode(none); // ours: they keep their places
+npc_facesquare(movecoord(^agrith_circle, 1, 0, 1));
+
+// takes away the throne room people that were added for you
+[proc,agrith_cast_clear]
+npc_findallany(movecoord(^agrith_circle, 1, 0, 1), 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid & ~agrith_is_cast(npc_type) = true) npc_del;
+}
+
+[proc,agrith_is_cast](npc $type)(boolean)
+switch_npc ($type) {
+    case agrith_denath, agrith_denath_sigil, agrith_eric, agrith_eric_sigil, agrith_dave, agrith_dave_sigil, agrith_matthew, agrith_matthew_sigil : return(true);
+    case agrith_jennifer, agrith_jennifer_sigil, agrith_tanya, agrith_tanya_sigil, agrith_patrick, agrith_patrick_sigil : return(true);
+    case agrith_badden, agrith_badden_sigil, agrith_reen, agrith_reen_sigil, agrith_golem_throneroom, agrith_golem_sigil, agrith_naar : return(true);
+}
+return(false);
+
+// finds your own $type in the throne room (it becomes the active npc)
+[proc,agrith_find](npc $type)(boolean)
+npc_findall(movecoord(^agrith_circle, 1, 0, 1), $type, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) return(true);
+}
+return(false);
+
+// one of yours in the room does something (the npc commands need it found in the same script)
+[proc,agrith_say_as](npc $type, string $text)
+npc_findall(movecoord(^agrith_circle, 1, 0, 1), $type, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) npc_say($text);
+}
+
+[proc,agrith_del_as](npc $type)
+npc_findall(movecoord(^agrith_circle, 1, 0, 1), $type, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) npc_del;
+}
+
+[proc,agrith_anim_as](npc $type, seq $seq, int $delay)
+npc_findall(movecoord(^agrith_circle, 1, 0, 1), $type, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) npc_anim($seq, $delay);
+}
+
+[proc,agrith_walk_as](npc $type, coord $to)
+npc_findall(movecoord(^agrith_circle, 1, 0, 1), $type, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) npc_walk($to);
+}
+
+// everyone of yours in the room says it
+[proc,agrith_cast_say](string $text)
+npc_findallany(movecoord(^agrith_circle, 1, 0, 1), 20, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid & ~agrith_is_cast(npc_type) = true & npc_type ! agrith_naar) npc_say($text);
+}
+
+// the room as it is at your stage
+[proc,agrith_cast_spawn]
+~agrith_cast_clear;
+def_int $s = %agrith_quest;
+if ($s < ^agrith_joined) return;
+if ($s < ^agrith_ritual) {
+    ~agrith_cast_add(^agrith_denath_spot, agrith_denath);
+    ~agrith_cast_add(^agrith_eric_spot, agrith_eric);
+    ~agrith_cast_add(^agrith_matthew_spot, agrith_matthew);
+    ~agrith_cast_add(^agrith_jennifer_spot, agrith_jennifer);
+    ~agrith_cast_add(^agrith_tanya_spot, agrith_tanya);
+    ~agrith_cast_add(^agrith_patrick_spot, agrith_patrick);
+    return;
+}
+if ($s = ^agrith_ritual) {
+    // in the circle with their sigils
+    ~agrith_cast_add(^agrith_circle_1, agrith_denath_sigil);
+    ~agrith_cast_add(^agrith_circle_2, agrith_dave_sigil);
+    ~agrith_cast_add(^agrith_circle_3, agrith_eric_sigil);
+    ~agrith_cast_add(^agrith_circle_4, agrith_matthew_sigil);
+    ~agrith_cast_add(^agrith_circle_5, agrith_jennifer_sigil);
+    ~agrith_cast_add(^agrith_circle_6, agrith_tanya_sigil);
+    ~agrith_cast_add(^agrith_circle_7, agrith_patrick_sigil);
+    return;
+}
+if ($s = ^agrith_ready | $s = ^agrith_summoned) {
+    if ($s = ^agrith_ready) ~agrith_cast_add(^agrith_circle_4, agrith_matthew_sigil);
+    ~agrith_cast_add(^agrith_circle_5, agrith_jennifer_sigil);
+    ~agrith_cast_add(^agrith_circle_7, agrith_patrick_sigil);
+    ~agrith_cast_add(^agrith_circle_2, agrith_dave_sigil);
+    ~agrith_cast_add(^agrith_circle_1, agrith_badden_sigil);
+    ~agrith_cast_add(^agrith_circle_6, agrith_reen_sigil);
+    ~agrith_cast_add(^agrith_circle_3, agrith_golem_sigil);
+    return;
+}
+// after Denath went (90-100), and after Agrith-Naar is dead
+if ($s < ^agrith_slain) ~agrith_cast_add(^agrith_circle_4, agrith_matthew);
+~agrith_cast_add(^agrith_circle_5, agrith_jennifer);
+~agrith_cast_add(^agrith_circle_7, agrith_patrick);
+if (%agrith_convinced_dave >= ^agrith_dave_walking) ~agrith_cast_add(^agrith_circle_2, agrith_dave);
+if (%agrith_badden_uzer >= ^agrith_priest_walking) ~agrith_cast_add(^agrith_circle_1, agrith_badden);
+if (%agrith_reen_uzer >= ^agrith_priest_walking) ~agrith_cast_add(^agrith_circle_6, agrith_reen);
+if (%agrith_convinced_golem >= ^agrith_golem_inside) ~agrith_cast_add(^agrith_circle_3, agrith_golem_throneroom);
+
+// ---------------------------------------------------------------- the portal, both ways
+// golem_portal (quest_golem.rs2) while Shadow of the Storm is going on
+[label,agrith_portal_enter]
+if (%agrith_quest < ^agrith_joined) {
+    ~agrith_dave("<p,angry>Hey! This is our portal! Keep out!"); // the RS wiki's
+    return;
+}
+mes("You step into the portal.");
+p_arrivedelay;
+p_teleport(^agrith_throne_arrive);
+~agrith_cast_spawn;
+if (%agrith_quest = ^agrith_summoned) ~agrith_naar_spawn; // agrith_naar.rs2 (ours: he waits for you)
+if (~agrith_music = true) return;
+@music_playbyregionplane(^agrith_throne_arrive);
+
+// golem_demon_portal and agrith_portal_closing (quest_golem.rs2) while Shadow of the Storm is going on
+[label,agrith_portal_leave]
+mes("You step into the portal.");
+p_arrivedelay;
+~agrith_cast_clear;
+~agrith_naar_clear; // agrith_naar.rs2
+p_teleport(^agrith_portal_outside);
+if (%agrith_quest = ^agrith_desummoned) {
+    p_delay(0);
+    @agrith_tanya_falls; // agrith_storm.rs2
+}
+if (~agrith_music = true) return;
+@music_playbyregionplane(^agrith_portal_outside);
+
+[oploc1,agrith_portal_closing] @agrith_portal_leave;
+
+// ---------------------------------------------------------------- Evil Dave's escort
+// the RS wiki's transcript: "Screen fade in/out. Cutscene begins. Evil Dave and the player appear
+// in Thammaron's throne room. The player follows Evil Dave all the way through the room until
+// Denath."
+[label,agrith_dave_cutscene]
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(^agrith_throne_arrive);
+~agrith_cast_spawn_joining;
+npc_add(movecoord(^agrith_throne_arrive, 1, 0, 0), agrith_dave, 100);
+%npc_aggressive_player = uid;
+def_npc_uid $dave = npc_uid;
+p_delay(1);
+~fade_in;
+if (npc_finduid($dave) = true) npc_walk(movecoord(^agrith_denath_spot, 1, 0, -2));
+p_walk(movecoord(^agrith_denath_spot, 0, 0, -2));
+~mesbox("Evil Dave escorts you into the demonic throne room.");
+p_delay(8);
+if (npc_finduid($dave) = true) npc_facesquare(^agrith_denath_spot);
+~agrith_dave("<p,happy>Master! This person wants to join us!");
+~agrith_denath("<p,neutral>Indeed? Well we are one wizard short since Josef ran away. Can you vouch for <~agrith_him>?");
+~agrith_dave("<p,happy>Yeah! <~agrith_he>'s totally evil!");
+~agrith_denath("<p,neutral>Thank you, Dave.");
+if (npc_finduid($dave) = true) npc_del;
+~agrith_set(^agrith_joined);
+%agrith_reen_uzer = ^agrith_priest_uzer; // ours: Reen has left Al Kharid (the cache: there at 0-20 only)
+@agrith_denath_welcome;
+
+// the room before you join (stage 20): as at 30
+[proc,agrith_cast_spawn_joining]
+~agrith_cast_clear;
+~agrith_cast_add(^agrith_denath_spot, agrith_denath);
+~agrith_cast_add(^agrith_eric_spot, agrith_eric);
+~agrith_cast_add(^agrith_matthew_spot, agrith_matthew);
+~agrith_cast_add(^agrith_jennifer_spot, agrith_jennifer);
+~agrith_cast_add(^agrith_tanya_spot, agrith_tanya);
+~agrith_cast_add(^agrith_patrick_spot, agrith_patrick);
+
+// ---------------------------------------------------------------- Denath
+[proc,agrith_denath](string $text) ~chatnpc_specific("Denath", agrith_denath, $text);
+[proc,agrith_matthew](string $text) ~chatnpc_specific("Matthew", agrith_matthew, $text);
+[proc,agrith_jennifer](string $text) ~chatnpc_specific("Jennifer", agrith_jennifer, $text);
+[proc,agrith_patrick](string $text) ~chatnpc_specific("Patrick", agrith_patrick, $text);
+[proc,agrith_eric](string $text) ~chatnpc_specific("Eric", agrith_eric, $text);
+[proc,agrith_tanya](string $text) ~chatnpc_specific("Tanya", agrith_tanya, $text);
+
+[opnpc1,agrith_denath] @agrith_denath_talk;
+[opnpc1,agrith_denath_sigil] @agrith_denath_talk;
+
+[label,agrith_denath_talk]
+if (%agrith_quest = ^agrith_joined) @agrith_denath_welcome;
+~agrith_denath("<p,angry>Leave me alone! I am preparing for the summoning ritual. You should make yourself a demonic sigil and practice the incantation with the other wizards.");
+@agrith_denath_menu(1, 1, 1);
+
+[label,agrith_denath_welcome]
+~agrith_denath("<p,neutral>So you wish to join us? You have made a wise choice. When we summon the demon Agrith-Naar, he will grant all our worldly desires.");
+~agrith_denath("<p,neutral>An abyssal whip, a dragon chain mail? To conjure these items is trivial for Agrith-Naar.");
+~agrith_denath("<p,neutral>But you will not need such weapons or armour, for Agrith-Naar will grant you the power of life and death over all creatures!");
+~agrith_denath("<p,evillaugh>You shall have every wish granted, and everyone who has ever wronged you will burn in a hell of your own devising!");
+@agrith_denath_menu(1, 1, 1);
+
+// the transcript's "other": the questions you haven't asked yet stay on the menu
+[label,agrith_denath_menu](int $wrong, int $how, int $josef)
+def_string $last = "I forgot the incantation.";
+if (%agrith_quest = ^agrith_joined) $last = "What do I have to do?";
+switch_int (~p_choice_some5("Isn't this, you know, wrong?", $wrong, "How do you know Agrith-Naar will do all this for us?", calc($how * 2), "Why did Josef run away?", calc($josef * 3), $last, 4, "", 0)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Isn't this, you know, wrong?");
+        ~agrith_denath("<p,angry>Right and wrong are for the weak! This is your chance to choose to be on the side of the strong, and have all your desires granted, while the weak are crushed beneath Agrith-Naar's demonic feet!");
+        @agrith_denath_menu(0, $how, $josef);
+    case 2 :
+        ~chatplayer("<p,quiz>How do you know Agrith-Naar will do all this for us?");
+        ~agrith_denath("<p,angry>My binding spells will make Agrith-Naar my slave! You would be wise not to question my powers again, lest I turn the same spells on you!");
+        @agrith_denath_menu($wrong, 0, $josef);
+    case 3 :
+        ~chatplayer("<p,quiz>Why did Josef run away?");
+        ~agrith_denath("<p,angry>Obviously he was a coward who did not have the strength to abandon his old-fashioned morality. I hope you will not be a similar disappointment.");
+        @agrith_denath_menu($wrong, $how, 0);
+    case 4 :
+        if (%agrith_quest = ^agrith_joined) @agrith_denath_task;
+        ~chatplayer("<p,sad>I forgot the incantation.");
+        ~agrith_denath("<p,angry>Ignoramus! Are you incapable of even the simplest task? The incantation is <~agrith_incantation_text(false)>.");
+}
+
+[label,agrith_denath_task]
+~chatplayer("<p,quiz>What do I have to do?");
+~agrith_denath("<p,neutral>When I have finished preparing the magic circle, we will all recite the incantation that will summon Agrith-Naar.");
+~agrith_new_incantation;
+~agrith_set(^agrith_incantation);
+~agrith_denath("<p,neutral>You must memorize the incantation carefully. It is <~agrith_incantation_text(false)>.");
+~agrith_denath("<p,neutral>You will also need to make yourself a demonic sigil to act as a focus of power. One of the group has the mould you need to make it.");
+~agrith_denath("<p,angry>Now let me continue with my preparations!");
+
+// ---------------------------------------------------------------- Evil Dave in the room
+[opnpc1,agrith_dave] @agrith_dave_talk;
+[opnpc1,agrith_dave_sigil] @agrith_dave_talk;
+
+[label,agrith_dave_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_ritual) {
+    ~agrith_dave("<p,happy>Our evil moment is at hand! You should get to your place in the circle so the ritual can start!");
+} else if ($s = ^agrith_gathering) {
+    ~agrith_dave("<p,sad>That demon killed Eric! When are you going to start the ritual and slay him?");
+} else if ($s = ^agrith_ready) {
+    ~agrith_dave("<p,angry>Hurry up with the ritual! That demon killed Eric!");
+} else if ($s = ^agrith_summoned) {
+    ~agrith_dave("<p,scared>Kill him, <displayname>!");
+} else if ($s >= ^agrith_slain) {
+    ~agrith_dave("<p,happy>Thank goodness that's over!");
+    ~chatplayer("<p,quiz>Goodness?");
+    ~agrith_dave("<p,happy>I'm not going to try to be evil any more. From now on I'm going to be good!");
+}
+
+// ---------------------------------------------------------------- Jennifer
+[opnpc1,agrith_jennifer] @agrith_jennifer_talk;
+[opnpc1,agrith_jennifer_sigil] @agrith_jennifer_talk;
+
+[label,agrith_jennifer_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_ritual) {
+    ~agrith_jennifer("<p,neutral>You ought to get to your place in the circle. Denath wants YOU to lead the ritual.");
+    return;
+}
+if ($s = ^agrith_desummoned | $s = ^agrith_gathering) {
+    ~agrith_jennifer("<p,sad>We should have known it was too good to be true.");
+    ~agrith_jennifer("<p,sad>It's always the same, everyone want to use you. Even demons.");
+    return;
+}
+if ($s = ^agrith_ready) {
+    ~agrith_jennifer("<p,neutral>You ought to get to the head of the circle and lead the incantation. Let's get this over with.");
+    return;
+}
+if ($s = ^agrith_summoned) {
+    ~agrith_jennifer("<p,scared>Help!");
+    return;
+}
+if ($s >= ^agrith_slain) {
+    ~agrith_jennifer("<p,neutral>At least that's all over.");
+    return;
+}
+~agrith_jennifer("<p,bored>Huh.");
+switch_int (~p_choice3("What?", 1, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What?");
+        ~agrith_jennifer("<p,sad>You don't understand.");
+        switch_int (~p_choice3("Understand what?", 1, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3)) {
+            case 1 :
+                ~chatplayer("<p,quiz>Understand what?");
+                ~agrith_jennifer("<p,sad>Nobody understands.");
+                switch_int (~p_choice3("What don't we understand?", 1, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3)) {
+                    case 1 :
+                        ~chatplayer("<p,quiz>What don't we understand?");
+                        ~agrith_jennifer("<p,sad>Oh, it doesn't matter. You don't understand. Go away.");
+                    case 2 : @agrith_jennifer_mould;
+                    case 3 : @agrith_jennifer_josef;
+                }
+            case 2 : @agrith_jennifer_mould;
+            case 3 : @agrith_jennifer_josef;
+        }
+    case 2 : @agrith_jennifer_mould;
+    case 3 : @agrith_jennifer_josef;
+}
+
+[label,agrith_jennifer_mould]
+~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+if (inv_total(inv, agrith_sigil_mould) > 0 | inv_total(bank, agrith_sigil_mould) > 0) {
+    ~agrith_jennifer("<p,angry>I already gave that to you! Go away!");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~agrith_jennifer("<p,bored>Come back when you've got free space.");
+    return;
+}
+~agrith_jennifer("<p,bored>Huh. So that's all you want. Here it is.");
+inv_add(inv, agrith_sigil_mould, 1);
+~chatplayer("<p,happy>Thanks!");
+~agrith_jennifer("<p,bored>Huh.");
+
+[label,agrith_jennifer_josef]
+~chatplayer("<p,quiz>Do you know what happened to Josef?");
+~agrith_jennifer("<p,angry>He didn't understand!");
+~chatplayer("<p,neutral>No, I don't suppose he did.");
+
+// ---------------------------------------------------------------- Patrick
+[opnpc1,agrith_patrick] @agrith_patrick_talk;
+[opnpc1,agrith_patrick_sigil] @agrith_patrick_talk;
+
+[label,agrith_patrick_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_ritual) {
+    ~agrith_patrick("<p,happy>Get to your place in the circle and lead the ritual! I'm so excited!");
+    return;
+}
+if ($s = ^agrith_desummoned) {
+    ~agrith_patrick("<p,scared>Oh no!");
+    ~agrith_patrick("<p,scared>What are we going to do?");
+    ~agrith_patrick("<p,scared>What are we going to do?!!!");
+    return;
+}
+if ($s = ^agrith_gathering | $s = ^agrith_ready) {
+    ~agrith_patrick("<p,sad>I guess none of us are going to get rich now. Let's do what needs to be done!");
+    return;
+}
+if ($s = ^agrith_summoned) {
+    ~agrith_patrick("<p,scared>Help! Save me from the demon!");
+    return;
+}
+if ($s >= ^agrith_slain) {
+    ~agrith_patrick("<p,neutral>So Agrith-Naar was never going to do anything for us. I suppose I'll have to make my fortune the hard way!");
+    return;
+}
+~agrith_patrick("<p,happy>Agrith-Naar is going to make us all sooo rich!");
+switch_int (~p_choice4("Yeah! We'll all be rich!", 1, "Isn't it more satisfying to earn riches yourself?", 2, "Do you have the demonic sigil mould?", 3, "Do you know what happened to Josef?", 4)) {
+    case 1 :
+        ~chatplayer("<p,happy>Yeah! We'll all be rich!");
+        ~agrith_patrick("<p,happy>Yeah! I'm going to get myself a dragon longsword! And a million rune ores! And a small piece of coloured paper to put on my head!");
+        ~chatplayer("<p,confused>Um... if you like.");
+        if (%golem_throne_gems = 0) ~agrith_patrick("<p,neutral>Those gems on the demon's throne look valuable. I just wish I had some way to remove them.");
+    case 2 :
+        ~chatplayer("<p,quiz>Isn't it more satisfying to earn riches yourself?");
+        ~agrith_patrick("<p,angry>I don't want to be satisfied, I want to be rich!");
+    case 3 :
+        ~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+        ~agrith_patrick("<p,happy>Right now I don't have anything. But soon, I will have everything!");
+    case 4 :
+        ~chatplayer("<p,quiz>Do you know what happened to Josef?");
+        ~agrith_patrick("<p,confused>Denath says he ran away. I don't know why. Who would want to run away from what Agrith-Naar is going to do for us?");
+}
+
+// ---------------------------------------------------------------- Eric
+[opnpc1,agrith_eric] @agrith_eric_talk;
+[opnpc1,agrith_eric_sigil] @agrith_eric_talk;
+
+[label,agrith_eric_talk]
+if (%agrith_quest = ^agrith_ritual) {
+    ~agrith_eric("<p,neutral>We'd better do the ritual!");
+    return;
+}
+~agrith_eric("<p,angry>They won't ignore me for much longer!");
+switch_int (~p_choice3("Who?", 1, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who?");
+        ~agrith_eric("<p,angry>Everyone!");
+        ~agrith_eric("<p,angry>When I have demonic powers, they'll all have to pay attention to me!");
+        ~agrith_eric("<p,sad>And SHE won't ignore me then. I'll be able to show her how I feel.");
+        ~agrith_eric("<p,evillaugh>I will make everyone like me!");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+        ~agrith_eric("<p,neutral>No. I gave it to Matthew.");
+    case 3 :
+        ~chatplayer("<p,quiz>Do you know what happened to Josef?");
+        ~agrith_eric("<p,sad>He went away and left us. He probably didn't like me.");
+}
+
+// ---------------------------------------------------------------- Tanya
+[opnpc1,agrith_tanya] @agrith_tanya_talk;
+[opnpc1,agrith_tanya_sigil] @agrith_tanya_talk;
+
+[label,agrith_tanya_talk]
+if (%agrith_quest = ^agrith_ritual) {
+    ~agrith_tanya("<p,happy>Get to your place in the circle and lead the ritual! I'm so excited!");
+    return;
+}
+~agrith_tanya("<p,evillaugh>Soon, all will bow down before me!");
+switch_int (~p_choice3("Oh?", 1, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Oh?");
+        ~agrith_tanya("<p,evillaugh>Agrith-Naar will make us the rulers of the world! I shall be a dark queen over all Gielinor! All shall love me and despair!");
+        // the RS wiki: she laughs overhead, louder each time
+        ~agrith_say_as(agrith_tanya, "Ha ha ha ha!");
+        ~agrith_tanya("<p,evillaugh>Ha ha ha ha!");
+        ~agrith_say_as(agrith_tanya, "Ah ha ha ha ha!!");
+        ~agrith_tanya("<p,evillaugh>Ah ha ha ha ha ha!!");
+        ~agrith_say_as(agrith_tanya, "AAH HA HA HA HA HAAAAA!!!!");
+        ~agrith_tanya("<p,evillaugh>AAH HA HA HA HA HA HAAAAA!!!!");
+        ~agrith_patrick("<p,angry>Look, we've told you not to do that. It makes everyone uncomfortable.");
+        ~agrith_tanya("<p,sad>Sorry.");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+        ~agrith_tanya("<p,angry>Hah! Carrying such humble implements is beneath me!");
+    case 3 :
+        ~chatplayer("<p,quiz>Do you know what happened to Josef?");
+        ~agrith_tanya("<p,angry>He was a fool who could not cope with power! When Agrith-Naar makes us rulers of continents, I will find him and crush him!");
+}
+
+// ---------------------------------------------------------------- Matthew
+[opnpc1,agrith_matthew] @agrith_matthew_talk;
+[opnpc1,agrith_matthew_sigil] @agrith_matthew_talk;
+
+[label,agrith_matthew_talk]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_ritual) {
+    ~agrith_matthew("<p,neutral>This is it! Get to your place in the circle and say the words!");
+    return;
+}
+if ($s = ^agrith_desummoned | $s = ^agrith_gathering) @agrith_matthew_gather;
+if ($s = ^agrith_ready) {
+    ~agrith_matthew("<p,neutral>What are we waiting for? You must lead the ritual and kill Agrith-Naar! We're all counting on you!");
+    return;
+}
+if ($s >= ^agrith_tome) {
+    if ($s = ^agrith_tome & inv_total(inv, agrith_book) > 0) @agrith_matthew_book;
+    if ($s > ^agrith_tome) {
+        ~agrith_matthew("<p,neutral>Are you prepared for the ritual? You must be ready to slay Agrith-Naar when he appears.");
+        return;
+    }
+}
+if ($s >= ^agrith_josef) {
+    ~agrith_matthew("<p,quiz>Did you find that book?");
+    switch_int (~p_choice2("Not yet.", 1, "Do you have the demonic sigil mould?", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Not yet.");
+            ~agrith_matthew("<p,neutral>I really want to know what's in it. I think Denath is hiding something from us, but we won't know what unless we read that book!");
+        case 2 : @agrith_matthew_mould;
+    }
+    return;
+}
+~agrith_matthew("<p,quiz>Hello. Are you Josef's replacement?");
+@agrith_matthew_menu(1);
+
+[label,agrith_matthew_menu](int $replacement)
+switch_int (~p_choice_some5("Yes, I suppose I am.", $replacement, "Do you have the demonic sigil mould?", 2, "Do you know what happened to Josef?", 3, "", 0, "", 0)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes, I suppose I am.");
+        ~agrith_matthew("<p,sad>It just goes to show how little Denath values us.");
+        ~chatplayer("<p,quiz>What do you mean?");
+        ~agrith_matthew("<p,sad>Denath told us we would learn the secrets of demonic magic, but all we've done is memorize one incantation. And now he replaces poor Josef with the next person who comes along!");
+        @agrith_matthew_menu(0);
+    case 2 : @agrith_matthew_mould;
+    case 3 : @agrith_matthew_josef;
+}
+
+[label,agrith_matthew_mould]
+~chatplayer("<p,quiz>Do you have the demonic sigil mould?");
+~agrith_matthew("<p,neutral>No, I think Jennifer has it.");
+
+[label,agrith_matthew_josef]
+~chatplayer("<p,quiz>Do you know what happened to Josef?");
+~agrith_matthew("<p,shifty>Shh! Listen, Denath doesn't know this...");
+~agrith_matthew("<p,neutral>When we joined him, Denath told us we were going to learn all the secrets of demonic magic, but we still don't know anything.");
+~agrith_matthew("<p,neutral>The others, they just think they're terribly evil, with their sigils and the incantation they learned by rote. But Josef and I wanted more - we wanted to know how it worked.");
+~agrith_matthew("<p,neutral>Josef was more curious than me. Last night, he secretly read a book that Denath was keeping from us. He didn't know I was awake, but I saw what happened.");
+~agrith_matthew("<p,scared>I saw him read it, and then his face turned white, and he took the book and ran through the portal.");
+~agrith_matthew("<p,neutral>But Denath was waking up, and when he saw Josef was gone he went through the portal to look for him. A bit later Denath returned, without Josef or the book.");
+~agrith_matthew("<p,neutral>Josef didn't have money for the magic carpet, and he can't have got far in the desert at night with that heavy book.");
+// ours: Josef's story moves the quest on once Denath has taught you the incantation
+if (%agrith_quest = ^agrith_incantation) ~agrith_set(^agrith_josef);
+~agrith_matthew("<p,neutral>Josef must have hidden the book somewhere in the ruins, before Denath followed him. If you could find it, we'd know what it was that frightened him. We'd know what Denath is really up to!");
+
+[label,agrith_matthew_book]
+~agrith_matthew("<p,quiz>Did you find that book?");
+~chatplayer("<p,neutral>Yes. The golem saw Josef hide it in one of the broken kilns in the city.");
+~agrith_matthew("<p,quiz>Did the golem see what happened to Josef?");
+~chatplayer("<p,sad>It said Denath killed him.");
+~agrith_matthew("<p,shock>Oh no!");
+~agrith_matthew("<p,sad>I knew Denath was a dark wizard but I didn't think he'd kill one of his disciples.");
+~agrith_matthew("<p,neutral>Let me look at the book then.");
+~objbox(agrith_book, "Matthew quickly reads the book then hands it back to you.", 250, 0, ^objbox_height);
+~agrith_matthew("<p,confused>I don't understand. What's in here that Denath thought was worth killing over? Josef must have worked something out - but what?");
+~agrith_matthew("<p,neutral>But look at the incantation in the book. The words are in the reverse order to the order that Denath taught us.");
+~chatplayer("<p,quiz>The incantation in the book is backwards?");
+~agrith_matthew("<p,confused>More likely the book has the correct incantation and the one Denath taught us was backwards. But what does that mean?");
+~agrith_matthew("<p,scared><displayname>, I'm not happy about this ritual. I don't think Agrith-Naar is going to grant all our wishes, I think he's going to kill us all. But if I try to stop it, Denath will kill me like he did Josef!");
+~chatplayer("<p,neutral>Don't worry. I'm here to kill the demon!");
+if (inv_total(inv, agrith_silverlight_dyed) > 0 | inv_total(worn, agrith_silverlight_dyed) > 0) {
+    ~chatplayer("<p,neutral>This is the demon-slaying sword Silverlight, the only weapon that can kill Agrith-Naar!");
+    ~agrith_matthew("<p,happy>Thank goodness! I think Denath is nearly ready for the ritual. We must prepare!");
+    ~agrith_set(^agrith_ritual);
+    @agrith_ritual_assemble;
+}
+~chatplayer("<p,neutral>But I need find a way to smuggle Silverlight in here. It's the only weapon that can defeat Agrith-Naar!");
+~agrith_matthew("<p,neutral>Thank goodness! I will try to stall the ritual until you have Silverlight. Hurry!");
+
+// after the backwards ritual: the four to find (Evil Dave, Father Badden, Father Reen, the golem)
+[proc,agrith_still_needed]()(int)
+def_int $n = 0;
+if (%agrith_convinced_dave < ^agrith_dave_walking) $n = calc($n + 1);
+if (%agrith_badden_uzer < ^agrith_priest_walking) $n = calc($n + 1);
+if (%agrith_reen_uzer < ^agrith_priest_walking) $n = calc($n + 1);
+if (%agrith_convinced_golem < ^agrith_golem_inside) $n = calc($n + 1);
+return($n);
+
+[label,agrith_matthew_gather]
+def_int $n = ~agrith_still_needed;
+if (%agrith_quest = ^agrith_desummoned) {
+    ~agrith_matthew("<p,neutral>We've got to perform the ritual again, forwards this time, so you can kill Agrith-Naar. I'll prepare for it here while you find four more people.");
+} else if ($n = 0) {
+    ~agrith_matthew("<p,quiz>We've got eight people now. Are you ready to summon Agrith-Naar and slay him?");
+    switch_int (~p_choice3("Yes.", 1, "No.", 2, "I don't understand what happened!", 3)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Yes.");
+            if (inv_total(inv, agrith_sigil) = 0) {
+                ~agrith_matthew("<p,quiz>Where's your demonic sigil? You'll need that in order to lead the ritual.");
+                return;
+            }
+            if (~agrith_carries_silverlight = false) {
+                ~agrith_matthew("<p,shock>Where is Silverlight? It's impossible to kill Agrith-Naar without that magic sword!");
+                return;
+            }
+            ~agrith_matthew("<p,scared>*gulp* Okay, here we go...");
+            ~agrith_set(^agrith_ready);
+            ~agrith_cast_spawn; // the others assemble at the centre of the room
+            hint_coord(^hint_center, ^agrith_head, 100);
+        case 2 :
+            ~chatplayer("<p,neutral>No.");
+            ~agrith_matthew("<p,neutral>Do hurry! We haven't got much time!");
+        case 3 : @agrith_matthew_explain;
+    }
+    return;
+} else if ($n = 1) {
+    ~agrith_matthew("<p,neutral>We're ready to perform the ritual. We just need one more person!");
+} else if ($n = 2) {
+    ~agrith_matthew("<p,neutral>We'll be ready to perform the ritual soon, but you need to find two more people.");
+} else {
+    ~agrith_matthew("<p,neutral>We need to get everyone back in here! We need <~agrith_number($n)> more people to perform the ritual!");
+}
+if (~p_choice2("Okay.", 1, "I don't understand what happened!", 2) = 1) {
+    ~chatplayer("<p,neutral>Okay!");
+    ~agrith_matthew("<p,neutral>Hurry!");
+    return;
+}
+@agrith_matthew_explain;
+
+[proc,agrith_number](int $n)(string)
+if ($n = 4) return("four");
+if ($n = 3) return("three");
+if ($n = 2) return("two");
+return("one");
+
+[label,agrith_matthew_explain]
+~chatplayer("<p,confused>I don't understand what happened!");
+~agrith_matthew("<p,neutral>Denath must have been Agrith-Naar all along!");
+~agrith_matthew("<p,neutral>Ellemar's book said that Agrith-Naar can only use his powerful magics from the demon plane.");
+~agrith_matthew("<p,neutral>Ellemar must have trapped him in human form to stop him using his magics. That must be what the last pages of the book said.");
+~agrith_matthew("<p,neutral>So the reason he assembled us was to send him back to his own plane, where he would be much more powerful! That's why the ritual was backwards!");
+~agrith_matthew("<p,scared>He's already started to close the portal to trap us. Who knows what else he could do?");
+~agrith_matthew("<p,neutral>But if we can perform the ritual forwards then you can kill him using Silverlight and end his evil magics once and for all!");
+
+// ---------------------------------------------------------------- the ritual
+// Matthew has read the book: Denath gathers the wizards in the circle
+[label,agrith_ritual_assemble]
+~agrith_denath("<p,neutral>It is time for the ritual to commence!");
+~agrith_cast_spawn; // Denath and the disciples assemble around the centre of the room
+~agrith_say_as(agrith_denath_sigil, "<displayname>, please take your place in the circle!");
+hint_coord(^hint_center, ^agrith_head, 100);
+
+// Chant (the cache's iop1 on the demonic sigil)
+[opheld1,agrith_sigil]
+def_int $s = %agrith_quest;
+if (($s ! ^agrith_ritual & $s ! ^agrith_ready) | inzone(^agrith_throne_sw, ^agrith_throne_ne, coord) = false) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+if (coord ! ^agrith_head) {
+    // ours: you lead it from the head of the circle
+    mes("You need to take your place at the head of the circle to lead the incantation.");
+    hint_coord(^hint_center, ^agrith_head, 100);
+    return;
+}
+hint_stop;
+if ($s = ^agrith_ritual) ~agrith_say_as(agrith_denath_sigil, "<displayname> will lead us in the incantation.");
+def_int $said1 = ~agrith_chant_word(1);
+def_int $said2 = ~agrith_chant_word(2);
+def_int $said3 = ~agrith_chant_word(3);
+def_int $said4 = ~agrith_chant_word(4);
+def_int $said5 = ~agrith_chant_word(5);
+def_boolean $denath = false;
+def_boolean $book = false;
+if ($said1 = %agrith_incantation_1 & $said2 = %agrith_incantation_2 & $said3 = %agrith_incantation_3 & $said4 = %agrith_incantation_4 & $said5 = %agrith_incantation_5) $denath = true;
+if ($said1 = %agrith_incantation_5 & $said2 = %agrith_incantation_4 & $said3 = %agrith_incantation_3 & $said4 = %agrith_incantation_2 & $said5 = %agrith_incantation_1) $book = true;
+if ($s = ^agrith_ritual) {
+    if ($denath = false) {
+        ~agrith_denath("<p,angry>You fool! Do it again, and get it right!");
+        return;
+    }
+    @agrith_desummon;
+}
+if ($book = false) {
+    // the transcript has this for the backwards incantation; ours: for any other order too
+    ~agrith_matthew("<p,angry>No, we need to perform the ritual forwards, as it appears in the book!");
+    return;
+}
+@agrith_summon; // agrith_naar.rs2
+
+// one word of the incantation: you say it and everyone in the circle says it after you
+[proc,agrith_chant_word](int $n)(int)
+def_int $w = ~p_choice5_header("Caldar", ^agrith_word_caldar, "Nahudu", ^agrith_word_nahudu, "Agrith-Naar", ^agrith_word_agrith, "Camerinthum", ^agrith_word_camerinthum, "Tarren", ^agrith_word_tarren, "Select a word.");
+def_string $word = ~agrith_word($w);
+if ($n = 5) $word = append($word, "!");
+else $word = append($word, "...");
+anim(summon_summon, 0);
+~chatplayer("<p,neutral><$word>");
+say($word);
+~agrith_cast_say($word);
+p_delay(1);
+return($w);
+
+// the incantation as Denath taught it: Denath is Agrith-Naar, and goes home
+[label,agrith_desummon]
+if_close;
+loc_add(^agrith_circle, summon_floor_spotanim_loc, 0, centrepiece_straight, 40);
+sound_synth(agrith_circle, 1, 0);
+~mesbox("A magic circle appears in the floor...");
+~agrith_walk_as(agrith_denath_sigil, movecoord(^agrith_circle, 1, 0, 1));
+p_delay(3);
+~agrith_anim_as(agrith_denath_sigil, denath_leave, 0);
+p_delay(2);
+~agrith_del_as(agrith_denath_sigil);
+obj_add(movecoord(^agrith_circle, 1, 0, 1), agrith_sigil, 1, 500); // the OSRS wiki: Denath's sigil, on the floor
+~agrith_set(^agrith_desummoned);
+~agrith_play("Incantation", "incantation", 12, 11); // agrith_journal.rs2: the cache's unlock 12,11
+~agrith_jennifer("<p,shock>Oh my gods!");
+~agrith_eric("<p,shock>He disappeared!");
+~agrith_patrick("<p,confused>Where'd he go?");
+~agrith_matthew("<p,shock>Of course! How could we be so stupid?");
+~chatplayer("<p,quiz>What happened?");
+~agrith_matthew("<p,neutral>What do you get when you perform a summoning ritual backwards?");
+~agrith_matthew("<p,scared>Denath was Agrith-Naar all along! We've just helped him return to his own dimension!");
+sound_synth(agrith_portalclose, 1, 0);
+cam_shake(1, 0, 4, 4); // ours
+loc_add(^agrith_throne_portal, agrith_portal_closing, 0, centrepiece_straight, 10); // ours: only while the others flee
+~mesbox("@dre@BOOM!");
+cam_reset;
+~agrith_jennifer("<p,shock>What was that?!");
+~agrith_tanya("<p,scared>Look! The portal's closing!");
+~agrith_dave("<p,scared>I'm getting out of here!");
+// Evil Dave, Eric and Tanya run for the portal
+~agrith_flee(agrith_dave_sigil);
+~agrith_flee(agrith_eric_sigil);
+~agrith_flee(agrith_tanya_sigil);
+%agrith_convinced_dave = ^agrith_dave_passage; // the cache's agrith_dave_in_passage
+~agrith_matthew("<p,scared>No, don't leave!");
+~agrith_matthew("<p,scared>Who knows what Denath could do now?");
+~agrith_matthew("<p,neutral>We've got to perform the ritual again so you can kill Agrith-Naar. But we need eight people!");
+~agrith_matthew("<p,neutral>Quick, <displayname>, you've got to get those three to come back! And you'd better take Denath's sigil and find one more person to help.");
+~agrith_cast_spawn; // the three who stayed put their sigils away
+
+// they vanish through the portal (agrith_cast_spawn takes them away)
+[proc,agrith_flee](npc $type)
+~agrith_walk_as($type, movecoord(^agrith_throne_portal, 1, 0, 1));

@@ -1,0 +1,154 @@
+// EASCape: Shadow of the Storm - the journal, the reward, the music and the login check.
+// The reward (the OSRS and RS wikis): 1 quest point, 10,000 experience in a combat skill you
+// choose (the OSRS wiki's transcript: Strength, Attack, Defence, then Hitpoints, Magic and Ranged),
+// Silverlight turned into Darklight; you keep the demonic sigil and tome.
+// The music (the OSRS wiki): Incantation is unlocked in the summoning and plays over The Golem,
+// Forgotten and Throne of the Demon until Agrith-Naar is slain; Grip of the Talon is unlocked in
+// the fight.
+
+// ---------------------------------------------------------------- the journal
+// Ours: no source has the 2005 journal's text, so these lines say what the OSRS and RS wikis'
+// walkthroughs have you do next.
+[if_button,questlist:agrith]
+def_int $s = %agrith_quest;
+if ($s = ^agrith_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Father Reen@dbl@ just south|@dbl@of the bank in @dre@Al Kharid@dbl@.||";
+    def_boolean $met = false;
+    if (%golem_a = ^golem_complete) $met = true;
+    $req = append($req, ~agrith_req_line($met, "I need to have completed The Golem"));
+    $met = false;
+    if (%demonstart >= ^demon_complete) $met = true;
+    $req = append($req, ~agrith_req_line($met, "I need to have completed Demon Slayer"));
+    $met = false;
+    if (stat(crafting) >= 30) $met = true;
+    $req = append($req, ~agrith_req_line($met, "I need a Crafting level of at least 30"));
+    $req = append($req, "|@dbl@I must be able to defeat a level 100 demon.");
+    ~quest_journal("Shadow of the Storm", $req);
+    return;
+}
+if ($s >= ^agrith_complete) {
+    ~quest_journal("Shadow of the Storm", "@str@Father Reen asked me to help the dark wizard Denath summon the|@str@demon Agrith-Naar in Uzer, so that I could slay him. Denath was|@str@Agrith-Naar all along: the ritual he taught us sent him home.|@str@With eight people and the incantation from Josef's book I|@str@summoned him again, and slew him with Silverlight. His blood|@str@turned it into Darklight.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@Father Reen told me that the dark wizard Denath is about to|@str@summon the demon Agrith-Naar in Uzer.||";
+def_string $next;
+switch_int ($s) {
+    case ^agrith_started : $next = "@dbl@I should take @dre@Silverlight@dbl@ to @dre@Uzer@dbl@ and find @dre@Father Badden@dbl@.";
+    case ^agrith_badden : $next = "@dbl@Badden wants me to infiltrate Denath's group in the temple|@dbl@ruins. @dre@Evil Dave@dbl@ guards their portal. I may need to look evil, and|@dbl@Silverlight is far too shiny.";
+    case ^agrith_joined : $next = "@dbl@I have joined Denath's group. I should ask @dre@Denath@dbl@ what I have|@dbl@to do.";
+    case ^agrith_incantation : $next = "@dbl@Denath taught me the incantation. I need a @dre@demonic sigil@dbl@:|@dbl@one of the wizards has the mould. The wizards also talk of|@dre@Josef@dbl@, who ran away.";
+    case ^agrith_josef : $next = "@dbl@Matthew thinks Josef hid a book in the ruins before Denath|@dbl@followed him. Someone outside may have seen something last|@dbl@night.";
+    case ^agrith_kilns : $next = "@dbl@The clay golem saw Josef hide a book in one of the @dre@broken kilns@dbl@|@dbl@of Uzer, before Denath killed him.";
+    case ^agrith_tome : $next = "@dbl@I found Josef's book. I should show it to @dre@Matthew@dbl@.";
+    case ^agrith_ritual : $next = "@dbl@The incantation in the book is backwards. Denath is ready for|@dbl@the ritual: I must take my place in the circle and @dre@chant@dbl@ with my|@dbl@sigil.";
+    case ^agrith_desummoned : $next = "@dbl@Denath was Agrith-Naar all along! We sent him back to his own|@dbl@dimension. Some of the wizards fled through the portal.";
+    case ^agrith_gathering : $next = append("@dbl@We must summon Agrith-Naar again, forwards this time. I need|@dbl@eight people, each with a demonic sigil.|", ~agrith_gather_line);
+    case ^agrith_ready : $next = "@dbl@Everyone is in the circle. I must lead the incantation as it is|@dbl@written in the book, and slay Agrith-Naar with @dre@Silverlight@dbl@.";
+    case ^agrith_summoned : $next = "@dbl@Agrith-Naar is here! I must slay him with @dre@Silverlight@dbl@.";
+    case default : $next = "@dbl@Agrith-Naar is dead, and his blood has fused with Silverlight.";
+}
+~quest_journal("Shadow of the Storm", append($t, $next));
+
+[proc,agrith_req_line](boolean $met, string $text)(string)
+if ($met = true) return("@str@<$text>.|");
+return("@dbl@<$text>.|");
+
+// ours: who is still to be found
+[proc,agrith_gather_line]()(string)
+def_string $l = "";
+if (%agrith_convinced_dave < ^agrith_dave_walking) $l = append($l, "@dre@Evil Dave@dbl@ fled through the portal.|");
+if (%agrith_badden_uzer < ^agrith_priest_walking) $l = append($l, "@dre@Father Badden@dbl@ is outside the temple.|");
+if (%agrith_reen_uzer < ^agrith_priest_walking) $l = append($l, "@dre@Father Reen@dbl@ is outside the temple.|");
+if (%agrith_convinced_golem < ^agrith_golem_inside) $l = append($l, "The @dre@clay golem@dbl@ is outside the temple.|");
+if (compare($l, "") = 0) return("@dbl@Everyone is in the throne room. I should tell @dre@Matthew@dbl@.");
+return($l);
+
+// ---------------------------------------------------------------- requirements
+[proc,agrith_requirements]()(boolean)
+if (%golem_a ! ^golem_complete) return(false);
+if (%demonstart < ^demon_complete) return(false);
+if (stat(crafting) < 30) return(false); // the OSRS wiki: boostable
+return(true);
+
+// ---------------------------------------------------------------- Silverlight
+// the sword as you got it from Demon Slayer (not dyed)
+[proc,agrith_has_plain_silverlight]()(boolean)
+if (inv_total(inv, silverlight) > 0 | inv_total(worn, silverlight) > 0 | inv_total(bank, silverlight) > 0) return(true);
+return(false);
+
+// any Silverlight you carry or wear, dyed or not
+[proc,agrith_carries_silverlight]()(boolean)
+if (inv_total(inv, silverlight) > 0 | inv_total(worn, silverlight) > 0) return(true);
+if (inv_total(inv, agrith_silverlight_dyed) > 0 | inv_total(worn, agrith_silverlight_dyed) > 0) return(true);
+return(false);
+
+// any Silverlight you own anywhere, Darklight too
+[proc,agrith_owns_silverlight]()(boolean)
+if (~agrith_carries_silverlight = true) return(true);
+if (inv_total(bank, silverlight) > 0 | inv_total(bank, agrith_silverlight_dyed) > 0) return(true);
+if (inv_total(inv, darklight) > 0 | inv_total(worn, darklight) > 0 | inv_total(bank, darklight) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the reward
+// the OSRS and RS wikis' transcripts: after the final blow, and again on taking Darklight off
+// if it was cut short
+[queue,agrith_reward]
+if (%agrith_quest ! ^agrith_slain) return;
+~objbox(darklight, "You try to wipe Silverlight clean, but Agrith-Naar's blood has fused with the blade. You heft the sword and sense that it has become more powerful.", 250, 0, ^objbox_height);
+~mesbox("You feel the power flowing up into your arm. You can direct it into any combat skill...");
+def_stat $stat = ~agrith_choose_stat;
+%agrith_quest = ^agrith_complete;
+stat_advance($stat, 100000);
+~music_setvar(12, 12); // Grip of the Talon (music.dbrow: unlock 12,12), if not already
+session_log(^log_adventure, "Quest complete: Shadow of the Storm");
+~send_quest_complete(questlist:agrith, darklight, 250, ^agrith_questpoints, "You have completed the Shadow of the Storm Quest!", "10,000 XP in a combat skill|Darklight"); // ours: the scroll's wording
+
+[proc,agrith_choose_stat]()(stat)
+def_int $again = 1;
+while ($again = 1) {
+    switch_int (~p_choice4_header("* Strength *", 1, "* Attack *", 2, "* Defence *", 3, "--- More ---", 4, "Select a skill to advance")) {
+        case 1 : return(strength);
+        case 2 : return(attack);
+        case 3 : return(defence);
+    }
+    switch_int (~p_choice4_header("* Hitpoints *", 1, "* Magic *", 2, "* Ranged *", 3, "--- Previous ---", 4, "Select a skill to advance")) {
+        case 1 : return(hitpoints);
+        case 2 : return(magic);
+        case 3 : return(ranged);
+    }
+}
+return(strength);
+
+// Darklight taken off before the reward was chosen (the OSRS wiki) (player/equip.rs2's on_unequip)
+[proc,agrith_unequip](obj $obj)
+if ($obj = darklight & %agrith_quest = ^agrith_slain) queue(agrith_reward, 0, 0);
+
+// ---------------------------------------------------------------- login
+// ours: back at the throne room's portal if you logged out in it, with the room as at your
+// stage (the wizards are added for you), and the reward if it was never chosen
+[proc,agrith_login]
+if (%agrith_quest = ^agrith_slain) queue(agrith_reward, 2, 0);
+if (inzone(^agrith_throne_sw, ^agrith_throne_ne, coord) = true & %agrith_quest > ^agrith_not_started) {
+    p_telejump(^agrith_throne_arrive);
+    ~agrith_cast_spawn; // agrith_throne.rs2
+    if (%agrith_quest = ^agrith_summoned) ~agrith_naar_spawn; // agrith_naar.rs2
+}
+
+// ---------------------------------------------------------------- music
+// The Golem, Forgotten and Throne of the Demon make way for Incantation while Agrith-Naar is
+// loose (move.rs2's mapzones for Uzer and the temple)
+[proc,agrith_music]()(boolean)
+if (%agrith_quest < ^agrith_desummoned | %agrith_quest >= ^agrith_slain) return(false);
+if (%agrith_quest = ^agrith_summoned & inzone(^agrith_throne_sw, ^agrith_throne_ne, coord) = true) {
+    ~agrith_play("Grip of the Talon", "grip of the talon", 12, 12);
+    return(true);
+}
+~agrith_play("Incantation", "incantation", 12, 11);
+return(true);
+
+[proc,agrith_play](string $name, midi $track, int $var, int $bit)
+if (testbit(~music_getvar($var), $bit) = ^false) ~music_setvar($var, $bit);
+if (%musicplay ! 0) {
+    if_settext(music:com_177, $name);
+    midi_song($track);
+}

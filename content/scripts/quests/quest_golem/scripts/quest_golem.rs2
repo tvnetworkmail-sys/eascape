@@ -14,6 +14,8 @@
 // - skill_thieving / golem_phoenix
 
 [oploc1,golem_insidestairs_base]
+// EASCape: Shadow of the Storm's falling rocks and sandstorm (quest_agrith/agrith_storm.rs2)
+if (%agrith_quest >= ^agrith_desummoned & %agrith_quest < ^agrith_summoned) @agrith_storm_stairs;
 p_arrivedelay;
 p_teleport(0_54_48_35_18);
 
@@ -29,6 +31,8 @@ inv_add(inv, golem_mushroom, 1);
 ~objbox(golem_mushroom, "You pick a mushroom.", 250, 0, ^objbox_height);
 
 [oploc1,golem_portal]
+// EASCape: Shadow of the Storm's Evil Dave and dark wizards (quest_agrith/agrith_throne.rs2)
+if (%agrith_quest >= ^agrith_started) @agrith_portal_enter;
 if(%golem_a < ^golem_doors_open) {
     mes("You can't find any way to open the door.");
     return;
@@ -43,6 +47,8 @@ if(%golem_a = ^golem_doors_open) {
 @music_playbyregionplane(coord);
 
 [oploc1,golem_demon_portal]
+// EASCape: Shadow of the Storm (quest_agrith/agrith_throne.rs2)
+if (%agrith_quest >= ^agrith_joined) @agrith_portal_leave;
 mes("You step into the portal.");
 p_arrivedelay;
 p_teleport(0_42_76_25_49);
@@ -108,6 +114,8 @@ inv_del(inv, golem_mushroom, 1);
 def_obj $used_with = inv_getobj(inv, last_useslot);
 
 // Using with empty vial works in osrs as well, but not in rs3, assume it's a "QoL change" done for osrs at some point.
+// EASCape: Shadow of the Storm: a black mushroom on Silverlight dyes it (quest_agrith/agrith_start.rs2)
+if($used_with = silverlight) @agrith_mushroom_on_silverlight;
 if($used_with ! pestle_and_mortar) {
     ~displaymessage(^dm_default);
     return;
