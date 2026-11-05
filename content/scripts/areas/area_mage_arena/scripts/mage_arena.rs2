@@ -23,6 +23,33 @@ mes("You pull the lever...");
 p_delay(0);
 ~player_teleport_normal(0_48_61_18_52);
 
+// EASCape: the arena's own entrance, north of it (TzHaar reworks and mage arena changes,
+// 26 September 2005: "Webs and a lever have been added to prevent people using it as a quick exit
+// point"). The 2006 map has the webs (bigweb_slashable, general_use/scripts/web.rs2) across the
+// tunnel and a lever each side of the wall: the one in the tunnel takes you into the arena once
+// Kolodion has let you (Void, MageArenaChamber.kt: "completed" or later, with his line), the one
+// inside takes you out. Where you land is 2006Scape's and Void's (3105,3951 and 3105,3956).
+// ours: no lever-down model for these levers in the cache, so the lever doesn't change.
+[oploc1,magearena_lever_in]
+if (%magearena < ^mage_arena_complete) {
+    ~chatnpc_specific("Kolodion", arenamage1, "<p,neutral>You're not allowed in there. Come downstairs if you want to enter my arena.");
+    return;
+}
+~magearena_entrance_lever(0_48_61_33_47);
+
+[oploc1,magearena_lever_out] ~magearena_entrance_lever(0_48_61_33_52);
+
+[proc,magearena_entrance_lever](coord $dest)
+p_arrivedelay;
+if (~tele_block_check = true) return;
+anim(human_leverdown, 0);
+sound_synth(lever, 1, 0);
+if_close;
+p_delay(1);
+mes("You pull the lever...");
+p_delay(0);
+~player_teleport_normal($dest);
+
 [oploc1,magearena_waterportal1] @jump_in_sparkling_pool(^sparkling_pool_chamber_coord);
 [oploc1,magearena_waterportal2] @jump_in_sparkling_pool(^sparkling_pool_return_coord);
 

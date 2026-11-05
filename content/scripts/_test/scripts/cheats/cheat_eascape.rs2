@@ -2749,3 +2749,62 @@ switch_int ($n) {
         return;
 }
 p_telejump(map_findsquare($c, 1, 3, ^map_findsquare_lineofwalk));
+
+// ::pittele <n> - TzHaar city and the Mage Arena entrance (Fight Pits 19 Sep 2005, TzHaar reworks
+// and mage arena changes 26 Sep 2005): 1 TzHaar-Ket-Zuh (the bank), 2 TzHaar-Mej-Kah (outside the
+// waiting room), 3 inside the waiting room by the viewing orb, 4 in the arena by the hot vent,
+// 5 TzHaar-Hur-Tel (equipment), 6 TzHaar-Hur-Lek (ore and gems), 7 TzHaar-Mej-Roh (runes),
+// 8 the Mage Arena's north tunnel outside the webs, 9 in the tunnel by the lever in, 10 inside
+// the arena by the lever out
+[debugproc,pittele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = 0_38_80_13_59;
+    case 2 : $c = ^fightpit_outside;
+    case 3 : $c = ^fightpit_wait_spot;
+    case 4 : $c = 0_37_80_31_47;
+    case 5 : $c = 0_38_80_46_25;
+    case 6 : $c = 0_38_80_32_28;
+    case 7 : $c = 0_38_80_30_6;
+    case 8 : $c = 0_48_61_33_56;
+    case 9 : $c = 0_48_61_33_52;
+    case 10 : $c = 0_48_61_33_47;
+    case default :
+        mes("::pittele 1-10: 1 TzHaar-Ket-Zuh, 2 TzHaar-Mej-Kah, 3 the waiting room, 4 the arena by the vent,");
+        mes("5 TzHaar-Hur-Tel, 6 TzHaar-Hur-Lek, 7 TzHaar-Mej-Roh, 8 Mage Arena tunnel (outside the webs),");
+        mes("9 the tunnel by the lever in, 10 inside the arena by the lever out.");
+        return;
+}
+if ($n >= 8 | $n = 3 | $n = 4) {
+    p_telejump($c);
+} else {
+    p_telejump(map_findsquare($c, 0, 3, ^map_findsquare_lineofwalk));
+}
+
+// ::pitround - the Fight Pit's next round starts in 2 ticks (still needs two players: two in the
+// waiting room, or one there and the champion in the arena)
+[debugproc,pitround]
+if (p_finduid(uid) = false) return;
+if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = false) {
+    mes("TzHaar-Mej-Kah isn't there.");
+    return;
+}
+if (%npc_int2 = 1) {
+    mes("A round is already on.");
+    return;
+}
+%npc_int = sub(^fightpit_countdown, 2);
+mes("The next round starts in 2 ticks if two can go in.");
+
+// ::pitchamp - makes you the Fight Pit champion with 100 tokkul waiting (skull, name on the
+// overlay and with TzHaar-Mej-Kah); go into the waiting room by the vent for the tokkul
+[debugproc,pitchamp]
+if (p_finduid(uid) = false) return;
+if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
+    %npc_aggressive_player = uid;
+}
+%tzhaar_fightpit_tokkul = add(%tzhaar_fightpit_tokkul, 100);
+~headicon_add(^headicon_pits_champion);
+softtimer(fightpit_champion, ^fightpit_skull_ticks);
+mes("You're the Fight Pit champion, with <tostring(%tzhaar_fightpit_tokkul)> tokkul waiting.");

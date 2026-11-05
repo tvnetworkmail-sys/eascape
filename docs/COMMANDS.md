@@ -98,6 +98,9 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::womtask <n>` | Gives you a Wise Old Man task (talk to him once first): 0 clears it, 1-7 a letter (1 Father Aereck, 2 High Priest of Entrana, 3 Reldo, 4 Thurgo, 5 Father Lawrence, 6 Abbot Langley, 7 the Oracle; gives you the letter), 8 the thing under his bed (kick the bed upstairs), 9 fetch 3 bones (gives you them) |
 | `::womjunk` | Banks the Wise Old Man's three books (always junk) and two of Imp Catcher's beads (junk once Imp Catcher is done) for his junk check |
 | `::fightwave 30` | Into the TzHaar Fight Cave starting at that wave (`::fightwave 63` is TzTok-Jad) |
+| `::pittele <n>` | TzHaar city and the Mage Arena entrance: 1 TzHaar-Ket-Zuh (the bank), 2 TzHaar-Mej-Kah (outside the Fight Pit's waiting room), 3 inside the waiting room by the viewing orb, 4 in the arena by the hot vent, 5 TzHaar-Hur-Tel (equipment), 6 TzHaar-Hur-Lek (ore and gems), 7 TzHaar-Mej-Roh (runes), 8 the Mage Arena's north tunnel outside the webs, 9 in the tunnel by the lever in, 10 inside the arena by the lever out |
+| `::pitround` | The Fight Pit's next round starts in 2 ticks (it still needs two players: two in the waiting room, or one there and the champion in the arena) |
+| `::pitchamp` | Makes you the Fight Pit champion with 100 tokkul waiting (red skull, your name on the overlay and with TzHaar-Mej-Kah); go through the hot vent into the waiting room to be paid |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |

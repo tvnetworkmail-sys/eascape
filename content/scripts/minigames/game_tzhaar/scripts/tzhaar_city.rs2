@@ -1,0 +1,138 @@
+// EASCape: the TzHaar city's bank and shops (Massive minigame - Fight Pits, 19 September 2005:
+// "A bank and new shops").
+//
+// The lines are the OSRS wiki's transcripts (Transcript:TzHaar-Ket-Zuh, TzHaar-Hur-Tel,
+// TzHaar-Hur-Lek, TzHaar-Mej-Roh) and Void (TzHaar.kt, TzHaarBanker.kt, TzHaarShops.kt), with
+// Void's faces. Your caste is Void's: whichever pair of skills is highest, Magic + Prayer (Mej),
+// Strength + Defence (Ket), Attack + Agility (Xil), Crafting + Smithing (Hur).
+// TzHaar-Ket-Zuh has no bank booth (OSRS wiki), so he's talked to and banked with up close.
+
+// ---- castes
+
+// 1 Mej, 2 Ket, 3 Xil, 4 Hur (ties go to the first)
+[proc,tzhaar_caste_of](int $mej, int $ket, int $xil, int $hur)(int)
+def_int $caste = 1;
+def_int $best = $mej;
+if ($ket > $best) {
+    $caste = 2;
+    $best = $ket;
+}
+if ($xil > $best) {
+    $caste = 3;
+    $best = $xil;
+}
+if ($hur > $best) {
+    $caste = 4;
+}
+return($caste);
+
+[proc,tzhaar_caste_name](int $caste)(string)
+switch_int ($caste) {
+    case 2 : return("Ket");
+    case 3 : return("Xil");
+    case 4 : return("Hur");
+}
+return("Mej");
+
+[proc,tzhaar_caste_id]()(int)
+return(~tzhaar_caste_of(add(stat_base(magic), stat_base(prayer)), add(stat_base(strength), stat_base(defence)),
+    add(stat_base(attack), stat_base(agility)), add(stat_base(crafting), stat_base(smithing))));
+
+[proc,tzhaar_caste]()(string)
+return(~tzhaar_caste_name(~tzhaar_caste_id));
+
+// "JalYt-Ket-Name"
+[proc,tzhaar_jalyt_name]()(string)
+return("JalYt-<~tzhaar_caste>-<displayname>");
+
+// ---- "What did you call me?" ($kind: 1 a TzHaar-Ket, 2 a TzHaar-Hur, 3 a TzHaar-Mej)
+
+[label,tzhaar_what_did_you_call_me](int $kind)
+def_int $id = ~tzhaar_caste_id;
+def_string $caste = ~tzhaar_caste_name($id);
+~chatplayer("<p,angry>What did you call me?");
+~chatnpc("<p,confused>Are you not JalYt-<$caste>-<displayname>?");
+switch_int (~p_choice3("What's a 'JalYt-<$caste>'?", 1, "I guess so...", 2, "No I'm not!", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's a 'JalYt-<$caste>'?");
+        if ($id = 1) {
+            ~chatnpc("<p,confused>That what you are... you user of mystic powers no?");
+        } else if ($id = 2) {
+            ~chatnpc("<p,confused>That what you are... you tough and strong no?");
+        } else if ($id = 3) {
+            ~chatnpc("<p,confused>That what you are... you agile and quick no?");
+        } else {
+            ~chatnpc("<p,confused>That what you are... you skilled at making things no?");
+        }
+        ~chatplayer("<p,confused>Well yes I suppose I am...");
+        ~chatnpc("<p,happy>Then you JalYt-<$caste>!");
+        if (~p_choice2("What are you then?", 1, "Thanks for explaining it.", 2) = 2) {
+            ~chatplayer("<p,sad>Thanks for explaining it.");
+            return;
+        }
+        ~chatplayer("<p,quiz>What are you then?");
+        if ($kind = 1) {
+            ~chatnpc("<p,happy>Daft JalYt, I am TzHaar-Ket, one of the guardians of our city.");
+            ~chatnpc("<p,neutral>There are the wise TzHaar-Mej who guide us, the swift TzHaar-Xil who hunt for our food, and the skilled TzHaar-Hur who craft our homes and tools.");
+        } else if ($kind = 2) {
+            ~chatnpc("<p,happy>Silly JalYt, I am TzHaar-Hur, one of the crafters for this city.");
+            ~chatnpc("<p,neutral>There are the wise TzHaar-Mej who guide us, the mighty TzHaar-Ket who guard us, and the swift TzHaar-Xil who hunt for our food.");
+        } else {
+            ~chatnpc("<p,happy>Foolish JalYt, I am TzHaar-Mej, one of the mystics of this city.");
+            if (~p_choice2("What other types are there?", 1, "Ah ok then.", 2) = 1) {
+                ~chatplayer("<p,quiz>What other types are there?");
+                ~chatnpc("<p,neutral>There are the mighty TzHaar-Ket who guard us, the swift TzHaar-Xil who hunt for our food, and the skilled TzHaar-Hur who craft our homes and tools.");
+            } else {
+                ~chatplayer("<p,neutral>Ah ok then.");
+            }
+        }
+    case 2 :
+        ~chatplayer("<p,confused>I guess so...");
+        ~chatnpc("<p,neutral>Well then, no problems.");
+    case 3 :
+        ~chatplayer("<p,angry>No I'm not!");
+        ~chatnpc("<p,shifty>What ever you say, crazy JalYt!");
+}
+
+// ---- TzHaar-Ket-Zuh, the banker
+
+[opnpc1,tzhaar_banker1] @tzhaar_banker_talk;
+[apnpc1,tzhaar_banker1]
+if (npc_range(coord) > 1) {
+    p_aprange(1);
+    return;
+}
+@tzhaar_banker_talk;
+
+[opnpc3,tzhaar_banker1] @openbank;
+[apnpc3,tzhaar_banker1]
+if (npc_range(coord) > 1) {
+    p_aprange(1);
+    return;
+}
+@openbank;
+
+[label,tzhaar_banker_talk]
+~chatnpc("<p,quiz>Can I help you <~tzhaar_jalyt_name>?");
+switch_int (~p_choice3("I'd like to access my bank account please.", 1, "What did you call me?", 2, "I'd like to check my PIN settings.", 3)) {
+    case 1 : @openbank;
+    case 2 : @tzhaar_what_did_you_call_me(1);
+    case 3 :
+        ~chatplayer("<p,neutral>I'd like to check my PIN settings.");
+        @open_bank_pin_setting;
+}
+
+// ---- the shops: TzHaar-Hur-Tel (equipment), TzHaar-Hur-Lek (ore and gems), TzHaar-Mej-Roh (runes)
+// (Trade is the shop keepers' usual op3; the shops are paid in tokkul, shopkeeper.param)
+
+[opnpc1,tzhaar_merchant_equipment] @tzhaar_shop_talk(2);
+[opnpc1,tzhaar_merchant_oreandgem] @tzhaar_shop_talk(2);
+[opnpc1,tzhaar_merchant_rune] @tzhaar_shop_talk(3);
+
+[label,tzhaar_shop_talk](int $kind)
+~chatnpc("<p,quiz>Can I help you <~tzhaar_jalyt_name>?");
+switch_int (~p_choice3("What do you have to trade?", 1, "What did you call me?", 2, "No I'm fine thanks.", 3)) {
+    case 1 : ~openshop_activenpc;
+    case 2 : @tzhaar_what_did_you_call_me($kind);
+    case 3 : ~chatplayer("<p,neutral>No I'm fine thanks.");
+}

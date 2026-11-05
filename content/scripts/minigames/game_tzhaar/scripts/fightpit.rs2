@@ -1,14 +1,20 @@
 // EASCape: the TzHaar Fight Pit.
 //
 // From the OSRS wiki (TzHaar Fight Pit) and 2006Scape (FightPits.java):
-// - The hot vent door into the waiting room; a round starts once two or more are waiting and
-//   a countdown of 80 ticks has run (2006Scape), and everyone waiting goes into the arena.
-// - Last one standing wins: tokkul equal to the combat levels of everyone beaten that round,
-//   and a red skull for an hour (OSRS wiki). Dying is safe and puts you back in the waiting room.
+// - The hot vent door into the waiting room; a round starts once two or more are waiting (or one
+//   and the champion, who stays in the pit, RS wiki) and a countdown of 80 ticks has run
+//   (2006Scape), and everyone waiting goes into the arena without being asked (TzHaar reworks and
+//   mage arena changes, 26 September 2005).
+// - Last one standing wins and stays in the pit for the next fight (TzHaar-Mej-Kah): tokkul equal
+//   to the combat levels of everyone beaten that round, paid when the champion goes into the
+//   waiting room (RS and OSRS wikis), more for every round won, and a red skull for an hour (OSRS
+//   wiki). Dying is safe and puts you back in the waiting room.
+// - Leaving the arena by the hot vent heals your hitpoints and cures poison (26 September 2005).
 // - A round that runs on brings in TzHaar monsters: Tz-Kih at 1:30, Tz-Kek at 3:30, Tok-Xil at
 //   5:30 (OSRS wiki; the 2006 game data has only these three for the pit). One comes for each
 //   player still in the arena (how many isn't written down anywhere; that's our choice).
-// - The viewing orb in the waiting room shows the arena from five places.
+// - The viewing orb in the waiting room looks through the five orbs in the arena (the 2006 and 2007
+//   maps' loc_9392s; "More viewing orbs have been added", 26 September 2005).
 // TzHaar-Mej-Kah runs it (his timer, every tick): %npc_int2 1 while a round is on, %npc_int the
 // countdown or the round's age in ticks, %npc_lastattack the tokkul for the winner,
 // %npc_aggressive_player the champion.
@@ -28,14 +34,31 @@ if (coordz(coord) > coordz(loc_coord)) {
     ~fightpit_overlay;
 } else {
     p_teleport(movecoord(loc_coord, 0, 0, 1));
+    // ours: this is a hot vent door too, so it heals the way out as well
+    ~fightpit_vent_heal;
     if_openoverlay(null);
 }
 
-// out of the arena (counts as losing if a round is on)
+// the hot vent's healing spell: "restore the hitpoints of any leaving contender and cure any
+// poison afflicted" (26 September 2005)
+[proc,fightpit_vent_heal]
+stat_heal(hitpoints, 0, 100);
+~clear_poison;
+
+// the champion's tokkul, kept until they go into the waiting room
+[proc,fightpit_pay_tokkul]
+if (%tzhaar_fightpit_tokkul > 0) {
+    ~fightcave_give(tzhaar_token, %tzhaar_fightpit_tokkul);
+    %tzhaar_fightpit_tokkul = 0;
+}
+
+// out of the arena (counts as leaving, not losing, if a round is on: nothing for the winner)
 [oploc1,loc_9368]
 if (coordz(coord) < coordz(loc_coord)) {
     set_player_op(null, 2, ^false);
     p_teleport(^fightpit_wait_spot);
+    ~fightpit_vent_heal;
+    ~fightpit_pay_tokkul;
     ~fightpit_overlay;
 } else {
     mes("You'll go in when the next round starts.");
@@ -57,11 +80,19 @@ if_openoverlay(inter_62);
 [proc,fightpit_champion_text]
 def_string $name = "TzHaar-Xil-Huz";
 if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
-    if (.finduid(%npc_aggressive_player) = true) {
-        $name = "JalYt-Ket-<.displayname>";
-    }
+    $name = ~fightpit_champion_name;
 }
 if_settext(inter_62:com_0, "Current Champion: <$name>");
+
+// the champion as TzHaar-Mej-Kah (the active npc) knows them: JalYt-<caste>-<name>; before anyone
+// has won, the interface's own TzHaar-Xil-Huz (the 377 cache, inter_62)
+[proc,fightpit_champion_name]()(string)
+if (.finduid(%npc_aggressive_player) = true) {
+    return("JalYt-<~tzhaar_caste_name(~tzhaar_caste_of(add(.stat_base(magic), .stat_base(prayer)),
+        add(.stat_base(strength), .stat_base(defence)), add(.stat_base(attack), .stat_base(agility)),
+        add(.stat_base(crafting), .stat_base(smithing))))>-<.displayname>");
+}
+return("TzHaar-Xil-Huz");
 
 // ---- the round, run by TzHaar-Mej-Kah
 
@@ -69,7 +100,8 @@ if_settext(inter_62:com_0, "Current Champion: <$name>");
 def_int $waiting = map_playercount(^fightpit_wait_sw, ^fightpit_wait_ne);
 def_int $fighting = map_playercount(^fightpit_arena_sw, ^fightpit_arena_ne);
 if (%npc_int2 = 0) {
-    if ($waiting < 2) {
+    // the champion, still in the arena, counts towards the two
+    if ($waiting < 1 | add($waiting, $fighting) < 2) {
         %npc_int = 0;
         return;
     }
@@ -98,6 +130,8 @@ if (%npc_int > 5 & $fighting <= 1) {
         while (huntnext = true) {
             if (~in_fightpit_arena(coord) = true) {
                 %npc_aggressive_player = uid;
+                // OSRS wiki (Transcript:TzHaar-Mej-Kah, overhead)
+                npc_say("<~tzhaar_jalyt_name> is the champion!");
                 queue(fightpit_win, 0, $tokkul);
             }
         }
@@ -144,6 +178,8 @@ if (npc_finduid($self) = false) {
 
 [queue,fightpit_start]
 if_close;
+%tzhaar_fightpit_orb = 0;
+cam_reset;
 p_teleport(movecoord(^fightpit_start_sw, random(13), 0, random(13)));
 set_player_op("Attack", 2, ^true);
 ~fightpit_overlay;
@@ -151,12 +187,10 @@ set_player_op("Attack", 2, ^true);
 [queue,fightpit_remaining](int $count)
 %tzhaar_fightpit_remaining = $count;
 
+// the champion stays in the pit (TzHaar-Mej-Kah: "they stay in the pit for next fight"); the
+// tokkul waits for them in the waiting room, and adds up over every round they win
 [queue,fightpit_win](int $tokkul)
-set_player_op(null, 2, ^false);
-p_teleport(^fightpit_wait_spot);
-if ($tokkul > 0) {
-    ~fightcave_give(tzhaar_token, $tokkul);
-}
+%tzhaar_fightpit_tokkul = add(%tzhaar_fightpit_tokkul, $tokkul);
 mes("You are the champion!");
 ~headicon_add(^headicon_pits_champion);
 softtimer(fightpit_champion, ^fightpit_skull_ticks);
@@ -209,6 +243,8 @@ healenergy(10000);
 ~update_all(null);
 ~initalltabs;
 ~player_end_poison;
+// ours: a champion who dies before going into the waiting room still gets the tokkul
+~fightpit_pay_tokkul;
 ~fightpit_overlay;
 
 // logging back in inside the pit puts you outside it (2006Scape)
@@ -216,6 +252,8 @@ healenergy(10000);
 if (~in_fightpit_wait(coord) = true | ~in_fightpit_arena(coord) = true) {
     p_teleport(^fightpit_outside);
 }
+// ours: a champion who logged out before going into the waiting room still gets the tokkul
+~fightpit_pay_tokkul;
 
 // ---- the viewing orb
 
@@ -236,16 +274,64 @@ if_openside(inter_68);
 cam_reset;
 if_close;
 
-// centre, north-west, north-east, south-east, south-west of the arena
+// walking off or anything else that shuts the orb's side panel puts the camera back
+[if_close,inter_68]
+cam_reset;
+
+// the arena's five orbs (loc_9392 in the 2006 and 2007 maps): centre (2398,5150), north-west
+// (2384,5157), north-east (2409,5158), south-east (2411,5137), south-west (2388,5138).
+// ours: the camera sits above the orb and looks across the arena towards its far side
 [proc,fightpit_orb_view](int $view)
 %tzhaar_fightpit_orb = $view;
-def_coord $at;
+def_coord $orb;
+def_coord $look;
 switch_int ($view) {
-    case 2 : $at = 0_37_80_20_36;
-    case 3 : $at = 0_37_80_42_36;
-    case 4 : $at = 0_37_80_42_14;
-    case 5 : $at = 0_37_80_20_14;
-    case default : $at = 0_37_80_31_25;
+    case 2 :
+        $orb = 0_37_80_16_37;
+        $look = 0_37_80_30_23;
+    case 3 :
+        $orb = 0_37_80_41_38;
+        $look = 0_37_80_28_24;
+    case 4 :
+        $orb = 0_37_80_43_17;
+        $look = 0_37_80_28_31;
+    case 5 :
+        $orb = 0_37_80_20_18;
+        $look = 0_37_80_34_32;
+    case default :
+        $orb = 0_37_80_30_30;
+        $look = 0_37_80_30_16;
 }
-cam_moveto(movecoord($at, 0, 0, -6), 900, 100, 100);
-cam_lookat($at, 0, 100, 100);
+cam_moveto($orb, 600, 100, 100);
+cam_lookat($look, 0, 100, 100);
+
+// ---- TzHaar-Mej-Kah's Talk-to (OSRS wiki, Transcript:TzHaar-Mej-Kah; 2009scape TzHaarMejKah.java
+// has the same lines). ours: the faces (neither source gives them for his own lines)
+
+[opnpc1,tzhaar_fightpit_master]
+~chatnpc("<p,quiz>You want help <~tzhaar_jalyt_name>?");
+switch_int (~p_choice4("What is this place?", 1, "Who's the current champion?", 2, "What did you call me?", 3, "No I'm fine thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What is this place?");
+        ~chatnpc("<p,neutral>This is the fight pit, TzHaar-Xil made it for their sport but many JalYt come here to fight too. If you are wanting to fight then enter the cage, you will be summoned when next round is ready to begin.");
+        if (~p_choice2("Are there any rules?", 1, "Ok thanks.", 2) = 2) {
+            ~chatplayer("<p,neutral>Ok thanks.");
+            return;
+        }
+        ~chatplayer("<p,quiz>Are there any rules?");
+        ~chatnpc("<p,neutral>No rules, you use whatever you want. Last person standing wins and is declared champion, they stay in the pit for next fight.");
+        if (~p_choice2("Do I win anything?", 1, "Sounds good.", 2) = 2) {
+            ~chatplayer("<p,happy>Sounds good.");
+            return;
+        }
+        ~chatplayer("<p,quiz>Do I win anything?");
+        ~chatnpc("<p,angry>You ask a lot of questions. Champion gets TokKul as reward, more fights the more TokKul they get.");
+        ~chatplayer("<p,neutral>...");
+        ~chatnpc("<p,neutral>Before you ask, TokKul is like your Coins.");
+        ~chatnpc("<p,neutral>Gold is like you JalYt, soft and easily broken, we use hard rock forged in fire like TzHaar!");
+    case 2 :
+        ~chatplayer("<p,quiz>Who's the current champion?");
+        ~chatnpc("<p,neutral>Ah that would be <~fightpit_champion_name>!");
+    case 3 : @tzhaar_what_did_you_call_me(3);
+    case 4 : ~chatplayer("<p,neutral>No I'm fine thanks.");
+}
