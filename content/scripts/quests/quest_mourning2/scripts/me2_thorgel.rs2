@@ -1,0 +1,239 @@
+// EASCape: Mourning's End Part II - Thorgel at the death altar and his list. Words: the RS wiki's
+// transcript (the OSRS wiki's for the book). The list: the RS and OSRS wikis' 50 items, in the
+// cache's item list window (inter_131: fifty lines). Handed-in items: the cache's mourning_dwarf_*
+// varbits for the 21 it names, %me2_list for the rest (ours). %mourning_dwarf_startedtask (ours):
+// 0 no list yet, 1 a list, 2 a list done.
+
+// the RS wiki: the dwarf meets you as you first step through the black door
+[proc,me2_thorgel_meet]
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,angry>'Ere... How'd you get in 'ere?!");
+~chatplayer("<p,neutral>Funny, I was just going to ask you the same thing.");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>Well I asked first.");
+~chatplayer("<p,neutral>Well I battled my way through hordes of shadows, whilst trying to solve a huge maze that I had to bounce a light beam around. Now your turn.");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>I came in through this hole in the back.");
+~chatplayer("<p,shock>You mean there's an easy way?");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>Not easy as such. A few of the boys and me set-up an outpost at the other end of the tunnel, the outpost is in the bottom of a huge cavern deep underground and the way to get there is through caves riddled with traps.");
+~chatplayer("<p,quiz>Hang on this sounds familiar, is the name of one of your companions Klank?");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,quiz>Yes, How did you know that?");
+~chatplayer("<p,happy>He's a friend of mine, he made me a great pair of gauntlets.");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,shock>Wait... You must be <displayname>.");
+~chatplayer("<p,quiz>That's right, How did you know that?");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>Klank told me about you, told me how you got rid of that Iban fellow. As it's you I'll make you an offer, I'll trade you a Death talisman.");
+if (~me2_has_talisman = true) {
+    ~chatplayer("<p,neutral>Thanks, but I have one.");
+    ~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>Well if you wanna 'nother, just come back and I'll tell you what I need.");
+    return;
+}
+~chatplayer("<p,quiz>Great... Wait, what for?");
+~chatnpc_specific("Thorgel", mourning_deathalter_dwarf_vis, "<p,neutral>I just need a few things, here I'll make you a list.");
+~me2_new_list;
+~objbox(mourning_deathalter_list, "The Dwarf writes on a scrap of paper and hands it to you.", 250, 0, divide(^objbox_height, 2));
+~chatplayer("<p,neutral>Right I'd better get started, see you soon.");
+
+[proc,me2_has_talisman]()(boolean)
+if (inv_total(inv, death_talisman) > 0 | inv_total(worn, tiara_death) > 0) return(true);
+return(false);
+
+[opnpc1,mourning_deathalter_dwarf] ~me2_thorgel_talk;
+
+[proc,me2_thorgel_talk]
+def_int $task = %mourning_dwarf_startedtask;
+if ($task = 0 | $task = 2) {
+    if ($task = 0) {
+        ~chatnpc("<p,neutral>Hey there, <displayname>. Do you want that shopping list now?");
+        ~chatplayer("<p,quiz>It depends... What do I get out of it again?");
+        ~chatnpc("<p,neutral>I've got this death talisman I could give you in return.");
+    } else {
+        ~chatnpc("<p,neutral>Hello again. Feel like getting us more supplies?");
+    }
+    if (~p_choice2("Okay, sure thing. What do you need?", 1, "Hmm, no thanks, I'm not interested.", 2) = 2) {
+        ~chatplayer("<p,neutral>Hmm, no thanks, I'm not interested.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Okay, sure thing. What do you need?");
+    ~chatnpc("<p,neutral>You'd better take this list - we need everything on it! Just bring them to me and I'll take them off your hands.");
+    ~me2_new_list;
+    return;
+}
+~chatnpc("<p,quiz>Hi again. How're you doing with those items we need?");
+switch_int (~p_choice4("I've got some of them with me.", 1, "Do you have another copy of the list?", 2, "What do you need all this stuff for?", 3, "No, I'd better get looking for them.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I've got some of them with me.");
+        ~chatnpc("<p,quiz>Great, can I take everything I need?");
+        if (~p_choice2("Yeah, sure.", 1, "I'd rather you didn't.", 2) = 1) {
+            ~chatplayer("<p,neutral>Yeah, sure.");
+            if (~me2_list_carried = 0) {
+                ~chatnpc("<p,neutral>Doesn't look like you do to me.");
+                return;
+            }
+            ~me2_list_take_all;
+            ~me2_list_after;
+            return;
+        }
+        ~chatplayer("<p,neutral>I'd rather you didn't.");
+        if (~me2_list_carried = 0) {
+            ~chatnpc("<p,angry>Wait, you don't have anything. Quit wasting my time!");
+            return;
+        }
+        ~me2_list_ask;
+    case 2 :
+        ~chatplayer("<p,quiz>Do you have another copy of the list?");
+        if (~obj_gettotal(mourning_deathalter_list) > 0) {
+            ~chatnpc("<p,neutral>You already have the list! Just bring them to me and I'll take them off your hands.");
+            return;
+        }
+        if (inv_freespace(inv) = 0) {
+            ~chatnpc("<p,neutral>Looks like you're carrying enough stuff at the moment."); // the OSRS wiki
+            return;
+        }
+        ~chatnpc("<p,neutral>Try not to lose it this time - we need everything on it! Just bring them to me and I'll take them off your hands.");
+        inv_add(inv, mourning_deathalter_list, 1);
+    case 3 :
+        ~chatplayer("<p,quiz>What do you need all this stuff for?");
+        ~chatnpc("<p,neutral>Oh, well, we don't get many deliveries down here, so it's supplies mostly...");
+        def_namedobj $ticket = ~me2_list_item(48);
+        def_namedobj $book = ~me2_list_item(49);
+        def_namedobj $key = ~me2_list_item(50);
+        switch_int (~p_choice4("What about the <oc_name($ticket)>?", 1, "Why do you want the <oc_name($book)>?", 2, "How do you explain the <oc_name($key)>?", 3, "Yeah, right, all of those are just 'supplies'.", 4)) {
+            case 1 :
+                ~chatplayer("<p,quiz>What about the <oc_name($ticket)>?");
+                ~chatnpc("<p,shifty>Well, you see...umm... We don't really get much chance to, er, go out or anything...and we'd like some of the prizes some day.");
+                ~chatplayer("<p,quiz>Why didn't you ask for the prizes then?");
+                ~chatnpc("<p,shock>Oh, no, that'd just be sad.");
+            case 2 :
+                ~chatplayer("<p,quiz>Why do you want the <oc_name($book)>?");
+                ~chatnpc("<p,happy>Oh just some light reading, it's nice to catch up on current events occasionally.");
+                ~chatplayer("<p,confused>Current events? But it's... Oh never mind.");
+            case 3 :
+                ~chatplayer("<p,quiz>How do you explain the <oc_name($key)>?");
+                ~chatnpc("<p,shifty>Ah... Um... I'm not sure how that got on the list... Can we have it anyway?");
+                ~chatplayer("<p,quiz>Right, why do I get the feeling I shouldn't?");
+                ~chatnpc("<p,happy>Pretty please...with a blood talisman on top!");
+                ~chatplayer("<p,confused>Blood talisman?");
+                ~chatnpc("<p,shock>Oops! I meant death talisman!");
+            case 4 :
+                ~chatplayer("<p,neutral>Yeah, right, all of those are just 'supplies'.");
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>No, I'd better get looking for them.");
+}
+
+[proc,me2_new_list]
+%mourning_dwarf_startedtask = 1;
+%mourning_part2_basevar2 = clearbit_range(%mourning_part2_basevar2, 0, 20);
+%me2_list = 0;
+%me2_picks = calc(random(3) + 4 * random(3) + 16 * random(3));
+if (~obj_gettotal(mourning_deathalter_list) = 0) {
+    if (inv_freespace(inv) > 0) inv_add(inv, mourning_deathalter_list, 1);
+    else obj_add(coord, mourning_deathalter_list, 1, ^lootdrop_duration);
+}
+
+// item $i (1-50) of this list
+[proc,me2_list_item](int $i)(namedobj)
+if ($i = 48) return(enum(int, namedobj, me2_list_ticket, getbit_range(%me2_picks, 0, 1)));
+if ($i = 49) return(enum(int, namedobj, me2_list_book, getbit_range(%me2_picks, 2, 3)));
+if ($i = 50) return(enum(int, namedobj, me2_list_key, getbit_range(%me2_picks, 4, 5)));
+return(enum(int, namedobj, me2_list_obj, $i));
+
+[proc,me2_list_done](int $i)(boolean)
+if ($i <= 21) {
+    if (testbit(%mourning_part2_basevar2, sub($i, 1)) = ^true) return(true);
+    return(false);
+}
+if (testbit(%me2_list, sub($i, 22)) = ^true) return(true);
+return(false);
+
+// handing in item $i: the cache's own varbit for the first 21 (mourning_dwarf_rune is bit 0)
+[proc,me2_list_mark](int $i)
+if ($i <= 21) {
+    %mourning_part2_basevar2 = setbit(%mourning_part2_basevar2, sub($i, 1));
+    return;
+}
+%me2_list = setbit(%me2_list, sub($i, 22));
+
+[proc,me2_list_left]()(int)
+def_int $n = 0;
+def_int $i = 1;
+while ($i <= 50) {
+    if (~me2_list_done($i) = false) $n = add($n, 1);
+    $i = add($i, 1);
+}
+return($n);
+
+[proc,me2_list_carried]()(int)
+def_int $n = 0;
+def_int $i = 1;
+while ($i <= 50) {
+    if (~me2_list_done($i) = false & inv_total(inv, ~me2_list_item($i)) > 0) $n = add($n, 1);
+    $i = add($i, 1);
+}
+return($n);
+
+[proc,me2_list_take_all]
+def_int $i = 1;
+while ($i <= 50) {
+    def_namedobj $obj = ~me2_list_item($i);
+    if (~me2_list_done($i) = false & inv_total(inv, $obj) > 0) {
+        inv_del(inv, $obj, 1);
+        ~me2_list_mark($i);
+    }
+    $i = add($i, 1);
+}
+
+// one at a time: tickets, books and keys first (the RS wiki), then the rest; after each one he
+// starts again from the top
+[proc,me2_list_ask]
+def_int $pos = 0;
+while ($pos < 50) {
+    def_int $i = 48;
+    if ($pos = 1) $i = 49;
+    if ($pos = 2) $i = 50;
+    if ($pos > 2) $i = sub($pos, 2);
+    def_namedobj $obj = ~me2_list_item($i);
+    if (~me2_list_done($i) = false & inv_total(inv, $obj) > 0) {
+        ~chatnpc("<p,quiz>I see you've got the <oc_name($obj)>. Can I have it please?");
+        if (~p_choice2("Sure, here you go!", 1, "I think I'll keep hold of it for now.", 2) = 1) {
+            ~chatplayer("<p,happy>Sure, here you go!");
+            inv_del(inv, $obj, 1);
+            ~me2_list_mark($i);
+            if (~me2_list_left = 0) {
+                ~me2_list_after;
+                return;
+            }
+            ~chatnpc("<p,happy>Thanks, I've updated your list for you.");
+            $pos = -1;
+        } else {
+            ~chatplayer("<p,neutral>I think I'll keep hold of it for now.");
+        }
+    }
+    $pos = add($pos, 1);
+}
+
+[proc,me2_list_after]
+if (~me2_list_left > 0) {
+    ~chatnpc("<p,happy>Thanks, I've updated your list for you.");
+    return;
+}
+%mourning_dwarf_startedtask = 2;
+if (inv_total(inv, mourning_deathalter_list) > 0) inv_del(inv, mourning_deathalter_list, 1); // ours
+if (inv_freespace(inv) > 0) inv_add(inv, death_talisman, 1);
+else obj_add(coord, death_talisman, 1, ^lootdrop_duration);
+~chatnpc("<p,happy>Great, thank you so much for getting all that for us! Take this death talisman as a reward.|Any time you want another one of those talismans come see me and I'll sort you out with another list.");
+
+// ---------------------------------------------------------------- the list (inter_131's fifty
+// lines; ours: what you have handed in is struck through)
+[opheld1,mourning_deathalter_list]
+def_int $i = 1;
+while ($i <= 50) {
+    def_string $line = oc_name(~me2_list_item($i));
+    if (~me2_list_done($i) = true) $line = "@str@<$line>";
+    if ($i = 1) if_settext(inter_131:com_4, $line);
+    else if_settext(enum(int, component, me2_list_com, $i), $line);
+    $i = add($i, 1);
+}
+if_openmain(inter_131);
+
+[opheld5,mourning_deathalter_list]
+def_int $slot = last_slot;
+if (~destroy_confirm(mourning_deathalter_list, "You can obtain another list from Thorgel.") = false) return; // Void
+if (inv_getobj(inv, $slot) = mourning_deathalter_list) inv_delslot(inv, $slot);

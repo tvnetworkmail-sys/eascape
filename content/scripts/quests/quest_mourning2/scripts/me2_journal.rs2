@@ -1,0 +1,87 @@
+// EASCape: Mourning's End Part II (17 October 2005, Mourning's Ends Pt II). Sources: the RS wiki's
+// transcript (the 2005 words: the Head Mourner, Eluned's copy, Thorgel), the RS and OSRS wikis'
+// guides (the light maze, the chests, the 50 items, the wall supports' odds), Void (the shadows'
+// combat, the items' destroy lines), 2009scape (the death altar's quest checks, dark beast tasks)
+// and the 377 cache (its varp and varbits, the temple's map, beams, pillars, doors and chests, the
+// item list window inter_131). Our own choices are marked "ours".
+
+// ---------------------------------------------------------------- the journal (ours: the words;
+// no source has the 2005 journal). Requirements: the OSRS wiki's quest details.
+[if_button,questlist:mourning2]
+def_int $s = %mourning_quest_main;
+if ($s = ^me2_not_started) {
+    ~quest_journal("Mourning's Ends Part 2", "@dbl@I can start this quest by talking to the @dre@Head Mourner@dbl@ in the|@dre@Mourner Headquarters@dbl@ in West Ardougne, once I have told|@dre@Arianwyn@dbl@ in Lletya what the mourners are looking for.|@dbl@To complete this quest I will need to have completed:|<~lt_req("Mourning's Ends Part 1", %mourning_quest, ^me1_complete)>");
+    return;
+}
+if ($s >= ^me2_complete) {
+    ~quest_journal("Mourning's Ends Part 2", "@str@The mourners were digging for the Temple of Light. I found|@str@their lost dig team at its door, took a sample of its darkened|@str@crystal to Arianwyn, and Eluned made a new one. I bounced|@str@light around the temple's maze to reach the death altar,|@str@powered the crystal there and restored the safeguards. Some|@str@dwarves had tunnelled in through the back.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@The Head Mourner gave me a key to the excavation site.||";
+def_string $next;
+switch_int ($s) {
+    case ^me2_started : $next = "@dbl@He wants me to find out what happened to a missing @dre@dig|@dre@team@dbl@ in the tunnels west of the Mourner Headquarters. I|@dbl@should wear my mourner gear and watch out for the beasts.";
+    case ^me2_found_team : $next = "@dbl@I found the dig team dead at the entrance of an ancient|@dbl@temple, surrounded by shadows. I should tell @dre@Arianwyn@dbl@ in|@dre@Lletya@dbl@ before the mourners find out.";
+    case ^me2_sample : $next = "@dbl@Arianwyn thinks the temple's safeguards have failed. He wants|@dbl@a sample of the @dre@darkened crystal@dbl@ somewhere in the temple.";
+    case ^me2_eluned : $next = "@dbl@Arianwyn summoned @dre@Eluned@dbl@. I should hand her the @dre@blackened|@dre@crystal@dbl@ so she can make a new one.";
+    case ^me2_eluned_making : $next = "@dbl@Eluned is making a copy of the blackened crystal. I should|@dbl@speak to her.";
+    case ^me2_new_crystal : $next = "@dbl@Eluned made me a @dre@newly made crystal@dbl@. I should ask @dre@Arianwyn@dbl@|@dbl@what to do with it.";
+    case ^me2_altar : $next = "@dbl@I must take the newly made crystal to the @dre@altar@dbl@ at the end of|@dbl@the temple to power it, then put it with the shards of the|@dbl@darkened crystal. The way is through the temple's maze of|@dbl@light doors: beams of light, mirrors and coloured crystals.";
+    case ^me2_powered : $next = "@dbl@The crystal is powered. I should put it with the shards of|@dbl@the @dre@darkened crystal@dbl@ on the temple's top floor.";
+    case default : $next = "@dbl@The safeguards are restored. I should tell @dre@Arianwyn@dbl@.";
+}
+~quest_journal("Mourning's Ends Part 2", append($t, $next));
+
+// ---------------------------------------------------------------- shared
+[proc,me2_set](int $stage)
+%mourning_quest_main = $stage;
+~send_quest_progress(questlist:mourning2, %mourning_quest_main, ^me2_complete);
+
+[proc,me2_login]
+if (%mourning_quest_main > ^me2_not_started) ~me2_light_update;
+
+// ---------------------------------------------------------------- the end (the RS wiki):
+// 2 quest points, 20,000 Agility experience (the 2005 amount; the OSRS wiki: 60,000 since 2022),
+// the crystal trinket and the death altar. The scroll shows the cyan crystal (the RS wiki).
+[proc,me2_complete]
+~me2_set(^me2_complete);
+~me1_give(mourning_crystal_trinket, 1);
+stat_advance(agility, 200000);
+session_log(^log_adventure, "Quest complete: Mourning's End Part II");
+~send_quest_complete(questlist:mourning2, mourning_crystal_cyan, 250, ^me2_questpoints, "You have completed\\nMourning's Ends Part 2!", "2 Quest Points|20,000 Agility XP|Access to the Death altar|A crystal trinket");
+
+// ---------------------------------------------------------------- the items (destroy lines: Void)
+[opheld5,mourning_mirror] ~me2_destroy(mourning_mirror, "Resetting the light maze will generate a new mirror.");
+[opheld5,mourning_crystal_yellow] ~me2_destroy(mourning_crystal_yellow, "Resetting the light maze will generate a new crystal.");
+[opheld5,mourning_crystal_cyan] ~me2_destroy(mourning_crystal_cyan, "Resetting the light maze will generate a new crystal.");
+[opheld5,mourning_crystal_blue] ~me2_destroy(mourning_crystal_blue, "Resetting the light maze will generate a new crystal.");
+[opheld5,mourning_fractured_crystal_1] ~me2_destroy(mourning_fractured_crystal_1, "Resetting the light maze will generate a new crystal.");
+[opheld5,mourning_fractured_crystal_2] ~me2_destroy(mourning_fractured_crystal_2, "Resetting the light maze will generate a new crystal.");
+[opheld5,mourning_crystal_red] ~me2_destroy(mourning_crystal_red, "If you destroy this, you'll have to transmute some more.");
+[opheld5,mourning_crystal_green] ~me2_destroy(mourning_crystal_green, "If you destroy this, you'll have to transmute some more.");
+[opheld5,mourning_crystal_magenta] ~me2_destroy(mourning_crystal_magenta, "If you destroy this, you'll have to transmute some more.");
+
+[proc,me2_destroy](namedobj $obj, string $text)
+def_int $slot = last_slot;
+if (~destroy_confirm($obj, $text) = false) return;
+if (inv_getobj(inv, $slot) = $obj) inv_delslot(inv, $slot);
+
+// Edern's journal (the RS wiki's transcript, the older words: "returned to Prifddinas")
+[opheld1,mourning_ederns_journal]
+%book_page = 0;
+%open_book = mourning_ederns_journal;
+@book_flip_page(0, 0, 9, me2_edern_book);
+
+[proc,me2_edern_book]
+switch_int (%book_page) {
+    case 0 : ~book("Journal of Nissyen Edern", append("I start this new journal as I start my new life, I leave behind all that I was as I take a stand for the Elven race.||It is my hope that we can at last find peace with our misguided brethren and return home. To stay here is to condemn ", "ourselves to an eternity of chaos. To this end we must each do all that we can, for the greater good."));
+    case 1 : ~book("Journal of Nissyen Edern", append(append("Year 0 Day 1||The Death Guard is an old and honourable society and so I have enrolled, I have 1 more day in the city before I go for training.||I was speaking to my brother Iestin, he was telling me of the research he has been doing on the ", "under-city, he thinks he may have found the location of the old Grand Library.|It is a shame his research will never amount to anything, no one will ever enter that place - the seals were placed on it over 2000 years ago by Seren herself.||"), "He asked how my historical study of the Eastern Realms was going. I did not have the heart to tell him, I will wait until tomorrow."));
+    case 2 : ~book("Journal of Nissyen Edern", append("Year 0 Day 2||I have put the last of my affairs in order. Iestin begged me not to go, telling me that I should stick with my research. I think my big brother may have had his nose in a book too long, he does not see what is happening to ", "our people, we must regain our heritage if we are to survive on this world. Besides, if I am ever to know anything about the Eastern Realm I should go and see the land myself.||This may be the last night I spend in the home of my ancestors."));
+    case 3 : ~book("Journal of Nissyen Edern", append("Year 2 Day 2||It seems a shame to have lost 2 years from my Journal but I can understand the need for secrecy. I am told that when the subjects covered in that portion of my journal are no longer an issue of security the pages will be ", "returned to me.||At least I finished training, I'm told that my first assignment will be in a human city. I wonder what they look like."));
+    case 4 : ~book("Journal of Nissyen Edern", append(append("I was able to get an hour free in the city before leaving for my first post. I found Iestin in the same library I had left him in 2 years ago. It was good to see him again after such time, although his research has led him to some absurd ", "conclusions. He thinks that one of the 9 seals to the under-city is broken. Though I am sure there are too many safeguards for such to be true. I wish I had had more time for him.||This evening I camp on the peaks of Arandar, tomorrow I "), "report for my first day in service of the Death Guard."));
+    case 5 : ~book("Journal of Nissyen Edern", append("Year 2 Day 3||The induction to my new post was poor at best, I was not even assigned a bunk. The rest of the day was spent in a watch tower occasionally getting attacked by pigeons. The humans are not so different as I thought they would ", "be, although they live like animals.||Year 2 Day 6||I have been kept very busy by guard duty over the last few days and this is the first chance I've had to make an entry in my journal."));
+    case 6 : ~book("Journal of Nissyen Edern", append(append("I have bad feelings about the work I undertake. It seems to me that any task that requires us to treat other beings as poorly as we are treating these humans can only come to ill, but we must each do all that we can, for the greater good.||", "Year 2 Day 7||I have spent my day in the pointless exercise of chasing sheep about with a big wooden device, after wasting all the shots I tried putting vials of dye into it, in the end I only succeeded in breaking the device.||I have been "), "told that I will be doing paper work all day tomorrow, I cannot do as much damage in the office I was told."));
+    case 7 : ~book("Journal of Nissyen Edern", append(append("Year 2 Day 8||Today was quite something, I got a promotion. It looks like those years of study paid off after all. I am now in charge of collating all the historical data we are collecting in the excavation site.||While filing some papers ", "I could not help noticing lots of fragments from an old page, putting these pieces together revealed a message: 'Seren's light will open the doors, Her crystal is but a filter'. It seems no-one else had spotted that before, I think I have "), "earned the respect of my colleagues today."));
+    case 8 : ~book("Journal of Nissyen Edern", append(append("Year 2 Day 10||For the last 2 days I have worked cataloguing all the findings, then today a messenger turned up with a document requesting that 'all materials from the excavation site should be returned to Prifddinas'. I wish I could join ", "them on that journey. I hope my brother is well.||There is a rumour going around of a great human who reopened the well of voyage, and in the process of doing so banished the crazed mage. I wonder if this has anything to do with the "), "prophecies?"));
+    case 9 : ~book("Journal of Nissyen Edern", append("Year 2 Day 17||One of the slaves escaped and ran off down the south west cavern today, he was found some hours later in a small crevasse rocking back and forth repeating over and over 'No shadows get me'.||It looks like I will be the one ", "to get to go look for these shadows, I just got my orders to take a team and investigate the tunnel. I am to be briefed in the morning."));
+}

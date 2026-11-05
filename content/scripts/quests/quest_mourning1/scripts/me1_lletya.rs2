@@ -68,6 +68,7 @@ p_delay(1);
 
 [opnpc1,roving_female_woodelf_temp]
 // the Eluned that stands by Arianwyn while she brings you
+if (~me2_eluned = true) return; // EASCape: Mourning's End Part II: she copies the crystal (quest_mourning2/me2_npcs.rs2)
 ~chatnpc("<p,neutral>Now, I had better get going or Islwyn will get worried.");
 %mourning_can_see_eluned = 0;
 
@@ -209,6 +210,7 @@ if ($s < ^me1_complete) {
     ~chatnpc("<p,happy>Great work!! Stick with it <displayname>.");
     return;
 }
+if (~me2_arianwyn = true) return; // EASCape: Mourning's End Part II (quest_mourning2/me2_npcs.rs2)
 if (%me1_arianwyn_told = 0) {
     ~chatnpc("<p,quiz>How goes it <displayname>?");
     ~chatplayer("<p,neutral>I think I got the information you're after, it seems they're searching for an ancient temple of some sort under the mountains.");

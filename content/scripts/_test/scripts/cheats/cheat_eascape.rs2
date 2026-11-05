@@ -837,6 +837,18 @@ if (compare($name, "runemysteries") = 0) {
     if (inv_freespace(inv) = 0) ~questdone_give(twocats_present, 1); // the present, if ~ttc_complete finds no room
     if (inv_freespace(inv) = 0) %twocats_gotreward = 1;
     ~ttc_complete; // the present and quest complete scroll (quest_twocats/ttc_unferth.rs2)
+} else if (compare($name, "mourning2") = 0 | compare($name, "mourningsend2") = 0) {
+    if (%mourning_quest_main >= ^me2_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    if (%mourning_quest < ^me1_complete) %mourning_quest = ^me1_complete;
+    %me1_arianwyn_told = 1;
+    %mourning_arianwyn_told = 1;
+    %mourning_light_temple_safe_guards = 1;
+    %mourning_light_door_1_c_first_time = 1;
+    if (~obj_gettotal(mourning_excavation_key) = 0) ~questdone_give(mourning_excavation_key, 1);
+    ~me2_complete; // experience, crystal trinket and quest complete scroll (quest_mourning2/me2_journal.rs2)
 } else {
     mes("No quest called <$name>. Try ::questdone list.");
     return;
@@ -918,7 +930,7 @@ mes("desertrescue, itwatchtower, legendsquest, priestperil, death_equiproom, tro
 mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedmine, routequest (In Search of the Myreque)");
 mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf), recruitmentdrive (Recruitment Drive), mourning (Mourning's Ends Part 1), forgettabletale (Forgettable Tale...)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
-mes("gardenoftranquillity (Garden of Tranquillity), twocats (A Tail of Two Cats)");
+mes("gardenoftranquillity (Garden of Tranquillity), twocats (A Tail of Two Cats), mourning2 (Mourning's End Part II)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
 // run energy, poison cured

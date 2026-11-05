@@ -1,0 +1,164 @@
+// EASCape: test commands for Mourning's End Part II (quest_mourning2).
+
+// ::me2pack - what the quest needs (the RS and OSRS wikis): the six pieces of mourner gear, a rope,
+// a chisel and a death talisman. It also marks Mourning's End Part I done with Arianwyn told about
+// the temple (no rewards), so the Head Mourner hands over the new key.
+[debugproc,me2pack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(gasmask, 1));
+$banked = calc($banked + ~questpack_give(mourning_mourner_top, 1));
+$banked = calc($banked + ~questpack_give(mourning_mourner_legs, 1));
+$banked = calc($banked + ~questpack_give(mourning_mourner_gloves, 1));
+$banked = calc($banked + ~questpack_give(mourning_mourner_boots, 1));
+$banked = calc($banked + ~questpack_give(mourning_mourner_cloak, 1));
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(chisel, 1));
+$banked = calc($banked + ~questpack_give(death_talisman, 1));
+if (%mourning_quest < ^me1_complete) %mourning_quest = ^me1_complete;
+%me1_arianwyn_told = 1;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Mourning's End Part II", $banked);
+mes("Wear the six mourner pieces (nothing else) for the HQ door. Head Mourner: ::me2tele 1. ::me2stage sets the stage.");
+
+// ::me2stage <n> - sets Mourning's End Part II's stage (mourning2.constant): 0 not started (clears
+// everything), 10 the new key (find the dig team), 20 the dig team found, 30 Arianwyn wants a sample
+// (you get the blackened crystal), 40 Eluned summoned, 45 Eluned has the crystal, 50 the newly made
+// crystal, 60 to the altar (the light maze), 70 the crystal powered, 80 the safeguards restored
+// (talk to Arianwyn), 100 done (no rewards).
+// And the light maze, each as the RS wiki solves it (stage 60, every chest's items earned, the
+// pillars set, nothing in your pack): 71 the blue door, 72 the magenta door, 73 the cyan door,
+// 74 the yellow door, 75 the south-east magenta and yellow doors, 76 the black door. 77 empties
+// the pillars and fills the collector's tray with all 13 mirrors and 5 crystals.
+[debugproc,me2stage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n <= 0) {
+    %mourning_quest_part2 = 0;
+    %mourning_part2_basevar2 = 0;
+    %me2_pillars1 = 0;
+    %me2_pillars2 = 0;
+    %me2_pillars3 = 0;
+    %me2_pillars4 = 0;
+    %me2_list = 0;
+    %me2_picks = 0;
+    ~me2_light_update;
+    ~send_quest_progress(questlist:mourning2, 0, ^me2_complete);
+    ~update_questpoints;
+    mes("Mourning's End Part II: reset.");
+    return;
+}
+if (%mourning_quest < ^me1_complete) %mourning_quest = ^me1_complete;
+%me1_arianwyn_told = 1;
+if ($n > 70 & $n < 80) {
+    ~me2_cheat_maze($n);
+    return;
+}
+%mourning_quest_main = $n;
+%mourning_arianwyn_told = 0;
+if ($n > ^me2_started) %mourning_arianwyn_told = 1;
+%mourning_can_see_eluned = 0;
+if ($n = ^me2_eluned | $n = ^me2_eluned_making) %mourning_can_see_eluned = 1;
+if ($n >= ^me2_started & ~obj_gettotal(mourning_excavation_key) = 0) ~questdone_give(mourning_excavation_key, 1);
+if (($n = ^me2_sample | $n = ^me2_eluned) & ~obj_gettotal(mourning_crystal_sample) = 0) ~questdone_give(mourning_crystal_sample, 1);
+if (($n = ^me2_new_crystal | $n = ^me2_altar) & ~obj_gettotal(mourning_crystal_new_sample) = 0) ~questdone_give(mourning_crystal_new_sample, 1);
+if ($n = ^me2_powered & ~obj_gettotal(mourning_crystal_new_powered) = 0) ~questdone_give(mourning_crystal_new_powered, 1);
+%mourning_light_temple_safe_guards = 0;
+if ($n >= ^me2_restored) %mourning_light_temple_safe_guards = 1;
+~me2_light_update;
+~send_quest_progress(questlist:mourning2, %mourning_quest_main, ^me2_complete);
+~update_questpoints;
+mes("Mourning's End Part II stage: <tostring($n)>");
+
+[proc,me2_cheat_maze](int $n)
+if (%mourning_quest_main < ^me2_altar) %mourning_quest_main = ^me2_altar;
+%mourning_temple_parts_1 = 1;
+%mourning_temple_parts_2 = 1;
+%mourning_temple_parts_3 = 1;
+%mourning_temple_parts_4 = 1;
+%mourning_temple_parts_5 = 1;
+%mourning_temple_parts_6 = 1;
+%mourning_temple_mirrors_reset_tray = 0;
+%mourning_temple_orange_crystal_reset_tray = 0;
+%mourning_temple_red_crystal_reset_tray = 0;
+%mourning_temple_blue_crystal_reset_tray = 0;
+%mourning_temple_fractured_crystal_1_reset_tray = 0;
+%mourning_temple_fractured_crystal_2_reset_tray = 0;
+%me2_pillars1 = 0;
+%me2_pillars2 = 0;
+%me2_pillars3 = 0;
+%me2_pillars4 = 0;
+switch_int ($n) {
+    case 71 :
+        ~me2_cheat_put(49, ^me2_n, 47, ^me2_w, 46, ^me2_s, 51, ^me2_held_yellow);
+        ~me2_cheat_put(55, ^me2_e, 0, 0, 0, 0, 0, 0);
+    case 72 :
+        ~me2_cheat_put(49, ^me2_n, 47, ^me2_w, 46, ^me2_held_yellow, 45, ^me2_n);
+        ~me2_cheat_put(42, ^me2_e, 43, ^me2_held_cyan, 0, 0, 0, 0);
+    case 73, 74 :
+        ~me2_cheat_put(49, ^me2_n, 47, ^me2_down, 27, ^me2_w, 26, ^me2_n);
+        ~me2_cheat_put(23, ^me2_up, 43, ^me2_held_yellow, 63, ^me2_w, 61, ^me2_s);
+        ~me2_cheat_put(73, ^me2_down, 0, 0, 0, 0, 0, 0);
+        if ($n = 74) ~me2_cheat_put(43, ^me2_held_cyan, 61, ^me2_down, 0, 0, 0, 0);
+    case 75 :
+        ~me2_cheat_put(49, ^me2_n, 47, ^me2_w, 46, ^me2_up, 56, ^me2_held_blue);
+        ~me2_cheat_put(66, ^me2_s, 71, ^me2_held_fractured1, 70, ^me2_down, 30, ^me2_s);
+        ~me2_cheat_put(34, ^me2_e, 75, ^me2_e, 76, ^me2_down, 36, ^me2_n);
+    case 76 :
+        ~me2_cheat_put(49, ^me2_n, 47, ^me2_down, 27, ^me2_w, 26, ^me2_held_fractured2);
+        ~me2_cheat_put(23, ^me2_up, 43, ^me2_held_yellow, 63, ^me2_w, 61, ^me2_s);
+        ~me2_cheat_put(68, ^me2_e, 38, ^me2_w, 31, ^me2_held_fractured1, 30, ^me2_up);
+        ~me2_cheat_put(70, ^me2_w, 32, ^me2_n, 72, ^me2_n, 71, ^me2_n);
+        ~me2_cheat_put(66, ^me2_w, 65, ^me2_held_blue, 0, 0, 0, 0);
+    case 77 :
+        %mourning_temple_mirrors_reset_tray = 13;
+        %mourning_temple_orange_crystal_reset_tray = 1;
+        %mourning_temple_red_crystal_reset_tray = 1;
+        %mourning_temple_blue_crystal_reset_tray = 1;
+        %mourning_temple_fractured_crystal_1_reset_tray = 1;
+        %mourning_temple_fractured_crystal_2_reset_tray = 1;
+    case default :
+        mes("::me2stage 71-77: 71 blue door, 72 magenta, 73 cyan, 74 yellow, 75 south-east, 76 black door, 77 a full tray");
+        return;
+}
+~me2_light_update;
+~send_quest_progress(questlist:mourning2, %mourning_quest_main, ^me2_complete);
+def_string $open = "";
+def_int $k = 1;
+while ($k <= ^me2_door_1_c) {
+    if (~me2_door_open($k) = 1) $open = append($open, " <tostring($k)>");
+    $k = add($k, 1);
+}
+if (string_length($open) = 0) $open = " none";
+mes("Mourning's End Part II maze <tostring($n)>: light doors open:<$open> (1/2 NW yellow, 3/4 SW cyan, 5 SE yellow, 6 SE magenta, 7 NE magenta, 8/9 blue, 10 cyan, 11 black).");
+
+[proc,me2_cheat_put](int $a, int $av, int $b, int $bv, int $c, int $cv, int $d, int $dv)
+if ($a > 0) ~me2_setcontent($a, $av);
+if ($b > 0) ~me2_setcontent($b, $bv);
+if ($c > 0) ~me2_setcontent($c, $cv);
+if ($d > 0) ~me2_setcontent($d, $dv);
+
+// ::me2tele <n> - 1 the Head Mourner, 2 the dig team (the tunnel outside the temple), 3 inside the
+// temple's front door, 4 the crystal collector (middle floor), 5 the blackened crystal (top floor),
+// 6 the final room by Thorgel and the death altar's ruins, 7 the wall supports' west end (middle
+// floor), 8 the rock for the rope (middle floor), 9 Arianwyn (Lletya), 10 the dwarves' tunnel in
+// the Underground Pass
+[debugproc,me2tele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = 0_31_72_58_20;
+    case 2 : $to = 0_30_72_8_30;
+    case 3 : $to = 0_29_72_60_31;
+    case 4 : $to = 1_29_72_55_31;
+    case 5 : $to = 2_29_72_53_33;
+    case 6 : $to = 0_29_72_6_33;
+    case 7 : $to = ^me2_handhold_west;
+    case 8 : $to = ^me2_rope_top;
+    case 9 : $to = 0_36_49_49_35;
+    case 10 : $to = ^me2_tunnel_upass;
+    case default :
+        mes("::me2tele 1-10: 1 Head Mourner, 2 dig team, 3 temple door, 4 collector, 5 black crystal, 6 final room, 7 wall supports, 8 rope rock, 9 Arianwyn, 10 dwarves' tunnel");
+        return;
+}
+p_telejump($to);

@@ -1,0 +1,661 @@
+// EASCape: Mourning's End Part II - the Mourner tunnels and the Temple of Light: the dig team, the
+// blackened crystal, the crystal collector and its tray, the pillars of light, the light doors, the
+// chests, the wall supports, the rope, the low walls, the dwarves' tunnel and the front door.
+// Words: the RS wiki's transcript (2005, "Head Mourner") and the OSRS wiki's where the RS one has
+// none; the places are the 377 map's (m29_72, m30_72).
+
+// ---------------------------------------------------------------- the dig team (the RS wiki: the
+// camera pans over the dead guards and slaves; ours: it happens as you reach their bodies, with
+// no camera)
+[zone,0_30_72_0_24] ~me2_digteam_check;
+[zone,0_30_72_0_32] ~me2_digteam_check;
+[zone,0_30_72_8_24] ~me2_digteam_check;
+[zone,0_30_72_8_32] ~me2_digteam_check;
+
+[proc,me2_digteam_check]
+if (%mourning_quest_main = ^me2_started) queue(me2_digteam, 0, 0);
+
+[queue,me2_digteam]
+if (%mourning_quest_main ! ^me2_started) return;
+~me2_set(^me2_found_team);
+~chatplayer("<p,neutral>Well, this looks like the digteam. I should hurry and tell Arianwyn. I'd better make sure that the Head Mourner doesn't find out.");
+
+// the guard against the northern wall is Nissyen Edern (the OSRS wiki); in 2005 he had both the
+// colour wheel and his journal (the RS wiki's transcript)
+[oploc1,mourning_dead_guard1]
+def_int $wheel = ~obj_gettotal(mourning_colour_wheel);
+def_int $journal = ~obj_gettotal(mourning_ederns_journal);
+if ($wheel > 0 & $journal > 0) {
+    ~mesbox("The dead mourner has nothing other than the journal and colour wheel which you've taken.");
+    return;
+}
+def_int $need = 0;
+if ($wheel = 0) $need = add($need, 1);
+if ($journal = 0) $need = add($need, 1);
+if (inv_freespace(inv) < $need) {
+    // the OSRS wiki's words for a full pack
+    ~mesbox("You find something but you don't have enough room to take it.");
+    return;
+}
+if ($wheel = 0 & $journal = 0) {
+    inv_add(inv, mourning_colour_wheel, 1);
+    inv_add(inv, mourning_ederns_journal, 1);
+    ~doubleobjbox(mourning_colour_wheel, mourning_ederns_journal, "You find a colour wheel and a journal.", 250);
+    return;
+}
+if ($wheel = 0) {
+    inv_add(inv, mourning_colour_wheel, 1);
+    ~objbox(mourning_colour_wheel, "You find a colour wheel.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+inv_add(inv, mourning_ederns_journal, 1);
+~objbox(mourning_ederns_journal, "You find a journal.", 250, 0, divide(^objbox_height, 2));
+
+[oploc1,mourning_dead_guard2] ~mesbox("The man died with nothing.");
+[oploc1,mourning_dead_guard3] ~mesbox("The man died with nothing.");
+[oploc1,mourning_dead_slave1] ~mesbox("The man died with nothing.");
+[oploc1,mourning_dead_slave2] ~mesbox("The man died with nothing.");
+
+// ---------------------------------------------------------------- the blackened crystal (top
+// floor, over the entrance)
+[oploc1,mourning_temple_obsidian_crystal]
+if (%mourning_light_temple_safe_guards = 1) {
+    ~mesbox("The crystal seems intact and is successfully powering the temple's safeguards.");
+    return;
+}
+~mesbox("There are many blackened crystal shards here.");
+if (~p_choice2_header("Try to chisel a shard off the crystal.", 1, "Leave the crystal alone.", 2, "What do you want to do?") = 2) return;
+~me2_chip;
+
+[oplocu,mourning_temple_obsidian_crystal]
+if (last_useitem = chisel & %mourning_light_temple_safe_guards = 0) {
+    ~me2_chip;
+    return;
+}
+if (last_useitem = mourning_crystal_new_powered & %mourning_light_temple_safe_guards = 0) {
+    inv_del(inv, mourning_crystal_new_powered, 1);
+    %mourning_light_temple_safe_guards = 1;
+    if (%mourning_quest_main < ^me2_restored) ~me2_set(^me2_restored);
+    ~objbox(mourning_crystal_new_powered, "You place the powered crystal amongst the other shards.", 250, 0, divide(^objbox_height, 2));
+    mes("Nothing interesting happens."); // the RS wiki: it always says so
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,me2_chip]
+if (inv_total(inv, chisel) = 0) {
+    // the OSRS wiki
+    ~mesbox("There are many blackened crystal shards here. They are firmly attached. You'll need something suitable to chip one off.");
+    return;
+}
+if (~obj_gettotal(mourning_crystal_sample) > 0 | %mourning_quest_main >= ^me2_eluned_making | %mourning_quest_main < ^me2_started) {
+    ~mesbox("There are many blackened crystal shards here, but you have no need for them.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room to carry a shard."); // ours
+    return;
+}
+inv_add(inv, mourning_crystal_sample, 1);
+~objbox(mourning_crystal_sample, "You chip off one of the many blackened crystal shards that are here.", 250, 0, divide(^objbox_height, 2));
+
+// ---------------------------------------------------------------- the crystal collector (the RS
+// wiki: pulling the lever returns every mirror and crystal; the tray then holds them all, so
+// anything lost can be had again). The tray is the cache's mourning_temple_*_reset_tray; ours:
+// its orange bit is the yellow crystal and its red bit the cyan one.
+[oploc1,mourning_temple_light_wall_lever]
+loc_anim(mourning_temple_lever);
+mes("You pull the lever.");
+~me2_clear_pillars;
+%mourning_temple_parts_1 = 1;
+def_int $mirrors = calc(^me2_mirrors_start + 2 * %mourning_temple_parts_2 + 2 * %mourning_temple_parts_3 + 2 * %mourning_temple_parts_5 + 3 * %mourning_temple_parts_6);
+$mirrors = sub($mirrors, inv_total(inv, mourning_mirror));
+if ($mirrors < 0) $mirrors = 0;
+%mourning_temple_mirrors_reset_tray = $mirrors;
+%mourning_temple_orange_crystal_reset_tray = 0;
+if (inv_total(inv, mourning_crystal_yellow) = 0) %mourning_temple_orange_crystal_reset_tray = 1;
+%mourning_temple_red_crystal_reset_tray = 0;
+if (%mourning_temple_parts_2 = 1 & inv_total(inv, mourning_crystal_cyan) = 0) %mourning_temple_red_crystal_reset_tray = 1;
+%mourning_temple_blue_crystal_reset_tray = 0;
+if (%mourning_temple_parts_4 = 1 & inv_total(inv, mourning_crystal_blue) = 0) %mourning_temple_blue_crystal_reset_tray = 1;
+%mourning_temple_fractured_crystal_1_reset_tray = 0;
+if (%mourning_temple_parts_5 = 1 & inv_total(inv, mourning_fractured_crystal_1) = 0) %mourning_temple_fractured_crystal_1_reset_tray = 1;
+%mourning_temple_fractured_crystal_2_reset_tray = 0;
+if (%mourning_temple_parts_6 = 1 & inv_total(inv, mourning_fractured_crystal_2) = 0) %mourning_temple_fractured_crystal_2_reset_tray = 1;
+~me2_light_update;
+
+[proc,me2_tray_crystals]()(int)
+return(calc(%mourning_temple_orange_crystal_reset_tray + %mourning_temple_red_crystal_reset_tray + %mourning_temple_blue_crystal_reset_tray + %mourning_temple_fractured_crystal_1_reset_tray + %mourning_temple_fractured_crystal_2_reset_tray));
+
+[oploc1,mourning_temple_light_wall_collector]
+def_int $m = %mourning_temple_mirrors_reset_tray;
+def_int $c = ~me2_tray_crystals;
+if ($m = 0 & $c = 0) {
+    ~mesbox("There is nothing in the tray.");
+    return;
+}
+def_int $choice = 4;
+if ($m > 0 & $c > 0) {
+    $choice = ~p_choice4_header("Take the mirrors.", 1, "Take the crystals.", 2, "Take all the items.", 3, "Leave all the items.", 4, "There are mirrors and crystals in the tray...");
+} else if ($c > 0) {
+    $choice = ~p_choice2_header("Take the crystals.", 2, "Leave the crystals.", 4, "There are only crystals in the tray...");
+} else {
+    $choice = ~p_choice2_header("Take the mirrors.", 1, "Leave the mirrors", 4, "There are only mirrors in the tray...");
+}
+if ($choice = 4) {
+    ~mesbox("You leave the items in the tray.");
+    return;
+}
+def_boolean $all = true;
+if ($choice = 1 | $choice = 3) {
+    while (%mourning_temple_mirrors_reset_tray > 0 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_mirror, 1);
+        %mourning_temple_mirrors_reset_tray = sub(%mourning_temple_mirrors_reset_tray, 1);
+    }
+    if (%mourning_temple_mirrors_reset_tray > 0) $all = false;
+}
+if ($choice = 2 | $choice = 3) {
+    if (%mourning_temple_orange_crystal_reset_tray = 1 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_crystal_yellow, 1);
+        %mourning_temple_orange_crystal_reset_tray = 0;
+    }
+    if (%mourning_temple_red_crystal_reset_tray = 1 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_crystal_cyan, 1);
+        %mourning_temple_red_crystal_reset_tray = 0;
+    }
+    if (%mourning_temple_blue_crystal_reset_tray = 1 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_crystal_blue, 1);
+        %mourning_temple_blue_crystal_reset_tray = 0;
+    }
+    if (%mourning_temple_fractured_crystal_1_reset_tray = 1 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_fractured_crystal_1, 1);
+        %mourning_temple_fractured_crystal_1_reset_tray = 0;
+    }
+    if (%mourning_temple_fractured_crystal_2_reset_tray = 1 & inv_freespace(inv) > 0) {
+        inv_add(inv, mourning_fractured_crystal_2, 1);
+        %mourning_temple_fractured_crystal_2_reset_tray = 0;
+    }
+    if (~me2_tray_crystals > 0) $all = false;
+}
+switch_int ($choice) {
+    case 1 : ~mesbox("You take the mirrors from the tray.");
+    case 2 : ~mesbox("You take the crystals from the tray.");
+    case 3 : ~mesbox("You take the items from the tray.");
+}
+if ($all = false) mes("You don't have enough room for the rest; they are still in the tray."); // ours
+
+// ---------------------------------------------------------------- the pillars of light (the RS
+// wiki's transcript; ours: a choice of ways in place of the rotation window, which the 377 cache
+// doesn't have)
+[oploc1,mourning_temple_pillar_1_1] ~me2_pillar_search(21);
+[oploc1,mourning_temple_pillar_1_3] ~me2_pillar_search(23);
+[oploc1,mourning_temple_pillar_1_6] ~me2_pillar_search(26);
+[oploc1,mourning_temple_pillar_1_7] ~me2_pillar_search(27);
+[oploc1,mourning_temple_pillar_1_10] ~me2_pillar_search(30);
+[oploc1,mourning_temple_pillar_1_11] ~me2_pillar_search(31);
+[oploc1,mourning_temple_pillar_1_12] ~me2_pillar_search(32);
+[oploc1,mourning_temple_pillar_1_13] ~me2_pillar_search(33);
+[oploc1,mourning_temple_pillar_1_14] ~me2_pillar_search(34);
+[oploc1,mourning_temple_pillar_1_16] ~me2_pillar_search(36);
+[oploc1,mourning_temple_pillar_1_b] ~me2_pillar_search(38);
+[oploc1,mourning_temple_pillar_2_2] ~me2_pillar_search(42);
+[oploc1,mourning_temple_pillar_2_3] ~me2_pillar_search(43);
+[oploc1,mourning_temple_pillar_2_5] ~me2_pillar_search(45);
+[oploc1,mourning_temple_pillar_2_6] ~me2_pillar_search(46);
+[oploc1,mourning_temple_pillar_2_7] ~me2_pillar_search(47);
+[oploc1,mourning_temple_pillar_2_9] ~me2_pillar_search(49);
+[oploc1,mourning_temple_pillar_2_10] ~me2_pillar_search(50);
+[oploc1,mourning_temple_pillar_2_11] ~me2_pillar_search(51);
+[oploc1,mourning_temple_pillar_2_15] ~me2_pillar_search(55);
+[oploc1,mourning_temple_pillar_2_16] ~me2_pillar_search(56);
+[oploc1,mourning_temple_pillar_3_1] ~me2_pillar_search(61);
+[oploc1,mourning_temple_pillar_3_2] ~me2_pillar_search(62);
+[oploc1,mourning_temple_pillar_3_3] ~me2_pillar_search(63);
+[oploc1,mourning_temple_pillar_3_5] ~me2_pillar_search(65);
+[oploc1,mourning_temple_pillar_3_6] ~me2_pillar_search(66);
+[oploc1,mourning_temple_pillar_3_8] ~me2_pillar_search(68);
+[oploc1,mourning_temple_pillar_3_10] ~me2_pillar_search(70);
+[oploc1,mourning_temple_pillar_3_11] ~me2_pillar_search(71);
+[oploc1,mourning_temple_pillar_3_12] ~me2_pillar_search(72);
+[oploc1,mourning_temple_pillar_3_13] ~me2_pillar_search(73);
+[oploc1,mourning_temple_pillar_3_15] ~me2_pillar_search(75);
+[oploc1,mourning_temple_pillar_3_16] ~me2_pillar_search(76);
+// the pillars where the light turns down from the top floor and towards the final pillar below
+// (the RS wiki: mirrors fused into place)
+[oploc1,mourning_temple_pillar_3_a] ~me2_fused_mirror;
+
+[oplocu,mourning_temple_pillar_1_1] ~me2_pillar_use(21, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_3] ~me2_pillar_use(23, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_6] ~me2_pillar_use(26, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_7] ~me2_pillar_use(27, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_10] ~me2_pillar_use(30, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_11] ~me2_pillar_use(31, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_12] ~me2_pillar_use(32, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_13] ~me2_pillar_use(33, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_14] ~me2_pillar_use(34, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_16] ~me2_pillar_use(36, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_1_b] ~me2_pillar_use(38, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_2] ~me2_pillar_use(42, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_3] ~me2_pillar_use(43, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_5] ~me2_pillar_use(45, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_6] ~me2_pillar_use(46, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_7] ~me2_pillar_use(47, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_9] ~me2_pillar_use(49, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_10] ~me2_pillar_use(50, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_11] ~me2_pillar_use(51, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_15] ~me2_pillar_use(55, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_2_16] ~me2_pillar_use(56, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_1] ~me2_pillar_use(61, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_2] ~me2_pillar_use(62, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_3] ~me2_pillar_use(63, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_5] ~me2_pillar_use(65, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_6] ~me2_pillar_use(66, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_8] ~me2_pillar_use(68, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_10] ~me2_pillar_use(70, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_11] ~me2_pillar_use(71, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_12] ~me2_pillar_use(72, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_13] ~me2_pillar_use(73, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_15] ~me2_pillar_use(75, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_16] ~me2_pillar_use(76, last_useitem, last_useslot);
+[oplocu,mourning_temple_pillar_3_a] mes("There's already something in this pillar.");
+
+[proc,me2_fused_mirror]
+def_int $choice = ~p_choice3_header("Take the mirror.", 1, "Rotate the mirror.", 2, "Leave the mirror where it is.", 3, "There is a mirror in the pillar.");
+if ($choice = 1) {
+    ~mesbox("There is a mirror trapped in this pillar. It appears to have been fused in place.");
+} else if ($choice = 2) {
+    ~mesbox("This mirror cannot be rotated.");
+}
+
+[proc,me2_pillar_search](int $node)
+def_int $v = ~me2_content($node);
+if ($v = ^me2_held_green) {
+    ~objbox(mourning_crystal_green, "There is a green crystal fused in to the pillar.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+if ($v = ^me2_held_magenta) {
+    ~objbox(mourning_crystal_magenta, "There is a magenta crystal fused in to the pillar.", 250, 0, divide(^objbox_height, 2)); // ours: the green one's words
+    return;
+}
+if ($v = 0) {
+    ~mesbox("There is nothing in the pillar.");
+    return;
+}
+if ($v <= 6) {
+    def_int $choice = ~p_choice3_header("Take the mirror.", 1, "Rotate the mirror.", 2, "Leave the mirror where it is.", 3, "There is a mirror in the pillar.");
+    if ($choice = 1) {
+        if (~me2_preplaced($node) = true) {
+            // ours: the three mirrors already in place stay
+            ~mesbox("There is a mirror trapped in this pillar. It appears to have been fused in place.");
+            return;
+        }
+        if (inv_freespace(inv) = 0) {
+            mes("You don't have enough room to take the mirror."); // ours
+            return;
+        }
+        ~me2_setcontent($node, 0);
+        inv_add(inv, mourning_mirror, 1);
+        ~objbox(mourning_mirror, "You take the mirror.", 250, 0, divide(^objbox_height, 2));
+        ~me2_light_update;
+        return;
+    }
+    if ($choice = 2) ~me2_rotate($node, $v);
+    return;
+}
+def_namedobj $obj = ~me2_held_obj($v);
+def_string $what = "a fractured crystal";
+if ($v < ^me2_held_fractured1) $what = "a <lowercase(oc_name($obj))>";
+if (~p_choice2_header("Take the crystal.", 1, "Leave the crystal where it is.", 2, "There is <$what> in the pillar.") = 2) return;
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room to take the crystal."); // ours
+    return;
+}
+~me2_setcontent($node, 0);
+inv_add(inv, $obj, 1);
+if ($v >= ^me2_held_fractured1) ~objbox($obj, "You take the fractured crystal from the pillar.", 250, 0, divide(^objbox_height, 2));
+else ~objbox($obj, "You take the <lowercase(oc_name($obj))>.", 250, 0, divide(^objbox_height, 2));
+~me2_light_update;
+
+[proc,me2_held_obj](int $v)(namedobj)
+switch_int ($v) {
+    case ^me2_held_yellow : return(mourning_crystal_yellow);
+    case ^me2_held_cyan : return(mourning_crystal_cyan);
+    case ^me2_held_blue : return(mourning_crystal_blue);
+    case ^me2_held_fractured1 : return(mourning_fractured_crystal_1);
+    case ^me2_held_fractured2 : return(mourning_fractured_crystal_2);
+}
+return(null);
+
+[proc,me2_dir_name](int $dir)(string)
+switch_int ($dir) {
+    case ^me2_n : return("North");
+    case ^me2_e : return("East");
+    case ^me2_s : return("South");
+    case ^me2_w : return("West");
+    case ^me2_up : return("Up");
+    case ^me2_down : return("Down");
+}
+return("");
+
+// the ways a mirror here can face: the pillar's holes (the map's beams), but not the way it faces now
+[proc,me2_rotate](int $node, int $now)
+if (~me2_openings($node) <= 2) {
+    ~mesbox("This mirror cannot be rotated.");
+    return;
+}
+def_int $d1 = 0;
+def_int $d2 = 0;
+def_int $d3 = 0;
+def_int $d4 = 0;
+def_int $d5 = 0;
+def_int $n = 0;
+def_int $d = 1;
+while ($d <= 6) {
+    if ($d ! $now & ~me2_open($node, $d) = true) {
+        $n = add($n, 1);
+        if ($d1 = 0) $d1 = $d;
+        else if ($d2 = 0) $d2 = $d;
+        else if ($d3 = 0) $d3 = $d;
+        else if ($d4 = 0) $d4 = $d;
+        else $d5 = $d;
+    }
+    $d = add($d, 1);
+}
+def_string $head = "Which way should the mirror face?"; // ours
+def_int $to = 0;
+switch_int ($n) {
+    case 2 : $to = ~p_choice2_header(~me2_dir_name($d1), $d1, ~me2_dir_name($d2), $d2, $head);
+    case 3 : $to = ~p_choice3_header(~me2_dir_name($d1), $d1, ~me2_dir_name($d2), $d2, ~me2_dir_name($d3), $d3, $head);
+    case 4 : $to = ~p_choice4_header(~me2_dir_name($d1), $d1, ~me2_dir_name($d2), $d2, ~me2_dir_name($d3), $d3, ~me2_dir_name($d4), $d4, $head);
+    case 5 : $to = ~p_choice5_header(~me2_dir_name($d1), $d1, ~me2_dir_name($d2), $d2, ~me2_dir_name($d3), $d3, ~me2_dir_name($d4), $d4, ~me2_dir_name($d5), $d5, $head);
+}
+if ($to < 1) return;
+~me2_setcontent($node, $to);
+~me2_light_update;
+mes("You turn the mirror to face <lowercase(~me2_dir_name($to))>."); // ours
+
+[proc,me2_pillar_use](int $node, obj $item, int $slot)
+def_int $v = ~me2_content($node);
+if ($item ! mourning_mirror & $item ! mourning_crystal_yellow & $item ! mourning_crystal_cyan & $item ! mourning_crystal_blue
+    & $item ! mourning_fractured_crystal_1 & $item ! mourning_fractured_crystal_2) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if ($v ! 0) {
+    mes("There's already something in this pillar.");
+    return;
+}
+if ($item = mourning_mirror) {
+    // ours: the mirror first faces the first of its holes, north, east, south, west, up, down
+    def_int $d = 1;
+    while ($d <= 6 & ~me2_open($node, $d) = false) $d = add($d, 1);
+    if ($d > 6) $d = 1;
+    inv_delslot(inv, $slot);
+    ~me2_setcontent($node, $d);
+    ~objbox(mourning_mirror, "You place the mirror in the pillar.", 250, 0, divide(^objbox_height, 2));
+    ~me2_light_update;
+    return;
+}
+if ($item = mourning_fractured_crystal_1 | $item = mourning_fractured_crystal_2) {
+    // ours: it fits where the pillar has a hole on its clear side
+    def_int $clear = ^me2_n;
+    def_string $side = "north";
+    def_int $held = ^me2_held_fractured1;
+    if ($item = mourning_fractured_crystal_2) {
+        $clear = ^me2_e;
+        $side = "east";
+        $held = ^me2_held_fractured2;
+    }
+    if (~me2_open($node, $clear) = false) {
+        ~objbox($item, "This fractured crystal doesn't seem to fit right in this pillar.", 250, 0, divide(^objbox_height, 2));
+        return;
+    }
+    inv_delslot(inv, $slot);
+    ~me2_setcontent($node, $held);
+    ~objbox($item, "This crystal only fits the pillar with the clear side facing <$side>.", 250, 0, divide(^objbox_height, 2));
+    ~me2_light_update;
+    return;
+}
+def_int $crystal = ^me2_held_yellow;
+if ($item = mourning_crystal_cyan) $crystal = ^me2_held_cyan;
+if ($item = mourning_crystal_blue) $crystal = ^me2_held_blue;
+inv_delslot(inv, $slot);
+~me2_setcontent($node, $crystal);
+~objbox($item, "You place the <lowercase(oc_name($item))> in the pillar.", 250, 0, divide(^objbox_height, 2)); // ours
+~me2_light_update;
+
+// ---------------------------------------------------------------- the light doors: white while
+// the right colour lights them (me2_light.rs2)
+[oploc1,mourning_door_1_1_south] ~me2_pass_door(1);
+[oploc1,mourning_door_1_1_east] ~me2_pass_door(2);
+[oploc1,mourning_door_1_13_north] ~me2_pass_door(3);
+[oploc1,mourning_door_1_13_east] ~me2_pass_door(4);
+[oploc1,mourning_door_1_16_north] ~me2_pass_door(5);
+[oploc1,mourning_door_1_16_west] ~me2_pass_door(6);
+[oploc1,mourning_door_2_4_west] ~me2_pass_door(7);
+[oploc1,mourning_door_2_16_north] ~me2_pass_door(8);
+[oploc1,mourning_door_2_16_west] ~me2_pass_door(9);
+[oploc1,mourning_door_1_b] ~me2_pass_door(10);
+[oploc1,mourning_door_1_c] ~me2_pass_door(11);
+// never lit by any beam on the map (their doors stay shut)
+[oploc1,mourning_door_2_4_south] ~me2_pass_door(0);
+[oploc1,mourning_door_1_a] ~me2_pass_door(0);
+
+[proc,me2_pass_door](int $door)
+if ($door = 0 | ~me2_door_open($door) = 0) {
+    mes("The light door blocks your way."); // ours
+    return;
+}
+def_int $dx = calc(coordx(loc_coord) - coordx(coord));
+def_int $dz = calc(coordz(loc_coord) - coordz(coord));
+if ($dx > 1) $dx = 1;
+if ($dx < -1) $dx = -1;
+if ($dz > 1) $dz = 1;
+if ($dz < -1) $dz = -1;
+mes("You step through the white light.");
+p_telejump(movecoord(loc_coord, $dx, 0, $dz));
+if ($door = ^me2_door_1_c & %mourning_light_door_1_c_first_time = 0) {
+    // the RS wiki: Thorgel appears as you step through
+    %mourning_light_door_1_c_first_time = 1;
+    p_delay(0);
+    ~me2_thorgel_meet;
+}
+
+// ---------------------------------------------------------------- the chests behind the doors
+// (what each holds: the RS wiki's transcript; ours: what doesn't fit waits in the collector's tray)
+[oploc1,mourning_temple_light_parts_2_closed] loc_change(mourning_temple_light_parts_2_open, 300);
+[oploc1,mourning_temple_light_parts_3_closed] loc_change(mourning_temple_light_parts_3_open, 300);
+[oploc1,mourning_temple_light_parts_4_closed] loc_change(mourning_temple_light_parts_4_open, 300);
+[oploc1,mourning_temple_light_parts_5_closed] loc_change(mourning_temple_light_parts_5_open, 300);
+[oploc1,mourning_temple_light_parts_6_closed] loc_change(mourning_temple_light_parts_6_open, 300);
+[oploc2,mourning_temple_light_parts_2_open] loc_change(mourning_temple_light_parts_2_closed, 300);
+[oploc2,mourning_temple_light_parts_3_open] loc_change(mourning_temple_light_parts_3_closed, 300);
+[oploc2,mourning_temple_light_parts_4_open] loc_change(mourning_temple_light_parts_4_closed, 300);
+[oploc2,mourning_temple_light_parts_5_open] loc_change(mourning_temple_light_parts_5_closed, 300);
+[oploc2,mourning_temple_light_parts_6_open] loc_change(mourning_temple_light_parts_6_closed, 300);
+
+[oploc1,mourning_temple_light_parts_2_open]
+if (%mourning_temple_parts_2 = 1) {
+    ~mesbox("The chest is empty.");
+    return;
+}
+%mourning_temple_parts_2 = 1;
+~me2_chest_give(mourning_mirror, 2);
+~me2_chest_give(mourning_crystal_cyan, 1);
+~doubleobjbox(mourning_mirror, mourning_crystal_cyan, "You find 2 mirrors and a cyan crystal.", 250);
+
+[oploc1,mourning_temple_light_parts_3_open]
+if (%mourning_temple_parts_3 = 1) {
+    ~mesbox("The chest is empty.");
+    return;
+}
+%mourning_temple_parts_3 = 1;
+~me2_chest_give(mourning_mirror, 2);
+~objbox(mourning_mirror, "You find 2 mirrors.", 250, 0, divide(^objbox_height, 2));
+
+[oploc1,mourning_temple_light_parts_4_open]
+if (%mourning_temple_parts_4 = 1) {
+    ~mesbox("The chest is empty.");
+    return;
+}
+%mourning_temple_parts_4 = 1;
+~me2_chest_give(mourning_crystal_blue, 1);
+~objbox(mourning_crystal_blue, "You find a blue crystal.", 250, 0, divide(^objbox_height, 2));
+
+[oploc1,mourning_temple_light_parts_5_open]
+if (%mourning_temple_parts_5 = 1) {
+    ~mesbox("The chest is empty.");
+    return;
+}
+%mourning_temple_parts_5 = 1;
+~me2_chest_give(mourning_mirror, 2);
+~me2_chest_give(mourning_fractured_crystal_1, 1);
+~doubleobjbox(mourning_mirror, mourning_fractured_crystal_1, "You find 2 mirrors and a fractured crystal.", 250);
+
+[oploc1,mourning_temple_light_parts_6_open]
+if (%mourning_temple_parts_6 = 1) {
+    ~mesbox("The chest is empty.");
+    return;
+}
+%mourning_temple_parts_6 = 1;
+~me2_chest_give(mourning_fractured_crystal_2, 1);
+~me2_chest_give(mourning_mirror, 3);
+~doubleobjbox(mourning_fractured_crystal_2, mourning_mirror, "You find a fractured crystal and three mirrors.", 250);
+
+[proc,me2_chest_give](namedobj $obj, int $count)
+def_int $i = 0;
+while ($i < $count) {
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, $obj, 1);
+    } else {
+        mes("You have no room for one; it will be in the crystal collector's tray when you pull its lever."); // ours
+    }
+    $i = add($i, 1);
+}
+
+// ---------------------------------------------------------------- the wall supports (middle floor,
+// south-east). The OSRS wiki: eight rolls, each 25% at level 1 to 106% at 99; a failed one drops
+// you to the floor below among the shadows for 5 damage; no experience; weight doesn't matter.
+// Ours: the animations and the words when you fall.
+[oploc1,mourning_temple_agility_hanging]
+def_coord $from = ^me2_handhold_west;
+def_coord $to = ^me2_handhold_east;
+def_int $step = 1;
+def_seq $anim = human_ledge_walk_left;
+if (coordx(coord) > coordx(movecoord(^me2_handhold_west, 5, 0, 0))) {
+    $from = ^me2_handhold_east;
+    $to = ^me2_handhold_west;
+    $step = -1;
+    $anim = human_ledge_walk_right;
+}
+p_arrivedelay;
+if (coord ! $from) p_telejump($from);
+p_delay(0);
+def_coord $at = $from;
+def_int $i = 0;
+while ($at ! $to) {
+    def_coord $next = movecoord($at, $step, 0, 0);
+    // the first and last moves are on and off the supports; the eight between are the leaps
+    if ($i > 0 & $next ! $to & stat_random(agility, 64, 271) = false) {
+        ~me2_handhold_fall;
+        return;
+    }
+    ~agility_exactmove($anim, 0, 1, $at, $next, 0, 30, ^exact_south, false);
+    $at = $next;
+    $i = add($i, 1);
+}
+anim(null, 0);
+
+[proc,me2_handhold_fall]
+anim(human_climbing_fall, 0);
+mes("You lose your grip and fall!"); // ours
+p_delay(1);
+p_telejump(^me2_handhold_fall);
+anim(null, 0);
+damage(uid, 1, 5);
+
+// ---------------------------------------------------------------- the rock and the rope (the RS
+// wiki's transcript; ours: where you stand)
+[oploc1,mourning_temple_way_down]
+if (%mourning_temple_rope = 1) {
+    anim(human_climbing_down, 0); // ours
+    p_delay(1);
+    p_telejump(^me2_rope_bottom);
+    anim(null, 0);
+    return;
+}
+if (inv_total(inv, rope) = 0) {
+    mes("You need to secure a rope here before you can climb down.");
+    return;
+}
+@me2_secure_rope;
+
+[oplocu,mourning_temple_way_down]
+if (last_useitem ! rope | %mourning_temple_rope = 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@me2_secure_rope;
+
+[label,me2_secure_rope]
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Do you want to secure a rope here?") = 2) {
+    mes("You need to secure a rope here before you can climb down.");
+    return;
+}
+inv_del(inv, rope, 1);
+%mourning_temple_rope = 1;
+mes("You secure the rope to the rock.");
+
+[oploc1,mourning_temple_way_ropemulti]
+if (%mourning_temple_rope = 0) return;
+anim(human_climbing, 0); // ours
+p_delay(1);
+p_telejump(^me2_rope_top);
+anim(null, 0);
+
+// the low walls by the rock (middle floor); ours: a jump across
+[oploc1,mourning_temple_wall_jump]
+def_int $dx = 1;
+if (coordx(coord) > coordx(loc_coord)) $dx = -1;
+def_coord $start = movecoord(loc_coord, multiply($dx, -1), 0, 0);
+if (coord ! $start) p_telejump($start);
+def_int $face = ^exact_east;
+if ($dx = -1) $face = ^exact_west;
+~agility_exactmove(human_spot_jump, 0, 1, $start, movecoord(loc_coord, $dx, 0, 0), 15, 30, $face, false);
+
+// ---------------------------------------------------------------- the dwarves' tunnel (the RS
+// wiki: Thorgel's hole in the back of the temple, out to their camp in the Underground Pass; the
+// cache opens its end in the camp, cavewalltunnel_to_temple, once you have been through the black
+// door). Ours: where you come out.
+[oploc1,mourning_temple_light_wall_with_hole]
+p_telejump(^me2_tunnel_upass);
+
+[oploc1,cavewalltunnel_to_temple]
+if (%mourning_light_door_1_c_first_time = 0) return;
+p_telejump(^me2_tunnel_temple);
+
+// ---------------------------------------------------------------- the front door after the quest
+// (the RS wiki's crystal trinket page: without the trinket "A strange force blocks your path."
+// and you are bounced back; ours: noticed as you step from outside onto the doorway)
+[zone,0_29_72_56_24] ~me2_door_zone;
+[zone,0_29_72_56_32] ~me2_door_zone;
+[zoneexit,0_29_72_56_24] ~me2_door_zone_exit;
+[zoneexit,0_29_72_56_32] ~me2_door_zone_exit;
+
+[proc,me2_door_zone]
+if (%mourning_quest_main < ^me2_complete) return;
+%me2_lastx = coordx(coord);
+settimer(me2_front_door, 1);
+
+[proc,me2_door_zone_exit]
+if (inzone(0_29_72_56_24, 0_29_72_63_39, coord) = false) cleartimer(me2_front_door);
+
+[timer,me2_front_door]
+def_int $x = coordx(coord);
+if (%me2_lastx > ^me2_front_door_x & $x <= ^me2_front_door_x & coordz(coord) >= 4636 & coordz(coord) <= 4642 & coordy(coord) = 0
+    & inv_total(inv, mourning_crystal_trinket) = 0) {
+    p_telejump(movecoord(coord, calc(^me2_front_door_x + 2 - $x), 0, 0));
+    mes("A strange force blocks your path.");
+    $x = calc(^me2_front_door_x + 2);
+}
+%me2_lastx = $x;

@@ -1,0 +1,295 @@
+// EASCape: Mourning's End Part II - the light maze's beams. The cache draws every beam, pillar,
+// cross point and light door from its own varbits (mourning_quest_beams1-6, vert_beams1-5,
+// beam_cross1-2, light_doors); the map's beam locs give which pillar each beam joins
+// (mourning2.enum). The rules are the RS wiki's guide: the light starts at the pillar over the
+// collector (the middle floor's pillar 9, over the great crystal); an empty pillar lets it through
+// if there is a hole on the far side; a mirror sends it one of six ways; a crystal tints it (white
+// takes the crystal's colour, two colours with one between them on the colour wheel make that
+// one, any other pair blocks it); a fractured crystal splits it three ways; a light door opens to
+// its complementary colour only; the final pillar merges red, green and blue into white. Ours: a
+// mirror facing back the way the light came stops it; a pillar with only two holes (the RS wiki:
+// "this mirror cannot be rotated") always turns the light from one to the other; light only
+// enters a fractured crystal through its clear side; beams crossing over a cross point show the
+// first beam's colour.
+
+// works the whole maze out again from the pillars and sets the beams and doors
+[proc,me2_light_update]
+%mourning_quest_beams1 = 0;
+%mourning_quest_beams2 = 0;
+%mourning_quest_beams3 = 0;
+%mourning_quest_beams4 = 0;
+%mourning_quest_beams5 = 0;
+%mourning_quest_beams6 = 0;
+%mourning_quest_vert_beams1 = 0;
+%mourning_quest_vert_beams2 = 0;
+%mourning_quest_vert_beams3 = 0;
+%mourning_quest_vert_beams4 = 0;
+%mourning_quest_vert_beams5 = 0;
+%mourning_quest_beam_cross1 = 0;
+%mourning_quest_beam_cross2 = 0;
+def_int $doors = 0;
+def_int $final = 0;
+def_int $final_done = 0;
+// beams waiting to be followed: (node*8 + direction)*8 + colour
+def_int $q1 = -1;
+def_int $q2 = -1;
+def_int $q3 = -1;
+def_int $q4 = -1;
+def_int $q5 = -1;
+def_int $q6 = -1;
+// arriving at $an travelling $at, or leaving $en towards $ed
+def_int $an = ^me2_node_source;
+def_int $at = ^me2_up;
+def_int $en = -1;
+def_int $ed = 0;
+def_int $c = ^me2_white;
+def_int $o1 = 0;
+def_int $o2 = 0;
+def_int $o3 = 0;
+def_int $nc = 0;
+def_int $e = 0;
+def_int $target = 0;
+def_int $steps = 0;
+while ($steps < 400) {
+    $steps = add($steps, 1);
+    if ($an ! -1) {
+        $o1, $o2, $o3, $nc = ~me2_outputs($an, $at, $c);
+        $en = -1;
+        if ($o1 > 0) {
+            $en = $an;
+            $ed = $o1;
+            $c = $nc;
+            if ($o2 > 0) {
+                if ($q1 = -1) $q1 = calc(($an * 8 + $o2) * 8 + $nc);
+                else if ($q2 = -1) $q2 = calc(($an * 8 + $o2) * 8 + $nc);
+                else if ($q3 = -1) $q3 = calc(($an * 8 + $o2) * 8 + $nc);
+                else if ($q4 = -1) $q4 = calc(($an * 8 + $o2) * 8 + $nc);
+                else if ($q5 = -1) $q5 = calc(($an * 8 + $o2) * 8 + $nc);
+                else $q6 = calc(($an * 8 + $o2) * 8 + $nc);
+            }
+            if ($o3 > 0) {
+                if ($q1 = -1) $q1 = calc(($an * 8 + $o3) * 8 + $nc);
+                else if ($q2 = -1) $q2 = calc(($an * 8 + $o3) * 8 + $nc);
+                else if ($q3 = -1) $q3 = calc(($an * 8 + $o3) * 8 + $nc);
+                else if ($q4 = -1) $q4 = calc(($an * 8 + $o3) * 8 + $nc);
+                else if ($q5 = -1) $q5 = calc(($an * 8 + $o3) * 8 + $nc);
+                else $q6 = calc(($an * 8 + $o3) * 8 + $nc);
+            }
+        }
+        $an = -1;
+    }
+    if ($en = -1) {
+        // the next waiting beam
+        def_int $q = -1;
+        if ($q1 ! -1) {
+            $q = $q1;
+            $q1 = -1;
+        } else if ($q2 ! -1) {
+            $q = $q2;
+            $q2 = -1;
+        } else if ($q3 ! -1) {
+            $q = $q3;
+            $q3 = -1;
+        } else if ($q4 ! -1) {
+            $q = $q4;
+            $q4 = -1;
+        } else if ($q5 ! -1) {
+            $q = $q5;
+            $q5 = -1;
+        } else if ($q6 ! -1) {
+            $q = $q6;
+            $q6 = -1;
+        }
+        if ($q ! -1) {
+            $c = modulo($q, 8);
+            $ed = modulo(divide($q, 8), 8);
+            $en = divide($q, 64);
+        } else if ($final_done = 0 & testbit($final, ^me2_red) = ^true & testbit($final, ^me2_green) = ^true & testbit($final, ^me2_blue) = ^true) {
+            // the RS wiki: the three beams merge into a single white beam at the final pillar
+            $final_done = 1;
+            $en = ^me2_node_final;
+            $ed = ^me2_w;
+            $c = ^me2_white;
+        } else {
+            $steps = 400;
+        }
+    }
+    if ($en ! -1) {
+        $e = enum(int, int, me2_edge, calc($en * 8 + $ed));
+        $en = -1;
+        if ($e ! -1) {
+            ~me2_seg(modulo($e, 256), $c);
+            if (modulo(divide($e, 256), 256) > 0) ~me2_seg(modulo(divide($e, 256), 256), $c);
+            $target = divide($e, 65536);
+            $at = modulo($target, 8);
+            $target = divide($target, 8);
+            if ($target = ^me2_node_final) {
+                $final = setbit($final, $c);
+            } else if ($target >= 80 & $target < ^me2_wall) {
+                if ($c = ~me2_door_needs(sub($target, 80))) $doors = setbit($doors, sub($target, 80));
+            } else if ($target ! ^me2_wall) {
+                $an = $target;
+            }
+        }
+    }
+}
+def_int $k = 1;
+while ($k <= ^me2_door_1_c) {
+    if (testbit($doors, $k) = ^true) ~me2_door_set($k, 1);
+    else ~me2_door_set($k, 0);
+    $k = add($k, 1);
+}
+
+// the colour that opens a light door: its complementary colour on the colour wheel (the RS wiki).
+// The doors' colours are their locs' (mourning2.loc): 1_1 yellow, 1_13 cyan, 1_16 yellow and
+// magenta, 2_4 magenta, 2_16 blue, 1_b cyan, 1_c black (opened by white).
+[proc,me2_door_needs](int $door)(int)
+switch_int ($door) {
+    case 1, 2, 5 : return(^me2_blue);
+    case 3, 4, 10 : return(^me2_red);
+    case 6, 7 : return(^me2_green);
+    case 8, 9 : return(^me2_yellow);
+    case 11 : return(^me2_white);
+}
+return(0);
+
+[proc,me2_opp](int $dir)(int)
+switch_int ($dir) {
+    case ^me2_n : return(^me2_s);
+    case ^me2_s : return(^me2_n);
+    case ^me2_e : return(^me2_w);
+    case ^me2_w : return(^me2_e);
+    case ^me2_up : return(^me2_down);
+    case ^me2_down : return(^me2_up);
+}
+return(0);
+
+[proc,me2_open](int $node, int $dir)(boolean)
+if (enum(int, int, me2_edge, calc($node * 8 + $dir)) = -1) return(false);
+return(true);
+
+[proc,me2_openings](int $node)(int)
+def_int $n = 0;
+def_int $d = 1;
+while ($d <= 6) {
+    if (~me2_open($node, $d) = true) $n = add($n, 1);
+    $d = add($d, 1);
+}
+return($n);
+
+// light of colour $c through a crystal of colour $k (the RS wiki's colour wheel rules); 0 blocked
+[proc,me2_mix](int $c, int $k)(int)
+if ($c = ^me2_white) return($k);
+def_int $d = modulo(calc($k - $c + 6), 6);
+if ($d = 2) return(add(modulo($c, 6), 1));
+if ($d = 4) return(add(modulo(calc($c + 4), 6), 1));
+return(0);
+
+// where light arriving at $node travelling $t (colour $c) goes: up to three ways out, and its colour
+[proc,me2_outputs](int $node, int $t, int $c)(int, int, int, int)
+if (enum(int, int, me2_cross, $node) = 1) {
+    def_int $class = 0;
+    if ($t = ^me2_e | $t = ^me2_w) $class = 7;
+    if ($t = ^me2_up | $t = ^me2_down) $class = 14;
+    ~me2_cross_mark($node, $class, $c);
+    if (~me2_open($node, $t) = true) return($t, 0, 0, $c);
+    return(0, 0, 0, $c);
+}
+def_int $v = ~me2_content($node);
+def_int $from = ~me2_opp($t);
+if ($v = 0) {
+    if (~me2_open($node, $t) = true) return($t, 0, 0, $c);
+    return(0, 0, 0, $c);
+}
+if ($v <= 6) {
+    if (~me2_openings($node) = 2) {
+        if (~me2_open($node, $from) = false) return(0, 0, 0, $c);
+        def_int $d = 1;
+        while ($d <= 6) {
+            if ($d ! $from & ~me2_open($node, $d) = true) return($d, 0, 0, $c);
+            $d = add($d, 1);
+        }
+        return(0, 0, 0, $c);
+    }
+    if ($v = $from | ~me2_open($node, $v) = false) return(0, 0, 0, $c);
+    return($v, 0, 0, $c);
+}
+if ($v = ^me2_held_fractured1 | $v = ^me2_held_fractured2) {
+    def_int $clear = ^me2_n;
+    if ($v = ^me2_held_fractured2) $clear = ^me2_e;
+    if ($from ! $clear) return(0, 0, 0, $c);
+    def_int $a = 0;
+    def_int $b = 0;
+    def_int $x = 0;
+    def_int $h = 1;
+    while ($h <= 4) {
+        if ($h ! $clear & ~me2_open($node, $h) = true) {
+            if ($a = 0) $a = $h;
+            else if ($b = 0) $b = $h;
+            else $x = $h;
+        }
+        $h = add($h, 1);
+    }
+    return($a, $b, $x, $c);
+}
+def_int $k = 0;
+switch_int ($v) {
+    case ^me2_held_yellow : $k = ^me2_yellow;
+    case ^me2_held_cyan : $k = ^me2_cyan;
+    case ^me2_held_blue : $k = ^me2_blue;
+    case ^me2_held_green : $k = ^me2_green;
+    case ^me2_held_magenta : $k = ^me2_magenta;
+}
+def_int $mixed = ~me2_mix($c, $k);
+if ($mixed = 0 | ~me2_open($node, $t) = false) return(0, 0, 0, $c);
+return($t, 0, 0, $mixed);
+
+// ---------------------------------------------------------------- what is in a pillar
+[proc,me2_content](int $node)(int)
+if ($node = ^me2_node_green) return(^me2_held_green);
+if ($node = ^me2_node_magenta) return(^me2_held_magenta);
+def_int $slot = enum(int, int, me2_slot, $node);
+if ($slot = -1) return(0);
+def_int $v = ~me2_slot_get($slot);
+if ($v = 0) {
+    // the mirrors already in place, as the OSRS wiki finds them: 1_1 lets you through its east
+    // door first, 1_13 lights its north door, 1_b lights the cyan door
+    if ($node = ^me2_node_1_1) return(^me2_e);
+    if ($node = ^me2_node_1_13) return(^me2_n);
+    if ($node = ^me2_node_1_b) return(^me2_e);
+}
+return($v);
+
+[proc,me2_preplaced](int $node)(boolean)
+if ($node = ^me2_node_1_1 | $node = ^me2_node_1_13 | $node = ^me2_node_1_b) return(true);
+return(false);
+
+[proc,me2_slot_get](int $slot)(int)
+def_int $bit = multiply(modulo($slot, 8), 4);
+switch_int (divide($slot, 8)) {
+    case 0 : return(getbit_range(%me2_pillars1, $bit, add($bit, 3)));
+    case 1 : return(getbit_range(%me2_pillars2, $bit, add($bit, 3)));
+    case 2 : return(getbit_range(%me2_pillars3, $bit, add($bit, 3)));
+    case 3 : return(getbit_range(%me2_pillars4, $bit, add($bit, 3)));
+}
+return(0);
+
+[proc,me2_setcontent](int $node, int $v)
+def_int $slot = enum(int, int, me2_slot, $node);
+if ($slot = -1) return;
+def_int $bit = multiply(modulo($slot, 8), 4);
+switch_int (divide($slot, 8)) {
+    case 0 : %me2_pillars1 = setbit_range_toint(%me2_pillars1, $v, $bit, add($bit, 3));
+    case 1 : %me2_pillars2 = setbit_range_toint(%me2_pillars2, $v, $bit, add($bit, 3));
+    case 2 : %me2_pillars3 = setbit_range_toint(%me2_pillars3, $v, $bit, add($bit, 3));
+    case 3 : %me2_pillars4 = setbit_range_toint(%me2_pillars4, $v, $bit, add($bit, 3));
+}
+
+// the crystal collector's lever: every mirror and crystal you put in comes back (the mirrors
+// already in place stay where they are, ours)
+[proc,me2_clear_pillars]
+def_int $node = 20;
+while ($node < 80) {
+    if (enum(int, int, me2_slot, $node) ! -1 & ~me2_preplaced($node) = false) ~me2_setcontent($node, 0);
+    $node = add($node, 1);
+}

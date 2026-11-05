@@ -7,6 +7,9 @@ if (oc_category(last_useitem) = talismans) {
     switch_obj (last_useitem) {
         case blankrune, blankrune_high : @runecraft_runes;
         case tiara : @runecraft_craft_tiaras(loc_type, last_useitem, last_useslot);
+        case mourning_crystal_new_sample : // EASCape: Mourning's End Part II (quest_mourning2/me2_npcs.rs2)
+            if (loc_type = death_altar) ~me2_charge_crystal;
+            else ~displaymessage(^dm_default);
         case default : ~displaymessage(^dm_default);
     }
 }

@@ -39,6 +39,7 @@ if ($data = null | db_getfield($data, runecraft_table:talisman, 0) ! last_useite
     ~displaymessage(^dm_default);
     return;
 }
+if (loc_param(rune_type) = ^death & ~me2_death_ok(true) = false) return; // EASCape: Mourning's End Part II (quest_mourning2/me2_npcs.rs2)
 if (db_getfield($data, runecraft_table:members, 0) = ^true) {
     if (map_members = ^false) {
         mes(^mes_members_do_that); // guess
@@ -56,6 +57,7 @@ p_telejump(map_findsquare(db_getfield($data, runecraft_table:enter_coord, random
 [label,quick_teleport_to_ruins]
 def_dbrow $data = ~get_runecraft_data(loc_param(rune_type));
 if ($data = null) return;
+if (loc_param(rune_type) = ^death & ~me2_death_ok(true) = false) return; // EASCape: Mourning's End Part II (quest_mourning2/me2_npcs.rs2)
 
 if (db_getfield($data, runecraft_table:members, 0) = ^true) {
     if (map_members = ^false) {
@@ -75,6 +77,7 @@ if ($data = null) {
     ~displaymessage(^dm_default);
     return;
 }
+if (loc_param(rune_type) = ^death & ~me2_death_ok(false) = false) return; // EASCape: Mourning's End Part II (quest_mourning2/me2_npcs.rs2)
 def_int $levelreq = db_getfield($data, runecraft_table:level, 0);
 def_namedobj $rune = db_getfield($data, runecraft_table:rune, 0);
 if (oc_members($rune) = true) {

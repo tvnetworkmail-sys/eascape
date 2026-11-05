@@ -143,9 +143,7 @@ if ($s = ^me1_poison) {
     ~me1_complete;
     return;
 }
-~chatplayer("<p,quiz>Do you have the key to the excavation site yet?");
-~chatnpc("<p,neutral>No the guard is being a bit slow, but we should have it soon.");
-~chatplayer("<p,neutral>Alright, I'll report in again tomorrow.");
+~me2_head_mourner; // EASCape: Mourning's End Part II: the new key (quest_mourning2/me2_npcs.rs2)
 
 [label,me1_hm_plan]
 ~chatnpc("<p,neutral>We have never tried this before, but some joker put something in our food not too long ago that gave us all symptoms akin to those of the plague.");
@@ -161,6 +159,10 @@ if ($s = ^me1_poison) {
 [oploc1,loc_8799]
 if (%mourning_quest < ^me1_recruit) {
     ~chatnpc_specific(nc_name(mourner_hideout_head_mourner), mourner_hideout_head_mourner, "<p,angry>Get away from my desk!");
+    return;
+}
+if (%mourning_quest_main >= ^me2_started) {
+    ~me2_desk; // EASCape: Mourning's End Part II: the new keys too (quest_mourning2/me2_npcs.rs2)
     return;
 }
 if (inv_total(inv, mourning_gnome_key) > 0) {

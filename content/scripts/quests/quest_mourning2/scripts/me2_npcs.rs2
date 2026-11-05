@@ -1,0 +1,320 @@
+// EASCape: Mourning's End Part II - the Head Mourner (the start and the new key), his desk, the
+// excavation door, Arianwyn and Eluned in Lletya, and the end. Words: the RS wiki's transcript
+// (2005: the Head Mourner, Eluned's copy); the OSRS wiki's where it has none.
+
+// ---------------------------------------------------------------- the Head Mourner (me1_hq.rs2
+// hands over once Mourning's End Part I is done)
+[proc,me2_head_mourner]
+def_int $s = %mourning_quest_main;
+if ($s = ^me2_not_started) {
+    ~chatplayer("<p,quiz>Do you have the key to the excavation site yet?");
+    if (%me1_arianwyn_told = 0) {
+        // Mourning's End Part I's words, until you have told Arianwyn about the temple
+        ~chatnpc("<p,neutral>No the guard is being a bit slow, but we should have it soon.");
+        ~chatplayer("<p,neutral>Alright, I'll report in again tomorrow.");
+        return;
+    }
+    if (inv_freespace(inv) = 0) {
+        ~chatnpc("<p,neutral>Try freeing up some space in your inventory, then we can talk about keys."); // the OSRS wiki
+        return;
+    }
+    ~chatnpc("<p,neutral>The guard has finally returned, seems it took him so long because he had ten times as many cut as we needed.");
+    ~chatplayer("<p,happy>That's useful I'm always losing keys.");
+    ~chatnpc("<p,neutral>Well I have plenty now.");
+    ~chatplayer("<p,quiz>So... You mentioned a task you had for me, something to do with a temple.");
+    ~chatnpc("<p,neutral>That is right, we have been excavating for some time now, digging far under the mountains in search of an ancient temple as I said before.");
+    ~chatplayer("<p,neutral>That's right. You said something about an altar that will give us access to some very powerful magic.");
+    ~chatnpc("<p,neutral>Indeed it will, once we find it.");
+    ~chatplayer("<p,quiz>So how do you want me to help?");
+    ~chatnpc("<p,neutral>One of our dig teams has recently gone missing, I need you to find out what happened to them.");
+    ~chatplayer("<p,neutral>Sounds easy enough.");
+    ~chatnpc("<p,neutral>You say that now but it seems our digging disturbed some of the beasts that dwell in the deep crevasses under the mountain. We've tried but we are unable to damage the creatures, it seems we need some sort of beast slayer to help kill them.");
+    ~chatplayer("<p,sad>It's never easy...");
+    ~chatnpc("<p,angry>Pardon... What was that?");
+    ~chatplayer("<p,shifty>Err... Nothing Sir... I'll get to it.");
+    ~chatnpc("<p,neutral>Here - you will need this.");
+    ~me2_set(^me2_started);
+    ~me1_give(mourning_excavation_key, 1);
+    ~objbox(mourning_excavation_key, "The Head Mourner hands you a newly cut key.", 250, 0, divide(^objbox_height, 2));
+    ~chatplayer("<p,shifty>Thanks... Err... I think.");
+    ~chatnpc("<p,happy>Good Luck!");
+    return;
+}
+~chatnpc("<p,quiz>Any news yet on our missing dig team?");
+if ($s < ^me2_found_team) {
+    ~chatplayer("<p,neutral>Not yet.");
+} else {
+    ~chatplayer("<p,shifty>No, I have looked everywhere, but I can see no sign of them.");
+    ~chatnpc("<p,sad>This is not good news, did you find anything else down there?");
+    ~chatplayer("<p,shifty>Nothing other than the beasts you spoke of.");
+    ~chatnpc("<p,neutral>I must ask you to return to the search and remember if you see anything elven-made down there you must let me know. After all that is what we are here for.");
+    ~chatplayer("<p,neutral>I'll come to you as soon as I dig any thing up.");
+}
+if (~obj_gettotal(mourning_excavation_key) = 0) {
+    ~chatplayer("<p,sad>I've lost the key to the excavation site.");
+    if (inv_freespace(inv) = 0) {
+        ~chatnpc("<p,neutral>Free up some inventory space and get another one from my desk."); // the OSRS wiki
+        return;
+    }
+    ~chatnpc("<p,neutral>Have a new one then, if you lose it help yourself to one from my desk.");
+    inv_add(inv, mourning_excavation_key, 1);
+    ~objbox(mourning_excavation_key, "The Head Mourner hands you a newly cut key.", 250, 0, divide(^objbox_height, 2));
+}
+
+// his desk, once he has new keys (the RS wiki's transcript)
+[proc,me2_desk]
+def_boolean $old = false;
+def_boolean $new = false;
+if (inv_total(inv, mourning_gnome_key) > 0) $old = true;
+if (inv_total(inv, mourning_excavation_key) > 0) $new = true;
+if ($old = true & $new = true) {
+    ~mesbox("The desk has a few copies of both the tarnished key and the new key on it, but as you have both you leave them alone."); // ours: Part I's words for one key
+    return;
+}
+if ($old = true) {
+    ~mesbox("The desk has a few copies of both the tarnished key and the new key on it, you already have a tarnished key...");
+    if (~p_choice2_header("Take a new key.", 1, "Leave the new key.", 2, "Do you wish to...") = 2) {
+        ~mesbox("You leave the keys on the desk.");
+        return;
+    }
+    ~me2_desk_new;
+    return;
+}
+if ($new = true) {
+    ~mesbox("The desk has a few copies of both the tarnished key and the new key on it, you already have a new key...");
+    if (~p_choice2_header("Take a tarnished key.", 1, "Leave the tarnished key.", 2, "Do you wish to...") = 2) {
+        ~mesbox("You leave the keys on the desk.");
+        return;
+    }
+    ~me2_desk_old;
+    return;
+}
+~mesbox("The desk has a few copies of both the tarnished key and the new key on it...");
+switch_int (~p_choice3_header("Take a tarnished key.", 1, "Take a new key.", 2, "Leave the keys.", 3, "Do you wish to")) {
+    case 1 : ~me2_desk_old;
+    case 2 : ~me2_desk_new;
+    case 3 : ~mesbox("You leave the keys on the desk.");
+}
+
+[proc,me2_desk_new]
+~me1_give(mourning_excavation_key, 1);
+~objbox(mourning_excavation_key, "You take one of the new keys.", 250, 0, divide(^objbox_height, 2));
+
+[proc,me2_desk_old]
+~me1_give(mourning_gnome_key, 1);
+~objbox(mourning_gnome_key, "You take one of the tarnished keys.", 250, 0, divide(^objbox_height, 2));
+
+// the door west into the tunnels (the OSRS wiki: the new key opens it). Ours: the words when you
+// have no key.
+[oploc1,mourner_hideout_door4]
+if (coordx(coord) >= coordx(loc_coord) & inv_total(inv, mourning_excavation_key) = 0) {
+    mes("This door is locked.");
+    return;
+}
+~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+
+[oplocu,mourner_hideout_door4]
+if (last_useitem = mourning_excavation_key) {
+    ~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- Arianwyn (me1_lletya.rs2 hands
+// over once Part I is done and he has heard about the temple)
+[proc,me2_arianwyn]()(boolean)
+def_int $s = %mourning_quest_main;
+if ($s = ^me2_not_started) return(false);
+if ($s = ^me2_started) {
+    ~chatnpc("<p,quiz>How goes it <displayname>?");
+    ~chatplayer("<p,neutral>Good, I have just been given access to the Mourners' excavation site, I can now start the search for this temple you spoke of, what can you tell me about it?");
+    ~chatnpc("<p,neutral>The Temple of Light was created thousands of years ago, It was built to protect an ancient altar.");
+    ~chatplayer("<p,quiz>What do you know about this altar?");
+    ~chatnpc("<p,neutral>It is something that dates back to before we walked this land. It has certain powers over life.");
+    ~chatplayer("<p,quiz>So I guess it would be bad news for the Mourners to find it?");
+    ~chatnpc("<p,neutral>That would be an understatement. It is vitally important that the temple's safeguards remain intact, you must discover it and make sure the Mourners cannot get access to it.");
+    ~chatplayer("<p,neutral>I'll do what I can");
+    %mourning_arianwyn_told = 1;
+    return(true);
+}
+if ($s = ^me2_found_team) {
+    ~chatnpc("<p,quiz>What is the latest news?");
+    ~chatplayer("<p,neutral>I have found the entrance to the temple. I was asked to investigate when one of the dig crews went missing. I found them, massacred at the entrance to the temple, surrounded by strange shadows.");
+    ~chatnpc("<p,sad>So they are one step from finding it... I was hoping I would not need to ask you this, but I need your help again, we need to restore the safeguards on the Temple of Light.");
+    ~chatplayer("<p,quiz>Tell me about this temple.");
+    ~chatnpc("<p,neutral>The Temple was created thousands of years ago, to protect an altar that dates back to a time before we walked this land. This altar has certain powers over life.");
+    ~chatplayer("<p,quiz>And you need me to fix it?");
+    ~chatnpc("<p,neutral>You really can be quite perceptive at times. Normally it would not matter, but if the shadows are free to roam outside of the temple then the safeguards must have failed.");
+    ~chatplayer("<p,confused>Okay, I don't know about you but I have no idea how to fix ancient elven technology.");
+    ~chatnpc("<p,neutral>Luckily our ways have stayed very much the same, somewhere in the temple you will find a huge crystal set in the ground, if I am right this crystal will be darkened somewhat. I need you to bring back a sample of that crystal.");
+    ~me2_set(^me2_sample);
+    if (inv_total(inv, mourning_crystal_sample) = 0) {
+        ~chatplayer("<p,neutral>Alright then, I'll see what I can do.");
+        return(true);
+    }
+    ~chatplayer("<p,quiz>Like this one?");
+    ~me2_show_sample;
+    return(true);
+}
+if ($s = ^me2_sample) {
+    // the OSRS wiki
+    ~chatnpc("<p,quiz><displayname>, do you have that sample yet?");
+    if (inv_total(inv, mourning_crystal_sample) > 0) {
+        ~chatplayer("<p,quiz>Is this it?");
+        ~me2_show_sample;
+    return(true);
+    }
+    ~chatplayer("<p,neutral>Not yet.");
+    ~chatnpc("<p,neutral>Don't take too long. Remember, you need to search the temple for a blackened crystal. Once you find it, bring a sample of it back here.");
+    return(true);
+}
+if ($s = ^me2_eluned) {
+    if (inv_total(inv, mourning_crystal_sample) = 0) {
+        ~chatnpc("<p,neutral>Don't take too long. Remember, you need to search the temple for a blackened crystal. Once you find it, bring a sample of it back here.");
+        return(true);
+    }
+    ~chatnpc("<p,neutral>Well done, hand it to Eluned and she shall take a look at it.");
+    %mourning_can_see_eluned = 1;
+    return(true);
+}
+if ($s = ^me2_eluned_making) {
+    ~chatnpc("<p,neutral>Eluned is making the copy. Speak to her."); // ours
+    %mourning_can_see_eluned = 1;
+    return(true);
+}
+if ($s = ^me2_new_crystal | $s = ^me2_altar) {
+    if (inv_total(inv, mourning_crystal_new_sample) = 0) {
+        ~me2_replacement;
+        return(true);
+    }
+    ~chatplayer("<p,quiz>I have the new crystal, now what am I meant to do with it?");
+    ~chatnpc("<p,neutral>You will need to first take the newly formed crystal to the end of the temple and place it on the old altar. This will imbue the crystal with the power it needs to safeguard the temple.");
+    ~chatplayer("<p,scared>This is starting to sound hard.");
+    ~chatnpc("<p,neutral>It should be quite simple. Once you have powered-up the newly formed crystal, you will need to return to where you found the darkened crystal and place the new shard with the others. This should restore the safeguards.");
+    ~chatplayer("<p,quiz>And that's it?");
+    ~chatnpc("<p,neutral>Yes that is all.");
+    ~chatplayer("<p,neutral>Right then, I'll get to it.");
+    if ($s = ^me2_new_crystal) ~me2_set(^me2_altar);
+    return(true);
+}
+if ($s = ^me2_powered) {
+    if (~obj_gettotal(mourning_crystal_new_powered) = 0) {
+        // ours: a lost powered crystal is copied again, to be powered again
+        ~me2_set(^me2_altar);
+        ~me2_replacement;
+        return(true);
+    }
+    // ours: his words from before
+    ~chatnpc("<p,neutral>Once you have powered-up the newly formed crystal, you will need to return to where you found the darkened crystal and place the new shard with the others. This should restore the safeguards.");
+    return(true);
+}
+if ($s = ^me2_restored) {
+    ~chatplayer("<p,happy>I have at last repaired the safeguards on the temple.");
+    ~chatnpc("<p,happy>This is good news indeed <displayname>, that should stop anyone from using the altar for another thousand years.");
+    ~chatplayer("<p,shifty>Erm... Not quite, it seems some dwarves have broken in through the back of the temple.");
+    ~chatnpc("<p,shock>Some dwarves?!");
+    ~chatplayer("<p,neutral>That's what I found when I entered the altar room, it seems that a group of dwarves have set-up an outpost in the underground pass and tunneled through to the back of the temple of light.");
+    ~chatnpc("<p,neutral>This is interesting news. We are still safe for the time being, I doubt very much if any of the death guard would ever venture into the underground pass.");
+    ~chatplayer("<p,quiz>Why's that?");
+    ~chatnpc("<p,neutral>A great many of them died down there at one time, in a huge battle, now they fear to enter. I will send an envoy down to speak with them, and make sure the temple is secure.");
+    ~chatnpc("<p,happy>Well done <displayname>, you have done well. All I can offer is this trinket, it should allow the bearer to pass the temple's front door.");
+    ~me2_complete;
+    return(true);
+}
+if ($s >= ^me2_complete) {
+    // ours: a lost trinket (the RS wiki: another from Arianwyn)
+    if (~obj_gettotal(mourning_crystal_trinket) = 0) {
+        ~chatplayer("<p,sad>I've lost the crystal trinket.");
+        ~chatnpc("<p,neutral>Here, take another. It should allow the bearer to pass the temple's front door.");
+        ~me1_give(mourning_crystal_trinket, 1);
+        return(true);
+    }
+    ~chatnpc("<p,happy>Thank you again for restoring the safeguards on the temple, <displayname>."); // ours
+    return(true);
+}
+return(false);
+
+[proc,me2_show_sample]
+~objbox(mourning_crystal_sample, "You show the blackened crystal to Arianwyn.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,happy>Yes! Just like that one... Where did you get it?");
+~chatplayer("<p,neutral>I found it on the top floor of the temple.");
+~chatnpc("<p,neutral>Good, with this sample a good crystal chanter should be able to make a replacement. Just a second, I will summon Eluned.");
+~chatnpc("<p,neutral>...");
+%mourning_can_see_eluned = 1;
+p_delay(1);
+~chatnpc("<p,neutral>Thank you for responding to my summons Eluned.");
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,happy>Any time Arianwyn, How can I help?");
+~chatnpc("<p,neutral><displayname> here has an old crystal shard, we need you to make a replacement for it.");
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,neutral>Alright, hand it here and I shall take a look.");
+~me2_set(^me2_eluned);
+
+// the RS wiki: a lost crystal is copied again
+[proc,me2_replacement]
+~chatplayer("<p,neutral>I need another copy of that crystal for repairing the temple of light.");
+~chatnpc("<p,neutral>Just a second, I will summon Eluned again.");
+%mourning_can_see_eluned = 1;
+p_delay(1);
+~chatnpc("<p,neutral>Thank you for responding to my summons again Eluned.");
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,happy>Any time Arianwyn, how can I help this time?");
+~chatnpc("<p,neutral>It seems that <displayname> here misplaced that crystal - could you make <~me2_pronoun> another copy?");
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,neutral>Sure...");
+~me1_give(mourning_crystal_new_sample, 1);
+~objbox(mourning_crystal_new_sample, "Eluned gives you a newly formed crystal.", 250, 0, divide(^objbox_height, 2));
+~chatnpc_specific("Eluned", roving_female_woodelf_temp_1, "<p,neutral>I had better get going, bye.");
+%mourning_can_see_eluned = 0;
+
+[proc,me2_pronoun]()(string)
+if (gender() = 1) return("her");
+return("him");
+
+// ---------------------------------------------------------------- Eluned by Arianwyn
+[proc,me2_eluned]()(boolean)
+def_int $s = %mourning_quest_main;
+if ($s = ^me2_eluned) {
+    ~chatnpc("<p,neutral>Hand the blackened crystal here then and I will take a look at it. I should be able to make a copy.");
+    return(true);
+}
+if ($s = ^me2_eluned_making) {
+    ~chatplayer("<p,quiz>How's that crystal coming on? Are you done with it yet?");
+    ~chatnpc("<p,happy>Yes, it is ready now. Here...");
+    ~me1_give(mourning_crystal_new_sample, 1);
+    ~objbox(mourning_crystal_new_sample, "Eluned gives you a newly formed crystal.", 250, 0, divide(^objbox_height, 2));
+    ~me2_set(^me2_new_crystal);
+    ~chatplayer("<p,happy>Thanks.");
+    ~chatnpc("<p,happy>No problem, Arianwyn will tell you what you should do with it. I had better get going, see you around.");
+    %mourning_can_see_eluned = 0;
+    return(true);
+}
+return(false);
+
+[opnpcu,roving_female_woodelf_temp]
+if (%mourning_quest_main = ^me2_eluned & last_useitem = mourning_crystal_sample) {
+    inv_del(inv, mourning_crystal_sample, 1);
+    ~objbox(mourning_crystal_sample, "You hand Eluned the blackened crystal shard.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,neutral>Now, let me see... hmm, this may take a few seconds.");
+    ~me2_set(^me2_eluned_making);
+    return;
+}
+~chatnpc("<p,neutral>Thanks, but I have no need for that.");
+
+// ---------------------------------------------------------------- the death altar (the RS
+// wiki's transcript): the newly made crystal on it
+[proc,me2_charge_crystal]
+if (%mourning_quest_main < ^me2_new_crystal | inv_total(inv, mourning_crystal_new_sample) = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, mourning_crystal_new_sample, 1);
+inv_add(inv, mourning_crystal_new_powered, 1);
+if (%mourning_quest_main < ^me2_powered) ~me2_set(^me2_powered);
+~objbox(mourning_crystal_new_powered, "You place the crystal on the altar. It starts to glow with a strange light.", 250, 0, divide(^objbox_height, 2));
+
+// the death altar, its ruins and the Abyss's death rift (2009scape: MysteriousRuinListener's and
+// RuneCraftPulse's quest check and its words; the OSRS wiki: crafting needs the quest done; the RS
+// wiki: the Abyss doesn't take you there during the quest). Ours: the ruins inside the temple let
+// you in once the quest has begun, as the quest needs.
+[proc,me2_death_ok](boolean $during)(boolean)
+if (%mourning_quest_main >= ^me2_complete) return(true);
+if ($during = true & %mourning_quest_main >= ^me2_started) return(true);
+mes("This requires completion of Mourning's End Part II to access.");
+return(false);
