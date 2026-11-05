@@ -116,6 +116,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::wantedtele <n>` | Wanted!: 1 Sir Tiffy, 2 Sir Amik, 3 Lord Daquarius (Taverley Dungeon), 4 the Mage of Zamorak (Varrock), 5 Sir Vyvin, 6 the place Solus is at now, 7 the rune essence mine (as if teleported there), 11-29 the 19 scan places |
 | `::wantedkills <n>` | Sets your White Knight kill score (100 Novice, 200 Peon, 300 Page, 500 Noble, 800 Adept, 1300 Master); Sir Vyvin sells by it once Wanted! is done |
 | `::dairypack` | For the dairy churns and baked potatoes: Cooking up to 48 if you're below, 3 buckets of milk, a pot of cream, a pat of butter, 2 potatoes and a cheese. Churn in a farm house (one at 3226,3294 north of Lumbridge): milk makes cream (21), butter (38) or cheese (48), cream makes butter or cheese, butter makes cheese. Bake a potato on a range, add butter (39), then cheese (47) |
+| `::fishpack` | For pet fish: Crafting up to 42 if you're below, a glassblowing pipe, 2 molten glass, 2 seaweed, a guam leaf, a pestle and mortar and 20 coins. Blow a fishbowl (pipe on molten glass), fill it at water, add seaweed, buy a tiny net from Harry (Catherby fishing shop) and Fish-In his aquarium; Talk-At, Play-With and Feed the fish. Harry gives an empty fish food box (ground guam and ground seaweed make fish food) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |

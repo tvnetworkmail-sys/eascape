@@ -1,0 +1,179 @@
+// EASCape: pet fish (Mogres, Lizards, Pet Fish, Potions and Potatoes!, 24 October 2005:
+// "Fishbowls are now available and waiting to be filled from the Aquarium in Catherby").
+// 2009scape is the source (FishbowlPlugin, FishfoodPlugin, HarryDialogue): fill a fishbowl at
+// water, add seaweed, buy a tiny net from Harry (10 coins), Fish-In his aquarium with the net and
+// a seaweed bowl for a tiny bluefish, greenfish or spinefish by your Fishing level (1 xp), then
+// Talk-At, Play-With and Feed (fish food; Harry gives the empty box, which takes ground guam and
+// ground seaweed). The anims are the cache's own per fish (human_talk_to_pet_fish_blue etc.).
+// Void (catherby.recipes.toml) has the seaweed line; the OSRS wiki (Fishbowl (pet)) has the
+// line for using anything else on a fish.
+
+// ---- the bowl ----
+[opheldu,fishbowl_water]
+switch_obj (last_useitem) {
+    case seaweed : @petfish_add_seaweed(last_slot, last_useslot);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,petfish_add_seaweed](int $bowl_slot, int $weed_slot)
+inv_delslot(inv, $weed_slot);
+inv_setslot(inv, $bowl_slot, fishbowl_water_weed, 1);
+mes("You carefully place the seaweed into the fishbowl."); // Void catherby.recipes.toml
+
+// 2009scape FishbowlPlugin: the water or the water and weed go on the ground
+[opheld3,fishbowl_water] @petfish_empty_bowl;
+[opheld3,fishbowl_water_weed] @petfish_empty_bowl;
+
+[label,petfish_empty_bowl]
+inv_setslot(inv, last_slot, fishbowl_empty, 1);
+mes("You empty the contents of the fishbowl onto the ground.");
+
+// ---- seaweed: pestle and mortar, the fishbowl, and the monkey from Tai Bwo Wannai Trio ----
+[opheldu,seaweed]
+switch_obj (last_useitem) {
+    case pestle_and_mortar : ~attempt_grind_ingredient(last_useslot, last_slot);
+    case fishbowl_water : @petfish_add_seaweed(last_useslot, last_slot);
+    case tbwt_monkey_corpse : @tbwt_stuff_monkey_corpse; // quest_tbwt.rs2
+    case tbwt_monkey_skin : @tbwt_sandwich_monkey_skin; // quest_tbwt.rs2
+    case default : ~displaymessage(^dm_default);
+}
+
+// guam on a pestle and mortar makes ground guam; a vial of water goes on to Herblore as before
+[opheldu,guam_leaf]
+switch_obj (last_useitem) {
+    case pestle_and_mortar : ~attempt_grind_ingredient(last_useslot, last_slot);
+    case vial_water : ~attempt_brew_potion(last_slot, last_useslot);
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---- fish food (2009scape FishfoodPlugin) ----
+[opheldu,empty_fishfood_box]
+switch_obj (last_useitem) {
+    case ground_guam : @petfish_box(last_useslot, last_slot, guam_fishfood_box, "You put the ground Guam into the box.");
+    case ground_seaweed : @petfish_box(last_useslot, last_slot, seaweed_fishfood_box, "You put the ground Seaweed into the box.");
+    case default : ~displaymessage(^dm_default);
+}
+[opheldu,guam_fishfood_box]
+if (last_useitem = ground_seaweed) @petfish_box(last_useslot, last_slot, fish_food, "You put the ground Seaweed into the box and make Fish Food.");
+~displaymessage(^dm_default);
+[opheldu,seaweed_fishfood_box]
+if (last_useitem = ground_guam) @petfish_box(last_useslot, last_slot, fish_food, "You put the ground Guam into the box and make Fish Food.");
+~displaymessage(^dm_default);
+[opheldu,ground_guam]
+switch_obj (last_useitem) {
+    case empty_fishfood_box : @petfish_box(last_slot, last_useslot, guam_fishfood_box, "You put the ground Guam into the box.");
+    case seaweed_fishfood_box : @petfish_box(last_slot, last_useslot, fish_food, "You put the ground Guam into the box and make Fish Food.");
+    case default : ~displaymessage(^dm_default);
+}
+[opheldu,ground_seaweed]
+switch_obj (last_useitem) {
+    case empty_fishfood_box : @petfish_box(last_slot, last_useslot, seaweed_fishfood_box, "You put the ground Seaweed into the box.");
+    case guam_fishfood_box : @petfish_box(last_slot, last_useslot, fish_food, "You put the ground Seaweed into the box and make Fish Food.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,petfish_box](int $ground_slot, int $box_slot, namedobj $product, string $message)
+inv_delslot(inv, $ground_slot);
+inv_setslot(inv, $box_slot, $product, 1);
+mes($message);
+
+// ---- Harry's aquarium ----
+[oploc1,aquarium] @petfish_aquarium;
+[oplocu,aquarium]
+if (last_useitem = tiny_net) @petfish_aquarium;
+~displaymessage(^dm_default);
+
+[label,petfish_aquarium]
+if (inv_total(inv, tiny_net) < 1) {
+    mes("You see some tiny fish swimming around... but how to catch them?");
+    return;
+}
+if (inv_total(inv, fishbowl_water_weed) < 1) {
+    mes("You need something to put your catch in!");
+    return;
+}
+inv_del(inv, fishbowl_water_weed, 1);
+mes("You wave the net around...");
+stat_advance(fishing, 10);
+// 2009scape: the weights by Fishing level, each rounded and held between its two limits
+// (bluefish 106 - 0.6667 x level, 40-60; greenfish 19.7059 + 0.2941 x level, 20-40; spinefish
+// 0.6667 x level - 46, 0-20), here in ten-thousandths
+def_int $level = stat(fishing);
+def_int $blue = max(400000, min(600000, calc(1060000 - 6667 * $level)));
+def_int $green = max(200000, min(400000, calc(197059 + 2941 * $level)));
+def_int $spine = max(0, min(200000, calc(6667 * $level - 460000)));
+$blue = calc(($blue + 5000) / 10000);
+$green = calc(($green + 5000) / 10000);
+$spine = calc(($spine + 5000) / 10000);
+def_int $roll = random(calc($blue + $green + $spine));
+if ($roll < $blue) {
+    inv_add(inv, fishbowl_bluefish, 1);
+    mes("...and you catch a Tiny Bluefish!");
+} else if ($roll < calc($blue + $green)) {
+    inv_add(inv, fishbowl_greenfish, 1);
+    mes("...and you catch a Tiny Greenfish!");
+} else {
+    inv_add(inv, fishbowl_spinefish, 1);
+    mes("...and you catch a Tiny Spinefish!");
+}
+
+// ---- the fish ----
+[opheld1,fishbowl_bluefish] @petfish_talk(human_talk_to_pet_fish_blue);
+[opheld1,fishbowl_greenfish] @petfish_talk(human_talk_to_pet_fish_green);
+[opheld1,fishbowl_spinefish] @petfish_talk(human_talk_to_pet_fish_spine);
+[opheld2,fishbowl_bluefish] @petfish_play(human_play_with_pet_fish_blue);
+[opheld2,fishbowl_greenfish] @petfish_play(human_play_with_pet_fish_green);
+[opheld2,fishbowl_spinefish] @petfish_play(human_play_with_pet_fish_spine);
+[opheld3,fishbowl_bluefish] @petfish_feed(human_feed_pet_fish_blue);
+[opheld3,fishbowl_greenfish] @petfish_feed(human_feed_pet_fish_green);
+[opheld3,fishbowl_spinefish] @petfish_feed(human_feed_pet_fish_spine);
+[opheld5,fishbowl_bluefish] @petfish_drop;
+[opheld5,fishbowl_greenfish] @petfish_drop;
+[opheld5,fishbowl_spinefish] @petfish_drop;
+[opheldu,fishbowl_bluefish] @petfish_use(last_useitem, human_feed_pet_fish_blue);
+[opheldu,fishbowl_greenfish] @petfish_use(last_useitem, human_feed_pet_fish_green);
+[opheldu,fishbowl_spinefish] @petfish_use(last_useitem, human_feed_pet_fish_spine);
+
+[label,petfish_talk](seq $seq)
+anim($seq, 0);
+~chatplayer("<p,neutral>Good fish. Just keep swimming... swimming... swimming...");
+~mesbox("The fish swims. It is clearly an obedient fish.");
+
+[label,petfish_play](seq $seq)
+anim($seq, 0);
+if (gender = ^gender_male) ~chatplayer("<p,neutral>Jump! 'Cmon girl, jump!");
+else ~chatplayer("<p,neutral>Jump! 'Cmon boy, jump!");
+~mesbox("The fish bumps into the side of the fishbowl. Then it swims some|more.");
+~chatplayer("<p,neutral>Good fish...");
+
+[label,petfish_feed](seq $seq)
+if (inv_total(inv, fish_food) > 0) {
+    inv_del(inv, fish_food, 1);
+    inv_add(inv, empty_fishfood_box, 1);
+    anim($seq, 0);
+    mes("You feed your fish.");
+} else if (inv_total(inv, poisoned_fish_food) > 0) {
+    mes("You can't poison your own pet!");
+} else {
+    mes("You don't have any fish food.");
+}
+
+[label,petfish_use](obj $item, seq $seq)
+if ($item = fish_food) @petfish_feed($seq);
+if ($item = poisoned_fish_food) {
+    mes("You can't poison your own pet!");
+    return;
+}
+mes("Your fish looks at you strangely. You get the feeling this will not work.");
+
+[label,petfish_drop]
+def_int $slot = last_slot;
+def_obj $bowl = last_item;
+~mesbox("If you drop your fishbowl it will break!");
+if (~p_choice2("Drop it regardless", 1, "Keep hold", 2) = 1) {
+    if (inv_getobj(inv, $slot) ! $bowl) return;
+    inv_delslot(inv, $slot);
+    ~mesbox("The fishbowl shatters on the ground.");
+} else {
+    ~mesbox("You keep a hold of it for now.");
+}

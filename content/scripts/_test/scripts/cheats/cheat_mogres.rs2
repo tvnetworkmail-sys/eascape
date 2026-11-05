@@ -15,3 +15,20 @@ $banked = calc($banked + ~questpack_give(cheese, 1));
 if ($banked > 0) mes("<tostring($banked)> of the items went to your bank (no room in your pack).");
 mes("Churn: milk makes cream, butter or cheese (21/38/48 Cooking); cream makes butter or cheese; butter makes cheese.");
 mes("Bake a potato on a range, add a pat of butter (39), then cheese (47).");
+
+// ::fishpack - pet fish: Crafting up to 42 if it's lower (fishbowls), a glassblowing pipe,
+// 2 molten glass, 2 seaweed, a guam leaf, a pestle and mortar and 20 coins. Blow a fishbowl, fill
+// it at water, add seaweed, buy a tiny net from Harry (Catherby's fishing shop, the aquarium is
+// by him at 2830,3442) and Fish-In the aquarium. Harry gives the empty fish food box.
+[debugproc,fishpack]
+if (p_finduid(uid) = false) return;
+if (stat_base(crafting) < 42) stat_advance(crafting, calc(455290 - stat_xp(crafting))); // 45,529 xp
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(glassblowingpipe, 1));
+$banked = calc($banked + ~questpack_give(molten_glass, 2));
+$banked = calc($banked + ~questpack_give(seaweed, 2));
+$banked = calc($banked + ~questpack_give(guam_leaf, 1));
+$banked = calc($banked + ~questpack_give(pestle_and_mortar, 1));
+$banked = calc($banked + ~questpack_give(coins, 20));
+if ($banked > 0) mes("<tostring($banked)> of the items went to your bank (no room in your pack).");
+mes("Glassblowing pipe on molten glass: Fishbowl. Fill it at water, add seaweed, then see Harry in Catherby for a tiny net.");

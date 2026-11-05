@@ -53,39 +53,81 @@ mes("You heat the sand and soda ash in the furnace to make glass.");
 stat_advance(crafting, 200);
 
 
+// EASCape: the glassblowing menu is the cache's own glass_crafting screen (beer glass, candle
+// lantern, oil lamp, vial, fishbowl, orb, lantern lens; Make 1/5/10/X on each). The old
+// three-item picture menu (multiobj3) isn't in our cache, so glassblowing did nothing before.
+// One every 3 ticks (Void glassblowing.recipes.toml: ticks = 3, its glassblowing sound).
 [label,craft_glass_interface]
 if (map_members = ^false) {
     mes(^mes_members_feature);
     return;
 }
-def_namedobj $item = ~multiobj3 ("What would you like to make?", 
-    beer_glass, 0, 5, 200, "Beer Glass", 0, 0,
-    vial_empty, 2, 10, 180, "Vial", 0, 0,
-    stafforb, 2, -10, 200, "Orb", 0, 0
-);
-if ($item = null) {
-    ~displaymessage(^dm_default);
-    return;
-}
-@crafting_glass($item);
+if_openmain(glass_crafting);
 
+[if_button,glass_crafting:com_10] @crafting_glass_x(vial_empty);
+[if_button,glass_crafting:com_11] @crafting_glass_count(vial_empty, 10);
+[if_button,glass_crafting:com_12] @crafting_glass_count(vial_empty, 5);
+[if_button,glass_crafting:com_13] @crafting_glass_count(vial_empty, 1);
+[if_button,glass_crafting:com_14] @crafting_glass_x(stafforb);
+[if_button,glass_crafting:com_15] @crafting_glass_count(stafforb, 10);
+[if_button,glass_crafting:com_16] @crafting_glass_count(stafforb, 5);
+[if_button,glass_crafting:com_17] @crafting_glass_count(stafforb, 1);
+[if_button,glass_crafting:com_18] @crafting_glass_x(beer_glass);
+[if_button,glass_crafting:com_19] @crafting_glass_count(beer_glass, 10);
+[if_button,glass_crafting:com_20] @crafting_glass_count(beer_glass, 5);
+[if_button,glass_crafting:com_21] @crafting_glass_count(beer_glass, 1);
+[if_button,glass_crafting:com_22] @crafting_glass_x(candle_lantern_empty);
+[if_button,glass_crafting:com_23] @crafting_glass_count(candle_lantern_empty, 10);
+[if_button,glass_crafting:com_24] @crafting_glass_count(candle_lantern_empty, 5);
+[if_button,glass_crafting:com_25] @crafting_glass_count(candle_lantern_empty, 1);
+[if_button,glass_crafting:com_26] @crafting_glass_x(oil_lamp_empty);
+[if_button,glass_crafting:com_27] @crafting_glass_count(oil_lamp_empty, 10);
+[if_button,glass_crafting:com_28] @crafting_glass_count(oil_lamp_empty, 5);
+[if_button,glass_crafting:com_29] @crafting_glass_count(oil_lamp_empty, 1);
+[if_button,glass_crafting:com_30] @crafting_glass_x(bullseye_lantern_lens);
+[if_button,glass_crafting:com_31] @crafting_glass_count(bullseye_lantern_lens, 10);
+[if_button,glass_crafting:com_32] @crafting_glass_count(bullseye_lantern_lens, 5);
+[if_button,glass_crafting:com_33] @crafting_glass_count(bullseye_lantern_lens, 1);
+[if_button,glass_crafting:com_34] @crafting_glass_x(fishbowl_empty);
+[if_button,glass_crafting:com_35] @crafting_glass_count(fishbowl_empty, 10);
+[if_button,glass_crafting:com_36] @crafting_glass_count(fishbowl_empty, 5);
+[if_button,glass_crafting:com_37] @crafting_glass_count(fishbowl_empty, 1);
 
-[label,crafting_glass](namedobj $glass_item)
+[label,crafting_glass_x](namedobj $glass_item)
+if_close;
+p_countdialog;
+if (last_int < 1) return;
+@crafting_glass_count($glass_item, last_int);
+
+[label,crafting_glass_count](namedobj $glass_item, int $count)
+if_close;
+if (~crafting_glass_one($glass_item) = false) return;
+if ($count > 1) weakqueue*(crafting_glass_next, 3)($glass_item, calc($count - 1));
+
+[queue,crafting_glass_next](namedobj $glass_item, int $count)
+if ($count < 1) return;
+if (~crafting_glass_one($glass_item) = false) return;
+if ($count > 1) weakqueue*(crafting_glass_next, 3)($glass_item, calc($count - 1));
+
+[proc,crafting_glass_one](namedobj $glass_item)(boolean)
 def_struct $struct = oc_param($glass_item, crafting_glass_struct);
 // check if high enough level
 def_int $level = struct_param($struct, levelrequire);
 def_string $name = struct_param($struct, productmessage);
 if (stat(crafting) < $level) {
     mes("You need level <tostring($level)> Crafting to make <$name>.");
-    return;
+    return(false);
 }
+if (inv_total(inv, molten_glass) < 1 | inv_total(inv, glassblowingpipe) < 1) return(false);
 // delete molten glass
 inv_del(inv, molten_glass, 1);
 // add item
 inv_add(inv, $glass_item, 1);
 // play anim
 anim(human_glassblowing,0);
+sound_synth(glassblowing, 1, 0);
 // display game message
 mes("You make <$name>.");
 // give xp
 stat_advance(crafting, struct_param($struct, productexp));
+return(true);

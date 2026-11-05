@@ -71,6 +71,11 @@ if(last_useitem = fish_food) @poison_fish_food;
 
 [opheldu,fish_food]
 if(last_useitem = poison) @poison_fish_food;
+// EASCape: feeding a pet fish (areas/area_catherby/eascape_pet_fish.rs2)
+if (last_useitem = fishbowl_bluefish) @petfish_feed(human_feed_pet_fish_blue);
+if (last_useitem = fishbowl_greenfish) @petfish_feed(human_feed_pet_fish_green);
+if (last_useitem = fishbowl_spinefish) @petfish_feed(human_feed_pet_fish_spine);
+~displaymessage(^dm_default);
 
 [label,poison_fish_food]
 inv_del(inv, fish_food, 1);

@@ -161,22 +161,28 @@ if ((oc_category($item) = weapon_polearm) | (oc_category($item) = weapon_spear) 
     mes("You don't know how to skin a monkey ... yet.");
     return;
 } else if ($item = seaweed) {
-    inv_del(inv, tbwt_monkey_corpse, 1);
-    inv_del(inv, seaweed, 1);
-    inv_add(inv, tbwt_seaweed_in_monkey_corpse, 1);
-    mes("You stuff the seaweed into the monkey corpse, creating a stuffed monkey.");
-    return;
+    @tbwt_stuff_monkey_corpse;
 }
 
 [opheldu,tbwt_monkey_skin]
 switch_obj(last_useitem) {
-    case seaweed :
-        inv_del(inv, tbwt_monkey_skin, 1);
-        inv_del(inv, seaweed, 1);
-        inv_add(inv, tbwt_seaweed_in_monkey_skin_sandwich, 1);
-        mes("You sandwich the seaweed into the monkey skin.");
+    case seaweed : @tbwt_sandwich_monkey_skin;
     case default : ~displaymessage(^dm_default);
 }
+
+// EASCape: labels so seaweed has its own use script (pestle and mortar, fishbowls:
+// area_catherby/eascape_pet_fish.rs2) and still works on the monkey either way round
+[label,tbwt_stuff_monkey_corpse]
+inv_del(inv, tbwt_monkey_corpse, 1);
+inv_del(inv, seaweed, 1);
+inv_add(inv, tbwt_seaweed_in_monkey_corpse, 1);
+mes("You stuff the seaweed into the monkey corpse, creating a stuffed monkey.");
+
+[label,tbwt_sandwich_monkey_skin]
+inv_del(inv, tbwt_monkey_skin, 1);
+inv_del(inv, seaweed, 1);
+inv_add(inv, tbwt_seaweed_in_monkey_skin_sandwich, 1);
+mes("You sandwich the seaweed into the monkey skin.");
 
 [opheldu,banana]
 def_obj $item = last_useitem;

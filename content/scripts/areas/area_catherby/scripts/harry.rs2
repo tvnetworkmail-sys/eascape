@@ -1,9 +1,71 @@
 [opnpc1,harry]
 ~chatnpc("<p,happy>Welcome, you can buy fishing equipment at my store. We'll also give you a good price for any fish that you catch.");
-def_int $option = ~p_choice2("Let's see what you've got then.", 1, "Sorry, I'm not interested.", 2);
+// EASCape: pet fish (24 October 2005). 2009scape HarryDialogue: with a fishbowl of water or of
+// water and seaweed he offers a fish for the bowl and fish food; with a seaweed bowl or a fish,
+// fish food only.
+def_boolean $bowl = false;
+if (inv_total(inv, fishbowl_water) > 0 | inv_total(inv, fishbowl_water_weed) > 0) $bowl = true;
+def_boolean $food = false;
+if (inv_total(inv, fishbowl_water_weed) > 0 | inv_total(inv, fishbowl_bluefish) > 0 | inv_total(inv, fishbowl_greenfish) > 0 | inv_total(inv, fishbowl_spinefish) > 0) $food = true;
+def_int $option;
+if ($bowl = true) {
+    $option = ~p_choice4("Let's see what you've got then.", 1, "Can I get a fish for this bowl?", 3, "Do you have any fishfood?", 4, "Sorry, I'm not interested.", 2);
+} else if ($food = true) {
+    $option = ~p_choice3("Let's see what you've got then.", 1, "Do you have any fishfood?", 4, "Sorry, I'm not interested.", 2);
+} else {
+    $option = ~p_choice2("Let's see what you've got then.", 1, "Sorry, I'm not interested.", 2);
+}
 if($option = 1) {
     ~chatplayer("<p,neutral>Let's see what you've got then.");
     ~openshop_activenpc;
 } else if($option = 2) {
     ~chatplayer("<p,neutral>Sorry, I'm not interested.");
+} else if ($option = 3) {
+    @harry_fish_for_bowl;
+} else if ($option = 4) {
+    @harry_fish_food;
+}
+
+[label,harry_fish_for_bowl]
+~chatplayer("<p,neutral>Can I get a fish for this bowl?");
+if (inv_total(inv, fishbowl_water_weed) < 1) {
+    ~chatnpc("<p,neutral>Sorry, you need to put some seaweed into the bowl|first.");
+    ~chatplayer("<p,neutral>Seaweed?");
+    ~chatnpc("<p,neutral>Yes, the fish seem to like it. Come and see me when|you have put some in the bowl.");
+    return;
+}
+~chatnpc("<p,neutral>Yes you can!");
+~chatnpc("<p,neutral>I can see that you have a nicely filled fishbowl there to|use, and you can catch a fish from my aquarium if|you want.");
+~chatnpc("<p,neutral>You will need a special net to do this though, and I sell|them for 10 gold.");
+if (~p_choice2("I'll take it!", 1, "No thanks, later maybe", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks, later maybe");
+    return;
+}
+~chatplayer("<p,neutral>I'll take it!");
+if (inv_total(inv, coins) < 10) {
+    ~chatnpc("<p,neutral>Well, I'll be happy to give you the net once you|have the cash, but not before!");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>Here you... oh.");
+    ~chatnpc("<p,neutral>Well, you don't seem to have any free space for|this right now. Come back later when you do.");
+    return;
+}
+~chatnpc("<p,neutral>Here you go!");
+inv_del(inv, coins, 10);
+inv_add(inv, tiny_net, 1);
+mes("Harry sells you a tiny net!");
+
+[label,harry_fish_food]
+~chatplayer("<p,neutral>Do you have any fishfood?");
+~chatnpc("<p,neutral>Sorry, I'm all out. I used up the last of it feeding the|fish in the aquarium.");
+~chatnpc("<p,neutral>I have some empty boxes though, they have the|ingredients written on the back. I'm sure if you pick up|a pestle and mortar you will be able to make your own.");
+~chatnpc("<p,neutral>Here. I can hardly charge you for an empty box.");
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, empty_fishfood_box, 1);
+} else {
+    obj_add(coord, empty_fishfood_box, 1, ^lootdrop_duration); // ours (a full pack): 2009scape just adds it
+}
+if (inv_total(inv, fishbowl_water) < 1 & (inv_total(inv, fishbowl_water_weed) > 0 | inv_total(inv, fishbowl_bluefish) > 0 | inv_total(inv, fishbowl_greenfish) > 0 | inv_total(inv, fishbowl_spinefish) > 0)) {
+    ~chatnpc("<p,neutral>Take good care of that fish!");
 }
