@@ -23,6 +23,11 @@ if (last_useitem ! fishing_explosive) {
     ~displaymessage(^dm_default);
     return;
 }
+// Skippy and the Mogres first (2009scape MudSkipperPointListeners; quests/miniquest_skippy)
+if (%skippy_state < ^skippy_sober) {
+    ~mesbox("Sinister as that fishing spot is, why would I want to|explode it?");
+    return;
+}
 inv_del(inv, fishing_explosive, 1);
 facesquare(loc_coord);
 anim(human_throw, 0);

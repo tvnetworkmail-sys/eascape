@@ -83,9 +83,16 @@ switch_int($target) {
             return (false);
         }
         return (true);
-    // EASCape: Desert Treasure and the Skippy miniquest aren't built yet, so these are open for
-    // now (like the quest doors); the check goes back in with each quest
-    case ^slayer_dustdevil, ^slayer_mogre :
+    // EASCape: Desert Treasure isn't built yet, so this is open for now (like the quest doors);
+    // the check goes back in with the quest
+    case ^slayer_dustdevil :
+        return (true);
+    // EASCape: Skippy and the Mogres (Void slayer.tables.toml: mogres need the miniquest;
+    // quests/miniquest_skippy)
+    case ^slayer_mogre :
+        if (%skippy_state < ^skippy_sober) {
+            return (false);
+        }
         return (true);
     // EASCape: Mourning's End Part II (2009scape: Tasks.java's DARK_BEASTS)
     case ^slayer_darkbeast :

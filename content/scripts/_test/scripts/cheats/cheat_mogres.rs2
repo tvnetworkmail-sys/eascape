@@ -32,3 +32,35 @@ $banked = calc($banked + ~questpack_give(pestle_and_mortar, 1));
 $banked = calc($banked + ~questpack_give(coins, 20));
 if ($banked > 0) mes("<tostring($banked)> of the items went to your bank (no room in your pack).");
 mes("Glassblowing pipe on molten glass: Fishbowl. Fill it at water, add seaweed, then see Harry in Catherby for a tiny net.");
+
+// ::skippypack - Skippy and the Mogres: a bucket of water, a bowl of nettle tea, a hangover cure
+// and 2 fishing explosives (and Slayer up to 32 if it's lower, for the mogres).
+[debugproc,skippypack]
+if (p_finduid(uid) = false) return;
+if (stat_base(slayer) < 32) stat_advance(slayer, calc(164560 - stat_xp(slayer))); // 16,456 xp
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(bucket_water, 1));
+$banked = calc($banked + ~questpack_give(bowl_nettletea, 1));
+$banked = calc($banked + ~questpack_give(hangover_cure, 1));
+$banked = calc($banked + ~questpack_give(fishing_explosive, 2));
+if ($banked > 0) mes("<tostring($banked)> of the items went to your bank (no room in your pack).");
+mes("Sober-Up Skippy with the water (or use it on him), then give him the tea, then the cure. ::skippytele 1 / 2.");
+
+// ::skippystage <n> - sets skippy_state: 0 drunk (not started), 1 damp (wants nettle tea),
+// 2 hungover (wants the hangover cure), 3 sober (done: mogres can be lured and given as tasks)
+[debugproc,skippystage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 3) {
+    mes("::skippystage 0 drunk, 1 damp, 2 hungover, 3 sober (done).");
+    return;
+}
+%skippy_state = $n;
+mes("Skippy and the Mogres: stage <tostring($n)>.");
+
+// ::skippytele <n> - 1 Skippy on the Rimmington coast, 2 Mudskipper Point by the ominous fishing
+// spot and the forlorn boot
+[debugproc,skippytele](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 1) p_telejump(0_46_49_40_58);
+else if ($n = 2) p_telejump(0_46_48_40_43);
+else mes("::skippytele 1 Skippy, 2 Mudskipper Point.");
