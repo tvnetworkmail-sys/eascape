@@ -155,6 +155,7 @@ if (%npc_attacking_uid ! uid | %follower_uid ! npc_uid) {
     mes("This is not your cat.");
     return;
 }
+if (~ttc_cat_talk = true) return; // EASCape: A Tail of Two Cats: the chores (quest_twocats/ttc_house.rs2)
 if(getbit_range(%cat_growth, 5, 10) = 28) { 
     %cat_growth = setbit_range_toint(%cat_growth, 23, 5, 10); 
 } else {

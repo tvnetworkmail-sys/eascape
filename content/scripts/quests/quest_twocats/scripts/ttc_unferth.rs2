@@ -1,0 +1,246 @@
+// EASCape: A Tail of Two Cats - Unferth (twocats_unferth: his hair is the cache's multinpc on
+// %twocats_chores_tidyhuman). Words: the OSRS wiki's quest transcript; after the quest, the
+// RuneScape wiki's Unferth transcript.
+[opnpc1,twocats_unferth] @ttc_unferth_talk;
+
+[label,ttc_unferth_talk]
+def_int $s = %twocats_quest;
+if ($s >= ^ttc_complete) {
+    if (%twocats_gotreward = 0) @ttc_unferth_present; // ours: a present you had no room for
+    ~chatplayer("<p,happy>Hi Unferth. How's Bob?");
+    ~ttc_unferth_says("<p,neutral>I don't see him as much as I used to but he's fine.");
+    ~chatplayer("<p,quiz>Feeling OK?");
+    ~ttc_unferth_says("<p,sad>Well my spleen is playing up again...");
+    ~chatplayer("<p,shock>I must go, something came up!");
+    ~ttc_unferth_says("<p,neutral>Oh, OK.");
+    return;
+}
+if (%ics_little_var < ^ics_complete | %fluffs < ^fluffs_complete) {
+    ~ttc_unferth_says("<p,sad>Hello.");
+    ~chatplayer("<p,quiz>What's wrong?");
+    ~ttc_unferth_says("<p,sad>It's fine. Nothing for you to worry about.");
+    ~mesbox("You do not meet all of the requirements to start the A Tail of Two Cats quest.");
+    return;
+}
+if (~ttc_has_cat = false) {
+    // the transcript's lines for an owner without a cat to hand (ours: at every stage)
+    ~ttc_unferth_says("<p,quiz>Hello, do you have a cat?");
+    ~chatplayer("<p,neutral>I do but my cat is in a safe place.");
+    ~ttc_unferth_says("<p,neutral>Oh, hmm.");
+    return;
+}
+switch_int ($s) {
+    case ^ttc_not_started : @ttc_unferth_start;
+    case ^ttc_started, ^ttc_hild :
+        ~ttc_unferth_says("<p,quiz>Have you spoken to Hild about locating Bob?");
+        ~chatplayer("<p,neutral>Not yet.");
+        ~ttc_unferth_says("<p,neutral>She lives in the village, just follow the path north a little.");
+        ~chatplayer("<p,neutral>Ok, I'll speak to her.");
+    case ^ttc_chores :
+        ~chatplayer("<p,happy>Hi Unferth, I'm doing some ch...");
+        ~ttc_catsay("<p,angry>Hiss!");
+        ~chatplayer("<p,shock>What?!");
+        if (~ttc_catspeak = false) {
+            ~ttc_no_catspeak("Meow!");
+            return;
+        }
+        ~ttc_catsay("<p,neutral>Don't tell him you're doing his chores!");
+        ~ttc_catsay("<p,neutral>Part of the cat-human relationship is to let them believe they are in control.");
+        ~chatplayer("<p,neutral>Ah... OK.");
+        ~chatplayer("<p,neutral>Never mind.");
+        ~ttc_unferth_says("<p,angry>Hmph.");
+    case ^ttc_chores_done : @ttc_unferth_ill;
+    case ^ttc_ill, ^ttc_hat : @ttc_unferth_doctor;
+    case ^ttc_cured :
+        ~chatplayer("<p,happy>Hello Unferth.");
+        ~ttc_unferth_says("<p,happy>I feel much better now.");
+        ~chatplayer("<p,happy>That's good to hear.");
+        if (~ttc_catspeak = false) {
+            ~ttc_no_catspeak("Meow, meow.");
+            return;
+        }
+        ~ttc_catsay("<p,neutral>We should go and see Bob now Unferth is feeling better, he should be back by now.");
+    case ^ttc_holiday : @ttc_unferth_end;
+    case default :
+        ~ttc_unferth_says("<p,quiz>Have you found Bob yet?");
+        ~chatplayer("<p,neutral>Don't worry, we're working on it.");
+        ~ttc_unferth_says("<p,sad>Please hurry, I'm worried.");
+}
+
+[label,ttc_unferth_start]
+~ttc_unferth_says("<p,happy>Hello, I see you have a cat.");
+~ttc_catsay("<p,happy>Meow.");
+~chatplayer("<p,happy>Indeed I do! Do you have a cat?");
+~ttc_unferth_says("<p,sad>I do! His name is Bob but I can't find him!");
+~chatplayer("<p,sad>Oh dear...");
+~ttc_unferth_says("<p,sad>I haven't seen him for a week! What am I to do?!");
+if (~ttc_catspeak = false) {
+    ~ttc_no_catspeak("Meow, meow.");
+    return;
+}
+~ttc_catsay("<p,bored>What a wet blanket, Bob can look after himself.");
+~chatplayer("<p,neutral>I know puss, but he is in distress.");
+~ttc_unferth_says("<p,confused>Whaa...");
+~chatplayer("<p,neutral>Never mind.");
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the A Tail of Two Cats quest?") = 2) {
+    ~chatplayer("<p,neutral>Goodbye.");
+    return;
+}
+~chatplayer("<p,happy>Tell you what. I'll help you!");
+%twocats_quest = ^ttc_started;
+~send_quest_progress(questlist:twocats, %twocats_quest, ^ttc_complete);
+~ttc_unferth_says("<p,happy>Would you? Oh that would be so great!");
+~ttc_unferth_says("<p,sad>I don't want to leave the house in case Bob comes back.");
+~ttc_unferth_says("<p,sad>He must be hungry by now!");
+~ttc_catsay("<p,bored>This guy gets on my nerves.");
+~chatplayer("<p,angry>Shh!");
+~ttc_unferth_says("<p,confused>Huh?");
+~chatplayer("<p,quiz>Er... Where did you see Bob last?");
+~ttc_unferth_says("<p,neutral>Well he usually comes back to me once a week. Usually a Wednesday a bit before lunchtime.");
+~chatplayer("<p,confused>I wonder why it's on a Wednesday.");
+~ttc_unferth_says("<p,sad>Hmph, well, this week he hasn't come back for his food and I'm worried.");
+~chatplayer("<p,quiz>So he could be anywhere?");
+~ttc_unferth_says("<p,neutral>I guess so.");
+~ttc_unferth_says("<p,happy>I've just had an idea!");
+~ttc_catsay("<p,laugh>Oh my, you win... a biscuit!");
+~chatplayer("<p,angry>Puss!");
+~ttc_unferth_says("<p,angry>Do you want to help or not?!");
+~chatplayer("<p,neutral>I said I would, didn't I?");
+~ttc_unferth_says("<p,neutral>Ok.");
+~ttc_unferth_says("<p,neutral>My friend Hild is cleverer than me...");
+~ttc_catsay("<p,laugh>ANYONE would be 'cleverer'!");
+~chatplayer("<p,laugh>Hehe!");
+~ttc_unferth_says("<p,angry>This isn't funny!");
+~chatplayer("<p,sad>Sorry!");
+~ttc_unferth_says("<p,neutral>Where was I? Oh yes... my friend Hild might be able to locate where Bob is, she lives in the house just up the road.");
+~chatplayer("<p,neutral>Ok. I'll go speak to her!");
+~ttc_unferth_says("<p,sad>Please hurry!");
+
+// ---------------------------------------------------------------- the chores are done
+[label,ttc_unferth_ill]
+~chatplayer("<p,quiz>Hi Unferth, is there anything I can do for you?");
+~ttc_unferth_says("<p,sad>Ugh...");
+def_boolean $speak = ~ttc_catspeak;
+if ($speak = false) ~ttc_no_catspeak("Meow, meow."); // the RuneScape wiki's transcript
+if ($speak = true) ~ttc_catsay("<p,angry>Now what?!");
+~ttc_unferth_says("<p,sad>I don't feel so good...");
+~chatplayer("<p,shock>Oh dear! What's up?");
+if ($speak = true) ~ttc_catsay("<p,bored>Nothing, I bet!");
+if ($speak = true) ~chatplayer("<p,angry>Shh!");
+~ttc_unferth_says("<p,sad>I think I need the Doctor...ugh...");
+~chatplayer("<p,quiz>What Doctor is that?");
+~ttc_unferth_says("<p,sad>Just a Doctor... please hurry... I don't think I'll last long...");
+if ($speak = true) ~ttc_catsay("<p,angry>Snarl!");
+~chatplayer("<p,neutral>We can't let Bob see him like this!");
+if ($speak = true) {
+    ~ttc_catsay("<p,neutral>I guess you're right, there is the Apothecary in Varrock.");
+    ~chatplayer("<p,happy>Good idea!");
+}
+%twocats_quest = ^ttc_ill;
+
+// ---------------------------------------------------------------- the doctor calls
+// The transcript: a doctor's or nurse's hat, white robes and nothing in your hands. The OSRS wiki's
+// walkthrough names the robes: a desert shirt, a druid's robe top or the medical gown, with a desert
+// robe or a druid's robe.
+[label,ttc_unferth_doctor]
+def_obj $hat = inv_getobj(worn, ^wearpos_hat);
+if ($hat ! twocats_doctors_hat & $hat ! twocats_nurses_hat) {
+    ~ttc_unferth_says("<p,sad>I think I need the Doctor...ugh...");
+    ~chatplayer("<p,neutral>Don't worry, I'll get the Apothecary from Varrock!");
+    return;
+}
+def_string $title = "Doctor";
+if ($hat = twocats_nurses_hat) $title = "Nurse";
+~chatplayer("<p,happy>Good day Unferth, I am <$title> <displayname>.");
+def_obj $top = inv_getobj(worn, ^wearpos_torso);
+def_obj $legs = inv_getobj(worn, ^wearpos_legs);
+def_boolean $dressed = true;
+if ($top ! desert_shirt & $top ! druidrobetop & $top ! doctor_gown) $dressed = false;
+if ($legs ! desert_robe & $legs ! druidrobebottom) $dressed = false;
+if (inv_getobj(worn, ^wearpos_rhand) ! null | inv_getobj(worn, ^wearpos_lhand) ! null) $dressed = false;
+if ($dressed = false) {
+    ~ttc_unferth_says("<p,angry>No you're not! A <$title> wouldn't be holding that!");
+    return;
+}
+~ttc_unferth_says("<p,happy>I am so glad to see you <$title>!");
+if (inv_total(inv, vial_water) = 0) {
+    // ours: no line in any transcript for coming without the "potion"
+    ~chatplayer("<p,confused>Er... I'll be right back with your medicine.");
+    return;
+}
+~ttc_unferth_says("<p,sad>I am not a well man!");
+~chatplayer("<p,quiz>What seems to be the problem?");
+~ttc_catsay("<p,laugh>Theres something wrong with his head!");
+~ttc_unferth_says("<p,sad>My back hurts!");
+~chatplayer("<p,neutral>No problem...");
+~ttc_unferth_says("<p,sad>I think my arm is broken!");
+~chatplayer("<p,neutral>We can...");
+~ttc_unferth_says("<p,sad>Then there's my spleen!");
+~chatplayer("<p,confused>Your what...?");
+~ttc_unferth_says("<p,sad>My liver has packed in!");
+~chatplayer("<p,neutral>All you need to do is take this potion.");
+inv_del(inv, vial_water, 1);
+~objbox(vial_water, "You give Unferth the 'potion'.", 250, 0, 0);
+~ttc_unferth_says("<p,angry>Is that it?! I'm much more ill than that!");
+~ttc_catsay("<p,laugh>We could offer to bonk him on the head with a big hammer.");
+~chatplayer("<p,laugh>Hehe!");
+~ttc_unferth_says("<p,angry><$title> Please take this seriously! I demand treatment!");
+~chatplayer("<p,neutral>Of course sir! The potion I have given you is the latest technology. It cures all known illnesses, and a few unknown ones. It's what we call in the trade a 'miracle cure'.");
+~ttc_unferth_says("<p,happy>Wow! What can I say... I feel special!");
+~chatplayer("<p,quiz>Do you feel better?");
+~ttc_unferth_says("<p,confused>I'm not sure...");
+~ttc_catsay("<p,angry>Argh!");
+~ttc_unferth_says("<p,happy>Wait! I feel something! Yes! I can feel the potion working... The pain has gone... I can walk on my leg... <$title>! I'm cured!");
+%twocats_quest = ^ttc_cured;
+~chatplayer("<p,happy>That's... great! Phew!");
+if (~ttc_catspeak = true) ~ttc_catsay("<p,neutral>Indeed. Bob should be back by now; let's go find him.");
+
+// ---------------------------------------------------------------- Bob is home
+[label,ttc_unferth_end]
+~chatplayer("<p,happy>Hi Unferth!");
+~ttc_unferth_says("<p,happy>Hello! Bob came home today! I'm so happy!");
+~chatplayer("<p,happy>That's good news!");
+~ttc_unferth_says("<p,angry>Fat lot of use you were! He came home on his own!");
+~chatplayer("<p,confused>Er...");
+if (~ttc_catspeak = true) {
+    ~ttc_catsay("<p,angry>This guy is unbelievable!");
+    ~chatplayer("<p,neutral>You're not wrong.");
+    ~ttc_unferth_says("<p,neutral>Of course I'm not wrong.");
+}
+~chatplayer("<p,neutral>I'll be going now.");
+~ttc_unferth_says("<p,neutral>Before you go, I found the strangest thing. There was a package left under the bed, it's addressed to you.");
+~ttc_complete;
+
+// ours: the present, if your pack was full when the quest ended
+[label,ttc_unferth_present]
+~ttc_unferth_says("<p,neutral>That package under the bed is still here, it's addressed to you.");
+if (inv_freespace(inv) = 0) {
+    ~chatplayer("<p,neutral>I don't have the space, one second.");
+    return;
+}
+inv_add(inv, twocats_present, 1);
+%twocats_gotreward = 1;
+~objbox(twocats_present, "Unferth gives you a present.", 250, 0, 0);
+
+// The OSRS wiki's rewards: 2 quest points, the doctor's or nurse hat (already worn), and the present
+// (two antique lamps of 2,500 experience in skills of 30 or more, and a mouse toy).
+[proc,ttc_complete]
+%twocats_quest = ^ttc_complete;
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, twocats_present, 1);
+    %twocats_gotreward = 1;
+}
+session_log(^log_adventure, "Quest complete: A Tail of Two Cats");
+~send_quest_complete(questlist:twocats, twocats_present, 250, ^ttc_questpoints, "You have completed\\nA Tail of Two Cats!", "A Doctor's hat or Nurse hat|A present: two antique lamps|(2,500 XP each) and a mouse toy");
+
+// twocats_unferth is a multinpc with no name of its own, so his lines name him and show the head
+// his hair has (the cache's multinpc on %twocats_chores_tidyhuman)
+[proc,ttc_unferth_says](string $text)
+def_npc $head = twocats_unferth_bald;
+switch_int (%twocats_chores_tidyhuman) {
+    case 1, 7 : $head = twocats_unferth_shorthair;
+    case 2, 6 : $head = twocats_unferth_mediumhair;
+    case 3, 5 : $head = twocats_unferth_spikeyhair;
+    case 4 : $head = twocats_unferth_longhair;
+}
+~chatnpc_specific("Unferth", $head, $text);

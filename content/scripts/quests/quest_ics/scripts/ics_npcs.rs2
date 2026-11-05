@@ -177,6 +177,9 @@ if (%ics_little_var = ^ics_remembered) {
 
 // ---------------------------------------------------------------- the Sphinx
 [opnpc1,ics_little_sphinx]
+def_int $ttc = ~ttc_ask_sphinx; // EASCape: A Tail of Two Cats (quest_twocats/ttc_npcs.rs2)
+if ($ttc = 2) @ttc_sphinx_cutscene;
+if ($ttc = 1) return;
 def_int $s = %ics_little_var;
 ~chatplayer("<p,neutral>Good day.");
 if (~ics_has_cat = false) {

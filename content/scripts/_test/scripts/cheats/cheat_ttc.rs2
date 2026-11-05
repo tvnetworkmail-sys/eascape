@@ -1,0 +1,135 @@
+// EASCape: test commands for A Tail of Two Cats (quest_twocats).
+
+// ::ttcpack - what the quest needs (the OSRS wiki's list): a cat (only if you have none with you),
+// the catspeak amulet (the enchanted one from stage 20; only if you have neither), 5 death runes,
+// a chocolate cake, logs, a tinderbox, a bucket of milk, shears, 4 potato seeds, a rake, a seed
+// dibber, a vial of water, a desert shirt and a desert robe. It also marks Icthlarin's Little Helper
+// and Gertrude's Cat done (no rewards) if they aren't.
+[debugproc,ttcpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+if (~ttc_has_cat = false) $banked = calc($banked + ~questpack_give(growncatobject, 1));
+if (~obj_gettotal(ics_little_amulet_of_catspeak) = 0 & ~obj_gettotal(twocats_amuletofcatspeak) = 0) {
+    if (%twocats_quest >= ^ttc_amulet) $banked = calc($banked + ~questpack_give(twocats_amuletofcatspeak, 1));
+    else $banked = calc($banked + ~questpack_give(ics_little_amulet_of_catspeak, 1));
+}
+$banked = calc($banked + ~questpack_give(deathrune, 5));
+$banked = calc($banked + ~questpack_give(chocolate_cake, 1));
+$banked = calc($banked + ~questpack_give(logs, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(bucket_milk, 1));
+$banked = calc($banked + ~questpack_give(shears, 1));
+$banked = calc($banked + ~questpack_give(potato_seed, 4));
+$banked = calc($banked + ~questpack_give(rake, 1));
+$banked = calc($banked + ~questpack_give(dibber, 1));
+$banked = calc($banked + ~questpack_give(vial_water, 1));
+$banked = calc($banked + ~questpack_give(desert_shirt, 1));
+$banked = calc($banked + ~questpack_give(desert_robe, 1));
+if (%fluffs < ^fluffs_complete) %fluffs = ^fluffs_complete;
+if (%ics_little_var < ^ics_complete) %ics_little_var = ^ics_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("A Tail of Two Cats", $banked);
+mes("Drop the cat so it follows you and wear the amulet. Unferth: ::ttctele 1. ::ttcstage sets the stage.");
+
+// ::ttcstage <n> - sets A Tail of Two Cats's stage (twocats.constant): 0 not started (clears
+// everything), 10 see Hild, 15 Hild wants the runes, 20 the amulet is enchanted (find Bob), 25 ask
+// Gertrude, 30 ask Reldo, 35 back to Bob, 37 see the Sphinx, 40 the chores (none done), 41 every
+// chore done but the potatoes (planted, nearly grown), 45 every chore done, 50 Unferth is ill,
+// 55 the Apothecary's hat (a doctor's hat if you have none), 60 Unferth is cured (find Bob),
+// 65 Bob's holiday seen (talk to Unferth), 70 done (no rewards).
+[debugproc,ttcstage](int $n)
+if (p_finduid(uid) = false) return;
+cleartimer(ttc_potatoes);
+if ($n <= 0) {
+    %twocats_varbit = 0;
+    ~send_quest_progress(questlist:twocats, 0, ^ttc_complete);
+    ~update_questpoints;
+    mes("A Tail of Two Cats: reset.");
+    return;
+}
+def_int $stage = $n;
+if ($n = 41) $stage = ^ttc_chores;
+%twocats_quest = $stage;
+%twocats_reldo = 0;
+%twocats_gotreward = 0;
+if ($stage >= ^ttc_complete) %twocats_gotreward = 1;
+// the enchanted amulet from stage 20
+if ($stage >= ^ttc_amulet & ~obj_gettotal(twocats_amuletofcatspeak) = 0) {
+    if (inv_total(worn, ics_little_amulet_of_catspeak) > 0) {
+        inv_changeslot(worn, ics_little_amulet_of_catspeak, twocats_amuletofcatspeak, 1);
+        buildappearance(worn);
+    } else if (inv_total(inv, ics_little_amulet_of_catspeak) > 0) {
+        inv_changeslot(inv, ics_little_amulet_of_catspeak, twocats_amuletofcatspeak, 1);
+    } else {
+        ~questdone_give(twocats_amuletofcatspeak, 1);
+    }
+}
+// the chores
+%twocats_chores_tidyhouse = 0;
+%twocats_chores_warmhuman = 0;
+%twocats_chores_feedhuman = 0;
+%twocats_chores_tidyhuman = 0;
+%twocats_chores_tidygarden = 0;
+if ($stage = ^ttc_chores) {
+    %twocats_chores_feedhuman = ^ttc_table_empty;
+    %twocats_chores_tidyhuman = ^ttc_hair_long;
+    if (~obj_gettotal(twocats_chores) = 0) ~questdone_give(twocats_chores, 1);
+}
+if ($n = 41 | $stage > ^ttc_chores) {
+    %twocats_chores_tidyhouse = ^ttc_bed_made;
+    %twocats_chores_warmhuman = ^ttc_fire_lit;
+    %twocats_chores_feedhuman = ^ttc_table_full;
+    %twocats_chores_tidyhuman = ^ttc_hair_bald;
+    %twocats_chores_tidygarden = ^ttc_patch_grown;
+}
+if ($n = 41) {
+    %twocats_chores_tidygarden = 7;
+    settimer(ttc_potatoes, 5);
+}
+if ($stage >= ^ttc_hat & ~ttc_has_hat = false) ~questdone_give(twocats_doctors_hat, 1);
+~send_quest_progress(questlist:twocats, %twocats_quest, ^ttc_complete);
+~update_questpoints;
+mes("A Tail of Two Cats stage: <tostring($n)>");
+
+// ::ttctele <n> - 1 inside Unferth's house (Burthorpe), 2 Hild, 3 Bob (wherever he has wandered),
+// 4 Gertrude, 5 Reldo, 6 the Sphinx, 7 the Apothecary, 8 Unferth's patch
+[debugproc,ttctele](int $n)
+if (p_finduid(uid) = false) return;
+def_int $x = 0;
+def_int $z = 0;
+switch_int ($n) {
+    case 1 :
+        $x = 2921;
+        $z = 3558;
+    case 2 :
+        $x = 2929;
+        $z = 3566;
+    case 3 :
+        def_coord $bob = ~ttc_find_bob;
+        if ($bob = null) {
+            mes("Bob isn't anywhere near Burthorpe or you.");
+            return;
+        }
+        p_telejump(map_findsquare($bob, 1, 2, ^map_findsquare_lineofwalk));
+        return;
+    case 4 :
+        $x = 3150;
+        $z = 3410;
+    case 5 :
+        $x = 3209;
+        $z = 3494;
+    case 6 :
+        $x = 3299;
+        $z = 2781;
+    case 7 :
+        $x = 3195;
+        $z = 3402;
+    case 8 :
+        $x = 2920;
+        $z = 3563;
+    case default :
+        mes("::ttctele 1-8: 1 Unferth, 2 Hild, 3 Bob, 4 Gertrude, 5 Reldo, 6 Sphinx, 7 Apothecary, 8 Unferth's patch");
+        return;
+}
+p_telejump(movecoord(0_0_0_0_0, $x, 0, $z));

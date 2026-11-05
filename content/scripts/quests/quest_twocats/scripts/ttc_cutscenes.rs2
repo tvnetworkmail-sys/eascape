@@ -1,0 +1,292 @@
+// EASCape: A Tail of Two Cats - the two cutscenes. Words: the OSRS wiki's quest transcript. Cast:
+// the 377 cache's twocats_*_cutscene npcs (Sphinx, Bob and his hypnotised head, Neite, Robert the
+// Strong, Odysseus, the dragonkin, the King Black Dragon, R4ng3rNo0b889, the love cats on their
+// carpet and on the ship) and seqs (bob_hypnotised_face, panther_pounce, panther_death,
+// roberts_death, dragonkin_special_death, twocats_cats_fly/_love/_trawler). Places: the
+// dragonkin's castle is the cache's map square 29_70; the King Black Dragon's lair, Sophanem and
+// the trawler's deck are the real ones. Ours: where everyone stands, the moves and the timing; you
+// watch while hidden (an invisible disguise, the cache's desert_treasure_invisible_npc) wherever
+// the transcript doesn't have you in the scene. The music: Strange Place (the cache unlocks it at
+// stage 40); the 377 cache has no "Bob's on Holiday".
+
+// ---------------------------------------------------------------- the Sphinx's hypnosis
+[label,ttc_sphinx_cutscene]
+def_coord $back = coord;
+if_close;
+%ttc_cutscene = 1;
+~fade_out;
+p_delay(2);
+minimap_toggle(2);
+p_telejump(^ttc_desert_player);
+npc_add(^ttc_desert_sphinx, twocats_sphinx_cutscene, 1000);
+def_npc_uid $sphinx = npc_uid;
+npc_facesquare(^ttc_desert_player);
+p_delay(1);
+~fade_in;
+p_delay(2);
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Quiet please.... I shall summon Bob.");
+npc_add(^ttc_desert_bob, twocats_bob_cutscene, 1000);
+def_npc_uid $bob = npc_uid;
+npc_facesquare(^ttc_desert_sphinx);
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,confused>What..? What happened?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,sad>I was eating a particularly nice piece of tuna.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Greetings Bob.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,happy>Oh, hi there Sphinx.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>Hi there <displayname>, what's going on?");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>I have brought you here to find out who you really are.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>So you buy this Robert the Strong stuff?");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>I have long suspected that your appearance as an ordinary cat belies your true nature.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,shock>Hey! I'm just this cat, you know?");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Look into my eyes.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,bored>Sure... whatever.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>You are now under my influence.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Let's start with something simple. What is your name?");
+~ttc_cs_hypno("My name is Bob.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Good. Are you or have you ever been called Robert the Strong?");
+~ttc_cs_hypno("I... I don't know.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Think back to your earliest memories.");
+~ttc_cs_hypno("I see a big cat...");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Where are you now?");
+~ttc_cs_hypno("I am in front of a dark tower... the cat is called Odysseus.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>What is your name?");
+~ttc_cs_hypno("My name is Robert.");
+~ttc_cs_hypno("I am walking towards the tower...");
+// the dragonkin's castle
+~fade_out;
+p_delay(2);
+if_close;
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump(^ttc_castle_player);
+~music_setvar(11, 17); // Strange Place (music.dbrow: unlock 11,17)
+midi_song("strange place");
+npc_add(^ttc_castle_robert, twocats_robert_cutscene, 400);
+def_npc_uid $robert = npc_uid;
+npc_add(^ttc_castle_odysseus, twocats_odysseus_cutscene, 400);
+def_npc_uid $odysseus = npc_uid;
+p_delay(1);
+~fade_in;
+p_delay(1);
+if (npc_finduid($robert) = true) npc_walk(movecoord(^ttc_castle_robert, 0, 0, 4));
+if (npc_finduid($odysseus) = true) npc_walk(movecoord(^ttc_castle_odysseus, 0, 0, 4));
+p_delay(3);
+if (npc_finduid($robert) = true) npc_say("Come, Odysseus!");
+~ttc_cs("Robert the Strong", twocats_robert_cutscene, "<p,angry>Come, Odysseus!");
+npc_add(^ttc_castle_dragonkin, twocats_dragonkin_cutscene, 400);
+def_npc_uid $dragonkin = npc_uid;
+npc_facesquare(movecoord(^ttc_castle_robert, 0, 0, 4));
+npc_say("Hesente!");
+~ttc_cs("Dragonkin", twocats_dragonkin_cutscene, "<p,angry>Hesente!");
+if_close;
+def_int $round = 0;
+while ($round < 3) {
+    if (npc_finduid($odysseus) = true) npc_anim(panther_pounce, 0);
+    if (npc_finduid($robert) = true) npc_anim(human_bow, 0);
+    p_delay(2);
+    if (npc_finduid($dragonkin) = true) npc_anim(seq_2685, 0);
+    p_delay(2);
+    $round = calc($round + 1);
+}
+if (npc_finduid($odysseus) = true) npc_anim(panther_death, 0);
+p_delay(3);
+if (npc_finduid($odysseus) = true) npc_del;
+if (npc_finduid($robert) = true) npc_anim(roberts_death, 0);
+p_delay(2);
+if (npc_finduid($dragonkin) = true) npc_say("Crasortius!");
+~ttc_cs("Dragonkin", twocats_dragonkin_cutscene, "<p,angry>Crasortius!");
+if (npc_finduid($robert) = true) {
+    npc_anim(null, 0);
+    npc_say("Never!");
+}
+~ttc_cs("Robert the Strong", twocats_robert_cutscene, "<p,angry>Never!");
+if_close;
+if (npc_finduid($robert) = true) npc_anim(human_bow, 0);
+p_delay(2);
+if (npc_finduid($dragonkin) = true) npc_anim(dragonkin_special_death, 0);
+p_delay(4);
+~fade_out;
+p_delay(2);
+if (npc_finduid($dragonkin) = true) npc_del;
+if (npc_finduid($robert) = true) npc_del;
+p_transmogrify(null);
+p_telejump(^ttc_desert_player);
+p_delay(1);
+~fade_in;
+p_delay(1);
+// back in the desert
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>You are no longer under my influence.");
+~ttc_cs_cat("<p,shock>Wow Bob! You really are Robert the Strong!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,confused>I am?");
+~ttc_cs_cat("<p,happy>Yes! When you were hypnotised you told us of when you defeated a dragonkin!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,confused>I did?");
+~ttc_cs_cat("<p,happy>Yes! How can Neite refuse you now!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>Really?");
+~ttc_cs_cat("<p,happy>Sphinx, summon Neite please!");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,bored>There are more important matters than match making.");
+~ttc_cs_cat("<p,angry>That can wait! Bob has been love sick, we have to tell Neite!");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>Very well! I shall summon Neite!");
+npc_add(^ttc_desert_neite, twocats_niete_cutscene, 1000);
+def_npc_uid $neite = npc_uid;
+npc_facesquare(^ttc_desert_bob);
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,shock>Oh... furballs!");
+~ttc_cs_cat("<p,happy>Hi Neite!");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,quiz>Hello, to what do I owe this pleasure?");
+~ttc_cs_cat("<p,happy>Bob is Robert the Strong!");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,confused>What are you talking about?");
+~ttc_cs_cat("<p,neutral>The Sphinx hypnotised Bob. Bob told us about when he was Robert the Strong fighting dragonkin.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,quiz>So you're supposed to be Robert the Strong?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>So they tell me.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,bored>Hmph.");
+~ttc_cs("Sphinx", twocats_sphinx_cutscene, "<p,neutral>For too long I have ignored the fact that there is a mark of power on Bob. Under my influence Bob was able to recall memories that had remained hidden until now. It proves he is, or was, Robert the Strong.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,shock>Wow.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,happy>Come here you.");
+if (npc_finduid($neite) = true) npc_walk(movecoord(^ttc_desert_bob, 1, 0, 0));
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,happy>(Neite whispers in Bob's ear.)");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,shock>Neite!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,happy>Of course kitten.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>Hey <displayname>, could you do me a favour?");
+~ttc_cs_player("<p,neutral>Of course.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>Myself and Neite are going away for a few days. Could you look after Unferth for me whilst I'm away?");
+~ttc_cs_player("<p,confused>Er... sure.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>I'll give you a list of what needs doing.");
+~ttc_cs_player("<p,happy>OK, no problem Bob.");
+~fade_out;
+p_delay(2);
+if_close;
+if (npc_finduid($sphinx) = true) npc_del;
+if (npc_finduid($bob) = true) npc_del;
+if (npc_finduid($neite) = true) npc_del;
+minimap_toggle(0);
+%ttc_cutscene = 0;
+p_telejump($back);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~ttc_give_chores;
+~chatnpc_specific("Sphinx", ics_little_sphinx, "<p,neutral><displayname>, since you are to look after Unferth, shall I teleport you to his house?");
+if (~p_choice2("Yes, teleport me to Unferth's house.", 1, "No thanks, I'll stay in Sophanem.", 2) = 1) {
+    if_close;
+    ~ttc_cs_jump(^ttc_unferth_door);
+}
+~objbox(twocats_chores, "Bob has given you a list of chores to help look after Unferth.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Bob's holiday
+[label,ttc_holiday_cutscene]
+~chatplayer("<p,happy>Hi Bob! How's it hang... going?");
+~chatnpc("<p,happy>Wonderful! Neite and I have been all over Gielinor! We 'borrowed' a magic carpet...");
+if_close;
+%ttc_cutscene = 2;
+~fade_out;
+p_delay(2);
+minimap_toggle(2);
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump(^ttc_carpet_player);
+npc_add(^ttc_carpet_start, twocats_carpet_cats, 1000);
+def_npc_uid $carpet = npc_uid;
+npc_walk(^ttc_carpet_mid);
+p_delay(1);
+~fade_in;
+p_delay(1);
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>Where do we turn here?");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,confused>North... I think.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,shock>You think?!");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,neutral>Yes: north.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,shock>Slow down!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,quiz>For what?");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,shock>That camel!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,confused>What camel?!");
+// the King Black Dragon
+~fade_out;
+p_delay(2);
+if_close;
+if (npc_finduid($carpet) = true) npc_del;
+p_telejump(^ttc_kbd_player);
+npc_add(^ttc_kbd_dragon, twocats_kbd_cutscene, 600);
+def_npc_uid $kbd = npc_uid;
+npc_facesquare(^ttc_kbd_bob);
+npc_add(^ttc_kbd_bob, twocats_bob_cutscene, 600);
+def_npc_uid $bob = npc_uid;
+npc_facesquare(^ttc_kbd_dragon);
+npc_add(^ttc_kbd_neite, twocats_niete_cutscene, 600);
+def_npc_uid $neite = npc_uid;
+npc_facesquare(^ttc_kbd_dragon);
+p_delay(1);
+~fade_in;
+p_delay(1);
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,scared>Are you sure this is a good idea?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,happy>Yeh, the old King and I go way back.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,happy>Hey old King! How's things?");
+~ttc_cs("King Black Dragon", twocats_kbd_cutscene, "<p,bored>Same as always: adventurers trying to kill me.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>There, there, could be worse!");
+~ttc_cs("King Black Dragon", twocats_kbd_cutscene, "<p,neutral>I guess... one moment...");
+if_close;
+npc_add(^ttc_kbd_noob_from, twocats_adventurer_cutscene, 300);
+def_npc_uid $noob = npc_uid;
+npc_walk(^ttc_kbd_noob_to);
+p_delay(4);
+if (npc_finduid($noob) = true) npc_say("Lolz die noob!");
+p_delay(2);
+if (npc_finduid($kbd) = true) {
+    npc_facesquare(^ttc_kbd_noob_to);
+    npc_anim(dragon_attack, 0);
+    spotanim_npc(firebreath_attack, 0, 0);
+}
+p_delay(2);
+if (npc_finduid($noob) = true) npc_anim(human_death, 0);
+p_delay(3);
+if (npc_finduid($noob) = true) npc_del;
+if (npc_finduid($kbd) = true) npc_facesquare(^ttc_kbd_bob);
+~ttc_cs("King Black Dragon", twocats_kbd_cutscene, "<p,bored>See what I mean?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,laugh>Mate! You need a new line of work!");
+// back at Sophanem
+~fade_out;
+p_delay(2);
+if_close;
+if (npc_finduid($kbd) = true) npc_del;
+if (npc_finduid($bob) = true) npc_del;
+if (npc_finduid($neite) = true) npc_del;
+p_telejump(^ttc_carpet_player);
+npc_add(^ttc_carpet_mid, twocats_carpet_cats, 1000);
+$carpet = npc_uid;
+npc_walk(^ttc_carpet_end);
+p_delay(1);
+~fade_in;
+p_delay(1);
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,angry>I said left at the camel!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,confused>What camel?!");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,shock>You're too close to the pyramid!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,angry>Do you want to drive?!");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,sad>I think we're lost.");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>No, I know where I'm going.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,quiz>Are we there yet?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,neutral>No.");
+~ttc_cs("Neite", twocats_niete_cutscene, "<p,quiz>Are we there yet?");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,angry>No!");
+// on a ship at sea
+~fade_out;
+p_delay(2);
+if_close;
+if (npc_finduid($carpet) = true) npc_del;
+p_telejump(^ttc_ship_player);
+npc_add(^ttc_ship_cats, twocats_trawler_cats, 300);
+def_npc_uid $ship = npc_uid;
+npc_facesquare(movecoord(^ttc_ship_cats, 5, 0, 0));
+p_delay(1);
+~fade_in;
+p_delay(2);
+if (npc_finduid($ship) = true) npc_say("I'm the King of Gielinor!");
+~ttc_cs("Bob", twocats_bob_cutscene, "<p,happy>I'm the King of Gielinor!");
+~fade_out;
+p_delay(2);
+if_close;
+if (npc_finduid($ship) = true) npc_del;
+p_transmogrify(null);
+minimap_toggle(0);
+%ttc_cutscene = 0;
+%twocats_quest = ^ttc_holiday;
+p_telejump(^ttc_unferth_door);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatplayer("<p,happy>Phew!");

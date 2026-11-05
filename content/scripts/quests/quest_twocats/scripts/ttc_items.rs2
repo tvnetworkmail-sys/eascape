@@ -1,0 +1,172 @@
+// EASCape: A Tail of Two Cats - its items (the 377 cache's twocats_ objs) and the catspeak
+// amulet(e)'s locator (the cache's inter_311: a cat's face, its nose turned by the whiskers).
+// Destroy lines: Void's item data (from the OSRS wiki). Ours are marked.
+
+// ---------------------------------------------------------------- the list and the recipe
+// ours: the list's words (the transcripts give only the five chores' names); a struck-through
+// line is a chore done
+[opheld1,twocats_chores]
+def_string $a = "Tidy House";
+def_string $b = "Warm Human";
+def_string $c = "Feed Human";
+def_string $d = "Tidy Human";
+def_string $e = "Tend Garden";
+if (%twocats_chores_tidyhouse = ^ttc_bed_made) $a = "@str@<$a>";
+if (%twocats_chores_warmhuman = ^ttc_fire_lit) $b = "@str@<$b>";
+if (%twocats_chores_feedhuman = ^ttc_table_full) $c = "@str@<$c>";
+if (%twocats_chores_tidyhuman = ^ttc_hair_bald) $d = "@str@<$d>";
+if (%twocats_chores_tidygarden = ^ttc_patch_grown) $e = "@str@<$e>";
+~mesbox("<$a>|<$b>|<$c>|<$d>|<$e>");
+
+// ours: the recipe's words (Void: "It says on the back 'My favourite recipe.'")
+[opheld1,twocats_recipe]
+~mesbox("Unferth's favourite: a whole chocolate cake, with a glass of milk to wash it down.");
+
+[opheld5,twocats_chores]
+def_int $slot = last_slot;
+def_string $line = "You can get a replacement list of chores by speaking to your kitten or cat.";
+if (%twocats_quest >= ^ttc_chores_done) $line = "You have completed the chores; you can safely destroy the list.";
+if (~destroy_confirm(twocats_chores, $line) = false) return;
+if (inv_getobj(inv, $slot) = twocats_chores) inv_delslot(inv, $slot);
+
+[opheld5,twocats_recipe]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_recipe, "You found the recipe in Unferth's bookcase, which is in his Burthorpe house, you will be able to get a replacement.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_recipe) inv_delslot(inv, $slot);
+
+[opheld5,twocats_doctors_hat]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_doctors_hat, "You can get another Doctor's hat from the Apothecary in Varrock.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_doctors_hat) inv_delslot(inv, $slot);
+
+[opheld5,twocats_nurses_hat]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_nurses_hat, "You can get another Nurse's hat from the Apothecary in Varrock.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_nurses_hat) inv_delslot(inv, $slot);
+
+[opheld5,twocats_mouse_toy]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_mouse_toy, "You can get a replacement mouse toy by speaking to Bob, the cat.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_mouse_toy) inv_delslot(inv, $slot);
+
+[opheld5,twocats_present]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_present, "You can not get a replacement for the present. Open it to get your reward.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_present) inv_delslot(inv, $slot);
+
+[opheld5,twocats_rewardlamp]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_rewardlamp, "If you destroy this item, you cannot reclaim it.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_rewardlamp) inv_delslot(inv, $slot);
+
+[opheld5,twocats_amuletofcatspeak]
+def_int $slot = last_slot;
+if (~destroy_confirm(twocats_amuletofcatspeak, "You can get another Amulet of Catspeak from the Sphinx in Sophanem. Bring a cat or kitten with you.") = false) return;
+if (inv_getobj(inv, $slot) = twocats_amuletofcatspeak) inv_delslot(inv, $slot);
+
+// ---------------------------------------------------------------- the present (the OSRS wiki: two
+// antique lamps and a mouse toy; the lamps are Fairytale II's 2,500-experience lamp, xplamp.rs2)
+[opheld1,twocats_present]
+if (inv_freespace(inv) < 2) {
+    mes("You need two free spaces in your pack to open the present."); // ours
+    return;
+}
+inv_del(inv, twocats_present, 1);
+inv_add(inv, twocats_rewardlamp, 2);
+inv_add(inv, twocats_mouse_toy, 1);
+~doubleobjbox(twocats_rewardlamp, twocats_mouse_toy, "You open the present and find two antique lamps and a mouse toy.", 250); // ours
+
+// ---------------------------------------------------------------- the locator
+// Hild: the whiskers turn the nose; when it points Bob's way the eyes light up and the mouth opens,
+// and very close to Bob they do so whichever way it points. The cache: nose frames for eight
+// directions (south, south-west, west, north-west, north, north-east, east, south-east round the
+// whiskers) and bob_locator_eyes on the eyes and mouth. Ours: %twocats_locator_direction counts
+// 0 north, 1 north-east ... 7 north-west; %if1 marks the whisker last used (the interface's own
+// script shows a lit whisker for 1 and 2).
+[opheld3,twocats_amuletofcatspeak]
+%if1 = 0;
+if_openmain(inter_311);
+~ttc_locator_draw;
+
+[if_button,inter_311:com_5]
+%twocats_locator_direction = calc((%twocats_locator_direction + 7) % 8);
+%if1 = 1;
+~ttc_locator_draw;
+
+[if_button,inter_311:com_6]
+%twocats_locator_direction = calc((%twocats_locator_direction + 1) % 8);
+%if1 = 2;
+~ttc_locator_draw;
+
+[proc,ttc_locator_draw]
+def_int $dir = %twocats_locator_direction;
+if ($dir > 7) $dir = 0;
+switch_int ($dir) {
+    case 1 : if_setanim(inter_311:com_1, bob_locator_nose_northeast);
+    case 2 : if_setanim(inter_311:com_1, bob_locator_nose_east);
+    case 3 : if_setanim(inter_311:com_1, bob_locator_nose_southeast);
+    case 4 : if_setanim(inter_311:com_1, bob_locator_nose_south);
+    case 5 : if_setanim(inter_311:com_1, bob_locator_nose_southwest);
+    case 6 : if_setanim(inter_311:com_1, bob_locator_nose_west);
+    case 7 : if_setanim(inter_311:com_1, bob_locator_nose_northwest);
+    case default : if_setanim(inter_311:com_1, bob_locator_nose_north);
+}
+def_boolean $lit = false;
+def_coord $bob = ~ttc_find_bob;
+if ($bob ! null) {
+    if (coordy($bob) = coordy(coord) & distance(coord, $bob) <= ^ttc_locator_close) {
+        $lit = true;
+    } else if (~ttc_direction(coord, $bob) = $dir) {
+        $lit = true;
+    }
+}
+if ($lit = true) {
+    if_setanim(inter_311:com_2, bob_locator_eyes);
+    if_setanim(inter_311:com_3, bob_locator_eyes);
+    if_setanim(inter_311:com_4, bob_locator_eyes);
+} else {
+    if_setanim(inter_311:com_2, null);
+    if_setanim(inter_311:com_3, null);
+    if_setanim(inter_311:com_4, null);
+}
+
+// Bob, wherever he is: the one you last talked to, else the one nearest you or his home
+[proc,ttc_find_bob]()(coord)
+if (%ttc_bob_uid ! null) {
+    if (npc_finduid(%ttc_bob_uid) = true) return(npc_coord);
+}
+if (npc_find(coord, death_growncat_black, 100, 0) = true) {
+    %ttc_bob_uid = npc_uid;
+    return(npc_coord);
+}
+if (npc_find(^ttc_bob_spawn, death_growncat_black, 200, 0) = true) {
+    %ttc_bob_uid = npc_uid;
+    return(npc_coord);
+}
+return(null);
+
+// the compass point from one square to another (0 north, clockwise to 7 north-west), split at 22.5
+// degrees either side of each point
+[proc,ttc_direction](coord $from, coord $to)(int)
+def_int $dx = calc(coordx($to) - coordx($from));
+def_int $dz = calc(coordz($to) - coordz($from));
+def_int $ax = abs($dx);
+def_int $az = abs($dz);
+def_int $ax1000 = calc($ax * 1000);
+def_int $az1000 = calc($az * 1000);
+def_int $ax414 = calc($ax * 414);
+def_int $az414 = calc($az * 414);
+if ($az1000 <= $ax414) {
+    if ($dx >= 0) return(2);
+    return(6);
+}
+if ($ax1000 <= $az414) {
+    if ($dz >= 0) return(0);
+    return(4);
+}
+if ($dz > 0) {
+    if ($dx > 0) return(1);
+    return(7);
+}
+if ($dx > 0) return(3);
+return(5);

@@ -1,0 +1,170 @@
+// EASCape: A Tail of Two Cats (26 September 2005) - the shared pieces.
+// Words: the OSRS wiki's quest transcript (the 2007 game), filled from the RuneScape wiki's where
+// the OSRS one is missing a line. Things: the 377 cache's own twocats_ npcs, objs, locs, varbits
+// and seqs. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- your cat
+// a cat or kitten following you or in your pack (Icthlarin's Little Helper's check)
+[proc,ttc_has_cat]()(boolean)
+return(~ics_has_cat);
+
+// your cat's npc type, for its chathead: the one following you, else the first in your pack
+[proc,ttc_cat]()(npc)
+if (%follower_obj ! null) {
+    def_category $fc = oc_category(%follower_obj);
+    if ($fc = kitten | $fc = cat | $fc = overgrown) return(oc_param(%follower_obj, follower_id));
+}
+def_int $slot = 0;
+def_obj $obj;
+while ($slot < inv_size(inv)) {
+    $obj = inv_getobj(inv, $slot);
+    if ($obj ! null) {
+        def_category $c = oc_category($obj);
+        if ($c = kitten | $c = cat | $c = overgrown) return(oc_param($obj, follower_id));
+    }
+    $slot = calc($slot + 1);
+}
+return(growncat);
+
+[proc,ttc_catsay](string $text)
+def_npc $cat = ~ttc_cat;
+~chatnpc_specific(nc_name($cat), $cat, $text);
+
+// either catspeak amulet, worn
+[proc,ttc_catspeak]()(boolean)
+def_obj $neck = inv_getobj(worn, ^wearpos_front);
+if ($neck = ics_little_amulet_of_catspeak | $neck = twocats_amuletofcatspeak) return(true);
+return(false);
+
+// the transcript's lines when your cat speaks and you can't understand it
+[proc,ttc_no_catspeak](string $meow)
+~ttc_catsay("<p,neutral><$meow>");
+~chatplayer("<p,confused>Hmm... My cat is trying to say something but I'm not wearing the Amulet of Catspeak.");
+
+// ---------------------------------------------------------------- odds and ends
+[proc,ttc_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+    mes("Your pack is full, so the <lowercase(oc_name($obj))> is on the ground."); // ours
+}
+
+[proc,ttc_has_hat]()(boolean)
+if (~obj_gettotal(twocats_doctors_hat) > 0 | ~obj_gettotal(twocats_nurses_hat) > 0) return(true);
+return(false);
+
+// the chores Bob's list sets (ours: the table's empty dishes and Unferth's long hair appear when the
+// list is given; the cache's varbits start at the bare table and the bald Unferth)
+[proc,ttc_give_chores]
+%twocats_quest = ^ttc_chores;
+%twocats_chores_tidyhouse = 0;
+%twocats_chores_warmhuman = 0;
+%twocats_chores_feedhuman = ^ttc_table_empty;
+%twocats_chores_tidyhuman = ^ttc_hair_long;
+%twocats_chores_tidygarden = 0;
+~send_quest_progress(questlist:twocats, %twocats_quest, ^ttc_complete);
+if (inv_total(inv, twocats_chores) = 0) ~ttc_give(twocats_chores);
+
+[proc,ttc_chores_left]()(int)
+def_int $n = 0;
+if (%twocats_chores_tidyhouse ! ^ttc_bed_made) $n = calc($n + 1);
+if (%twocats_chores_warmhuman ! ^ttc_fire_lit) $n = calc($n + 1);
+if (%twocats_chores_feedhuman ! ^ttc_table_full) $n = calc($n + 1);
+if (%twocats_chores_tidyhuman ! ^ttc_hair_bald) $n = calc($n + 1);
+if (%twocats_chores_tidygarden ! ^ttc_patch_grown) $n = calc($n + 1);
+return($n);
+
+// after each chore: the last one done moves the quest on, and your cat says so (the transcript)
+[proc,ttc_chore_done]
+if (%twocats_quest ! ^ttc_chores | ~ttc_chores_left > 0) return;
+%twocats_quest = ^ttc_chores_done;
+if (~ttc_catspeak = true & ~ttc_has_cat = true) {
+    ~ttc_catsay("<p,happy>Well done, that's all the chores finished!");
+    ~ttc_catsay("<p,neutral>Let's talk to Unferth to see if there's anything else we can do.");
+}
+
+[queue,ttc_chores_finished]
+~ttc_chore_done;
+
+// ---------------------------------------------------------------- the potatoes
+// The OSRS wiki: Unferth's patch takes 15-35 minutes to grow, and your cat tells you when it has.
+// Ours: four steps (the cache's potato1-potato5), each 375 to 875 ticks.
+[timer,ttc_potatoes]
+def_int $g = %twocats_chores_tidygarden;
+if ($g < ^ttc_patch_planted | $g >= ^ttc_patch_grown) {
+    cleartimer(ttc_potatoes);
+    return;
+}
+$g = calc($g + 1);
+%twocats_chores_tidygarden = $g;
+if ($g >= ^ttc_patch_grown) {
+    cleartimer(ttc_potatoes);
+    mes("Perhaps I should have a look and see if Unferth's potatoes have grown...");
+    if (%twocats_quest = ^ttc_chores & ~ttc_chores_left = 0) queue(ttc_chores_finished, 0, 0);
+    return;
+}
+settimer(ttc_potatoes, calc(375 + random(501)));
+
+// ours: a timer doesn't last a logout, so the potatoes carry on growing from the step they reached;
+// and a logout in a cutscene brings you back out of it (to start it again)
+[proc,ttc_login]
+if (%ttc_cutscene ! 0) {
+    p_transmogrify(null);
+    minimap_toggle(0);
+    if (%ttc_cutscene = 1) p_telejump(0_51_43_35_29);
+    else p_telejump(^ttc_unferth_door);
+    %ttc_cutscene = 0;
+}
+if (%twocats_chores_tidygarden >= ^ttc_patch_planted & %twocats_chores_tidygarden < ^ttc_patch_grown) {
+    settimer(ttc_potatoes, calc(375 + random(501)));
+}
+
+// ---------------------------------------------------------------- the cutscenes' dialogue
+// Ours: the cutscenes play on their own (the 2005 Myreque cutscene's style, inter_213_274), so a
+// stray click can't leave you stranded in one. Each page stays up for a few ticks.
+[proc,ttc_cs](string $name, npc $npc, string $text)
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatnpc_cutscene_page($name, $npc, $page);
+    p_delay(calc(2 + split_linecount($page) * 2));
+    $page = calc($page + 1);
+}
+
+// Bob under the Sphinx's influence: his hypnotised face (the cache's bob_hypnotised_face)
+[proc,ttc_cs_hypno](string $text)
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatnpc_cutscene_page("Bob", twocats_bob_cutscene2, $page);
+    if_setanim(inter_213_274:com_0, bob_hypnotised_face);
+    p_delay(calc(2 + split_linecount($page) * 2));
+    $page = calc($page + 1);
+}
+
+[proc,ttc_cs_player](string $text)
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatplayer_page($page);
+    p_delay(calc(2 + split_linecount($page) * 2));
+    $page = calc($page + 1);
+}
+
+[proc,ttc_cs_cat](string $text)
+def_npc $cat = ~ttc_cat;
+~ttc_cs(nc_name($cat), $cat, $text);
+
+// a jump between the cutscene's places, behind a fade
+[proc,ttc_cs_jump](coord $c)
+~fade_out;
+p_delay(2);
+p_telejump($c);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);

@@ -1,0 +1,30 @@
+// EASCape: A Tail of Two Cats's journal. Ours: no source has the journal's text, so these lines say
+// what the OSRS wiki's walkthrough has you do next.
+[if_button,questlist:twocats]
+def_int $s = %twocats_quest;
+if ($s = ^ttc_not_started) {
+    ~quest_journal("A Tail of Two Cats", "@dbl@I can start this quest by talking to @dre@Unferth@dbl@ at his house in|@dre@Burthorpe@dbl@.||@dbl@I will need to have completed @dre@Icthlarin's Little Helper@dbl@ and|@dre@Gertrude's Cat@dbl@, and to bring a @dre@cat@dbl@ or @dre@kitten@dbl@ with me.");
+    return;
+}
+if ($s >= ^ttc_complete) {
+    ~quest_journal("A Tail of Two Cats", "@str@Unferth's cat Bob went missing. I found him lovesick for|@str@Neite, who wanted a cat with a family. With Gertrude, Reldo|@str@and the Sphinx I found that Bob was once Robert the Strong.|@str@I looked after Unferth while Bob and Neite were away, and|@str@Bob came home on his own.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@Unferth's cat Bob has gone missing.||";
+def_string $next;
+switch_int ($s) {
+    case ^ttc_started : $next = "@dbl@Unferth's friend @dre@Hild@dbl@, in the house just up the road, may be|@dbl@able to find Bob.";
+    case ^ttc_hild : $next = "@dbl@Hild will enchant my @dre@Amulet of Catspeak@dbl@ to find Bob if I bring|@dbl@her @dre@five death runes@dbl@.";
+    case ^ttc_amulet : $next = "@dbl@Hild enchanted my amulet. I can @dre@open@dbl@ it and turn its whiskers|@dbl@until the eyes light up, then head that way to find @dre@Bob@dbl@.";
+    case ^ttc_found_bob : $next = "@dbl@Bob has fallen for @dre@Neite@dbl@, but she wants a cat with a family. I|@dbl@should ask @dre@Gertrude@dbl@, west of Varrock, about his parents.";
+    case ^ttc_gertrude : $next = "@dbl@Gertrude doesn't know. My cat thinks Bob may have something|@dbl@to do with the legend of @dre@Robert the Strong@dbl@. @dre@Reldo@dbl@ in Varrock|@dbl@palace library knows about legends.";
+    case ^ttc_reldo : $next = "@dbl@Reldo told me the tale of Robert the Strong. Could he be @dre@Bob@dbl@?|@dbl@I should ask him.";
+    case ^ttc_sphinx : $next = "@dbl@Bob doesn't remember. The @dre@Sphinx@dbl@ in @dre@Sophanem@dbl@ may be able to|@dbl@reach his memories.";
+    case ^ttc_chores : $next = "@dbl@Bob is Robert the Strong! He and Neite have gone away, and|@dbl@I must look after @dre@Unferth@dbl@: Bob's @dre@list of chores@dbl@ says what to|@dbl@do, and my cat can help.";
+    case ^ttc_chores_done : $next = "@dbl@I've done all the chores. I should see if @dre@Unferth@dbl@ needs|@dbl@anything else.";
+    case ^ttc_ill : $next = "@dbl@Unferth feels ill and wants a doctor. The @dre@Apothecary@dbl@ in|@dbl@Varrock may help.";
+    case ^ttc_hat : $next = "@dbl@Unferth isn't ill at all. I must dress as a doctor or nurse:|@dbl@the @dre@hat@dbl@, @dre@white robes@dbl@ and nothing in my hands, and give him a|@dre@vial of water@dbl@.";
+    case ^ttc_cured : $next = "@dbl@Unferth is 'cured'. @dre@Bob@dbl@ should be back by now; I should find|@dbl@him.";
+    case default : $next = "@dbl@Bob has told me about his holiday. I should tell @dre@Unferth@dbl@.";
+}
+~quest_journal("A Tail of Two Cats", append($t, $next));

@@ -1,0 +1,238 @@
+// EASCape: A Tail of Two Cats - Bob's list of chores at Unferth's house in Burthorpe. The house's
+// bed, fireplace, table, bookcase and patch are the 377 cache's twocats_ multilocs (already in the
+// map); their looks follow the cache's chore varbits. Words: the OSRS and RuneScape wikis' quest
+// transcripts (your cat, the table, the bookcase, the potatoes); the OSRS walkthrough for what does
+// each chore. Ours are marked.
+
+// ---------------------------------------------------------------- Tidy House: the bed
+[oploc1,twocats_bed]
+if (%twocats_quest < ^ttc_chores | %twocats_quest >= ^ttc_complete) {
+    ~chatplayer("<p,angry>I'm not touching someone else's bed!");
+    return;
+}
+if (%twocats_chores_tidyhouse = ^ttc_bed_made) return;
+anim(human_pickuptable, 0); // ours
+p_delay(1);
+%twocats_chores_tidyhouse = ^ttc_bed_made;
+mes("You make the bed."); // ours
+~ttc_chore_done;
+
+// ---------------------------------------------------------------- Warm Human: the fireplace (logs,
+// then a tinderbox; the cache's human_twocats_got_wood and human_twocats_ignite_wood)
+[oplocu,twocats_fireplace]
+if (%twocats_quest ! ^ttc_chores) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_obj $item = last_useitem;
+if (%twocats_chores_warmhuman = 0) {
+    if ($item = logs | $item = oak_logs | $item = willow_logs | $item = maple_logs | $item = yew_logs | $item = magic_logs) {
+        anim(human_twocats_got_wood, 0);
+        p_delay(2);
+        inv_del(inv, $item, 1);
+        %twocats_chores_warmhuman = ^ttc_fire_wood;
+        mes("You put the logs in the fireplace."); // ours
+        return;
+    }
+    if ($item = tinderbox) {
+        mes("There's nothing in the fireplace to light."); // ours
+        return;
+    }
+}
+if (%twocats_chores_warmhuman = ^ttc_fire_wood & $item = tinderbox) {
+    anim(human_twocats_ignite_wood, 0);
+    sound_synth(fire_lit, 1, 0);
+    p_delay(2);
+    %twocats_chores_warmhuman = ^ttc_fire_lit;
+    mes("The fire catches and the logs begin to burn."); // ours
+    ~ttc_chore_done;
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- Feed Human: the table (a whole
+// chocolate cake and a bucket of milk, the OSRS walkthrough; a slice of cake does not work)
+[oploc1,twocats_table]
+switch_int (%twocats_chores_feedhuman) {
+    case 0 : ~mesbox("The table is bare.");
+    case ^ttc_table_empty : ~mesbox("The table has an empty cake stand and empty milk glass on it.");
+    case ^ttc_table_milk : ~mesbox("The table has an empty cake stand and full milk glass on it."); // ours
+    case ^ttc_table_cake : ~mesbox("The table has a chocolate cake and empty milk glass on it.");
+    case default : ~mesbox("The table has a chocolate cake and full milk glass on it.");
+}
+
+[oplocu,twocats_table]
+def_int $t = %twocats_chores_feedhuman;
+if (%twocats_quest ! ^ttc_chores) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (last_useitem = chocolate_cake & ($t = ^ttc_table_empty | $t = ^ttc_table_milk)) {
+    anim(human_pickuptable, 0);
+    p_delay(1);
+    inv_del(inv, chocolate_cake, 1);
+    if ($t = ^ttc_table_milk) %twocats_chores_feedhuman = ^ttc_table_full;
+    else %twocats_chores_feedhuman = ^ttc_table_cake;
+    mes("You put the chocolate cake on the cake stand."); // ours
+    ~ttc_chore_done;
+    return;
+}
+if (last_useitem = bucket_milk & ($t = ^ttc_table_empty | $t = ^ttc_table_cake)) {
+    anim(human_pickuptable, 0);
+    p_delay(1);
+    inv_del(inv, bucket_milk, 1);
+    inv_add(inv, bucket_empty, 1);
+    if ($t = ^ttc_table_cake) %twocats_chores_feedhuman = ^ttc_table_full;
+    else %twocats_chores_feedhuman = ^ttc_table_milk;
+    mes("You fill the glass with milk."); // ours
+    ~ttc_chore_done;
+    return;
+}
+~displaymessage(^dm_default);
+
+// the recipe in Unferth's bookcase (the RuneScape wiki's transcript)
+[oploc1,twocats_bookcase]
+if (~obj_gettotal(twocats_recipe) > 0) {
+    ~mesbox("You find nothing of interest.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~mesbox("You have found a recipe but do not have the space in your inventory for it.");
+    return;
+}
+inv_add(inv, twocats_recipe, 1);
+~objbox(twocats_recipe, "You have found a recipe.", 250, 0, 0);
+
+// ---------------------------------------------------------------- Tidy Human: shears on Unferth (the
+// cache's human_shearing_unferth and twocats_shear; his hair goes long, spiky, medium, short, bald)
+[opnpcu,twocats_unferth]
+if (last_useitem ! shears | %twocats_quest ! ^ttc_chores) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%twocats_chores_tidyhuman < ^ttc_hair_long | %twocats_chores_tidyhuman >= ^ttc_hair_bald) {
+    mes("Unferth's hair doesn't need cutting."); // ours
+    return;
+}
+npc_facesquare(coord);
+while (%twocats_chores_tidyhuman < ^ttc_hair_bald) {
+    anim(human_shearing_unferth, 0);
+    sound_synth(twocats_shear, 1, 0);
+    p_delay(2); // ours: the time per cut
+    %twocats_chores_tidyhuman = calc(%twocats_chores_tidyhuman + 1);
+}
+anim(null, 0);
+mes("You give Unferth a haircut."); // ours
+~ttc_chore_done;
+
+// ---------------------------------------------------------------- Tend Garden: Unferth's patch (a
+// rake, then four potato seeds with a seed dibber; the OSRS walkthrough)
+[oplocu,twocats_patch]
+if (%twocats_quest ! ^ttc_chores) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $g = %twocats_chores_tidygarden;
+if (last_useitem = rake) {
+    if ($g >= ^ttc_patch_weeded) {
+        mes("This patch doesn't need weeding right now.");
+        return;
+    }
+    while (%twocats_chores_tidygarden < ^ttc_patch_weeded) {
+        anim(farming_raking, 0);
+        p_delay(2);
+        %twocats_chores_tidygarden = calc(%twocats_chores_tidygarden + 1);
+        // ours: a weed each time, as a farming patch gives
+        if (inv_freespace(inv) > 0 | inv_total(inv, weeds) > 0) inv_add(inv, weeds, 1);
+        else obj_add(coord, weeds, 1, ^lootdrop_duration);
+    }
+    anim(null, 0);
+    return;
+}
+if (last_useitem = potato_seed) {
+    if ($g < ^ttc_patch_weeded) {
+        mes("This patch needs weeding first."); // ours
+        return;
+    }
+    if ($g > ^ttc_patch_weeded) {
+        mes("Something is already growing in Unferth's patch."); // ours
+        return;
+    }
+    if (inv_total(inv, dibber) = 0) {
+        mes("You need a seed dibber to plant seeds."); // ours
+        return;
+    }
+    if (inv_total(inv, potato_seed) < 4) {
+        mes("You need 4 potato seeds to grow those.");
+        return;
+    }
+    inv_del(inv, potato_seed, 4);
+    anim(farming_seed_dibbing, 0);
+    sound_synth(farming_dibbing, 1, 0);
+    p_delay(2);
+    %twocats_chores_tidygarden = ^ttc_patch_planted;
+    mes("You plant 4 potato seeds in Unferth's patch.");
+    settimer(ttc_potatoes, calc(375 + random(501)));
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- your cat and the chores
+// The transcripts' Talk-to on your cat while the chores are set (pet.rs2 asks this first).
+[proc,ttc_cat_talk]()(boolean)
+def_int $s = %twocats_quest;
+if ($s ! ^ttc_chores & $s ! ^ttc_chores_done) return(false);
+if (~ttc_catspeak = false) return(false);
+if (~p_choice2("Ask about the chores Bob set you to do.", 1, "Ask about something else.", 2) = 2) return(false);
+if ($s = ^ttc_chores_done) {
+    ~chatplayer("<p,quiz>So. Now what?");
+    ~ttc_catsay("<p,neutral>You've done all the chores so you should see if Unferth needs anything else done.");
+    return(true);
+}
+if (~obj_gettotal(twocats_chores) = 0) {
+    // the RuneScape wiki's transcript
+    ~chatplayer("<p,sad>I don't have the list of chores that Bob gave me.");
+    ~ttc_catsay("<p,neutral>I can remember them. I'll make a list.");
+    ~ttc_give(twocats_chores);
+    ~objbox(twocats_chores, "Your cat has given you a list of chores.", 250, 0, 0);
+}
+switch_int (~p_choice5("What do I have to do for 'Tidy House'?", 1, "What do I have to do for 'Warm Human'?", 2, "What do I have to do for 'Feed Human'?", 3, "What do I have to do for 'Tidy Human'?", 4, "What do I have to do for 'Tend Garden'?", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do I have to do for 'Tidy House'?");
+        if (%twocats_chores_tidyhouse = ^ttc_bed_made) ~ttc_catsay("<p,happy>You've finished that chore.");
+        else ~ttc_catsay("<p,neutral>Look round the house for anything messy that needs to be put right.");
+    case 2 :
+        ~chatplayer("<p,quiz>What do I have to do for 'Warm Human'?");
+        if (%twocats_chores_warmhuman = ^ttc_fire_lit) ~ttc_catsay("<p,happy>You've finished that chore.");
+        else ~ttc_catsay("<p,neutral>Theres only one source of warmth in the house, I suggest you use it.");
+    case 3 :
+        ~chatplayer("<p,quiz>What do I have to do for 'Feed Human'?");
+        if (%twocats_chores_feedhuman = ^ttc_table_full) {
+            ~ttc_catsay("<p,happy>You've finished that chore.");
+        } else {
+            ~ttc_catsay("<p,neutral>There's a table with empty dishes, I think they need refilling.");
+            ~chatplayer("<p,quiz>What does Unferth eat?");
+            ~ttc_catsay("<p,neutral>I've no idea, perhaps you can find out.");
+        }
+    case 4 :
+        ~chatplayer("<p,quiz>What do I have to do for 'Tidy Human'?");
+        if (%twocats_chores_tidyhuman = ^ttc_hair_bald) {
+            ~ttc_catsay("<p,happy>You've finished that chore.");
+        } else {
+            ~ttc_catsay("<p,neutral>Have you noticed that Unferth's hair has grown rather long?");
+            ~chatplayer("<p,quiz>Do you know where I can get some scissors?");
+            ~ttc_catsay("<p,laugh>It's so long I should think you'd need shears to cut it!");
+        }
+    case 5 :
+        ~chatplayer("<p,quiz>What do I have to do for 'Tend Garden'?");
+        if (%twocats_chores_tidygarden = ^ttc_patch_grown) {
+            ~ttc_catsay("<p,happy>You've finished that chore.");
+        } else {
+            ~ttc_catsay("<p,neutral>Check the garden to see if anything needs tending.");
+            if (%twocats_chores_tidygarden >= ^ttc_patch_weeded) {
+                ~chatplayer("<p,quiz>I've weeded the garden, now what?");
+                ~ttc_catsay("<p,neutral>I'm sure there should be something growing in the garden.");
+            }
+        }
+}
+return(true);

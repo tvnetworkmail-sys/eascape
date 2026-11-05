@@ -1,0 +1,466 @@
+// EASCape: A Tail of Two Cats - Hild, Bob, Neite and the quest's lines for Gertrude, Reldo, the
+// Apothecary and the Sphinx. Words: the OSRS wiki's quest transcript and its Hild, Bob and Neite
+// transcripts; the RuneScape wiki's where the OSRS one has a gap. Ours are marked.
+
+// ---------------------------------------------------------------- Hild (death_woman_indoors1)
+[opnpc1,death_woman_indoors1]
+def_int $s = %twocats_quest;
+if ($s = ^ttc_started & ~ttc_has_cat = true) @ttc_hild_intro;
+if ($s = ^ttc_hild) {
+    ~chatnpc("<p,quiz>Greetings Adventurer, do you have the death runes so I can enchant your Amulet of Catspeak?");
+    if (inv_total(inv, deathrune) < 5) {
+        ~chatplayer("<p,neutral>Not yet.");
+        ~chatnpc("<p,neutral>Come back to me when you have them.");
+        return;
+    }
+    @ttc_hild_enchant;
+}
+// the OSRS Hild transcript: a lost enchanted amulet, once she has made one
+if ($s >= ^ttc_amulet & ~obj_gettotal(twocats_amuletofcatspeak) = 0) {
+    ~chatplayer("<p,sad>I've lost my enchanted Amulet of Catspeak.");
+    ~chatnpc("<p,neutral>This can be rectified, simply bring me another Amulet of Catspeak and five death runes and I will enchant it for you.");
+    if (inv_total(inv, deathrune) < 5) {
+        ~chatplayer("<p,neutral>I don't have the five death runes on me.");
+        ~chatnpc("<p,neutral>Come back to me when you have them.");
+        return;
+    }
+    @ttc_hild_enchant;
+}
+@citizen_burthorpe_chat;
+
+[label,ttc_hild_intro]
+~chatnpc("<p,quiz>Greetings Adventurer, why have you come to me in my abode?");
+~chatplayer("<p,neutral>Greetings Hild, I am trying to find Unferth's cat...");
+if (~ttc_catspeak = false) {
+    // ours: Hild talks about your amulet, so she has nothing to say until you wear one
+    ~ttc_no_catspeak("Meow.");
+    return;
+}
+~ttc_catsay("<p,angry>Unferth's cat? Pfft! Unferth is Bob's human!");
+~chatplayer("<p,confused>What are you talking about?");
+~chatnpc("<p,neutral>Your cat speaks some truth, it is humans that misinterpret their relationship with cats.");
+~chatplayer("<p,shock>You understand what my cat is saying?!");
+~chatnpc("<p,neutral>Indeed.");
+~chatplayer("<p,confused>Er...");
+~ttc_catsay("<p,neutral>Bob didn't come home this week.");
+~chatnpc("<p,quiz>Hmm. This is not like Bob, I wonder what could be the problem?");
+~ttc_catsay("<p,laugh>I don't think there is a problem, Bob is probably chasing females again!");
+~chatplayer("<p,angry>Hello? I'm still here!");
+~chatnpc("<p,neutral>I am sorry <displayname>. I will help Unferth find Bob, he has been a friend of mine for many years.");
+~chatplayer("<p,neutral>Ah... good! He could be anywhere though!");
+~chatnpc("<p,neutral>I see you have an Amulet of Catspeak. If you open the amulet up, you will see contained inside is a mechanism. If this is enchanted correctly it can be used to locate a cat, in our case Bob. If you bring me five death runes");
+~chatnpc("<p,neutral>then I will be able to perform the enchantment for you.");
+%twocats_quest = ^ttc_hild;
+if (inv_total(inv, deathrune) < 5) {
+    ~chatplayer("<p,neutral>I don't have the death runes.");
+    ~chatnpc("<p,neutral>Come back to me when you have them.");
+    return;
+}
+@ttc_hild_enchant;
+
+[label,ttc_hild_enchant]
+def_inv $where = inv;
+if (inv_total(worn, ics_little_amulet_of_catspeak) > 0) {
+    $where = worn;
+} else if (inv_total(inv, ics_little_amulet_of_catspeak) = 0) {
+    // the OSRS Hild transcript (a lost enchanted amulet: the runes but no amulet)
+    ~chatplayer("<p,neutral>I have the runes but don't have the amulet on me.");
+    ~chatnpc("<p,neutral>Bring me the amulet and I will enchant it for you.");
+    return;
+}
+~chatplayer("<p,happy>I have the death runes with me now.");
+~chatnpc("<p,neutral>Good. Give me the amulet so that I may perform the enchantment.");
+~objbox(ics_little_amulet_of_catspeak, "You pass Hild the amulet.", 250, 0, 0);
+if (inv_total(inv, deathrune) < 5 | inv_total($where, ics_little_amulet_of_catspeak) = 0) return;
+inv_del(inv, deathrune, 5);
+inv_changeslot($where, ics_little_amulet_of_catspeak, twocats_amuletofcatspeak, 1);
+if ($where = worn) buildappearance(worn);
+if (%twocats_quest < ^ttc_amulet) {
+    %twocats_quest = ^ttc_amulet;
+}
+~objbox(twocats_amuletofcatspeak, "Hild gives you the enchanted amulet.", 250, 0, 0);
+~chatnpc("<p,neutral>Using the enchanted amulet is easy; open up the amulet and you'll see a cat's face, use the whiskers to rotate the cats nose. You'll see the nose move and the new direction highlighted. When the nose points in the");
+~chatnpc("<p,neutral>direction that Bob is in, the eyes will light up and the mouth will open. You'll need to head in that direction and then check the direction again. If you are very close to Bob then the eyes and mouth will animate no");
+~chatnpc("<p,happy>matter which way the nose is pointing. That's all there is to it, good luck!");
+~chatplayer("<p,happy>Thanks!");
+
+// ---------------------------------------------------------------- Bob (death_growncat_black)
+// The cache gives him wanderrange=30000; the OSRS wiki: he roams far from Unferth's house.
+[opnpc1,death_growncat_black]
+%ttc_bob_uid = npc_uid;
+if (~ttc_catspeak = false) {
+    npc_say("Miaoww"); // the Bob transcript, without a catspeak amulet
+    return;
+}
+def_int $s = %twocats_quest;
+if (~ttc_has_cat = true) {
+    switch_int ($s) {
+        case ^ttc_amulet : @ttc_bob_found;
+        case ^ttc_found_bob, ^ttc_gertrude :
+            ~chatplayer("<p,happy>Hi Bob!");
+            ~chatnpc("<p,sad>Hmph...Oh Neite...My bounty is as boundless as the sea, my love as deep. The more I give to thee, the more I have, for both are infinite.");
+            ~ttc_catsay("<p,neutral>OK OK... This is becoming dangerous. If we don't do something he will probably implode! We'll go to Gertrude and ask if she knows who your parents are!");
+            return;
+        case ^ttc_reldo : @ttc_bob_robert;
+        case ^ttc_sphinx :
+            ~chatplayer("<p,happy>Hi Bob!");
+            ~chatnpc("<p,quiz>Have you been to the Sphinx yet?");
+            ~ttc_catsay("<p,neutral>No we haven't. Come on <displayname>, let's go.");
+            return;
+        case ^ttc_cured : @ttc_holiday_cutscene;
+    }
+}
+if ($s >= ^ttc_complete & ~obj_gettotal(twocats_mouse_toy) = 0) @ttc_bob_mouse_toy;
+@ttc_bob_standard;
+
+[label,ttc_bob_found]
+~chatplayer("<p,happy>Bob! I've found you at last!");
+~ttc_catsay("<p,happy>Hi Bob!");
+~chatnpc("<p,neutral>Hi there son.");
+~chatplayer("<p,angry>Don't start that again!");
+~ttc_catsay("<p,neutral>The humans have been looking for you, they get worried too easily.");
+~chatnpc("<p,sad>Ah. I should've realised Unferth would miss me.");
+~ttc_catsay("<p,quiz>What's up?");
+~chatnpc("<p,sad>Sigh. I can't believe it but I've fallen for Neite!");
+~chatplayer("<p,confused>Neite...now, I'm sure I've heard that name before...");
+~chatnpc("<p,happy>What a beauty she is! It's the way the shimmer from the hot sand makes her eyes sparkle, the way she flicks her tail as she leaps gracefully across the pyramids, the way she cleans herself after a good rat. As you humans");
+~chatnpc("<p,happy>would say, she's the cat's whiskers. Oh how I long to be curled up with her in front of a log fire and a big bowl of tuna. Menaphos would be a great place to start a family.");
+~ttc_catsay("<p,shock>Wow! He's got it bad! Real bad! I never thought I'd see the day!");
+~chatnpc("<p,sad>I know but there is something about her. The way she...well, it's everything! Oh, the hidden pain of love. Love lies not with the eyes but with the mind, and therefore is the winged Cupid painted blind.");
+~chatplayer("<p,sad>I'm starting to feel sick...");
+~chatnpc("<p,sad>I haven't been home because I've wanted to be alone.");
+~ttc_catsay("<p,quiz>Does Neite feel the same way about you?");
+~chatnpc("<p,sad>She said she has feelings for me but would never get involved with someone like me that has no family or status.");
+~ttc_catsay("<p,quiz>Don't you know who your parents are?");
+~chatnpc("<p,neutral>All I know is that Gertrude found me on her doorstep one day. She looked after me when I was a kitten.");
+~chatplayer("<p,quiz>The crazy cat lady?");
+~ttc_catsay("<p,quiz>Don't you have any memory of your parents?");
+~chatnpc("<p,sad>Nothing! The furthest back I can remember is Gertrude looking after me.");
+%twocats_quest = ^ttc_found_bob;
+~ttc_catsay("<p,happy><displayname> let's go and talk to Gertrude! Perhaps she knows who Bob's parents are!");
+~chatplayer("<p,angry>Do I look like a match maker?!");
+~ttc_catsay("<p,happy>Come on! We can help Bob!");
+
+[label,ttc_bob_robert]
+~chatplayer("<p,happy>Hi Bob!");
+~chatnpc("<p,quiz>Did you find out who my parents are?");
+~chatplayer("<p,neutral>Not exactly...");
+~ttc_catsay("<p,happy>We think you are... or used to be... Robert the Strong!");
+~chatnpc("<p,confused>Robert the who?");
+~chatplayer("<p,bored>I thought this was stupid.");
+~ttc_catsay("<p,quiz>Robert the Strong was a great hero, you have no memory of him?");
+~chatnpc("<p,sad>No... I'm afraid not.");
+~ttc_catsay("<p,quiz>Does a black panther called Odysseus ring any bells?");
+~chatnpc("<p,sad>No...");
+~ttc_catsay("<p,quiz>What about the dragonkin? A vicious race of bird like creatures?");
+~chatnpc("<p,sad>Nothing...");
+~chatplayer("<p,sad>Looks like theres nothing else we can do puss.");
+~ttc_catsay("<p,angry>I'm not done yet!");
+~ttc_catsay("<p,quiz>Do you remember when you were hypnotised by the Devourer?");
+~chatplayer("<p,angry>Well no... I was hypnotised!");
+~ttc_catsay("<p,laugh>Hehe!");
+~ttc_catsay("<p,neutral>The Sphinx understood how you were hypnotised, it might be able to access Bob's memories of Robert the Strong.");
+~chatplayer("<p,neutral>Sounds crazy... guess it might work!");
+%twocats_quest = ^ttc_sphinx;
+~ttc_catsay("<p,happy>Bye for now Bob, we're going to speak to the Sphinx.");
+~chatnpc("<p,neutral>Bye.");
+
+// the OSRS Bob transcript: wearing a catspeak amulet, outside the quest
+[label,ttc_bob_standard]
+if (%follower_obj ! null & ~ttc_has_cat = true) {
+    def_category $fc = oc_category(%follower_obj);
+    if ($fc = kitten | $fc = cat | $fc = overgrown) {
+        ~chatnpc("<p,neutral>Hi, my name is Bob.");
+        ~ttc_catsay("<p,happy>Hello Bob!");
+        ~chatplayer("<p,quiz>Do you two know each other?");
+        ~ttc_catsay("<p,confused>I don't think so...");
+        ~chatnpc("<p,neutral>Yes you do. Dive deep, search your feelings.");
+        ~ttc_catsay("<p,neutral>OK, I will try.");
+        ~chatplayer("<p,quiz>What's up puss?");
+        ~chatnpc("<p,neutral>If only you knew the power of Bob. Your master never told you who your real father was, did he?");
+        ~ttc_catsay("<p,shock>No, but what's that got to do with... no, nooooooo! It cannot be!!");
+        ~chatnpc("<p,neutral>Yes. I am your father!");
+        ~ttc_catsay("<p,shock>That's impossible!!");
+        ~chatnpc("<p,neutral>You can destroy Zamorak. He has foreseen this. It is your destiny. Join me, and together we can rule this place as father and son.");
+        ~ttc_catsay("<p,scared>OK dad, maybe later, you're scaring me!");
+        ~chatplayer("<p,neutral>I think that's about enough of that. I'm off.");
+        return;
+    }
+}
+~chatplayer("<p,happy>Hi Bob!");
+~chatnpc("<p,sad>Hmm... Wish I had a cat to talk to.");
+~chatnpc("<p,quiz>Erm, hello? Can you understand me?");
+~chatplayer("<p,happy>I certainly can. I am wearing this amulet I got in Sophanem!");
+~chatnpc("<p,neutral>Ah so you've met some of the local felines. Wise and confusing, those Sphinges.");
+~chatplayer("<p,shock>Wow!! You know the plural of Sphinx!! What else do you know?");
+~chatnpc("<p,happy>All sorts of stuff! I pick up no end of comments on my travels. Want to hear one?");
+~chatplayer("<p,happy>I certainly do. Share your wisdom Bob!");
+switch_int (random(5)) {
+    case 0 : ~chatnpc("<p,neutral>If a player falls down in a forest and nobody is there, do they make any noise?");
+    case 1 :
+        ~chatnpc("<p,neutral>Dogs believe they are human. Cats believe they are Guthix!");
+        ~chatplayer("<p,quiz>What do you believe, Bob?");
+        ~chatnpc("<p,confused>Well, I don't believe much really since I know I am Zar... erm, well, no, I erm, meow?");
+        ~chatplayer("<p,laugh>Hee hee. OK Bob.");
+    case 2 : ~chatnpc("<p,neutral>Don't get distracted so easily! See, I'm distracting you right now!");
+    case 3 :
+        ~chatnpc("<p,neutral>Sorry, I'm far too busy calculating thermal vectors.");
+        ~chatplayer("<p,confused>Eh?");
+        ~chatnpc("<p,confused>Oh, sorry... I meant, erm, meow?");
+    case 4 : ~chatnpc("<p,neutral>Cats are rather delicate creatures and they are subject to a good many ailments, but I never heard of one who suffered from insomnia.");
+}
+
+// the OSRS Bob transcript: a lost mouse toy
+[label,ttc_bob_mouse_toy]
+~chatplayer("<p,sad>Hi Bob! Do you have another one of those mouse toys? I lost mine.");
+~chatnpc("<p,quiz>Hi <displayname>. Mouse toy?");
+~chatplayer("<p,neutral>You know, a fake mouse on a string.");
+~chatnpc("<p,happy>Oh, you mean an ACTD.");
+~chatplayer("<p,confused>Eh?");
+~chatnpc("<p,happy>An Advanced Combat Training Device, every cat should have one. Here's another one.");
+if (inv_freespace(inv) = 0) {
+    ~chatplayer("<p,neutral>I don't have the space, one second.");
+    return;
+}
+inv_add(inv, twocats_mouse_toy, 1);
+~chatplayer("<p,happy>Thanks Bob! You're the best!");
+~chatnpc("<p,happy>You're welcome!");
+
+// ---------------------------------------------------------------- Neite at Unferth's (twocats_niete:
+// the cache shows her at stages 60, 65 and 70). The OSRS Neite transcript, after the quest.
+[opnpc1,twocats_niete] @ttc_niete_talk;
+
+[label,ttc_niete_talk]
+if (~ttc_catspeak = false) {
+    npc_say("Miaoww");
+    return;
+}
+~chatplayer("<p,happy>Hello again, Neite.");
+~chatnpc_specific("Neite", ics_little_cat_visible, "<p,neutral>Hello.");
+if (~p_choice2("Where's Bob?", 1, "I'll leave you to it.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'll leave you to it.");
+    return;
+}
+~chatplayer("<p,quiz>Where's Bob?");
+~chatnpc_specific("Neite", ics_little_cat_visible, "<p,neutral>Out gallivanting. I think he's hunting noobs in the Wilderness this time. You know what he's like.");
+~chatplayer("<p,quiz>So, why aren't you out there with him?");
+~chatnpc_specific("Neite", ics_little_cat_visible, "<p,neutral>I like to roam as much as the next cat, but, every so often, I do like to come home.");
+~chatplayer("<p,quiz>So, you and Bob haven't had an argument?");
+~chatnpc_specific("Neite", ics_little_cat_visible, "<p,angry>Who told you that?");
+~chatplayer("<p,confused>Er... nobody.");
+
+// ---------------------------------------------------------------- Gertrude (gertrude.rs2 asks first)
+[proc,ttc_ask_gertrude]()(boolean)
+def_int $s = %twocats_quest;
+if ($s ! ^ttc_found_bob & $s ! ^ttc_gertrude) return(false);
+if (~ttc_has_cat = false) return(false);
+if (~p_choice2("Ask about Bob's parents.", 1, "Talk about something else.", 2) = 2) return(false);
+if ($s = ^ttc_gertrude) {
+    ~chatplayer("<p,happy>Hello Gertrude!");
+    ~chatnpc("<p,quiz>Greetings adventurer, have you spoken to Reldo in the palace library about Robert the Strong?");
+    ~chatplayer("<p,neutral>Not yet.");
+    if (~ttc_catspeak = true) ~ttc_catsay("<p,neutral>Come on, lets go.");
+    return(true);
+}
+~chatplayer("<p,happy>Hello again Gertrude!");
+~chatnpc("<p,happy>Welcome back adventurer! How is your cat?");
+if (~ttc_catspeak = false) {
+    ~ttc_no_catspeak("Meow.");
+    return(true);
+}
+~ttc_catsay("<p,happy>I'm fine thanks.");
+~chatplayer("<p,happy>He says he's fine.");
+~chatnpc("<p,quiz>What can I do for you then? I hope it's not about death runes. I heard a terrible rumour you know.");
+~chatplayer("<p,confused>Death runes? No idea.... No, it's not that. I, erm...");
+~chatnpc("<p,neutral>Come on, spit it out.");
+~chatplayer("<p,confused>This is going to sound silly...");
+~chatnpc("<p,quiz>Why, are you going to talk in a stupid accent? Go on, try me.");
+~chatplayer("<p,quiz>Ok... Well... Do you know who Bob's parents are?");
+~chatnpc("<p,neutral>Bob.... you mean the big tomcat who hangs around the Heroes' guild? No, I'm afraid I don't know a lot about him. People round here know I care for sick and abandoned animals, and one day I found a basket with");
+~chatnpc("<p,happy>a kitten inside it left on my doorstep. I brought him up as best I could and he soon learnt to take care of himself. He really was an amazing little thing. There was this one time when.....");
+~ttc_catsay("<p,angry>We don't have time for this, Bob could be in trouble! Tell her to get on with it.");
+~chatnpc("<p,shock>Crumbs! Your cat's quite noisy isn't it? Is everything OK?");
+~chatplayer("<p,shifty>No, it's erm... It needs to be taken to the vets, URGENTLY. For an emergency AMPUTATION!");
+~ttc_catsay("<p,angry>I do hope you're joking. These claws are real you know, none of your bronze nonsense.");
+~chatplayer("<p,shifty>See, it just can't stop howling. Allergic to cat hair apparently. Anyway, you were talking about Bob's parents.");
+~chatnpc("<p,sad>Oh was I... Oh yes, well, I'm afraid I don't know anything about them adventurer.");
+~ttc_catsay("<p,quiz>Hang on, maybe this is something to do with the legend... yes, it just might. Have you ever heard of Robert the Strong?");
+~chatplayer("<p,confused>Vaguely?");
+~ttc_catsay("<p,neutral>Ask Gertrude if she knows anything.");
+~chatplayer("<p,quiz>Hmm... Gertrude, do you know anything of the legend, Robert the Strong?");
+~chatnpc("<p,neutral>No, sorry. If it's a legend, it's Reldo you need to talk to. He's in Varrock palace library, knows all about that kind of thing.");
+%twocats_quest = ^ttc_gertrude;
+~ttc_catsay("<p,happy>Good old Gertrude! Come on, lets go.");
+~chatplayer("<p,confused>But...");
+~ttc_catsay("<p,neutral>I'll explain later!");
+return(true);
+
+// ---------------------------------------------------------------- Reldo (reldo.rs2 asks first)
+// returns 0 (not ours), 1 (done) or 2 (his trade line)
+[proc,ttc_ask_reldo]()(int)
+def_int $s = %twocats_quest;
+if ($s ! ^ttc_gertrude & $s ! ^ttc_reldo & $s ! ^ttc_sphinx) return(0);
+if (~ttc_has_cat = false) return(0);
+~ttc_reldo_says("<p,happy>Hello there, <displayname>.");
+def_string $topic = "I have a cat related question.";
+if ($s ! ^ttc_gertrude) $topic = "So, about Robert the Strong...";
+switch_int (~p_choice3($topic, 1, "Do you have anything to trade?", 2, "I'd better get going.", 3)) {
+    case 2 : return(2);
+    case 3 :
+        ~chatplayer("<p,neutral>I'd better get going.");
+        return(1);
+}
+if ($s ! ^ttc_gertrude) {
+    ~chatplayer("<p,neutral>So, about Robert the Strong...");
+    ~ttc_reldo_says("<p,quiz>Yes?");
+    if (~ttc_catspeak = false) {
+        ~chatplayer("<p,neutral>Never mind, I've found out enough now, I should go back to Bob.");
+        return(1);
+    }
+    ~ttc_catsay("<p,neutral>We've found out enough now, we should go back to Bob.");
+    ~chatplayer("<p,neutral>Ok.");
+    return(1);
+}
+~chatplayer("<p,quiz>I have a cat related question.");
+~ttc_reldo_says("<p,quiz>Yes?");
+~chatplayer("<p,confused>Well...");
+if (~ttc_catspeak = false) {
+    ~ttc_no_catspeak("Meow.");
+    return(1);
+}
+~ttc_catsay("<p,neutral>Go on... ask him.");
+~chatplayer("<p,neutral>Okay, okay. I'm on it.");
+~chatplayer("<p,quiz>Do you know anything about Robert the Strong?");
+~ttc_reldo_says("<p,neutral>Ah, Robert the Strong. There's some details on him in one of my books on the history of Gielinor. Let's see now...");
+%twocats_reldo = 1; // the cache's Reldo multinpc: reldo_withbook (ours: while he reads)
+~ttc_reldo_says("<p,neutral>Fourth Age... Popular Lore... Ah here we are, Robert the Strong!");
+~ttc_reldo_says("<p,neutral>'Not much is known about the hero called Robert the Strong. Most folk tales describe him as being taller than the tallest human and far stronger than the strongest warrior.'");
+~ttc_reldo_says("<p,neutral>'He wields a six foot tall longbow and travels with his faithful panther, Odysseus. He is said to have had a personal crusade against the dragonkin...'");
+~chatplayer("<p,quiz>Dragonkin?");
+~ttc_reldo_says("<p,neutral>I'm coming to that.");
+~ttc_reldo_says("<p,neutral>'The stories tell of the dragonkin being an intelligent race of bird-like creatures that walked rather than using their wings. They are said to be immortal, but cannot reproduce.'");
+~ttc_reldo_says("<p,neutral>'Because of this, they became very afraid of death and shunned all other races.'");
+~ttc_reldo_says("<p,neutral>'Some even say the dragonkin made corrupted versions of themselves for protection, what we now know as dragons. However, this has never been proven.'");
+~chatplayer("<p,bored>Hmm... Doesn't sound very believable.");
+~ttc_reldo_says("<p,neutral>There's no doubt that some elements of these tales have been overexaggerated for storytelling purposes, but you should be careful of outright dismissing them.");
+~ttc_reldo_says("<p,neutral>Robert the Strong is a name that often comes up in stories from the Fourth Age. There's no reason not to believe that these folk tales are based on events that actually happened.");
+%twocats_reldo = 0;
+%twocats_quest = ^ttc_reldo;
+~chatplayer("<p,neutral>Thank you Reldo, you've been most... helpful.");
+~chatplayer("<p,quiz>That was a nice tale for mothers to tell their children, but I don't see how this helps Bob?");
+~ttc_catsay("<p,quiz>Don't you think it's odd that no one knows where Bob came from?");
+~chatplayer("<p,confused>I guess, but he's just a cat... right?");
+~ttc_catsay("<p,angry>I'd hoped you would've understood by now that there's more to cats than humans believe!");
+~chatplayer("<p,neutral>Ok, ok! I get your point, after all I'm being dragged round Gielinor by... my cat!");
+~ttc_catsay("<p,happy>I wouldn't say dragged... let's call it a partnership!");
+~chatplayer("<p,neutral>Ok!");
+~chatplayer("<p,shock>So are you saying that Robert the Strong is... is...");
+~chatplayer("<p,shock>Bob?!");
+~ttc_catsay("<p,happy>Let's ask Bob!");
+~chatplayer("<p,happy>Let's go!");
+return(1);
+
+// Reldo is the cache's multinpc on %twocats_reldo (reldo_normal, reldo_withbook): name him
+[proc,ttc_reldo_says](string $text)
+if (%twocats_reldo = 1) {
+    ~chatnpc_specific("Reldo", reldo_withbook, $text);
+    return;
+}
+~chatnpc_specific("Reldo", reldo_normal, $text);
+
+// ---------------------------------------------------------------- the Apothecary
+[label,ttc_hook_apothecary]
+def_int $s = %twocats_quest;
+def_boolean $ask = false;
+if (($s = ^ttc_ill | $s = ^ttc_hat) & ~ttc_has_cat = true) $ask = true;
+if ($s >= ^ttc_hat & ~ttc_has_hat = false) $ask = true;
+if ($ask = false) @osf_hook_apothecary;
+if (~p_choice2("Talk about A Tail of Two Cats.", 1, "Talk about something else.", 2) = 2) @osf_hook_apothecary;
+if ($s >= ^ttc_hat & ~ttc_has_hat = false) {
+    ~chatplayer("<p,sad>Hello Apothecary, I've lost that hat you gave me.");
+    ~chatnpc("<p,neutral>No problem, I get plenty of these from Gielinor Hospital Supplies.");
+    def_int $h = ~ttc_pick_hat;
+    return;
+}
+if ($s = ^ttc_hat) {
+    ~chatplayer("<p,happy>Hello Apothecary.");
+    ~chatnpc("<p,quiz>Have you been to 'cure' Unferth by dressing up in white robes, wearing the hat and giving him a vial of water?");
+    ~chatplayer("<p,happy>That's what I was going to do! Thanks, I'll see you later.");
+    return;
+}
+~chatplayer("<p,neutral>Hello Apothecary, Unferth has fallen ill. Could you go and see him please?");
+~chatnpc("<p,angry>That Unferth! Honestly, I have been to see him more times than my Mother's hair has fallen out!");
+if (~ttc_catspeak = false) {
+    ~ttc_no_catspeak("Meow.");
+    return;
+}
+~ttc_catsay("<p,angry>I never did like that guy!");
+~chatplayer("<p,neutral>I'm beginning to agree with you!");
+~chatplayer("<p,quiz>What can I do with Unferth?");
+~ttc_catsay("<p,evillaugh>I have a few suggestions!");
+~chatnpc("<p,neutral>It's quite simple. Unferth is what we call a hypochondriac; he isn't ill but he thinks he is. All you need to do is convince him you are a Doctor or a Nurse and give him a potion to make him 'better'.");
+~chatplayer("<p,quiz>How do I make Unferth believe I am a Doctor or Nurse?");
+~chatnpc("<p,neutral>Easy, make sure you are dressed in white robes and take one of these hats to wear.");
+def_int $hat = ~ttc_pick_hat;
+%twocats_quest = ^ttc_hat;
+~chatnpc("<p,neutral>Then all you need to do is give him a vial of water and he'll take it thinking it's a cure potion.");
+~chatplayer("<p,laugh>Haha!");
+if ($hat = 2) ~chatplayer("<p,happy>I always wanted to be a Nurse!");
+else ~chatplayer("<p,happy>I always wanted to be a Doctor!");
+
+// the RuneScape wiki's choice ("Nurse's hat." / "Doctor's hat."); the OSRS wiki's boxes
+[proc,ttc_pick_hat]()(int)
+if (~p_choice2("Doctor's hat.", 1, "Nurse's hat.", 2) = 2) {
+    ~ttc_give(twocats_nurses_hat);
+    ~objbox(twocats_nurses_hat, "The Apothecary has given you a Nurse's Hat.", 250, 0, 0);
+    return(2);
+}
+~ttc_give(twocats_doctors_hat);
+~objbox(twocats_doctors_hat, "The Apothecary has given you a Doctor's Hat.", 250, 0, 0);
+return(1);
+
+// ---------------------------------------------------------------- the Sphinx (ics_npcs.rs2 asks first)
+// returns 0 (not ours), 1 (done) or 2 (the cutscene)
+[proc,ttc_ask_sphinx]()(int)
+def_int $s = %twocats_quest;
+if ($s ! ^ttc_sphinx & $s ! ^ttc_chores) return(0);
+if (~ttc_has_cat = false) return(0);
+if (~p_choice2("Ask the Sphinx for help for Bob.", 1, "Talk about something else.", 2) = 2) return(0);
+~chatplayer("<p,neutral>Good day.");
+if ($s = ^ttc_chores) {
+    ~chatnpc("<p,quiz>Have you completed the chores that Bob asked you to?");
+    ~chatplayer("<p,neutral>Not yet.");
+    if (~ttc_catspeak = true) ~ttc_catsay("<p,neutral>Come on!");
+    return(1);
+}
+~chatnpc("<p,neutral>What is it human?");
+~chatplayer("<p,shock>Sphinx, we need your help!");
+if (~ttc_catspeak = false) {
+    ~ttc_no_catspeak("Meow.");
+    return(1);
+}
+~ttc_catsay("<p,sad>Yes, please help!");
+~chatnpc("<p,neutral>Very well, I see you have a close relationship with your cat, I will help you if I can.");
+~chatnpc("<p,quiz>What is the problem?");
+~chatplayer("<p,happy>Thank you!");
+~chatplayer("<p,neutral>Bob is in love with Neite but we need to prove that he used to be Robert the Strong before she will have anything to do with him!");
+~chatnpc("<p,angry>Slow down human!");
+~chatnpc("<p,shock>Bob has fallen in love?");
+~chatnpc("<p,shock>This I did not foresee!");
+~chatnpc("<p,quiz>Who is this Robert the Strong that you speak of?");
+~chatplayer("<p,happy>He was a mighty hero!");
+~chatnpc("<p,bored>Human myths interest me not.");
+~ttc_catsay("<p,neutral>Robert the Strong was no ordinary human though!");
+~chatnpc("<p,neutral>It is true that there is something about Bob... there is the mark of power on him, I have ignored it for too long.");
+~chatplayer("<p,sad>But Bob has no memory of this!");
+~chatnpc("<p,neutral>Then it is the time for action!");
+~chatnpc("<p,neutral>Come with me into the desert so we are not disturbed.");
+if (~p_choice2("View the cutscene (5 mins 20 secs).", 1, "Skip cutscene and view summary.", 2) = 2) {
+    // ours: no source has the summary's words
+    ~mesbox("The Sphinx summons Bob and hypnotises him. Under her influence Bob remembers his earliest memories: he was Robert the Strong, and with his panther Odysseus he fought and slew a dragonkin.");
+    ~mesbox("The Sphinx summons Neite and tells her what Bob remembered. Neite is impressed. Bob and Neite are going away for a few days, and Bob asks you to look after Unferth while he is away.");
+    ~ttc_give_chores;
+    ~objbox(twocats_chores, "Bob has given you a list of chores to help look after Unferth.", 250, 0, 0);
+    return(1);
+}
+return(2);

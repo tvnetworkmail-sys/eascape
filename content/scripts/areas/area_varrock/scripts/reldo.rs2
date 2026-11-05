@@ -2,6 +2,9 @@
 if (~wom_letter(^wom_to_reldo) = true) return; // the Wise Old Man's letter (area_draynor/wom_tasks.rs2)
 if (~lt_ask_reldo = true) return; // The Lost Tribe
 if (~gd_ask_reldo = true) return; // The Giant Dwarf
+def_int $ttc = ~ttc_ask_reldo; // EASCape: A Tail of Two Cats (quest_twocats/ttc_npcs.rs2)
+if ($ttc = 1) return;
+if ($ttc = 2) @reldo_trade;
 if(%phoenixgang = ^phoenixgang_read_book) {
     @reldo_read_book;
 }
