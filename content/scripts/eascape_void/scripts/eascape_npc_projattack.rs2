@@ -48,6 +48,11 @@ if (randominc($attack_roll) > randominc($defence_roll)) {
     }
     anim(%com_defendanim, $duration);
     queue(combat_damage_player, calc($duration / 30), $damage);
+    if (npc_type = dagcave_magic_boss) {
+        // EASCape: Dagannoth Prime's water wave lands with the cache's waterwave_hit sound (Void gives
+        // Prime an impact sound, water_surge_impact; our cache's matching one is Water Wave's)
+        sound_synth(waterwave_hit, 1, $duration);
+    }
     if (npc_param(eascape_impact_gfx) ! null) {
         spotanim_pl(npc_param(eascape_impact_gfx), 92, $duration);
     }
