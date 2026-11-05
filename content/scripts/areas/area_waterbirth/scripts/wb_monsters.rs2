@@ -139,6 +139,8 @@ if ($type = dagannoth_water_creature_1x1 | $type = dagannoth_water_creature_1x12
 return(false);
 
 [queue,spinolyp_attack_sound](int $unused)
-if (%spinolyp_sound_clock = map_clock) return;
-%spinolyp_sound_clock = map_clock;
+// EASCape (ours): one spinolyp attack sound per 4 ticks (one spinolyp attack cycle), so the
+// pool's spinolyps firing on different ticks don't stack their sounds over each other
+if (%spinolyp_sound_clock > map_clock) return;
+%spinolyp_sound_clock = add(map_clock, 4);
 sound_synth(water_creature_attack, 1, 0);

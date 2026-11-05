@@ -54,7 +54,10 @@ if (randominc($attack_roll) > randominc($defence_roll)) {
     ~npc_poison_player;
 } else if ($style = ^magic_style) {
     spotanim_pl(failedspell_impact, 92, $duration);
-    sound_synth(spellfail, 1, $duration);
+    // EASCape (ours): no splash sound on top of a spinolyp's attack sound
+    if (~wb_spinolyp(npc_type) = false) {
+        sound_synth(spellfail, 1, $duration);
+    }
 } else {
     anim(%com_defendanim, $duration);
     queue(combat_damage_player, calc($duration / 30), 0);
