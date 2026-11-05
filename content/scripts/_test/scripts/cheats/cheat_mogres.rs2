@@ -1,0 +1,17 @@
+// EASCape: test commands for Mogres, Lizards, Pet Fish, Potions and Potatoes! (24 October 2005).
+
+// ::dairypack - the dairy churns and baked potatoes: Cooking up to 48 if it's lower (cheese at a
+// churn), 3 buckets of milk, a pot of cream, a pat of butter, 2 potatoes and a cheese. Churns are
+// in farm houses (one at 3226,3294, north of Lumbridge); potatoes bake on a range only.
+[debugproc,dairypack]
+if (p_finduid(uid) = false) return;
+if (stat_base(cooking) < 48) stat_advance(cooking, calc(830140 - stat_xp(cooking))); // 83,014 xp
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(bucket_milk, 3));
+$banked = calc($banked + ~questpack_give(pot_of_cream, 1));
+$banked = calc($banked + ~questpack_give(pot_of_butter, 1));
+$banked = calc($banked + ~questpack_give(potato, 2));
+$banked = calc($banked + ~questpack_give(cheese, 1));
+if ($banked > 0) mes("<tostring($banked)> of the items went to your bank (no room in your pack).");
+mes("Churn: milk makes cream, butter or cheese (21/38/48 Cooking); cream makes butter or cheese; butter makes cheese.");
+mes("Bake a potato on a range, add a pat of butter (39), then cheese (47).");

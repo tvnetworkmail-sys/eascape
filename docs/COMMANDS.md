@@ -115,6 +115,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::wantedstage <n>` (chase) | The chase at one of its seven places, the ones before it done: 71 Canifis, 72 the banana plantation (Solus sends you to Camelot), 73 the Champions' Guild (smoke), 74 the Wizards' Tower (the Flames of Zamorak), 75 the Dorgeshuun mine (the woman), 76 Ardougne market (the Black Knight), 77 the rune essence mine (the last fight: teleport in, or `::wantedtele 7`). Scan with the CommOrb there |
 | `::wantedtele <n>` | Wanted!: 1 Sir Tiffy, 2 Sir Amik, 3 Lord Daquarius (Taverley Dungeon), 4 the Mage of Zamorak (Varrock), 5 Sir Vyvin, 6 the place Solus is at now, 7 the rune essence mine (as if teleported there), 11-29 the 19 scan places |
 | `::wantedkills <n>` | Sets your White Knight kill score (100 Novice, 200 Peon, 300 Page, 500 Noble, 800 Adept, 1300 Master); Sir Vyvin sells by it once Wanted! is done |
+| `::dairypack` | For the dairy churns and baked potatoes: Cooking up to 48 if you're below, 3 buckets of milk, a pot of cream, a pat of butter, 2 potatoes and a cheese. Churn in a farm house (one at 3226,3294 north of Lumbridge): milk makes cream (21), butter (38) or cheese (48), cream makes butter or cheese, butter makes cheese. Bake a potato on a range, add butter (39), then cheese (47) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |

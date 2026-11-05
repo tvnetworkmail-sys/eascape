@@ -27,14 +27,24 @@ if (stat_base(cooking) < 39) {
     inv_del(inv, pot_of_butter, 1);
     inv_add(inv, potato_butter, 1);
     stat_advance(cooking, 400);
+    mes("You add the butter to the potato."); // EASCape: Void cooking.recipes.toml
 }
 
+// EASCape: the level check was the wrong way round (only under 47 could make it); Void
+// cooking.recipes.toml: 47 Cooking, 40 xp
 [label,make_cheese_potato]
 if (stat_base(cooking) < 47) {
+    ~mesbox("You need a Cooking level of 47 to do make a Potato with butter and cheese.");
+} else {
     inv_del(inv, potato_butter, 1);
     inv_del(inv, cheese, 1);
     inv_add(inv, potato_cheese, 1);
     stat_advance(cooking, 400);
-} else {
-    ~mesbox("You need a Cooking level of 47 to do make a Potato with butter and cheese.");
+    mes("You add the cheese to the potato."); // EASCape: Void cooking.recipes.toml
 }
+
+// EASCape: the potatoes had Eat in the cache but nothing to eat them by. Void cooking.items.toml
+// heals: baked potato 4, with butter 14, with cheese 16; they eat as normal food.
+[opheld1,potato_baked] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,potato_butter] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,potato_cheese] @player_consume_item(consume_effect_stat, 2, 3);

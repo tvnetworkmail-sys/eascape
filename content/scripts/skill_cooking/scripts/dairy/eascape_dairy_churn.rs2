@@ -1,0 +1,112 @@
+// EASCape: dairy churns (Mogres, Lizards, Pet Fish, Potions and Potatoes!, 24 October 2005:
+// "Several farm buildings now contain dairy churns, which can be used to make cream, cheese and
+// even butter"). The churns are already in the map (loc_10093, and loc_10094 upstairs in
+// Ardougne); what they make, the levels and experience are Void's (dairy.tables.toml,
+// DairyChurn.kt): cream at 21 Cooking (18 xp) from milk, butter at 38 (40.5 xp) from milk or
+// cream, cheese at 48 (64 xp) from milk, cream or butter, using the first of those you carry,
+// the bucket back when it was milk (dropped if there's no room), one every 3 ticks with
+// player_churns_milk_short (Void's churn anim, 2793). The menus are the cache's own: inter_317
+// (cream, butter, cheese) with milk, inter_316 (butter, cheese) with cream but no milk, and
+// inter_315 (cheese) with butter alone. They have one button per product and no Make 1/5/10, so
+// it keeps churning until you run out or walk away (ours).
+[oploc1,loc_10093] @dairy_churn;
+[oploc1,loc_10094] @dairy_churn;
+[oplocu,loc_10093] @dairy_churn_use;
+[oplocu,loc_10094] @dairy_churn_use;
+
+[label,dairy_churn_use]
+switch_obj (last_useitem) {
+    case bucket_milk, pot_of_cream, pot_of_butter : @dairy_churn;
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,dairy_churn]
+if (inv_total(inv, bucket_milk) < 1 & inv_total(inv, pot_of_cream) < 1 & inv_total(inv, pot_of_butter) < 1) {
+    mes("You need some milk, cream or butter to use in the churn.");
+    return;
+}
+def_namedobj $product = null;
+p_delay(0);
+if (inv_total(inv, bucket_milk) > 0) {
+    if_openchat(inter_317);
+    if_addresumebutton(inter_317:com_5);
+    if_addresumebutton(inter_317:com_6);
+    if_addresumebutton(inter_317:com_7);
+    p_pausebutton;
+    switch_component (last_com) {
+        case inter_317:com_5 : $product = pot_of_cream;
+        case inter_317:com_6 : $product = pot_of_butter;
+        case inter_317:com_7 : $product = cheese;
+    }
+} else if (inv_total(inv, pot_of_cream) > 0) {
+    if_openchat(inter_316);
+    if_addresumebutton(inter_316:com_4);
+    if_addresumebutton(inter_316:com_5);
+    p_pausebutton;
+    switch_component (last_com) {
+        case inter_316:com_4 : $product = pot_of_butter;
+        case inter_316:com_5 : $product = cheese;
+    }
+} else {
+    if_openchat(inter_315);
+    if_addresumebutton(inter_315:com_3);
+    p_pausebutton;
+    if (last_com = inter_315:com_3) $product = cheese;
+}
+if_close;
+if ($product = null) return;
+if (~dairy_churn_check($product) = false) return;
+facesquare(loc_coord);
+anim(player_churns_milk_short, 0);
+weakqueue*(dairy_churn_next, 3)($product);
+
+// Void dairy.tables.toml: level, then the inputs in the order they're used up
+[proc,dairy_churn_level](namedobj $product)(int)
+switch_obj ($product) {
+    case pot_of_cream : return(21);
+    case pot_of_butter : return(38);
+    case default : return(48);
+}
+
+[proc,dairy_churn_input](namedobj $product)(namedobj)
+if (inv_total(inv, bucket_milk) > 0) return(bucket_milk);
+if ($product = pot_of_cream) return(null);
+if (inv_total(inv, pot_of_cream) > 0) return(pot_of_cream);
+if ($product = pot_of_butter) return(null);
+if (inv_total(inv, pot_of_butter) > 0) return(pot_of_butter);
+return(null);
+
+[proc,dairy_churn_check](namedobj $product)(boolean)
+if (~dairy_churn_input($product) = null) {
+    mes("You need some milk, cream or butter to use in the churn.");
+    return(false);
+}
+def_int $level = ~dairy_churn_level($product);
+if (stat(cooking) < $level) {
+    mes("You need a Cooking level of <tostring($level)> to make <~add_article(lowercase(oc_name($product)))>.");
+    return(false);
+}
+return(true);
+
+[queue,dairy_churn_next](namedobj $product)
+def_namedobj $input = ~dairy_churn_input($product);
+if ($input = null) return;
+if (stat(cooking) < ~dairy_churn_level($product)) return;
+inv_del(inv, $input, 1);
+inv_add(inv, $product, 1);
+if ($input = bucket_milk) {
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, bucket_empty, 1);
+    } else {
+        obj_add(coord, bucket_empty, 1, ^lootdrop_duration);
+    }
+}
+switch_obj ($product) {
+    case pot_of_cream : stat_advance(cooking, 180);
+    case pot_of_butter : stat_advance(cooking, 405);
+    case default : stat_advance(cooking, 640);
+}
+mes("You make <~add_article(lowercase(oc_name($product)))>.");
+if (~dairy_churn_input($product) = null) return;
+anim(player_churns_milk_short, 0);
+weakqueue*(dairy_churn_next, 3)($product);
