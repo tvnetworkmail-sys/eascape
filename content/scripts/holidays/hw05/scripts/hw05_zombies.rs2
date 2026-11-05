@@ -1,0 +1,106 @@
+// EASCape: the 2005 Halloween event (31 October 2005) - the zombies of the Lumbridge Swamp.
+// RS wiki "Zombie (2005 Halloween event)" and its transcript: three kinds of passive zombie,
+// Call-Over (break_zomb_waist) splits at the waist into two Most of a Zombie (break_zomb_torso and
+// break_zomb_legs), Insult (break_zomb_neck) knocks its head off (break_zomb_headless and the
+// Zombie Head, break_zomb_head, which you catch for the zombie head item), and Scare
+// (break_zombie_middle) splits it into the Half-Zombie and Other Half-Zombie (break_zombie_half,
+// break_zombie_half_2), which splice back together and scare you: the Scared emote (the cache's
+// emote_terrified). The cache pairs each zombie with its own split animation, spot animation and
+// sound by name (split_mid/break_zombie_split_mid/splitzombie_split for the waist,
+// split_head/break_zombie_split_head/splitzombie_split_head for the neck,
+// split_hip/break_zombie_split_hip/splitzombie_split_half for the middle).
+// The spawns are in the map (m50_49.jm2, ours: three of each by the swamp's giant rats).
+
+// ---------------------------------------------------------------- Talk-To
+// ours: no source has a Talk-To; each zombie says the line it opens its own option with
+// (the RS wiki transcript)
+[opnpc1,break_zomb_waist] ~chatnpc("<p,neutral>Durrrr...");
+[opnpc1,break_zomb_neck] ~chatnpc("<p,neutral>Braaaaains...");
+[opnpc1,break_zombie_middle] ~chatnpc("<p,happy>Traaa laaa laaa...");
+[opnpc1,break_zomb_torso] ~chatnpc("<p,neutral>Durrrr..."); // ours
+[opnpc1,break_zomb_legs] mes("They're only legs. They don't have much to say."); // ours
+[opnpc1,break_zomb_headless] mes("It doesn't have a head to talk with."); // ours
+[opnpc1,break_zombie_half] ~chatnpc("<p,scared>Aaaaaargh!"); // ours
+[opnpc1,break_zombie_half_2] ~chatnpc("<p,scared>Aaaaaargh!"); // ours
+[opnpc2,break_zomb_head] ~chatnpc("<p,neutral>What?"); // ours (the zombie head item's transcript)
+
+// ---------------------------------------------------------------- Call-Over (RS wiki transcript)
+[opnpc3,break_zomb_waist]
+~chatnpc("<p,neutral>Durrrr...");
+~chatplayer("<p,neutral>Hey! Come over here!");
+~chatnpc("<p,quiz>Who? Me?");
+anim(emote_beckon, 0); // RS wiki: the player performs the beckon emote
+~chatplayer("<p,neutral>Yes, you!");
+~chatnpc("<p,neutral>Give me a moment...I can't move that fast.");
+~chatplayer("<p,quiz>Why not?");
+~chatnpc("<p,sad>I used to be a magician's assistant until the accident...");
+~chatplayer("<p,quiz>What accident?");
+~chatnpc("<p,neutral>Looook...");
+if (npc_type ! break_zomb_waist) return; // ours: someone else broke it first
+// the zombie breaks in half at the waist (RS wiki), the upper half and the legs
+npc_facesquare(coord);
+npc_anim(split_mid, 0);
+spotanim_npc(break_zombie_split_mid, 0, 0);
+sound_synth(splitzombie_split, 0, 0);
+p_delay(1); // ours
+.npc_add(npc_coord, break_zomb_legs, ^hw05_broken_time);
+npc_changetype(break_zomb_torso, ^hw05_broken_time);
+
+// ---------------------------------------------------------------- Insult (RS wiki transcript)
+[opnpc3,break_zomb_neck]
+~chatnpc("<p,neutral>Braaaaains...");
+~chatplayer("<p,neutral>Zombie, it has come to my attention that you are a fool, a nitwit if you will.");
+anim(emote_laugh, 0); // RS wiki: the player performs the laugh emote
+~chatplayer("<p,laugh>I propose that your head, instead of being filled with the brains you so crave, is instead filled with a mixture of crushed lemons and kelp!");
+~chatnpc("<p,sad>Oh noooo..I'd best take it off then...");
+~chatplayer("<p,shock>What?");
+if (npc_type ! break_zomb_neck) return; // ours
+// the zombie's head rolls off, leaving it headless (RS wiki)
+npc_facesquare(coord);
+npc_anim(split_head, 0);
+spotanim_npc(break_zombie_split_head, 0, 0);
+sound_synth(splitzombie_split_head, 0, 0);
+p_delay(1); // ours
+.npc_add(npc_coord, break_zomb_head, ^hw05_broken_time);
+npc_changetype(break_zomb_headless, ^hw05_broken_time);
+
+// the Zombie Head rolls about (the cache's zombie_head_walk) until it is caught: "you can collect
+// your very own zombie head to talk to (if you can catch it)" (the update)
+[opnpc1,break_zomb_head]
+if (inv_total(inv, trick_or_treat_head) > 0) {
+    mes("The head bites at you! Good job you already have one."); // RS wiki (Zombie Head trivia)
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+anim(human_pickupfloor, 0); // ours
+inv_add(inv, trick_or_treat_head, 1);
+%hw05_head = 1;
+mes("You catch the zombie head."); // ours
+npc_del;
+
+// ---------------------------------------------------------------- Scare (RS wiki transcript)
+[opnpc3,break_zombie_middle]
+~chatnpc("<p,happy>Traaa laaa laaa...");
+anim(emote_cheer, 0); // RS wiki: the player performs the cheer emote
+~chatplayer("<p,angry>Oogaboogabooga!");
+~chatnpc("<p,scared>Aaaaaargh!");
+if (npc_type ! break_zombie_middle) return; // ours
+// the zombie splits in two, then splices the one half and the other half back together (RS wiki)
+npc_facesquare(coord);
+npc_anim(split_hip, 0);
+spotanim_npc(break_zombie_split_hip, 0, 0);
+sound_synth(splitzombie_split_half, 0, 0);
+p_delay(1); // ours
+.npc_add(npc_coord, break_zombie_half_2, ^hw05_splice_time);
+npc_changetype(break_zombie_half, ^hw05_splice_time);
+p_delay(^hw05_splice_time);
+// this scares the player (RS wiki; the transcript has nothing more) and unlocks the Scared emote
+// for good: the update says the emote stays after the event
+anim(terrified_emote, 0);
+if (%emote_terrified = ^false) {
+    %emote_terrified = ^true;
+    mes("You have unlocked the Scared emote!"); // ours
+}

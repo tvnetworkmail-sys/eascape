@@ -1,0 +1,58 @@
+// EASCape: test commands for the 2005 Halloween event (holidays/hw05).
+
+// ::hw05pack - a zombie head, one of each of the seven sweets, 200 coins (to treat the children)
+// and a spade (to dig a lost head up in the swamp)
+[debugproc,hw05pack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(trick_or_treat_head, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_lightblue, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_darkblue, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_green, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_pink, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_purple, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_red, 1));
+$banked = calc($banked + ~questpack_give(easter_egg_2005_white, 1));
+$banked = calc($banked + ~questpack_give(coins, 200));
+$banked = calc($banked + ~questpack_give(spade, 1));
+%hw05_head = 1;
+~questpack_done("Halloween 2005", $banked);
+mes("Zombies: ::hw05tele 1. Children: ::hw05tele 2.");
+
+// ::hw05stage <n> - what the event has given you: 0 nothing (Scared emote locked, no head ever
+// caught), 1 the Scared emote only, 2 a head caught only (it can be dug up again), 3 both. It
+// never adds or takes the head item itself (::hw05pack gives one).
+[debugproc,hw05stage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 3) {
+    mes("::hw05stage 0-3: 0 nothing, 1 Scared emote, 2 head caught, 3 both");
+    return;
+}
+if ($n = 1 | $n = 3) {
+    %emote_terrified = ^true;
+} else {
+    %emote_terrified = ^false;
+}
+if ($n >= 2) {
+    %hw05_head = 1;
+} else {
+    %hw05_head = 0;
+}
+mes("Halloween 2005: Scared emote <~hw05_onoff(%emote_terrified)>, head caught <~hw05_onoff(%hw05_head)>.");
+
+[proc,hw05_onoff](int $v)(string)
+if ($v = 1) return("yes");
+return("no");
+
+// ::hw05tele <n> - 1 the Lumbridge Swamp zombies, 2 the trick-or-treating children in Lumbridge
+[debugproc,hw05tele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^hw05_zombie_spot;
+    case 2 : $to = ^hw05_child_spot;
+    case default :
+        mes("::hw05tele 1-2: 1 the swamp zombies, 2 the Lumbridge children");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 2, ^map_findsquare_lineofwalk));

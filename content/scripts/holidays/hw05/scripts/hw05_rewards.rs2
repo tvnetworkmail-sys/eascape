@@ -1,0 +1,209 @@
+// EASCape: the 2005 Halloween event (31 October 2005) - the zombie head, trick or treating with
+// the Lumbridge children, the sweets, and the Grim Reaper's death visit.
+// Sources: the update ("Halloween Update!!"), the RS wiki's "2005 Halloween event", "Zombie head"
+// and its transcript, "Child (2005 Halloween event)", "Blue sweets" and "Death"; 2009scape
+// ToyListeners.kt for the head's Talk-At and Display.
+
+// ================================================================ the zombie head
+// Talk-At: 2009scape ToyListeners.kt (animation 2840, the cache's hamlet_head_all; "Alas!")
+[opheld1,trick_or_treat_head]
+anim(hamlet_head_all, 0);
+say("Alas!");
+
+// Display: 2009scape ToyListeners.kt (animation 2844, the cache's scare_kid_zombie, which holds
+// the head out). 2009scape says "MWAHAHAHAHAHAHAH"; the RS wiki has "Mwuhahahaha!"
+[opheld2,trick_or_treat_head]
+anim(scare_kid_zombie, 0);
+say("MWAHAHAHAHAHAHAH");
+
+// Question: the five questions of the RS wiki's transcript (Transcript:Zombie head). The head
+// speaks as the cache's Zombie Head NPC (break_zomb_head), as the RS wiki says.
+[opheld3,trick_or_treat_head]
+def_int $q = ~p_choice5("How did you die?", 1, "What is your name?", 2, "Can you do any tricks?", 3, "Want a new hat?", 4, "Want to go scare some people?", 5);
+switch_int ($q) {
+    case 1 :
+        ~chatplayer("<p,quiz>Hey, Head?");
+        ~hw05_head_says("<p,neutral>What?");
+        ~chatplayer("<p,quiz>How did you die?");
+        ~hw05_head_says("<p,sad>I stuck my neck out for an old friend.");
+        ~chatplayer("<p,neutral>You shouldn't get so cut up about it.");
+        ~hw05_head_says("<p,neutral>Well if I keep it all bottled up I'll turn into a total head case.");
+    case 2 :
+        ~chatplayer("<p,quiz>Hey, Head?");
+        ~hw05_head_says("<p,neutral>What?");
+        ~chatplayer("<p,quiz>What is your name?");
+        ~hw05_head_says("<p,shifty>Mumblemumblemumble...");
+        ~chatplayer("<p,quiz>What was that?");
+        ~hw05_head_says("<p,neutral>My name is Edward Cranium.");
+        ~chatplayer("<p,quiz>Edd Cranium?");
+        ~chatplayer("<p,laugh>Hahahahahahahahahahaha!");
+        ~hw05_head_says("<p,angry>Har har...");
+    case 3 :
+        ~chatplayer("<p,quiz>Hey Head?");
+        ~hw05_head_says("<p,bored>What now?");
+        ~chatplayer("<p,quiz>Can you do any tricks?");
+        ~hw05_head_says("<p,sad>Not any more...");
+        ~chatplayer("<p,quiz>How come?");
+        ~hw05_head_says("<p,sad>Because I used to be able to do a handstand for over an hour while juggling cannon balls with my feet...");
+        ~chatplayer("<p,happy>Wow, you were quite the entertainer.");
+        ~hw05_head_says("<p,sad>Yep. Now I can barely roll my eyes...");
+        ~chatplayer("<p,happy>I know what you can do!");
+        ~hw05_head_says("<p,quiz>What?");
+        ~chatplayer("<p,happy>Vent...");
+        ~hw05_head_says("<p,angry>Don't even suggest it!");
+        ~chatplayer("<p,neutral>Ok.");
+    case 4 :
+        ~chatplayer("<p,quiz>Hey, Head?");
+        ~hw05_head_says("<p,bored>Can't I rest in peace?");
+        ~chatplayer("<p,neutral>No!");
+        ~chatplayer("<p,quiz>Would you like a new hat?");
+        ~hw05_head_says("<p,neutral>No, but could you screw a handle into the top of my head?");
+        ~chatplayer("<p,quiz>A handle? Why?");
+        ~hw05_head_says("<p,sad>Because currently you wave me about by my hair, and it hurts.");
+    case 5 :
+        ~chatplayer("<p,quiz>Hey, Head?");
+        ~hw05_head_says("<p,bored>Will you ever leave me alone?");
+        ~chatplayer("<p,neutral>No!");
+        ~chatplayer("<p,happy>Want to go scare some people?");
+        ~hw05_head_says("<p,neutral>Let's leave it for now.");
+        ~chatplayer("<p,neutral>All right...");
+        ~chatplayer("<p,laugh>We'll quit while we're ahead!");
+        ~hw05_head_says("<p,sad>If I try really hard I might be able to will myself deader...");
+}
+
+[proc,hw05_head_says](string $text)
+~chatnpc_specific(nc_name(break_zomb_head), break_zomb_head, $text);
+
+// A lost head comes back by digging in the Lumbridge Swamp with a spade (RS wiki, "2005 Halloween
+// event" and "Zombie head"); the cache has its own dig animation for it (zombie_head_dig).
+// Diango and the POH toy box are not in EASCape. Called from general_use/spade.rs2.
+[proc,hw05_can_dig_head]()(boolean)
+if (%hw05_head ! 1) return(false);
+if (inzone(^hw05_swamp_sw, ^hw05_swamp_ne, coord) = false) return(false);
+if (inv_total(inv, trick_or_treat_head) > 0 | inv_total(bank, trick_or_treat_head) > 0 | inv_total(worn, trick_or_treat_head) > 0) return(false);
+return(true);
+
+[label,hw05_dig_head]
+p_arrivedelay;
+p_stopaction;
+anim(zombie_head_dig, 0);
+p_delay(1);
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+inv_add(inv, trick_or_treat_head, 1);
+mes("You dig up a zombie head!"); // ours
+
+// ================================================================ trick or treating
+// The six children of Lumbridge (the cache's trickortreater_1-6; the map's spawns are ours, by
+// the town's men in m50_50.jm2). RS wiki: talk to them and choose to trick them (scare them) or
+// treat them (coins you choose, at most 100 at once, or sweets). They aren't scared of
+// adventurers, but a zombie head scares them into dropping some sweets. No source has their words.
+[opnpc1,trickortreater_1] @hw05_child;
+[opnpc1,trickortreater_2] @hw05_child;
+[opnpc1,trickortreater_3] @hw05_child;
+[opnpc1,trickortreater_4] @hw05_child;
+[opnpc1,trickortreater_5] @hw05_child;
+[opnpc1,trickortreater_6] @hw05_child;
+
+[label,hw05_child]
+~chatnpc("<p,happy>Trick or treat!"); // ours
+def_int $choice = ~p_choice2("Trick.", 1, "Treat.", 2);
+if ($choice = 1) @hw05_trick;
+@hw05_treat;
+
+[label,hw05_trick]
+if (inv_total(inv, trick_or_treat_head) < 1) {
+    // RS wiki: the kids aren't fazed by the sight of adventurers
+    ~chatplayer("<p,angry>Boo!"); // ours
+    ~chatnpc("<p,bored>You'll have to do better than that. We see adventurers every day."); // ours
+    return;
+}
+// RS wiki: with a zombie head you automatically use it to scare the child into dropping sweets;
+// the cache's scare_kid_zombie (the player holding out the head), scarekid and child_scared
+facesquare(npc_coord);
+npc_facesquare(coord);
+anim(scare_kid_zombie, 0);
+sound_synth(scarekid, 0, 0);
+npc_anim(child_scared, 0);
+p_delay(1); // ours
+obj_add(npc_coord, ~hw05_random_sweets, 1, ^lootdrop_duration);
+mes("The child drops some sweets in fright!"); // ours
+
+[label,hw05_treat]
+def_obj $sweets = ~hw05_carried_sweets;
+def_int $choice = 2;
+if ($sweets ! null) {
+    $choice = ~p_choice2("Give some sweets.", 1, "Give some coins.", 2); // ours
+}
+if ($choice = 1) {
+    inv_del(inv, $sweets, 1);
+    npc_anim(child_praise, 0);
+    ~chatnpc("<p,happy>Thank you!"); // ours
+    return;
+}
+if (inv_total(inv, coins) < 1) {
+    ~chatplayer("<p,sad>Sorry, I don't have any coins."); // ours
+    return;
+}
+p_countdialog;
+def_int $amount = last_int;
+if ($amount < 1) return;
+$amount = min($amount, ^hw05_treat_max);
+$amount = min($amount, inv_total(inv, coins));
+inv_del(inv, coins, $amount);
+npc_anim(child_praise, 0);
+~chatnpc("<p,happy>Thank you!"); // ours
+mes("You give the child <~pluralise($amount, "coin")>."); // ours
+
+// RS wiki: blue, deep blue, green, pink, purple, red or white
+[proc,hw05_random_sweets]()(namedobj)
+switch_int (random(7)) {
+    case 0 : return(easter_egg_2005_lightblue);
+    case 1 : return(easter_egg_2005_darkblue);
+    case 2 : return(easter_egg_2005_green);
+    case 3 : return(easter_egg_2005_pink);
+    case 4 : return(easter_egg_2005_purple);
+    case 5 : return(easter_egg_2005_red);
+    case default : return(easter_egg_2005_white);
+}
+
+[proc,hw05_carried_sweets]()(obj)
+if (inv_total(inv, easter_egg_2005_lightblue) > 0) return(easter_egg_2005_lightblue);
+if (inv_total(inv, easter_egg_2005_darkblue) > 0) return(easter_egg_2005_darkblue);
+if (inv_total(inv, easter_egg_2005_green) > 0) return(easter_egg_2005_green);
+if (inv_total(inv, easter_egg_2005_pink) > 0) return(easter_egg_2005_pink);
+if (inv_total(inv, easter_egg_2005_purple) > 0) return(easter_egg_2005_purple);
+if (inv_total(inv, easter_egg_2005_red) > 0) return(easter_egg_2005_red);
+if (inv_total(inv, easter_egg_2005_white) > 0) return(easter_egg_2005_white);
+return(null);
+
+// ================================================================ the sweets
+// RS wiki: eating them makes steam come out of your ears (the cache's steam_head_play and
+// steam_head_spotanim). No source has a message or any healing.
+[opheld1,easter_egg_2005_lightblue] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_darkblue] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_green] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_pink] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_purple] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_red] @hw05_eat_sweets;
+[opheld1,easter_egg_2005_white] @hw05_eat_sweets;
+
+[label,hw05_eat_sweets]
+inv_delslot(inv, last_slot);
+anim(steam_head_play, 0);
+spotanim_pl(steam_head_spotanim, 0, 0);
+mes("You eat the sweets."); // ours
+
+// ================================================================ the Grim Reaper
+// RS wiki ("2005 Halloween event", "Death"): on death, every player was visited by the Grim
+// Spectre of Death (the cache's halloween_death, with his scythe stance human_ready_scythe), who
+// said a short line and briefly dragged the player with his scythe before the normal death.
+// No source has his line, and the cache has no named drag animation: he swings his scythe
+// (human_scythe_sweep, ours) beside you as you fall. Called from player/scripts/death.rs2.
+[proc,hw05_grim_reaper]
+if (1 ! ^hw05_grim_reaper) return;
+npc_add(map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk), halloween_death, 5); // ours: 5 ticks
+npc_facesquare(coord);
+npc_anim(human_scythe_sweep, 0); // ours
