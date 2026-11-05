@@ -1,0 +1,56 @@
+// Making History (22 November 2005). Everything lives in the 377 cache's own makinghistory varp
+// (varp 604, now perm) and its varbits:
+//   makinghistory_prog (bits 0-2)         the quest's stage
+//   makinghistory_trader_prog (3-5)       Erin the silver merchant's part (key, chest, journal)
+//   makinghistory_warr_prog (6-8)         the warrior's part (Blanin, Dron)
+//   makinghistory_ghost_prog (9-12)       the ghost's part (Droalak, Melina, the scroll)
+//   makinghistory_melina_pres (13)        1 once Melina has gone (her multinpc hides her)
+//   makinghistory_droalak_pres (14)       1 once Droalak has passed on (after the quest)
+//   varbit_1389 (15-19)                   the treasure the key now leads to (1-11, 0 none yet)
+//   makinghistory_objloc (20)             1 once the outpost is a museum (its multilocs)
+//   makinghistory_locstatus (21-31)       eleven bits, one for each treasure dug up
+// The cache names the varbits but not their values; the values below are ours, in the order of
+// the OSRS and RS wikis' transcripts. varbit_1389 is unnamed in the cache: ours, used for the
+// current treasure because it is the free five bits between the ghost's part and the museum.
+^mh_not_started = 0
+^mh_started = 1              // Jorral asked you to find the outpost's history
+^mh_letter_king = 2          // all three parts told to Jorral: his letter for King Lathas
+^mh_letter_jorral = 3        // King Lathas's letter back to Jorral
+^mh_complete = 4
+^mh_questpoints = 3
+
+// makinghistory_trader_prog
+^mh_trader_key = 1           // Erin lent you the enchanted key
+^mh_trader_chest = 2         // you dug up the chest
+^mh_trader_journal = 3       // you opened it with the key: the journal
+^mh_trader_done = 4          // you showed Jorral the journal
+^mh_trader_dissolved = 5     // after the quest: you told Erin the key dissolved (ours)
+
+// makinghistory_ghost_prog
+^mh_ghost_asked = 1          // Droalak asked you to give Melina a strung sapphire amulet
+^mh_ghost_amulet = 2         // Melina has the amulet
+^mh_ghost_scroll = 3         // Droalak gave you the scroll
+^mh_ghost_done = 4           // you showed Jorral the scroll
+
+// makinghistory_warr_prog
+^mh_warr_hints = 1           // Blanin told you about Dron
+^mh_warr_answers = 2         // you answered Dron's questions
+^mh_warr_done = 3            // you told Jorral
+
+// the eleven treasure sites (all of them dug: 2047)
+^mh_sites = 11
+^mh_all_dug = 2047
+
+// where the people stand (the 377 maps' spawns, the same as Void's)
+^mh_jorral = 0_38_52_5_19            // 2437,3347
+^mh_erin = 0_41_51_34_52             // 2658,3316, the north-western stall of the market
+^mh_droalak = 0_57_54_9_13           // 3657,3469
+^mh_melina = 0_57_54_26_28           // 3674,3484
+^mh_blanin = 0_41_57_51_23           // 2675,3671
+^mh_dron = 0_41_57_34_52             // 2658,3700
+^mh_lathas = 1_40_51_18_29           // 2578,3293, upstairs in the castle
+^mh_museum_upstairs = 1_38_52_3_20   // the outpost's first floor, by the second large display
+
+// the chest: the OSRS and RS wikis' Chest (Making History) map, 2442,3139 (north of Castle Wars,
+// "around 4 steps north from the east side of the second bridge")
+^mh_chest_site = 0_38_49_10_3

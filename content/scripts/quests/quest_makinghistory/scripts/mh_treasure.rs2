@@ -1,0 +1,238 @@
+// EASCape: Making History - the enchanted key, the chest it leads to during the quest, and the
+// hunt for buried treasure "that you can continue after the quest, with unique rewards awaiting
+// you at the end" (the 22 Nov 2005 news post).
+//
+// Feel: the distance is counted in steps, diagonals included, ignoring obstacles (the OSRS and RS
+// wikis: the Chebyshev distance). The readings are the OSRS wiki's Transcript:Making History
+// (burning hot within 50, hot within 100, warm within 150, cold within 200, freezing beyond), with
+// "The key is steaming. It must be right below your feet." within 4 (the 9 by 9 square you may dig
+// in, the OSRS and RS wikis); both wikis' later tables have eight readings, but the 377 cache has
+// six sounds for the key (history_key_steaming, _burning, _hot, _warm, _cold, _freezing), which
+// fit the transcript's. No full stop: the RS wiki's update history adds the punctuation in 2016.
+// The second part (" and warmer than last time", " but colder than last time", " and the same
+// temperature as last time") is the RS wiki's transcript, once you have felt it since logging in
+// or finding a treasure (%mh_key_last).
+//
+// After the quest the key leads to eleven treasures in turn: the first always south of Rellekka,
+// the other ten in a random order for each player (the OSRS wiki's The Enchanted Key), each
+// treasure the OSRS wiki's list at its coordinates; when the last is dug up the key disappears.
+// Ours: the essence and ores come noted (the RS wiki: the essence noted), and the key goes with
+// its own message.
+
+[proc,mh_site_coord](int $site)(coord)
+switch_int ($site) {
+    case 1 : return(0_42_56_28_22);     // south of Rellekka, 2716,3606
+    case 2 : return(0_40_50_61_39);     // south of Ardougne by the monastery, 2621,3239
+    case 3 : return(0_37_52_49_54);     // north of West Ardougne, by the outpost, 2417,3382
+    case 4 : return(0_38_53_16_51);     // the Gnome Stronghold, 2448,3443
+    case 5 : return(0_47_53_25_45);     // the body altar, 3033,3437
+    case 6 : return(0_46_51_28_40);     // south of Falador, 2972,3304
+    case 7 : return(0_47_49_8_30);      // Mudskipper Point, 3016,3166
+    case 8 : return(0_49_49_25_40);     // the Lumbridge Swamp, 3161,3176
+    case 9 : return(0_51_50_27_20);     // Al Kharid, 3291,3220
+    case 10 : return(0_51_52_35_21);    // the south-east Varrock mine, 3299,3349
+    case 11 : return(0_49_54_24_34);    // north-west of Varrock (the Grand Exchange's place), 3160,3490
+}
+return(null);
+
+[proc,mh_site_dug](int $site)(boolean)
+if ($site < 1 | $site > ^mh_sites) return(true);
+if (testbit(%makinghistory_locstatus, sub($site, 1)) = ^true) return(true);
+return(false);
+
+// the treasure the key leads to now (choosing the next one if need be); 0 when all are dug up
+[proc,mh_current_site]()(int)
+if (%makinghistory_locstatus = ^mh_all_dug) return(0);
+if (%varbit_1389 > 0 & ~mh_site_dug(%varbit_1389) = false) return(%varbit_1389);
+if (%makinghistory_locstatus = 0) {
+    %varbit_1389 = 1; // the first is always south of Rellekka
+    return(1);
+}
+def_int $left = 0;
+def_int $i = 1;
+while ($i <= ^mh_sites) {
+    if (~mh_site_dug($i) = false) $left = calc($left + 1);
+    $i = calc($i + 1);
+}
+def_int $pick = random($left);
+$i = 1;
+while ($i <= ^mh_sites) {
+    if (~mh_site_dug($i) = false) {
+        if ($pick = 0) {
+            %varbit_1389 = $i;
+            return($i);
+        }
+        $pick = calc($pick - 1);
+    }
+    $i = calc($i + 1);
+}
+return(0);
+
+[proc,mh_steps](coord $a, coord $b)(int)
+return(max(abs(calc(coordx($a) - coordx($b))), abs(calc(coordz($a) - coordz($b)))));
+
+// where the key leads, or null (with the message for why)
+[proc,mh_key_target]()(coord)
+def_int $t = %makinghistory_trader_prog;
+if (%makinghistory_prog < ^mh_complete) {
+    if (inv_total(inv, makinghistory_chest) > 0) {
+        mes("You already have the chest");
+        return(null);
+    }
+    if (inv_total(inv, makinghistory_journal) > 0) {
+        mes("You already have the journal");
+        return(null);
+    }
+    if ($t >= ^mh_trader_done) {
+        mes("You've already delivered the journal");
+        return(null);
+    }
+    return(^mh_chest_site);
+}
+def_int $site = ~mh_current_site;
+if ($site = 0) {
+    mes("The key doesn't seem to respond."); // ours
+    return(null);
+}
+return(~mh_site_coord($site));
+
+[opheld1,makinghistory_key]
+def_coord $target = ~mh_key_target;
+if ($target = null) return;
+// the RS wiki's later "The key doesn't seem to respond in this area." under the surface (ours there:
+// underground, where a square's coordinates are not the world's above)
+if (coordz(coord) >= 6400) {
+    mes("The key doesn't seem to respond in this area.");
+    return;
+}
+def_int $d = ~mh_steps(coord, $target);
+if ($d <= 4) {
+    sound_synth(history_key_steaming, 1, 0);
+    mes("The key is steaming. It must be right below your feet.");
+    %mh_key_last = calc($d + 1);
+    return;
+}
+def_string $reading;
+if ($d <= 50) {
+    $reading = "Ouch! It's burning hot";
+    sound_synth(history_key_burning, 1, 0);
+} else if ($d <= 100) {
+    $reading = "It's hot";
+    sound_synth(history_key_hot, 1, 0);
+} else if ($d <= 150) {
+    $reading = "It's warm";
+    sound_synth(history_key_warm, 1, 0);
+} else if ($d <= 200) {
+    $reading = "It's cold";
+    sound_synth(history_key_cold, 1, 0);
+} else {
+    $reading = "It's freezing";
+    sound_synth(history_key_freezing, 1, 0);
+}
+def_int $last = %mh_key_last;
+%mh_key_last = calc($d + 1);
+if ($last > 0) {
+    def_int $was = calc($last - 1);
+    if ($d < $was) {
+        $reading = append($reading, " and warmer than last time");
+    } else if ($d > $was) {
+        $reading = append($reading, " but colder than last time");
+    } else {
+        $reading = append($reading, " and the same temperature as last time");
+    }
+}
+mes($reading);
+
+// ---------------------------------------------------------------- digging
+// called by the spade (general_use/spade.rs2) before its own digging: true when you are digging
+// where the key would steam, carrying it
+[proc,mh_can_dig]()(boolean)
+if (inv_total(inv, makinghistory_key) = 0) return(false);
+def_int $t = %makinghistory_trader_prog;
+if (%makinghistory_prog < ^mh_complete) {
+    if ($t < ^mh_trader_key | $t >= ^mh_trader_done) return(false);
+    if (inv_total(inv, makinghistory_chest) > 0 | inv_total(inv, makinghistory_journal) > 0) return(false);
+    if (~mh_steps(coord, ^mh_chest_site) > 4 | coordz(coord) >= 6400) return(false);
+    return(true);
+}
+if (%makinghistory_locstatus = ^mh_all_dug) return(false);
+def_int $site = ~mh_current_site;
+if ($site = 0) return(false);
+if (~mh_steps(coord, ~mh_site_coord($site)) > 4 | coordz(coord) >= 6400) return(false);
+return(true);
+
+[label,mh_dig]
+p_arrivedelay;
+p_stopaction;
+anim(human_dig, 0);
+p_delay(0);
+if (%makinghistory_prog < ^mh_complete) {
+    if (inv_freespace(inv) = 0) {
+        mes("You don't have enough room to carry what's down there."); // ours
+        return;
+    }
+    inv_add(inv, makinghistory_chest, 1);
+    if (%makinghistory_trader_prog < ^mh_trader_chest) %makinghistory_trader_prog = ^mh_trader_chest;
+    ~objbox(makinghistory_chest, "You use the spade and find a chest. Wonder what's inside?", 250, 0, ^objbox_height);
+    return;
+}
+def_int $site = ~mh_current_site;
+if ($site = 0) return;
+%makinghistory_locstatus = setbit(%makinghistory_locstatus, sub($site, 1));
+%varbit_1389 = 0;
+%mh_key_last = 0;
+~mh_treasure($site);
+mes("You found some treasure."); // the RS wiki (Transcript:Banking History)
+if (%makinghistory_locstatus = ^mh_all_dug) {
+    inv_del(inv, makinghistory_key, inv_total(inv, makinghistory_key));
+    mes("The enchanted key has served its purpose and dissolves away."); // ours (Erin: "It dissolved!")
+}
+
+// the OSRS wiki's The Enchanted Key, each site's loot
+[proc,mh_treasure](int $site)
+switch_int ($site) {
+    case 1 :
+        ~mh_give(steel_arrow, 20);
+        ~mh_give(cert_mithril_ore, 10);
+        ~mh_give(lawrune, 15);
+    case 2 :
+        ~mh_give(cert_blankrune_high, 36);
+        ~mh_give(cert_iron_ore, 15);
+        ~mh_give(firerune, 30);
+    case 3 :
+        ~mh_give(cert_blankrune_high, 40);
+        ~mh_give(iron_arrowheads, 20);
+        ~mh_give(firerune, 20);
+    case 4 :
+        ~mh_give(cert_blankrune_high, 39);
+        ~mh_give(iron_arrowheads, 20);
+        ~mh_give(waterrune, 30);
+    case 5 :
+        ~mh_give(cert_mithril_ore, 10);
+        ~mh_give(cert_iron_ore, 15);
+        ~mh_give(earthrune, 45);
+    case 6 :
+        ~mh_give(earthrune, 15);
+        ~mh_give(iron_arrow, 20);
+        ~mh_give(makinghistory_saradomin_polestaff, 1);
+    case 7 :
+        ~mh_give(cert_iron_ore, 15);
+        ~mh_give(mithril_arrow, 20);
+        ~mh_give(deathrune, 15);
+    case 8 :
+        ~mh_give(cert_blankrune_high, 29);
+        ~mh_give(mindrune, 20);
+        ~mh_give(steel_arrow, 20);
+    case 9 :
+        ~mh_give(cert_blankrune_high, 40);
+        ~mh_give(cert_mithril_ore, 10);
+        ~mh_give(makinghistory_zamorak_polestaff, 1);
+    case 10 :
+        ~mh_give(cert_blankrune_high, 40);
+        ~mh_give(cert_iron_ore, 15);
+        ~mh_give(makinghistory_guthix_polestaff, 1);
+    case 11 :
+        ~mh_give(cert_blankrune_high, 39);
+        ~mh_give(mithril_arrow, 10);
+        ~mh_give(lawrune, 15);
+}

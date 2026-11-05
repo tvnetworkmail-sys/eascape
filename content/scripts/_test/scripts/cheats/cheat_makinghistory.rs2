@@ -1,0 +1,118 @@
+// EASCape: test commands for Making History (quest_makinghistory).
+
+// ::mhpack - what the quest needs you to bring (the OSRS and RS wikis): a spade, a strung sapphire
+// amulet, an amulet of ghostspeak and two ectotokens for Port Phasmatys's toll. It also marks
+// Priest in Peril and The Restless Ghost done (no rewards).
+[debugproc,mhpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(strung_sapphire_amulet, 1));
+$banked = calc($banked + ~questpack_give(amulet_of_ghostspeak, 1));
+$banked = calc($banked + ~questpack_give(ectotoken, 2));
+if (%priestperil < ^priestperil_complete) %priestperil = ^priestperil_complete;
+if (%prieststart ! ^priest_complete) %prieststart = ^priest_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Making History", $banked);
+mes("Jorral: ::mhtele 1. Wear the ghostspeak amulet for Droalak and Melina.");
+
+// ::mhstage <n> - sets Making History, with what you would be carrying: 0 not started (clears
+// everything: the museum, Melina and Droalak back, every treasure undug), 1 started, 2 Erin's key,
+// 3 the chest dug up, 4 the journal, 5 the journal shown to Jorral and Droalak's errand, 6 the
+// amulet given to Melina, 7 Droalak's scroll, 8 the scroll shown and Blanin's hints, 9 Dron's
+// answers, 10 Jorral's letter for the king, 11 the king's letter back, 12 done (no rewards; the
+// key for the treasures), 13 done with ten of the eleven treasures dug up (the last left).
+// `::questdone makinghistory` finishes it with its rewards.
+[debugproc,mhstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 13) {
+    mes("::mhstage 0-13");
+    return;
+}
+%makinghistory = 0;
+%mh_key_last = 0;
+if ($n = 0) {
+    ~send_quest_progress(questlist:makinghistory, 0, ^mh_complete);
+    ~update_questpoints;
+    mes("Making History: reset.");
+    return;
+}
+def_int $s = ^mh_started;
+if ($n >= 2) %makinghistory_trader_prog = ^mh_trader_key;
+if ($n >= 3) %makinghistory_trader_prog = ^mh_trader_chest;
+if ($n >= 4) %makinghistory_trader_prog = ^mh_trader_journal;
+if ($n >= 5) {
+    %makinghistory_trader_prog = ^mh_trader_done;
+    %makinghistory_ghost_prog = ^mh_ghost_asked;
+}
+if ($n >= 6) {
+    %makinghistory_ghost_prog = ^mh_ghost_amulet;
+    %makinghistory_melina_pres = 1;
+}
+if ($n >= 7) %makinghistory_ghost_prog = ^mh_ghost_scroll;
+if ($n >= 8) {
+    %makinghistory_ghost_prog = ^mh_ghost_done;
+    %makinghistory_warr_prog = ^mh_warr_hints;
+}
+if ($n >= 9) %makinghistory_warr_prog = ^mh_warr_answers;
+if ($n >= 10) {
+    %makinghistory_warr_prog = ^mh_warr_done;
+    $s = ^mh_letter_king;
+}
+if ($n >= 11) $s = ^mh_letter_jorral;
+if ($n >= 12) {
+    $s = ^mh_complete;
+    %makinghistory_objloc = 1;
+}
+if ($n = 13) %makinghistory_locstatus = 1023; // all but the Grand Exchange's place
+%makinghistory_prog = $s;
+switch_int ($n) {
+    case 2, 3, 4, 12, 13 : if (inv_total(inv, makinghistory_key) = 0) ~questdone_give(makinghistory_key, 1);
+}
+switch_int ($n) {
+    case 3 : if (inv_total(inv, makinghistory_chest) = 0) ~questdone_give(makinghistory_chest, 1);
+    case 4 : if (inv_total(inv, makinghistory_journal) = 0) ~questdone_give(makinghistory_journal, 1);
+    case 7 : if (inv_total(inv, makinghistory_scroll1) = 0) ~questdone_give(makinghistory_scroll1, 1);
+    case 10 : if (inv_total(inv, makinghistory_letter1) = 0) ~questdone_give(makinghistory_letter1, 1);
+    case 11 : if (inv_total(inv, makinghistory_letter2) = 0) ~questdone_give(makinghistory_letter2, 1);
+}
+~send_quest_progress(questlist:makinghistory, %makinghistory_prog, ^mh_complete);
+~update_questpoints;
+mes("Making History: stage <tostring($n)> (prog <tostring(%makinghistory_prog)>, trader <tostring(%makinghistory_trader_prog)>, ghost <tostring(%makinghistory_ghost_prog)>, warrior <tostring(%makinghistory_warr_prog)>).");
+
+// ::mhtele <n> - 1 Jorral (the outpost), 2 Erin (East Ardougne market), 3 where the chest is
+// buried, 4 Droalak, 5 Melina (Port Phasmatys), 6 Blanin, 7 Dron (Rellekka), 8 King Lathas
+// (upstairs in his castle), 9 the outpost's first floor (the second large display), 10 the
+// treasure the key leads to now (after the quest)
+[debugproc,mhtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+def_int $site = 0;
+switch_int ($n) {
+    case 1 : $to = ^mh_jorral;
+    case 2 : $to = movecoord(^mh_erin, 0, 0, 1);
+    case 3 : $to = ^mh_chest_site;
+    case 4 : $to = ^mh_droalak;
+    case 5 : $to = ^mh_melina;
+    case 6 : $to = ^mh_blanin;
+    case 7 : $to = ^mh_dron;
+    case 8 : $to = ^mh_lathas;
+    case 9 : $to = ^mh_museum_upstairs;
+    case 10 :
+        if (%makinghistory_prog < ^mh_complete) {
+            mes("The treasures come after the quest (::mhstage 12).");
+            return;
+        }
+        $site = ~mh_current_site;
+        if ($site = 0) {
+            mes("Every treasure is dug up.");
+            return;
+        }
+        mes("Treasure <tostring($site)>.");
+        $to = ~mh_site_coord($site);
+    case default :
+        mes("::mhtele 1-10: 1 Jorral, 2 Erin, 3 chest, 4 Droalak, 5 Melina, 6 Blanin, 7 Dron, 8 King Lathas, 9 museum upstairs, 10 next treasure");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 2, ^map_findsquare_lineofwalk));

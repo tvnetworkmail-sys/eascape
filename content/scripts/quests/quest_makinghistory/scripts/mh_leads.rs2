@@ -1,0 +1,474 @@
+// EASCape: Making History - the three people who know something of the outpost (Erin the silver
+// merchant, Droalak and Melina, Blanin and Dron), King Lathas, and the quest's items. The words
+// are the OSRS and RS wikis' transcripts (quest_makinghistory/mh_jorral.rs2 has the sources);
+// Dron's and Blanin's lines outside the quest are 2009scape's (DronDialogue.kt, BlaninDialogue.kt).
+
+// ---------------------------------------------------------------- Erin, the silver merchant
+// Called from his Talk-to (area_ardougne_east/silver_merchant.rs2) once you choose "Ask about the
+// outpost.", which he offers while the quest is under way.
+[label,mh_erin_outpost]
+def_int $t = %makinghistory_trader_prog;
+if ($t = 0) {
+    ~chatplayer("<p,quiz>Are you Erin?");
+    ~chatnpc("<p,neutral>That I am. What do you want? You realise I'm working here.");
+    ~chatplayer("<p,neutral>This shouldn't take too long. I just want to ask you a bit about your great Grandfather, the one who lived in the outpost?");
+    ~chatnpc("<p,quiz>What's it to you?");
+    ~chatplayer("<p,neutral>I'm doing some research for a man called Jorral. Apparently the King is going to make the outpost into his very own alchemists' lab.");
+    ~chatnpc("<p,shock>That can only cause chaos! Well, my great Grandfather lived and died there according to my mother, but even she knows very little about him.");
+    ~chatplayer("<p,neutral>I see.");
+    ~chatnpc("<p,neutral>The only thing I have of his is a key. It's a strange key, it changes temperature by itself as you walk around. I'm afraid I don't know what it's for though.");
+    ~chatplayer("<p,quiz>No idea at all?");
+    ~chatnpc("<p,neutral>Well, I imagine it's to some sort of chest of his belongings as it's too small for a door. Perhaps if you find some of his belongings you will discover some clues amongst them.");
+    ~chatplayer("<p,quiz>It's better than nothing. Will you lend it to me then?");
+    ~chatnpc("<p,neutral>Why not. I can't use it anyway. Try feeling its change in temperature as you walk around.");
+    %makinghistory_trader_prog = ^mh_trader_key;
+    ~mh_give(makinghistory_key, 1);
+    return;
+}
+if ($t >= ^mh_trader_done) {
+    // ours: the OSRS wiki's lines after the quest, before it is finished
+    ~chatplayer("<p,happy>Hello again.");
+    ~chatnpc("<p,happy>Hello, I hope Jorral was pleased with that Journal.");
+    ~chatplayer("<p,happy>I'm sure it's been a valuable find.");
+    return;
+}
+if (inv_total(inv, makinghistory_journal) > 0) {
+    ~chatplayer("<p,happy>Would you like to see the journal I have found?");
+    ~chatnpc("<p,neutral>Let's have a look.");
+    ~mesbox("Erin reads the journal.");
+    ~chatnpc("<p,happy>Very interesting. Best you show it to Jorral at the outpost.");
+    ~chatplayer("<p,neutral>I was just about to. Do you want the key back?");
+    ~chatnpc("<p,happy>Keep it, it may come in handy.");
+    return;
+}
+if (inv_total(inv, makinghistory_chest) > 0) {
+    ~chatplayer("<p,happy>I found a chest!");
+    ~chatnpc("<p,neutral>I wonder what is inside.");
+    return;
+}
+if ($t = ^mh_trader_key) {
+    ~chatplayer("<p,sad>I haven't found anything yet.");
+    ~chatnpc("<p,neutral>Keep trying. Have you noticed that the key changes temperature as you walk around?");
+} else {
+    // the RS wiki: found the chest, then lost it
+    ~chatplayer("<p,sad>I found a chest, but I lost it and any content it had.");
+    ~chatnpc("<p,neutral>Well I suggest you go back to where you found it.");
+}
+if (inv_total(inv, makinghistory_key) = 0) {
+    ~chatplayer("<p,sad>That's kind of hard because I lost the key.");
+    ~chatnpc("<p,happy>I was waiting for you to say that... because I just found it! Take it and don't lose it.");
+    ~mh_give(makinghistory_key, 1);
+}
+
+// After the quest (the OSRS wiki's Transcript:Silver merchant): the key again for 500 coins, and
+// once every treasure is found, the key dissolved (once; ours: then he is back to his stall).
+[label,mh_erin_after]
+if (%makinghistory_locstatus = ^mh_all_dug) {
+    ~chatplayer("<p,neutral>Oh, You know that key you gave me?");
+    ~chatnpc("<p,quiz>Yes?");
+    ~chatplayer("<p,shock>It dissolved!");
+    ~chatnpc("<p,neutral>Really? I suppose it served its purpose.");
+    %makinghistory_trader_prog = ^mh_trader_dissolved;
+    return;
+}
+~chatplayer("<p,happy>Hello again.");
+~chatnpc("<p,happy>Hello, I hope Jorral was pleased with that Journal.");
+~chatplayer("<p,happy>I'm sure it's been a valuable find.");
+if (inv_total(inv, makinghistory_key) > 0) {
+    ~chatnpc("<p,happy>You know you can use that enchanted key you have all over Gielinor. Who knows what you might find?");
+    return;
+}
+if (inv_total(bank, makinghistory_key) > 0) {
+    ~chatnpc("<p,happy>You know you can use that enchanted key you've got stored? You can use it all over Gielinor. Who knows what you might find?");
+    return;
+}
+~chatplayer("<p,sad>What I came to ask was: I lost that key you gave me.");
+~chatnpc("<p,neutral>Oh dear, luckily I found it, but it'll cost you 500gp as I know it's valuable.");
+if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+~chatplayer("<p,neutral>Yes please.");
+if (inv_total(inv, coins) < 500) {
+    ~chatnpc("<p,sad>You don't have enough money, sorry.");
+    return;
+}
+if (inv_freespace(inv) = 0 & inv_total(inv, coins) ! 500) {
+    ~chatnpc("<p,neutral>You don't have the space to carry it! Empty some space in your inventory.");
+    return;
+}
+inv_del(inv, coins, 500);
+inv_add(inv, makinghistory_key, 1);
+~chatnpc("<p,happy>Thank you, enjoy!");
+
+// ---------------------------------------------------------------- the chest and the journal
+[opheldu,makinghistory_chest]
+if (last_useitem ! makinghistory_key) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, makinghistory_chest, 1);
+inv_add(inv, makinghistory_journal, 1);
+if (%makinghistory_trader_prog < ^mh_trader_journal) %makinghistory_trader_prog = ^mh_trader_journal;
+~objbox(makinghistory_journal, "You look in the chest and find a journal, and then you throw away the chest.", 250, 0, ^objbox_height);
+
+// the OSRS wiki's Transcript:Journal (Making History), Drozal's entries (ours: the title)
+[opheld1,makinghistory_journal]
+%book_page = 0;
+%open_book = makinghistory_journal;
+@book_flip_page(0, 0, ~mh_journal_last, mh_journal_book);
+
+[proc,mh_journal_split]
+split_init(append(append("---1st Bennath||My life is full of changes at the moment. I've met a great and powerful follower of Zamorak, whom has offered me the chance to join him and others in the quest for ultimate power and desolation of others. This is just the opportunity I've been looking for! I move into the old outpost (North of Ardougne) at the end of this week.||I can hardly wait!||---15th Bennath||Been here a few days now. I'm overwhelmed on just how evil the other 8 are. I suppose this is amplified by living in such a small building.||---20th Bennath||Started causing havoc to the people of Ardougne today. We poisoned the water supply with a strange concoction which caused everyone to break out in boils!", " Very funny. The others have been stealthily setting fire to some people and laughing at their conclusion of spontaneous combustion.||I think I shall have to come up with something more evil for tomorrow.||---32nd Bennath||Following my genius plan to make all the children invisible, the city is now in total chaos as the kids test their freedom by putting adults into a panic.||Honestly, some of the tricks the kids play are better than anything I could invent.||---20th Raktuber||Sadly things have calmed down in the city, and they've started to realise that we're the cause of all the tragedy. Luckily, the people don't have enough power to get past our defences, and even if they did, they would"), " wish they hadn't thought of such an attack.||---28th Raktuber||We have been told to 'beware for your days are numbered' by the people of Ardougne. It seems the city has asked for some external help, which will be upon us some time soon. I'm sure we will eliminate such a threat though."), 175, 22, q8_full);
+
+[proc,mh_journal_last]()(int)
+~mh_journal_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,mh_journal_book]
+~mh_journal_split;
+~book_page("Journal", %book_page);
+
+// the OSRS wiki's Transcript:Scroll (Making History)
+[opheld1,makinghistory_scroll1]
+if_settext(scroll:com_2, ^string_empty);
+if_settext(scroll:com_3, ^string_empty);
+if_settext(scroll:com_4, "@dbl@Timeline of the Ardougne Outpost");
+if_settext(scroll:com_5, ^string_empty);
+if_settext(scroll:com_6, "Start of Fifth age: Outpost built");
+if_settext(scroll:com_7, "+ 65 Years: 'The Dreaded Years of Tragedy'");
+if_settext(scroll:com_8, "+ 68 Years: 'The Great Battle'");
+if_settext(scroll:com_9, "+ 71 Years: Survivors of battle start a new line");
+if_settext(scroll:com_10, "of kings of Ardougne and the Equal Trade Market.");
+if_settext(scroll:com_11, ^string_empty);
+if_settext(scroll:com_12, ^string_empty);
+if_settext(scroll:com_13, ^string_empty);
+if_openmain(scroll);
+
+// Destroy: Void's destroy messages (making_history.items.toml)
+[opheld5,makinghistory_key] ~mh_destroy(makinghistory_key, "Hopefully Erin has a copy!");
+[opheld5,makinghistory_journal] ~mh_destroy(makinghistory_journal, "Hopefully there was another in the chest!");
+[opheld5,makinghistory_letter1] ~mh_destroy(makinghistory_letter1, "Hopefully Jorral will give you another!");
+[opheld5,makinghistory_letter2] ~mh_destroy(makinghistory_letter2, "Hopefully King Lathas will give you another!");
+[opheld5,makinghistory_scroll1] ~mh_destroy(makinghistory_scroll1, "Hopefully Droalak will give me another!");
+[opheld5,makinghistory_chest] ~mh_destroy(makinghistory_chest, "Hopefully there was another in the hole!");
+
+[proc,mh_destroy](namedobj $obj, string $text)
+def_int $slot = last_slot;
+if (~destroy_confirm($obj, $text) = false) return;
+if (inv_getobj(inv, $slot) = $obj) inv_delslot(inv, $slot);
+
+// ---------------------------------------------------------------- Droalak and Melina
+// Both are the cache's multinpcs (makinghistory_droalak_pres, makinghistory_melina_pres): 1 hides
+// them for you once they've gone.
+// (the spawned NPC is the multinpc, which has no name or head of its own, so the lines name them)
+[proc,mh_ghostspeak](string $name, npc $head)(boolean)
+def_obj $neck = inv_getobj(worn, ^wearpos_front);
+if ($neck = amulet_of_ghostspeak | $neck = amulet_of_ghostspeak_enchanted) return(true);
+~chatnpc_specific($name, $head, "<p,neutral>wooo wooo");
+return(false);
+
+[opnpc1,makinghistory_droalak_multi] @mh_droalak;
+
+[label,mh_droalak]
+if (~mh_ghostspeak("Droalak", makinghistory_droalak) = false) return;
+if (%makinghistory_prog >= ^mh_complete) {
+    ~chatplayer("<p,happy>I have delivered the scroll, you can rest in peace now.");
+    ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>Thanks for telling me! I've been waiting for ages!");
+    ~chatplayer("<p,neutral>Good bye.");
+    ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>Bye!");
+    // the RS wiki: "Droalak slowly fades until he disappears completely"
+    def_coord $at = npc_coord;
+    %makinghistory_droalak_pres = 1;
+    npc_add($at, makinghistory_droalak_fade_npc, 4); // ours: as long as the cache's makinghistory_ghost_fade lasts
+    return;
+}
+switch_int (%makinghistory_ghost_prog) {
+    case 0 :
+        if (%makinghistory_prog = ^mh_not_started) {
+            ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,sad>Please, leave me alone.");
+            ~chatplayer("<p,angry>Your loss!");
+            return;
+        }
+        ~chatplayer("<p,quiz>Hello. Are you Droalak?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,shock>Wow. I haven't spoken to the living for... for... I don't remember how long.");
+        ~chatplayer("<p,quiz>So your name IS Droalak?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>Sorry, yes I am he.");
+        ~chatplayer("<p,quiz>Great. Do you know anything about the outpost North of Ardougne?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,sad>I don't really like to talk about it, but I died there.");
+        ~chatplayer("<p,sad>Oh dear.");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>I do have a scroll which might interest you that describes the timeline of the outpost. But first I wonder if I could ask you to tie up a problem?");
+        ~chatplayer("<p,quiz>Like what?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,sad>Well, I left to go to the outpost against the wishes of my wife. I promised I would return to her, but obviously I did not as I died there. She's a ghost nearby, but won't listen to my apologies.");
+        ~chatplayer("<p,quiz>You want me to patch things up?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>Yes, how'd you guess?");
+        ~chatplayer("<p,happy>Call it 'traveller's intuition'.");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>OK, well perhaps you could give her a strung sapphire amulet, because this is what I gave her the day I left. Her name is Melina by the way.");
+        ~chatplayer("<p,neutral>No problem.");
+        %makinghistory_ghost_prog = ^mh_ghost_asked;
+    case ^mh_ghost_asked :
+        if (inv_total(inv, unstrung_sapphire_amulet) > 0 & inv_total(inv, strung_sapphire_amulet) = 0) {
+            ~chatplayer("<p,happy>I have a sapphire amulet!");
+            ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,angry>I said it needed to be a STRUNG sapphire amulet - best get some string!");
+        } else if (inv_total(inv, strung_sapphire_amulet) > 0) {
+            ~chatplayer("<p,happy>I have a sapphire amulet!");
+            ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>Good work. Just give it to Melina, who's wandering somewhere nearby.");
+        } else {
+            ~chatplayer("<p,quiz>What do you want me to do again?");
+            ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>Make a strung sapphire amulet and give it to Melina!");
+            ~chatplayer("<p,neutral>Ok. Ok.");
+        }
+    case ^mh_ghost_amulet :
+        ~chatplayer("<p,happy>I've given her the amulet. She was very pleased and said she just wanted to know you still cared.");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>Excellent! I am so glad she believes me. I can finally rest in peace.");
+        ~chatplayer("<p,quiz>Could I have that scroll you mentioned first?");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>Of course. Let me know if it was of any use and then I can be forever free.");
+        %makinghistory_ghost_prog = ^mh_ghost_scroll;
+        ~mh_give(makinghistory_scroll1, 1);
+        ~chatplayer("<p,happy>Thank you.");
+    case ^mh_ghost_scroll :
+        if (inv_total(inv, makinghistory_scroll1) > 0) {
+            ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>Take that scroll to Jorral in the outpost.");
+            return;
+        }
+        ~chatplayer("<p,sad>Thank's for the scroll, but I seem to have lost it.");
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,happy>It's a good job I stuck around then isn't it! Have another copy.");
+        ~mh_give(makinghistory_scroll1, 1);
+    case default :
+        // ours: the scroll is with Jorral, the quest not yet done
+        ~chatnpc_specific("Droalak", makinghistory_droalak, "<p,neutral>Let me know if it was of any use and then I can be forever free.");
+}
+
+[opnpc1,makinghistory_melina_multi] @mh_melina;
+
+[label,mh_melina]
+if (~mh_ghostspeak("Melina", makinghistory_melina) = false) return;
+if (%makinghistory_ghost_prog = 0) {
+    // the RS wiki: before you've spoken to Droalak
+    ~chatnpc_specific("Melina", makinghistory_melina, "<p,sad>Oh why did he leave me? Did he truly love me?");
+    return;
+}
+if (%makinghistory_ghost_prog > ^mh_ghost_asked) {
+    // ours: she has the amulet (and would be gone)
+    ~chatnpc_specific("Melina", makinghistory_melina, "<p,happy>At last I feel complete. Fare well.");
+    return;
+}
+if (inv_total(inv, strung_sapphire_amulet) = 0) {
+    ~chatplayer("<p,neutral>Hi.");
+    ~chatnpc_specific("Melina", makinghistory_melina, "<p,sad>Oh why did he leave me? Did he truly love me?");
+    ~chatplayer("<p,neutral>Erm. I think you're talking about Droalak. I believe he did love you and he's very sorry for leaving you!");
+    ~chatnpc_specific("Melina", makinghistory_melina, "<p,angry>You're giving me empty words. That is all.");
+    return;
+}
+~chatplayer("<p,quiz>If you don't mind me asking, are you Melina?");
+~chatnpc_specific("Melina", makinghistory_melina, "<p,neutral>That I am. What's it to you?");
+~chatplayer("<p,neutral>I've been talking to Droalak. I believe he left you but never returned.");
+~chatnpc_specific("Melina", makinghistory_melina, "<p,angry>He did. I suppose he has asked you to tell me he's sorry. What an empty gesture!");
+~chatplayer("<p,neutral>Well actually he told me to give you this amulet.");
+if (inv_total(inv, strung_sapphire_amulet) = 0) return;
+inv_del(inv, strung_sapphire_amulet, 1);
+%makinghistory_ghost_prog = ^mh_ghost_amulet;
+~chatnpc_specific("Melina", makinghistory_melina, "<p,happy>A sapphire amulet! He remembers! It's just like the one he gave me before he left.");
+~chatplayer("<p,neutral>I honestly believe he's sorry.");
+~chatnpc_specific("Melina", makinghistory_melina, "<p,happy>I'm so glad. Please, tell him I forgive him!");
+~chatplayer("<p,happy>I will.");
+~chatnpc_specific("Melina", makinghistory_melina, "<p,happy>At last I feel complete. Fare well.");
+~chatplayer("<p,neutral>Goodbye.");
+// "Melina disappears, taking the player's sapphire amulet"
+def_coord $at = npc_coord;
+%makinghistory_melina_pres = 1;
+npc_add($at, makinghistory_melina_fade_npc, 4); // ours: as long as the cache's makinghistory_ghost_fade lasts
+
+// ---------------------------------------------------------------- Blanin and Dron
+[opnpc1,makinghistory_blanin]
+def_int $w = %makinghistory_warr_prog;
+if (%makinghistory_prog = ^mh_not_started | (%makinghistory_prog >= ^mh_complete & $w = 0)) {
+    // 2009scape BlaninDialogue
+    ~chatplayer("<p,happy>Good day.");
+    ~chatnpc("<p,happy>Good day to you, sir.");
+    return;
+}
+if ($w >= ^mh_warr_answers) {
+    ~chatplayer("<p,happy>That's one less thing to worry about.");
+    ~chatnpc("<p,happy>Glad I could help.");
+    return;
+}
+if ($w = ^mh_warr_hints) {
+    ~chatnpc("<p,quiz>Making progress?");
+    ~chatplayer("<p,sad>Not the best. Can you give me those hints again for speaking with Dron?");
+    ~chatnpc("<p,neutral>Sure. You must be firm with him and don't mention that I sent you. In case he asks, he wields an iron mace in battle, eats rats for breakfast, kittens for lunch and bunnies for tea!");
+    ~chatnpc("<p,neutral>His favorite drink is red spider blood, he's 36 years, 8 months and 21 days old, he studies famous battles of the Fourth and Fifth ages, lives on the North East side of town and his, erm... pet cat is called Fluffy.");
+    ~chatplayer("<p,neutral>I think I can remember all that.");
+    ~chatnpc("<p,neutral>Just remember those points when you speak to Dron. He's nearby, so you should still be able to find him.");
+    return;
+}
+~chatplayer("<p,quiz>Hello there. Are you the brother of Dron?");
+~chatnpc("<p,quiz>That I am. Why? Has he killed one of your family?");
+~chatplayer("<p,confused>Not that I know of...");
+~chatnpc("<p,happy>Oh good, how can I help you?");
+~chatplayer("<p,neutral>Well I'd like to talk to your brother Dron about the outpost North of Ardougne.");
+~chatnpc("<p,neutral>I'm afraid he's not easy to talk to, so it's good that you came to see me. You'll need to remember a few things when talking to him.");
+~chatplayer("<p,quiz>Like?");
+~chatnpc("<p,neutral>You must be firm with him and don't mention that I sent you. In case he asks, he wields an iron mace in battle, eats rats for breakfast, kittens for lunch and bunnies for tea!");
+~chatnpc("<p,neutral>His favorite drink is red spider blood, he's 36 years, 8 months and 21 days old, studies famous battles of the Fourth and Fifth ages, lives on the North East side of town and his, erm... pet cat is called Fluffy.");
+~chatplayer("<p,confused>O..K....");
+~chatnpc("<p,neutral>I know this sounds strange but Dron won't talk to anyone unless they know him well - he's a secretive guy.");
+%makinghistory_warr_prog = ^mh_warr_hints;
+
+[opnpc1,makinghistory_dron]
+def_int $w = %makinghistory_warr_prog;
+if ($w >= ^mh_warr_answers) {
+    ~chatnpc("<p,angry>You have your answers, now go away!");
+    return;
+}
+if (%makinghistory_prog = ^mh_not_started | %makinghistory_prog >= ^mh_complete) {
+    // 2009scape DronDialogue
+    ~chatplayer("<p,neutral>Excuse me.");
+    ~chatnpc("<p,angry>Leave me or I'll destroy you!");
+    return;
+}
+if ($w = 0) {
+    ~chatplayer("<p,neutral>Excuse me.");
+    ~chatnpc("<p,angry>Look, I don't have time for weaklings, if you want conversation, talk to my brother Blanin!");
+    return;
+}
+~chatplayer("<p,neutral>I need to talk to you.");
+~chatnpc("<p,angry>Why should I?");
+switch_int (~p_choice3("Erm, sorry I don't mean to cause offence.", 1, "Please don't hurt me.", 2, "I'm after important answers.", 3)) {
+    case 1 :
+        ~chatplayer("<p,sad>Erm, sorry I don't mean to cause offence.");
+        @mh_dron_wrong;
+    case 2 :
+        ~chatplayer("<p,shock>Please don't hurt me.");
+        @mh_dron_wrong;
+}
+~chatplayer("<p,neutral>I'm after important answers.");
+~chatnpc("<p,quiz>But how do you know me?");
+if (~p_choice2("I just talked to your brother.", 1, "Why, you're the famous warrior Dron!", 2) = 1) {
+    ~chatplayer("<p,neutral>I just talked to your brother.");
+    ~chatnpc("<p,angry>Don't talk of my brother. He's not on my good side at the moment.");
+    return;
+}
+~chatplayer("<p,happy>Why, you're the famous warrior Dron!");
+~chatnpc("<p,quiz>If so, what weapon do I use?");
+if (~p_choice3("An iron axe", 1, "An iron mace", 2, "A steel mace", 3) ! 2) @mh_dron_wrong;
+~chatplayer("<p,neutral>An iron mace.");
+~chatnpc("<p,quiz>When do I like to eat rats?");
+if (~p_choice3("Breakfast", 1, "Tea", 2, "Lunch", 3) ! 1) @mh_dron_wrong;
+~chatplayer("<p,neutral>Breakfast.");
+~chatnpc("<p,quiz>When are kittens best devoured?");
+if (~p_choice2("Tea", 1, "Lunch", 2) ! 2) @mh_dron_wrong;
+~chatplayer("<p,neutral>Lunch.");
+~chatnpc("<p,quiz>What do I usually eat for tea?");
+switch_int (~p_choice3("Bunnies", 1, "Kittens", 2, "Puppies", 3)) {
+    case 2 :
+        ~chatplayer("<p,neutral>Kittens.");
+        ~chatnpc("<p,confused>Eww. Gross. You have some strange tastes.");
+        ~chatplayer("<p,angry>You can't lecture ME on eating habits.");
+        return;
+    case 3 : @mh_dron_wrong;
+}
+~chatplayer("<p,neutral>Bunnies.");
+~chatnpc("<p,quiz>What colour spider blood tastes the best?");
+if (~p_choice3("Green", 1, "Red", 2, "Blue", 3) ! 2) @mh_dron_wrong;
+~chatplayer("<p,neutral>Red.");
+~chatnpc("<p,quiz>How many years old am I?");
+if (~p_choice2("38", 1, "36", 2) ! 2) @mh_dron_wrong;
+~chatplayer("<p,neutral>36");
+~chatnpc("<p,quiz>and months?");
+if (~p_choice3("8", 1, "21", 2, "5", 3) ! 1) @mh_dron_wrong;
+~chatplayer("<p,neutral>8");
+~chatnpc("<p,quiz>What are the most interesting ages for battles?");
+if (~p_choice3("Fourth", 1, "Third and Fourth", 2, "Fifth and Fourth", 3) ! 3) @mh_dron_wrong;
+~chatplayer("<p,neutral>Fifth and Fourth.");
+~chatnpc("<p,quiz>And my house is situated where?");
+if (~p_choice3("North side of the town", 1, "North West side of town", 2, "North East side of town", 3) ! 3) @mh_dron_wrong;
+~chatplayer("<p,neutral>North East side of town.");
+~chatnpc("<p,quiz>What is my brother's name?");
+switch_int (~p_choice3("Blanin", 1, "Dave", 2, "Blanon", 3)) {
+    case 2 :
+        ~chatplayer("<p,neutral>Dave.");
+        ~chatnpc("<p,confused>Dev?");
+        ~chatplayer("<p,neutral>No. D-A-V-E");
+        ~chatnpc("<p,confused>What a strange name. Unlike my brothers!");
+        return;
+    case 3 : @mh_dron_wrong;
+}
+~chatplayer("<p,neutral>Blanin.");
+~chatnpc("<p,quiz>And my pet cat is called?");
+if (~p_choice2("Fluffy", 1, "Snowy", 2) ! 1) @mh_dron_wrong;
+~chatplayer("<p,neutral>Fluffy.");
+~chatnpc("<p,quiz>What's 5 plus 7?");
+if (~p_choice2("12, but what does that have to do with anything?", 1, "14", 2) ! 1) @mh_dron_wrong;
+~chatplayer("<p,confused>12, but what does that have to do with anything?");
+~chatnpc("<p,angry>Everything! Besides, it's 13!");
+~chatplayer("<p,neutral>Er, I think you'll find it's 12.");
+~chatnpc("<p,neutral>....");
+~chatnpc("<p,neutral>..........");
+~chatnpc("<p,neutral>Very well, you seem to know me quite well, I'll answer your questions best I can.");
+%makinghistory_warr_prog = ^mh_warr_answers;
+~chatplayer("<p,happy>Phew!");
+~chatnpc("<p,quiz>Well what are they then?");
+~chatplayer("<p,neutral>I'm trying to find out the history of the outpost near Ardougne. I was hoping you could help me.");
+~chatnpc("<p,neutral>Let me see. Ah yes, I remember reading of a battle that took place at the outpost many years ago. Two ex- friends led forces in a small battle that ended with them pitted against each other at the top of the outpost as the sole survivors because of their superior strength.");
+~chatplayer("<p,quiz>Ex-friends?");
+~chatnpc("<p,neutral>They were once friends but a difference in their beliefs meant they fell out. One chose to follow the god Zamorak, whilst the other chose Saradomin. But finding themselves in this extreme situation at the top of the outpost caused them to see the errors of their ways, like the waste of life, the lost friendship and the wasted time.");
+~chatnpc("<p,neutral>They both then decided to unite under Guthix.");
+~chatplayer("<p,happy>Ah, I like happy endings.");
+~chatnpc("<p,angry>You would.");
+~chatplayer("<p,neutral>Thank you, I can report this back to Jorral now.");
+~chatnpc("<p,quiz>Anything else?");
+~chatplayer("<p,quiz>Well, I was wondering how you get the blood stains out of your clothes?");
+~chatnpc("<p,angry>BE GONE!");
+
+// a wrong answer: one of four at random (the OSRS and RS wikis)
+[label,mh_dron_wrong]
+switch_int (random(4)) {
+    case 0 : ~chatnpc("<p,angry>Don't waste my time!");
+    case 1 : ~chatnpc("<p,angry>You know nothing!");
+    case 2 : ~chatnpc("<p,angry>Leave me alone!");
+    case default : ~chatnpc("<p,angry>Wrong, wrong, wrong!");
+}
+
+// ---------------------------------------------------------------- King Lathas
+// Called first from his Talk-to (area_ardougne_east/king_lathas.rs2) while you have a letter to
+// deliver or one to take back: the OSRS wiki's "Talk about the outpost." / "Talk about something
+// else." (the second goes on to what he would otherwise say). False for something else.
+[proc,mh_lathas]()(boolean)
+def_int $s = %makinghistory_prog;
+if ($s ! ^mh_letter_king & $s ! ^mh_letter_jorral) return(false);
+if (~p_choice2("Talk about the outpost.", 1, "Talk about something else.", 2) = 2) return(false);
+if ($s = ^mh_letter_king) {
+    if (inv_total(inv, makinghistory_letter1) = 0) {
+        ~chatplayer("<p,sad>Excuse me. I have been asked to give you from Jorral... Ooops, I had a letter, but I don't have it with me - be right back!");
+        return(true);
+    }
+    ~chatplayer("<p,neutral>Excuse me. I have been asked to hand you this from Jorral at the outpost.");
+    ~chatnpc("<p,neutral>I see.");
+    ~mesbox("The King reads the letter.");
+    ~chatnpc("<p,shock>I had no idea that place had any value at all! All this about my Great Grandfather and Jorral's plans to make it into a museum makes for a convincing case.");
+    ~chatplayer("<p,neutral>I am sure he only wants what is best.");
+    ~chatnpc("<p,neutral>Very well, I will comply with his request. Take this letter back to him with my kind regards.");
+    inv_del(inv, makinghistory_letter1, 1);
+    inv_add(inv, makinghistory_letter2, 1);
+    ~mh_stage(^mh_letter_jorral);
+    ~chatplayer("<p,happy>Thank you.");
+    return(true);
+}
+if (inv_total(inv, makinghistory_letter2) > 0) {
+    ~chatnpc("<p,quiz>Have you taken that letter to Jorral yet?");
+    ~chatplayer("<p,neutral>I'm working on it!");
+    return(true);
+}
+~chatplayer("<p,sad>Excuse me sire, but I seem to have lost that letter you gave me.");
+if (inv_total(bank, makinghistory_letter2) > 0) {
+    ~chatnpc("<p,angry>Liar! You've put it in your bank!");
+    return(true);
+}
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>Well I would give you another letter if you had space to carry it.");
+    return(true);
+}
+~chatnpc("<p,neutral>Very well, take another.");
+inv_add(inv, makinghistory_letter2, 1);
+return(true);

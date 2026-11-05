@@ -1,0 +1,377 @@
+// EASCape: Making History (22 November 2005) - Jorral, the outpost's history and the end.
+// Sources, in order: Void (the spawns and items only; it has no quest script), 2006Scape and
+// 2009scape (nothing beyond Dron's and Blanin's short lines, quest_makinghistory/mh_leads.rs2),
+// the OSRS wiki's and the RS wiki's Making History and its transcripts, then the 377 cache's own
+// makinghistory varp, varbits, NPCs, objs, locs, seq and sounds. Where the two wikis differ the
+// OSRS wiki's (older) words are used, with the RS wiki filling what it has and the OSRS wiki lacks.
+// Anything a source doesn't give is marked "ours".
+//
+// The requirements: Priest in Peril and The Restless Ghost (the OSRS wiki and 2009scape's
+// Requirement.kt; Void's quests.toml has only The Restless Ghost, but it is Void's later quest
+// list, and Port Phasmatys is past Priest in Peril's temple anyway).
+
+[proc,mh_requirements]()(boolean)
+if (%priestperil < ^priestperil_complete | %prieststart ! ^priest_complete) return(false);
+return(true);
+
+[proc,mh_stage](int $s)
+%makinghistory_prog = $s;
+~send_quest_progress(questlist:makinghistory, %makinghistory_prog, ^mh_complete);
+
+// into your pack, or on the ground under you when it's full (the OSRS wiki: Droalak "drops a
+// scroll on the ground" when you have no room; ours for everything else)
+[proc,mh_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- Jorral
+[opnpc1,makinghistory_jorral]
+def_int $s = %makinghistory_prog;
+if ($s >= ^mh_complete) {
+    // the OSRS wiki's Transcript:Jorral, after the quest
+    ~chatnpc("<p,happy>Thanks for the help again. Feel free to browse the room next door!");
+    return;
+}
+if ($s = ^mh_letter_king) @mh_jorral_letter_king;
+if ($s = ^mh_letter_jorral) @mh_jorral_letter_back;
+~chatplayer("<p,neutral>Hi there.");
+if ($s = ^mh_not_started) @mh_jorral_start;
+~chatnpc("<p,neutral>How's it going?");
+@mh_jorral_progress;
+
+[label,mh_jorral_start]
+~chatnpc("<p,sad>All is lost!");
+~chatplayer("<p,confused>Sorry?");
+if (~mh_requirements = false) {
+    ~chatnpc("<p,angry>Don't bother, you're not experienced enough to help me!");
+    return;
+}
+~chatnpc("<p,sad>Just look around you! This great building will soon be in ruin.");
+~chatplayer("<p,confused>Great building?");
+~chatnpc("<p,happy>Of course! This building has a history spanning generations!");
+~chatplayer("<p,neutral>Ah, I see, a great history. But why will it be in ruin?");
+~chatnpc("<p,sad>It's to be ripped apart to make way for King Lathas' new alchemists' lab.");
+~chatplayer("<p,quiz>Does the king not respect the outpost's GREAT history?");
+~chatnpc("<p,neutral>Well, actually nobody knows what the history is. But there must be something.");
+~chatnpc("<p,happy>Wait a minute. You could help me!");
+~chatplayer("<p,confused>Me?");
+~chatnpc("<p,happy>Yes! Uncover the history of this building to convince King Lathas to leave it alone. Do you want to know more?");
+if (~p_choice2("Tell me more.", 1, "I don't care about some dusty building.", 2) = 2) {
+    @mh_jorral_decline;
+}
+~chatplayer("<p,neutral>Tell me more.");
+~chatnpc("<p,happy>That's what I like to hear."); // the RS wiki's transcript
+~mh_outpost_film;
+~chatnpc("<p,happy>If all goes well, I hope to be able to turn it into a museum as a monument to the area's history. What do you think?");
+// ours: the OSRS wiki's "Yes." / "No." as the lines that follow them
+if (~p_choice2("OK, I will make a stand for history!", 1, "I don't care about some dusty building.", 2) = 2) {
+    @mh_jorral_decline;
+}
+~chatplayer("<p,happy>OK, I will make a stand for history!");
+~mh_stage(^mh_started);
+~chatnpc("<p,happy>Oh thank you so much, you really are my saviour!");
+~chatplayer("<p,quiz>But where should I start?");
+@mh_jorral_three;
+
+[label,mh_jorral_decline]
+~chatplayer("<p,neutral>I don't care about some dusty building.");
+~chatnpc("<p,sad>It's doomed. DOOMED!");
+
+[label,mh_jorral_three]
+~chatplayer("<p,quiz>What do I need to do now?");
+~chatnpc("<p,neutral>There are three people that may be able to help:");
+switch_int (~p_choice3("A trader in Ardougne", 1, "A ghost in Port Phasmatys", 2, "A warrior in Rellekka", 3)) {
+    case 1 :
+        ~chatnpc("<p,neutral>There is a silver trader in East Ardougne called Erin, who I believe can help.");
+        ~chatplayer("<p,quiz>In what way can he help?");
+        ~chatnpc("<p,neutral>His Great Grandfather lived in this outpost according to the records. He must know something!");
+        ~chatplayer("<p,neutral>OK, I'll see what he has to say.");
+    case 2 :
+        ~chatnpc("<p,neutral>I've been told that there's a ghost far off in Port Phasmatys that moans of losing his life to this place.");
+        ~chatplayer("<p,quiz>Sounds ominous. Does he have a name?");
+        ~chatnpc("<p,neutral>He does indeed. It's Droalak.");
+        ~chatplayer("<p,neutral>I'll track him down.");
+        ~chatnpc("<p,neutral>It might not be so simple! You'll need an amulet of ghostspeak to talk to him!");
+        ~chatplayer("<p,happy>I've conversed with the dead before, that shouldn't be too much of a problem.");
+    case 3 :
+        ~chatnpc("<p,neutral>Up near the mountains, in Rellekka is a warrior called Dron whom I have spoken to in the past. He is always on the lookout for information that can improve his fighting and commanding skills.");
+        ~chatplayer("<p,quiz>And how's he related to this outpost?");
+        ~chatnpc("<p,neutral>He isn't directly, but he's studied many wars, and as this used to be an outpost it should have been involved in some war.");
+        ~chatplayer("<p,neutral>That sounds simple enough.");
+        ~chatnpc("<p,neutral>He isn't the easiest person to talk to, so you may need to speak to his brother, Blanin, first.");
+}
+@mh_jorral_menu;
+
+[label,mh_jorral_menu]
+switch_int (~p_choice3("What's the story so far?", 1, "What do I need to do now?", 2, "Got to go, bye!", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's the story so far?");
+        if (~mh_jorral_story = false) return;
+        @mh_jorral_menu;
+    case 2 : @mh_jorral_three;
+    case 3 : ~chatplayer("<p,neutral>Got to go, bye!");
+}
+
+// What Jorral knows so far: the RS wiki's transcript has the journal alone, the journal and the
+// scroll, and the journal and Dron's story; ours for the rest (the same facts, from the scroll and
+// Dron's story as Jorral sums them up when you hand them in). False if you've found nothing.
+[proc,mh_jorral_story]()(boolean)
+def_boolean $journal = false;
+def_boolean $scroll = false;
+def_boolean $warrior = false;
+if (%makinghistory_trader_prog >= ^mh_trader_done) $journal = true;
+if (%makinghistory_ghost_prog >= ^mh_ghost_done) $scroll = true;
+if (%makinghistory_warr_prog >= ^mh_warr_done) $warrior = true;
+if ($journal = false & $scroll = false & $warrior = false) {
+    ~chatnpc("<p,angry>What do you mean? You've discovered nothing!");
+    return(false);
+}
+if ($journal = true & $scroll = false & $warrior = false) {
+    ~chatnpc("<p,neutral>From the journal you received detailing the experiences of a follower of Zamorak, we know that Zamorak followers were living in the outpost at some point, and that they were being a nuisance to Ardougne but the Journal ends abruptly, I think they were halted by someone, some force.");
+} else if ($journal = true & $scroll = true) {
+    ~chatnpc("<p,neutral>From the two pieces of evidence, we know that the outpost was lived in by followers of Zamorak, whom caused havoc to the nearby city of Ardougne. This must be the time of 'The Dreadful Years of Tragedy', which was stopped in 'The Great battle'. One of the survivors became King, which must be the current King Lathas' Great Grandfather and the other started the market place. But who stopped the Zamorakian followers?");
+} else if ($journal = true & $warrior = true) {
+    ~chatnpc("<p,neutral>From the two pieces of evidence, we know that the outpost was occupied by followers of Zamorak who caused havoc to the nearby city of Ardougne. Ardougne called in some Saradomin followers to deal with the problem. The two sides were led by ex-friends who settled their differences and decided to worship Guthix. But who survived and what happened to them?");
+} else if ($scroll = true & $warrior = true) {
+    // ours
+    ~chatnpc("<p,neutral>From the two pieces of evidence, we know that there was a great battle at the outpost, led by two ex-friends, one following Zamorak and the other Saradomin, who settled their differences and decided to worship Guthix. One of the survivors became King and the other started the market place. But why was there a battle here at all?");
+} else if ($scroll = true) {
+    // ours
+    ~chatnpc("<p,neutral>From the scroll, we know that there was a great battle at the outpost. Then one of the survivors became king, and the other started the market place. But who fought, and why?");
+} else {
+    // ours
+    ~chatnpc("<p,neutral>From what the warrior told you, we know that two ex-friends, one following Zamorak and the other Saradomin, led a battle at the outpost and then decided to unite under Guthix. But who were they, and what became of them?");
+}
+return(true);
+
+// handing in what you found: the OSRS and RS wikis' transcripts. After each one, the menu (the
+// RS wiki), or the whole story when it was the last; ours: anything else you brought is handed in
+// first, so you needn't talk to him again for each.
+[label,mh_jorral_progress]
+def_int $t = %makinghistory_trader_prog;
+if ($t >= ^mh_trader_chest & $t < ^mh_trader_done & inv_total(inv, makinghistory_journal) = 0) {
+    if (inv_total(inv, makinghistory_chest) > 0) {
+        ~chatplayer("<p,happy>Hi. I found a chest.");
+        ~chatnpc("<p,neutral>Best you look inside then.");
+        return;
+    }
+    // the RS wiki: lost the chest (and what was in it)
+    ~chatplayer("<p,sad>Hi. I found a chest... oh no! I lost it, and its contents. I'll have to look around again.");
+    return;
+}
+if ($t >= ^mh_trader_key & $t < ^mh_trader_done & inv_total(inv, makinghistory_journal) > 0) {
+    ~chatplayer("<p,happy>I found a journal!");
+    ~chatnpc("<p,happy>Good work. Let's see what it says.");
+    ~mesbox("Jorral reads through the journal.");
+    inv_del(inv, makinghistory_journal, 1);
+    %makinghistory_trader_prog = ^mh_trader_done;
+    ~chatnpc("<p,neutral>The person who wrote the journal spent time living in the outpost, following the order of Zamorak.");
+    ~chatplayer("<p,neutral>I see.");
+    ~chatnpc("<p,angry>He talks of all the nasty things they did to the people of Ardougne, which I don't care to mention! It looks like they were stopped by someone. But it doesn't say who.");
+    ~chatplayer("<p,neutral>Interesting.");
+    if (~mh_all_told = true) @mh_jorral_all;
+    @mh_jorral_progress; // ours: on to anything else you've brought, then the menu
+}
+if (%makinghistory_ghost_prog = ^mh_ghost_scroll & inv_total(inv, makinghistory_scroll1) > 0) {
+    ~chatplayer("<p,happy>I have been in contact with the ghost you suggested, and I've recovered this:");
+    ~mesbox("Jorral skims over the contents of the scroll.");
+    inv_del(inv, makinghistory_scroll1, 1);
+    %makinghistory_ghost_prog = ^mh_ghost_done;
+    ~chatnpc("<p,happy>Very interesting. So there was a great battle at the outpost. Then one of the survivors became king, and the other started the market place. Good work.");
+    if (~mh_all_told = true) @mh_jorral_all;
+    @mh_jorral_progress; // ours: on to anything else you've brought, then the menu
+}
+if (%makinghistory_warr_prog = ^mh_warr_answers) {
+    ~chatplayer("<p,happy>I've talked to the warrior.");
+    ~chatnpc("<p,happy>Excellent! What did he say?");
+    ~chatplayer("<p,neutral>Well...");
+    // the RS wiki: the screen fades out and in while you tell him
+    ~fade_out;
+    p_delay(2);
+    ~fade_in;
+    p_delay(1);
+    if_openoverlay(null);
+    %makinghistory_warr_prog = ^mh_warr_done;
+    ~chatplayer("<p,laugh>And then I asked him about getting the blood stains out of his clothes, but he didn't like that!");
+    ~chatnpc("<p,laugh>It seems you're lucky he didn't beat you up! Well done, that's another piece of the puzzle.");
+    if (~mh_all_told = true) @mh_jorral_all;
+    @mh_jorral_progress; // ours: on to anything else you've brought, then the menu
+}
+@mh_jorral_menu;
+
+[proc,mh_all_told]()(boolean)
+if (%makinghistory_trader_prog >= ^mh_trader_done & %makinghistory_ghost_prog >= ^mh_ghost_done & %makinghistory_warr_prog >= ^mh_warr_done) return(true);
+return(false);
+
+// the last piece: the whole story and the letter for the king
+[label,mh_jorral_all]
+~chatnpc("<p,happy>It all makes sense now, I never realised there was quite so much history to this place, it was more than I could have hoped.");
+~chatplayer("<p,quiz>I'm glad to hear. What's the whole story?");
+~chatnpc("<p,neutral>Many years ago, there were two friends who fell out over their difference of opinion in religion. One decided to dedicate his life to Saradomin, the other to Zamorak. Years passed and the follower of Zamorak moved into this outpost with a group of others to cause havoc for the city of Ardougne.");
+~chatnpc("<p,neutral>The people of the city called upon some Saradomin followers, who happened to be led by the other friend. A battle ensued that ended with the two ex-friends at the top of the outpost as the sole survivors. Realising their mistakes they made friends again.");
+~chatnpc("<p,neutral>One decided to become King and spread the word of equality, and the other chose to start up a market where all could trade their wares equally and fairly. The one that became king is the great grandfather of the King Lathas that we know!");
+~chatplayer("<p,quiz>So what should I do now?");
+~chatnpc("<p,neutral>Well, what I'll do is write down the details you have provided in a more easy to digest manner, along with my plans for using this building as a museum.");
+~mh_stage(^mh_letter_king);
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>Well I would give you the letter if you had space to carry it.");
+    return;
+}
+inv_add(inv, makinghistory_letter1, 1);
+~chatplayer("<p,neutral>Then I suppose you want ME to deliver it to the king?");
+~chatnpc("<p,happy>You've got that right!");
+
+[label,mh_jorral_letter_king]
+if (inv_total(inv, makinghistory_letter1) > 0) {
+    ~chatnpc("<p,quiz>Have you taken that letter to King Lathas in Ardougne yet?");
+    ~chatplayer("<p,sad>No, sorry.");
+    ~chatnpc("<p,neutral>Any time soon would be great.");
+    return;
+}
+~chatplayer("<p,sad>Don't suppose you could give me the letter again?");
+if (inv_total(bank, makinghistory_letter1) > 0) {
+    ~chatnpc("<p,angry>I bet you do have it. I bet you put it in your bank!");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>Well I would give you the letter if you had space to carry it.");
+    return;
+}
+~chatnpc("<p,neutral>Ok. Just don't lose it again");
+inv_add(inv, makinghistory_letter1, 1);
+
+[label,mh_jorral_letter_back]
+if (inv_total(inv, makinghistory_letter2) = 0) {
+    ~chatplayer("<p,sad>I was given a letter to give to you from the king! But I seem to have lost it.");
+    ~chatnpc("<p,neutral>Perhaps he will give you another one.");
+    return;
+}
+~chatplayer("<p,happy>I've been to see the king and he gave me this letter.");
+~chatnpc("<p,happy>Quick, let me see.");
+~mesbox("Jorral reads the letter.");
+inv_del(inv, makinghistory_letter2, 1);
+~chatnpc("<p,happy>Hurrah! Good work, you've done it. You've saved the outpost!");
+~chatplayer("<p,happy>My pleasure.");
+~chatnpc("<p,happy>I can now continue with my plans for this place. Thank you.");
+// the RS wiki: "Screen fade out/in. Displays have been added to the outpost."
+~fade_out;
+p_delay(2);
+%makinghistory_objloc = 1;
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~chatnpc("<p,happy>Take a look at the artefacts in the new museum room. You may find something of interest.");
+~mh_complete;
+
+// ---------------------------------------------------------------- the opening film
+// The OSRS wiki's narration (the RS wiki's is the same, worded later); the RS wiki: "Screen fade
+// out/in. Cutscene begins. Camera pans over the outpost." Ours: where the camera goes, and the
+// narration in message boxes. The Outpost jingle isn't in our cache's jingles.
+[proc,mh_outpost_film]
+if_close;
+~fade_out;
+p_delay(2);
+cam_moveto(0_38_52_17_7, 1200, 0, 100);
+cam_lookat(0_38_52_4_17, 350, 0, 100);
+p_delay(1);
+cam_moveto(0_38_52_17_27, 1200, 1, 0); // ours: a slow drift round the outpost
+~fade_in;
+p_delay(2);
+~mesbox("With many occupants over the years...");
+~mesbox("...the building has seen much action.");
+~mesbox("It started life as an outpost...");
+~mesbox("... its sole purpose being to see invading armies...");
+~mesbox("... before they saw the city of Ardougne.");
+~fade_out;
+p_delay(2);
+cam_reset;
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- the reward
+// The OSRS and RS wikis: 3 quest points, 1,000 Crafting and 1,000 Prayer experience, 750 coins,
+// the enchanted key to go on treasure digs, the museum. Ours: a key if you no longer have one.
+[proc,mh_complete]
+~mh_stage(^mh_complete);
+%makinghistory_objloc = 1;
+stat_advance(crafting, 10000);
+stat_advance(prayer, 10000);
+~mh_give(coins, 750);
+if (inv_total(inv, makinghistory_key) = 0 & inv_total(bank, makinghistory_key) = 0) {
+    ~mh_give(makinghistory_key, 1);
+}
+session_log(^log_adventure, "Quest complete: Making History");
+~send_quest_complete(questlist:makinghistory, makinghistory_key, 250, ^mh_questpoints, "You have completed the Making History Quest!", "1,000 Crafting XP|1,000 Prayer XP|750 Coins|The Enchanted Key|Access to the museum");
+
+// ---------------------------------------------------------------- the journal
+// The RS wiki's Transcript:Making History/Journal has only the four main lines (it is marked
+// incomplete); the lines for the three people are ours, from the transcripts.
+[if_button,questlist:makinghistory]
+def_int $s = %makinghistory_prog;
+if ($s = ^mh_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Jorral@dbl@ at the|@dre@outpost@dbl@ north-west of @dre@West Ardougne@dbl@.||@dbl@To start this quest I must have completed:|";
+    $req = append($req, ~mh_req_line(%priestperil, ^priestperil_complete, "Priest in Peril"));
+    $req = append($req, ~mh_req_line(%prieststart, ^priest_complete, "The Restless Ghost"));
+    ~quest_journal("Making History", $req);
+    return;
+}
+def_string $t;
+if ($s = ^mh_started) {
+    $t = "@dbl@@dre@Jorral@dbl@ wants to save the outpost from @dre@King Lathas@dbl@ plans.|";
+    $t = append($t, ~mh_journal_trader);
+    $t = append($t, ~mh_journal_ghost);
+    $t = append($t, ~mh_journal_warrior);
+} else {
+    $t = "@str@Jorral wants to save the outpost from King Lathas plans.|";
+}
+if ($s = ^mh_letter_king) {
+    $t = append($t, "|@dbl@I have gathered the parts of history. I have been given a|@dre@letter@dbl@ for @dre@King Lathas@dbl@.");
+} else if ($s > ^mh_letter_king) {
+    $t = append($t, "|@str@I have gathered the parts of history. I have been given a|@str@letter.");
+}
+if ($s = ^mh_letter_jorral) {
+    $t = append($t, "|@dbl@The king was pleased to see the history. He gave me a|@dre@letter@dbl@ for @dre@Jorral@dbl@.");
+} else if ($s > ^mh_letter_jorral) {
+    $t = append($t, "|@str@The king was pleased to see the history. He gave me a|@str@letter for Jorral");
+}
+if ($s >= ^mh_complete) {
+    $t = append($t, "||@dbl@The outpost is saved!||@red@QUEST COMPLETE!");
+}
+~quest_journal("Making History", $t);
+
+[proc,mh_req_line](int $have, int $need, string $text)(string)
+if ($have >= $need) return("@str@<$text>|");
+return("@dre@<$text>|");
+
+// ours
+[proc,mh_journal_trader]()(string)
+switch_int (%makinghistory_trader_prog) {
+    case 0 : return("|@dbl@A silver trader in @dre@East Ardougne@dbl@ called @dre@Erin@dbl@ may be able|@dbl@to help.|");
+    case ^mh_trader_key : return("|@dre@Erin@dbl@ lent me his great grandfather's @dre@enchanted key@dbl@. It|@dbl@changes temperature as I walk around.|");
+    case ^mh_trader_chest : return("|@dbl@The key led me to a buried @dre@chest@dbl@. I should look inside it.|");
+    case ^mh_trader_journal : return("|@dbl@I found a @dre@journal@dbl@ in the chest. I should show it to @dre@Jorral@dbl@.|");
+}
+return("|@str@Jorral has read the journal I found with Erin's key.|");
+
+// ours
+[proc,mh_journal_ghost]()(string)
+switch_int (%makinghistory_ghost_prog) {
+    case 0 : return("|@dbl@A ghost called @dre@Droalak@dbl@ in @dre@Port Phasmatys@dbl@ may be able to|@dbl@help. I will need an @dre@amulet of ghostspeak@dbl@.|");
+    case ^mh_ghost_asked : return("|@dre@Droalak@dbl@ wants me to give his wife @dre@Melina@dbl@ a @dre@strung|@dre@sapphire amulet@dbl@.|");
+    case ^mh_ghost_amulet : return("|@dbl@I gave @dre@Melina@dbl@ the amulet. I should tell @dre@Droalak@dbl@.|");
+    case ^mh_ghost_scroll : return("|@dre@Droalak@dbl@ gave me a @dre@scroll@dbl@. I should take it to @dre@Jorral@dbl@.|");
+}
+return("|@str@Jorral has read Droalak's scroll.|");
+
+// ours
+[proc,mh_journal_warrior]()(string)
+switch_int (%makinghistory_warr_prog) {
+    case 0 : return("|@dbl@A warrior in @dre@Rellekka@dbl@ called @dre@Dron@dbl@ may be able to help. I|@dbl@may need to speak to his brother @dre@Blanin@dbl@ first.|");
+    case ^mh_warr_hints : return("|@dre@Blanin@dbl@ told me what I need to remember when talking to|@dre@Dron@dbl@.|");
+    case ^mh_warr_answers : return("|@dre@Dron@dbl@ told me of a battle at the outpost. I should tell|@dre@Jorral@dbl@.|");
+}
+return("|@str@I have told Jorral what Dron told me.|");

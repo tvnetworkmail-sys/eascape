@@ -3,9 +3,21 @@ if (getqueue(stolen_from_stall_silver) > 0) {
     npc_say("You stole from me. Talk to me when you've considered your actions!");
     return;
 }
+// EASCape: Making History (quest_makinghistory/mh_leads.rs2): after the quest, until the key
+// has dissolved and he has heard of it, his "Hello again" talk (the OSRS wiki)
+if (%makinghistory_prog >= ^mh_complete & %makinghistory_trader_prog < ^mh_trader_dissolved) {
+    @mh_erin_after;
+}
 ~chatnpc("<p,happy>Silver! Silver!|Best prices for buying and selling in all Kandarin!");
 
-def_int $option = ~p_choice2("Yes please.", 1, "No thank you.", 2);
+// EASCape: Making History: "Ask about the outpost." while the quest is under way (the OSRS wiki)
+def_int $option;
+if (%makinghistory_prog > ^mh_not_started & %makinghistory_prog < ^mh_complete) {
+    $option = ~p_choice3("Yes please.", 1, "Ask about the outpost.", 3, "No thank you.", 2);
+    if ($option = 3) @mh_erin_outpost;
+} else {
+    $option = ~p_choice2("Yes please.", 1, "No thank you.", 2);
+}
 
 if($option = 1) {
     ~openshop_activenpc;

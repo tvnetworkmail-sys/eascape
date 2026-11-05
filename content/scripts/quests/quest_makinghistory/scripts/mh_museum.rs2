@@ -1,0 +1,74 @@
+// EASCape: Making History - the museum in the outpost once the quest is done. The displays,
+// bookcase and catapult are the 377 cache's multilocs on makinghistory_objloc (crates, a bed and
+// sacks before, the museum after), already in our map of the outpost. The words are the OSRS and
+// RS wikis' transcripts (Bookcase (Outpost), The History of the Outpost, The Times of Lathas, The
+// Mysterious Adventurer, Shield Display, Large Display).
+
+[oploc1,makinghistory_shield_display_multiloc]
+~mesbox("Inside the case is a giant shield, the plate reads: 'This shield comes from the Fourth age when people were fighting to become more settled and less nomadic'.");
+
+// the ground floor's display
+[oploc1,makinghistory_large_display1_multiloc]
+~mesbox("Inside the case are three items, the first is a helmet, and its card reads: 'The helm worn by Wally in his defeat of Delrith the Demon 150 years ago'.");
+~mesbox("Next is a battle axe, its card reads: 'The axe of Arrav, left behind by accident before he journeyed on his quest for the shield to save the people of Avarrocka'.");
+~mesbox("Lastly are a pair of old boots, their card reads: 'These boots were worn by Randas before being corrupted by Zamorak's promises of glory'.");
+
+// the first floor's display
+[oploc1,makinghistory_large_display2_multiloc]
+~mesbox("Inside the case are three items, the first is a flag of Saradomin, and its card reads: 'This flag was held high by an incoming Saradominist force that did battle in this outpost 68 years after the start of the Fifth age. Its good condition is a testament to the importance of such items to warriors of those times'.");
+~mesbox("Next is an iron mace and its card reads: 'The mace comes from the Fourth age. A time when people were first mining metals and putting them to use. Historians suspect this was one of the first uses for the metal'.");
+~mesbox("The last object is a flag of Zamorak and its card reads: 'The symbol of Zamorak has made its mark on many items, but none so important as the flag borne into battle. This flag was not only carried into battle, but also had pride of place at the top of this outpost in the years known as The Dreaded Years of Tragedy'.");
+
+[oploc1,makinghistory_bookcase_multiloc]
+~mesbox("There's a great variety of books. Which shall you choose?");
+switch_int (~p_choice3("The History of the Outpost.", 1, "The Times of Lathas.", 2, "The Mysterious Adventurer.", 3)) {
+    case 1 :
+        %book_page = 0;
+        %open_book = makinghistory_scroll1; // ours: the bookcase's books are no objs; a quest obj marks which is open (general/book.rs2)
+        @book_flip_page(0, 0, ~mh_outpost_last, mh_book_outpost);
+    case 2 :
+        ~mesbox("You pick up a new looking book: 'The Times of Lathas'. You skim over the heavy book. It talks about the heritage of the line of kings who carry the name Ardignas. They only came into power 68 years ago, but in which time there have been five kings, the current being King Lathas.");
+    case 3 :
+        %book_page = 0;
+        %open_book = makinghistory_chest; // ours, as above
+        @book_flip_page(0, 0, ~mh_adventurer_last, mh_book_adventurer);
+}
+
+// The History of the Outpost
+[proc,mh_outpost_split]
+split_init(append(append("Approximately 140 years after the establishment of the outpost, a great traveller, known only as <displayname()> unravelled the history of the outpost.||It transpires that the outpost was first established to protect the nearby city of Ardougne from threats, spotting them before they had the chance to reach the city. There followed a long period without war during which the outpost was abandoned as a pointless project. Various people visited the outpost for various reasons, but none left any particular mark on history. The first and most important mark wasn't until 65 years after the establishment of the outpost, when a group of Zamorak followers moved in.||The Zamorakians' only purpose", " seemed to be the disruption of the nearby city of Ardougne, over the years now known as the 'The Dreaded Years of Tragedy'.||The leader of the Zamorak followers had once had a great friend. However, when they were still young they had both fallen apart in a disagreement over religion. One decided that Saradomin was the god for him, and the other chose Zamorak. It just so happened that when the City of Ardougne called for help to rid them of these Zamorakians, that the incoming force were Saradominists led by the other ex-friend. This in-turn led to a battle simply known as 'The Great Battle', perhaps because little was known about its activity with it being a small battle in terms of"), " numbers, (although not in power, we suspect).||The battle produced two survivors - the two ex- friends, both being the most powerful mages. It is said that they settled their differences on the grounds of the friendship they had lost, as well as the loss of life and time.||Settling for the neutral god Guthix, the two went about their ways to spread equality among the people. One of the friends became king, to listen to people's views and ensure a fair and equal life for everyone, whilst the other friend founded the market place, allowing people to trade their skills and wares under equal rights and opportunities."), 175, 22, q8_full);
+
+[proc,mh_outpost_last]()(int)
+~mh_outpost_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,mh_book_outpost]
+~mh_outpost_split;
+~book_page("The History of the Outpost", %book_page);
+
+// The Mysterious Adventurer: the OSRS wiki's list (the RS wiki's has quests added in 2011), the
+// deeds of the quests you have done. Ours: which quest each line is.
+[proc,mh_adventurer_split]
+def_string $l = "";
+if (%demonstart >= ^demon_complete) $l = append($l, "- Confronting the demon Delrith with the sword, Silverlight.|");
+if (%prieststart = ^priest_complete) $l = append($l, "- Returning the skull of a ghost so that he may rest in peace.|");
+if (%cookquest >= ^cook_complete) $l = append($l, "- Collecting ingredients for the chef in Lumbridge to make a cake.|");
+if (%fenk_quest >= ^fenk_complete) $l = append($l, "- Helping Dr Fenkenstrain create a monster.|");
+if (%dwarfrock_quest >= ^bar_complete) $l = append($l, "- Being launched from a cannon wearing a gold helm just to help an old dwarf.|");
+if (%biohazard >= ^biohazard_complete) $l = append($l, "- Meddling with Mourner's soup in West Ardougne.|");
+if (%sheep >= ^sheep_complete) $l = append($l, "- Shearing many sheep to help Farmer Fred.|");
+if (%spy >= ^blackknight_complete) $l = append($l, "- Sabotaging the plans of the black knights with just a cabbage!|");
+if (%haunted >= ^haunted_complete) $l = append($l, "- Turning a chicken called Ernest into a man.|");
+if (%fishingcompo >= ^fishingcompo_complete) $l = append($l, "- Participating in the fishing contest at Hemenster and winning first prize.|");
+if (%fluffs >= ^fluffs_complete) $l = append($l, "- Searching for a lost cat and returning its kitten.|");
+def_string $who = "He has";
+if (gender = 1) $who = "She has";
+split_init("Word is spreading of a brave and intelligent adventurer who goes by the name '<displayname()>', <$who> talked to a great many people, helping solve problems and improving their lives.||The list of achievements include:||<$l>|The list goes on, so we can see that this <displayname()> is destined for great things for which Gielinor should be truly grateful!", 175, 22, q8_full);
+
+[proc,mh_adventurer_last]()(int)
+~mh_adventurer_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,mh_book_adventurer]
+~mh_adventurer_split;
+~book_page("The Mysterious Adventurer", %book_page);
