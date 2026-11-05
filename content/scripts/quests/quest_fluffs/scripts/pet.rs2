@@ -17,6 +17,11 @@ if (npc_finduid(%follower_uid) = true) {
         cleartimer(petcat_growth);
         return;
     }
+    if ($cat_cat = wilycat | $cat_cat = lazycat) { // EASCape: Rat Catchers - they don't grow (quest_ratcatchers/rc_journal.rs2)
+        npc_say("Meow!");
+        if ($cat_cat = wilycat) ~rc_wily_tick;
+        return;
+    }
     def_int $growth = getbit_range(%cat_growth, 11, 19); //growth       (0-120-320)
     npc_say("Meow!"); //done every 90s, no random chance
     %cat_growth = setbit_range_toint(%cat_growth, min(320,max(calc($growth + 1),-1)), 11, 19);
@@ -156,6 +161,9 @@ if (%npc_attacking_uid ! uid | %follower_uid ! npc_uid) {
     return;
 }
 if (~ttc_cat_talk = true) return; // EASCape: A Tail of Two Cats: the chores (quest_twocats/ttc_house.rs2)
+@pet_stroke;
+
+[label,pet_stroke]
 if(getbit_range(%cat_growth, 5, 10) = 28) { 
     %cat_growth = setbit_range_toint(%cat_growth, 23, 5, 10); 
 } else {
@@ -168,11 +176,22 @@ p_delay(2);
 npc_say("Purr...purr...");
 ~chatplayer("<p,happy>That cat sure loves to be stroked.");
 
+// EASCape: Interact-with (the cache's op4) offers what Void's cats do: Stroke, Chase vermin or
+// Shoo away; the cats have no op5 for Chase vermin of their own
 [opnpc4,_petcat]
 if (%npc_attacking_uid ! uid | %follower_uid ! npc_uid) {
     mes("This is not your cat.");
     return;
 }
+def_string $what = "Interact with Cat";
+if (oc_category(nc_param(npc_type, pet_item_id)) = kitten) $what = "Interact with Kitten";
+switch_int (~p_choice3_header("Stroke", 1, "Chase vermin", 2, "Shoo away", 3, $what)) {
+    case 1 : @pet_stroke;
+    case 2 : @pet_chase;
+}
+@pet_shoo;
+
+[label,pet_shoo]
 def_int $choice = ~p_choice2_header("Yes I am.", 1, "No I'm not.", 2, "Are you sure you want to shoo away the cat?");
 if ($choice = 2) {
     mes("You choose not to shoo away the cat."); //osrs
@@ -191,6 +210,10 @@ if (%npc_attacking_uid ! uid | %follower_uid ! npc_uid) {
     mes("This is not your cat.");
     return;
 }
+@pet_chase;
+
+[label,pet_chase]
+if (~rc_chase = true) return; // EASCape: Rat Catchers: the mansion's rats (quest_ratcatchers/rc_journal.rs2)
 if (oc_category(nc_param(npc_type, pet_item_id)) = overgrown) {
     mes("The cat is just too big to catch vermin.");
     return;
@@ -217,6 +240,11 @@ if (.npc_find(coord, rat, 10, 1) = true) {
     if(oc_category(nc_param(npc_type, pet_item_id)) = kitten) {
         $chance = random(10); //10% if not grown
     }
+    // EASCape: Rat Catchers - the RS wiki: wily cats catch 93% of rats, lazy cats as cats do
+    if (oc_category(nc_param(npc_type, pet_item_id)) = wilycat) {
+        $chance = 0;
+        if (random(100) >= 93) $chance = 1;
+    }
     if($chance ! 0) {
         mes("The rat manages to get away!");
         return;
@@ -225,6 +253,7 @@ if (.npc_find(coord, rat, 10, 1) = true) {
     npc_say("MeeeoooooW!");
     say("Hey well done kitty, you got it!"); //"kitty" guessed
     %cat_growth = setbit_range_toint(%cat_growth, min(100,max(calc($vermin + 1),-1)), 20, 26);
+    ~rc_rat_caught; // EASCape: Rat Catchers: the sisters' count, the rat pole, lazy cats (quest_ratcatchers/rc_journal.rs2)
 } else {
     mes("There aren't any rats or mice around."); // 2004 https://youtu.be/HQEpeWAUMbI?t=21
 }

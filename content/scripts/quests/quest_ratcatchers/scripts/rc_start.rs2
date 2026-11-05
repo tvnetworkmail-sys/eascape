@@ -1,0 +1,221 @@
+// EASCape: Rat Catchers - Gertrude and the sisters Grime (Phingspet and Grimesquit) in the Varrock
+// sewers. Words: the RS wiki's quest and NPC transcripts; the OSRS wiki's where the RS one has none.
+
+// ---------------------------------------------------------------- Gertrude
+// gertrude.rs2 asks this after A Tail of Two Cats. Ours: the RS wiki's menu, without "Can you
+// tell me how to look after my cat?" (Gertrude has no such talk here); kittens go on to her own.
+[proc,rc_ask_gertrude]()(boolean)
+if (%fluffs ! ^fluffs_complete) return(false);
+def_int $s = %ratcatch_var;
+if ($s = ^rc_not_started & ~rc_requirements = false) return(false);
+if ($s > ^rc_jimmy & $s < ^rc_complete) return(false);
+if (~p_choice2("Do you have any more kittens?", 1, "Talk about the 'Ratcatchers' quest.", 2) = 1) return(false);
+if ($s = ^rc_not_started) {
+    ~chatnpc("<p,happy>Oh yes, before I forget I think there are some people you should meet.");
+    ~chatplayer("<p,quiz>Who's that then?");
+    ~chatnpc("<p,neutral>Well there are these two ladies who know a lot about rat catching.");
+    ~chatplayer("<p,quiz>Oh really? Where would I find them?");
+    ~rc_set(^rc_started);
+    ~rc_gertrude_sewers;
+    return(true);
+}
+if ($s = ^rc_started) {
+    ~chatnpc("<p,quiz>Did you ever get to talk to those people I told you about?");
+    ~chatplayer("<p,neutral>Not yet. Can you remind me where to find those two ladies who know a lot about rat catching?");
+    ~rc_gertrude_sewers;
+    return(true);
+}
+~chatnpc("<p,quiz>Did you ever get to talk to those people I told you about?");
+~chatplayer("<p,neutral>Yes, strange people. But interesting nonetheless.");
+return(true);
+
+[proc,rc_gertrude_sewers]
+~chatnpc("<p,neutral>They generally are to be found in the sewers underneath Varrock, a horrible place, I should know.");
+~chatplayer("<p,confused>I wouldn't have thought you would have much business down in the sewers?");
+~chatnpc("<p,angry>I've had to drag Shilop and Wilough out of there more times than I care for, the little rascals.");
+~chatnpc("<p,neutral>I don't know which is harder raising kids or cats.");
+~chatplayer("<p,happy>Thank you Gertrude, I'll be sure to have a look for them.");
+
+// ---------------------------------------------------------------- the sisters Grime
+[opnpc1,vc_grimesquit] @rc_sisters;
+[opnpc1,vc_phingspet] @rc_sisters;
+
+[proc,rc_grime](string $text)
+~chatnpc_specific("Grimesquit", vc_grimesquit, $text);
+
+[proc,rc_phing](string $text)
+~chatnpc_specific("Phingspet", vc_phingspet, $text);
+
+[label,rc_sisters]
+def_int $s = %ratcatch_var;
+if ($s = ^rc_not_started) {
+    // Transcript:Grimesquit, before Rat Catchers
+    ~rc_grime("<p,neutral>What's you want?");
+    ~rc_phing("<p,quiz>Ya what's zey want?");
+    ~rc_grime("<p,confused>I don't know it's why I is asking 'em.");
+    ~rc_phing("<p,neutral>Why do we care what zey wants let's get back to rat splattin'.");
+    ~rc_grime("<p,happy>Ya good plan.");
+    ~chatplayer("<p,confused>Em... Ahemm.. Excuse me?");
+    return;
+}
+if ($s = ^rc_started) @rc_sisters_meet;
+if ($s = ^rc_sniffed) @rc_sisters_count;
+if ($s = ^rc_caught_eight) @rc_sisters_fool;
+if ($s >= ^rc_complete) @rc_sisters_after;
+@rc_sisters_again;
+
+[label,rc_sisters_meet]
+if (~rc_has_cat = false) {
+    // the OSRS wiki
+    ~chatplayer("<p,neutral>They're not going to be able to sniff whether I was successful or not unless I bring my cat with me.");
+    return;
+}
+~rc_grime("<p,happy>O 'ello what's we gots 'ere?");
+~mesbox("Despite being in a vile smelling sewer, your nostrils still pick up a sickly sweet vinegarish odour which is wafting from their general direction.");
+~rc_phing("<p,neutral>Wot's you want?");
+~chatplayer("<p,happy>Oh hello. I was told by a friend that you know a lot about rat catching, I was wondering if you'd teach me a little.");
+~rc_grime("<p,happy>We know lots about rat splattering.");
+~rc_phing("<p,neutral>Ya we knows. But why should we tells you?");
+~chatplayer("<p,neutral>Well I am a great cat owner myself and I'd like to meet other people who are also interested in the same things, and who can perhaps teach me and my cat a trick or two about ratcatching.");
+~rc_phing("<p,quiz>D'you 'ear 'em?");
+~rc_grime("<p,confused>Wa?");
+~rc_phing("<p,laugh>Dey tinks fuzzys does trickses.");
+~rc_grime("<p,laugh>Ha! Everyone knowses only dogsies does trickses.");
+~rc_phing("<p,neutral>I doesn't tinks dey knows anting 'bout catchin ratsies.");
+~rc_grime("<p,neutral>Set's em a task and we'll sees.");
+~rc_phing("<p,neutral>If yous catches 8 rats with y'er fuzzy we'll tells yous.");
+~chatplayer("<p,confused>How will you know that I've completed your task and what's a fuzzy?");
+~rc_phing("<p,neutral>Y'er cat stupid and we'll smells 'em.");
+~chatplayer("<p,confused>Um... alright I guess.");
+~chatplayer("<p,sad>I can't believe I'm going to do this. But what choice do I have?");
+~rc_set(^rc_sniffed);
+%ratcatch_ometer = 0;
+if (~rc_cat_kind > 0) {
+    ~mesbox("With that, she picks up your cat and takes a powerful whiff of it before placing it gently back on the ground.");
+    ~chatplayer("<p,quiz>Are you alright cat?");
+    if (~ttc_catspeak = true) ~rc_catsay("<p,sad>I'll live.");
+    else ~rc_catsay("<p,sad>Miaoww!"); // the OSRS wiki
+    return;
+}
+~mesbox("With that, she walks over and takes a powerful whiff of your bag.");
+~rc_phing("<p,bored>I's bored wit dis chaterboxing, let's splat some more ratsies.");
+~chatplayer("<p,confused>Em... Ahemm...|Excuse me?");
+~mesbox("The gruesome twosome seem to have lost interest in you, and turn their minute intellects elsewhere.");
+
+[label,rc_sisters_count]
+~chatplayer("<p,neutral>Hello.");
+~rc_phing("<p,happy>O 'ello what's we gots 'ere?");
+~rc_grime("<p,neutral>It's dem again.");
+~rc_phing("<p,quiz>Has dey caught de ratsies?");
+~mesbox("Both Grimesquit and Phingspet sniff in theatrically.");
+if (%ratcatch_ometer = 0) {
+    ~rc_grime("<p,laugh>No dey asn't caught any. Told ya dey was rubbish!");
+} else {
+    ~rc_grime("<p,neutral>No deys only gots <tostring(%ratcatch_ometer)> of 'em.");
+}
+~chatplayer("<p,quiz>How many of them do I need to catch again?");
+~rc_phing("<p,neutral>8 ratsies. An' your fuzzy 'as to catch them. Any you gets don't count.");
+~rc_grime("<p,bored>Ey! I's bored of 'em.");
+~rc_phing("<p,laugh>I 'ears ya. Bet's ya I'll squash more ratsies dan you...");
+~mesbox("You can't take much more of their mindless banter and leave them go back to whatever they were doing.");
+
+[label,rc_sisters_fool]
+~chatplayer("<p,happy>I got de ratsies for you's.");
+~rc_phing("<p,confused>What's up with them?");
+~rc_grime("<p,neutral>Didn't I tell you they were a bit thick?");
+~chatplayer("<p,confused>?");
+~rc_phing("<p,neutral>What a slack jawed mindless creature.");
+~rc_grime("<p,laugh>Yeah, like what's 'I got de ratsies' mean.");
+~chatplayer("<p,confused>?");
+~chatplayer("<p,angry>Hang on a second. I thought you were thick.");
+~rc_phing("<p,laugh>Ha! We were only playing with you.");
+~rc_grime("<p,laugh>That was funny. We should try that again on the next adventurer who comes along. They're so gullible.");
+~rc_grime("<p,laugh>Believe anything you say.");
+~chatplayer("<p,bored>Ok you've had your laugh, now will you please show me something about ratcatching?");
+~rc_phing("<p,neutral>There's not much we can teach you here.");
+~rc_grime("<p,neutral>No not much at all, no not much at all.");
+~chatplayer("<p,angry>What? So we've just caught all these rats for nothing?");
+~rc_phing("<p,neutral>Here have's a rat pole.");
+~rc_set(^rc_jimmy);
+~ttc_give(vc_rat_pole);
+~objbox(vc_rat_pole, "Phingspet hands you a rat pole.", 250, 0, 0);
+~chatplayer("<p,quiz>What can I use it for.");
+~rc_phing("<p,neutral>You can stick the ratsies your fuzzy catches onto it.");
+~chatplayer("<p,confused>Um... thanks I guess.");
+~rc_phing("<p,quiz>Will we tell <text_gender("him", "her")> about Jimmy and the rat pits?");
+~rc_grime("<p,confused>I doesn' knows. I doesn' know.");
+~rc_phing("<p,laugh>You gots all de dead ratsies with you.");
+~rc_grime("<p,laugh>Ha! Ha!");
+~chatplayer("<p,angry>No!");
+~rc_phing("<p,laugh>Go on, go on, tell them about Jimmy, go on.");
+~rc_grime("<p,neutral>You should talk to Jimmy Dazzler in Ardougne. He could show your fuzzy a ting o' two.");
+~rc_phing("<p,laugh>Ha! Ha, ha, ...ha .......ha.");
+~rc_grime("<p,laugh>Ha! Ha!");
+~mesbox("You have the feeling that they'll get no end of fun from that joke, and you begin to question their intellectual capacity once more.");
+
+[label,rc_sisters_again]
+~rc_grime("<p,confused>Eh? Would you credit da.");
+~rc_phing("<p,confused>Wha?");
+~rc_grime("<p,neutral>It's <displayname> again init?");
+~rc_phing("<p,confused>Wha?");
+~rc_grime("<p,neutral><displayname> has come back again.");
+~rc_phing("<p,confused>S' wha does 'ey want?");
+~chatplayer("<p,bored>Oh come on, stop the act. It's just not funny anymore.");
+~rc_grime("<p,laugh>Ya it is.");
+~rc_phing("<p,laugh>Ha! Ha!");
+~rc_grime("<p,laugh>Ha! Ha!");
+~rc_sisters_pole;
+~chatplayer("<p,quiz>Can you tell me where I would find Jimmy Dazzler?");
+~rc_sisters_jimmy;
+
+// the OSRS wiki: "Players who lose their rat pole can obtain a new empty one by talking to
+// Phingspet and Grimesquit." (ours: Phingspet's words from when she first gave it)
+[proc,rc_sisters_pole]
+if (~obj_gettotal(vc_rat_pole) > 0) return;
+if (calc(~obj_gettotal(vc_rat_pole_1) + ~obj_gettotal(vc_rat_pole_2) + ~obj_gettotal(vc_rat_pole_3)) > 0) return;
+if (calc(~obj_gettotal(vc_rat_pole_4) + ~obj_gettotal(vc_rat_pole_5) + ~obj_gettotal(vc_rat_pole_6)) > 0) return;
+~rc_phing("<p,neutral>Here have's a rat pole.");
+~ttc_give(vc_rat_pole);
+~objbox(vc_rat_pole, "Phingspet hands you a rat pole.", 250, 0, 0);
+
+[proc,rc_sisters_jimmy]
+~rc_grime("<p,neutral>'Ees in Ardougne. In ee?");
+~rc_phing("<p,neutral>'e is, e is. He stays in the Flying Horse dun 'e?");
+~rc_grime("<p,laugh>Tell 'im we said 'ello. Will ye?");
+~mesbox("She then breaks out in a burst of girly giggles.");
+
+// Transcript:Grimesquit, after Rat Catchers
+[label,rc_sisters_after]
+~rc_grime("<p,confused>Eh? Would you credit da.");
+~rc_phing("<p,confused>Wha?");
+~rc_grime("<p,neutral>It's <displayname> again init?");
+~rc_phing("<p,confused>Wha?");
+~rc_grime("<p,neutral><displayname> has come back again.");
+~rc_phing("<p,confused>S' wha does 'ey want?");
+~chatplayer("<p,bored>Oh come on, stop the act. It's just not funny anymore.");
+~rc_grime("<p,laugh>Ya it is.");
+~rc_phing("<p,laugh>Ha! Ha!");
+~rc_grime("<p,laugh>Ha! Ha!");
+~rc_sisters_pole;
+switch_int (~p_choice5("Jimmy Dazzler", 1, "Hooknosed Jack", 2, "Smokin' Joe", 3, "The face", 4, "Felkrash", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can you tell me where I would find Jimmy Dazzler?");
+        ~rc_sisters_jimmy;
+    case 2 :
+        ~chatplayer("<p,quiz>Can you tell me where I would find Hooknosed Jack?");
+        ~rc_grime("<p,neutral>Da big ugly's ere in Vu'rock.");
+        ~rc_phing("<p,laugh>Da big ugly! Ha that's a good one. 'E is big n ugly though isn't e, serve him right for all the fights e get's in.");
+        ~rc_grime("<p,laugh>Ha! I nose the truth when I 'ears it! Get it? Get it? Nose the truth?");
+        ~rc_phing("<p,laugh>Ha, ha, ha ah ha.....");
+        ~mesbox("You leave the sisters grime mid cackle.");
+    case 3 :
+        ~chatplayer("<p,quiz>Can you tell me where I would find Smokin' Joe?");
+        ~rc_grime("<p,neutral>Short stuff's out in Keldagrime.");
+    case 4 :
+        ~chatplayer("<p,quiz>Can you tell me where I would find the Face?");
+        ~rc_grime("<p,quiz>Hey features? Where is she?");
+        ~rc_phing("<p,neutral>Port Sarim last I 'eard.");
+    case 5 :
+        ~chatplayer("<p,quiz>Can you tell me where I would find Felkrash?");
+        ~rc_grime("<p,neutral>She's travels about a bit, but I reckon Port Sarim.");
+}

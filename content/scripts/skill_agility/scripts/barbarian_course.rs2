@@ -25,7 +25,7 @@ loc_anim(ropeswing_long);
 ~agility_exactmove(human_ropeswing_long, 20, 0, $start_pos, movecoord($start_pos, 0, 0, -5), 45, 70, ^exact_south, false);
 mes("You skillfully swing across.");
 sound_synth(swing_across, 1, 0);
-stat_advance(agility, 200);
+stat_advance(agility, 220); // EASCape: the OSRS wiki's 22 (the 28 November 2005 update raised the course's experience; this file had 20 from a 2006 tip.it guide)
 ~update_barbarian_varp(1);
 
 [oploc1,barbarian_log_balance]
@@ -149,6 +149,6 @@ if(calc(%barbarian_course_progress + 1) >= $completed) {
     %barbarian_course_progress = $completed;
 }
 if(%barbarian_course_progress = 5) {
-    stat_advance(agility, 462);
+    stat_advance(agility, 463); // EASCape: the OSRS wiki's 46.3 lap bonus (this file had 46.2)
     %barbarian_course_progress = 0;
 }

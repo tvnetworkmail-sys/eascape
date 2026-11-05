@@ -1336,7 +1336,11 @@ if (last_useitem ! coins) {
 }
 inv_del(inv, coins, 1); // ours: one coin, as the quick guide says to use "a coin"
 ~mesbox("The snake charmer snaps out of his trance and directs his full attention to you.");
-if (~p_choice2("Wow, a snake charmer! Can I have a go? Can I have a go? Please?", 1, "Never mind.", 2) = 2) return;
+def_int $rc = ~rc_charmer; // EASCape: Rat Catchers: animal charming (quest_ratcatchers/rc_sarim.rs2)
+if ($rc = 1) return;
+if ($rc = 0) {
+    if (~p_choice2("Wow, a snake charmer! Can I have a go? Can I have a go? Please?", 1, "Never mind.", 2) = 2) return;
+}
 ~chatplayer("<p,happy>Wow, a snake charmer! Can I have a go? Can I have a go? Please?");
 if (npc_find(coord, feud_snakecharmer, 10, 0) = false) return;
 def_boolean $flute = false;

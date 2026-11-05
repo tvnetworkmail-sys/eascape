@@ -1,0 +1,502 @@
+// EASCape: Rat Catchers - the Face and Felkrash in Port Sarim, the snake charmer of Pollnivneach,
+// the music scroll (the cache's inter_323, which shows the tune: D, G, E, F#, high D, B, C#, A, the
+// OSRS wiki's reading), the snake charm (inter_322 and the cache's vc_note varbits) and the rats'
+// drowning, the end of the quest, and Felkrash's wily cats. Words: the RS wiki's quest transcript;
+// the OSRS wiki's historical lines for the Face's "below in the pits" and Felkrash after the quest.
+
+// ---------------------------------------------------------------- the Face
+[opnpc1,vc_face]
+def_int $s = %ratcatch_var;
+if ($s < ^rc_face) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~mesbox("She looks through you as if you don't exist.");
+    return;
+}
+if ($s = ^rc_face | $s = ^rc_felkrash) {
+    ~chatnpc("<p,neutral>Ah you, peasant. Felkrash wishes to speak with you.");
+    ~mesbox("'The Face' comports herself in an air of haughtiness uncommon to those with appearances as ugly as hers.");
+    ~chatplayer("<p,quiz>Ok, where would I find her?");
+    ~chatnpc("<p,neutral>You should find her below in the pits.");
+    if ($s = ^rc_face) ~rc_set(^rc_felkrash);
+    return;
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,neutral>Oh it's you again.|*She glances at you with barely disguised disdain.*");
+~chatplayer("<p,shifty>*Aside* I wonder what her problem is?");
+if ($s >= ^rc_drowned) {
+    ~chatnpc("<p,neutral>I must congratulate you on your performance, I have only ever seen one other display of musicality to match, as you should know.");
+    ~chatplayer("<p,happy>Thank you, and don't worry, I won't tell Felkrash that you helped me.");
+    return;
+}
+if ($s >= ^rc_story) {
+    ~chatnpc("<p,neutral>Felkrash told me of the task she set you.");
+    ~chatplayer("<p,shock>Really?");
+    ~chatnpc("<p,angry>I shouldn't have told you that story. Shame on you for coaxing it out of me.");
+    ~chatplayer("<p,neutral>I promise I won't tell her you helped me.");
+    return;
+}
+~chatnpc("<p,quiz>Have you spoken with Felkrash yet?");
+~chatplayer("<p,neutral>Yes.");
+~mesbox("You notice a rather unkempt looking cat nearby. Despite its bedraggled appearance it exudes power, strength and intelligence beyond that of a normal cat.");
+~chatplayer("<p,neutral>That's an interesting looking cat.");
+~chatnpc("<p,happy>Ah yes Belle. What a cat. Felkrash trained her for me shortly after she single handedly charmed all the rats of the Port and drowned them.");
+~chatplayer("<p,happy>I love that story. My favourite part is how she managed to get rid of all the rats. Would you tell it to me?");
+~chatnpc("<p,neutral>I don't know, I really shouldn't.");
+~chatplayer("<p,shifty>*Aside* I'll get the story out of her, a little sweet talking should do the trick.");
+~chatplayer("<p,happy>Oh please tell me, I'm sure you'd tell the story wonderfully, you have such a pretty ...");
+~chatnpc("<p,happy>Yes..?");
+~chatnpc("<p,happy>*The face's face perks up at the mention of the word pretty.*");
+~chatplayer("<p,neutral>...voice.");
+~chatnpc("<p,sad>Oh.|*And just as quickly turns sour again.*");
+~chatplayer("<p,sad>*Aside* Dang!");
+~chatplayer("<p,happy>... which compliments your radiant aura.");
+~chatplayer("<p,shifty>*Aside* That should do the trick.");
+~chatnpc("<p,happy>Oh you're too generous.");
+~chatnpc("<p,neutral>Do you know something, I think I'll tell you, mind you, don't tell Felkrash about this, she'd only get sore with me.");
+~chatnpc("<p,neutral>She's the story teller not me.");
+~chatnpc("<p,neutral>One day .....");
+if (npc_find(coord, vc_face, 10, 0) = true) npc_say("One day...");
+~fade_out;
+p_delay(3);
+~fade_in;
+~chatnpc("<p,neutral>And that is how she drowned the rats.");
+if (npc_find(coord, vc_face, 10, 0) = true) npc_say("..And that is how she drowned the rats.");
+~mesbox("You just about manage to stay awake through the long and turgid recital of the story.");
+~mesbox("The snakecharmer of Pollnivneach from what you gathered seemed to play a critical role in the story.");
+~chatplayer("<p,neutral>*Aside*Perhaps I should pay this snake charmer a visit.");
+~rc_set(^rc_story);
+
+// ours: Bellemorde, the Face's wily cat, is a cat
+[opnpc1,vc_bellemorde]
+if (~ttc_catspeak = false) {
+    ~chatnpc("<p,neutral>Miaow.");
+    return;
+}
+mes("Bellemorde ignores you."); // ours
+
+// ---------------------------------------------------------------- Felkrash
+[opnpc1,vc_felkrash_the_bard]
+def_int $s = %ratcatch_var;
+if ($s < ^rc_felkrash) {
+    mes("Felkrash is too busy with her poem to notice you."); // ours: no source has her before the quest in 2005
+    return;
+}
+switch_int ($s) {
+    case ^rc_felkrash : @rc_felkrash_task;
+    case ^rc_task :
+        ~chatnpc("<p,neutral>You haven't completed the task yet.");
+        ~chatplayer("<p,quiz>What do I have to do again?");
+        ~chatnpc("<p,neutral>Rid the port of all its rats with one action.");
+        ~chatplayer("<p,neutral>I'd better get to it then.");
+    case ^rc_story, ^rc_music :
+        ~chatplayer("<p,happy>I think I know how to carry out the task.");
+        ~chatnpc("<p,shifty>Has the face been telling tall tales again?");
+        ~chatplayer("<p,shifty>Oh no, she didn't say a word.");
+        ~chatplayer("<p,shifty>Really she didn't.");
+    case ^rc_drowned : @rc_felkrash_done;
+    case ^rc_complete : @rc_felkrash_after;
+}
+
+[label,rc_felkrash_task]
+~chatplayer("<p,neutral>Hello, the face said that you were looking to talk with me.");
+~chatnpc("<p,neutral>Indeed, word has gotten to me from our other ratcatcher chapters that you are quite a talent.");
+~chatplayer("<p,neutral>Well I can't take all the credit, I've had more than a little help from my cat.");
+~chatnpc("<p,happy>Modesty, a trait seldom displayed by adventurers these days.");
+~chatnpc("<p,laugh>Too many more like you and I'll lose half of my business.");
+~chatplayer("<p,quiz>Why is that?");
+~chatnpc("<p,neutral>Epic poems of bravery and heroics aren't usually commissioned by the shy and retiring.");
+~chatplayer("<p,neutral>Smokin' Joe said that you know lots about training wily cats.");
+~chatnpc("<p,neutral>Indeed I do. It's for this very reason that I requested to talk to you.");
+~chatplayer("<p,happy>So you will show me how to turn my cat into a wily cat?");
+~chatnpc("<p,neutral>No, not yet.");
+~chatplayer("<p,sad>*Sighs.*");
+~chatnpc("<p,neutral>No I need you to carry out just one task for me.");
+~chatplayer("<p,bored>Well experience has taught me to expect as much, what must I do?");
+~chatnpc("<p,neutral>Nothing too difficult, just rid the port of every single rat, with just one action.");
+~chatplayer("<p,shock>What?");
+~chatplayer("<p,shock>Are you serious?");
+~chatnpc("<p,evillaugh>Deadly.");
+~mesbox("You see a manic glint in her eye which you had previously missed.");
+~chatplayer("<p,confused>But why? Why one stroke, why not a slow eradication?");
+~chatnpc("<p,happy>I want to write a new poem.");
+~chatplayer("<p,confused>But...");
+~chatplayer("<p,neutral>I am touched that you want to write an epic poem about me, but why can't you write the poem about seagulls or daffodils or something?");
+~chatnpc("<p,neutral>Well seagulls rarely make good central characters. They're a bit too ... uhm.... flighty.");
+~chatnpc("<p,neutral>Besides the poem is about me not you.");
+~chatplayer("<p,confused>Sorry I don't follow.");
+~chatnpc("<p,happy>I myself carried out the very same feat once upon a time.");
+~chatplayer("<p,quiz>So why do you need me to repeat your most heroic of feats?");
+~chatnpc("<p,neutral>It's all about objectivity and integrity. I need to be utterly divorced from the process.");
+~chatplayer("<p,confused>Umm... ok, I suppose.");
+~chatplayer("<p,quiz>So can you tell me how you went about achieving this?");
+~chatnpc("<p,neutral>No. Therein lies the challenge.");
+~chatplayer("<p,bored>*Sigh* Why does it always have to be like this?");
+~rc_set(^rc_task);
+
+[label,rc_felkrash_done]
+~chatplayer("<p,happy>Ha! I did it. Did you see me?");
+~chatnpc("<p,neutral>Yes I saw that, now what can I do for you? Don't keep me overly long, I'm trying to complete my poem.");
+~chatplayer("<p,quiz>Can you show me how to train my cat into a wily cat?");
+~rc_complete;
+~rc_felkrash_train;
+
+// the OSRS wiki's historical lines (the rename option is left out: this engine has no way to type
+// a name)
+[label,rc_felkrash_after]
+switch_int (~p_choice3("Can you train my cat for me?", 1, "Can you tell me more about the pits?", 2, "Can you tell me more about wily cats?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can you show me how to train my cat into a wily cat?");
+        ~rc_felkrash_train;
+    case 2 : ~rc_pits_talk("In the Port Sarim pits, your cat will become happier and fitter after fighting.", "");
+    case 3 : ~rc_felkrash_wily;
+}
+
+// an overgrown cat with you (following you or in your pack: the OSRS wiki's bug note) becomes
+// wily; one wily or lazy cat at a time
+[proc,rc_felkrash_train]
+if (~rc_owns_wily = true) {
+    ~rc_felk("<p,neutral>You already have a mature cat, look after that first.");
+    return;
+}
+if (%follower_obj ! null & npc_finduid(%follower_uid) = true) {
+    if (oc_category(%follower_obj) = overgrown) {
+        def_namedobj $wily = ~rc_swap_obj(%follower_obj);
+        npc_changetype_keepall(oc_param($wily, follower_id), ^max_32bit_int);
+        %follower_uid = npc_uid;
+        %follower_obj = $wily;
+        %cat_growth = 0;
+        ~mesbox("Your overgrown cat has grown into a lean mean hunting cat.");
+        ~rc_felk("<p,neutral>You should really name your cat.");
+        ~rc_felkrash_wily;
+        return;
+    }
+}
+def_int $slot = 0;
+while ($slot < inv_size(inv)) {
+    if (inv_getobj(inv, $slot) ! null) {
+        if (oc_category(inv_getobj(inv, $slot)) = overgrown) {
+            inv_setslot(inv, $slot, ~rc_swap_obj(inv_getobj(inv, $slot)), 1);
+            ~mesbox("Your overgrown cat has grown into a lean mean hunting cat.");
+            ~rc_felk("<p,neutral>You should really name your cat.");
+            ~rc_felkrash_wily;
+            return;
+        }
+    }
+    $slot = calc($slot + 1);
+}
+~rc_felk("<p,neutral>I can only train overgrown cats into wilycats.");
+
+[proc,rc_owns_wily]()(boolean)
+if (%follower_obj ! null) {
+    if (oc_category(%follower_obj) = wilycat | oc_category(%follower_obj) = lazycat) return(true);
+}
+if (inv_totalcat(inv, wilycat) > 0 | inv_totalcat(inv, lazycat) > 0) return(true);
+if (inv_totalcat(bank, wilycat) > 0 | inv_totalcat(bank, lazycat) > 0) return(true);
+return(false);
+
+[proc,rc_felkrash_wily]
+~chatplayer("<p,quiz>Can you tell me more about Wily cats?");
+~rc_felk("<p,happy>Of course, of course, they're the highest form of cat that I know of.");
+~rc_felk("<p,neutral>They're tougher, stronger and faster than other variations of cat, they can catch butterflies and kalphite larva and are far superior to any other type of cat at hunting.");
+~chatplayer("<p,quiz>So is there any drawbacks to owning them?");
+~rc_felk("<p,neutral>Wily cats need looking after or else they get fat and lazy.");
+~chatplayer("<p,quiz>So how do I look after them then?");
+~rc_felk("<p,neutral>The key is to keep it active, bring it hunting or to the ratpits regularly.");
+~rc_felk("<p,neutral>Try keep it happy too, they can be a little nasty when they're cranky.");
+~chatplayer("<p,quiz>What happens if I neglect my cat.. not that I would or anything?");
+~rc_felk("<p,angry>They would get fat and lazy, be much worse at hunting and would show you up as a really poor cat trainer.");
+~chatplayer("<p,quiz>Can I retrain my lazy cat?");
+~rc_felk("<p,neutral>Yes you can get your lazy cat back in shape with a lot of rat catching, but you really shouldn't let it get into that state in the first place.");
+
+// Felkrash's lines once your cat's npc may hold the npc pointer
+[proc,rc_felk](string $text)
+~chatnpc_specific("Felkrash", vc_felkrash_the_bard, $text);
+
+// ---------------------------------------------------------------- the snake charmer
+// feud_npcs.rs2's money pot asks this once a coin is in: 0 not ours (it asks its own question), 1
+// dealt with, 2 you chose to have a go (the Feud's talk goes on)
+[proc,rc_charmer]()(int)
+if (%ratcatch_var < ^rc_story) return(0);
+if (npc_find(coord, feud_snakecharmer, 10, 0) = false) return(0);
+if (~p_choice2("Wow, a snake charmer. Can I have a go? Can I have a go? Please?", 1, "I want to talk to you about animal charming.", 2) = 1) return(2);
+~chatplayer("<p,neutral>I want to talk to you about animal charming.");
+if (%ratcatch_var >= ^rc_music) {
+    ~rc_charmer_lost;
+    return(1);
+}
+~chatnpc("<p,neutral>That depends.");
+~mesbox("You can literally see the glint of money light up across his eyes.");
+~chatplayer("<p,angry>No way.");
+~chatnpc("<p,confused>No way what?");
+~mesbox("The glint begins to wane a little.");
+~chatplayer("<p,neutral>I've already given you some money. Listen I would like to ask you about someone.");
+~chatnpc("<p,quiz>Go on. Who?");
+~chatplayer("<p,neutral>Felkrash the bard.");
+~chatnpc("<p,angry>Pah!");
+~mesbox("A look of disgust crosses his face.");
+~chatnpc("<p,angry>I taught her all she knows about animal charming, and then she uses the knowledge to kill.");
+~chatplayer("<p,neutral>What's wrong with killing vermin? They're dangerous carriers of disease.");
+~chatnpc("<p,neutral>Music should never be used to kill. I remember when we used to sing about love, not war nor killing.");
+~chatnpc("<p,sad>Oh things were a lot better in those days.");
+~chatplayer("<p,quiz>So there's nothing I could do to get you teach me how to charm rats?");
+~chatnpc("<p,neutral>Not a thing.");
+switch_int (~p_choice4("What if I offered you a drink?", 1, "What if I offered you some food?", 2, "What if I offered you some money?", 3, "What if I said I'd kill you?", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What if I offered you a drink?");
+        ~chatnpc("<p,happy>I'd say thank you very much and take it.");
+        ~chatplayer("<p,quiz>But would you teach me?");
+        ~chatnpc("<p,neutral>That might depend on how the drink tasted.");
+        ~chatplayer("<p,quiz>So what's your favourite drink then?");
+        ~chatnpc("<p,happy>Beer, just plain old beer.");
+        if (inv_total(inv, beer) = 0) {
+            ~chatplayer("<p,sad>I don't have any beer on me.");
+            ~chatnpc("<p,neutral>Well then you'll never know.");
+            return(1);
+        }
+        inv_del(inv, beer, 1);
+        ~mesbox("You offer the snake charmer a beer.");
+        ~mesbox("The snakecharmer downs the beer in one slug. He smacks his lips together.");
+        ~chatnpc("<p,happy>Ohhh, that really hit the spot.");
+        ~chatplayer("<p,quiz>So will you teach me now?");
+        ~chatnpc("<p,neutral>No.");
+        ~chatplayer("<p,shock>But,... but...");
+        ~mesbox("The snakecharmer turns his attention back to his snake, who seems to be coming around from its trance like state.");
+    case 2 :
+        ~chatplayer("<p,quiz>What if I offered you some food?");
+        ~chatnpc("<p,neutral>I'd say I wasn't hungry.");
+    case 3 : ~rc_charmer_money;
+    case 4 :
+        ~chatplayer("<p,angry>What if I said I'd kill you?");
+        ~chatnpc("<p,laugh>Hah! You'd never get away with it. I've paid up all my protection money this week to the Menaphite and bandit thugs. You'd be doing well to leave this town alive.");
+        ~mesbox("You can see this avenue of pursuit is going nowhere and abandon it.");
+}
+return(1);
+
+[proc,rc_charmer_money]
+~chatplayer("<p,quiz>What if I offered you some money?");
+~mesbox("A glint of gold temporarily flashes across the charmer's eyes.");
+~chatnpc("<p,happy>Now we're talking.");
+~chatplayer("<p,quiz>How much are we talking about?");
+// the RS wiki: one more coin than you carry, or 1,000 if you carry fewer
+def_int $ask = max(1000, calc(inv_total(inv, coins) + 1));
+~chatnpc("<p,happy>I'll teach you for <tostring($ask)> coins.");
+~chatplayer("<p,sad>I don't have that much money.");
+~chatnpc("<p,neutral>You're a resourceful looking adventurer I'm sure you'll work out something.");
+def_int $c;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    $c = ~p_choice3("[Go get more money.]", 1, "[Charm] How about I give you 50 coins?", 2, "Forget about it. I don't care.", 3);
+} else {
+    $c = ~p_choice2("[Go get more money.]", 1, "Forget about it. I don't care.", 3);
+}
+if ($c = 1) {
+    ~chatplayer("<p,neutral>Hold on sec, I'll get some more money.");
+    ~chatnpc("<p,neutral>I'll be waiting for you.");
+    return;
+}
+if ($c = 2) {
+    ~chatplayer("<p,shifty>What if I offered you 50 coins?");
+    ~mesbox("You see the snake charmer's resolve visibly crumble.");
+    ~chatnpc("<p,neutral>Ok you have a deal.");
+    ~rc_charmer_sell(50);
+    return;
+}
+~chatplayer("<p,neutral>Forget about it. I don't care. You know you've blown it.");
+~chatnpc("<p,shock>What? I'm offering something invaluable and you'll quibble over a couple of coins?");
+if (~p_choice2("Walk away", 1, "Walk away slowly", 2) = 1) {
+    ~mesbox("You walk away, to the strains of the snake charmer's protestations and cheaper offers.");
+    return;
+}
+~mesbox("You start slowly walking away from snake charmer.");
+~chatnpc("<p,neutral>I'll do it for half the price.");
+~mesbox("You keep walking.");
+~chatnpc("<p,neutral>I'll do it for quarter the price.");
+~mesbox("You don't even break stride.");
+~chatnpc("<p,neutral>I'll....");
+if (~p_choice2("Keep walking", 1, "Stop", 2) = 1) {
+    ~mesbox("You walk away. To the strains of the snake charmers protestations and cheaper offers.");
+    return;
+}
+~chatplayer("<p,quiz>You'll what?");
+~chatnpc("<p,neutral>An eighth?");
+~chatplayer("<p,angry>No!");
+~chatnpc("<p,confused>What do you mean by no?");
+~chatplayer("<p,neutral>I mean I'll give you no more than 100 coins.");
+~mesbox("You seem to have caught the snake charmer on the hop with the walking away con. An oldie but definitely a beauty.");
+~chatnpc("<p,neutral>Ummm... alright so.");
+~rc_charmer_sell(100);
+
+// the music, and a snake charm unless you have one (the OSRS wiki: "if you already have a snake
+// charm ... in your inventory or bank, you will not receive another")
+[proc,rc_charmer_sell](int $price)
+if (inv_total(inv, coins) < $price) {
+    ~chatplayer("<p,sad>Oh. I don't seem to have that much on me."); // ours
+    return;
+}
+inv_del(inv, coins, $price);
+~rc_set(^rc_music);
+~ttc_give(ratcatchers_music);
+if (~obj_gettotal(snake_flute) = 0) {
+    ~ttc_give(snake_flute);
+    ~doubleobjbox(ratcatchers_music, snake_flute, "The snake charmer sells you a flute and some music.", 250);
+} else {
+    ~objbox(ratcatchers_music, "The snake charmer sells you some music.", 250, 0, 0);
+    ~chatnpc("<p,neutral>You've still got that flute I gave you before, I think.");
+}
+~chatnpc("<p,neutral>Read the music, and copy what it says when you play the flute. You should attract rats to you like flies to a bucket of dung.");
+
+// the RS wiki's standard lines once you have bought the music
+[proc,rc_charmer_lost]
+def_boolean $music = false;
+def_boolean $flute = false;
+if (~obj_gettotal(ratcatchers_music) > 0) $music = true;
+if (~obj_gettotal(snake_flute) > 0) $flute = true;
+if ($music = true & $flute = true) {
+    ~chatnpc("<p,neutral>Yes?");
+    ~chatplayer("<p,quiz>Can you teach me any more about animal charming.");
+    ~chatnpc("<p,neutral>No, I doubt it. I believe your talents lie in other areas.");
+    return;
+}
+~chatplayer("<p,sad>I've lost some of the gear you gave me.");
+~chatnpc("<p,quiz>What do you need?");
+if ($music = false & $flute = false) ~chatplayer("<p,neutral>I need a new flute and some music.");
+else if ($music = false) ~chatplayer("<p,neutral>I need some more music.");
+else ~chatplayer("<p,neutral>I need another flute.");
+~chatnpc("<p,neutral>There you go. Now if you don't mind I'm busy trying to charm this here snake.");
+if ($music = false) ~ttc_give(ratcatchers_music);
+if ($flute = false) ~ttc_give(snake_flute);
+
+// ---------------------------------------------------------------- the music scroll
+[opheld1,ratcatchers_music]
+if_openmain(inter_323);
+
+// ---------------------------------------------------------------- the snake charm
+// The cache's inter_322: eight pages, one note a page; the notes show from vc_note_current (the
+// holes, vc_fingers_current, and the octave, vc_note_current_hi). Each page's note is kept in
+// vc_note1-8. The holes' values are the interface's own (D 63, E 62, F# 60, G 56, A 48, B 32,
+// C# 1, C 24); a raised octave adds 64.
+[opheld1,snake_flute]
+%vc_note_number = 0;
+%vc_note_current = %vc_note1;
+if_settext(inter_322:com_11, "Page 1 of 8");
+if_openmain(inter_322);
+
+[if_button,inter_322:com_12]
+if (%vc_note_current_hi = 1) %vc_note_current_hi = 0;
+else %vc_note_current_hi = 1;
+
+[if_button,inter_322:com_13] ~rc_note(63);
+[if_button,inter_322:com_14] ~rc_note(62);
+[if_button,inter_322:com_15] ~rc_note(60);
+[if_button,inter_322:com_16] ~rc_note(56);
+[if_button,inter_322:com_17] ~rc_note(48);
+[if_button,inter_322:com_18] ~rc_note(32);
+[if_button,inter_322:com_19] ~rc_note(1);
+[if_button,inter_322:com_20] ~rc_note(24);
+
+[proc,rc_note](int $fingers)
+%vc_fingers_current = $fingers;
+~rc_note_sound;
+
+// the cache's charmflute sounds: the low octave unless raised (ours: which sound goes with which)
+[proc,rc_note_sound]
+def_boolean $hi = false;
+if (%vc_note_current_hi = 1) $hi = true;
+switch_int (%vc_fingers_current) {
+    case 63 : if ($hi = true) sound_synth(charmflute_d, 1, 0); else sound_synth(charmflute_low_d, 1, 0);
+    case 62 : if ($hi = true) sound_synth(charmflute_e, 1, 0); else sound_synth(charmflute_low_e, 1, 0);
+    case 56 : if ($hi = true) sound_synth(charmflute_g, 1, 0); else sound_synth(charmflute_low_g, 1, 0);
+    case 48 : if ($hi = true) sound_synth(charmflute_a, 1, 0); else sound_synth(charmflute_low_a, 1, 0);
+    case 32 : if ($hi = true) sound_synth(charmflute_b, 1, 0); else sound_synth(charmflute_low_b, 1, 0);
+    case 24 : if ($hi = true) sound_synth(charmflute_c, 1, 0); else sound_synth(charmflute_low_c, 1, 0);
+}
+
+[if_button,inter_322:com_22] ~rc_page(1);
+[if_button,inter_322:com_23] ~rc_page(-1);
+
+[proc,rc_page](int $step)
+~rc_keep_note;
+%vc_note_number = max(0, min(7, calc(%vc_note_number + $step)));
+%vc_note_current = ~rc_page_note(%vc_note_number);
+if_settext(inter_322:com_11, "Page <tostring(calc(%vc_note_number + 1))> of 8");
+
+[proc,rc_keep_note]
+switch_int (%vc_note_number) {
+    case 0 : %vc_note1 = %vc_note_current;
+    case 1 : %vc_note2 = %vc_note_current;
+    case 2 : %vc_note3 = %vc_note_current;
+    case 3 : %vc_note4 = %vc_note_current;
+    case 4 : %vc_note5 = %vc_note_current;
+    case 5 : %vc_note6 = %vc_note_current;
+    case 6 : %vc_note7 = %vc_note_current;
+    case 7 : %vc_note8 = %vc_note_current;
+}
+
+[proc,rc_page_note](int $page)(int)
+switch_int ($page) {
+    case 0 : return(%vc_note1);
+    case 1 : return(%vc_note2);
+    case 2 : return(%vc_note3);
+    case 3 : return(%vc_note4);
+    case 4 : return(%vc_note5);
+    case 5 : return(%vc_note6);
+    case 6 : return(%vc_note7);
+}
+return(%vc_note8);
+
+// the music scroll's tune (inter_323): D, G, E, F#, high D, B, C#, A
+[proc,rc_tune_right]()(boolean)
+if (%vc_note1 ! 63 | %vc_note2 ! 56 | %vc_note3 ! 62 | %vc_note4 ! 60) return(false);
+if (%vc_note5 ! 127 | %vc_note6 ! 32 | %vc_note7 ! 1 | %vc_note8 ! 48) return(false);
+return(true);
+
+[if_button,inter_322:com_21]
+~rc_keep_note;
+if_close;
+// the OSRS wiki: without the snake charmer's music your fingers aren't dexterous enough
+if (%ratcatch_var < ^rc_music) {
+    mes("Your fingers are not dexterous enough to play this tune."); // ours: the wording
+    return;
+}
+anim(snake_charming, 0);
+if (~rc_tune_right = false) {
+    mes("You play a tune, but nothing happens."); // ours
+    return;
+}
+if (%ratcatch_var ! ^rc_music) {
+    mes("You play the tune, but there are no rats left here to charm."); // ours
+    return;
+}
+if (inzone(^rc_docks_sw, ^rc_docks_ne, coord) = false) {
+    mes("You play the tune, but nothing happens. Perhaps this isn't the right place."); // ours
+    return;
+}
+queue(rc_pied_piper, 0, 0);
+
+// The RS wiki: "Rats start appearing out of nowhere, seemingly drawn to your music." and "Each rat in
+// turn throws itself into the water and drowns." Ours: eight of the cache's vc_rat around you, who
+// run off the dock's east side one by one (the cache's rat_drown and watersplash).
+[queue,rc_pied_piper]
+mes("Rats start appearing out of nowhere, seemingly drawn to your music.");
+def_int $i = 0;
+while ($i < 8) {
+    npc_add(map_findsquare(coord, 1, 3, ^map_findsquare_lineofwalk), vc_rat, 30);
+    npc_setmode(none);
+    $i = calc($i + 1);
+}
+anim(snake_charming, 0);
+p_delay(2);
+npc_findallany(coord, 4, 0);
+while (npc_findnext = true) {
+    if (npc_type = vc_rat) npc_walk(movecoord(coord, 4, 0, 0));
+}
+p_delay(3);
+npc_findallany(coord, 8, 0);
+while (npc_findnext = true) {
+    if (npc_type = vc_rat) {
+        spotanim_map(watersplash, npc_coord, 0, 0);
+        npc_del;
+    }
+}
+sound_synth(rat_drown, 1, 0);
+mes("Each rat in turn throws itself into the water and drowns.");
+~rc_set(^rc_drowned);

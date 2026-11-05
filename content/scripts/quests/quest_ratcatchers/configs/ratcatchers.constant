@@ -1,0 +1,101 @@
+// Rat Catchers (28 November 2005). The 377 cache's own varps, now perm:
+//   main_ratcatch_var: ratcatch_var (bits 0-7) the quest's stage; ratcatch_rathole_1-4 (8-11) the
+//     warehouse's poisoned rat holes; ratcatch_catknowsdrill (12) your cat offered to help Smokin'
+//     Joe; vc_note_current (13-19) the note showing on the snake charm (vc_fingers_current the
+//     holes, vc_note_current_hi the octave); vc_note_number (20-22) the snake charm's page;
+//     ratcatch_cathas_expressed (28) your cat gave you a look without the catspeak amulet
+//   ratcatch_var_multi: ratcatch_ometer (bits 0-6) the rats your cat caught for the sisters;
+//     vc_raton_off1-6 (7-12) the mansion's six rats caught (the cache's vc_partyrat_multi1-6)
+//   ratcatch_var_temp1/2: vc_note1-8 the eight notes you have set on the snake charm's pages;
+//     ratcatch_withdrawfrom_kingrat (temp2 bit 29) you told your cat to be careful
+// The cache names the varbits but not their values: the stages below are ours, in the order of
+// the OSRS and RS wikis' walkthroughs, except ^rc_complete (Void: ratcatchers completed = 127).
+^rc_not_started = 0
+^rc_started = 1          // Gertrude told you about the sisters
+^rc_sniffed = 2          // the sisters sniffed your cat: catch 8 rats
+^rc_caught_eight = 3     // your cat caught the eighth
+^rc_jimmy = 4            // the sisters gave you a rat pole and sent you to Jimmy Dazzler
+^rc_mansion = 5          // Jimmy gave you the directions
+^rc_mansion_done = 6     // the six rats caught
+^rc_jack = 7             // Jimmy sent you to Hooknosed Jack (the Ardougne pits are open)
+^rc_poison = 8           // Jack asked you to poison the warehouse's rat holes
+^rc_holes_done = 9       // all four holes poisoned
+^rc_pox = 10             // Pox is ill: see the Apothecary
+^rc_antipoison = 11      // the Apothecary told you the cure (he makes it when you bring the makings)
+^rc_kingrat = 12         // Pox is cured: the King rat is left
+^rc_kingrat_dead = 13    // the King rat is dead
+^rc_joe = 14             // Jack sent you to Smokin' Joe (the Varrock pits are open)
+^rc_smoke = 15           // Joe asked you to smoke out his rats
+^rc_smoke_tried = 16     // the rats ran back in: you need your cat
+^rc_smoked = 17          // your cat caught Joe's rats
+^rc_face = 18            // Joe sent you to the Face (the Keldagrim pits are open)
+^rc_felkrash = 19        // the Face sent you to Felkrash
+^rc_task = 20            // Felkrash set you the task: every rat in the port with one action
+^rc_story = 21           // the Face told you the story: the snake charmer of Pollnivneach
+^rc_music = 22           // the snake charmer sold you the music
+^rc_drowned = 23         // you charmed the port's rats into the sea
+^rc_complete = 127
+^rc_questpoints = 2
+
+^rc_rats_needed = 8      // the sisters' rats (the RS and OSRS wikis)
+^rc_mansion_rats = 6     // the mansion's rats (the RS and OSRS wikis)
+
+// mansion checkpoints (ours: the OSRS wiki's "three checkpoints", of which it places one north of
+// the trellis; the others are the gates and the foot of the ladder)
+^rc_cp_gates = 0
+^rc_cp_trellis = 1
+^rc_cp_ladder = 2
+
+// rat pits (%rc_pit_state)
+^rc_pit_none = 0
+^rc_pit_challenged = 1   // you challenged %rc_pit_opp
+^rc_pit_betting = 2      // the betting interface is open
+^rc_pit_accepted = 3     // you accepted the bet
+^rc_pit_fighting = 4
+
+// tactics (%rc_pit_tactic): the RS and OSRS wikis' four strategies
+^rc_tactic_none = 0
+^rc_tactic_careful = 1   // "Just be careful in there cat."
+^rc_tactic_stay = 2      // "Stay in for as long as you can."
+^rc_tactic_guts = 3      // "No guts, no glory!"
+^rc_tactic_berserk = 4   // "Go berserk!"
+
+^rc_pit_minbet = 100     // the OSRS wiki: 100 to 20,000 coins
+^rc_pit_maxbet = 20000
+^rc_pit_step = 100       // ours: what each click on the arrows adds or takes away
+^rc_pit_ticks = 100      // ours: how long a cat lasts before it tires (the manual: "a certain period")
+
+// where things are (the 377 maps' spawns, the same as Void's)
+^rc_gertrude = 0_49_53_15_19            // 3151,3411, the RS wiki's start
+^rc_grimesquit = 0_50_154_43_10         // 3243,9866, the Varrock sewers
+^rc_phingspet = 0_50_154_45_12          // 3245,9868
+^rc_jimmy_at = 0_40_51_2_56                // 2562,3320, west of the Flying Horse
+^rc_mansion_gates = 0_44_79_31_10       // 2847,5066, inside the gates (ours: the OSRS wiki's tile A)
+^rc_mansion_trellis = 1_44_79_28_48     // 2844,5104 on the balcony, where the trellis brings you
+^rc_mansion_ladder = 0_44_79_46_35      // 2862,5091, the foot of the ladder down
+^rc_mansion_sw = 0_44_79_0_0
+^rc_mansion_ne = 3_44_79_63_63
+^rc_jack_at = 0_51_53_4_8                  // 3268,3400
+^rc_warehouse_top = 1_51_52_4_51        // 3268,3379, the warehouse's ladder (upstairs)
+^rc_rathole1 = 1_51_52_0_50             // 3264,3378
+^rc_rathole2 = 1_51_52_9_49             // 3273,3377
+^rc_rathole3 = 1_51_52_10_53            // 3274,3381
+^rc_rathole4 = 1_51_52_7_56             // 3271,3384
+^rc_kingrat_at = 1_51_52_7_50           // 3271,3378 (ours: behind the hole in the wall)
+^rc_kingrat_cat = 1_51_52_7_51          // 3271,3379 (ours: where your cat squeezes in)
+^rc_apothecary = 0_49_53_60_11          // 3196,3403 (ours: in the Apothecary's shop)
+^rc_joe_at = 0_45_159_50_37                // 2930,10213, Keldagrim
+^rc_joe_hole_south = 0_45_159_52_31     // 2932,10207
+^rc_joe_hole_east = 0_45_159_53_36      // 2933,10212
+^rc_face_at = 0_47_50_11_31                // 3019,3231, Port Sarim
+^rc_felkrash_at = 0_46_150_33_39           // 2977,9639, the Port Sarim pits
+^rc_badir_bowl = 0_52_46_27_9           // 3355,2953, Pollnivneach
+^rc_docks_sw = 0_47_50_21_5             // ours: Port Sarim's docks, where the tune works
+^rc_docks_ne = 0_47_50_50_31
+
+// the rat pits: the player's pit of each (the OSRS wiki's maps; the other pit has the
+// trainers' cats in it), where your cat goes in (ours)
+^rc_pit_ardougne = 0_41_150_28_40       // 2652,9640
+^rc_pit_varrock = 0_45_79_28_30         // 2908,5086
+^rc_pit_keldagrim = 0_30_73_34_33       // 1954,4705
+^rc_pit_sarim = 0_46_150_42_36          // 2986,9636

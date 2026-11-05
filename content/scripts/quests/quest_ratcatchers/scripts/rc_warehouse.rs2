@@ -1,0 +1,578 @@
+// EASCape: Rat Catchers - Hooknosed Jack, the warehouse's rat holes, Pox, the Apothecary's cat
+// antipoison and the King rat. Words: the RS wiki's quest transcript; Jack's after-quest talk is the
+// OSRS wiki's historical lines. The warehouse, its rat holes and the hole in the wall (the RS
+// wiki: loc 10320, here vc_blank_walldecor, "Hole in wall") are the 377 maps' own.
+
+// ---------------------------------------------------------------- Hooknosed Jack
+[opnpc1,vc_hooknosed_jack]
+def_int $s = %ratcatch_var;
+if ($s < ^rc_jack) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,angry>What?");
+    ~chatnpc("<p,angry>Actually I've got no time for this. I don't want to talk to you.");
+    return;
+}
+switch_int ($s) {
+    case ^rc_jack : @rc_jack_meet;
+    case ^rc_poison : @rc_jack_poison;
+    case ^rc_holes_done : @rc_jack_pox;
+    case ^rc_pox :
+        ~chatnpc("<p,sad>Have you spoken to the apothecary yet?");
+        ~chatplayer("<p,neutral>Umm... not yet. I'll get to it directly.");
+    case ^rc_antipoison : @rc_jack_antipoison;
+    case ^rc_kingrat :
+        ~chatnpc("<p,quiz>Have you completed this task yet?");
+        ~chatplayer("<p,neutral>Umm.. no.");
+        ~chatnpc("<p,angry>Would you ever finish that task? You might have saved my cat Pox, but thanks to you I'm further behind than I was before I met you.");
+        ~chatplayer("<p,quiz>How's Pox doing anyway?");
+        ~chatnpc("<p,neutral>The poor thing will live, thanks in no small part to you, but could you please get on with exterminating that last rat.");
+    case ^rc_kingrat_dead : @rc_jack_kingrat_dead;
+    case ^rc_complete : @rc_jack_after;
+    case default :
+        // ours: until the quest is done he says again where Joe is
+        ~chatnpc("<p,neutral>If you want to train overgrown cats seek out Smokin' Joe in Keldagrim, the Dwarven city.");
+}
+
+[label,rc_jack_meet]
+~chatnpc("<p,neutral>Ah, it's <displayname>, isn't it? Jimmy D said you'd be along. So what can I do for you?");
+~mesbox("You can't help but stare at Jack's mangled nose. It's not only huge, but dreadfully crooked.");
+~chatplayer("<p,shifty>I wonder if he can smell around corners with that nose.");
+~chatplayer("<p,neutral>Uh, sorry, yeah Jimmy Dazzler told me that you're 'the ticket' if I wanted to learn about grown cats.");
+~mesbox("You quickly avert your gaze from his face.");
+~chatnpc("<p,angry>Do you have a problem with my face?");
+~mesbox("With determination not to show any signs of embarrassment, you look Jack in the eyes.");
+~chatplayer("<p,neutral>No. Should I?");
+~chatnpc("<p,confused>Uh... I guess not. It's just that most... ah, forget it.");
+~chatplayer("<p,quiz>So will you help me? Or do I have to do some task for you first to prove that I'm worthy, or in payment?");
+~chatnpc("<p,neutral>Nah. I'm too busy.");
+~chatplayer("<p,angry>What? Oh come on.");
+~chatnpc("<p,neutral>No really, I'm just too busy at the moment. I've got three jobs going at the minute and I just don't have any time for helping the likes of you out.");
+~chatplayer("<p,neutral>Look if you need help catching rats I can lend you a hand, I got some good hands on experience from Jimmy Dazzler, Phingspet and Grimesquit.");
+~chatnpc("<p,happy>Ah you've met the sisters. Lovely girls aren't they?");
+~chatplayer("<p,shock>What? Does this guy have any taste? Or sense of smell, for that matter?");
+~chatplayer("<p,neutral>Uhh... yeah, lovely girls. How about I take some of your workload off you? Then you would have some time to teach me.");
+~chatnpc("<p,neutral>I suppose there is this job I have just south of here. I need to get someone to clear out a warehouse of rats. It should be a simple job of poisoning a few rat holes. Nothing too complicated.");
+~rc_set(^rc_poison);
+~chatplayer("<p,quiz>So will any type of poison do?");
+~chatnpc("<p,neutral>No, you need rat poison to kill rats. You can make it yourself. I'm sure I've seen some lying around.");
+~chatplayer("<p,quiz>How would I do that?");
+~chatnpc("<p,angry>Argh! Don't worry your little head about it, you're obviously incapable. Just bring me the base ingredients.");
+~chatplayer("<p,quiz>What are these ingredients then?");
+~chatnpc("<p,neutral>Get me some Kwuarm and some red spider eggs. Oh yeah, an empty vial would be good too.");
+if (~rc_jack_has_ingredients = true) {
+    ~chatplayer("<p,happy>Actually I happen to be carrying all that stuff at the moment.");
+    ~rc_jack_make_poison;
+}
+~chatnpc("<p,neutral>To poison the holes you'll need some bait. Use some cheese for this.");
+~chatnpc("<p,neutral>Pour some of the poison on the cheese and then place some of the poisoned cheese in each of the rat holes.");
+~chatplayer("<p,neutral>Ok, can do.");
+~chatnpc("<p,neutral>Report back to me when you're done. I want to get this job wrapped as soon as possible.");
+
+[label,rc_jack_poison]
+~chatplayer("<p,neutral>Hey!");
+~chatnpc("<p,angry>What?");
+switch_int (~p_choice3("Can you make me some rat poison?", 1, "Where is the warehouse again?", 2, "I've finished the job.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can you make me some rat poison?");
+        ~chatnpc("<p,quiz>Have you got the ingredients for me yet?");
+        if (~rc_jack_has_ingredients = false) {
+            ~chatplayer("<p,neutral>No not yet. What do I need again?");
+            ~chatnpc("<p,neutral>Get me some Kwuarm, red spider eggs and an empty vial. Once you've found those bring them to me, and I'll make a batch of the stuff for you.");
+            return;
+        }
+        ~rc_jack_make_poison;
+    case 2 :
+        ~chatnpc("<p,neutral>The warehouse is in the first floor of a building to the south of here.");
+        ~chatnpc("<p,neutral>Do you see that bar to the south of here?? Well, behind that is the warehouse. Look upstairs for the rats.");
+    case 3 :
+        ~chatplayer("<p,happy>I've finished the job. Now will you teach me about cats?");
+        ~chatnpc("<p,angry>You're pulling my leg!");
+        ~chatplayer("<p,confused>I what?");
+        ~chatnpc("<p,angry>Quit trying to hoodwink me and do the job you said you would.");
+}
+
+[proc,rc_jack_has_ingredients]()(boolean)
+if (inv_total(inv, kwuarm) > 0 & inv_total(inv, red_spiders_eggs) > 0 & inv_total(inv, vial_empty) > 0) return(true);
+return(false);
+
+[proc,rc_jack_make_poison]
+inv_del(inv, kwuarm, 1);
+inv_del(inv, red_spiders_eggs, 1);
+inv_del(inv, vial_empty, 1);
+inv_add(inv, rat_poison, 1);
+~objbox(rat_poison, "You hand Jack the ingredients and quick as a flash he hands you back a vial of the rat poison.", 250, 0, 0);
+
+[label,rc_jack_pox]
+~chatplayer("<p,happy>I've completed that task you set me. Now will you teach me?");
+~chatnpc("<p,sad>Give me a sec.");
+~chatplayer("<p,angry>Oh come on, I've gone and done a job for you, the least you could do is say thanks or something.");
+~chatnpc("<p,sad>I'm upset at the moment. I just found my cat Pox, and the poor thing's half dead.");
+~chatplayer("<p,shock>Oh!");
+~chatnpc("<p,sad>They found Pox at the warehouse you were working at. He must have eaten some of the rats you poisoned.");
+if (~p_choice2("That's too bad. Good bye", 1, "Can I help?", 2) = 1) {
+    ~chatplayer("<p,neutral>That's too bad. You should have looked after your cat a little better.|Good bye.");
+    ~mesbox("Jack seems to be too engrossed with the fate of his cat to hear your heartless comment. That's probably a good thing.");
+    return;
+}
+~chatplayer("<p,sad>Oh no. I feel somewhat responsible for this. Can I help in any way?");
+~chatnpc("<p,neutral>There is an apothecary here in town; seek his help. Tell him that the poison was made from red spider eggs and kwuarm, and he should know what to do.");
+~chatnpc("<p,angry>Go quickly!");
+~rc_set(^rc_pox);
+
+[label,rc_jack_antipoison]
+~chatnpc("<p,sad>Have you got the antipoison?");
+if (inv_total(inv, ratcatchers_cat_antipoison) = 0) {
+    ~chatplayer("<p,neutral>Yes, but I have to get a couple of things to put the cure together.");
+    ~chatnpc("<p,sad>Do hurry up. I don't know how long Pox can hold on for.");
+    return;
+}
+~chatplayer("<p,happy>Yes, I've got it right here.");
+inv_del(inv, ratcatchers_cat_antipoison, 1);
+~objbox(ratcatchers_cat_antipoison, "You hand the vial of cat antipoison to Jack.", 250, 0, 0);
+~rc_set(^rc_kingrat);
+~chatnpc("<p,happy>Thank you, <displayname>, thank you so much!");
+~chatplayer("<p,happy>No worries there, I'd be sorry to see any cat come to harm.");
+~chatnpc("<p,neutral>I have to have a word with you about the job you did in the warehouse.");
+~chatplayer("<p,happy>I did a good job. Didn't I?");
+~chatnpc("<p,neutral>You didn't quite finish that job I set you.");
+~chatplayer("<p,confused>Hang on, I thought that all I had to was poison a few rat holes and that was it?");
+~chatnpc("<p,neutral>Well one rat survived, the biggest and nastiest one of the lot.");
+~chatplayer("<p,angry>Hang on, that wasn't part of the deal, was it?");
+~chatnpc("<p,neutral>I'm afraid it was. You said you'd clear the warehouse of rats, I do remember.");
+~chatplayer("<p,shifty>Did you now?");
+~mesbox("You try to convey a sense of skepticism in your voice.");
+~chatnpc("<p,angry>I did. Now get to it!");
+
+[label,rc_jack_kingrat_dead]
+~chatnpc("<p,quiz>My sources tell me that you were successful in killing the rat?");
+~chatplayer("<p,neutral>They're not wrong. I must admit I was getting a little worried for my own cat's safety too.");
+~chatnpc("<p,confused>Your own cat?");
+~chatplayer("<p,neutral>Yes I had to use it to kill the rat. He was too far out of the way for me to get at it. So I sent in the fuzzy.");
+~chatnpc("<p,laugh>Ha, ha! There's hope for you yet.");
+~chatnpc("<p,neutral>Perhaps I can show you a thing or two in the pits. See that manhole o'er there? Climb down it to enter the Varrock pits.");
+~rc_set(^rc_joe);
+~chatplayer("<p,quiz>That's great! So you know things about grown and overgrown cats then?");
+~chatnpc("<p,neutral>I'm no expert on the larger cats. If you want to train overgrown cats seek out Smokin' Joe in Keldagrim, the Dwarven city.");
+
+// the OSRS wiki's historical lines
+[label,rc_jack_after]
+switch_int (~p_choice3("Can you tell me where I would find ....", 1, "Can you tell me more about the pits?", 2, "Can you show me to the rat pits?", 3)) {
+    case 2 : ~rc_pits_talk("In the Varrock pits your cat will grow up faster, whether it wins or loses.", "It will gain more experience and will become happier and will be fed."); // ours: Jimmy's words for the Varrock pits (the RS wiki: both grow cats)
+    case 3 :
+        ~chatplayer("<p,quiz>Can you show me to the rat pits?");
+        ~chatnpc("<p,angry>Argh you just don't listen do you? See that manhole yonder? Well climb down and you'll find the pits.");
+    case 1 :
+        switch_int (~p_choice5("Grimesquit and Phingspet", 1, "Jimmy Dazzler", 2, "Smokin' Joe", 3, "The face", 4, "Felkrash", 5)) {
+            case 1 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Phingspet and Grimesquit?");
+                ~chatnpc("<p,neutral>Oh the girls? You'll find them down in the sewers here in Varrock.");
+            case 2 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find Jimmy Dazzler?");
+                ~chatnpc("<p,angry>That conceited popinjay?");
+                ~chatplayer("<p,neutral>You could call him that. But where would I find him?");
+                ~chatnpc("<p,neutral>Probably cowering in his apartment at the back of the Flying Horse in Ardougne, praying that I don't go looking for him.");
+                ~chatplayer("<p,quiz>So you two know each other?");
+                ~mesbox("Jack shoots you a look that could rout a regiment of black knights.");
+            case 3 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Smokin Joe?");
+                ~chatnpc("<p,neutral>He should be in Keldagrim, the city of the dwarves.");
+            case 4 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find 'The Face'?");
+                ~chatnpc("<p,neutral>She'll be in Port Sarim, scaring people away from the entrance of the pits with her face.");
+            case 5 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find Felkrash?");
+                ~chatnpc("<p,neutral>Her nibs? She'll be in the pits of Port Sarim.");
+        }
+}
+
+// the Varrock pits' manhole by Jack (the OSRS wiki: "Step away from that manhole, you've no business
+// down there."), and the Port Sarim one by the Face (rc_sarim.rs2)
+[oploc1,vc_manhole_open]
+if (loc_coord = 0_51_53_3_8 & %ratcatch_var < ^rc_joe) {
+    if (npc_find(coord, vc_hooknosed_jack, 10, 0) = true) ~chatnpc("<p,angry>Step away from that manhole, you've no business down there.");
+    return;
+}
+if (loc_coord = 0_47_50_10_32 & %ratcatch_var < ^rc_felkrash) {
+    if (npc_find(coord, vc_face, 10, 0) = true) ~chatnpc("<p,angry>Step away from that manhole, you've no business down there.");
+    return;
+}
+~eascape_link(1);
+
+// ---------------------------------------------------------------- Pox
+[opnpc1,vc_pox]
+~chatplayer("<p,happy>Hi cat!");
+if (%ratcatch_var >= ^rc_pox & %ratcatch_var < ^rc_kingrat) {
+    ~mesbox("The cat seems too sick to respond.");
+    return;
+}
+if (%ratcatch_var < ^rc_kingrat | ~ttc_catspeak = false) {
+    ~chatnpc("<p,neutral>Miaow."); // ours: without the catspeak amulet, or before the quest
+    return;
+}
+~chatnpc("<p,happy>Hello <displayname>.");
+~chatplayer("<p,quiz>How are you feeling now?");
+~chatnpc("<p,sad>Still a bit below purrrr. Thank you for fetching the medicine for me.");
+~chatplayer("<p,happy>No problem, I hope you get better soon.");
+
+// ---------------------------------------------------------------- the poison and the holes
+[opheldu,rat_poison]
+if (last_useitem ! cheese) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~rc_poison_cheese;
+
+// the RS wiki: one rat poison does for the four cheeses (ours: the poison isn't used up)
+[proc,rc_poison_cheese]
+inv_del(inv, cheese, 1);
+inv_add(inv, ratcatchers_poisonedcheese, 1);
+mes("You pour a tiny drop of rat poison on the cheese.");
+
+// the OSRS wiki: "be sure not to eat!" (ours: you think better of it)
+[opheld1,ratcatchers_poisonedcheese]
+mes("You'd better not eat that, it's been poisoned."); // ours
+
+[oplocu,ratcatchers_rathole1] ~rc_rathole(1);
+[oplocu,ratcatchers_rathole2] ~rc_rathole(2);
+[oplocu,ratcatchers_rathole3] ~rc_rathole(3);
+[oplocu,ratcatchers_rathole4] ~rc_rathole(4);
+
+[proc,rc_rathole](int $hole)
+if (last_useitem ! ratcatchers_poisonedcheese) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%ratcatch_var ! ^rc_poison) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+if (~rc_hole_done($hole) = true) {
+    mes("You've already poisoned this rat hole."); // ours
+    return;
+}
+inv_del(inv, ratcatchers_poisonedcheese, 1);
+anim(human_pickupfloor, 0);
+mes("You place the poisoned cheese near the rat hole.");
+p_delay(1);
+mes("You hear the scuttling of little animal feet, followed quickly by the sounds of something devouring the cheese.");
+switch_int ($hole) {
+    case 1 : %ratcatch_rathole_1 = 1;
+    case 2 : %ratcatch_rathole_2 = 1;
+    case 3 : %ratcatch_rathole_3 = 1;
+    case 4 : %ratcatch_rathole_4 = 1;
+}
+if (~rc_holes_done < 4) {
+    ~chatplayer("<p,neutral>Well that's one less rat hole. I had better finish the job off quick before they start to reproduce again.");
+    return;
+}
+~rc_set(^rc_holes_done);
+~chatplayer("<p,happy>Hmm, that should do the trick.|Those rats should soon die off.");
+
+[proc,rc_hole_done](int $hole)(boolean)
+switch_int ($hole) {
+    case 1 : if (%ratcatch_rathole_1 = 1) return(true);
+    case 2 : if (%ratcatch_rathole_2 = 1) return(true);
+    case 3 : if (%ratcatch_rathole_3 = 1) return(true);
+    case 4 : if (%ratcatch_rathole_4 = 1) return(true);
+}
+return(false);
+
+[proc,rc_holes_done]()(int)
+return(calc(%ratcatch_rathole_1 + %ratcatch_rathole_2 + %ratcatch_rathole_3 + %ratcatch_rathole_4));
+
+// ---------------------------------------------------------------- the Apothecary
+// apothecary.rs2 comes here first
+[label,rc_hook_apothecary]
+if (%ratcatch_var < ^rc_pox | %ratcatch_var = ^rc_complete) @ttc_hook_apothecary;
+~chatnpc("<p,neutral>I am the Apothecary. I brew potions.|Do you need anything specific?");
+// ours: the RS wiki's fifth option, with the others as the Apothecary has them
+if (~p_choice2("I need to talk to you about cats.", 1, "Something else.", 2) = 2) @apothecary_standard;
+~chatplayer("<p,neutral>I need to talk to you about cats.");
+if (%ratcatch_var = ^rc_pox) {
+    ~chatnpc("<p,angry>As I said I'm the apothecary not the vet.");
+    ~chatplayer("<p,quiz>Would you know anything about poisons then?");
+    ~chatnpc("<p,neutral>I'm quite the expert, excuse me.");
+    ~chatplayer("<p,quiz>How about rat poisons and anti-poisons for cats.");
+    ~chatnpc("<p,neutral>I think I can help you with that. Try me.");
+    ~chatplayer("<p,neutral>Ok, Hooknosed Jack's cat, Pox ate some rats which were poisoned with a Kwuarm and red spider egg based concoction.");
+    ~chatnpc("<p,happy>Not Pox, what a personality. I remember... Hang on no, I have no time for dilly dallying.");
+    ~chatnpc("<p,neutral>I know just the thing that will sort Pox out.");
+    ~chatplayer("<p,happy>Great! What?");
+    ~chatnpc("<p,neutral>Well cats are simple enough to treat. Just bring me a bucket of milk, some Ground Unicorn Horn and a leaf of marrentill.");
+    ~rc_set(^rc_antipoison);
+    if (~rc_apothecary_missing = 0) ~rc_apothecary_make;
+    return;
+}
+if (%ratcatch_var = ^rc_antipoison) {
+    if (inv_total(inv, ratcatchers_cat_antipoison) > 0) {
+        ~chatnpc("<p,angry>What are you hanging around here for. You've got the anti poison give it to Jack. Quick.");
+        return;
+    }
+    if (~rc_apothecary_missing = 0) {
+        ~chatplayer("<p,quiz>I was wondering if you could make me another cat anti-poison potion would you?");
+        ~chatnpc("<p,neutral>No problem if you have the ingredients with you.");
+        ~rc_apothecary_make;
+        return;
+    }
+    ~rc_apothecary_need;
+    return;
+}
+~chatplayer("<p,quiz>You wouldn't be able to make any other cat potions, would you?");
+~chatnpc("<p,neutral>I have no plans to branch out into cat potions at the moment, but if there was sufficient demand for them I might change my mind.");
+
+// 0 if you have all three: bit 1 the milk, 2 the horn, 4 the marrentill missing
+[proc,rc_apothecary_missing]()(int)
+def_int $m = 0;
+if (inv_total(inv, bucket_milk) = 0) $m = calc($m + 1);
+if (inv_total(inv, unicorn_horn_dust) = 0) $m = calc($m + 2);
+if (inv_total(inv, marentill) = 0) $m = calc($m + 4);
+return($m);
+
+// the RS wiki's lines for what you're missing
+[proc,rc_apothecary_need]
+switch_int (~rc_apothecary_missing) {
+    case 7 : ~chatnpc("<p,neutral>You need to get a bucket of milk, ground unicorn horn and some marrentill before I can create a cat anti-poison potion for you.");
+    case 5 : ~chatnpc("<p,neutral>You need to get a bucket of milk and some marrentill before we can proceed.");
+    case 6 : ~chatnpc("<p,neutral>You need to get some ground unicorn horn and marrentill before we can proceed.");
+    case 3 : ~chatnpc("<p,neutral>You need to get a bucket of milk and some ground unicorn horn before we can proceed.");
+    case 1 : ~chatnpc("<p,neutral>You need to get a bucket of milk before we can proceed.");
+    case 2 : ~chatnpc("<p,neutral>You need to get some ground unicorn horn before we can proceed.");
+    case 4 : ~chatnpc("<p,neutral>You need to get some marrentill before we can proceed.");
+}
+
+[proc,rc_apothecary_make]
+inv_del(inv, bucket_milk, 1);
+inv_add(inv, bucket_empty, 1);
+inv_del(inv, unicorn_horn_dust, 1);
+inv_del(inv, marentill, 1);
+inv_add(inv, ratcatchers_cat_antipoison, 1);
+~objbox(ratcatchers_cat_antipoison, "The apothecary carefully mixes and blends the ingredients together. He then hands you a bottle of cat anti-poison.", 250, 0, 0);
+~chatnpc("<p,neutral>Quick, get this to Jack. If I know the man at all, he wouldn't have sent someone else to do this if his cat wasn't seriously ill.");
+
+// the cat antipoison's Empty (the cache's iop4)
+[opheld4,ratcatchers_cat_antipoison]
+inv_setslot(inv, last_slot, vial_empty, 1);
+mes("You empty the vial."); // ours
+
+// ---------------------------------------------------------------- the King rat
+// The RS and OSRS wikis: put your cat (from your pack) through the hole in the wall; feed it fish or
+// milk through the hole. The RS wiki: told to be careful, it flees at half its hitpoints; otherwise
+// it fights to the death. The OSRS wiki's stats (rc_journal.rs2's npc configs): the King rat has
+// 10 hitpoints and hits at most 1; cats as Mod Ash gave them.
+// ours: from a square or two away as well (the hole is a wall decoration in the King rat's room's
+// wall, which the pathing can't stand at)
+[aplocu,vc_blank_walldecor]
+if (distance(loc_coord, coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@rc_hole_use;
+
+[oplocu,vc_blank_walldecor] @rc_hole_use;
+
+[label,rc_hole_use]
+if (~rc_is_cat_obj(last_useitem) = true) {
+    @rc_kingrat_start;
+}
+if (~rc_is_cat_food(last_useitem) = true) {
+    @rc_kingrat_feed;
+}
+~displaymessage(^dm_default);
+
+[proc,rc_is_cat_obj](obj $obj)(boolean)
+switch_category (oc_category($obj)) {
+    case kitten, cat, overgrown, wilycat, lazycat : return(true);
+}
+return(false);
+
+// pet.rs2's fish and milk, and the cooked fish (ours: the RS wiki's "raw or cooked fish or buckets
+// of milk")
+[proc,rc_is_cat_food](obj $obj)(boolean)
+switch_obj ($obj) {
+    case bucket_milk, raw_shrimp, raw_anchovies, raw_sardine, raw_herring, raw_trout, raw_pike, raw_salmon, raw_tuna, raw_lobster, raw_swordfish, raw_shark, shrimp, anchovies, sardine, herring, trout, pike, salmon, tuna, lobster, swordfish, shark : return(true);
+}
+return(false);
+
+[label,rc_kingrat_start]
+if (%ratcatch_var ! ^rc_kingrat) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+if (npc_finduid(%rc_foe_uid) = true) {
+    mes("Your cat is already in there."); // ours
+    return;
+}
+if (npc_finduid(%follower_uid) = true) {
+    mes("You already have a follower."); // pet.rs2's line
+    return;
+}
+def_obj $catobj = last_useitem;
+def_int $slot = last_useslot;
+~mesbox("The rat inside the room looks very vicious. It could definitely hold its own against any cat.");
+if (~p_choice2_header("Yes", 1, "No", 2, "Are you sure you want to do this?") = 2) {
+    ~mesbox("You change your mind, deciding not to risk your cat's life.");
+    return;
+}
+if (inv_getobj(inv, $slot) ! $catobj) return;
+inv_delslot(inv, $slot);
+npc_add(^rc_kingrat_cat, oc_param($catobj, follower_id), ^max_32bit_int);
+%follower_obj = nc_param(npc_type, pet_item_id);
+%follower_uid = npc_uid;
+%npc_attacking_uid = uid;
+npc_setmode(none);
+%rc_cat_hp = npc_stat(hitpoints);
+npc_add(^rc_kingrat_at, vc_kingrat, 1000);
+%rc_foe_uid = npc_uid;
+npc_setmode(none);
+~mesbox("Your cat squeezes through the broken wall.");
+~mesbox("Perhaps you could also supply your cat with food through this opening.");
+%ratcatch_withdrawfrom_kingrat = 0;
+if (~p_choice2("Be careful in there, cat!", 1, "Go get that nasty rat!", 2) = 1) {
+    ~chatplayer("<p,neutral>Be careful in there, cat!");
+    %ratcatch_withdrawfrom_kingrat = 1;
+}
+~rc_catsay("<p,angry>Hisss!");
+~chatnpc_specific("King rat", vc_kingrat, "<p,angry>Pfssst!");
+say("Go get him kitty.");
+~rc_play("The Noble Rodent", "the noble rodent", 11, 26); // the RS wiki: while fighting the King rat (music.dbrow: 11,26)
+%rc_fight_clock = 0;
+softtimer(rc_kingrat_fight, 4); // the RS wiki: the King rat's speed is 4
+
+[label,rc_kingrat_feed]
+if (npc_finduid(%rc_foe_uid) = false | npc_finduid(%follower_uid) = false) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+inv_del(inv, last_useitem, 1);
+if (last_useitem = bucket_milk) inv_add(inv, bucket_empty, 1);
+anim(human_pickupfloor, 0);
+mes("You drop some supplies through the broken wall to help your cat.");
+npc_say("Meoow!");
+// the RS wiki: "All completely heal your cat or kitten the same amount" (ours: back to full)
+npc_statheal(hitpoints, 0, 100);
+
+[softtimer,rc_kingrat_fight]
+if (npc_finduid(%follower_uid) = false) {
+    ~rc_kingrat_end;
+    return;
+}
+// you left the room's floor (the OSRS wiki: climbing down the ladder pulls your cat back)
+if (coordy(coord) ! 1 | distance(coord, ^rc_kingrat_cat) > 10) {
+    ~rc_kingrat_end;
+    ~rc_cat_follow;
+    return;
+}
+if (.npc_finduid(%rc_foe_uid) = false) {
+    ~rc_kingrat_end;
+    return;
+}
+def_int $r = ~rc_exchange(%follower_uid, %rc_foe_uid, 0, 0);
+if ($r = 1) {
+    // the King rat is dead (the RS wiki's lines)
+    if (npc_finduid(%rc_foe_uid) = true) {
+        npc_anim(mouse_death, 0);
+        sound_synth(rat_death, 1, 0);
+    }
+    clearsofttimer(rc_kingrat_fight);
+    mes("The rat is dead!");
+    queue(rc_kingrat_won, 0, 0);
+    return;
+}
+if ($r = 2) {
+    clearsofttimer(rc_kingrat_fight);
+    queue(rc_cat_died, 0, 0);
+    ~rc_kingrat_remove;
+    return;
+}
+// told to be careful, it flees at half its hitpoints
+if (%ratcatch_withdrawfrom_kingrat = 1 & npc_finduid(%follower_uid) = true) {
+    if (calc(npc_stat(hitpoints) * 2) <= npc_basestat(hitpoints)) {
+        mes("Your cat flees from the King rat."); // ours
+        ~rc_kingrat_end;
+        ~rc_cat_follow;
+    }
+}
+
+[queue,rc_kingrat_won]
+~rc_set(^rc_kingrat_dead);
+p_delay(1);
+~rc_kingrat_remove;
+say("Come here kitty.");
+if (npc_finduid(%follower_uid) = true) {
+    npc_say("Miaow!");
+    npc_statheal(hitpoints, 0, 100);
+}
+~rc_cat_follow;
+
+[proc,rc_kingrat_end]
+clearsofttimer(rc_kingrat_fight);
+~rc_kingrat_remove;
+
+[proc,rc_kingrat_remove]
+if (npc_finduid(%rc_foe_uid) = true) npc_del;
+%rc_foe_uid = null;
+
+// the RS wiki: "If your cat dies, a spectral cat with wings will briefly appear, and you will
+// receive the chatbox message: 'Your cat has passed away'." (the cache's kitten_angel_goes_to_heaven)
+[queue,rc_cat_died]
+if (npc_finduid(%follower_uid) = true) {
+    npc_anim(cat_death, 0);
+    sound_synth(cat_death, 1, 0);
+    p_delay(1);
+    if (npc_finduid(%follower_uid) = true) npc_anim(kitten_angel_goes_to_heaven, 0);
+    p_delay(2);
+}
+mes("Your cat has passed away.");
+~follower_death;
+
+// ---------------------------------------------------------------- the fight
+// One exchange: your cat and its foe each swing. Ours: a hit lands with chance
+// (attack + 1) / (attack + defence + 2) and does 1 to the attacker's max hit, which is the OSRS
+// wiki's (1 for most cats, 2 for wily cats: 1 + strength / 8; the King rat and pit rats 1).
+// $att and $def change your cat's attack and defence (the pits' tactics). Returns 1 if the foe died,
+// 2 if your cat died, 0 otherwise.
+[proc,rc_exchange](npc_uid $cat, npc_uid $foe, int $att, int $def)(int)
+if (npc_finduid($foe) = false) return(1);
+def_coord $foe_at = npc_coord;
+def_int $foe_att = npc_stat(attack);
+def_int $foe_def = npc_stat(defence);
+if (npc_finduid($cat) = false) return(2);
+def_coord $cat_at = npc_coord;
+def_int $cat_att = max(0, calc(npc_stat(attack) + $att));
+def_int $cat_def = max(0, calc(npc_stat(defence) + $def));
+def_int $cat_max = calc(1 + npc_stat(strength) / 8);
+// your cat swings
+if (distance($cat_at, $foe_at) > 1) {
+    npc_walk(map_findsquare($foe_at, 1, 1, ^map_findsquare_lineofwalk));
+} else {
+    npc_facesquare($foe_at);
+    npc_anim(cat_attack, 0);
+    sound_synth(cat_attack, 1, 0);
+}
+def_boolean $cat_hits = false;
+if (distance($cat_at, $foe_at) <= 1 & random(calc($cat_att + $foe_def + 2)) < calc($cat_att + 1)) $cat_hits = true;
+if (npc_finduid($foe) = true) {
+    npc_facesquare($cat_at);
+    if (distance($cat_at, $foe_at) <= 1) {
+        if ($cat_hits = true) {
+            npc_damage(^hitmark_damage, calc(1 + random($cat_max)));
+        } else {
+            npc_damage(^hitmark_block, 0);
+        }
+        if (npc_stat(hitpoints) <= 0) return(1);
+        npc_anim(mouse_attack, 0);
+        sound_synth(rat_attack, 1, 0);
+    }
+}
+// the foe swings back
+if (distance($cat_at, $foe_at) > 1) return(0);
+if (npc_finduid($cat) = false) return(2);
+if (random(calc($foe_att + $cat_def + 2)) < calc($foe_att + 1)) {
+    npc_damage(^hitmark_damage, 1);
+    npc_anim(cat_block, 0);
+    sound_synth(cat_hit, 1, 0);
+} else {
+    npc_damage(^hitmark_block, 0);
+}
+if (npc_stat(hitpoints) <= 0) return(2);
+return(0);

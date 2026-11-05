@@ -1,0 +1,323 @@
+// EASCape: Rat Catchers - Jimmy Dazzler and the mansion. Words: the RS wiki's quest and NPC
+// transcripts; the OSRS wiki's (historical where it has them) for the gates, the guards and
+// guests, and the directions. The mansion's people, rats and walls are the 377 maps' own.
+
+// ---------------------------------------------------------------- Jimmy Dazzler
+[opnpc1,vc_jimmy_dazzler]
+def_int $s = %ratcatch_var;
+if ($s < ^rc_jimmy) {
+    // Transcript:Jimmy Dazzler, before Rat Catchers
+    ~chatnpc("<p,neutral>What is your name and what is your business here?");
+    ~chatplayer("<p,neutral>My name is <displayname>, and I have a couple of questions for you.");
+    ~chatnpc("<p,neutral>No.");
+    ~chatplayer("<p,confused>What do you mean by no?");
+    ~chatnpc("<p,angry>That just isn't the ticket. I don't know you nor will I answer any questions. Now begone from here, you'll attract unwanted attention to me.");
+    ~chatplayer("<p,laugh>As if those 'clothes' you're wearing wouldn't do that already.");
+    return;
+}
+if ($s = ^rc_jimmy) @rc_jimmy_ticket;
+if ($s = ^rc_mansion) @rc_jimmy_waiting;
+if ($s = ^rc_mansion_done) @rc_jimmy_done;
+if ($s >= ^rc_complete) @rc_jimmy_after;
+// ours: until the quest is done he says again where Jack is
+~chatnpc("<p,happy>Ah, <displayname>, aren't you just the ticket?");
+~chatnpc("<p,neutral>Hooknosed Jack should be in the roughest area of Varrock, knowing him. He likes a good scrap does Jack.");
+
+[label,rc_jimmy_ticket]
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,happy>Ah, <displayname>, I've been expecting you.");
+~chatplayer("<p,confused>You have?");
+~chatnpc("<p,neutral>I have. Those repulsive sisters from the Varrock sewers sent word.");
+~mesbox("At the thought of Phingspet and Grimesquit he shudders.");
+~chatplayer("<p,neutral>An odd couple. Anyway, they said that you could teach me a thing or two about cats.");
+~chatnpc("<p,neutral>I could, but I would need a motivation. I didn't get rich enough to afford clothes like these by giving out help freely to every adventurer who came my way.");
+~chatplayer("<p,quiz>Maybe I could help you out with something then?");
+~chatnpc("<p,happy>Ah, that's music to my ears.");
+~chatplayer("<p,quiz>Well, have you anything for me to do, or will that come at a later point?");
+~chatnpc("<p,happy>No, no. I've just the ticket right here.");
+~mesbox("He gives you a dazzling smile, his pearly whites both pearly and white.");
+~chatplayer("<p,shock>Gosh those teeth are very white, and... sharp. Well I know where he gets his name from.");
+~chatnpc("<p,happy>Yes, this is just the ticket. Here...");
+~chatnpc("<p,neutral>Take a good and long look at this map.");
+~rc_set(^rc_mansion);
+%rc_checkpoint = ^rc_cp_gates;
+%vc_raton_off1 = 0;
+%vc_raton_off2 = 0;
+%vc_raton_off3 = 0;
+%vc_raton_off4 = 0;
+%vc_raton_off5 = 0;
+%vc_raton_off6 = 0;
+if (~obj_gettotal(ratcatchers_party_directions) = 0) ~ttc_give(ratcatchers_party_directions);
+~objbox(ratcatchers_party_directions, "You look at Jimmy Dazzler's map. On it are directions to a country manor located outside Ardougne in an apparently densely wooded area.", 250, 0, 0);
+~chatnpc("<p,neutral>Now, a wealthy client of mine, a merchant of high repute, is having a soiree.");
+~chatplayer("<p,confused>A what?");
+~chatnpc("<p,neutral>A party.");
+~mesbox("He gives you a look of disdain.");
+~chatnpc("<p,neutral>Now please don't interrupt me any further. He has a problem, a small furry one.");
+~chatplayer("<p,happy>So he wants me to go to his place and kill some rats? I can sort that - no probs.");
+~chatnpc("<p,neutral>No, no, no. It's not that simple. He can't afford to have you seen on his premises. If a vermin catcher were to be seen in his manor, think of the damage it would do to his reputation.");
+~chatplayer("<p,neutral>Oh, I see. So I have to do this covertly?");
+~chatnpc("<p,happy>That's it, that's the very ticket.");
+~mesbox("Jimmy dazzles you with another one of his trademark smiles.");
+~chatnpc("<p,neutral>Now I'm going to cast a spell on you that will allow you to carry out this task with some element of safety.");
+~chatplayer("<p,quiz>Are you going to cast an invisible spell on me? That should make it easy.");
+~chatnpc("<p,neutral>Not quite.");
+~mesbox("You receive an uncertain smile. You can see that his confidence in you isn't limitless.");
+~chatnpc("<p,neutral>The spell will wipe the last few seconds of memory from anyone who spots you, and also teleport you a small distance away.");
+~chatplayer("<p,shock>Wow. That's some spell. I'd say that comes in handy.");
+~mesbox("Jimmy gives you a knowing smile.");
+~chatnpc("<p,happy>It's the ticket, my friend, it's the ticket.");
+~mesbox("Without another word Jimmy waves his hands about and mutters something under his breath. Uncomfortable now, you search your pockets to check that you're not missing anything.");
+~chatplayer("<p,quiz>Where did you learn that spell?");
+~chatnpc("<p,neutral>If I told everyone all my secrets, would I be as well off as I am now?");
+~mesbox("You decide not to answer; the question was obviously rhetorical.");
+~chatnpc("<p,neutral>Well let's get on with things. Carry out this simple task and I'll aid you.");
+~chatnpc("<p,neutral>Now scram, get going. And remember: the map's your ticket.");
+~chatnpc("<p,neutral>Oh yes, one more thing. Use a cat to dispose of the rats. Sword-play is really too noisy. Using your cat is...");
+~chatplayer("<p,laugh>...the ticket?");
+
+[label,rc_jimmy_waiting]
+// ours: what he says while you're at it; the directions again if you lost them
+if (~obj_gettotal(ratcatchers_party_directions) = 0) {
+    ~chatnpc("<p,neutral>Take a good and long look at this map.");
+    ~ttc_give(ratcatchers_party_directions);
+    ~objbox(ratcatchers_party_directions, "You look at Jimmy Dazzler's map. On it are directions to a country manor located outside Ardougne in an apparently densely wooded area.", 250, 0, 0);
+}
+~chatnpc("<p,neutral>Now scram, get going. And remember: the map's your ticket.");
+
+[label,rc_jimmy_done]
+~chatnpc("<p,happy>Ah, <displayname>, aren't you just the ticket?");
+~chatplayer("<p,confused>I am?");
+~chatnpc("<p,happy>Congratulations on a job well done.");
+~chatplayer("<p,quiz>You'll teach me all about cats now?");
+~chatnpc("<p,neutral>Ahh, now, that's something I didn't say.");
+~mesbox("Jimmy flashes you an unconvincing smile.");
+~chatplayer("<p,angry>You didn't? Well then, what did you promise?");
+~chatnpc("<p,neutral>Well I can show you into the rat pits of Ardougne; it's a great place for training kittens. Teach them young, you know.");
+~chatplayer("<p,neutral>Right. What if I want to know about grown and overgrown cats?");
+~chatnpc("<p,neutral>Ah now. When it comes to grown cats, Hooknosed Jack is your ticket.");
+~chatplayer("<p,quiz>Where would I find him?");
+~chatnpc("<p,neutral>He should be in the roughest area of Varrock, knowing him. He likes a good scrap does Jack.");
+~chatnpc("<p,neutral>I'll tell him to look out for you.");
+~rc_set(^rc_jack);
+inv_del(inv, ratcatchers_party_directions, inv_total(inv, ratcatchers_party_directions));
+~chatplayer("<p,quiz>Tell me about these pits and where I can find them.");
+~chatnpc("<p,neutral>One question at a time. The pits lie below this very pub.");
+~chatnpc("<p,neutral>See that ladder there? Well, that's the ticket.");
+~chatplayer("<p,quiz>What goes on in these pits then?");
+~chatnpc("<p,neutral>Here take this, you might find it useful.");
+~ttc_give(ratpits_manual);
+~objbox(ratpits_manual, "You are handed a manual concerning the ratpits.", 250, 0, 0);
+
+// Transcript:Jimmy Dazzler (the OSRS wiki's historical lines, with Bones)
+[label,rc_jimmy_after]
+~chatnpc("<p,happy>Ah, <displayname>, aren't you just the ticket?");
+switch_int (~p_choice3("Can you tell me where I would find...", 1, "Can you tell me more about the pits?", 2, "Can you show me to the rat pits?", 3)) {
+    case 2 : ~rc_pits_talk("In the Ardougne pits your kitten will grow up faster, whether it wins or loses.", "It will gain more experience and will become happier and will be fed.");
+    case 3 :
+        ~chatplayer("<p,quiz>Can you show me to the rat pits?");
+        ~chatnpc("<p,neutral>The pits lie below this very pub.");
+        ~chatnpc("<p,neutral>See that ladder there? Well, that's the ticket.");
+    case 1 :
+        switch_int (~p_choice5("Grimesquit and Phingspet", 1, "Hooknosed Jack", 2, "Smokin' Joe", 3, "The Face", 4, "Felkrash", 5)) {
+            case 1 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Phingspet and Grimesquit?");
+                ~chatnpc("<p,neutral>You can find those vile harpies in the sewers of Varrock.");
+                ~chatnpc("<p,sad>~ Jimmy shudders when he thinks of them. ~");
+                ~chatnpc("<p,neutral>If you ask me, it's too good a place for them.");
+            case 2 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Hooknosed Jack?");
+                ~chatnpc("<p,neutral>He should be in the roughest area of Varrock, knowing him. He likes a good scrap does Jack.");
+            case 3 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Smokin' Joe?");
+                ~chatnpc("<p,neutral>You won't find him around here. They wouldn't let a filthy old dwarf like him into a civilised town like this.");
+                ~chatplayer("<p,quiz>Well, if he's not here, where would I find him?");
+                ~chatnpc("<p,neutral>If the old rascal's lungs haven't given up yet, you should find him in Keldagrim, the city of dwarves.");
+            case 4 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find 'The Face'?");
+                ~chatnpc("<p,laugh>Old Pugly? My oh my, she got her comeuppance alright!");
+                ~chatplayer("<p,confused>Old Pugly?");
+                ~chatnpc("<p,laugh>Pug ugly.");
+                ~chatnpc_specific("Bones", vc_bones, "<p,neutral>She's worse than that.");
+                ~chatplayer("<p,confused>She is?");
+                ~chatnpc_specific("Bones", vc_bones, "<p,laugh>Her looks are the stuff of legend. She's so ugly she ...");
+                ~chatplayer("<p,angry>You guys are really nasty.");
+                ~chatnpc("<p,angry>Believe me, she deserves everything she gets!");
+                ~chatplayer("<p,quiz>What did she do?");
+                ~chatnpc("<p,neutral>I couldn't possibly tell you, but be careful around her.");
+                ~chatplayer("<p,quiz>Will you please tell me where I could find her?");
+                ~chatnpc("<p,neutral>She'll be in or around Port Sarim I reckon.");
+            case 5 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find Felkrash?");
+                ~chatnpc("<p,neutral>The Boss?");
+                ~chatnpc("<p,neutral>You'll find her in Port Sarim, probably in the ratpits.");
+                ~chatplayer("<p,shock>She's your boss?");
+                ~chatnpc("<p,neutral>Well, sort of. She's the unofficial head of the rat catchers.");
+        }
+}
+
+// the Ardougne pits' ladder in Jimmy's house (the OSRS wiki's line before you may go down)
+[oploc1,vc_ladder_down]
+if (loc_coord = 0_40_51_1_56 & %ratcatch_var < ^rc_jack) {
+    ~chatplayer("<p,neutral>I can't see the bottom of the ladder. I think I'll leave it be, for now.");
+    return;
+}
+~eascape_link(1);
+
+// ---------------------------------------------------------------- the directions
+// the RS wiki's transcript; the OSRS wiki's lines at the mansion and after
+[opheld1,ratcatchers_party_directions]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = true) {
+    ~chatplayer("<p,neutral>Directions to... here, actually! I'd better hold onto them until I complete Jimmy's task.");
+    return;
+}
+~mesbox("The scroll contains directions to a manor in a densely wooded area near Ardougne.");
+if (~p_choice2("Follow the directions to the house.", 1, "Follow the directions another time.", 2) = 2) {
+    ~chatplayer("<p,neutral>I think I'll go there some other time.");
+    return;
+}
+if (%ratcatch_var > ^rc_mansion_done) {
+    ~chatplayer("<p,neutral>I don't want to go there again. I barely managed to get out unseen.");
+    return;
+}
+if (%ratcatch_var < ^rc_mansion) {
+    ~chatplayer("<p,neutral>I don't think I should go there at this point.");
+    return;
+}
+// ours: Ardougne is East and West Ardougne's mapsquares
+if (inzone(0_38_49_0_0, 0_41_52_63_63, coord) = false) {
+    ~chatplayer("<p,neutral>The directions are from Ardougne, it would be much easier to find the place if I left from there.");
+    return;
+}
+~rc_mansion_go;
+
+[proc,rc_mansion_go]
+if_close;
+~fade_out;
+p_delay(2);
+p_telejump(map_findsquare(~rc_checkpoint_coord, 0, 1, ^map_findsquare_lineofwalk));
+~rc_cat_follow;
+p_delay(0);
+~fade_in;
+softtimer(rc_mansion_watch, 1);
+
+[proc,rc_checkpoint_coord]()(coord)
+switch_int (%rc_checkpoint) {
+    case ^rc_cp_trellis : return(^rc_mansion_trellis);
+    case ^rc_cp_ladder : return(^rc_mansion_ladder);
+}
+return(^rc_mansion_gates);
+
+// your cat comes too, when it's out (the npc pointer is left on it)
+[proc,rc_cat_follow]
+if (%follower_obj = null) return;
+if (npc_finduid(%follower_uid) = false) return;
+npc_tele(map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk));
+npc_setmode(playerfollow);
+
+// ---------------------------------------------------------------- the guards and guests
+// The OSRS and RS wikis: a guard or party guest who sees you shouts, and you are teleported to your
+// last checkpoint. Ours: "sees" is within 3 squares with a line of sight (no source has their
+// field of view in 2005; the RS wiki: cut to 100 degrees in 2009), and how often they talk.
+[softtimer,rc_mansion_watch]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false | %ratcatch_var ! ^rc_mansion) {
+    clearsofttimer(rc_mansion_watch);
+    return;
+}
+// checkpoints (ours: upstairs is the trellis's, the ground floor east of the hall the ladder's)
+if (coordy(coord) = 1 & %rc_checkpoint < ^rc_cp_trellis) %rc_checkpoint = ^rc_cp_trellis;
+if (coordy(coord) = 0 & coordx(coord) >= 2856 & coordz(coord) >= 5084 & %rc_checkpoint = ^rc_cp_trellis) %rc_checkpoint = ^rc_cp_ladder;
+// ours: a few seconds' grace after being sent back, so a guard by the checkpoint can't catch you
+// again at once
+if (map_clock < %rc_fight_clock) return;
+npc_findallany(coord, 3, 0);
+while (npc_findnext = true) {
+    if (~rc_watcher(npc_type) > 0 & lineofsight(npc_coord, coord) = true) {
+        if (~rc_watcher(npc_type) = 1) npc_say("Halt thief!");
+        else npc_say("A Thief!");
+        npc_facesquare(coord);
+        queue(rc_spotted, 0, 0);
+        clearsofttimer(rc_mansion_watch);
+        return;
+    }
+}
+if (random(25) = 0) {
+    npc_findallany(coord, 12, 0);
+    while (npc_findnext = true) {
+        if (~rc_watcher(npc_type) = 1 & random(3) = 0) {
+            npc_say(~rc_guard_line);
+            return;
+        }
+    }
+}
+
+// 1 a guard, 2 a party guest
+[proc,rc_watcher](npc $npc)(int)
+switch_npc ($npc) {
+    case ratcatcher_staticguard, ratcatcher_chiefguard, ratcatcher_guard_left_front, ratcatcher_guard_left_mid, ratcatcher_guard_left_back, ratcatcher_guard_left_fullback, ratcatcher_guard_right_front, ratcatcher_guard_right_mid, ratcatcher_guard_right_back, ratcatcher_guard_right_fullback, ratcatcher_guard_left_inside, ratcatcher_guard_right_inside : return(1);
+    case vc_partyguests_sir_ceril_carnillean, vc_partyguests_councillor_halgrive, vc_partyguests_spice_merchant, vc_partyguests_fur_merchant, vc_partyguests_gem_merchant, vc_partyguests_silver_merchant, vc_partyguests_silk_merchant, vc_partyguests_zenesha, vc_partyguests_ali_m : return(2);
+}
+return(0);
+
+// the RS wiki's transcript
+[proc,rc_guard_line]()(string)
+switch_int (random(15)) {
+    case 0 : return("Can't wait for the weekend.");
+    case 1 : return("These night shifts just go on and on.");
+    case 2 : return("Wheres that relief guard?");
+    case 3 : return("Why me?");
+    case 4 : return("I'd kill for a kebab.");
+    case 5 : return("10 green bottles sit.. *Whistles*");
+    case 6 : return("Dum dum dum de dum Hey!");
+    case 7 : return("Why isn't it 6 already?");
+    case 8 : return("I miss Billy and Bob *sighs*");
+    case 9 : return("Exciting new post he said.");
+    case 10 : return("*Whistles*");
+    case 11 : return("*sings* If I had 3 wil....");
+    case 12 : return("I'm hungry.");
+    case 13 : return("I need a new job.");
+}
+return("I am so bored");
+
+[queue,rc_spotted]
+%rc_fight_clock = calc(map_clock + 8);
+mes("You've been spotted and teleported a small distance away.");
+p_telejump(map_findsquare(~rc_checkpoint_coord, 0, 1, ^map_findsquare_lineofwalk));
+~rc_cat_follow;
+softtimer(rc_mansion_watch, 1);
+
+// ---------------------------------------------------------------- the grounds
+// the gates (the OSRS wiki's transcript); ours: they bring you back outside Jimmy's house
+[oploc1,vc_ornaterailing]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false) {
+    ~eascape_door_walk;
+    return;
+}
+if (~p_choice2_header("Yes, let's get out of here!", 1, "No I've changed my mind.", 2, "Do you want to leave the grounds?") ! 1) return;
+~fade_out;
+p_delay(2);
+clearsofttimer(rc_mansion_watch);
+p_telejump(map_findsquare(movecoord(^rc_jimmy_at, 2, 0, -3), 0, 2, ^map_findsquare_lineofwalk));
+~rc_cat_follow;
+p_delay(0);
+~fade_in;
+
+// the trellis: up to the balcony (the OSRS wiki: a checkpoint) and down again
+[oploc1,vc_trellis_base]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = true & %ratcatch_var = ^rc_mansion & %rc_checkpoint < ^rc_cp_trellis) %rc_checkpoint = ^rc_cp_trellis;
+~eascape_link(1);
+
+[oploc2,vc_trellis_base]
+mes("You look up the trellis. It looks sturdy enough to climb."); // ours
+
+[oploc1,vc_blank_trellis_top_trigger] ~eascape_link(1);
+
+// the mansion's music: Rat Hunt (musicregion.dbrow), and the watch starts again if you log in there
+[proc,rc_mansion_login]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false) return;
+if (%ratcatch_var = ^rc_mansion) {
+    softtimer(rc_mansion_watch, 1);
+    return;
+}
+// ours: once the task is done or before it, the mansion can't be found again
+p_telejump(map_findsquare(movecoord(^rc_jimmy_at, 2, 0, -3), 0, 2, ^map_findsquare_lineofwalk));

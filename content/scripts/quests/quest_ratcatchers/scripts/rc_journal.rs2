@@ -1,0 +1,377 @@
+// EASCape: Rat Catchers (28 November 2005) - the journal, the reward and the shared pieces.
+// Words: the RS wiki's quest transcript (the closest to 2005; the OSRS one was rewritten in 2024),
+// filled from the OSRS wiki's "historical dialogue" where the RS one is missing a line. Things: the
+// 377 cache's own ratcatch varps and varbits, vc_ and ratcatcher_ npcs, objs, locs, seqs, spotanims,
+// sounds and interfaces (inter_320 the bet, inter_321 the fight, inter_322 the snake charm,
+// inter_323 the music scroll). The reward (both wikis): 2 quest points and 4,500 Thieving
+// experience; the rat pole, the rat pits and Felkrash's wily cats. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- the journal
+// Ours: no source has the 2005 journal's text, so these lines say what the RS and OSRS wikis'
+// walkthroughs have you do next.
+[if_button,questlist:ratcatch]
+def_int $s = %ratcatch_var;
+if ($s = ^rc_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Gertrude@dbl@, who lives just|@dbl@west of @dre@Varrock@dbl@.||";
+    def_boolean $met = false;
+    if (%fluffs = ^fluffs_complete) $met = true;
+    $req = append($req, ~rc_req_line($met, "I need to have completed Gertrude's Cat"));
+    $met = false;
+    if (%ics_little_var >= ^ics_complete) $met = true;
+    $req = append($req, ~rc_req_line($met, "I need to have completed Icthlarin's Little Helper"));
+    $met = false;
+    if (%giantdwarf_quest > ^gd_not_started) $met = true;
+    $req = append($req, ~rc_req_line($met, "I need to be able to get into Keldagrim"));
+    $req = append($req, "|@dbl@I will need a cat that is not overgrown.");
+    ~quest_journal("Rat Catchers", $req);
+    return;
+}
+if ($s >= ^rc_complete) {
+    ~quest_journal("Rat Catchers", "@str@Gertrude sent me to the rat catchers. With my cat I caught rats for|@str@the sisters in the Varrock sewers, for Jimmy Dazzler in a mansion|@str@near Ardougne, for Hooknosed Jack in a Varrock warehouse and for|@str@Smokin' Joe in Keldagrim. Then I charmed every rat in Port Sarim|@str@into the sea, as Felkrash once did.||@red@QUEST COMPLETE!||@dbl@Felkrash in the Port Sarim rat pits can train an overgrown cat into|@dbl@a wily cat.");
+    return;
+}
+def_string $t = "@str@Gertrude told me about two ladies in the Varrock sewers who know|@str@a lot about rat catching.||";
+def_string $next;
+switch_int ($s) {
+    case ^rc_started : $next = "@dbl@I should find them in the @dre@sewers under Varrock@dbl@, with my cat.";
+    case ^rc_sniffed : $next = append("@dbl@@dre@Phingspet@dbl@ and @dre@Grimesquit@dbl@ want my cat to catch @dre@8 rats@dbl@.|", "@dbl@So far it has caught <tostring(%ratcatch_ometer)>.");
+    case ^rc_caught_eight : $next = "@dbl@My cat has caught 8 rats. I should go back to the sisters.";
+    case ^rc_jimmy : $next = "@dbl@The sisters gave me a rat pole and sent me to @dre@Jimmy Dazzler@dbl@ in|@dbl@@dre@Ardougne@dbl@, at the Flying Horse.";
+    case ^rc_mansion : $next = append("@dbl@Jimmy wants a client's mansion cleared of rats without anyone|@dbl@seeing me. His @dre@directions@dbl@ take me there from Ardougne; my cat must|", "@dbl@catch the rats. It has caught <tostring(~rc_mansion_count)> of 6.");
+    case ^rc_mansion_done : $next = "@dbl@The mansion is clear of rats. I should get out quietly and tell|@dre@Jimmy Dazzler@dbl@.";
+    case ^rc_jack : $next = "@dbl@Jimmy sent me to @dre@Hooknosed Jack@dbl@, who knows about grown cats. He|@dbl@is in the roughest part of Varrock.";
+    case ^rc_poison : $next = append("@dbl@Jack wants the @dre@rat holes@dbl@ upstairs in the warehouse south of the|@dbl@Dancing Donkey poisoned, with @dre@cheese@dbl@ and @dre@rat poison@dbl@. He can make the|@dbl@poison from kwuarm, red spider eggs and a vial.|", "@dbl@<tostring(~rc_holes_done)> of the 4 holes are poisoned.");
+    case ^rc_holes_done : $next = "@dbl@I have poisoned every rat hole. I should tell @dre@Hooknosed Jack@dbl@.";
+    case ^rc_pox : $next = "@dbl@Jack's cat Pox ate a poisoned rat. The @dre@Apothecary@dbl@ in Varrock should|@dbl@know a cure.";
+    case ^rc_antipoison : $next = "@dbl@The Apothecary needs a @dre@bucket of milk@dbl@, @dre@unicorn horn dust@dbl@ and|@dre@marrentill@dbl@ for a cat antipoison, which I must take to @dre@Jack@dbl@.";
+    case ^rc_kingrat : $next = "@dbl@Pox will live. One rat survived the poison, the biggest of them:|@dbl@the @dre@King rat@dbl@ upstairs in the warehouse. I can't reach it, but my cat|@dbl@could get through the @dre@hole in the wall@dbl@.";
+    case ^rc_kingrat_dead : $next = "@dbl@My cat killed the King rat. I should tell @dre@Hooknosed Jack@dbl@.";
+    case ^rc_joe : $next = "@dbl@Jack sent me to @dre@Smokin' Joe@dbl@ in @dre@Keldagrim@dbl@, who knows about overgrown|@dbl@cats.";
+    case ^rc_smoke : $next = "@dbl@Joe wants his rats smoked out. I need a @dre@pot of weeds@dbl@, lit, to use on|@dbl@the @dre@rat hole@dbl@.";
+    case ^rc_smoke_tried : $next = "@dbl@The rats ran back in before I could get them. Perhaps my cat,|@dbl@and a @dre@catspeak amulet@dbl@, could help.";
+    case ^rc_smoked : $next = "@dbl@My cat caught Joe's rats. I should tell @dre@Smokin' Joe@dbl@.";
+    case ^rc_face : $next = "@dbl@Joe sent me to @dre@the Face@dbl@ in @dre@Port Sarim@dbl@, to learn about wily cats.";
+    case ^rc_felkrash : $next = "@dbl@The Face says @dre@Felkrash@dbl@ wants to speak to me, below in the pits.";
+    case ^rc_task : $next = "@dbl@Felkrash wants every rat in @dre@Port Sarim@dbl@ gone, with one action, as she|@dbl@once did. She won't say how. Maybe @dre@the Face@dbl@ knows.";
+    case ^rc_story : $next = "@dbl@The Face told me the story: the @dre@snake charmer@dbl@ of @dre@Pollnivneach@dbl@ played|@dbl@a part in it.";
+    case ^rc_music : $next = "@dbl@The snake charmer sold me some music. I should play it on my|@dre@snake charm@dbl@ on the @dre@docks@dbl@ of Port Sarim.";
+    case default : $next = "@dbl@Every rat in the port followed my tune into the sea. I should tell|@dre@Felkrash@dbl@.";
+}
+~quest_journal("Rat Catchers", append($t, $next));
+
+[proc,rc_req_line](boolean $met, string $text)(string)
+if ($met = true) return("@str@<$text>.|");
+return("@dbl@<$text>.|");
+
+[proc,rc_requirements]()(boolean)
+if (%fluffs ! ^fluffs_complete) return(false);
+if (%ics_little_var < ^ics_complete) return(false);
+return(true);
+
+[proc,rc_set](int $stage)
+%ratcatch_var = $stage;
+~send_quest_progress(questlist:ratcatch, %ratcatch_var, ^rc_complete);
+
+// ---------------------------------------------------------------- the reward
+[proc,rc_complete]
+%ratcatch_var = ^rc_complete;
+stat_advance(thieving, 45000);
+// the RS wiki: Bubble and Squeak, Sarim's Vermin, Rat a Tat Tat and Catch Me If You Can "when
+// speaking to Felkrash at quest's end" (music.dbrow: unlock 11,27 / 11,28 / 11,25 / 11,24)
+~rc_unlock_music(11, 27);
+~rc_unlock_music(11, 28);
+~rc_unlock_music(11, 25);
+~rc_unlock_music(11, 24);
+session_log(^log_adventure, "Quest complete: Rat Catchers");
+~send_quest_complete(questlist:ratcatch, vc_rat_pole, 250, ^rc_questpoints, "You have completed the Rat Catchers Quest!", "4,500 Thieving XP|Access to the rat pits|Felkrash can train your overgrown|cats into wily cats"); // ours: the scroll's wording
+
+[proc,rc_unlock_music](int $var, int $bit)
+if (testbit(~music_getvar($var), $bit) = ^false) ~music_setvar($var, $bit);
+
+[proc,rc_play](string $name, midi $track, int $var, int $bit)
+~rc_unlock_music($var, $bit);
+if (%musicplay ! 0) {
+    if_settext(music:com_177, $name);
+    midi_song($track);
+}
+
+// ---------------------------------------------------------------- your cat
+// ^rc_cat_: what kind of cat is following you (0 none)
+[proc,rc_cat_kind]()(int)
+if (%follower_obj = null) return(0);
+if (npc_finduid(%follower_uid) = false) return(0);
+switch_category (oc_category(%follower_obj)) {
+    case kitten : return(1);
+    case cat : return(2);
+    case overgrown : return(3);
+    case wilycat : return(4);
+    case lazycat : return(5);
+}
+return(0);
+
+// your cat is out, and the npc pointer is on it
+[proc,rc_cat_out]()(boolean)
+if (~rc_cat_kind = 0) return(false);
+return(npc_finduid(%follower_uid));
+
+// a cat of any kind with you, out or in your pack
+[proc,rc_has_cat]()(boolean)
+if (~ics_has_cat = true) return(true);
+if (~rc_cat_kind > 0) return(true);
+if (inv_totalcat(inv, wilycat) > 0 | inv_totalcat(inv, lazycat) > 0) return(true);
+return(false);
+
+// your cat's chathead, the one following you or else one in your pack (A Tail of Two Cats's, with
+// the wily and lazy cats)
+[proc,rc_cat_npc]()(npc)
+if (%follower_obj ! null) {
+    def_npc $f = oc_param(%follower_obj, follower_id);
+    if ($f ! null) return($f);
+}
+return(~ttc_cat);
+
+[proc,rc_catsay](string $text)
+def_npc $cat = ~rc_cat_npc;
+~chatnpc_specific(nc_name($cat), $cat, $text);
+
+// ---------------------------------------------------------------- chasing vermin
+// pet.rs2's Chase vermin asks this first: the mansion's six rats (the cache's vc_partyrat_multi1-6,
+// hidden once caught by vc_raton_off1-6). True if it dealt with the chase.
+[proc,rc_chase]()(boolean)
+if (%ratcatch_var ! ^rc_mansion) return(false);
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false) return(false);
+def_int $kind = ~rc_cat_kind;
+if ($kind = 0) return(false);
+def_int $which = 0;
+def_int $i = 1;
+while ($i <= 6 & $which = 0) {
+    if (~rc_raton($i) = 0 & .npc_find(coord, ~rc_partyrat($i), 8, 0) = true) $which = $i;
+    $i = calc($i + 1);
+}
+if ($which = 0) return(false);
+if (.npc_find(coord, ~rc_partyrat($which), 8, 0) = false) return(false);
+say("Go on kitty...kill that rat!");
+p_delay(0);
+npc_say("Meeeeeoooowww!");
+.npc_say("Eek!");
+sound_synth(rat_hit, 1, 0);
+if (lineofwalk(npc_coord, .npc_coord) = false) {
+    mes("Your cat cannot get to its prey.");
+    return(true);
+}
+npc_setmode(none);
+npc_walk(.npc_coord);
+p_delay(1);
+npc_anim(cat_pounce, 0);
+p_delay(1);
+npc_setmode(playerfollow);
+// the OSRS wiki: kittens catch the mansion's rats 40% of the time and cats 75%; other cats as they
+// always do (pet.rs2: overgrown cats can't hunt)
+def_int $chance = 75;
+switch_int ($kind) {
+    case 1 : $chance = 40;
+    case 3 : $chance = 0;
+    case 4 : $chance = 93;
+    case 5 : $chance = 50;
+}
+if (random(100) >= $chance) {
+    mes("The rat manages to get away!");
+    return(true);
+}
+~rc_set_raton($which);
+npc_say("MeeeoooooW!");
+say("Hey well done puss, you got it!");
+~rc_rat_pole;
+if (~rc_mansion_count >= ^rc_mansion_rats) {
+    ~rc_set(^rc_mansion_done);
+    ~chatplayer("<p,happy>Good job puss, I think that just about wraps things up here.");
+    if (~ttc_catspeak = true) {
+        ~rc_catsay("<p,neutral>Yeah 'suppose so, this covert rat killing just comes so naturally.");
+        ~chatplayer("<p,quiz>Really? Why's that?");
+        ~rc_catsay("<p,evillaugh>I'm a cold blooded, claw toting, hitkitty.");
+        ~chatplayer("<p,confused>A what?");
+        ~rc_catsay("<p,evillaugh>A callous cat.");
+        ~chatplayer("<p,happy>I knew you had a dark side.");
+        ~rc_catsay("<p,evillaugh>I have many darksides.");
+        ~chatplayer("<p,neutral>Well, we had better get out of here and let's do it quietly.");
+    } else {
+        // the OSRS wiki's 2024 lines for no catspeak amulet (the RS wiki has none)
+        ~rc_catsay("<p,neutral>Miaow.");
+    }
+}
+return(true);
+
+[proc,rc_partyrat](int $i)(npc)
+switch_int ($i) {
+    case 1 : return(vc_partyrat_multi1);
+    case 2 : return(vc_partyrat_multi2);
+    case 3 : return(vc_partyrat_multi3);
+    case 4 : return(vc_partyrat_multi4);
+    case 5 : return(vc_partyrat_multi5);
+}
+return(vc_partyrat_multi6);
+
+[proc,rc_raton](int $i)(int)
+switch_int ($i) {
+    case 1 : return(%vc_raton_off1);
+    case 2 : return(%vc_raton_off2);
+    case 3 : return(%vc_raton_off3);
+    case 4 : return(%vc_raton_off4);
+    case 5 : return(%vc_raton_off5);
+}
+return(%vc_raton_off6);
+
+[proc,rc_set_raton](int $i)
+switch_int ($i) {
+    case 1 : %vc_raton_off1 = 1;
+    case 2 : %vc_raton_off2 = 1;
+    case 3 : %vc_raton_off3 = 1;
+    case 4 : %vc_raton_off4 = 1;
+    case 5 : %vc_raton_off5 = 1;
+    case 6 : %vc_raton_off6 = 1;
+}
+
+[proc,rc_mansion_count]()(int)
+return(calc(%vc_raton_off1 + %vc_raton_off2 + %vc_raton_off3 + %vc_raton_off4 + %vc_raton_off5 + %vc_raton_off6));
+
+// pet.rs2: after your cat catches an ordinary rat
+[proc,rc_rat_caught]
+if (%ratcatch_var = ^rc_sniffed) {
+    %ratcatch_ometer = min(^rc_rats_needed, calc(%ratcatch_ometer + 1));
+    if (%ratcatch_ometer >= ^rc_rats_needed) {
+        ~rc_set(^rc_caught_eight);
+        ~chatplayer("<p,happy>Good job puss, we really showed those rats what for.");
+        if (~ttc_catspeak = true) {
+            ~rc_catsay("<p,confused>What for?");
+            ~chatplayer("<p,neutral>Oh never mind, it's just a turn of phrase.");
+            ~rc_catsay("<p,neutral>Speaking of turning faces, shouldn't we get back to those ugly sisters?");
+            ~chatplayer("<p,neutral>Suppose so.");
+        } else {
+            // the OSRS wiki's lines (the RS wiki's are missing)
+            ~rc_catsay("<p,neutral>Miaow.");
+            ~chatplayer("<p,neutral>Well cat, we should tell Grimesquit and Phingspet that we're done.");
+        }
+    }
+}
+~rc_lazy_rat;
+~rc_rat_pole;
+
+// the RS and OSRS wikis: with the rat pole wielded, a rat your cat catches can go on it (six at most)
+[proc,rc_rat_pole]
+def_obj $pole = inv_getobj(worn, ^wearpos_rhand);
+def_namedobj $next = null;
+switch_obj ($pole) {
+    case vc_rat_pole : $next = vc_rat_pole_1;
+    case vc_rat_pole_1 : $next = vc_rat_pole_2;
+    case vc_rat_pole_2 : $next = vc_rat_pole_3;
+    case vc_rat_pole_3 : $next = vc_rat_pole_4;
+    case vc_rat_pole_4 : $next = vc_rat_pole_5;
+    case vc_rat_pole_5 : $next = vc_rat_pole_6;
+}
+if ($next = null) return;
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Do you want to add a rat to the pole?") ! 1) return;
+if (inv_getobj(worn, ^wearpos_rhand) ! $pole) return;
+inv_setslot(worn, ^wearpos_rhand, $next, 1);
+mes("You add a rat to the pole.");
+
+// Remove-rat (the cache's iop1): ours, the rat is thrown away
+[opheld1,vc_rat_pole_1] ~rc_pole_remove(vc_rat_pole);
+[opheld1,vc_rat_pole_2] ~rc_pole_remove(vc_rat_pole_1);
+[opheld1,vc_rat_pole_3] ~rc_pole_remove(vc_rat_pole_2);
+[opheld1,vc_rat_pole_4] ~rc_pole_remove(vc_rat_pole_3);
+[opheld1,vc_rat_pole_5] ~rc_pole_remove(vc_rat_pole_4);
+[opheld1,vc_rat_pole_6] ~rc_pole_remove(vc_rat_pole_5);
+
+[proc,rc_pole_remove](namedobj $less)
+inv_setslot(inv, last_slot, $less, 1);
+mes("You take a rat off the pole and throw it away."); // ours
+
+// ---------------------------------------------------------------- wily and lazy cats
+// The RS wiki: a wily cat turns lazy after a random time, "usually under an hour", and a lazy cat
+// takes "about 80 rats" to be wily again. Ours: a 1 in 40 chance each time pet.rs2's growth timer
+// meows (every 90 seconds), and the rats counted in %cat_growth's growth bits (11-19), which wily
+// and lazy cats don't use.
+[proc,rc_wily_tick]
+def_category $c = oc_category(%follower_obj);
+if ($c = wilycat & random(40) = 0) {
+    def_namedobj $lazy = ~rc_swap_obj(%follower_obj);
+    npc_changetype_keepall(oc_param($lazy, follower_id), ^max_32bit_int);
+    %follower_uid = npc_uid;
+    %follower_obj = $lazy;
+    %cat_growth = setbit_range_toint(%cat_growth, 0, 11, 19);
+    mes("Your wily cat has grown fat and lazy."); // ours
+}
+
+[proc,rc_lazy_rat]
+if (%follower_obj = null) return;
+if (oc_category(%follower_obj) ! lazycat) return;
+def_int $n = calc(getbit_range(%cat_growth, 11, 19) + 1);
+if ($n < 80) {
+    %cat_growth = setbit_range_toint(%cat_growth, $n, 11, 19);
+    return;
+}
+if (npc_finduid(%follower_uid) = false) return;
+def_namedobj $wily = ~rc_swap_obj(%follower_obj);
+npc_changetype_keepall(oc_param($wily, follower_id), ^max_32bit_int);
+%follower_uid = npc_uid;
+%follower_obj = $wily;
+%cat_growth = setbit_range_toint(%cat_growth, 0, 11, 19);
+mes("Your lazy cat is back in shape: it is a wily cat again."); // ours
+
+// a wily cat's lazy colour, and back; an overgrown cat's wily colour
+[proc,rc_swap_obj](obj $obj)(namedobj)
+switch_obj ($obj) {
+    case wileycatobject : return(lazycatobject);
+    case wileycatobject_light : return(lazycatobject_light);
+    case wileycatobject_brown : return(lazycatobject_brown);
+    case wileycatobject_black : return(lazycatobject_black);
+    case wileycatobject_browngrey : return(lazycatobject_browngrey);
+    case wileycatobject_bluegrey : return(lazycatobject_bluegrey);
+    case lazycatobject : return(wileycatobject);
+    case lazycatobject_light : return(wileycatobject_light);
+    case lazycatobject_brown : return(wileycatobject_brown);
+    case lazycatobject_black : return(wileycatobject_black);
+    case lazycatobject_browngrey : return(wileycatobject_browngrey);
+    case lazycatobject_bluegrey : return(wileycatobject_bluegrey);
+    case overgrowncatobject : return(wileycatobject);
+    case overgrowncatobject_light : return(wileycatobject_light);
+    case overgrowncatobject_brown : return(wileycatobject_brown);
+    case overgrowncatobject_black : return(wileycatobject_black);
+    case overgrowncatobject_browngrey : return(wileycatobject_browngrey);
+    case overgrowncatobject_bluegrey : return(wileycatobject_bluegrey);
+}
+return(wileycatobject);
+
+// dropping a wily or lazy cat lets it out, like the other cats (pet.rs2)
+[opheld5,wileycatobject] ~cat_drop;
+[opheld5,wileycatobject_light] ~cat_drop;
+[opheld5,wileycatobject_brown] ~cat_drop;
+[opheld5,wileycatobject_black] ~cat_drop;
+[opheld5,wileycatobject_browngrey] ~cat_drop;
+[opheld5,wileycatobject_bluegrey] ~cat_drop;
+[opheld5,lazycatobject] ~cat_drop;
+[opheld5,lazycatobject_light] ~cat_drop;
+[opheld5,lazycatobject_brown] ~cat_drop;
+[opheld5,lazycatobject_black] ~cat_drop;
+[opheld5,lazycatobject_browngrey] ~cat_drop;
+[opheld5,lazycatobject_bluegrey] ~cat_drop;
+
+// ---------------------------------------------------------------- items' destroy lines
+// Void's: "You can obtain another sheet of music by talking to the snakecharmer of Pollnivneach."
+// and "... another set of directions to the party by talking to Jimmy Dazzler."
+[opheld5,ratcatchers_music]
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Destroy the music scroll?") ! 1) return; // ours: the question
+inv_del(inv, ratcatchers_music, 1);
+mes("You can obtain another sheet of music by talking to the snakecharmer of Pollnivneach.");
+
+[opheld5,ratcatchers_party_directions]
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Destroy the directions?") ! 1) return; // ours: the question
+inv_del(inv, ratcatchers_party_directions, 1);
+mes("You can obtain another set of directions to the party by talking to Jimmy Dazzler.");
+
+// ---------------------------------------------------------------- login
+// login.rs2: the mansion's guards watch again (or you are put outside if the task is over); a King
+// rat fight or a rat pit match cut short by logging out is over (ours: a bet already made is lost;
+// the other trainer's cat wins when it tires)
+[proc,rc_login]
+~rc_mansion_login;

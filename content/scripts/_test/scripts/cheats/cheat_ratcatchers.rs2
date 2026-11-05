@@ -1,0 +1,140 @@
+// EASCape: test commands for Rat Catchers and the rat pits (quest_ratcatchers).
+
+// ::rcpack - what the quest needs you to bring (the RS and OSRS wikis): a cat (a grown one, in your
+// pack), 4 cheese and the rat poison's makings (kwuarm, red spider eggs, a vial), unicorn horn dust,
+// marrentill and a bucket of milk, a catspeak amulet, weeds, an empty pot and a tinderbox, 5 raw
+// trout for your cat, a beer and 1,000 coins. It also marks Gertrude's Cat and Icthlarin's Little
+// Helper done (no rewards).
+[debugproc,rcpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+if (~rc_has_cat = false) $banked = calc($banked + ~questpack_give(growncatobject, 1));
+$banked = calc($banked + ~questpack_give(cheese, 4));
+$banked = calc($banked + ~questpack_give(kwuarm, 1));
+$banked = calc($banked + ~questpack_give(red_spiders_eggs, 1));
+$banked = calc($banked + ~questpack_give(vial_empty, 1));
+$banked = calc($banked + ~questpack_give(unicorn_horn_dust, 1));
+$banked = calc($banked + ~questpack_give(marentill, 1));
+$banked = calc($banked + ~questpack_give(bucket_milk, 1));
+$banked = calc($banked + ~questpack_give(ics_little_amulet_of_catspeak, 1));
+$banked = calc($banked + ~questpack_give(weeds, 1));
+$banked = calc($banked + ~questpack_give(pot_empty, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(raw_trout, 5));
+$banked = calc($banked + ~questpack_give(beer, 1));
+$banked = calc($banked + ~questpack_give(coins, 1000));
+if (%fluffs ! ^fluffs_complete) %fluffs = ^fluffs_complete;
+if (%ics_little_var < ^ics_complete) %ics_little_var = ^ics_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Rat Catchers", $banked);
+mes("Gertrude: ::rctele 1. Drop your cat to have it follow you; wear the catspeak amulet.");
+
+// ::rcstage <n> - sets Rat Catchers, with what you would be carrying: 0 not started (clears
+// everything), 1 Gertrude told you, 2 the sisters sniffed your cat (7 of the 8 rats caught),
+// 3 the 8 rats caught, 4 the rat pole (go to Jimmy), 5 Jimmy's directions (5 of the 6 mansion rats
+// caught), 6 the mansion done, 7 go to Hooknosed Jack, 8 the rat holes (3 of 4 poisoned, a
+// poisoned cheese), 9 the holes done, 10 Pox ill, 11 the Apothecary's recipe (with the antipoison),
+// 12 the King rat, 13 the King rat dead, 14 go to Smokin' Joe, 15 the smoke (a smouldering pot),
+// 16 the rats ran back, 17 Joe's rats caught, 18 go to the Face, 19 Felkrash, 20 Felkrash's task,
+// 21 the Face's story, 22 the music (and a snake charm), 23 the rats drowned, 24 done (no rewards).
+// `::questdone ratcatchers` finishes it with its rewards.
+[debugproc,rcstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 24) {
+    mes("::rcstage 0-24");
+    return;
+}
+%main_ratcatch_var = 0;
+%ratcatch_var_multi = 0;
+%ratcatch_var_temp1 = 0;
+%ratcatch_var_temp2 = 0;
+%rc_checkpoint = ^rc_cp_gates;
+if ($n = 0) {
+    ~send_quest_progress(questlist:ratcatch, 0, ^rc_complete);
+    ~update_questpoints;
+    mes("Rat Catchers: reset.");
+    return;
+}
+def_int $s = $n;
+if ($n = 24) $s = ^rc_complete;
+%ratcatch_var = $s;
+if ($n = 2) %ratcatch_ometer = 7;
+if ($n >= 3) %ratcatch_ometer = ^rc_rats_needed;
+if ($n = 5) {
+    %vc_raton_off1 = 1;
+    %vc_raton_off2 = 1;
+    %vc_raton_off3 = 1;
+    %vc_raton_off4 = 1;
+    %vc_raton_off5 = 1;
+}
+if ($n >= 6) {
+    %vc_raton_off1 = 1;
+    %vc_raton_off2 = 1;
+    %vc_raton_off3 = 1;
+    %vc_raton_off4 = 1;
+    %vc_raton_off5 = 1;
+    %vc_raton_off6 = 1;
+}
+if ($n = 8) {
+    %ratcatch_rathole_1 = 1;
+    %ratcatch_rathole_2 = 1;
+    %ratcatch_rathole_3 = 1;
+}
+if ($n >= 9) {
+    %ratcatch_rathole_1 = 1;
+    %ratcatch_rathole_2 = 1;
+    %ratcatch_rathole_3 = 1;
+    %ratcatch_rathole_4 = 1;
+}
+if ($n >= 17) %ratcatch_catknowsdrill = 1;
+if ($n >= 4 & ~obj_gettotal(vc_rat_pole) = 0) ~questdone_give(vc_rat_pole, 1);
+switch_int ($n) {
+    case 5 : if (inv_total(inv, ratcatchers_party_directions) = 0) ~questdone_give(ratcatchers_party_directions, 1);
+    case 8 : if (inv_total(inv, ratcatchers_poisonedcheese) = 0) ~questdone_give(ratcatchers_poisonedcheese, 1);
+    case 11 : if (inv_total(inv, ratcatchers_cat_antipoison) = 0) ~questdone_give(ratcatchers_cat_antipoison, 1);
+    case 15, 16 : if (inv_total(inv, ratcatchers_smokey_weedpot) = 0) ~questdone_give(ratcatchers_smokey_weedpot, 1);
+    case 22 :
+        if (inv_total(inv, ratcatchers_music) = 0) ~questdone_give(ratcatchers_music, 1);
+        if (~obj_gettotal(snake_flute) = 0) ~questdone_give(snake_flute, 1);
+}
+if ($n >= 7 & ~obj_gettotal(ratpits_manual) = 0) ~questdone_give(ratpits_manual, 1);
+~send_quest_progress(questlist:ratcatch, %ratcatch_var, ^rc_complete);
+~update_questpoints;
+mes("Rat Catchers: stage <tostring($n)> (var <tostring(%ratcatch_var)>, sewer rats <tostring(%ratcatch_ometer)>, mansion rats <tostring(~rc_mansion_count)>, holes <tostring(~rc_holes_done)>).");
+
+// ::rctele <n> - 1 Gertrude, 2 the sisters (Varrock sewers), 3 Jimmy Dazzler, 4 the mansion's gates,
+// 5 Hooknosed Jack, 6 the warehouse upstairs (the rat holes and the hole in the wall), 7 the
+// Apothecary, 8 Smokin' Joe (Keldagrim), 9 the Face (Port Sarim), 10 Felkrash (the Port Sarim pits),
+// 11 the snake charmer (Pollnivneach), 12 Port Sarim's docks (where the tune works), 13-16 the
+// Ardougne, Varrock, Keldagrim and Port Sarim pits, 17 the mansion's balcony, 18 the foot of its
+// ladder. Your cat comes too.
+[debugproc,rctele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^rc_gertrude;
+    case 2 : $to = movecoord(^rc_grimesquit, 1, 0, 0);
+    case 3 : $to = movecoord(^rc_jimmy_at, 1, 0, 0);
+    case 4 : $to = ^rc_mansion_gates;
+    case 5 : $to = movecoord(^rc_jack_at, 1, 0, 1);
+    case 6 : $to = movecoord(^rc_warehouse_top, 0, 0, 1);
+    case 7 : $to = ^rc_apothecary;
+    case 8 : $to = movecoord(^rc_joe_at, -1, 0, -1);
+    case 9 : $to = movecoord(^rc_face_at, 1, 0, 1);
+    case 10 : $to = movecoord(^rc_felkrash_at, 1, 0, 0);
+    case 11 : $to = movecoord(^rc_badir_bowl, 0, 0, -1); // 3355,2952
+    case 12 : $to = 0_47_50_25_20;
+    case 13 : $to = ^rc_pit_ardougne;
+    case 14 : $to = ^rc_pit_varrock;
+    case 15 : $to = ^rc_pit_keldagrim;
+    case 16 : $to = ^rc_pit_sarim;
+    case 17 : $to = ^rc_mansion_trellis;
+    case 18 : $to = ^rc_mansion_ladder;
+    case default :
+        mes("::rctele 1-18: 1 Gertrude, 2 sisters, 3 Jimmy, 4 mansion gates, 5 Jack, 6 warehouse upstairs, 7 Apothecary, 8 Joe, 9 the Face, 10 Felkrash, 11 snake charmer, 12 docks, 13-16 Ardougne/Varrock/Keldagrim/Port Sarim pits, 17 mansion balcony, 18 mansion ladder");
+        return;
+}
+p_telejump($to);
+~rc_cat_follow;
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = true & %ratcatch_var = ^rc_mansion) softtimer(rc_mansion_watch, 1);

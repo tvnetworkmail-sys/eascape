@@ -1,0 +1,276 @@
+// EASCape: Rat Catchers - Smokin' Joe in Keldagrim and the way down to its rat pits. Words: the RS
+// wiki's quest transcript; Joe's after-quest talk is the OSRS wiki's historical lines. The rat holes
+// are the 377 maps' two ratcatchers_rathole5 by Joe; the smoke is the cache's ratcatcher_smokes and
+// ratcatcher_create_smoke seqs, ratcatcher_smoke spotanims and create_smoke / smoke_rats sounds.
+
+// keldagrim_npcs.rs2's [opnpc1,vc_smokin_joe] comes here
+[label,rc_joe]
+def_int $s = %ratcatch_var;
+if ($s < ^rc_joe) @keldagrim_talk_joe;
+switch_int ($s) {
+    case ^rc_joe : @rc_joe_meet;
+    case ^rc_smoke, ^rc_smoke_tried :
+        ~chatnpc("<p,quiz>Have you got that job done yet?");
+        ~chatplayer("<p,neutral>Umm no not yet.");
+        ~chatplayer("<p,neutral>You know your lungs seem to be a lot better since I volunteered. Maybe you could try it again?");
+        ~chatnpc("<p,neutral>Aheeh ah,|*Takes deep breath.*|Well maybe there's hope for them yet. I appreciate your help hugely.");
+        ~chatplayer("<p,neutral>Fair enough. I'll get back to it. But I'd appreciate any pointers you could give me.");
+        ~chatnpc("<p,neutral>An extra pair of eyes or set of claws can often come in handy.");
+        ~chatplayer("<p,confused>What do you mean by that?");
+        ~mesbox("Joe just shakes his head.");
+    case ^rc_smoked : @rc_joe_done;
+    case ^rc_complete : @rc_joe_after;
+    case default :
+        // ours: until the quest is done he says again where the Face is
+        ~chatnpc("<p,neutral>Look for 'The Face' in Port Sarim. She'll show you.");
+}
+
+[label,rc_joe_meet]
+~chatplayer("<p,happy>Hi! What are you doing?");
+~chatnpc("<p,neutral>Isn't it obvious?|*Wheezes*");
+~chatplayer("<p,confused>No not really.");
+~chatnpc("<p,neutral>*Joe splutters a few times, but finally clears his throat.*");
+~chatnpc("<p,neutral>Bluaaghhaha!|Sorry about that.");
+~chatnpc("<p,neutral>*Wipes some phlegm from the corner of his mouth.*");
+~chatnpc("<p,neutral>I'm trying to smoke these pesky rats out.|Bluaaghhaha.");
+~chatnpc("<p,neutral>*Joe breaks into another bout of coughing.*");
+~chatplayer("<p,shock>*Aside* Ewww... what a disgusting little dwarf. And whoa look at the size of those ears.");
+~mesbox("You notice the dwarf's enormous plate like ears, which are constantly twitching as if he's trying to tune them to some unseen and unheard source.");
+~chatnpc("<p,neutral>*After two attempts, Joe gets his breath back and eventually manages to speak.*");
+~chatnpc("<p,sad>Anyway I'm trying to get rid of these rats, but my lungs just aren't up for it like they used to be. Bluaaghhaha.");
+~chatplayer("<p,shock>*Aside* Ew!");
+if (~p_choice2("I could help you.", 1, "That's too bad. Good luck with that.", 2) = 2) {
+    ~chatplayer("<p,neutral>That's too bad. Good luck with that anyway.");
+    ~chatnpc("<p,neutral>Tha.., *Wheeze* Than.. *Wheeze* than..k. *Bluaaghhaha* thanks anyway.");
+    return;
+}
+~chatplayer("<p,happy>I could help you. I'm young..ish and have a fairly good set of lungs in me.");
+~chatnpc("<p,neutral>That's .....");
+~mesbox("The dwarf suddenly starts frantically waving his arms about, gesturing that he is unable to catch his breath.");
+~mesbox("You give him a forceful pat on the back, which dislodges a ... eww! Actually I don't want to look at that. Take it from me it ain't pretty.");
+~chatnpc("<p,happy>Ahhh that's better. Ooohhh boy,|*Joe takes a deep breath.*");
+~chatplayer("<p,quiz>What's up with your lungs anyway?");
+~chatnpc("<p,neutral>Ahh sure wasn't it years of blowing smoke into rat holes that has done this to me? *Wheeze* That and probably the pipe I used to smoke. *Wheeze*");
+~chatplayer("<p,neutral>Oh right, anyway where were we?");
+~chatnpc("<p,neutral>*Gulp* You offered to help me.");
+~chatplayer("<p,neutral>Of course I did. Now you want to get these rats in there. How should I go about doing that?");
+~chatnpc("<p,neutral>That's sim... bluaaghhaha... simple. Take this pot light the contents and blow the smoke into the hole.");
+~mesbox("You look at the pot that the dwarf offers you and notice that it's half covered with fluidy green stuff that Joe has coughed up.");
+~chatplayer("<p,shock>*Aside* No way! No way am I touching that. That is soooo disgusting.");
+~chatplayer("<p,neutral>Hey Joe would you mind if I made my own? I might break yours.");
+~chatnpc("<p,confused>*The dwarf looks sceptically at you.*");
+~chatplayer("<p,scared>*Aside*Aghh! How am I going to get out of this one?");
+~chatplayer("<p,neutral>You know, you'd probably catch some of my germs. Cross species diseases are incredibly dangerous. I heard of this one village of gnomes who...");
+~chatnpc("<p,neutral>You're right. *Wheeze* With my lungs in their current state I just can't take chances.");
+~chatplayer("<p,happy>*Aside* Sweet.");
+~chatplayer("<p,quiz>So how do I make my own rat smoking device?");
+~chatnpc("<p,neutral>Ahheem, ahh ahh, *Splutters*");
+~chatnpc("<p,neutral>Just take a simple pot, stick some garden weeds in it. Light it and then use it on a rat hole.");
+~chatplayer("<p,happy>Great. I'll get to it.");
+~rc_set(^rc_smoke);
+
+[label,rc_joe_done]
+~chatplayer("<p,happy>I got them.");
+if (~ttc_catspeak = false) {
+    ~rc_catsay("<p,neutral>Miaaow.");
+    ~mesbox("Joe's ears start to wiggle a little, and wears a look of grim determination on his face.");
+    ~chatnpc("<p,neutral>Miiiaow?");
+    ~rc_catsay("<p,neutral>Meeeow.");
+    ~chatplayer("<p,confused>What, whats going on? Are you speaking in cat?");
+    ~chatnpc("<p,neutral>Ya, and your cat tells me that you don't deserve all the credit.");
+    ~chatplayer("<p,shock>Wow, you've got a amulet of catpspeak too?");
+} else {
+    ~rc_catsay("<p,neutral>You got them? I think I may have had something to do with it.");
+    ~mesbox("Joe screws his face up tightly and his ears start to wiggle a little.");
+    ~chatnpc("<p,neutral>Did you now?");
+    ~rc_catsay("<p,neutral>Well of course you'd hardly expect that human to do a ratcatchers job.");
+    ~chatplayer("<p,confused>What, what's going on? Do you have an amulet of catspeak as well?");
+}
+~chatnpc("<p,neutral>No, I don't need such trinkets. See these ears? I can tune them to any language I like.");
+~chatplayer("<p,confused>But you were responding in cat.");
+~chatnpc("<p,neutral>Ya well that's not too difficult, it's just really a case of trial and error and being a good mimic. Tuning your ears is the hardest part.");
+~chatplayer("<p,quiz>Maybe you could show me how to do that?");
+~chatnpc("<p,neutral>I just don't think you've got the ears for it.");
+~chatnpc("<p,happy>Well good show. Good *Wheeze* Bluaaghhaha. *Wheeze* good show.");
+~rc_set(^rc_face);
+~chatnpc("<p,neutral>I'd better show you our rat pits here in Keldagrim.");
+~chatplayer("<p,happy>Great stuff. Let's go.");
+~chatnpc("<p,neutral>They're quite nice, but just don't compare with what they have in Port Sarim.");
+~chatplayer("<p,quiz>They have ratpits in Port Sarim?");
+~chatnpc("<p,neutral>Why of course! Where else would us ratcatchers train our wily cats?");
+~chatplayer("<p,confused>Wily cats?");
+~chatnpc("<p,neutral>Look for 'The Face' in Port Sarim. She'll show you.");
+~chatplayer("<p,quiz>So where are the Keldagrim pits then?");
+~chatnpc("<p,neutral>Try the stairs into the basement of the 'Laughing Miner'. A grand watering hole it is.");
+
+// the OSRS wiki's historical lines
+[label,rc_joe_after]
+switch_int (~p_choice3("Can you tell me where I would find ....", 1, "Can you tell me more about the pits?", 2, "Can you show me to the rat pits?", 3)) {
+    case 2 : ~rc_pits_talk("In the Keldagrim pits, your cat will grow wiser by gaining more experience.", "");
+    case 3 :
+        ~chatplayer("<p,quiz>Can you show me to the rat pits?");
+        ~chatnpc("<p,neutral>Try the stairs into the basement of the 'Laughing Miner'. A grand watering hole it is. My cat should be standing next to it.");
+    case 1 :
+        switch_int (~p_choice5("Grimesquit and Phingspet", 1, "Jimmy Dazzler", 2, "Hooknosed Jack", 3, "The face", 4, "Felkrash", 5)) {
+            case 1 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Phingspet and Grimesquit?");
+                ~chatnpc("<p,neutral>Ah the sisters, as strange a pair as you're ever likely to meet.");
+                ~chatnpc("<p,neutral>You're most likely to find them in the sewers of Varrock.");
+            case 2 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find Jimmy Dazzler?");
+                ~chatnpc("<p,happy>Ah young Jimmy, he must be a made man by now.");
+                ~chatnpc("<p,happy>I remember when ...");
+                ~chatplayer("<p,angry>Do you know where I would find him or not?");
+                ~chatnpc("<p,neutral>Hrmph! The entrance to the pits of Ardougne are in the back of the Flying Horse in Ardougne.");
+                ~chatnpc("<p,neutral>I doubt he would be too far away from there.");
+            case 3 :
+                ~chatplayer("<p,quiz>Can you tell me where I could find Hooknosed Jack?");
+                ~chatnpc("<p,neutral>That old brawler? Is he still knocking about?");
+                ~chatnpc("<p,neutral>Well your best bet would be somewhere on the rough side of Varrock, the east side if I remember correctly.");
+            case 4 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find 'The Face'?");
+                ~chatnpc("<p,sad>What a tragedy, that girl.");
+                ~chatnpc("<p,neutral>Look for her in Port Sarim.");
+            case 5 :
+                ~chatplayer("<p,quiz>Can you tell me where I would find Felkrash?");
+                ~chatnpc("<p,neutral>Ah queen muck, you'll probably find her in the Port Sarim pits.");
+        }
+}
+
+// ---------------------------------------------------------------- the smoke
+// a pot of weeds (the RS and OSRS wikis: weeds used on an empty pot), lit with a tinderbox
+[opheldu,weeds]
+if (last_useitem ! pot_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~rc_weedpot;
+
+[opheldu,pot_empty]
+if (last_useitem ! weeds) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~rc_weedpot;
+
+[proc,rc_weedpot]
+inv_del(inv, weeds, 1);
+inv_del(inv, pot_empty, 1);
+inv_add(inv, ratcatchers_weedpot, 1);
+mes("You put the weeds into the pot."); // ours
+
+[opheldu,ratcatchers_weedpot]
+if (last_useitem ! tinderbox) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~rc_light_pot;
+
+[proc,rc_light_pot]
+anim(ratcatcher_create_smoke, 0);
+sound_synth(create_smoke, 1, 0);
+p_delay(1);
+inv_del(inv, ratcatchers_weedpot, 1);
+inv_add(inv, ratcatchers_smokey_weedpot, 1);
+mes("The weeds in the pot begin to smoulder."); // ours
+
+[oplocu,ratcatchers_rathole5]
+if (last_useitem ! ratcatchers_smokey_weedpot) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_int $s = %ratcatch_var;
+if ($s ! ^rc_smoke & $s ! ^rc_smoke_tried) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+def_coord $other = ^rc_joe_hole_south;
+if (loc_coord = ^rc_joe_hole_south) $other = ^rc_joe_hole_east;
+// the RS wiki: the second time, with your cat out, it offers to help (the catspeak amulet lets you
+// understand it); without the amulet it gives you a look and you carry on alone
+if ($s = ^rc_smoke_tried & ~rc_cat_kind > 0) {
+    if (~ttc_catspeak = false) {
+        %ratcatch_cathas_expressed = 1;
+        ~mesbox("Your cat gives you a look of disgust. It makes as if it wants to talk to you.");
+        ~chatplayer("<p,angry>Hush! Kitty I'm adventuring.");
+    } else {
+        ~rc_catsay("<p,neutral>Hey <displayname>, hey talk to me.");
+        ~chatplayer("<p,angry>What's that cat? Can't you see I'm adventuring?");
+        ~rc_catsay("<p,neutral>Look I can't let you keep doing this, you're doing it all wrong.");
+        ~chatplayer("<p,quiz>I am? Well then smarty pants what should I be doing?");
+        ~rc_catsay("<p,neutral>What we have here is a two cat job.");
+        ~rc_catsay("<p,neutral>Every time you try to smoke those rats out they run out of the hole, the only problem is the smoke clears fast enough for them to run back in before you can get over to them.");
+        ~chatplayer("<p,neutral>I know that.");
+        ~rc_catsay("<p,neutral>Well then why don't you let me help out. Tell me when you're going to start the fire and I'll race over and get the rats, while you're smoking them out.");
+        ~chatplayer("<p,happy>Great idea puss. I'll get right to it.");
+        %ratcatch_catknowsdrill = 1;
+        ~chatplayer("<p,happy>Hey cat, you know the drill, get going.");
+        ~rc_catsay("<p,angry>Exterminate! Exterminate!");
+        ~chatplayer("<p,confused>What?");
+        ~rc_catsay("<p,neutral>Sorry, I got a little carried away.");
+        ~rc_smoke_out($other, true);
+        ~rc_set(^rc_smoked);
+        ~chatplayer("<p,happy>Hey cat, great job. What an ambush!");
+        ~rc_catsay("<p,laugh>Hu-ha!");
+        ~chatplayer("<p,confused>...?");
+        ~chatplayer("<p,scared>You know you really scare me sometimes.");
+        return;
+    }
+}
+~rc_smoke_out($other, false);
+~mesbox("The rats quickly scamper back into their hole as soon as the smoke clears.");
+~chatplayer("<p,sad>This isn't working the way I thought it would.");
+if ($s = ^rc_smoke) ~rc_set(^rc_smoke_tried);
+
+// ours: three rats come out of the other hole for a moment; with your cat waiting there they don't
+// get back in
+[proc,rc_smoke_out](coord $other, boolean $cat)
+anim(ratcatcher_smokes, 0);
+spotanim_map(ratcatcher_smoke, loc_coord, 0, 0);
+sound_synth(smoke_rats, 1, 0);
+if ($cat = true & npc_finduid(%follower_uid) = true) {
+    npc_setmode(none);
+    npc_walk(map_findsquare($other, 1, 1, ^map_findsquare_lineofwalk));
+}
+p_delay(2);
+spotanim_map(ratcatcher_smoke_big, $other, 0, 0);
+sound_synth(smoke_out_rats, 1, 0);
+def_int $i = 0;
+while ($i < 3) {
+    npc_add(map_findsquare($other, 1, 2, ^map_findsquare_lineofwalk), vc_rat, 6);
+    npc_say("Eek!");
+    $i = calc($i + 1);
+}
+p_delay(2);
+if ($cat = true & npc_finduid(%follower_uid) = true) {
+    npc_anim(cat_pounce, 0);
+    npc_say("Meeeeeoooowww!");
+    sound_synth(rat_death, 1, 0);
+    npc_findallany($other, 3, 0);
+    while (npc_findnext = true) {
+        if (npc_type = vc_rat) npc_del;
+    }
+    p_delay(1);
+    if (npc_finduid(%follower_uid) = true) npc_setmode(playerfollow);
+    return;
+}
+npc_findallany($other, 3, 0);
+while (npc_findnext = true) {
+    if (npc_type = vc_rat) npc_del;
+}
+
+// ---------------------------------------------------------------- the Laughing Miner's basement
+// the RS wiki: The Beast keeps those who aren't let in out of the pits (ours: what it does)
+[proc,rc_keldagrim_down]()(boolean)
+if (loc_coord ! 0_45_159_34_12) return(false);
+if (%ratcatch_var < ^rc_face) {
+    mes("The Beast glowers at you, and you think better of going down there."); // ours
+    return(true);
+}
+p_telejump(1_30_73_23_33);
+return(true);
+
+[proc,rc_keldagrim_up]()(boolean)
+if (inzone(1_30_73_0_0, 1_30_73_63_63, loc_coord) = false) return(false);
+p_telejump(0_45_159_34_13);
+return(true);

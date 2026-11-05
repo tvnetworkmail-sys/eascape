@@ -1,0 +1,521 @@
+// EASCape: the rat pits (28 November 2005): Ardougne (kittens), Varrock (cats), Keldagrim
+// (overgrown cats) and Port Sarim (wily cats), each opened by its trainer in Rat Catchers. The
+// sources: the RS and OSRS wikis' Rat Pits pages and the rat pits manual (the OSRS wiki's
+// transcript): challenge another trainer with the right kind of cat, tell your cat your tactics if
+// you wear a catspeak amulet, both bet the same (100 to 20,000 coins), and the first cat to kill
+// enough rats wins (5 in Ardougne); a cat that runs or dies loses, and a tired cat stops, the one
+// with more kills winning (a draw gives the bets back). Winning or losing in Ardougne and Varrock
+// grows a kitten or cat about fifteen minutes (half if it loses). The cache's inter_320 (the bet)
+// and inter_321 (the fight), its pit rats (the OSRS wiki's stats in their npc configs) and maps.
+// Ours: the kills needed outside Ardougne, how long a cat lasts, the tactics' numbers and the bet's
+// step.
+
+// ---------------------------------------------------------------- the pits and their music
+// 1 Ardougne, 2 Varrock, 3 Keldagrim, 4 Port Sarim, 0 none
+[proc,rc_pit_zone](coord $c)(int)
+if (inzone(0_41_150_0_0, 0_41_150_63_63, $c) = true) return(1);
+if (inzone(0_45_79_0_0, 0_45_79_63_63, $c) = true) return(2);
+if (inzone(0_30_73_0_0, 1_30_73_63_63, $c) = true) return(3);
+if (inzone(0_46_150_0_0, 1_46_150_63_63, $c) = true) return(4);
+return(0);
+
+[proc,rc_pit_open](int $pit)(boolean)
+switch_int ($pit) {
+    case 1 : if (%ratcatch_var >= ^rc_jack) return(true);
+    case 2 : if (%ratcatch_var >= ^rc_joe) return(true);
+    case 3 : if (%ratcatch_var >= ^rc_face) return(true);
+    case 4 : if (%ratcatch_var >= ^rc_complete) return(true);
+}
+return(false);
+
+// the kind of cat each pit takes (rc_journal.rs2's ^rc_cat_ kinds)
+[proc,rc_pit_cat](int $pit)(int)
+switch_int ($pit) {
+    case 1 : return(1);
+    case 2 : return(2);
+    case 3 : return(3);
+}
+return(4);
+
+// the manual: 5 in Ardougne; ours: one more in each pit after
+[proc,rc_pit_needed](int $pit)(int)
+return(calc(4 + $pit));
+
+[proc,rc_pit_entry](int $pit)(coord)
+switch_int ($pit) {
+    case 1 : return(^rc_pit_ardougne);
+    case 2 : return(^rc_pit_varrock);
+    case 3 : return(^rc_pit_keldagrim);
+}
+return(^rc_pit_sarim);
+
+// the RS wiki: Catch Me If You Can, Rat a Tat Tat, Bubble and Squeak and Sarim's Vermin play in the
+// pits (musicregion.dbrow); Rat Hunt in the mansion. Entering a pit you may fight in gives you the
+// Challenge option on other players (as the duel arena does).
+[mapzone,0_41_150]
+set_player_op("Challenge", 1, ^false);
+@music_playbyregion(coord);
+[mapzone,0_45_79]
+set_player_op("Challenge", 1, ^false);
+@music_playbyregion(coord);
+[mapzone,0_30_73]
+set_player_op("Challenge", 1, ^false);
+@music_playbyregion(coord);
+[mapzone,0_46_150]
+set_player_op("Challenge", 1, ^false);
+@music_playbyregion(coord);
+[mapzone,0_44_79] @music_playbyregion(coord);
+[mapzoneexit,0_41_150] ~rc_pit_leave;
+[mapzoneexit,0_45_79] ~rc_pit_leave;
+[mapzoneexit,0_30_73] ~rc_pit_leave;
+[mapzoneexit,0_46_150] ~rc_pit_leave;
+
+[proc,rc_pit_leave]
+if (~rc_pit_zone(coord) > 0) return;
+set_player_op(null, 1, ^false);
+if (%rc_pit_state ! ^rc_pit_none) ~rc_pit_cancel;
+
+// ---------------------------------------------------------------- talking about the pits
+// the OSRS wiki's historical lines (Jimmy Dazzler, Hooknosed Jack, Smokin' Joe and Felkrash say
+// the same, but for what their own pit does for a cat)
+[proc,rc_pits_talk](string $benefit, string $win)
+~chatplayer("<p,quiz>Can you tell me more about the pits?");
+if (~obj_gettotal(ratpits_manual) = 0) {
+    ~chatnpc("<p,neutral>Here take this, you might find it useful.");
+    ~ttc_give(ratpits_manual);
+    ~objbox(ratpits_manual, "You are handed a manual concerning the ratpits.", 250, 0, 0);
+}
+~chatnpc("<p,quiz>Well what do you want to know?");
+def_int $again = 1;
+while ($again = 1) {
+    if (~p_choice2("Do you have any pointers for me and my cat?", 1, "What benefits does my cat get from training in the pits?", 2) = 1) {
+        ~chatplayer("<p,quiz>Do you have any pointers for me and my cat?");
+        ~chatnpc("<p,neutral>You should wear an amulet of catspeak. It will allow you to organise tactics with your cat.");
+        ~chatplayer("<p,quiz>What would be the best tactic to adopt then?");
+        ~chatnpc("<p,neutral>Well, that depends on your outlook, whether you're ready to risk your cat's life or not and how defensive or aggressive you want your cat to be.");
+        if (~p_choice2("I will not risk my cat's life.", 1, "I am willing to risk my cat if it improves my chances.", 2) = 1) {
+            ~chatplayer("<p,neutral>I will not risk my cat's life.");
+            ~chatnpc("<p,neutral>Well if that's the case then your are left with two choices.");
+            ~chatnpc("<p,neutral>You can adopt an ultra defensive strategy, which increases your cat's hitpoints and defence, the drawback to this is that your cat will flee sooner.");
+            ~chatnpc("<p,neutral>Your other option is to adopt a less defensive strategy which will allow your cat to stay in the pit for longer.");
+            if (~p_choice2("I think I would adopt a very defensive strategy.", 1, "I think I would adopt a less defensive strategy.", 2) = 1) {
+                ~chatplayer("<p,neutral>I think I would adopt a very defensive strategy");
+                ~chatnpc("<p,neutral>In that case you should tell your cat, 'Just take care of yourself cat.'");
+            } else {
+                ~chatplayer("<p,neutral>I think I would adopt a less defensive strategy.");
+                ~chatnpc("<p,neutral>In that case you should tell your cat, 'Stay in for as long as you can.'");
+            }
+        } else {
+            ~chatplayer("<p,neutral>I am willing to risk my cat, if it increases my chances of victory.");
+            ~chatnpc("<p,neutral>In that case you are left with two choices.");
+            ~chatnpc("<p,neutral>You could go for all out attack which will boost your cat's attack and strength, but weaken it");
+            ~chatnpc("<p,neutral>or go for a less aggressive stance which will increase your cat's strength and attack to a lesser degree, but carries no defensive penalties.");
+            if (~p_choice2("I think I would adopt a very aggressive strategy.", 1, "I think I would adopt a less aggressive strategy.", 2) = 1) {
+                ~chatplayer("<p,neutral>I think I would adopt a very aggressive strategy");
+                ~chatnpc("<p,neutral>In that case you should tell your cat, 'Go berserk!'");
+            } else {
+                ~chatplayer("<p,neutral>I think I would adopt a less aggressive strategy.");
+                ~chatnpc("<p,neutral>In that case you should tell this to your cat, 'No guts, no glory!'");
+            }
+        }
+    } else {
+        ~chatplayer("<p,quiz>What benefits does my cat get from training in the pits?");
+        ~chatnpc("<p,neutral>It depends on what kind of cat you have.");
+        ~chatnpc("<p,neutral><$benefit>");
+        if (compare($win, "") ! 0) {
+            ~chatplayer("<p,quiz>What if it wins then?");
+            ~chatnpc("<p,neutral><$win>");
+        }
+    }
+    ~chatplayer("<p,happy>Thanks for your help.");
+    ~chatnpc("<p,quiz>Do you have any other questions about the pits?");
+    if (~p_choice2("I'd like to ask you...", 1, "No thanks", 2) = 2) {
+        ~chatplayer("<p,neutral>No thanks.");
+        $again = 0;
+    }
+}
+
+// the rat pits manual (the OSRS wiki's transcript; ours: shown as a message box a section at a time)
+[opheld1,ratpits_manual]
+~mesbox("Disclaimer/Warning: Rat pit fighting is dangerous for the ill prepared. Lots of cats have died taking part in the past and many more will surely die in the future.");
+~mesbox("This needless death can be avoided completely by adopting the correct precautions.");
+~mesbox("Objective: The aim of rat pit fighting is to train your cat in a fun and profitable manner. Rules vary from pit to pit.");
+~mesbox("Each pit allows a certain type of cat fight there e.g. the Ardougne pit only permits kittens to fight in it.");
+~mesbox("How to challenge: To compete you must have the correct type of cat for the pit and have some spare change. If you have both of these, you can then challenge another cat trainer.");
+~mesbox("The player you challenge must also possess the correct type of cat and some money. Before you proceed to the bidding stage tactics should be discussed with your cat.");
+~mesbox("Tactics: A player should tell their cat what sort of strategy they should adopt. To do this competitors should wear an amulet of catspeak when initiating a fight and accepting a challenge.");
+~mesbox("Cautious tactics should be adopted by those who are unwilling to part with their cat. Using these tactics will aid the cat in terms of increased defence bonuses...");
+~mesbox("...but penalise them as their cats will get out of the pits faster rather than risking death. Using no tactics or aggressive tactics will result in your cat fighting to the death.");
+~mesbox("Aggressive tactics increase your cat's attack levels.");
+~mesbox("Bidding: Once a challenge has been accepted and both cats advised on tactics the bidding takes place. Both owners can place a small wager on the outcome of the match.");
+~mesbox("This wager must be the same for both sides.");
+~mesbox("Winning and losing: Rules differ for each pit, in the kitten pits of Ardougne the first cat to kill 5 rats is declared the winner, this number varies throughout other pits.");
+~mesbox("If your cat dies during a fight or runs away your opponent is declared the winner.");
+~mesbox("Cats tire quickly and after a certain period of time become too exhausted to continue fighting, in this case the cat with the largest number of kills is declared the winner.");
+~mesbox("If both cats have killed the same number of rats, the match is declared a draw.");
+~mesbox("Benefits: Winning a rat pit fight increases cats' happiness, matures them faster, improves their hunting skills and keeps them more active.");
+~mesbox("Even losing in a fight will benefit your cat (provided it doesn't die). As with everything in life, it's the taking part which matters.");
+
+// ---------------------------------------------------------------- the challenge
+// duel_arena.rs2's [opplayer1,_] comes here when you are in a rat pit
+[label,rc_pit_challenge]
+def_int $pit = ~rc_pit_zone(coord);
+if (%rc_pit_state >= ^rc_pit_betting) return;
+if (~rc_pit_ready($pit) = false) return;
+if (.busy = true | .%rc_pit_state >= ^rc_pit_betting) {
+    mes("Other player is busy at the moment.");
+    return;
+}
+if (~rc_pit_zone(.coord) ! $pit) return;
+if (.%rc_pit_opp = uid & .%rc_pit_state = ^rc_pit_challenged) {
+    // they challenged you first: to the tactics and the bet
+    %rc_pit_opp = .uid;
+    .%rc_pit_state = ^rc_pit_betting;
+    %rc_pit_state = ^rc_pit_betting;
+    .queue(rc_pit_bet_open, 0, 0);
+    queue(rc_pit_bet_open, 0, 0);
+    return;
+}
+%rc_pit_opp = .uid;
+%rc_pit_state = ^rc_pit_challenged;
+mes("Sending challenge..."); // ours: the duel arena's way
+.mes("<displayname> wishes to challenge your cat.");
+
+// you have this pit's kind of cat out, and coins to bet
+[proc,rc_pit_ready](int $pit)(boolean)
+if (~rc_pit_open($pit) = false) {
+    mes("You haven't been shown how this pit works yet."); // ours
+    return(false);
+}
+if (~rc_cat_kind ! ~rc_pit_cat($pit)) {
+    // the RS and OSRS wikis: each pit takes one kind of cat, lazy cats none
+    switch_int ($pit) {
+        case 1 : mes("Only kittens may fight in this pit."); // ours: the words
+        case 2 : mes("Only cats may fight in this pit.");
+        case 3 : mes("Only overgrown cats may fight in this pit.");
+        case 4 : mes("Only wily cats may fight in this pit.");
+    }
+    return(false);
+}
+if (inv_total(inv, coins) < ^rc_pit_minbet) {
+    mes("You need at least 100 coins to bet with."); // ours
+    return(false);
+}
+return(true);
+
+// the tactics (the RS and OSRS wikis' four lines; without a catspeak amulet your cat has none)
+// and the bet
+[queue,rc_pit_bet_open]
+%rc_pit_tactic = ^rc_tactic_none;
+%rc_pit_bet = ^rc_pit_minbet;
+if (~ttc_catspeak = true & ~rc_cat_kind > 0) {
+    switch_int (~p_choice4("Just be careful in there cat.", 1, "Stay in for as long as you can.", 2, "No guts, no glory!", 3, "Go berserk!", 4)) {
+        case 1 :
+            say("Just be careful in there cat.");
+            %rc_pit_tactic = ^rc_tactic_careful;
+        case 2 :
+            say("Stay in for as long as you can.");
+            %rc_pit_tactic = ^rc_tactic_stay;
+        case 3 :
+            say("No guts, no glory!");
+            %rc_pit_tactic = ^rc_tactic_guts;
+        case 4 :
+            say("Go berserk!");
+            %rc_pit_tactic = ^rc_tactic_berserk;
+    }
+}
+if (%rc_pit_state ! ^rc_pit_betting) return;
+~rc_pit_bet_show;
+if_openmain(inter_320);
+
+[proc,rc_pit_bet_show]
+if_settext(inter_320:com_15, tostring(%rc_pit_bet));
+if (.finduid(%rc_pit_opp) = true) {
+    if_settext(inter_320:com_16, tostring(.%rc_pit_bet));
+    .if_settext(inter_320:com_16, tostring(%rc_pit_bet));
+}
+
+[if_button,inter_320:com_19] ~rc_pit_bet_step(calc(0 - ^rc_pit_step));
+[if_button,inter_320:com_20] ~rc_pit_bet_step(^rc_pit_step);
+
+[proc,rc_pit_bet_step](int $step)
+if (%rc_pit_state ! ^rc_pit_betting & %rc_pit_state ! ^rc_pit_accepted) return;
+%rc_pit_bet = max(^rc_pit_minbet, min(^rc_pit_maxbet, calc(%rc_pit_bet + $step)));
+%rc_pit_bet = min(%rc_pit_bet, max(^rc_pit_minbet, inv_total(inv, coins)));
+%rc_pit_state = ^rc_pit_betting;
+if (.finduid(%rc_pit_opp) = true) {
+    if (.%rc_pit_state = ^rc_pit_accepted) .%rc_pit_state = ^rc_pit_betting;
+}
+~rc_pit_bet_show;
+
+[if_button,inter_320:com_6]
+if (%rc_pit_state ! ^rc_pit_betting) return;
+if (.finduid(%rc_pit_opp) = false) {
+    ~rc_pit_cancel;
+    return;
+}
+%rc_pit_state = ^rc_pit_accepted;
+if (.%rc_pit_state ! ^rc_pit_accepted) {
+    mes("Waiting for the other player..."); // ours
+    return;
+}
+if (.%rc_pit_bet ! %rc_pit_bet) {
+    mes("Both bets must be the same."); // the manual: "This wager must be the same for both sides."
+    %rc_pit_state = ^rc_pit_betting;
+    return;
+}
+if (inv_total(inv, coins) < %rc_pit_bet | .inv_total(inv, coins) < %rc_pit_bet) {
+    mes("One of you doesn't have that much money."); // ours
+    %rc_pit_state = ^rc_pit_betting;
+    return;
+}
+%rc_pit_state = ^rc_pit_fighting;
+.%rc_pit_state = ^rc_pit_fighting;
+// the bet's interface shuts first: a queue waits while it is open
+if_close;
+.if_close;
+.queue(rc_pit_begin, 0, 1);
+queue(rc_pit_begin, 0, 0);
+
+[if_button,inter_320:com_7] ~rc_pit_cancel;
+[if_close,inter_320]
+if (%rc_pit_state = ^rc_pit_betting | %rc_pit_state = ^rc_pit_accepted) ~rc_pit_cancel;
+
+[proc,rc_pit_cancel]
+def_int $was = %rc_pit_state;
+%rc_pit_state = ^rc_pit_none;
+if ($was >= ^rc_pit_betting & $was < ^rc_pit_fighting & .finduid(%rc_pit_opp) = true) {
+    if (.%rc_pit_opp = uid & .%rc_pit_state < ^rc_pit_fighting) {
+        .%rc_pit_state = ^rc_pit_none;
+        .if_close;
+        .mes("The other player has declined the challenge."); // ours
+    }
+}
+if ($was ! ^rc_pit_none) mes("The challenge is off."); // ours
+
+// ---------------------------------------------------------------- the fight
+// $arg 0 or 1: which side of the pit your cat starts on (ours)
+[queue,rc_pit_begin](int $side)
+if_close;
+if (~rc_cat_kind = 0) {
+    ~rc_pit_end(2);
+    return;
+}
+inv_del(inv, coins, %rc_pit_bet);
+%rc_pit_kills = 0;
+%rc_foe_uid = null;
+if (npc_finduid(%follower_uid) = false) {
+    %rc_pit_state = ^rc_pit_none;
+    return;
+}
+npc_tele(map_findsquare(movecoord(~rc_pit_entry(~rc_pit_zone(coord)), calc($side * 3), 0, 0), 0, 2, ^map_findsquare_lineofwalk));
+npc_setmode(none);
+// the tactics' hitpoints (ours: the numbers)
+switch_int (%rc_pit_tactic) {
+    case ^rc_tactic_careful : npc_statadd(hitpoints, 4, 0);
+    case ^rc_tactic_stay : npc_statadd(hitpoints, 2, 0);
+    case ^rc_tactic_berserk : npc_statsub(hitpoints, 2, 0);
+}
+%rc_fight_clock = calc(map_clock + ^rc_pit_ticks);
+if_openoverlay(inter_321);
+if_settext(inter_321:com_0, displayname);
+if (.finduid(%rc_pit_opp) = true) if_settext(inter_321:com_1, .displayname);
+if_settext(inter_321:com_4, "0");
+if_settext(inter_321:com_5, "0");
+softtimer(rc_pit_fight, 4);
+
+[softtimer,rc_pit_fight]
+if (%rc_pit_state ! ^rc_pit_fighting) {
+    clearsofttimer(rc_pit_fight);
+    return;
+}
+if (npc_finduid(%follower_uid) = false) {
+    ~rc_pit_end(2);
+    return;
+}
+def_int $pit = ~rc_pit_zone(coord);
+if (map_clock >= %rc_fight_clock) {
+    // the manual: tired cats; the most kills wins, the same is a draw
+    mes("Your cat is too tired to fight on."); // ours
+    def_int $theirs = 0;
+    if (.finduid(%rc_pit_opp) = true) $theirs = .%rc_pit_kills;
+    if (%rc_pit_kills > $theirs) ~rc_pit_end(1);
+    else if (%rc_pit_kills < $theirs) ~rc_pit_end(2);
+    else ~rc_pit_end(3);
+    return;
+}
+// a rat to fight: the nearest of this pit's
+if (npc_finduid(%rc_foe_uid) = false) {
+    if (npc_finduid(%follower_uid) = false) return;
+    def_coord $at = npc_coord;
+    %rc_foe_uid = null;
+    npc_findallany($at, 10, 0);
+    while (npc_findnext = true & %rc_foe_uid = null) {
+        if (~rc_pit_rat(npc_type, $pit) = true) %rc_foe_uid = npc_uid;
+    }
+    if (%rc_foe_uid = null) return;
+}
+def_int $att = 0;
+def_int $def = 0;
+switch_int (%rc_pit_tactic) {
+    case ^rc_tactic_careful :
+        $att = -2;
+        $def = 3;
+    case ^rc_tactic_stay :
+        $att = -1;
+        $def = 1;
+    case ^rc_tactic_guts : $att = 2;
+    case ^rc_tactic_berserk :
+        $att = 4;
+        $def = -2;
+}
+def_int $r = ~rc_exchange(%follower_uid, %rc_foe_uid, $att, $def);
+if ($r = 1) {
+    if (npc_finduid(%rc_foe_uid) = true) {
+        npc_anim(mouse_death, 0);
+        sound_synth(rat_death, 1, 0);
+        npc_del;
+    }
+    %rc_foe_uid = null;
+    %rc_pit_kills = calc(%rc_pit_kills + 1);
+    if_settext(inter_321:com_4, tostring(%rc_pit_kills));
+    if (.finduid(%rc_pit_opp) = true) .if_settext(inter_321:com_5, tostring(%rc_pit_kills));
+    if (%rc_pit_kills >= ~rc_pit_needed($pit)) ~rc_pit_end(1);
+    return;
+}
+if ($r = 2) {
+    ~rc_pit_end(4);
+    return;
+}
+// cautious cats run (ours: at half and at a quarter of their hitpoints)
+if (npc_finduid(%follower_uid) = true) {
+    if (%rc_pit_tactic = ^rc_tactic_careful & calc(npc_stat(hitpoints) * 2) <= npc_basestat(hitpoints)) {
+        mes("Your cat runs out of the pit."); // ours
+        ~rc_pit_end(2);
+    } else if (%rc_pit_tactic = ^rc_tactic_stay & calc(npc_stat(hitpoints) * 4) <= npc_basestat(hitpoints)) {
+        mes("Your cat runs out of the pit."); // ours
+        ~rc_pit_end(2);
+    }
+}
+
+[proc,rc_pit_rat](npc $npc, int $pit)(boolean)
+switch_npc ($npc) {
+    case pitrat_ardougne_def, pitrat_ardougne_agr, pitrat_ardougne_neu : if ($pit = 1) return(true);
+    case pitrat_varrock_def, pitrat_varrock_agr, pitrat_varrock_neu : if ($pit = 2) return(true);
+    case pitrat_keldagrim_def, pitrat_keldagrim_agr, pitrat_keldagrim_neu : if ($pit = 3) return(true);
+    case pitrat_sarim_def, pitrat_sarim_agr, pitrat_sarim_neu : if ($pit = 4) return(true);
+}
+return(false);
+
+// $how: 1 you won, 2 you lost (your cat ran or was gone), 3 a draw, 4 your cat died. The other side
+// is told the opposite.
+[proc,rc_pit_end](int $how)
+if (%rc_pit_state ! ^rc_pit_fighting) return;
+%rc_pit_state = ^rc_pit_none;
+clearsofttimer(rc_pit_fight);
+if (.finduid(%rc_pit_opp) = true) {
+    if (.%rc_pit_state = ^rc_pit_fighting & .%rc_pit_opp = uid) {
+        .%rc_pit_state = ^rc_pit_none;
+        def_int $theirs = 3;
+        if ($how = 1) $theirs = 2;
+        if ($how = 2 | $how = 4) $theirs = 1;
+        .queue(rc_pit_over, 0, $theirs);
+    }
+}
+queue(rc_pit_over_self, 0, $how);
+
+[queue,rc_pit_over](int $how)
+~rc_pit_end_self($how);
+
+[queue,rc_pit_over_self](int $how)
+if (%rc_pit_state = ^rc_pit_fighting) %rc_pit_state = ^rc_pit_none;
+clearsofttimer(rc_pit_fight);
+~rc_pit_result($how);
+
+[proc,rc_pit_end_self](int $how)
+%rc_pit_state = ^rc_pit_none;
+clearsofttimer(rc_pit_fight);
+~rc_pit_result($how);
+
+[proc,rc_pit_result](int $how)
+if_openoverlay(null);
+if (npc_finduid(%rc_foe_uid) = true) npc_setmode(wander);
+%rc_foe_uid = null;
+def_int $pit = ~rc_pit_zone(coord);
+switch_int ($how) {
+    case 1 :
+        mes("Your cat has won the fight!"); // ours
+        inv_add(inv, coins, calc(%rc_pit_bet * 2));
+        ~rc_pit_grow($pit, 2);
+    case 3 :
+        mes("The fight is a draw."); // ours
+        inv_add(inv, coins, %rc_pit_bet);
+    case 4 :
+        if_openoverlay(inter_321);
+        if_sethide(inter_321:com_7, false);
+        queue(rc_cat_died, 0, 0);
+    case default :
+        mes("Your cat has lost the fight."); // ours
+        ~rc_pit_grow($pit, 1);
+}
+%rc_pit_bet = 0;
+%rc_pit_kills = 0;
+if ($how ! 4 & npc_finduid(%follower_uid) = true) {
+    npc_statheal(hitpoints, 0, 100);
+    if (npc_stat(hitpoints) > npc_basestat(hitpoints)) npc_statsub(hitpoints, calc(npc_stat(hitpoints) - npc_basestat(hitpoints)), 0);
+    ~rc_cat_follow;
+}
+
+// the RS wiki: in Ardougne and Varrock a cat grows about fifteen minutes if it wins and half that
+// if it loses (pet.rs2's growth counts one every 90 seconds: 10 and 5)
+[proc,rc_pit_grow](int $pit, int $won)
+if ($pit ! 1 & $pit ! 2) return;
+def_int $g = getbit_range(%cat_growth, 11, 19);
+def_int $add = 5;
+if ($won = 2) $add = 10;
+%cat_growth = setbit_range_toint(%cat_growth, min(319, calc($g + $add)), 11, 19);
+
+// ---------------------------------------------------------------- the pits' people and things
+// the RS wiki: the pits' barmen sold beer for 2 coins and stew for 20 (ours: their words)
+[opnpc1,vc_gambler_rich3] @rc_pit_bar;
+[opnpc1,vc_dwarf_rich1] @rc_pit_bar;
+
+[label,rc_pit_bar]
+~chatnpc("<p,neutral>What'll it be? A beer for 2 coins, or a stew for 20?"); // ours
+switch_int (~p_choice3("A beer please.", 1, "A stew please.", 2, "Nothing, thanks.", 3)) {
+    case 1 : ~rc_pit_buy(beer, 2);
+    case 2 : ~rc_pit_buy(stew, 20);
+}
+
+[proc,rc_pit_buy](namedobj $obj, int $price)
+if (inv_total(inv, coins) < $price) {
+    ~chatplayer("<p,sad>Oh, I don't have enough money."); // ours
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+inv_del(inv, coins, $price);
+inv_add(inv, $obj, 1);
+~chatnpc("<p,happy>There you go."); // ours
+
+// the RS wiki: picking up a rat trap sets it off for 30 life points (3 hitpoints here); some have
+// cheese, which you can take (ours: the message)
+[oploc1,vc_mousetrap] ~rc_rat_trap(false);
+[oploc1,vc_mousetrap_set] ~rc_rat_trap(true);
+
+[proc,rc_rat_trap](boolean $cheese)
+anim(human_pickupfloor, 0);
+sound_synth(mousetrap_spring, 1, 0);
+mes("The trap snaps shut on your fingers!"); // ours
+~damage_self(3);
+if ($cheese = true & inv_freespace(inv) > 0) {
+    inv_add(inv, cheese, 1);
+    mes("You manage to take the cheese."); // ours
+}
+
+// the pits' rat walls: Spectate (ours: what you see)
+[oploc1,vc_rat_wall1] mes("You watch the rats scurry about in the pit.");
+[oploc1,vc_rat_wall1_inactive] mes("You watch the rats scurry about in the pit.");
+[oploc1,vc_dwarfrat_wall1] mes("You watch the rats scurry about in the pit.");
