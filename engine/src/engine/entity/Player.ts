@@ -2335,7 +2335,23 @@ export default class Player extends PathingEntity {
     }
 
     messageGame(msg: string) {
-        this.write(new MessageGame(msg));
+        // EASCape: MESSAGE_GAME's length is one byte, so a message over 255 characters
+        // desyncs the client and logs the player out. Long messages are split at spaces
+        // into lines of at most 100 characters instead.
+        if (msg.length <= 100) {
+            this.write(new MessageGame(msg));
+            return;
+        }
+        let rest = msg;
+        while (rest.length > 100) {
+            let cut = rest.lastIndexOf(' ', 100);
+            if (cut <= 0) cut = 100;
+            this.write(new MessageGame(rest.slice(0, cut)));
+            rest = rest.slice(cut).trimStart();
+        }
+        if (rest.length > 0) {
+            this.write(new MessageGame(rest));
+        }
     }
 
     isValid(_hash64?: bigint): boolean {
