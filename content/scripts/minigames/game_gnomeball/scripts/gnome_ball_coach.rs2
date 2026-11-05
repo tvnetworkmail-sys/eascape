@@ -1,0 +1,124 @@
+// EASCape: the Gnome Coach (Mogres, Lizards, Pet Fish, Potions and Potatoes!, 24 October 2005: "he
+// may spare you some time to answer questions on the game and its various intricacies"). He's
+// already in the map at the Gnome Ball field (gnome_ball_coach). No server source has him, so his
+// talk and his six overhead shouts are the RS wiki's transcript (Transcript:Gnome Coach). The chat
+// faces, and how often he shouts (a one-in-three chance every 17 ticks, all.npc timer), are ours.
+
+[opnpc1,gnome_ball_coach]
+~chatnpc("<p,angry>Run faster! Faster!");
+~chatplayer("<p,quiz>Excuse me?");
+~chatnpc("<p,neutral>Oh, sorry, I didn't notice you there.");
+~chatplayer("<p,quiz>I take it you're a coach?");
+~chatnpc("<p,neutral>That I am. Now get to the point, I'm very busy!");
+@gnome_coach_menu;
+
+[label,gnome_coach_menu]
+switch_int (~p_choice4("What's the History of Gnome ball?", 1, "Are there any special tactics?", 2, "Does the game bring fame?", 3, "Yawn", 4)) {
+    case 1 : @gnome_coach_history;
+    case 2 : @gnome_coach_tactics;
+    case 3 : @gnome_coach_fame;
+    case 4 :
+        ~chatplayer("<p,bored>Yawn.");
+        ~chatnpc("<p,angry>I beg your pardon?");
+        ~chatplayer("<p,shifty>Erm... thanks, catch you later.");
+}
+
+[label,gnome_coach_history]
+~chatplayer("<p,quiz>What's the history of Gnome ball?");
+~chatnpc("<p,neutral>Be more precise, stranger.");
+switch_int (~p_choice3("How did it all start?", 1, "What is the ball made from?", 2, "Those nets are strange.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>How did it all start?");
+        ~chatnpc("<p,neutral>Strangely enough, by accident.");
+        ~chatplayer("<p,confused>Accident?");
+        ~chatnpc("<p,angry>Don't interrupt!");
+        ~chatplayer("<p,sad>Sorry.");
+        ~chatnpc("<p,neutral>A great many years ago, before I was even born, there were two young Gnomes. Brothers to be exact.");
+        ~chatnpc("<p,neutral>They were always arguing with each other over the most trivial things - who was the faster runner or who was the tallest.");
+        ~chatnpc("<p,neutral>One day they were up at the swamp throwing stones at the toads.");
+        ~chatplayer("<p,neutral>As you do.");
+        ~chatnpc("<p,happy>Yep. You know nothing tastes better than toasted toad?");
+        ~chatplayer("<p,neutral>Oh, I'm sure");
+        ~chatnpc("<p,neutral>Anyway, they decided to compete to see who could kill the most toads. This gradually became a daily game, to which they invited friends and family to join in. It all evolved from there.");
+        ~chatnpc("<p,neutral>Creating a playing arena, making up teams and leagues.");
+        ~chatplayer("<p,neutral>Interesting.");
+        ~chatnpc("<p,quiz>Anything else?");
+    case 2 :
+        ~chatplayer("<p,quiz>What is the ball made from?");
+        ~chatnpc("<p,neutral>Toads of course");
+        ~chatplayer("<p,confused>Toads?");
+        ~chatnpc("<p,neutral>What with the swamp nearby, and their robust skin, there is nothing better to stretch over some common sand.");
+        ~chatplayer("<p,neutral>I'd never have guessed.");
+        ~chatnpc("<p,laugh>Well, of course. You humans know nothing! Anything else?");
+    case 3 :
+        ~chatplayer("<p,neutral>Those nets are strange.");
+        ~chatnpc("<p,happy>Ah, made from the finest thread in all the land.");
+        ~chatplayer("<p,quiz>And that is?");
+        ~chatnpc("<p,neutral>Gnome hair.");
+        ~chatplayer("<p,shock>You're kidding, right?");
+        ~chatnpc("<p,angry>I have no time for jokes. It's a serious matter, we go through plenty of nets every day.");
+        ~chatplayer("<p,quiz>So that's why you don't see many Gnomes with long hair?");
+        ~chatnpc("<p,neutral>Exactly.");
+        ~chatplayer("<p,happy>The world makes sense at last.");
+        ~chatnpc("<p,quiz>Anything else?");
+}
+@gnome_coach_menu;
+
+[label,gnome_coach_tactics]
+~chatplayer("<p,quiz>Are there any special tactics?");
+~chatnpc("<p,neutral>Well of course, like what?");
+switch_int (~p_choice4("How about in passing?", 1, "How about teamwork?", 2, "What about my personal physique?", 3, "Any information would be appreciated!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>How about passing?");
+        ~chatnpc("<p,neutral>There's the good old one-two tactic.");
+        ~chatplayer("<p,quiz>And that is?");
+        ~chatnpc("<p,angry>You don't know anything do you? You pass the ball onto a team mate, giving him all the attention of your opposition, and giving you the chance to run further ahead.");
+        ~chatplayer("<p,quiz>Then what?");
+        ~chatnpc("<p,neutral>Well, he passes back to you and you've made an advantage. It's useful in a variety of situations!");
+        ~chatplayer("<p,happy>I'll remember that one.");
+        ~chatnpc("<p,quiz>Anything else?");
+    case 2 :
+        ~chatplayer("<p,quiz>How about teamwork?");
+        ~chatnpc("<p,neutral>Well, don't forget that you can block the opposition whilst a team mate has the ball. Very useful if you want to stop or slow down anyone approaching him.");
+        ~chatplayer("<p,neutral>Block for team mates. Got it.");
+        ~chatnpc("<p,quiz>Anything else?");
+    case 3 :
+        ~chatplayer("<p,quiz>What about my personal physique?");
+        ~chatnpc("<p,laugh>You'd look better if you were shorter.");
+        ~chatplayer("<p,angry>I mean in regards to scoring more goals!");
+        ~chatnpc("<p,neutral>I see. Your agility is important if you want to avoid being tackled, so that would be a good attribute to improve. Also many Gnomes say that being able to attack well with a ranged weapon makes you better at scoring goals.");
+        ~chatplayer("<p,neutral>I suppose I should go away and work on those skills.");
+        ~chatnpc("<p,neutral>Yes, although playing the game itself will improve these skills too. Also you should remember that your distance from the goal affects your chance of scoring, so get close enough and your ranged ability won't matter as much.");
+    case 4 :
+        ~chatplayer("<p,happy>Any information would be appreciated!");
+        ~chatnpc("<p,quiz>Hmm, some general facts?");
+        ~chatplayer("<p,happy>Please!");
+        ~chatnpc("<p,neutral>OK. Have you noticed the different colour clothes for your opposing Gnomes?");
+        ~chatplayer("<p,neutral>Nope.");
+        ~chatnpc("<p,neutral>The colours correspond to their skill level. The red ones are the professionals. They've been playing since before you were born! The orange ones are in the middle of their careers, whereas the yellow players know very little. Just like you!");
+        ~chatplayer("<p,shifty>Thanks... Anything else?");
+        ~chatnpc("<p,neutral>It's always good to get a group of friends to play with you. That way you can score goals more easily, and if you take it in turns to score the goals you'll all reap the rewards.");
+}
+@gnome_coach_menu;
+
+[label,gnome_coach_fame]
+~chatplayer("<p,quiz>Does the game bring fame?");
+~chatnpc("<p,shock>You mean you've never heard of Speedy Sam The Striker or Norda 'Steal Arms' van Druman?");
+~chatplayer("<p,neutral>Afraid not.");
+~chatnpc("<p,shock>Not even Great Thunder Legs MacKnee?");
+~chatplayer("<p,neutral>Nope.");
+~chatnpc("<p,laugh>Well, they're all richer than you'll ever be!");
+~chatplayer("<p,bored>Good for them.");
+~chatnpc("<p,quiz>Indeed, anything else?");
+@gnome_coach_menu;
+
+[ai_timer,gnome_ball_coach]
+if (random(3) ! 0) return;
+switch_int (random(6)) {
+    case 0 : npc_say("One-Two, One-Two!");
+    case 1 : npc_say("Run faster! Don't be so lazy!");
+    case 2 : npc_say("Pass to your left! Pass now!");
+    case 3 : npc_say("There are others to pass to you know");
+    case 4 : npc_say("Hey human, get moving!");
+    case 5 : npc_say("Take him out you wuss");
+}

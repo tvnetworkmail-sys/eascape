@@ -120,6 +120,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::skippypack` | For Skippy and the Mogres: a bucket of water, a bowl of nettle tea, a hangover cure and 2 fishing explosives (Slayer up to 32 if you're below) |
 | `::skippystage <n>` | Sets Skippy and the Mogres: 0 drunk (not started), 1 damp (wants nettle tea), 2 hungover (wants the hangover cure), 3 sober (done: an explosive on an ominous fishing spot brings out a mogre, and mogres can be Slayer tasks) |
 | `::skippytele <n>` | 1 Skippy on the Rimmington coast, 2 Mudskipper Point by the ominous fishing spot and the forlorn boot |
+| `::coachtele` | The Gnome Coach by the Gnome Ball field (Talk-to: the game's history, tactics and fame; he shouts at the players now and then) |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |
