@@ -1,0 +1,86 @@
+// EASCape: test commands for the Blast Furnace (minigames/game_blastfurnace).
+
+// ::bfpack - 99 Smithing, and for the furnace: a hammer, 2 spades, a bucket of water, an empty
+// bucket, ice gloves (they do nothing here in 2005), 5,000 coins, 5 iron ore and 10 coal; in your
+// bank 28 each of copper, tin, iron, silver, gold, mithril, adamantite and runite ore, 200 coal and
+// 8 more spades. Working the machines needs 30 Strength, Agility, Firemaking and Crafting
+// (::setstat <skill> 30).
+[debugproc,bfpack]
+if (p_finduid(uid) = false) return;
+if (stat_base(smithing) < 99) stat_advance(smithing, 130344310);
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(spade, 2));
+$banked = calc($banked + ~questpack_give(bucket_water, 1));
+$banked = calc($banked + ~questpack_give(bucket_empty, 1));
+$banked = calc($banked + ~questpack_give(ice_gloves, 1));
+$banked = calc($banked + ~questpack_give(coins, 5000));
+$banked = calc($banked + ~questpack_give(iron_ore, 5));
+$banked = calc($banked + ~questpack_give(coal, 10));
+inv_add(bank, copper_ore, 28);
+inv_add(bank, tin_ore, 28);
+inv_add(bank, iron_ore, 28);
+inv_add(bank, silver_ore, 28);
+inv_add(bank, gold_ore, 28);
+inv_add(bank, mithril_ore, 28);
+inv_add(bank, adamantite_ore, 28);
+inv_add(bank, runite_ore, 28);
+inv_add(bank, coal, 200);
+inv_add(bank, spade, 8);
+~questpack_done("the Blast Furnace", $banked);
+mes("::bftele 1 goes down to the furnace; ::bfstate shows how it's running.");
+
+// ::bftele <n> - 1 the foot of the stairs, 2 the conveyor belt, 3 the pedals, 4 the coke and
+// stove, 5 the pump, 6 the gauge, 7 the bar dispenser and sink, 8 Ordan and Jorzik, 9 outside the
+// factory's stairs in Keldagrim
+[debugproc,bftele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = ^bf_entrance;
+    case 2 : $c = 0_30_77_22_39;
+    case 3 : $c = 0_30_77_28_38;
+    case 4 : $c = 0_30_77_30_35;
+    case 5 : $c = 0_30_77_31_33;
+    case 6 : $c = 0_30_77_25_32;
+    case 7 : $c = 0_30_77_20_34;
+    case 8 : $c = 0_30_77_17_37;
+    case 9 : $c = 0_45_159_51_21;
+    case default :
+        mes("::bftele 1-9: 1 stairs, 2 belt, 3 pedals, 4 coke and stove, 5 pump, 6 gauge,");
+        mes("7 dispenser and sink, 8 Ordan and Jorzik, 9 outside in Keldagrim.");
+        return;
+}
+def_coord $to = $c;
+if (map_blocked($c) = true) $to = map_findsquare($c, 1, 3, ^map_findsquare_lineofwalk);
+if ($to = null) $to = $c;
+p_telejump($to);
+if (~bf_in_room($to) = true) ~bf_enter;
+
+// ::bfstate - the furnace (coke, stove and furnace heat, what's broken, who's on the pump and
+// pedals) and yours (belt, ore in the furnace, bars, the dispenser, the fee)
+[debugproc,bfstate]
+if (p_finduid(uid) = false) return;
+mes("BF coke <tostring(%bf_coke)> stove <tostring(%bf_stove_temp)> furnace <tostring(%bf_furnace_temp)> broken <tostring(%bf_broken)> pump <tostring(calc(map_clock - %bf_pump_clock))> pedal <tostring(calc(map_clock - %bf_pedal_clock))>");
+mes("BF belt <tostring(%bf_belt)> coal <tostring(%blast_furnace_coal)> cu <tostring(%blast_furnace_copper_ore)> tin <tostring(%blast_furnace_tin_ore)> fe <tostring(%blast_furnace_iron_ore)> mith <tostring(%blast_furnace_mithril_ore)> addy <tostring(%blast_furnace_adamantite_ore)> rune <tostring(%blast_furnace_runite_ore)>");
+mes("BF bars bz <tostring(%blast_furnace_bronze_bars)> fe <tostring(%blast_furnace_iron_bars)> st <tostring(%blast_furnace_steel_bars)> mi <tostring(%blast_furnace_mithril_bars)> ad <tostring(%blast_furnace_adamantite_bars)> ru <tostring(%blast_furnace_runite_bars)> disp <tostring(%blast_furnace_bars_hot)> fee <tostring(max(0, calc(%bf_fee_end - map_clock)))>");
+
+// ::bfbreak <n> - breaks a part to repair: 1 the pipe by the pot, 2 the pipe by the pump, 3 the
+// drive belt, 4 the cogs; 0 mends them all; 5 fills the stove; 6 sets the furnace to 60 degrees
+[debugproc,bfbreak](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 0 : %bf_broken = 0;
+    case 1 : %bf_broken = setbit(%bf_broken, ^bf_pot_pipe);
+    case 2 : %bf_broken = setbit(%bf_broken, ^bf_pump_pipe);
+    case 3 : %bf_broken = setbit(%bf_broken, ^bf_drive_belt);
+    case 4 : %bf_broken = setbit(%bf_broken, ^bf_cogs);
+    case 5 :
+        %bf_coke = ^bf_coke_limit;
+        %bf_stove_temp = 100;
+    case 6 : %bf_furnace_temp = 60;
+    case default :
+        mes("::bfbreak 0-6: 0 mend all, 1 pot pipe, 2 pump pipe, 3 drive belt, 4 cogs, 5 fill stove, 6 heat 60");
+        return;
+}
+mes("BF broken <tostring(%bf_broken)> coke <tostring(%bf_coke)> furnace <tostring(%bf_furnace_temp)>");

@@ -1,0 +1,167 @@
+// EASCape: the Blast Furnace's dwarves. Their words are the OSRS wiki's transcripts
+// (Transcript:Blast Furnace Foreman, Transcript:Ordan, Transcript:Jorzik); the faces are ours
+// (2009scape's BlastFurnaceForemanDialogue where it has one). The Blast Furnace Plan is the cache's
+// inter_300; its crosses flash with the cache's flashing_x (stove com_1, air pump com_13, temp
+// gauge com_14, cogs com_12, as the transcript names them). We show it as an overlay so the chat
+// can go on beside it (ours: 2009scape opens it as a window).
+
+[opnpc1,blast_furnace_instructor]
+~chatnpc("<p,angry>You! Get to work!");
+if (~p_choice2("What?", 1, "Okay.", 2) = 2) {
+    ~chatplayer("<p,neutral>Okay.");
+    return;
+}
+~chatplayer("<p,confused>What?");
+~chatnpc("<p,neutral>You are here to help work the blast furnace, aren't you?");
+switch_int (~p_choice4("What's the blast furnace?", 1, "How can I help work the blast furnace?", 2, "Can I use the furnace to smelt ore?", 3, "Maybe some other time.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's the blast furnace?");
+        ~chatnpc("<p,happy>The blast furnace is the pinnacle of dwarven metal-processing! Ore goes in the top and comes out as metal bars almost at once! And it's so efficient it only takes half as much coal to purify it as a regular furnace.");
+        ~chatnpc("<p,neutral>But we've got a bit of a labour shortage at the moment, which is why I have to rely on immigrant workers to keep the furnace going. So, are you here to start work?");
+        switch_int (~p_choice3("How can I help work the blast furnace?", 2, "Can I use the furnace to smelt ore?", 3, "Maybe some other time.", 4)) {
+            case 2 : @bf_foreman_explain;
+            case 3 : @bf_foreman_smelt;
+            case 4 : @bf_foreman_bye;
+        }
+    case 2 : @bf_foreman_explain;
+    case 3 : @bf_foreman_smelt;
+    case 4 : @bf_foreman_bye;
+}
+
+[label,bf_foreman_explain]
+~chatplayer("<p,quiz>How can I help work the blast furnace?");
+~chatnpc("<p,neutral>The blast furnace will only work if there is a group of people keeping it going. Let me explain...");
+if_openoverlay(inter_300);
+if_setanim(inter_300:com_1, flashing_x);
+~chatnpc("<p,neutral>Firstly, the stove needs to be kept filled with coal. If this runs out the furnace will not work.");
+if_setanim(inter_300:com_1, flashing_x_off);
+if_setanim(inter_300:com_13, flashing_x);
+~chatnpc("<p,neutral>Secondly, someone needs to operate the pump that keeps the hot air blast circulating through the furnace.");
+if_setanim(inter_300:com_13, flashing_x_off);
+if_setanim(inter_300:com_14, flashing_x);
+~chatnpc("<p,neutral>Thirdly, someone needs to keep an eye on the temperature gauge. They should tell the pumper to start or stop so that the temperature stays in the right range.");
+if_setanim(inter_300:com_14, flashing_x_off);
+if_setanim(inter_300:com_12, flashing_x);
+~chatnpc("<p,neutral>Lastly, someone needs to be on the pedals to power the conveyor belt that puts ore into the furnace.");
+if_setanim(inter_300:com_12, flashing_x_off);
+~chatnpc("<p,neutral>Someone will also need to be on standby with a hammer in case the machine breaks!");
+~chatnpc("<p,neutral>While that's going, anyone else can put their ore on the conveyor belt to have it smelted.");
+if_openoverlay(null);
+switch_int (~p_choice3("So what do I get out of it?", 1, "Okay, I'll get to work.", 2, "Maybe some other time.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>So what do I get out of it?");
+        ~chatnpc("<p,happy>Keeping the furnace going is valuable experience in itself!");
+        ~chatnpc("<p,neutral>Keeping the stove alight will train your Firemaking, working the pump will train your Strength, pedalling the conveyor belt will train your Agility and repairing the furnace will train Crafting.");
+        ~chatnpc("<p,neutral>Plus, everyone working the furnace will get a bit of experience in Smithing whenever anyone smelts ore in it.");
+        switch_int (~p_choice3("So I don't actually get paid then?", 1, "Okay, I'll get to work.", 2, "Maybe some other time.", 3)) {
+            case 1 :
+                ~chatplayer("<p,quiz>So I don't actually get paid then?");
+                ~chatnpc("<p,angry>I offer you the privilege of working on the greatest example of dwarven engineering and you want to be PAID?");
+                ~chatnpc("<p,angry>If you co-operate with a group of people you can all get your smelting done pretty quickly. Or perhaps some humans who need to do some smelting will pay you, since you humans are all so obsessed with money.");
+                switch_int (~p_choice3("Okay, I'll get to work.", 1, "Maybe some other time.", 2, "No wonder you have a labour shortage if you don't pay your workers!", 3)) {
+                    case 1 : @bf_foreman_work;
+                    case 2 : @bf_foreman_bye;
+                    case 3 :
+                        ~chatplayer("<p,neutral>No wonder you have a labour shortage if you don't pay your workers!");
+                        ~chatnpc("<p,neutral>What would be the point of making money if I gave it all away to menial workers?");
+                        ~chatnpc("<p,shifty>I mean... Money isn't important! What about the greater glory of dwarven engineering? What about the satisfaction of helping others? What about the XP?");
+                        if (~p_choice2("Okay, I'll get to work.", 1, "Maybe some other time.", 2) = 1) @bf_foreman_work;
+                        @bf_foreman_bye;
+                }
+            case 2 : @bf_foreman_work;
+            case 3 : @bf_foreman_bye;
+        }
+    case 2 : @bf_foreman_work;
+    case 3 : @bf_foreman_bye;
+}
+
+[label,bf_foreman_work]
+~chatplayer("<p,happy>Okay, I'll get to work.");
+~chatnpc("<p,happy>Splendid!");
+
+[label,bf_foreman_bye]
+~chatplayer("<p,neutral>Maybe some other time.");
+~chatnpc("<p,angry>Well if you're not here to work, go hang around somewhere else!");
+
+// the fee: 2,500 coins for ten minutes below 60 Smithing, 1,250 with a ring of charos (a) worn
+[label,bf_foreman_smelt]
+~chatplayer("<p,quiz>Can I use the furnace to smelt ore?");
+~chatnpc("<p,neutral>You can, although you'll need to find some people to work it for you as well. But the furnace is very delicate so I charge a fee for anyone who doesn't have level 60 smithing.");
+if (~p_choice2("I have level 60!", 1, "I don't have level 60.", 2) = 1) {
+    ~chatplayer("<p,happy>I have level 60!");
+    ~chatnpc("<p,shock>A human has level 60 smithing? How extraordinary!");
+    ~chatnpc("<p,neutral>Feel free to use the furnace. Remember, you only need half as much coal as with a regular furnace.");
+    return;
+}
+~chatplayer("<p,sad>I don't have level 60.");
+~chatnpc("<p,neutral>Hmm, well, I'll let you use the furnace if you want, but you must pay a fee of 2,500 coins.");
+def_int $c = 0;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    $c = ~p_choice3("Okay.", 1, "Maybe some other time.", 2, "[Charm] How about I give you 1250 coins and I work extra hard?", 3);
+} else {
+    $c = ~p_choice2("Okay.", 1, "Maybe some other time.", 2);
+}
+if ($c = 2) @bf_foreman_bye;
+if ($c = 1) {
+    ~chatplayer("<p,neutral>Okay, here you are.");
+    if (inv_total(inv, coins) < ^bf_fee) {
+        ~chatnpc("<p,confused>Where?");
+        ~chatplayer("<p,sad>Actually I don't have enough money on me.");
+        ~chatnpc("<p,angry>Well go get it then.");
+        return;
+    }
+    inv_del(inv, coins, ^bf_fee);
+    %bf_fee_end = calc(map_clock + ^bf_fee_ticks);
+    ~chatnpc("<p,neutral>Okay, you can use the furnace for ten minutes. Remember, you only need half as much coal as with a regular furnace.");
+    return;
+}
+~chatplayer("<p,shifty>How about I give you 1250 coins and I work extra hard?");
+~chatnpc("<p,neutral>You'll have to work hard enough for two humans if I agree...");
+~chatplayer("<p,happy>Oh, three humans, easily!");
+~chatnpc("<p,neutral>Well, okay then - 1250GP it is.");
+if (inv_total(inv, coins) < divide(^bf_fee, 2)) {
+    ~chatplayer("<p,sad>Actually I don't have enough money on me.");
+    ~chatnpc("<p,angry>Well why did you try and haggle with me then? You'd better go and get some - you're not using the blast furnace for free.");
+    return;
+}
+inv_del(inv, coins, divide(^bf_fee, 2));
+%bf_fee_end = calc(map_clock + ^bf_fee_ticks);
+~chatnpc("<p,neutral>Okay, you can use the furnace for ten minutes. Remember, you only need half as much coal as with a regular furnace. And I want to see you doing the work of four humans!");
+
+// Ordan (Transcript:Ordan); Trade is the shop_keeper category (shop/scripts/shop.rs2)
+[opnpc1,smithing_guild_ore_seller]
+~chatnpc("<p,neutral>Are you here to smith? Do you want to buy some ore?");
+if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 1) {
+    ~openshop_activenpc;
+    return;
+}
+~chatplayer("<p,neutral>No thanks.");
+~chatnpc("<p,angry>Well don't waste my time then!");
+
+// Jorzik (Transcript:Jorzik)
+[opnpc1,smithing_guild_buyer]
+~chatnpc("<p,neutral>Do you want to trade?");
+if (~p_choice2("What are you selling?", 1, "No thanks.", 2) = 1) {
+    ~chatplayer("<p,quiz>What are you selling?");
+    ~chatnpc("<p,happy>The finest smiths from all over Gielinor come here to work, and I buy the fruit of their craft. Armour made from the higher metals!");
+    if (~p_choice2("Let's have a look then.", 1, "No thanks.", 2) = 1) {
+        ~chatplayer("<p,neutral>Let's have a look then.");
+        ~openshop_activenpc;
+        return;
+    }
+}
+~chatplayer("<p,neutral>No thanks.");
+~chatnpc("<p,sad>You just don't appreciate the beauty of fine metalwork.");
+
+// the gate to the anvils: 60 Smithing until it was taken out (RS wiki, Patch Notes 9 November
+// 2009); Jorzik's line is the transcript's. Which side is the anvils' is our map's.
+[oploc1,smithing_guild_door]
+if (coordz(coord) < 4970 & stat_base(smithing) < ^bf_smith_req) {
+    if (npc_find(^bf_jorzik_coord, smithing_guild_buyer, 6, 0) = true) {
+        ~chatnpc("<p,angry>Only the top smiths are allowed in there!");
+    } else {
+        mes("You need a Smithing level of 60 to go in there."); // ours
+    }
+    return;
+}
+~eascape_door_walk;

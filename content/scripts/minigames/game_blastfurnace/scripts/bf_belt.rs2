@@ -1,0 +1,397 @@
+// EASCape: your ore at the Blast Furnace: onto the conveyor belt, down it into the melting pot,
+// smelted into bars and cooled in the bar dispenser. 2009scape (BlastFurnace.placeAllOre,
+// BFOreContainer, BFPlayerState, BFBeltOre) unless said; the furnace's contents and your bars are
+// the cache's own varbits (blast_furnace_<ore>, blast_furnace_<metal>_bars, blast_furnace_bars_hot
+// for the dispenser's multiloc and blast_furnace_coal_required for the bar stock's "Coal to add").
+//
+// The furnace takes half the coal (the update; the foreman): steel 1, mithril 2, adamantite 3,
+// runite 4. Up to 28 of each ore and 28 primary ore in all (56 of copper and tin together), 226
+// coal, and no more of an ore while its 28 bars are waiting (2009scape BlastConsts).
+
+[proc,bf_may_use]()(boolean)
+if (stat_base(smithing) >= ^bf_smith_req) return(true);
+if (%bf_fee_end > map_clock) return(true);
+mes("You need level 60 Smithing, or to pay the foreman, to use the furnace."); // ours
+return(false);
+
+// ---- the ore in the furnace, and the bars, one varbit each
+[proc,bf_pot](obj $ore)(int)
+switch_obj ($ore) {
+    case coal : return(%blast_furnace_coal);
+    case copper_ore : return(%blast_furnace_copper_ore);
+    case tin_ore : return(%blast_furnace_tin_ore);
+    case iron_ore : return(%blast_furnace_iron_ore);
+    case silver_ore : return(%blast_furnace_silver_ore);
+    case gold_ore : return(%blast_furnace_gold_ore);
+    case mithril_ore : return(%blast_furnace_mithril_ore);
+    case adamantite_ore : return(%blast_furnace_adamantite_ore);
+    case runite_ore : return(%blast_furnace_runite_ore);
+}
+return(0);
+
+[proc,bf_pot_set](obj $ore, int $n)
+$n = max(0, min(255, $n));
+switch_obj ($ore) {
+    case coal : %blast_furnace_coal = $n;
+    case copper_ore : %blast_furnace_copper_ore = $n;
+    case tin_ore : %blast_furnace_tin_ore = $n;
+    case iron_ore : %blast_furnace_iron_ore = $n;
+    case silver_ore : %blast_furnace_silver_ore = $n;
+    case gold_ore : %blast_furnace_gold_ore = $n;
+    case mithril_ore : %blast_furnace_mithril_ore = $n;
+    case adamantite_ore : %blast_furnace_adamantite_ore = $n;
+    case runite_ore : %blast_furnace_runite_ore = $n;
+}
+
+[proc,bf_bars](obj $bar)(int)
+switch_obj ($bar) {
+    case bronze_bar : return(%blast_furnace_bronze_bars);
+    case iron_bar : return(%blast_furnace_iron_bars);
+    case steel_bar : return(%blast_furnace_steel_bars);
+    case silver_bar : return(%blast_furnace_silver_bars);
+    case gold_bar : return(%blast_furnace_gold_bars);
+    case mithril_bar : return(%blast_furnace_mithril_bars);
+    case adamantite_bar : return(%blast_furnace_adamantite_bars);
+    case runite_bar : return(%blast_furnace_runite_bars);
+}
+return(0);
+
+[proc,bf_bars_set](obj $bar, int $n)
+$n = max(0, min(255, $n));
+switch_obj ($bar) {
+    case bronze_bar : %blast_furnace_bronze_bars = $n;
+    case iron_bar : %blast_furnace_iron_bars = $n;
+    case steel_bar : %blast_furnace_steel_bars = $n;
+    case silver_bar : %blast_furnace_silver_bars = $n;
+    case gold_bar : %blast_furnace_gold_bars = $n;
+    case mithril_bar : %blast_furnace_mithril_bars = $n;
+    case adamantite_bar : %blast_furnace_adamantite_bars = $n;
+    case runite_bar : %blast_furnace_runite_bars = $n;
+}
+
+// the smelting struct of the bar an ore makes (getBarForOreId: iron makes steel when there's coal
+// in the furnace and you can smelt steel)
+[proc,bf_ore_struct](obj $ore, int $coal)(struct)
+switch_obj ($ore) {
+    case copper_ore, tin_ore : return(smelting_bronze_bar);
+    case iron_ore :
+        if ($coal >= 1 & stat(smithing) >= struct_param(smelting_steel_bar, levelrequired)) return(smelting_steel_bar);
+        return(smelting_iron_bar);
+    case silver_ore : return(smelting_silver_bar);
+    case gold_ore : return(smelting_gold_bar);
+    case mithril_ore : return(smelting_mithril_bar);
+    case adamantite_ore : return(smelting_adamantite_bar);
+    case runite_ore : return(smelting_runite_bar);
+}
+return(null);
+
+// half the regular coal (getNeededCoal)
+[proc,bf_coal_needed](struct $s)(int)
+switch_struct ($s) {
+    case smelting_steel_bar : return(1);
+    case smelting_mithril_bar : return(2);
+    case smelting_adamantite_bar : return(3);
+    case smelting_runite_bar : return(4);
+}
+return(0);
+
+[proc,bf_is_ore](obj $obj)(boolean)
+switch_obj ($obj) {
+    case coal, copper_ore, tin_ore, iron_ore, silver_ore, gold_ore, mithril_ore, adamantite_ore, runite_ore : return(true);
+}
+return(false);
+
+// primary ore in the furnace and on the belt
+[proc,bf_primary_total]()(int)
+def_int $n = calc(%blast_furnace_copper_ore + %blast_furnace_tin_ore + %blast_furnace_iron_ore + %blast_furnace_silver_ore + %blast_furnace_gold_ore);
+$n = calc($n + %blast_furnace_mithril_ore + %blast_furnace_adamantite_ore + %blast_furnace_runite_ore);
+return(calc($n + ~bf_belt_primary));
+
+[proc,bf_belt_primary]()(int)
+def_int $n = 0;
+def_int $slot = 0;
+while ($slot < inv_size(blast_furnace_inv)) {
+    def_obj $o = inv_getobj(blast_furnace_inv, $slot);
+    if ($o ! null & $o ! coal) $n = calc($n + inv_getnum(blast_furnace_inv, $slot));
+    $slot = calc($slot + 1);
+}
+return($n);
+
+// how many more of $ore may go on the belt (BFOreContainer.getAvailableSpace, less what's on the belt)
+[proc,bf_space](obj $ore)(int)
+if ($ore = coal) {
+    return(max(0, calc(^bf_coal_limit - %blast_furnace_coal - inv_total(blast_furnace_inv, coal))));
+}
+def_int $all = ^bf_ore_limit;
+if ($ore = copper_ore | $ore = tin_ore) $all = calc(^bf_ore_limit * 2);
+def_int $space = min(calc(^bf_ore_limit - ~bf_pot($ore) - inv_total(blast_furnace_inv, $ore)), calc($all - ~bf_primary_total));
+def_struct $s = ~bf_ore_struct($ore, %blast_furnace_coal);
+$space = calc($space - ~bf_bars(struct_param($s, product)));
+return(max(0, $space));
+
+// ---- putting ore on the belt (2009scape: "Really place all your ore on the belt?")
+[oploc1,blast_furnace_conveyer_belt_clickable]
+if (~bf_may_use = false) return;
+~mesbox("Really place all your ore on the belt?");
+if (~p_choice2("Yes.", 1, "Nevermind.", 2) = 1) ~bf_place(null);
+
+[oplocu,blast_furnace_conveyer_belt_clickable]
+if (~bf_is_ore(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~bf_may_use = false) return;
+~bf_place(last_useitem);
+
+// coal first, so iron put on with coal becomes steel (ours: 2009scape goes by inventory order)
+[proc,bf_place](obj $only)
+def_boolean $placed = false;
+def_boolean $full = false;
+def_int $i = 0;
+while ($i < 9) {
+    def_obj $ore = coal;
+    switch_int ($i) {
+        case 1 : $ore = copper_ore;
+        case 2 : $ore = tin_ore;
+        case 3 : $ore = iron_ore;
+        case 4 : $ore = silver_ore;
+        case 5 : $ore = gold_ore;
+        case 6 : $ore = mithril_ore;
+        case 7 : $ore = adamantite_ore;
+        case 8 : $ore = runite_ore;
+    }
+    $i = calc($i + 1);
+    if (($only = null | $only = $ore) & inv_total(inv, $ore) > 0) {
+        def_boolean $can = true;
+        if ($ore ! coal) {
+            def_struct $s = ~bf_ore_struct($ore, calc(%blast_furnace_coal + inv_total(blast_furnace_inv, coal)));
+            if (stat(smithing) < struct_param($s, levelrequired)) {
+                mes(struct_param($s, levelfailure));
+                $can = false;
+            }
+        }
+        if ($can = true) {
+            def_int $n = min(inv_total(inv, $ore), ~bf_space($ore));
+            if ($n > 0) {
+                inv_moveitem(inv, blast_furnace_inv, $ore, $n);
+                $placed = true;
+            } else {
+                $full = true;
+            }
+        }
+    }
+}
+if ($placed = true) {
+    if (%bf_belt = 0) %bf_belt = 1;
+    ~bf_belt_npc_show;
+    mes("You put your ore on the conveyor belt."); // ours
+} else if ($full = true) {
+    mes("You should check and see if the other bars have smelted before adding more."); // RS wiki
+}
+
+// ---- down the belt: a square every 2 ticks while it's pedalled (BlastFurnace.updatePedaler,
+// BFBeltOre.tick), then into the pot
+[proc,bf_belt_tick]
+if (%bf_belt = 0) return;
+%bf_belt_waiting = map_clock;
+~bf_belt_npc_show;
+if (%bf_pedal_clock < calc(map_clock - 1) | ~bf_belt_ok = false | modulo(map_clock, 2) ! 0) return;
+%bf_belt_moved = map_clock;
+if (%bf_belt >= 4) {
+    ~bf_belt_deposit;
+    return;
+}
+%bf_belt = calc(%bf_belt + 1);
+if (%bf_belt_npc ! null) {
+    if (npc_finduid(%bf_belt_npc) = true) {
+        npc_tele(~bf_belt_square);
+        if (%bf_belt = 4) npc_anim(blast_furnace_conveyer_ore_fall, 1);
+    }
+}
+
+[proc,bf_belt_square]()(coord)
+return(movecoord(^bf_ore_start, 0, 0, calc(1 - %bf_belt)));
+
+[proc,bf_belt_deposit]
+def_int $slot = 0;
+while ($slot < inv_size(blast_furnace_inv)) {
+    def_obj $o = inv_getobj(blast_furnace_inv, $slot);
+    if ($o ! null) ~bf_pot_set($o, calc(~bf_pot($o) + inv_getnum(blast_furnace_inv, $slot)));
+    $slot = calc($slot + 1);
+}
+inv_clear(blast_furnace_inv);
+%bf_belt = 0;
+if (%bf_belt_npc ! null) {
+    if (npc_finduid(%bf_belt_npc) = true) npc_del;
+}
+%bf_belt_npc = null;
+
+// the ore you see riding the belt: the cache's blast_furnace_<ore> npcs (one for your load, ours)
+[proc,bf_belt_npc_show]
+if (%bf_belt = 0) return;
+if (%bf_belt_npc ! null) {
+    if (npc_finduid(%bf_belt_npc) = true) return;
+}
+npc_add(~bf_belt_square, ~bf_belt_npc_type, 100);
+npc_setmode(null);
+%bf_belt_npc = npc_uid;
+
+[proc,bf_belt_npc_type]()(npc)
+if (inv_total(blast_furnace_inv, runite_ore) > 0) return(blast_furnace_runite_ore);
+if (inv_total(blast_furnace_inv, adamantite_ore) > 0) return(blast_furnace_adamantite_ore);
+if (inv_total(blast_furnace_inv, mithril_ore) > 0) return(blast_furnace_mithril_ore);
+if (inv_total(blast_furnace_inv, gold_ore) > 0) return(blast_furnace_gold_ore);
+if (inv_total(blast_furnace_inv, silver_ore) > 0) return(blast_furnace_silver_ore);
+if (inv_total(blast_furnace_inv, iron_ore) > 0) return(blast_furnace_iron_ore);
+if (inv_total(blast_furnace_inv, copper_ore) > 0) return(blast_furnace_copper_ore);
+if (inv_total(blast_furnace_inv, tin_ore) > 0) return(blast_furnace_tin_ore);
+return(blast_furnace_coal);
+
+// ---- smelting, while the furnace is between 51 and 66 (BlastFurnace.processBars,
+// BFPlayerState.processOresIntoBars): all your ore at once, the bar's own Smithing xp each, and the
+// dispenser pours (1) then glows (2); everyone in the room gets 1 Smithing xp for each player whose
+// bars were made (the "bit of experience" the foreman promises)
+[proc,bf_bars_tick]
+// someone else's bucket cools your bars too (2009scape: everyone's; Mod Ash: within 5 squares)
+if ((%blast_furnace_bars_hot = ^bf_disp_pouring | %blast_furnace_bars_hot = ^bf_disp_hot) & %bf_cool_clock >= calc(map_clock - 1)) {
+    if (distance(coord, ^bf_dispenser_coord) <= 5) %blast_furnace_bars_hot = ^bf_disp_cooled;
+}
+if (%bf_smelt_clock = calc(map_clock - 1) & %bf_xp_clock ! %bf_smelt_clock) {
+    %bf_xp_clock = %bf_smelt_clock;
+    stat_advance(smithing, calc(%bf_smelt_count * 10));
+}
+if (%bf_furnace_temp < 51 | %bf_furnace_temp > 66) return;
+if (%blast_furnace_bars_hot = ^bf_disp_pouring) {
+    %blast_furnace_bars_hot = ^bf_disp_hot;
+    return;
+}
+if (%blast_furnace_bars_hot ! ^bf_disp_empty) return;
+def_int $xp = ~bf_smelt_all;
+if ($xp < 1) return;
+stat_advance(smithing, $xp);
+%blast_furnace_bars_hot = ^bf_disp_pouring;
+if (%bf_smelt_clock ! map_clock) {
+    %bf_smelt_clock = map_clock;
+    %bf_smelt_count = 0;
+}
+%bf_smelt_count = calc(%bf_smelt_count + 1);
+
+// BFOreContainer.convertToBars; the xp is the smelting struct's (x10). Bronze, iron, silver, gold,
+// then the coal ones from the cheapest up (our order; 2009scape goes in the order the ore went in)
+[proc,bf_smelt_all]()(int)
+def_int $xp = 0;
+def_int $n = min(min(%blast_furnace_copper_ore, %blast_furnace_tin_ore), calc(^bf_bar_limit - %blast_furnace_bronze_bars));
+if ($n > 0) {
+    %blast_furnace_copper_ore = calc(%blast_furnace_copper_ore - $n);
+    %blast_furnace_tin_ore = calc(%blast_furnace_tin_ore - $n);
+    %blast_furnace_bronze_bars = calc(%blast_furnace_bronze_bars + $n);
+    $xp = calc($xp + $n * struct_param(smelting_bronze_bar, productexp));
+}
+// iron: each makes steel while there's coal (and you can), else iron
+def_int $iron = %blast_furnace_iron_ore;
+def_int $left = 0;
+while ($iron > 0) {
+    if (%blast_furnace_coal >= 1 & stat(smithing) >= struct_param(smelting_steel_bar, levelrequired)) {
+        if (%blast_furnace_steel_bars < ^bf_bar_limit) {
+            %blast_furnace_steel_bars = calc(%blast_furnace_steel_bars + 1);
+            %blast_furnace_coal = calc(%blast_furnace_coal - 1);
+            $xp = calc($xp + struct_param(smelting_steel_bar, productexp));
+        } else {
+            $left = calc($left + 1);
+        }
+    } else if (%blast_furnace_iron_bars < ^bf_bar_limit) {
+        %blast_furnace_iron_bars = calc(%blast_furnace_iron_bars + 1);
+        $xp = calc($xp + struct_param(smelting_iron_bar, productexp));
+    } else {
+        $left = calc($left + 1);
+    }
+    $iron = calc($iron - 1);
+}
+%blast_furnace_iron_ore = $left;
+$xp = calc($xp + ~bf_smelt(silver_ore, smelting_silver_bar));
+$xp = calc($xp + ~bf_smelt(gold_ore, smelting_gold_bar));
+$xp = calc($xp + ~bf_smelt(mithril_ore, smelting_mithril_bar));
+$xp = calc($xp + ~bf_smelt(adamantite_ore, smelting_adamantite_bar));
+$xp = calc($xp + ~bf_smelt(runite_ore, smelting_runite_bar));
+return($xp);
+
+[proc,bf_smelt](obj $ore, struct $s)(int)
+def_obj $bar = struct_param($s, product);
+def_int $n = min(~bf_pot($ore), calc(^bf_bar_limit - ~bf_bars($bar)));
+def_int $coal = ~bf_coal_needed($s);
+if ($coal > 0) $n = min($n, divide(%blast_furnace_coal, $coal));
+if ($n < 1) return(0);
+~bf_pot_set($ore, calc(~bf_pot($ore) - $n));
+~bf_bars_set($bar, calc(~bf_bars($bar) + $n));
+%blast_furnace_coal = calc(%blast_furnace_coal - $n * $coal);
+return(calc($n * struct_param($s, productexp)));
+
+// ---- the bar dispenser (the cache's multiloc: Search when empty, Take once cooled; nothing while
+// it's hot). A bucket of water cools it (2009scape; the cache's human_throw_bucket)
+[oploc1,blast_furnace_dispenser] ~bf_open_stock;
+
+[oplocu,blast_furnace_dispenser]
+if (last_useitem ! bucket_water) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_int (%blast_furnace_bars_hot) {
+    case ^bf_disp_pouring, ^bf_disp_hot :
+        anim(human_throw_bucket, 0);
+        inv_del(inv, bucket_water, 1);
+        inv_add(inv, bucket_empty, 1);
+        %blast_furnace_bars_hot = ^bf_disp_cooled;
+        %bf_cool_clock = map_clock;
+    case ^bf_disp_cooled : ~mesbox("These bars have already cooled off!");
+    case default : ~mesbox("There's nothing to cool off!");
+}
+
+// the cache's Blast Furnace Bar Stock (inter_299); opening it after cooling empties the
+// dispenser's mould (BFPlayerState.checkBars)
+[proc,bf_open_stock]
+if (%blast_furnace_bars_hot = ^bf_disp_cooled) %blast_furnace_bars_hot = ^bf_disp_empty;
+%blast_furnace_coal_required = max(0, calc(~bf_coal_wanted - %blast_furnace_coal));
+if_openmain(inter_299);
+
+[proc,bf_coal_wanted]()(int)
+def_int $n = 0;
+if (%blast_furnace_coal >= 1 & stat(smithing) >= struct_param(smelting_steel_bar, levelrequired)) $n = %blast_furnace_iron_ore;
+$n = calc($n + %blast_furnace_mithril_ore * 2 + %blast_furnace_adamantite_ore * 3 + %blast_furnace_runite_ore * 4);
+return($n);
+
+[if_button,inter_299:com_78] ~bf_take(bronze_bar, 1);
+[if_button,inter_299:com_109] ~bf_take(bronze_bar, 1);
+[if_button,inter_299:com_100] ~bf_take(bronze_bar, 28);
+[if_button,inter_299:com_75] ~bf_take(iron_bar, 1);
+[if_button,inter_299:com_110] ~bf_take(iron_bar, 1);
+[if_button,inter_299:com_101] ~bf_take(iron_bar, 28);
+[if_button,inter_299:com_92] ~bf_take(steel_bar, 1);
+[if_button,inter_299:com_111] ~bf_take(steel_bar, 1);
+[if_button,inter_299:com_102] ~bf_take(steel_bar, 28);
+[if_button,inter_299:com_93] ~bf_take(mithril_bar, 1);
+[if_button,inter_299:com_112] ~bf_take(mithril_bar, 1);
+[if_button,inter_299:com_103] ~bf_take(mithril_bar, 28);
+[if_button,inter_299:com_94] ~bf_take(adamantite_bar, 1);
+[if_button,inter_299:com_113] ~bf_take(adamantite_bar, 1);
+[if_button,inter_299:com_104] ~bf_take(adamantite_bar, 28);
+[if_button,inter_299:com_95] ~bf_take(runite_bar, 1);
+[if_button,inter_299:com_114] ~bf_take(runite_bar, 1);
+[if_button,inter_299:com_105] ~bf_take(runite_bar, 28);
+[if_button,inter_299:com_96] ~bf_take(silver_bar, 1);
+[if_button,inter_299:com_115] ~bf_take(silver_bar, 1);
+[if_button,inter_299:com_106] ~bf_take(silver_bar, 28);
+[if_button,inter_299:com_97] ~bf_take(gold_bar, 1);
+[if_button,inter_299:com_116] ~bf_take(gold_bar, 1);
+[if_button,inter_299:com_107] ~bf_take(gold_bar, 28);
+
+// BFPlayerState.claimBars: not while they're hot, and no more than you have room for
+[proc,bf_take](namedobj $bar, int $want)
+if (%blast_furnace_bars_hot = ^bf_disp_pouring | %blast_furnace_bars_hot = ^bf_disp_hot) return;
+def_int $n = min(min($want, ~bf_bars($bar)), inv_freespace(inv));
+if (~bf_bars($bar) > 0 & $n < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+if ($n < 1) return;
+inv_add(inv, $bar, $n);
+~bf_bars_set($bar, calc(~bf_bars($bar) - $n));

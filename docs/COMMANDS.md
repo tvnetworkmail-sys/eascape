@@ -127,6 +127,10 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::hw05pack` | For the 2005 Halloween event: a zombie head, one of each of the seven sweets, 200 coins (to treat the children) and a spade (to dig a lost head up in the Lumbridge Swamp); it marks a head as caught |
 | `::hw05stage <n>` | Sets what the 2005 Halloween event has given you: 0 nothing (Scared emote locked, no head ever caught), 1 the Scared emote, 2 a head caught (a lost one can be dug up in the swamp), 3 both. It never adds or takes the head item |
 | `::hw05tele <n>` | Halloween 2005: 1 the Lumbridge Swamp zombies (Call-Over, Insult, Scare), 2 the trick-or-treating children in Lumbridge |
+| `::bfpack` | For the Blast Furnace: 99 Smithing, a hammer, 2 spades, a bucket of water, an empty bucket, ice gloves (they don't cool bars in 2005), 5,000 coins, 5 iron ore and 10 coal; in your bank 28 each of copper, tin, iron, silver, gold, mithril, adamantite and runite ore, 200 coal and 8 more spades. The machines need 30 Strength (pump), Agility (pedals), Firemaking (stove) and Crafting (repairs): `::setstat <skill> 30` |
+| `::bftele <n>` | Blast Furnace: 1 the foot of the stairs, 2 the conveyor belt, 3 the pedals, 4 the coke and stove, 5 the pump, 6 the temperature gauge, 7 the bar dispenser (the sink is just south-east), 8 Ordan and Jorzik, 9 outside the factory stairs in Keldagrim. `::bftele` alone lists them |
+| `::bfstate` | The Blast Furnace in this world (coke in the stove, stove and furnace heat 0-100, the broken-parts bits, ticks since someone pumped and pedalled) and yours (ore on the belt and in the furnace, bars waiting, the dispenser state 0 empty / 1 pouring / 2 hot / 3 cooled, fee ticks left) |
+| `::bfbreak <n>` | Blast Furnace: 0 mends everything, 1 breaks the pipe by the pot, 2 the pipe by the pump, 3 the drive belt, 4 the cogs; 5 fills the stove (hot); 6 sets the furnace to 60, inside the smelting range 51-66 |
 | `::tele barrows` | By Ahrim's mound |
 | `::tele bob` | Bob in Lumbridge (Barrows repairs) |
 | `::tele tzhaar` | Mor Ul Rek, by the Fight Cave entrance |

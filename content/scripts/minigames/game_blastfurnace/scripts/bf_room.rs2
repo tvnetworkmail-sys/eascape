@@ -1,0 +1,259 @@
+// EASCape: the Blast Furnace (Update:Blast Furnace, 23 August 2005), in Keldagrim under the
+// Consortium's factory. One furnace per world, worked by everyone in the room (the world vars in
+// blast_furnace.vars); your own ore and bars are in your own varps (the cache's blast_furnace_1-5
+// and blast_furnace_readings, and blast_furnace_inv for what is on the belt).
+//
+// The furnace's workings are 2009scape's (content/minigame/blastfurnace: BlastState.tick,
+// BlastFurnace.tick, BFSceneryController). 2009scape runs them from a world tick; we run them
+// from the softtimer of whoever is in the room first each tick (ours), so the furnace only runs
+// while someone is down there; when someone comes back it catches up (ours, ~bf_catch_up).
+//
+// Not in 2005, so not here: the coffer and the dwarves you can pay to work it (OSRS, 15 Sep 2016),
+// cooling bars with ice gloves (OSRS, 14 Apr 2016; never in RuneScape, RS wiki), the bank chest
+// (OSRS 2014, RS 2016) and Ordan un-noting ore (10 Dec 2007).
+
+[proc,bf_in_room](coord $c)(boolean)
+return(inzone(^bf_room_sw, ^bf_room_ne, $c));
+
+[proc,bf_enter]
+clearsofttimer(bf_room);
+softtimer(bf_room, 1);
+%bf_gauge = 0;
+%bf_belt_npc = null;
+
+[proc,bf_login]
+if (~bf_in_room(coord) = true) ~bf_enter;
+
+[proc,bf_leave]
+clearsofttimer(bf_room);
+%bf_gauge = 0;
+if (%bf_belt_npc ! null) {
+    if (npc_finduid(%bf_belt_npc) = true) npc_del;
+}
+%bf_belt_npc = null;
+
+[softtimer,bf_room]
+if (~bf_in_room(coord) = false) {
+    ~bf_leave;
+    return;
+}
+~bf_world_tick;
+~bf_belt_tick;
+~bf_bars_tick;
+~bf_gauge_update;
+
+// 2009scape BlastState.tick and BlastFurnace.tick, once a tick
+[proc,bf_world_tick]
+if (%bf_clock = map_clock) return;
+def_int $gap = calc(map_clock - %bf_clock);
+%bf_clock = map_clock;
+if ($gap > 1) ~bf_catch_up($gap);
+%bf_ticks = calc(%bf_ticks + 1);
+
+// someone has worked the pump or pedals this tick or last (their queues mark it each tick);
+// 2009scape: "if (state.beltBroken || state.cogBroken) pedaler = null", same for the pipes
+def_boolean $pumping = false;
+def_boolean $pedalling = false;
+if (%bf_pump_clock >= calc(map_clock - 1) & ~bf_pipes_ok = true) $pumping = true;
+if (%bf_pedal_clock >= calc(map_clock - 1) & ~bf_belt_ok = true) $pedalling = true;
+
+// the pump and pedals come back once nobody's on them (2009scape addScenery when the pulse stops)
+if (%bf_pump_clock < calc(map_clock - 1) & testbit(%bf_hidden, ^bf_hide_pump) = ^true) {
+    loc_add(^bf_pump_coord, blast_furnace_pump, 1, centrepiece_straight, 1);
+    %bf_hidden = clearbit(%bf_hidden, ^bf_hide_pump);
+}
+if (%bf_pedal_clock < calc(map_clock - 1) & testbit(%bf_hidden, ^bf_hide_pedals) = ^true) {
+    loc_add(^bf_pedal_coord, blast_furnace_pedals, 1, centrepiece_straight, 1);
+    %bf_hidden = clearbit(%bf_hidden, ^bf_hide_pedals);
+}
+
+// adjustStoveTemperature
+if (%bf_coke > 0) {
+    %bf_stove_temp = min(100, calc(%bf_stove_temp + 1));
+} else {
+    %bf_stove_temp = max(0, calc(%bf_stove_temp - 1));
+}
+// adjustFurnaceTemperature: only while pumping with nothing broken
+if ($pumping = true & %bf_broken = 0) {
+    if (%bf_stove_temp >= 67) {
+        %bf_furnace_temp = calc(%bf_furnace_temp + 3);
+    } else if (%bf_stove_temp >= 33) {
+        %bf_furnace_temp = calc(%bf_furnace_temp + 2);
+    } else if (%bf_stove_temp >= 1) {
+        %bf_furnace_temp = calc(%bf_furnace_temp + 1);
+    }
+} else {
+    %bf_furnace_temp = calc(%bf_furnace_temp - 1);
+}
+%bf_furnace_temp = max(0, min(100, %bf_furnace_temp));
+// checkForCokeDecrement: a spadeful burns every 10 ticks
+if (modulo(%bf_ticks, 10) = 0) %bf_coke = max(0, calc(%bf_coke - 1));
+// checkForBreakage: 1 in 50 a tick for a pipe while pumping, and for the drive belt (else the
+// cogs) while pedalling
+if ($pumping = true & random(50) = 0) {
+    if (random(2) = 0) {
+        %bf_broken = setbit(%bf_broken, ^bf_pot_pipe);
+    } else {
+        %bf_broken = setbit(%bf_broken, ^bf_pump_pipe);
+    }
+}
+if ($pedalling = true) {
+    if (random(50) = 0) {
+        %bf_broken = setbit(%bf_broken, ^bf_drive_belt);
+    } else if (random(50) = 0) {
+        %bf_broken = setbit(%bf_broken, ^bf_cogs);
+    }
+}
+// the belt turns only while pedalled and whole (BFSceneryController.updateAnimations)
+def_boolean $turning = false;
+if (%bf_pedal_clock >= calc(map_clock - 1) & ~bf_belt_ok = true) $turning = true;
+~bf_visuals($turning);
+// the foreman shouts now and then (2009scape BlastFurnaceForemanNPC: 1 in 20 a tick); what he
+// shouts is ours, picked from what's wrong (his lines are the OSRS wiki's)
+if (random(20) = 0) ~bf_foreman_shout;
+// a dwarven miner brings Ordan more ore about every minute (OSRS wiki, Ordan)
+if (modulo(%bf_ticks, 100) = 0) ~bf_ordan_restock;
+
+// ours: nobody was in the room for $gap ticks; the stove burnt on and the furnace cooled
+[proc,bf_catch_up](int $gap)
+def_int $coke_before = %bf_coke;
+%bf_coke = max(0, calc(%bf_coke - divide($gap, 10)));
+if ($coke_before > 0 & %bf_coke > 0) {
+    %bf_stove_temp = min(100, calc(%bf_stove_temp + $gap));
+} else {
+    %bf_stove_temp = max(0, calc(%bf_stove_temp - $gap));
+}
+%bf_furnace_temp = max(0, calc(%bf_furnace_temp - $gap));
+
+[proc,bf_pipes_ok]()(boolean)
+if (testbit(%bf_broken, ^bf_pot_pipe) = ^true | testbit(%bf_broken, ^bf_pump_pipe) = ^true) return(false);
+return(true);
+
+[proc,bf_belt_ok]()(boolean)
+if (testbit(%bf_broken, ^bf_drive_belt) = ^true | testbit(%bf_broken, ^bf_cogs) = ^true) return(false);
+return(true);
+
+// BFSceneryController: the stove's grate (updateStove), the broken parts (updateBreakable) and the
+// turning belt and cogs (updateAnimations). We change a loc only when it should look different, and
+// check them all every 50 ticks (ours) in case one went back by itself.
+[proc,bf_visuals](boolean $turning)
+def_int $look = 0;
+if (%bf_stove_temp >= 67) {
+    $look = 2;
+} else if (%bf_stove_temp >= 34) {
+    $look = 1;
+}
+def_boolean $check = false;
+if (modulo(%bf_ticks, 50) = 0) $check = true;
+if ($look ! %bf_stove_look | $check = true) {
+    ~bf_stove_set($look);
+    %bf_stove_look = $look;
+}
+if (%bf_broken ! %bf_broken_shown | $check = true) {
+    ~bf_part_set(^bf_pot_pipe_coord, blast_furnace_pipes2, blast_furnace_pipes2_broken, testbit(%bf_broken, ^bf_pot_pipe));
+    ~bf_part_set(^bf_pump_pipe_coord, blast_furnace_pipes6, blast_furnace_pipes6_broken, testbit(%bf_broken, ^bf_pump_pipe));
+    ~bf_part_set(^bf_drivebelt_coord, blast_furnace_conveyer_cogs, blast_furnace_conveyer_cogs_broken, testbit(%bf_broken, ^bf_drive_belt));
+    ~bf_part_set(^bf_cogs2_coord, blast_furnace_conveyer_cogs2, blast_furnace_conveyer_cogs2_broken, testbit(%bf_broken, ^bf_cogs));
+    %bf_broken_shown = %bf_broken;
+}
+def_int $turn = 0;
+if ($turning = true) $turn = 1;
+if ($turn ! %bf_belt_turning) {
+    ~bf_belt_anim($turning);
+    %bf_belt_turning = $turn;
+}
+
+[proc,bf_stove_set](int $look)
+def_loc $want = blast_furnace_stove_low;
+if ($look = 1) $want = blast_furnace_stove_medium;
+if ($look = 2) $want = blast_furnace_stove_full;
+if (loc_find(^bf_stove_coord, blast_furnace_stove_low) = true) {
+    if ($want ! blast_furnace_stove_low) loc_change($want, 1000000);
+    return;
+}
+if (loc_find(^bf_stove_coord, blast_furnace_stove_medium) = true) {
+    if ($want ! blast_furnace_stove_medium) loc_change($want, 1000000);
+    return;
+}
+if (loc_find(^bf_stove_coord, blast_furnace_stove_full) = true) {
+    if ($want ! blast_furnace_stove_full) loc_change($want, 1000000);
+}
+
+[proc,bf_part_set](coord $c, loc $whole, loc $broken, int $is_broken)
+if ($is_broken = ^true) {
+    if (loc_find($c, $whole) = true) loc_change($broken, 1000000);
+    return;
+}
+if (loc_find($c, $broken) = true) loc_change($whole, 1000000);
+
+// 2009scape BFSceneryController.updateAnimations: the three belt sections, and the drive belt and
+// cogs; stopped, they go back to the cache's _end anims
+[proc,bf_belt_anim](boolean $turning)
+def_seq $belt = blast_furnace_conveyer_belt_end;
+def_seq $cogs = blast_furnace_conveyer_cogs_end;
+if ($turning = true) {
+    $belt = blast_furnace_conveyer_belt;
+    $cogs = blast_furnace_conveyer_cogs;
+}
+if (loc_find(^bf_belt1_coord, blast_furnace_conveyer_belt_clickable) = true) loc_anim($belt);
+if (loc_find(^bf_belt2_coord, blast_furnace_conveyer_belt) = true) loc_anim($belt);
+if (loc_find(^bf_belt3_coord, blast_furnace_conveyer_belt) = true) loc_anim($belt);
+if (loc_find(^bf_drivebelt_coord, blast_furnace_conveyer_cogs) = true) loc_anim($cogs);
+if (loc_find(^bf_cogs2_coord, blast_furnace_conveyer_cogs2) = true) loc_anim($cogs);
+if (loc_find(^bf_cogs3_coord, blast_furnace_conveyer_cogs3) = true) loc_anim($cogs);
+if (loc_find(^bf_cogs4_coord, blast_furnace_conveyer_cogs4) = true) loc_anim($cogs);
+if (loc_find(^bf_cogs5_coord, blast_furnace_conveyer_cogs5) = true) loc_anim($cogs);
+
+// the foreman's overhead lines (OSRS wiki, Transcript:Blast Furnace Foreman); which one, ours
+[proc,bf_foreman_shout]
+if (npc_find(^bf_foreman_coord, blast_furnace_instructor, 10, 0) = false) return;
+if (testbit(%bf_broken, ^bf_drive_belt) = ^true | testbit(%bf_broken, ^bf_cogs) = ^true) {
+    npc_say("Somebody fix the conveyer belt!");
+} else if (~bf_pipes_ok = false) {
+    npc_say("Somebody fix that pipe!");
+} else if (%bf_coke = 0) {
+    npc_say("Somebody refuel the stove!");
+} else if (%bf_belt_waiting >= calc(map_clock - 1) & %bf_pedal_clock < calc(map_clock - 1)) {
+    npc_say("Somebody work the conveyer belt!");
+} else if (%bf_pump_clock < calc(map_clock - 1)) {
+    npc_say("Somebody operate the pump!");
+} else if (%bf_furnace_temp > 66) {
+    npc_say("Keep the temperature controlled.");
+} else if (random(2) = 0) {
+    npc_say("That's it, keep it going!");
+} else {
+    npc_say("Work faster!");
+}
+
+// OSRS wiki (Ordan): a dwarven miner comes about every minute with one kind of ore; RS wiki
+// (Ordan): 20 to 40 of it, and at 100 or more he sends them to storage. The miners are the
+// cache's (npc_2550-2552, "Dwarven Miner"); where one stands and for how long is ours.
+[proc,bf_ordan_restock]
+if (npc_find(^bf_ordan_coord, smithing_guild_ore_seller, 5, 0) = false) return;
+def_namedobj $ore = coal;
+switch_int (random(7)) {
+    case 0 : $ore = copper_ore;
+    case 1 : $ore = tin_ore;
+    case 2 : $ore = iron_ore;
+    case 3 : $ore = mithril_ore;
+    case 4 : $ore = silver_ore;
+    case 5 : $ore = gold_ore;
+    case default : $ore = coal;
+}
+def_int $have = inv_total(smithing_guild_ore_seller, $ore);
+if ($have >= 100) {
+    npc_say("Thanks, I'll send them to storage.");
+} else {
+    inv_add(smithing_guild_ore_seller, $ore, min(calc(20 + random(21)), calc(100 - $have)));
+    npc_say("Thanks.");
+}
+def_coord $at = map_findsquare(^bf_ordan_coord, 1, 2, ^map_findsquare_lineofwalk);
+if ($at = null) return;
+def_npc $miner = npc_2550;
+switch_int (random(3)) {
+    case 1 : $miner = npc_2551;
+    case 2 : $miner = npc_2552;
+}
+npc_add($at, $miner, 8);
+npc_setmode(null);
+npc_facesquare(^bf_ordan_coord);

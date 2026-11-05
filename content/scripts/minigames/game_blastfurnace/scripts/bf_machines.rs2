@@ -1,0 +1,253 @@
+// EASCape: the Blast Furnace's machinery: the pump, the pedals, the coke and the stove, the
+// temperature gauge, the broken parts and the sink. Levels, xp, messages and anims are 2009scape's
+// (BlastFurnaceListeners.kt, BlastFurnace.updatePumper/updatePedaler) unless said; the pump and
+// pedal anims hold the cache's blast_furnace_pump_held / blast_furnace_conveyor_held, so the loc is
+// taken away while someone works it, as 2009scape does.
+
+[proc,bf_seq_ticks](seq $seq)(int)
+return(max(1, divide(calc(seqlength($seq) + 29), 30)));
+
+// ---- the pump: 30 Strength; 4 Strength xp every 2 ticks while the stove's warm; at full heat a
+// 1 in 5 chance of 20% of your hitpoints and you stop
+[oploc1,blast_furnace_pump]
+if (stat(strength) < 30) {
+    mes("You need a Strength level of 30 to do that.");
+    return;
+}
+if (%bf_pump_clock >= calc(map_clock - 1) & %bf_pumper ! uid) {
+    mes("Someone else is already doing that.");
+    return;
+}
+p_telejump(^bf_pump_coord);
+facesquare(^bf_pump_face);
+if (loc_find(^bf_pump_coord, blast_furnace_pump) = true) {
+    loc_del(1000000);
+    %bf_hidden = setbit(%bf_hidden, ^bf_hide_pump);
+}
+%bf_pumper = uid;
+%bf_pump_clock = map_clock;
+anim(blast_furnace_human_air_pump, 0);
+%bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_air_pump));
+weakqueue*(bf_pump, 1)();
+
+[queue,bf_pump]
+if (coord ! ^bf_pump_coord) return;
+%bf_pumper = uid;
+%bf_pump_clock = map_clock;
+if (map_clock >= %bf_anim_end) {
+    facesquare(^bf_pump_face);
+    anim(blast_furnace_human_air_pump, 0);
+    %bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_air_pump));
+}
+if (modulo(map_clock, 2) = 0 & ~bf_pipes_ok = true & %bf_stove_temp > 0) {
+    if (%bf_furnace_temp >= 100 & random(5) = 0) {
+        %bf_pump_clock = calc(map_clock - 2);
+        anim(null, 0);
+        damage(uid, ^hitmark_damage, max(1, divide(calc(stat_base(hitpoints) * 20), 100)));
+        mes("A blast of hot air cooks you a bit.");
+        // OSRS wiki overhead (Transcript:Blast Furnace Foreman)
+        if (npc_find(^bf_foreman_coord, blast_furnace_instructor, 10, 0) = true) npc_say("You fools, you let it overheat!");
+        return;
+    }
+    stat_advance(strength, 40);
+}
+weakqueue*(bf_pump, 1)();
+
+// ---- the pedals: 30 Agility (2009scape has "> 30"; the wiki and the foreman say 30); 2 Agility
+// xp and 2% run energy every 2 ticks while they move someone's ore; off when you're out of energy
+[oploc1,blast_furnace_pedals]
+if (stat(agility) < 30) {
+    mes("You need an Agility level of 30 to do that.");
+    return;
+}
+if (%bf_pedal_clock >= calc(map_clock - 1) & %bf_pedaler ! uid) {
+    mes("Someone else is already doing that.");
+    return;
+}
+p_telejump(^bf_pedal_coord);
+facesquare(^bf_pedal_face);
+if (loc_find(^bf_pedal_coord, blast_furnace_pedals) = true) {
+    loc_del(1000000);
+    %bf_hidden = setbit(%bf_hidden, ^bf_hide_pedals);
+}
+%bf_pedaler = uid;
+%bf_pedal_clock = map_clock;
+anim(blast_furnace_human_conveyer_cycle, 0);
+%bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_conveyer_cycle));
+weakqueue*(bf_pedal, 1)();
+
+[queue,bf_pedal]
+if (coord ! ^bf_pedal_coord) return;
+if (runenergy < 100) {
+    anim(null, 0);
+    %bf_pedal_clock = calc(map_clock - 2);
+    p_telejump(^bf_pedal_dismount);
+    return;
+}
+%bf_pedaler = uid;
+%bf_pedal_clock = map_clock;
+if (map_clock >= %bf_anim_end) {
+    facesquare(^bf_pedal_face);
+    anim(blast_furnace_human_conveyer_cycle, 0);
+    %bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_conveyer_cycle));
+}
+if (modulo(map_clock, 2) = 0 & ~bf_belt_ok = true & %bf_belt_moved >= calc(map_clock - 2)) {
+    stat_advance(agility, 20);
+    healenergy(-200);
+}
+weakqueue*(bf_pedal, 1)();
+
+// ---- the coke: a spade becomes a spadeful of coke (the cache's blast_furnace_coke_spade)
+[oploc1,blast_furnace_coke] @bf_collect_coke;
+[oplocu,blast_furnace_coke]
+if (last_useitem ! spade) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@bf_collect_coke;
+
+[label,bf_collect_coke]
+if (inv_total(inv, spade) < 1) {
+    mes("You need a spade to do this!");
+    return;
+}
+anim(human_shovel_coke_up, 0);
+inv_del(inv, spade, 1);
+inv_add(inv, blast_furnace_coke_spade, 1);
+p_delay(0);
+
+[opheld1,blast_furnace_coke_spade]
+inv_setslot(inv, last_slot, spade, 1);
+
+// ---- the stove: 30 Firemaking, 5 xp a spadeful; it holds 15 (2009scape BlastConsts.COKE_LIMIT;
+// the wikis say about 30)
+[oploc1,blast_furnace_stove_low] @bf_refuel;
+[oploc1,blast_furnace_stove_medium] @bf_refuel;
+[oploc1,blast_furnace_stove_full] @bf_refuel;
+[oplocu,blast_furnace_stove_low] @bf_refuel_use;
+[oplocu,blast_furnace_stove_medium] @bf_refuel_use;
+[oplocu,blast_furnace_stove_full] @bf_refuel_use;
+
+[label,bf_refuel_use]
+if (last_useitem ! blast_furnace_coke_spade) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@bf_refuel;
+
+[label,bf_refuel]
+if (inv_total(inv, blast_furnace_coke_spade) < 1) {
+    mes("You need some coke to do that!");
+    return;
+}
+if (%bf_coke >= ^bf_coke_limit) {
+    mes("The stove is already full of coke!");
+    return;
+}
+if (stat(firemaking) < 30) {
+    mes("You need a Firemaking level of 30 to do this.");
+    return;
+}
+anim(human_shovel_coke_down, 0);
+p_delay(0);
+if (inv_total(inv, blast_furnace_coke_spade) < 1) return;
+inv_del(inv, blast_furnace_coke_spade, 1);
+inv_add(inv, spade, 1);
+anim(human_shovel_coke_fin, 0);
+stat_advance(firemaking, 50);
+%bf_coke = min(^bf_coke_limit, calc(%bf_coke + 1));
+
+// ---- the temperature gauge: the cache's inter_301; its needle is anim blast_furnace_temp_gauge1-101
+// (2009scape: 2452 + the temperature, every tick). The two flags are the cache's
+// temp_gauge_flag_pipe_broken_out/in (left, com_3) and temp_gauge_flag_fuel_low_out/in (right,
+// com_2), the sides the OSRS wiki gives; when the fuel flag comes out (the stove has gone out) is ours.
+[oploc1,blast_furnace_gauge]
+if_openmain(inter_301);
+%bf_gauge = 1;
+%blast_furnace_temperature_reading = %bf_furnace_temp;
+if_setanim(inter_301:com_4, enum(int, seq, bf_gauge_seq, %bf_furnace_temp));
+%blast_furnace_broken_pipe_reading = 0;
+%blast_furnace_fuel_low_reading = 0;
+~bf_gauge_flags;
+
+[if_close,inter_301]
+%bf_gauge = 0;
+
+[proc,bf_gauge_update]
+if (%bf_gauge ! 1) return;
+if (%blast_furnace_temperature_reading ! %bf_furnace_temp) {
+    %blast_furnace_temperature_reading = %bf_furnace_temp;
+    if_setanim(inter_301:com_4, enum(int, seq, bf_gauge_seq, %bf_furnace_temp));
+}
+~bf_gauge_flags;
+
+[proc,bf_gauge_flags]
+def_int $pipe = 0;
+if (~bf_pipes_ok = false) $pipe = 1;
+if ($pipe ! %blast_furnace_broken_pipe_reading) {
+    %blast_furnace_broken_pipe_reading = $pipe;
+    if ($pipe = 1) {
+        if_setanim(inter_301:com_3, temp_gauge_flag_pipe_broken_out);
+    } else {
+        if_setanim(inter_301:com_3, temp_gauge_flag_pipe_broken_in);
+    }
+}
+def_int $fuel = 0;
+if (%bf_coke = 0) $fuel = 1;
+if ($fuel ! %blast_furnace_fuel_low_reading) {
+    %blast_furnace_fuel_low_reading = $fuel;
+    if ($fuel = 1) {
+        if_setanim(inter_301:com_2, temp_gauge_flag_fuel_low_out);
+    } else {
+        if_setanim(inter_301:com_2, temp_gauge_flag_fuel_low_in);
+    }
+}
+
+// ---- the broken parts: 30 Crafting and a hammer, 50 Crafting xp
+[oploc1,blast_furnace_pipes2_broken] @bf_repair(^bf_pot_pipe);
+[oploc1,blast_furnace_pipes6_broken] @bf_repair(^bf_pump_pipe);
+[oploc1,blast_furnace_conveyer_cogs_broken] @bf_repair(^bf_drive_belt);
+[oploc1,blast_furnace_conveyer_cogs2_broken] @bf_repair(^bf_cogs);
+[oplocu,blast_furnace_pipes2_broken] @bf_repair_use(^bf_pot_pipe);
+[oplocu,blast_furnace_pipes6_broken] @bf_repair_use(^bf_pump_pipe);
+[oplocu,blast_furnace_conveyer_cogs_broken] @bf_repair_use(^bf_drive_belt);
+[oplocu,blast_furnace_conveyer_cogs2_broken] @bf_repair_use(^bf_cogs);
+
+[label,bf_repair_use](int $part)
+if (last_useitem ! hammer) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@bf_repair($part);
+
+[label,bf_repair](int $part)
+if (stat(crafting) < 30) {
+    ~mesbox("I need 30 Crafting in order to do this");
+    return;
+}
+if (testbit(%bf_broken, $part) ! ^true) {
+    mes("You can't fix something that isn't broken.");
+    return;
+}
+if (inv_total(inv, hammer) < 1) {
+    mes("I need a hammer to do this!");
+    return;
+}
+%bf_broken = clearbit(%bf_broken, $part);
+stat_advance(crafting, 500);
+
+// ---- the sink (2009scape: "You fill the bucket from the sink.")
+[oploc1,blast_furnace_sink] @bf_sink;
+[oplocu,blast_furnace_sink]
+if (last_useitem ! bucket_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@bf_sink;
+
+[label,bf_sink]
+if (inv_total(inv, bucket_empty) < 1) {
+    mes("You need a bucket to fill."); // ours
+    return;
+}
+~fill_container_water_once(bucket_empty, "sink");
