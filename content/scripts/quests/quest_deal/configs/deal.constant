@@ -1,0 +1,64 @@
+// Rum Deal (31 October 2005). The stage is the 377 cache's own %deal_quest (varp 600, Void's
+// rum_deal varp 600 with the same twenty values, 0 unstarted to 19 completed). The rest lives in
+// the cache's deal_var varbits, which are Void's rum_deal_* varbits 1354-1366 by id:
+// deal_barrel (the creatures in the pressure barrel, 0-5; the lever shows "up" at 5),
+// deal_multi_hopper (the brewing control: 0 still, 1 possessed, 2 working), deal_squidfish
+// (unused, as in Void), deal_slug and deal_thulhu (Sluglings and Karamthulhu in the barrel),
+// deal_multi_pirate_a-f (each zombie swab intimidated), deal_diversion (unused, as in Void) and
+// deal_farming (the blindweed patch: 0-2 weeds, 3 weeded, 4 seed, 5 fully grown).
+^deal_not_started = 0
+^deal_agreed = 1            // agreed to help Pete find his family sword
+^deal_barrelor = 2          // agreed to slay Barrelor the Destroyer
+^deal_met_braindeath = 3    // woke in the brewery, no room for the seed
+^deal_seeds = 4             // given the blindweed seed
+^deal_grown = 5             // picked the blindweed
+^deal_shown = 6             // shown it to Captain Braindeath: to the hopper
+^deal_blindweed_added = 7
+^deal_fetch_water = 8       // to the stagnant lake
+^deal_collected_water = 9
+^deal_water_added = 10
+^deal_catch = 11            // five sea creatures for the pressure barrel
+^deal_pressurised = 12
+^deal_bless_wrench = 13     // the wrench, Davey, and the Evil Spirit
+^deal_spirit_banished = 14
+^deal_kill_spider = 15
+^deal_spider_added = 16
+^deal_collect_swill = 17    // the 'rum' for Captain Donnie
+^deal_told_donnie = 18
+^deal_complete = 19
+^deal_questpoints = 2
+
+// deal_farming (the cache's multiloc deal_blindweed: weeds3, weeds2, weeds1, empty, seed, grown)
+^deal_patch_weeded = 3
+^deal_patch_seed = 4
+^deal_patch_grown = 5
+// Void FarmingPatches.kt: the blindweed patch grows at the flower patches' rate (Void's
+// farming.growth.mins, 5 minutes); the OSRS wiki: "Wait about 5 minutes (or a few seconds)"
+^deal_growth_ticks = 500
+
+// places (the 377 map's spawns and locs; Void's tiles)
+^deal_pete_phasmatys = 0_57_55_32_17        // Pirate Pete on the dock north of Port Phasmatys
+^deal_phasmatys_landing = 0_57_55_32_16     // Void: where island Pete drops you (3680,3536)
+^deal_island_landing = 1_33_79_50_58        // Void: where Pete drops you on the island (2162,5114,1)
+^deal_braindeath_spot = 1_33_79_32_52       // Void: where you wake, south of the Captain (2144,5108,1)
+^deal_braindeath = 1_33_79_32_53            // Captain Braindeath (the map's spawn)
+^deal_intro_watch = 1_33_79_30_49           // Void: the intro cutscene's player square (2142,5105,1)
+^deal_intro_pete = 1_33_79_36_52            // Void: Pete in the intro cutscene (2148,5108,1)
+^deal_intro_pete_to = 1_33_79_32_55         // Void: Pete walks up to the Captain (2144,5111,1)
+^deal_protest_watch = 0_33_79_40_42         // Void: hidden here for the protest cutscene (2152,5098,0)
+^deal_protest_cam = 0_33_79_33_32           // Void: camera (2145,5088)
+^deal_protest_look = 0_33_79_33_10          // Void: looking at (2145,5066)
+^deal_protest_cam2 = 0_33_79_44_32          // Void: then over to (2156,5088)
+^deal_brew_cam = 1_33_79_32_50              // Void: the brewing cutscene camera (2144,5106)
+^deal_brew_look = 1_33_79_32_43             // Void: looking at (2144,5099)
+^deal_spirit_area = 1_33_79_31_42           // Void: the Evil Spirit appears in 4x4 from here (2143,5098,1)
+^deal_pressure_barrel = 2_33_79_29_46       // the map's deal_pressure (Void 2141,5102,2)
+^deal_davey = 1_33_79_20_44                 // Davey (the map's spawn)
+^deal_luke = 0_33_79_8_40                   // 50% Luke (the map's spawn)
+^deal_patch = 0_33_79_50_13                 // the blindweed patch (the map's deal_blindweed)
+^deal_stagnant_lake = 0_33_80_21_41         // the stagnant lake (the map's deal_stagnant)
+^deal_donnie = 0_33_79_38_22                // Captain Donnie (the map's spawn)
+^deal_hopper = 2_33_79_30_46                // the intake hopper (the map's deal_hopper)
+^deal_cupboard = 0_33_79_45_37              // the basement tool cupboard (the map's deal_broomcupboard)
+^deal_squid_spot = 0_33_79_50_5             // a fishing spot (the map's deal_squid)
+^deal_gate_z = 5098                         // Void: north of this is outside the compound

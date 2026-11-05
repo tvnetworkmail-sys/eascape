@@ -1,0 +1,277 @@
+// EASCape: Rum Deal - Pirate Pete (Void PiratePete.kt): the sob story at Port Phasmatys, the
+// knock on the head, the cutscene in the brewery and the boat both ways afterwards. The cache's
+// deal_pete stands on the dock north of Port Phasmatys, deal_island_pete on Braindeath Island.
+
+[opnpc1,deal_pete] @deal_pete_talk;
+[opnpc1,deal_island_pete] @deal_pete_talk;
+
+[label,deal_pete_talk]
+switch_int (%deal_quest) {
+    case ^deal_not_started :
+        ~chatplayer("<p,happy>Hello there!");
+        ~chatnpc("<p,neutral>Mornin'.");
+        // Void: Zogre Flesh Eaters and 42 Slayer to start; ours: Priest in Peril too (the OSRS wiki)
+        if (%zogre < ^zogre_complete | stat_base(slayer) < 42 | %priestperil < ^priestperil_complete) {
+            ~chatplayer("<p,quiz>Got any quests?");
+            ~chatnpc("<p,shifty>I may have a quest, but you don't look like you'd be able handle the kind of monsters I have problems with.");
+            return;
+        }
+        @deal_pete_offer;
+    case ^deal_agreed :
+        ~chatplayer("<p,neutral>Had any luck finding someone to slay the demon?");
+        ~chatnpc("<p,quiz>What?");
+        ~chatnpc("<p,happy>Oh! Yes! The demon, with the oppression and stuff!");
+        ~chatnpc("<p,sad>No, not yet. Why?");
+        switch_int (~p_choice2("Because I came to offer to help.", 1, "No reason.", 2)) {
+            case 1 :
+                ~chatplayer("<p,happy>Because I came to offer to help.");
+                ~deal_stage(^deal_barrelor);
+                @deal_pete_payment;
+            case 2 :
+                ~chatplayer("<p,neutral>No reason. I was just in the area and I thought I would ask.");
+                ~chatnpc("<p,quiz>I see...");
+                @deal_pete_heroic;
+        }
+    case ^deal_barrelor :
+        ~chatplayer("<p,happy>Hello again!");
+        ~chatnpc("<p,neutral>Oh, it's you again.");
+        ~chatnpc("<p,neutral>So, what brings you down here today?");
+        switch_int (~p_choice2("I've decided to help you for free.", 1, "No reason.", 2)) {
+            case 1 :
+                ~chatplayer("<p,happy>I've decided to help you for free! I will dispose of this evil half-brother of yours and leave you what little money is left to feed your family.");
+                @deal_pete_setoff;
+            case 2 :
+                ~chatplayer("<p,neutral>No reason. I was just in the area and I thought I would ask.");
+                ~chatnpc("<p,quiz>I see...");
+                @deal_pete_heroic;
+        }
+}
+// Void: once you have been to the island, Pete rows you either way
+~chatplayer("<p,quiz>Do I know you?");
+~chatnpc("<p,happy>Yes, you owe me some money.");
+if (npc_type = deal_island_pete) {
+    ~chatnpc("<p,quiz>Want a lift to Port Phasmatys?");
+} else {
+    ~chatnpc("<p,quiz>Want a lift to Braindeath Island?");
+    ~chatplayer("<p,quiz>Well, possibly, but could I go to Mos Le'Harmless instead?");
+    ~chatnpc("<p,neutral>Nope. It's Braindeath island or nothing. Interested?");
+}
+switch_int (~p_choice4("Okay!", 1, "Not now", 2, "Why do I get a headache every time I see you?", 3, "Are you any relation to Party Pete?", 4)) {
+    case 1 :
+        ~chatplayer("<p,happy>Okay!");
+        if (npc_type = deal_island_pete) @deal_pete_travel(^deal_phasmatys_landing);
+        @deal_pete_travel(^deal_island_landing);
+    case 2 :
+        ~chatplayer("<p,sad>I'm getting an awful headache talking to you. Any idea why?");
+        ~chatnpc("<p,shifty>No idea whatsoever.");
+    case 3 :
+        ~chatplayer("<p,quiz>Why do I get a headache every time I see you?");
+        ~chatnpc("<p,neutral>Well, it's possibly the weight of all of your expensive items giving you a sore back.");
+        ~chatnpc("<p,shifty>As a doctor I can tell you that sometimes a bad back can manifest as a headache.");
+        ~chatplayer("<p,quiz>You're a doctor?");
+        ~chatnpc("<p,shifty>I'm on a break.");
+        ~chatnpc("<p,happy>Regardless, I can tell you that if you hand me your most expensive items, then the pain will disappear.");
+        ~chatnpc("<p,happy>CoughonceyouturnaroundagainCough!");
+    case 4 :
+        ~chatplayer("<p,quiz>Are you any relation to Party Pete?");
+        ~chatnpc("<p,sad>Yes I am, he's my cousin.");
+        ~chatplayer("<p,quiz>Well, you don't sound too happy about it. What happened?");
+        ~chatnpc("<p,sad>Well, I arranged with all my friends to have a party at his place.");
+        ~chatnpc("<p,sad>But then I humiliated myself by trying to dance with the knights.");
+        ~chatnpc("<p,sad>All of them collapsed on me in a horrific, jangling pile.");
+        ~chatnpc("<p,sad>I tried to salvage the night by having all the balloons come down...");
+        ~chatplayer("<p,quiz>So what happened?");
+        ~chatnpc("<p,angry>I didn't know that someone had swapped the balloons with cannonballs!");
+        ~chatnpc("<p,sad>The casualties were horrific...");
+        ~chatnpc("<p,sad>That was the worst fifth birthday party in the history of the world.");
+        ~chatplayer("<p,neutral>I'm sure it wasn't that bad.");
+        ~chatnpc("<p,angry>Not according to the Official History of Gielinor!");
+        ~chatnpc("<p,sad>Every edition... the pictures bring it all back...");
+        ~chatplayer("<p,shock>Ouch...");
+}
+
+// ---------------------------------------------------------------- the sob story
+[label,deal_pete_offer]
+~chatnpc("<p,shifty>Hey...you're an adventurer, right?");
+~chatplayer("<p,happy>Yes I am!");
+~chatplayer("<p,neutral>Got any quests for me?");
+~chatnpc("<p,neutral>Yeah, I do, as a matter of fact!");
+~chatnpc("<p,neutral>(Ahem.)");
+~chatnpc("<p,sad>I am a poor, dispossessed nobleman, forced by circumstance to lurk in the middle of nowhere, soliciting help from passers-by.");
+~chatnpc("<p,neutral>You see, my fiendish half-brother has seized my estates and forced me into exile.");
+~chatnpc("<p,neutral>The simple lemon farmers suffer under his tyrannous yoke, and only a brave adventurer can lift his iron boot from the neck of the poor.");
+~chatnpc("<p,neutral>To reclaim my lands I will need to have my family sword returned to me so that I may present it as proof of my rulership.");
+~chatnpc("<p,quiz>Will you help me find my family sword?");
+switch_int (~p_choice2("Yes!", 1, "No.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Yes! Your uncorroborated sob story has touched my heart. When do we set off?");
+        ~deal_stage(^deal_agreed);
+        @deal_pete_barrelor;
+    case 2 :
+        ~chatplayer("<p,neutral>No, I don't think I'll help you out this time.");
+        @deal_pete_heroic;
+}
+
+[label,deal_pete_barrelor]
+~chatnpc("<p,happy>You'll help! Wonderful!");
+~chatnpc("<p,sad>But, alas, my half brother has a powerful ally, the mighty demon...");
+~chatnpc("<p,shifty>Err...");
+~chatnpc("<p,neutral>Err...Barrelor!");
+~chatnpc("<p,sad>Yes, the mighty, fearsome, tall, deadly, oaken, round demon Barrelor the Destroyer.");
+~chatplayer("<p,quiz>Barrelor?");
+~chatnpc("<p,neutral>That's what I said!");
+~chatnpc("<p,sad>Barrelor is an awesome opponent, and to reclaim my family sword you will need to defeat him, for he guards it within the deadly Trapped Pit of Barrelor.");
+~chatnpc("<p,quiz>Wanna give it a shot?");
+switch_int (~p_choice2("Of course, I fear no demon!", 1, "Not a chance, this sounds too dangerous.", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Of course, I fear no demon!");
+        ~deal_stage(^deal_barrelor);
+        @deal_pete_payment;
+    case 2 :
+        ~chatplayer("<p,neutral>Not a chance, this sounds too dangerous.");
+        @deal_pete_heroic;
+}
+
+[label,deal_pete_payment]
+~chatnpc("<p,neutral>Atta <text_gender("boy", "girl")>!");
+~chatnpc("<p,neutral>When I am reinstated in my rightful place, I will not be a very wealthy man, as my half-brother has squandered my family fortune.");
+~chatnpc("<p,neutral>However, I will gladly give you every bent penny of what is left, and starve in the gutter with my many adorable children if you say you will help me.");
+switch_int (~p_choice2("Nonsense! Keep the money!", 1, "Great, I'll take the cash in used coins please.", 2)) {
+    case 1 :
+        ~chatplayer("<p,happy>Nonsense! Keep the money! I will dispose of this evil half-brother of yours and leave you what little money is left to feed your family.");
+        @deal_pete_setoff;
+    case 2 :
+        ~chatplayer("<p,neutral>Great, I'll take the cash in used coins please.");
+        ~chatnpc("<p,shifty>Er...");
+        @deal_pete_heroic;
+}
+
+[label,deal_pete_heroic]
+~chatnpc("<p,neutral>Look, I think I'll wait here for someone a little more... you know...");
+~chatnpc("<p,neutral>...heroic.");
+
+// ---------------------------------------------------------------- off to the island
+[label,deal_pete_setoff]
+~chatnpc("<p,neutral>Wonderful! Just pick up your diversion and we'll leave!");
+~chatplayer("<p,quiz>What diversion?");
+if_close;
+~deal_knockout;
+p_delay(2);
+@deal_intro_cutscene;
+
+// Void: you look away, Pete hits you (mace_pummel, the stun graphic and the cudgel)
+[proc,deal_knockout]
+facesquare(movecoord(coord, 0, 0, -1));
+p_delay(1);
+say("Ow!");
+npc_anim(human_blunt_pound, 0);
+spotanim_pl(stunned_thieving, 92, 20);
+sound_synth(cudgel, 1, 15);
+~fade_out;
+
+// Void travel: the bottle again, and you wake on the other side
+[label,deal_pete_travel](coord $to)
+if (random(2) = 0) {
+    ~chatnpc("<p,quiz>Err... sure...");
+    ~chatplayer("<p,quiz>Why are you looking over my shoulder?");
+} else {
+    ~chatnpc("<p,happy>Well I'll be more than happy to...");
+    ~chatnpc("<p,shock>Egad! Did you see that?");
+    ~chatplayer("<p,quiz>What? Where?");
+}
+if_close;
+~deal_knockout;
+p_delay(3);
+p_telejump($to);
+p_delay(3);
+~fade_in;
+facesquare(movecoord(coord, 0, 0, 1));
+p_delay(2);
+if_openoverlay(null);
+// Void: Pete on the other side asks after you
+if (npc_find(coord, deal_island_pete, 8, 0) = false & npc_find(coord, deal_pete, 8, 0) = false) {
+    ~chatplayer("<p,drunk>Ooooh... my head...");
+    return;
+}
+~chatplayer("<p,drunk>Ooooh... my head...");
+~chatnpc("<p,quiz>Are you ok?  You, errr...");
+switch_int (random(3)) {
+    case 0 : ~chatnpc("<p,shifty>...missed your mouth while drinking from a bottle. Hence the bottle-shaped bruises.");
+    case 1 :
+        ~chatnpc("<p,shifty>...hit your head on my oars while I was rowing over.");
+        ~chatnpc("<p,shifty>Twice.");
+    case default : ~chatnpc("<p,shifty>...slipped and fell down some stairs.");
+}
+~chatplayer("<p,neutral>Wow... I'm lucky I wasn't seriously hurt!");
+
+// ---------------------------------------------------------------- the cutscene in the brewery
+// Void introCutscene: Pete reports to Captain Braindeath while you lie tied up. Void plays it in
+// an instance; ours: you are hidden in the brewery itself and a second Pete walks in (his lines are
+// said aloud as Void's are, and play on their own, a page every few ticks).
+[label,deal_intro_cutscene]
+%deal_cutscene = 1;
+minimap_toggle(2);
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump(^deal_intro_watch);
+npc_add(^deal_intro_pete, deal_pete, 100);
+def_npc_uid $pete = npc_uid;
+npc_facesquare(movecoord(^deal_intro_pete, 0, 0, 1));
+def_npc_uid $captain = null;
+if (npc_find(^deal_braindeath, deal_captian_braindeath, 6, 0) = true) $captain = npc_uid;
+cam_moveto(1_33_79_31_51, 305, 254, 254);
+cam_lookat(1_33_79_31_55, 100, 254, 254);
+p_delay(2);
+~fade_in;
+~deal_cs($captain, "Captain Braindeath", deal_captian_braindeath, "<p,sad>Arrr... 'Tis lookin' bleak...", "Arrr... 'Tis lookin' bleak...");
+~deal_cs($pete, "Pirate Pete", deal_pete, "<p,happy>Cap'n!", "Cap'n!");
+if (npc_finduid($pete) = true) npc_walk(^deal_intro_pete_to);
+~deal_cs($pete, "Pirate Pete", deal_pete, "<p,neutral>Good news Cap'n!", "Good news Cap'n!");
+~deal_cs($pete, "Pirate Pete", deal_pete, "<p,neutral>I found us a hero down by the docks!", "I found us a hero down by the docks!");
+if (npc_finduid($pete) = true) npc_facesquare(^deal_braindeath);
+if (npc_finduid($captain) = true) npc_facesquare(^deal_intro_pete_to);
+~deal_cs($captain, "Captain Braindeath", deal_captian_braindeath, "<p,quiz>Be they heroic, brave and true?", "Be they heroic, brave and true?");
+~deal_cs($pete, "Pirate Pete", deal_pete, "<p,happy>Aye! They also be gullible, tied up and unconscious!", "Aye! They also be gullible, tied up and unconscious!");
+~deal_cs($pete, "Pirate Pete", deal_pete, "<p,happy>They were willing to help out some random stranger with a good enough sob story, so I smacked them with a bottle and rowed them over.", "They were willing to help out some random stranger with a good enough sob story, so I smacked them with a bottle and rowed them over.");
+~deal_cs($captain, "Captain Braindeath", deal_captian_braindeath, "<p,happy>Brilliant! The island's location will remain a secret!", "Brilliant! The island's location will remain a secret!");
+~deal_cs($captain, "Captain Braindeath", deal_captian_braindeath, "<p,happy>Bring 'em here and wake 'em up.", "Bring 'em here and wake 'em up.");
+~deal_cs($captain, "Captain Braindeath", deal_captian_braindeath, "<p,happy>We may make it through this yet...", "We may make it through this yet...");
+if_close;
+~fade_out;
+p_delay(3);
+if (npc_finduid($pete) = true) npc_del;
+cam_reset;
+p_transmogrify(null);
+minimap_toggle(0);
+p_telejump(^deal_braindeath_spot);
+%deal_cutscene = 0;
+facesquare(^deal_braindeath);
+p_delay(1);
+~fade_in;
+spotanim_pl(stunned_thieving, 92, 0);
+sound_synth(stunned, 1, 0);
+p_delay(2);
+if_openoverlay(null);
+// Void: "The original hands straight over to Braindeath once the player comes round"
+if (npc_find(coord, deal_captian_braindeath, 6, 0) = true) @deal_braindeath_talk;
+
+// A line said aloud and in the chatbox, turning its own pages (Void: clickToContinue = false)
+[proc,deal_cs](npc_uid $who, string $name, npc $head, string $text, string $overhead)
+if ($who ! null & npc_finduid($who) = true) npc_say($overhead);
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatnpc_cutscene_page($name, $head, $page);
+    p_delay(calc(2 + split_linecount($page) * 2));
+    $page = calc($page + 1);
+}
+
+// logged out in a cutscene: back to Captain Braindeath
+[proc,deal_login]
+if (%deal_cutscene = 1) {
+    %deal_cutscene = 0;
+    p_transmogrify(null);
+    minimap_toggle(0);
+    p_telejump(^deal_braindeath_spot);
+}
+if (%deal_quest = ^deal_seeds & %deal_farming = ^deal_patch_seed) settimer(deal_blindweed, ^deal_growth_ticks);

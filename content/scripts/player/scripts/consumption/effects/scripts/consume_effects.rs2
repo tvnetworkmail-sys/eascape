@@ -69,7 +69,9 @@ while ($i < db_getfieldcount($effect_data, consume_table:stat_change)) {
 // stat heal
 $i = 0;
 while ($i < db_getfieldcount($effect_data, consume_table:stat_heal)) {
-    stat_heal(db_getfield($effect_data, consume_table:stat_heal, $i));
+    $stat, $constant, $percent = db_getfield($effect_data, consume_table:stat_heal, $i);
+    $percent = calc($percent + ~deal_holy_wrench_bonus($consumable, $stat)); // EASCape: Rum Deal's holy wrench (quest_deal/deal_journal.rs2)
+    stat_heal($stat, $constant, $percent);
     $i = calc($i + 1);
 }
 if (db_getfieldcount($effect_data, consume_table:healenergy) > 0) {

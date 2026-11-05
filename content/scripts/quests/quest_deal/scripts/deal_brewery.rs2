@@ -1,0 +1,396 @@
+// EASCape: Rum Deal - the brewery and the island (Void RumDeal.kt; the OSRS wiki's transcript for
+// the lines Void doesn't have, marked). The locs are the 377 cache's: deal_hopper (the intake
+// hopper), deal_pressure (the pressure barrel), deal_multi_lever (deal_lever_up/down on
+// deal_barrel), deal_multicontrol (the brewing control on deal_multi_hopper), deal_brewvat_tap,
+// deal_broomcupboard, deal_stagnant, deal_blindweed (on deal_farming) and deal_overgrown_patch;
+// the fishing spots are its deal_squid.
+
+// ---------------------------------------------------------------- the intake hopper
+[oplocu,deal_hopper]
+def_int $s = %deal_quest;
+switch_obj (last_useitem) {
+    case deal_blindweed :
+        if ($s ! ^deal_shown) @deal_nothing;
+        ~deal_stage(^deal_blindweed_added);
+        p_delay(0);
+        mes("You stuff the Blindweed into the Hopper.");
+        anim(human_pickupfloor, 0);
+        inv_del(inv, deal_blindweed, 1);
+        sound_synth(rumdeal_stuff_other, 1, 0);
+        p_delay(1);
+    case deal_stagnant_bucket :
+        if ($s ! ^deal_collected_water) @deal_nothing;
+        ~deal_stage(^deal_water_added);
+        p_delay(0);
+        mes("You dump the water into the hopper.");
+        anim(farming_pour_water, 0);
+        inv_del(inv, deal_stagnant_bucket, 1);
+        inv_add(inv, bucket_empty, 1);
+        sound_synth(pour_tea, 1, 0);
+        p_delay(4);
+    case deal_spider_body :
+        if ($s ! ^deal_kill_spider) @deal_nothing;
+        ~deal_stage(^deal_spider_added);
+        p_delay(0);
+        mes("You cram the diseased Fever Spider body into the hopper.");
+        anim(human_pickupfloor, 0);
+        inv_del(inv, deal_spider_body, 1);
+        sound_synth(rumdeal_stuff_other, 1, 0);
+        p_delay(1);
+    case default : @deal_nothing;
+}
+
+[label,deal_nothing]
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- the pressure barrel and lever
+[oplocu,deal_pressure]
+if (last_useitem ! deal_slugling & last_useitem ! deal_karamthulhu) @deal_nothing;
+if (%deal_quest ! ^deal_catch) {
+    mes("Nothing Interesting Happens"); // Void
+    return;
+}
+def_string $name = "Sluglings";
+if (last_useitem = deal_karamthulhu) $name = "Karamthulhu";
+if (%deal_barrel >= 5) {
+    mes("You don't think you can stuff any more <$name> in there.");
+    return;
+}
+%deal_barrel = calc(%deal_barrel + 1);
+if (last_useitem = deal_slugling) {
+    %deal_slug = calc(%deal_slug + 1);
+} else {
+    %deal_thulhu = calc(%deal_thulhu + 1);
+}
+mes("You stuff the squirming <$name> into the barrel.");
+anim(human_pickuptable, 0);
+inv_del(inv, last_useitem, 1);
+sound_synth(rumdeal_stuff_slugling, 1, 0);
+p_delay(1);
+
+[oploc2,deal_pressure]
+def_int $slugs = %deal_slug;
+def_int $karam = %deal_thulhu;
+if ($slugs = 0 & $karam = 0) {
+    mes("This barrel is empty and smells nasty.");
+} else if ($slugs = 1 & $karam = 0) {
+    mes("There are some Sluglings in this barrel.");
+} else if ($slugs = 0 & $karam = 1) {
+    mes("There is a Karamthulhu in this barrel.");
+} else if ($slugs = 1 & $karam = 1) {
+    mes("There are some Sluglings and a Karamthulhu in this barrel.");
+} else {
+    mes("There are <tostring($slugs)> loads of Sluglings and <tostring($karam)> Karamthulhu in this barrel.");
+}
+
+[oploc1,deal_multi_lever]
+if (%deal_barrel ! 5) {
+    mes("You do not yet have five sea creatures in the barrel!");
+    return;
+}
+%deal_barrel = 0;
+%deal_slug = 0;
+%deal_thulhu = 0;
+mes("You pressurise the assorted sea creatures.");
+sound_synth(rumdeal_pressurize, 1, 0);
+p_delay(1);
+if (%deal_quest = ^deal_catch) ~deal_stage(^deal_pressurised); // ours: only during that step
+%deal_multi_hopper = 1;
+if (loc_find(^deal_pressure_barrel, deal_pressure) = true) loc_anim(press_press);
+p_delay(1);
+
+// ---------------------------------------------------------------- the output tap
+[oploc1,deal_brewvat_tap] @deal_tap("Nothing interesting happens.");
+[oplocu,deal_brewvat_tap]
+if (last_useitem ! bucket_empty) @deal_nothing;
+@deal_tap("The vat is empty.");
+
+[label,deal_tap](string $empty)
+if (%deal_quest >= ^deal_told_donnie) {
+    mes("You thankfully have no need to do that any more.");
+    return;
+}
+if (%deal_quest ! ^deal_collect_swill) {
+    mes($empty);
+    return;
+}
+if (inv_total(inv, bucket_empty) = 0) @deal_nothing;
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, deal_bucket_swill, 1);
+mes("You carefully fill the bucket with the foul-smelling swill.");
+
+// ---------------------------------------------------------------- the brewing control
+[oplocu,deal_multicontrol]
+if (last_useitem = deal_wrench) {
+    // the OSRS wiki's transcript
+    say("Come out and face me!");
+    ~mesbox("Well, it seems that this wrench is just not holy enough to work. You should go and get it blessed.");
+    return;
+}
+if (last_useitem ! deal_wrench_blessed | %deal_quest ! ^deal_bless_wrench) @deal_nothing;
+if (~deal_my_spirit = true) {
+    mes("The Evil Spirit has already manifested!");
+    return;
+}
+mes("You raise your wrench on high and smite the controls mightily!");
+sound_synth(wrench_crush, 1, 0);
+anim(deal_smite_control, 0);
+say("The power of Guthix compels you!");
+p_delay(1);
+mes("The Evil Spirit is forced from the controls!");
+sound_synth(rumdeal_hopper_1, 1, 0);
+// Void: in the 4 by 4 squares south of the controls, for 8 minutes, and it goes for you
+def_coord $at = map_findsquare(movecoord(^deal_spirit_area, random(4), 0, random(4)), 0, 2, ^map_findsquare_lineofwalk);
+npc_add($at, deal_evil_spirit, 800);
+%npc_aggressive_player = uid;
+hint_npc;
+npc_setmode(opplayer2);
+
+// your own Evil Spirit is out
+[proc,deal_my_spirit]()(boolean)
+npc_findall(^deal_spirit_area, deal_evil_spirit, 12, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) return(true);
+}
+return(false);
+
+// only the player who called it out can fight it (Void: its owner)
+[proc,deal_spirit_attackable]()(boolean)
+if (%npc_aggressive_player ! uid) {
+    mes("That isn't your spirit to banish."); // ours
+    return(false);
+}
+return(true);
+
+[ai_queue3,deal_evil_spirit]
+gosub(npc_default_death);
+if (npc_findhero = ^true) queue(deal_spirit_banished, 0, 0);
+
+[queue,deal_spirit_banished]
+%deal_multi_hopper = 0;
+if (%deal_quest = ^deal_bless_wrench) ~deal_stage(^deal_spirit_banished);
+mes("You have banished the Evil Spirit!");
+hint_stop;
+
+// ---------------------------------------------------------------- the stagnant lake
+[oplocu,deal_stagnant]
+if (last_useitem ! bucket_empty) @deal_nothing;
+if (%deal_quest = ^deal_fetch_water) ~deal_stage(^deal_collected_water);
+mes("You scoop up a bucket of the stagnant water.");
+anim(deal_fillbucket_stagnent, 0);
+inv_del(inv, bucket_empty, 1);
+inv_add(inv, deal_stagnant_bucket, 1);
+p_delay(2);
+
+[opheld4,deal_stagnant_bucket] ~empty_container(bucket_empty); // ours: as the other buckets
+
+// ---------------------------------------------------------------- the squid fishing spots
+[opnpc1,deal_squid]
+if (%deal_quest ! ^deal_catch) {
+    mes("You don't think you have time for fishing.");
+    return;
+}
+if (stat_base(fishing) < 50) {
+    mes("You cannot fish here, you need a Fishing level of at least 50.");
+    return;
+}
+if (inv_total(inv, fishbowl_net) = 0) {
+    mes("You do not have the correct equipment to fish here.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You do not have any free space for anything that you will catch!");
+    return;
+}
+mes("You dunk the bowl in the water...");
+anim(deal_bowl_fish, 0);
+p_delay(3);
+if (random(3) = 0) {
+    mes("...and you catch a Karamthulhu!");
+    inv_add(inv, deal_karamthulhu, 1);
+} else {
+    mes("...and you catch some Sluglings!");
+    inv_add(inv, deal_slugling, 1);
+}
+
+// ---------------------------------------------------------------- the fishbowl and net
+// Void: the 377 cache's fishbowl_net is the pet fish's empty fishbowl (fishbowl_empty) wrapped in
+// a big fishing net (big_net)
+[opheld2,fishbowl_net]
+if (inv_freespace(inv) < 1) {
+    mes("You do not have enough space to unwrap the net from the fishbowl.");
+    return;
+}
+mes("You unwrap the net from the fishbowl.");
+inv_delslot(inv, last_slot);
+inv_add(inv, fishbowl_empty, 1);
+inv_add(inv, big_net, 1);
+
+[opheldu,fishbowl_empty]
+if (last_useitem = big_net) @deal_wrap_net;
+~displaymessage(^dm_default);
+[opheldu,big_net]
+if (last_useitem = fishbowl_empty) @deal_wrap_net;
+~displaymessage(^dm_default);
+
+[label,deal_wrap_net]
+mes("You wrap the net around the empty bowl.");
+inv_del(inv, fishbowl_empty, 1);
+inv_del(inv, big_net, 1);
+inv_add(inv, fishbowl_net, 1);
+
+// ---------------------------------------------------------------- the tool cupboard
+[oploc1,deal_broomcupboard]
+anim(human_opencupboard, 0);
+sound_synth(cupboard_open, 1, 0);
+loc_change(deal_broomcupboard_open, 500);
+
+[oploc3,deal_broomcupboard_open]
+anim(human_opencupboard, 0);
+sound_synth(cupboard_close, 1, 0);
+loc_change(deal_broomcupboard, 500);
+
+[oploc2,deal_broomcupboard_open]
+~mesbox("There is a tangle of rusty old farming equipment in here.");
+switch_int (~p_choice4_header("A rake", 1, "A seed dibber", 2, "A watering can", 3, "All of the above!", 4, "What would you like to take?")) {
+    case 1 : ~deal_cupboard_take(rake, "rake", "You can't find another rake. Good job you already have one.");
+    case 2 : ~deal_cupboard_take(dibber, "seed dibber", "The only dibber you find has a bent dibbing bit. You should use the one you have.");
+    case 3 : ~deal_cupboard_take(watering_can_0, "watering can", "You can't find any watering cans without holes in them, so you decide to use your own.");
+    case 4 :
+        if (~deal_has_can = true & inv_total(inv, rake) > 0 & inv_total(inv, dibber) > 0) {
+            ~mesbox("The remaining stuff seems fused together in a lump of spiky, tetanus-inducing rust. Best leave it alone for now.");
+        } else if (inv_freespace(inv) > 0) {
+            if (~deal_has_can = false & inv_freespace(inv) > 0) inv_add(inv, watering_can_0, 1);
+            if (inv_total(inv, rake) = 0 & inv_freespace(inv) > 0) inv_add(inv, rake, 1);
+            if (inv_total(inv, dibber) = 0 & inv_freespace(inv) > 0) inv_add(inv, dibber, 1);
+            ~mesbox("You help yourself to what you need.");
+        } else {
+            ~mesbox("You do not have any free space for all of these items.");
+        }
+}
+
+[proc,deal_cupboard_take](namedobj $obj, string $name, string $have)
+def_boolean $got = false;
+if (inv_total(inv, $obj) > 0) $got = true;
+if ($obj = watering_can_0) $got = ~deal_has_can;
+if ($got = true) {
+    ~mesbox($have);
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~mesbox("You do not have any free space for the <$name>.");
+    return;
+}
+inv_add(inv, $obj, 1);
+~mesbox("You take an old <$name>.");
+
+[proc,deal_has_can]()(boolean)
+if (inv_total(inv, watering_can_0) > 0 | inv_total(inv, watering_can_1) > 0 | inv_total(inv, watering_can_2) > 0 | inv_total(inv, watering_can_3) > 0) return(true);
+if (inv_total(inv, watering_can_4) > 0 | inv_total(inv, watering_can_5) > 0 | inv_total(inv, watering_can_6) > 0 | inv_total(inv, watering_can_7) > 0 | inv_total(inv, watering_can_8) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the blindweed patch
+// Void's farming for this patch (FarmingPatchTreat, FarmingPatchPlant, FarmingPatchPick and
+// FarmingPatchInspect): rake it (it has no Rake option, so a rake is used on it; each weed the
+// Farming experience of our other patches), plant the seed with a seed dibber (40 Farming, 32
+// experience), wait one flower-patch cycle, then Pick it with a spade (45 experience), which leaves
+// it weeded. The inspect lines and the level line are the OSRS wiki's transcript.
+[oploc1,deal_blindweed]
+if (%deal_farming ! ^deal_patch_grown) @deal_nothing;
+if (inv_total(inv, spade) = 0) {
+    mes("You need a spade to harvest your crops.");
+    return;
+}
+@deal_blindweed_pick;
+
+[oploc2,deal_blindweed]
+switch_int (%deal_farming) {
+    case 0, 1, 2 : mes("This is a blindweed patch. The soil has not been treated. The patch needs weeding.");
+    case ^deal_patch_weeded : mes("This is a blindweed patch. The soil has not been treated. The patch is empty."); // Void
+    case ^deal_patch_seed : mes("This is a blindweed patch. The soil has not been treated. The patch has something growing in it.");
+    case default : mes("This is a blindweed patch. The soil has not been treated. The patch is fully grown.");
+}
+
+[oplocu,deal_blindweed]
+switch_obj (last_useitem) {
+    case rake : @deal_patch_rake;
+    case deal_blindweed_seed : @deal_patch_plant;
+    case spade :
+        if (%deal_farming = ^deal_patch_grown) @deal_blindweed_pick;
+        @deal_nothing;
+    case default : @deal_nothing;
+}
+
+[label,deal_blindweed_pick]
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space to do that."); // ours
+    return;
+}
+mes("You begin to harvest the blindweed patch.");
+anim(human_dig, 0);
+sound_synth(digspade, 1, 0);
+p_delay(1);
+inv_add(inv, deal_blindweed, 1);
+stat_advance(farming, 450);
+mes("The blindweed patch is now empty.");
+%deal_farming = ^deal_patch_weeded;
+anim(null, 0);
+if (%deal_quest = ^deal_seeds) ~deal_stage(^deal_grown);
+
+[label,deal_patch_rake]
+if (%deal_farming >= ^deal_patch_weeded) {
+    mes("This blindweed patch doesn't need weeding right now.");
+    return;
+}
+while (%deal_farming < ^deal_patch_weeded) {
+    anim(farming_raking, 0);
+    p_delay(2);
+    if (stat_random(farming, 180, 255) = true) {
+        %deal_farming = calc(%deal_farming + 1);
+        if (inv_freespace(inv) > 0 | inv_total(inv, weeds) > 0) {
+            inv_add(inv, weeds, 1);
+        } else {
+            obj_add(coord, weeds, 1, ^lootdrop_duration);
+        }
+        stat_advance(farming, 80);
+    }
+}
+anim(null, 0);
+
+[label,deal_patch_plant]
+if (%deal_farming ! ^deal_patch_weeded) {
+    ~mesbox("You can only plant blindweed seeds in an empty patch.");
+    return;
+}
+if (inv_total(inv, dibber) = 0) {
+    mes("You need a seed dibber to plant the seed in the dirt.");
+    return;
+}
+if (stat_base(farming) < 40) {
+    ~mesbox("You must be a Level 40 Farmer to plant those."); // the OSRS wiki's transcript
+    return;
+}
+inv_del(inv, deal_blindweed_seed, 1);
+anim(farming_seed_dibbing, 0);
+sound_synth(farming_dibbing, 1, 0);
+p_delay(2);
+~mesbox("You plant a seed in the blindweed patch."); // the OSRS wiki's transcript
+%deal_farming = ^deal_patch_seed;
+stat_advance(farming, 320);
+settimer(deal_blindweed, ^deal_growth_ticks);
+
+// Void: "I wonder how my Blindweed is coming along..." when it is grown
+[timer,deal_blindweed]
+cleartimer(deal_blindweed);
+if (%deal_farming ! ^deal_patch_seed) return;
+%deal_farming = ^deal_patch_grown;
+if (%deal_quest = ^deal_seeds) mes("I wonder how my Blindweed is coming along...");
+
+// the trashed patches (the OSRS wiki's transcript)
+[oploc2,deal_overgrown_patch] mes("The soil here is too poor to farm on.");
+[oplocu,deal_overgrown_patch]
+if (last_useitem = rake) {
+    mes("You will probably have a hard time raking that.");
+    return;
+}
+~displaymessage(^dm_default);

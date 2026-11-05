@@ -1,0 +1,553 @@
+// EASCape: Rum Deal - the people of Braindeath Island: the eight brewers, Davey, Captain Donnie,
+// 50% Luke, the zombie protesters and the zombie swabs (Void Brewer.kt, Davey.kt,
+// CaptainDonnie.kt, Luke.kt, ZombieProtester.kt, ZombieSwab.kt).
+
+// ---------------------------------------------------------------- the brewers
+[opnpc1,deal_brewer_1] @deal_brewer(1);
+[opnpc1,deal_brewer_2] @deal_brewer(2);
+[opnpc1,deal_brewer_3] @deal_brewer(3);
+[opnpc1,deal_brewer_4] @deal_brewer(4);
+[opnpc1,deal_brewer_5] @deal_brewer(5);
+[opnpc1,deal_brewer_6] @deal_brewer(6);
+[opnpc1,deal_brewer_7] @deal_brewer(7);
+[opnpc1,deal_brewer_8] @deal_brewer(8);
+
+[label,deal_brewer](int $n)
+if (%deal_quest = ^deal_bless_wrench) @deal_brewer_wrench($n);
+if (%deal_quest >= ^deal_complete) @deal_brewer_after($n);
+~chatplayer("<p,quiz>So... how are you holding up?");
+switch_int ($n) {
+    case 1 :
+        ~chatnpc("<p,shock>Who are you?");
+        ~chatnpc("<p,angry>You're one of THEM arent you!");
+        ~chatplayer("<p,happy>O...kay...walking away now, smiling and not making eye contact.");
+    case 2 :
+        ~chatnpc("<p,scared>Game over, man! Game over!");
+        ~chatplayer("<p,shifty>Errr...keep up the good work.");
+    case 3 :
+        ~chatnpc("<p,neutral>Very well, considering.");
+        ~chatplayer("<p,quiz>Considering what?");
+        ~chatnpc("<p,neutral>That I've been crawling into the corner to cry whenever nobody is looking.");
+        ~chatplayer("<p,shifty>Wow... I always thought pirates were tough...");
+    case 4 :
+        ~chatnpc("<p,angry>Don't sneak up on me like that!");
+        ~chatnpc("<p,neutral>Don't you know there's a war on?");
+        ~chatplayer("<p,quiz>I didn't think this counted as a war.");
+        ~chatnpc("<p,angry>That's because you're a landlubber!");
+        ~chatnpc("<p,angry>I bet ye've never had to beat a dozen zombies to death with a blunt toothpick!");
+        ~chatplayer("<p,neutral>That's right. Have you?");
+        ~chatnpc("<p,scared>No, I've spent most of my time in the toilet to be honest.");
+    case 5 : ~chatnpc("<p,angry>Don't talk to me! If I play this right, I can sell you lot out and make it to the mainland!");
+    case 6 :
+        ~chatnpc("<p,drunk>No school today mother, my brain hurts real baaaad...");
+        ~chatplayer("<p,quiz>What?");
+        ~chatnpc("<p,drunk>I no sleep in many, many, many days.");
+    case 7 :
+        ~chatnpc("<p,scared>How do I know you're not one of them?");
+        ~chatplayer("<p,quiz>Well, I don't know... the way I'm breathing could give it away.");
+        ~chatnpc("<p,angry>That means nothing! NOTHING!");
+    case 8 :
+        ~chatnpc("<p,neutral>Very well.");
+        ~chatplayer("<p,quiz>You sure?");
+        ~chatnpc("<p,scared>Oh Guthix, who am I kidding?");
+        ~chatnpc("<p,scared>We're all gonna die!");
+}
+
+[label,deal_brewer_wrench](int $n)
+if (inv_total(inv, deal_wrench_blessed) > 0) {
+    ~chatplayer("<p,happy>Bask in the glory of my Holy Wrench!");
+    switch_int ($n) {
+        case 1 : ~chatnpc("<p,neutral>Oooh...It's so shiny...");
+        case 2 : ~chatnpc("<p,sad>(Sob) It's so beautiful...");
+        case 3 : ~chatnpc("<p,shock>I am not worthy to gaze upon it!");
+        case 4 : ~chatnpc("<p,shock>I can feel the aura of Wrenchly Power radiating from it!");
+        case 5 : ~chatnpc("<p,sad>Take it away, I am not worthy to be in its Wrenchly presence.");
+        case 6 : ~chatnpc("<p,neutral>Wow...I don't feel tired any more...");
+        case 7 : ~chatnpc("<p,scared>Such power!");
+        case 8 : ~chatnpc("<p,happy>We're saved!");
+    }
+    return;
+}
+~chatplayer("<p,neutral>I'm looking for a priest. And a wrench.");
+switch_int ($n) {
+    case 1 : ~chatnpc("<p,shock>What possible plan could involve a priest and a wrench?");
+    case 2 :
+        ~chatnpc("<p,scared>What? Are you gonna build some strange mechanical priest to save us?");
+        ~chatnpc("<p,neutral>What if it runs riot? We'll all be killed!");
+    case 3 : ~chatnpc("<p,neutral>Well good luck. If you find any spare trousers please pass them my way.");
+    case 4 : ~chatnpc("<p,neutral>Well the usual combo is an old priest and a young priest, but whatever floats your boat lad.");
+    case 5 : ~chatnpc("<p,shock>What are you going to do to that priest? No, wait, I don't want to know.");
+    case 6 :
+        ~chatnpc("<p,drunk>Try Davey, he might have seen it.");
+        ~chatplayer("<p,happy>Thanks!");
+        ~chatnpc("<p,drunk>His giant, green, inflatable dwarf might be able to tell you where one is as well.");
+    case 7 : ~chatnpc("<p,quiz>If this is some sort of secret zombie code then I don't get it.");
+    case 8 :
+        ~chatnpc("<p,neutral>Well I can't help you there.");
+        ~chatplayer("<p,neutral>Oh, sorry to have bothered you.");
+        ~chatnpc("<p,neutral>No problem.");
+        ~chatnpc("<p,sad>It's not like I'm going to live through this or anything.");
+        ~chatnpc("<p,scared>What if they get me while I sleep?");
+        ~chatnpc("<p,scared>I don't wanna die!");
+}
+
+[label,deal_brewer_after](int $n)
+if ($n = 6) {
+    ~chatplayer("<p,quiz>So...got any sleep yet?");
+} else {
+    ~chatplayer("<p,happy>Hello there!");
+}
+switch_int ($n) {
+    case 1 :
+        ~chatnpc("<p,angry>I don't know what your game is, but I know you're one of THEM!");
+        ~chatplayer("<p,shock>But I just saved you!");
+        ~chatnpc("<p,angry>The voices tell me different. It's all part of a plot! Confess!");
+    case 2 :
+        ~chatnpc("<p,scared>Have they gone yet?");
+        ~chatplayer("<p,neutral>Well, no, but they are a lot calmer now.");
+        ~chatnpc("<p,scared>What are we gonna do now, huh? What are we gunna do now?");
+        ~chatplayer("<p,neutral>In your case I would say relax.");
+    case 3 :
+        ~chatnpc("<p,happy>Hello yourself!");
+        ~chatplayer("<p,quiz>How's things?");
+        ~chatnpc("<p,shifty>Fine...");
+        ~chatplayer("<p,happy>Excellent! Since I get the feeling I don't want to know why you said that so oddly I'll just go over here!");
+        ~chatnpc("<p,neutral>I think that would be for the best!");
+    case 4 :
+        ~chatnpc("<p,happy>Hello yerself Landlubber!");
+        ~chatplayer("<p,quiz>Everything ok with you now?");
+        ~chatnpc("<p,neutral>Hmmm...Overall everything is good!");
+        ~chatplayer("<p,happy>Great!");
+    case 5 :
+        ~chatnpc("<p,laugh>Hello there, brave hero, in whom I had total confidence!");
+        ~chatplayer("<p,quiz>Total confidence?");
+        ~chatnpc("<p,happy>Yes! I was so confident that I would never, ever have sold your soft, edible body to the pirates outside!");
+        ~chatplayer("<p,shock>Well, great...");
+        ~chatnpc("<p,shifty>On a completely unrelated note, I would steer clear of Hungry Frank for a while.");
+        ~chatnpc("<p,angry>He's a filthy liar. And a forger. It wouldn't surprise me if he has written out a note detailing the terms of our surrender and your dismemberment and cooking in MY handwriting.");
+        ~chatnpc("<p,shifty>Imagine that, the fiend.");
+    case 6 :
+        ~chatnpc("<p,drunk>My brain is no longer capable of sleep.");
+        ~chatplayer("<p,quiz>So...what are you going to do now?");
+        ~chatnpc("<p,drunk>I was gonna try and will myself dead.");
+        ~chatplayer("<p,shifty>Right...good luck with that.");
+    case 7 :
+        ~chatnpc("<p,neutral>Well you proved that you're probably not a zombie.");
+        ~chatnpc("<p,quiz>So what are you then? A ghoul? A vampire?");
+        ~chatplayer("<p,angry>I'm not any form of undead!");
+        ~chatplayer("<p,quiz>What?");
+        ~chatnpc("<p,shifty>Nothing...");
+    case 8 :
+        ~chatnpc("<p,happy>You saved us! Huzzah!");
+        ~chatplayer("<p,happy>All in a day's work, think nothing of it.");
+        ~chatnpc("<p,neutral>I don't have anything to reward you with except my collection of bleak, gothic poetry I wrote when I assumed we were all done for. Do you want it?");
+        ~chatplayer("<p,shifty>I may come for it later, you hang on to it for now.");
+}
+
+// ---------------------------------------------------------------- Davey
+[opnpc1,deal_davey]
+if (%deal_quest = ^deal_bless_wrench) @deal_davey_wrench;
+if (%deal_quest >= ^deal_complete) @deal_davey_after;
+~chatplayer("<p,happy>Hello!");
+~chatnpc("<p,shifty>'Ello guv.");
+~chatplayer("<p,quiz>Why are you not helping out the others?");
+~chatnpc("<p,shifty>Well you see, guv, I've got these unshakable religious convictions.");
+~chatplayer("<p,quiz>And those are?");
+~chatnpc("<p,shifty>Well, it's like this, see. I used to do a bit of the old priestin' on the side.");
+~chatnpc("<p,neutral>You know, collectin' for repairs to the church roof, passing the collection plate, jumble sales, nicking the lead off the temple roof so they needed repairing again.");
+~chatnpc("<p,neutral>Real holy stuff, you know.");
+~chatplayer("<p,neutral>That doesn't sound all that holy to me.");
+~chatnpc("<p,shifty>Well, that's because you're not a man of the cloth are you?");
+~chatnpc("<p,neutral>You are, in fact, what we refer to in layman's terms as a punter.");
+~chatnpc("<p,neutral>But anyway, all that priestin' left me with an unshakable faith in three things.");
+~chatnpc("<p,neutral>The power of good over evil.");
+~chatnpc("<p,neutral>The true glory of the human spirit.");
+~chatnpc("<p,neutral>And that I ain't goin out there with those things runnin' around.");
+
+[label,deal_davey_wrench]
+~chatplayer("<p,quiz>You used to be a priest, right?");
+~chatnpc("<p,shifty>I didn't nick anything, guv. I've got twenty people who'll swear blind I was...");
+~chatplayer("<p,quiz>What?");
+~chatplayer("<p,neutral>Never mind. I need some help with the spirit in the brewing equipment.");
+if (inv_total(inv, deal_wrench_blessed) > 0) {
+    ~chatnpc("<p,shifty>You mean more help? I've already blessed one wrench for you, that should be enough.");
+    return;
+}
+if (inv_total(inv, deal_wrench) = 0) {
+    ~chatnpc("<p,shifty>Well, I'll bless something for you if you need it, but just don't spread it around that I'm giving out freebies.");
+    return;
+}
+if (stat(prayer) >= 47) {
+    ~chatnpc("<p,shifty>Trust me, guv, lots of people need help after coming into contact with the spirits we produce here.");
+}
+~chatplayer("<p,quiz>Could you bless this wrench for me?");
+// Void: your current Prayer (prayer points), 47
+if (stat(prayer) < 47) {
+    ~chatnpc("<p,shifty>Nope.");
+    ~chatplayer("<p,quiz>Nope?");
+    ~chatnpc("<p,shifty>Nope. You don't strike me as being... devout, you know?");
+    ~chatplayer("<p,quiz>Come again?");
+    ~chatnpc("<p,shifty>Your holy aura, it's a little shoddy, if you catch my drift.");
+    ~chatplayer("<p,quiz>What?");
+    ~chatnpc("<p,shifty>You need a Prayer of 47.");
+    ~chatplayer("<p,happy>Oh!");
+    ~chatplayer("<p,quiz>Well why didn't you just say so?");
+    ~chatnpc("<p,shifty>I might have had a bit of an overestimation problem guv. I'm sure it won't happen again.");
+    return;
+}
+~chatnpc("<p,shifty>I might well do. Remember, only the first one's free.");
+~chatnpc("<p,neutral>Dominoes Ad Nauseum, Romanes Eunt Domus.");
+~chatnpc("<p,neutral>Sorted.");
+~chatplayer("<p,quiz>Is that it?");
+~chatnpc("<p,shifty>Oh, you want the full package deal.");
+~chatnpc("<p,neutral>All right. Brace yourself.");
+if_close;
+// Void playBlessingCutscene: Davey cheers, the camera closes in, the wrench flourish and "Groovy."
+npc_anim(emote_cheer, 0);
+inv_del(inv, deal_wrench, 1);
+inv_add(inv, deal_wrench_blessed, 1);
+p_delay(4);
+cam_moveto(1_33_79_22_43, 180, 10, 70);
+cam_lookat(1_33_79_18_43, 100, 10, 70);
+p_delay(2);
+cam_moveto(1_33_79_23_43, 275, 1, 70);
+cam_lookat(1_33_79_20_43, 200, 10, 70);
+p_delay(3);
+spotanim_pl(deal_spotanim, 0, 0);
+anim(deal_wrench_flourish, 0);
+p_delay(3);
+say("Groovy.");
+p_delay(3);
+cam_reset;
+~chatplayer("<p,happy>Thanks!");
+~chatnpc("<p,shifty>No problem, guv. Good luck with your little problem.");
+~chatnpc("<p,neutral>You might find that little wrench worth hanging on to after you're done with the Spirit.");
+~chatplayer("<p,quiz>Really? I mean, it's holy and everything, but I don't think it looks all that useful.");
+~chatnpc("<p,shifty>Well, it may not look much, but you'll find that you might need a few less prayer potions if you have it in your pack, if you know what I mean.");
+~chatplayer("<p,happy>Well, no. I don't know what you mean, but I'm sure I'll find out!");
+
+[label,deal_davey_after]
+if (inv_total(inv, deal_wrench_blessed) > 0) {
+    ~chatnpc("<p,shifty>Ello again guv. How's things?");
+    ~chatplayer("<p,happy>Good! Everything seems to have worked out ok.");
+    ~chatnpc("<p,shifty>I'm sure it'll stay that way so long as you don't know it's missing.");
+    ~chatplayer("<p,quiz>What?");
+    ~chatnpc("<p,shifty>Nothin' guv, you just have a nice day.");
+    return;
+}
+~chatnpc("<p,shifty>Ello again guv. I take it you're here about the wrench?");
+~chatplayer("<p,quiz>What? The Holy Wrench? But I lost it somewhere...");
+~chatnpc("<p,shifty>Well guv, maybe that's what I want you to think.");
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, deal_wrench_blessed, 1);
+    ~chatnpc("<p,neutral>There you go. I've kept it nice and holy for you.");
+    ~chatplayer("<p,quiz>Thanks...");
+    return;
+}
+~chatnpc("<p,neutral>As soon as you've got somewhere to put it I'll hand it over. I'll keep it nice and holy until then.");
+
+// ---------------------------------------------------------------- Captain Donnie
+[opnpc1,deal_captian_donnie] @deal_donnie;
+[opnpcu,deal_captian_donnie]
+if (last_useitem = deal_bucket_swill) @deal_donnie;
+~displaymessage(^dm_default);
+
+[label,deal_donnie]
+if (inv_total(inv, deal_bucket_swill) > 0) {
+    if (%deal_quest = ^deal_collect_swill) @deal_donnie_rum;
+    ~chatnpc("<p,angry>Hey you! I can smell the 'rum' on ye!");
+    ~chatnpc("<p,angry>If it isn't in my belly by the time I cout ter three, I'll have ye flogged!");
+    inv_del(inv, deal_bucket_swill, 1);
+    ~mesbox("Donnie drinks the 'rum' like it is water.");
+    ~chatnpc("<p,drunk>Arrr...that hits the spot...");
+    return;
+}
+~chatnpc("<p,angry>Arr! What be ye wantin?");
+~chatplayer("<p,neutral>I, err, came to...");
+switch_int (~p_choice3("Tell you to leave.", 1, "Ask what you wanted.", 2, "Join your crew.", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>I have come to tell you to leave.");
+        ~chatnpc("<p,neutral>Ye have?");
+        ~chatplayer("<p,neutral>Yes.");
+        ~chatnpc("<p,happy>Hahahahahahahahahahahahaha!");
+        ~chatnpc("<p,happy>Bwahahahahahahahahahahahaha!");
+        ~chatnpc("<p,neutral>Wheeze...wheeze...");
+        ~chatnpc("<p,happy>Gadzooks lad, that be the funniest thing I've heard all day! Say it again!");
+        ~chatplayer("<p,quiz>I have come to tell you to leave.");
+        ~chatnpc("<p,happy>Stop lad! I'll shatter me ribs!");
+    case 2 :
+        ~chatplayer("<p,quiz>I've come to ask you what you want.");
+        ~chatnpc("<p,angry>Whadda we want? 'Rum'! When do we want it? Now!");
+        ~chatplayer("<p,quiz>So...if I were to give you 'rum' you would leave?");
+        ~chatnpc("<p,neutral>Not really lad. If ye were to give us 'rum' we'd kill ye quickly, as opposed to over a few weeks.");
+        ~chatplayer("<p,shock>Oh...");
+    case 3 :
+        ~chatplayer("<p,happy>I've come to join your crew!");
+        ~chatplayer("<p,happy>Err, I mean...");
+        ~chatplayer("<p,happy>Arr! Shiver me mainbraces and make them landlubbers walk the scurvy plank, Cap'n! I've come to join yer cut-throat, bilge swillin' crew! Also, arr!");
+        ~chatnpc("<p,quiz>Are ye quite done, lad?");
+        ~chatplayer("<p,neutral>Yes, for the time being anyway.");
+        ~chatnpc("<p,happy>Well, ye'll be glad to know that after that little performance I'd be glad to have ye on me crew!");
+        ~chatplayer("<p,happy>Huzzah!");
+        ~chatnpc("<p,happy>Course, I'll have te kill ye first.");
+        ~chatplayer("<p,sad>Oh...");
+        ~chatnpc("<p,neutral>Don't ye worry, lad. After we take the island I'll have the boss haul yer body to the temple and...");
+        ~chatnpc("<p,shifty>Err, never mind.");
+        ~chatplayer("<p,quiz>Never mind what?");
+        ~chatnpc("<p,shifty>Ferget I said anything.");
+}
+
+[label,deal_donnie_rum]
+~chatnpc("<p,quiz>Be that the finest, most abrasive 'rum' I've ever smelled?");
+~chatplayer("<p,happy>Yes! That it be!");
+~chatnpc("<p,angry>Hand it over or I'll run ye through!");
+inv_del(inv, deal_bucket_swill, 1);
+~deal_stage(^deal_told_donnie);
+~deal_swabs_calm;
+~mesbox("The Captain drinks the 'rum' as quickly as possible.");
+~chatnpc("<p,drunk>Arr.");
+~chatnpc("<p,neutral>Ye be a good <text_gender("lad", "lass")>, fer a filthy livin' landlubber."); // the OSRS wiki: [lad/lass]
+~chatplayer("<p,quiz>So... I take it your boss will be pleased?");
+~chatnpc("<p,drunk>Arr, that he will. I'll tell...");
+~chatnpc("<p,shifty>Wait a minute...");
+~chatnpc("<p,happy>Arr, ye tricky dog!");
+~chatnpc("<p,neutral>Ye tried to trick old Donnie!");
+~chatplayer("<p,neutral>Oh well, I guess I'll have to try again.");
+~chatnpc("<p,drunk>Arr, <text_gender("lad", "lass")>, you tried to trick me, but I was too clever for ye!");
+~chatnpc("<p,neutral>Besides, Rabid Jack would have my hide if I told ye it were him that sent me!");
+~chatplayer("<p,shifty>I'm sure he would. Good job you caught me out, eh!");
+~chatnpc("<p,drunk>Aye! Now get ye gone, and don't return without more 'rum'!");
+
+// ---------------------------------------------------------------- 50% Luke
+[opnpc1,deal_50luke]
+~chatplayer("<p,quiz>Are you all right?");
+~chatnpc("<p,quiz>Who goes there?");
+~chatnpc("<p,angry>Arr! A landlubber!");
+~chatnpc("<p,neutral>Begone afore I take my cutlass to ye! I've been charged with guardin' this gate and no noodle-armed landlubbers will make it past me alive!");
+~chatplayer("<p,neutral>That's not a cutlass.");
+~chatplayer("<p,neutral>I think it's a twig.");
+~chatnpc("<p,angry>Ye cheeky begger! I was wavin' my finger at ye!");
+~chatplayer("<p,neutral>All right...");
+~chatnpc("<p,sad>Arrr... just 'cos me body happens to be 50% wood does not mean I'm heartless.");
+~chatnpc("<p,happy>I got a bag of 'em here. Wanna see?");
+~chatplayer("<p,quiz>I think I'll pass.");
+switch_int (~p_choice3("What happened to you?", 1, "How flammable are you?", 2, "So what is going on here anyway?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What happened to you?");
+        ~chatnpc("<p,neutral>Well, it all starts with this albatross...");
+        ~chatnpc("<p,shifty>Wait, never mind, I'll skip forward a bit.");
+        ~chatplayer("<p,quiz>Are you sure?");
+        ~chatnpc("<p,shifty>I have to lad, Cap'n Donnie will flay what little is left of me if I told ye.");
+        ~chatnpc("<p,neutral>But anyway, I got recruited to the zombie pirates along with the rest of the crew in an unspecified incident involvin this albatross.");
+        ~chatnpc("<p,neutral>We was sailin' along happily, and I was partakin' of a little 'rum' in the crows nest.");
+        ~chatnpc("<p,sad>Well, we hit either a really rough wave or some rocks.");
+        ~chatnpc("<p,happy>Twas kind of hard for me to tell which, as I was well out of it by then!");
+        ~chatnpc("<p,sad>Regardless I toppled from the crows nest into the water.");
+        ~chatplayer("<p,quiz>Is that how you got so badly injured?");
+        ~chatnpc("<p,neutral>No <text_gender("lad", "lass")>!");
+        ~chatnpc("<p,neutral>What happened next was that I discovered a new, previously uncharted reef of hard, spiky coral.");
+        ~chatnpc("<p,neutral>I made a mental note of its location, and to this day it is still marked on our fleet's charts as Lukes Reef.");
+        ~chatnpc("<p,neutral>I managed to grab a hold of our ship, the Inebriated, as it passed overhead.");
+        ~chatnpc("<p,sad>And then I discovered another, taller, spikier reef of even sharper and more painful coral.");
+        ~chatnpc("<p,neutral>To this day it is still marked on our fleet's charts as The Other 50% Reef.");
+        ~chatplayer("<p,shock>Owwwwwwwww...");
+        ~chatnpc("<p,sad>It gets worse...");
+        ~chatnpc("<p,neutral>When they hauled what was left of me on deck, they dropped me onto the floor while they decided what to do with me.");
+        ~chatnpc("<p,neutral>Bear in mind this would be on a ghost ship, the planks of which sweat a thick mixture of stagnant water...and pure salt crystals.");
+        ~chatplayer("<p,shock>Oh...my...god...");
+        ~chatnpc("<p,happy>But on the good side, all my thrashin' and pained squealin' settled the matter in the Captain's mind, and he had the shipwright carve me half a body out of his Witchwood Planks.");
+        ~chatplayer("<p,quiz>Witchwood? What's that?");
+        ~chatnpc("<p,neutral>Tis a special, magical wood from a now extinct tree.");
+        ~chatnpc("<p,neutral>Once they nailed it all in place the stuff moves like it is part of me body.");
+        ~chatnpc("<p,neutral>The stuff will also grow back if it breaks, which is dead handy!");
+        ~chatplayer("<p,happy>Wow, that stuff must be very valuable!");
+        ~chatnpc("<p,happy>Arr! That it be!");
+        ~chatnpc("<p,sad>So, that be the tale of how I managed to lose precisely 50% of my body.");
+        ~chatplayer("<p,sad>There there.");
+    case 2 :
+        ~chatplayer("<p,neutral>So how flammable are you?");
+        ~chatnpc("<p,angry>What kind of a question is that?");
+        ~chatplayer("<p,neutral>A rather rude, personal one?");
+        ~chatnpc("<p,angry>Ye've got that right!");
+    case 3 :
+        ~chatplayer("<p,quiz>So what is going on here anyway?");
+        ~chatnpc("<p,angry>Ye expect me to talk?");
+        ~chatplayer("<p,neutral>No Mr. Luke, I expect you to die!");
+        ~chatnpc("<p,happy>Hah! I'm one step ahead of ye!");
+        ~chatplayer("<p,sad>Egad, outsmarted by the man with the wooden brain.");
+        ~chatplayer("<p,quiz>But seriously, what is going on here?");
+        ~chatnpc("<p,neutral>I can't tell ye lad.");
+        ~chatnpc("<p,neutral>The Cap'n would have me whittled down to toothpicks if I did.");
+        ~chatplayer("<p,quiz>Well if you can't tell me, perhaps you could show me through the medium of Interpretive Dance?");
+        ~chatnpc("<p,neutral>No. Just...no.");
+        ~chatplayer("<p,quiz>Mime?");
+        ~chatnpc("<p,angry>Look, lad I'm not tellin' ye a thing! So clear out while ye still can!");
+}
+
+// Luke's gate (Void: the gate north of Luke). Sneaking out needs a diversion, which only works
+// once Captain Braindeath has sent you for the water; coming back in, Luke marches you through.
+[oploc1,deal_gate_closed]
+if (npc_find(coord, deal_50luke, 10, 0) = false) {
+    ~eascape_door_walk; // ours: no Luke about, the gate opens as it did before
+    return;
+}
+if (coordz(coord) > ^deal_gate_z) {
+    ~chatnpc("<p,angry>Hey! What are you doing out there?");
+    ~chatplayer("<p,shifty>Nothing.");
+    ~chatnpc("<p,angry>Well Cap'n Donnie said no livin' landlubbers were allowed out of the compound.");
+    ~chatnpc("<p,angry>So get yerself back in here, or yer for it!");
+    if_close;
+    ~eascape_door_walk;
+    return;
+}
+~chatnpc("<p,angry>Arr! Tryin' ter get away eh? Well ye'll never sneak past me, I'm the best lookout this crew has ever seen!");
+if (%deal_quest < ^deal_fetch_water) {
+    ~chatplayer("<p,neutral>Err...look...an astonishing...thing. There. Behind you.");
+    ~chatnpc("<p,angry>Ye'll have te do better than that, landlubber!");
+    return;
+}
+switch_int (random(6)) {
+    case 0 : ~chatplayer("<p,shock>Oh my! Is that a genuine 3rd Age Diversion?");
+    case 1 : ~chatplayer("<p,quiz>Who's that making faces behind you?");
+    case 2 : ~chatplayer("<p,quiz>Is that your distraction?");
+    case 3 : ~chatplayer("<p,quiz>Who is that behind you?");
+    case 4 : ~chatplayer("<p,neutral>Hey you! Look over there!");
+    case default : ~chatplayer("<p,shock>That is the most amazing thing I have ever seen!");
+}
+if_close;
+npc_facesquare(movecoord(npc_coord, 0, 0, -1));
+npc_say("Where?");
+~eascape_door_walk;
+
+// ---------------------------------------------------------------- the zombie protesters
+[opnpc1,deal_zombie_protester_1] @deal_protester;
+[opnpc1,deal_zombie_protester_2] @deal_protester;
+[opnpc1,deal_zombie_protester_3] @deal_protester;
+[opnpc1,deal_zombie_protester_4] @deal_protester;
+[opnpc1,deal_zombie_protester_5] @deal_protester;
+[opnpc1,deal_zombie_protester_6] @deal_protester;
+
+[label,deal_protester]
+if (%deal_quest >= ^deal_told_donnie) {
+    ~chatnpc("<p,drunk>Arrrr! Tis yerself! Have a drink!");
+    ~chatplayer("<p,shifty>Errr...Arrr! I will in a sec, I've just go to, err, plunder some landlubbers...");
+    ~chatnpc("<p,drunk>Good huntin'!");
+    return;
+}
+~chatplayer("<p,quiz>Excuse me, but...");
+~chatnpc("<p,angry>Arr!");
+~chatplayer("<p,quiz>Is there any way you could...");
+~chatnpc("<p,angry>ARRR!");
+~chatplayer("<p,quiz>Is there anyone else I could...");
+~chatnpc("<p,angry>Arrrrrrrrrr!!!");
+~chatplayer("<p,bored>Fiiine...");
+
+// Void: a chant every 30 seconds while a player is within 4 squares (ours: not the leash chase)
+[ai_timer,deal_zombie_protester_1] @deal_protester_chant;
+[ai_timer,deal_zombie_protester_2] @deal_protester_chant;
+[ai_timer,deal_zombie_protester_3] @deal_protester_chant;
+[ai_timer,deal_zombie_protester_4] @deal_protester_chant;
+[ai_timer,deal_zombie_protester_5] @deal_protester_chant;
+[ai_timer,deal_zombie_protester_6] @deal_protester_chant;
+
+[label,deal_protester_chant]
+huntall(npc_coord, 4, 0);
+if (huntnext = false) return;
+switch_int (random(9)) {
+    case 0 : npc_say("Whadda we want? Rum!");
+    case 1 : npc_say("Give us rum or give us death!");
+    case 2 : npc_say("Give us yer rum, ye scurvy dog!");
+    case 3 : npc_say("Yer rum or yer brains!");
+    case 4 : npc_say("When do we want it? Now!");
+    case 5 : npc_say("Where d'ye think yer goin?");
+    case 6 : npc_say("Ye'll never beat us all!");
+    case 7 : npc_say("United we stagger!");
+    case default : npc_say("Rum, rum, we want rum!");
+}
+
+// ---------------------------------------------------------------- the zombie swabs
+[opnpc1,deal_pirate_a] @deal_swab_talk(1);
+[opnpc1,deal_pirate_b] @deal_swab_talk(2);
+[opnpc1,deal_pirate_c] @deal_swab_talk(3);
+[opnpc1,deal_pirate_d] @deal_swab_talk(4);
+[opnpc1,deal_pirate_e] @deal_swab_talk(5);
+[opnpc1,deal_pirate_f] @deal_swab_talk(6);
+[opnpc3,deal_pirate_a] @deal_swab_heckle(1);
+[opnpc3,deal_pirate_b] @deal_swab_heckle(2);
+[opnpc3,deal_pirate_c] @deal_swab_heckle(3);
+[opnpc3,deal_pirate_d] @deal_swab_heckle(4);
+[opnpc3,deal_pirate_e] @deal_swab_heckle(5);
+[opnpc3,deal_pirate_f] @deal_swab_heckle(6);
+
+[proc,deal_swab_scared](int $n)(boolean)
+switch_int ($n) {
+    case 1 : if (%deal_multi_pirate_a = 1) return(true);
+    case 2 : if (%deal_multi_pirate_b = 1) return(true);
+    case 3 : if (%deal_multi_pirate_c = 1) return(true);
+    case 4 : if (%deal_multi_pirate_d = 1) return(true);
+    case 5 : if (%deal_multi_pirate_e = 1) return(true);
+    case 6 : if (%deal_multi_pirate_f = 1) return(true);
+}
+return(false);
+
+[proc,deal_swab_scare](int $n)
+switch_int ($n) {
+    case 1 : %deal_multi_pirate_a = 1;
+    case 2 : %deal_multi_pirate_b = 1;
+    case 3 : %deal_multi_pirate_c = 1;
+    case 4 : %deal_multi_pirate_d = 1;
+    case 5 : %deal_multi_pirate_e = 1;
+    case 6 : %deal_multi_pirate_f = 1;
+}
+
+[label,deal_swab_talk](int $n)
+if (~deal_swab_scared($n) = false) {
+    mes("I don't think he wants to talk to you.");
+    return;
+}
+switch_int ($n) {
+    case 1 : ~chatnpc("<p,scared>Arr! Do what ye like, just don't hurt my face!");
+    case 2 : ~chatnpc("<p,scared>(Gulp) Be there anything ye want, <text_gender("sir", "miss")>?");
+    case 3 : ~chatnpc("<p,scared>Be there anything I can say to get out of here undead?");
+    case 4 : ~chatnpc("<p,scared>Arrgh! It's <text_gender("him", "her")>! Run fer it lads!");
+    case 5 : ~chatnpc("<p,scared>No! Not the flyswatter! I'll be good!");
+    case 6 : ~chatnpc("<p,scared>Egad! 'Tis <text_gender("him", "her")>!");
+}
+
+[label,deal_swab_heckle](int $n)
+if (~deal_swab_scared($n) = true) {
+    mes("I don't think he will be causing any more trouble.");
+    return;
+}
+~chatplayer("<p,angry>Hey you!");
+switch_int ($n) {
+    case 1 : ~chatnpc("<p,angry>Arr! Prepare to die!");
+    case 2 : ~chatnpc("<p,angry>Yer a deadman, sez I!");
+    case 3 : ~chatnpc("<p,angry>Yer brave, but stupid!");
+    case 4 :
+        ~chatnpc("<p,laugh>Hahahaha!");
+        ~chatnpc("<p,angry>Yer goin ter die!");
+    case 5 : ~chatnpc("<p,angry>Who? Me?");
+    case 6 : ~chatnpc("<p,angry>Hey yerself, landlubber!");
+}
+// Void: the insult is censored with a picture of a kitten (rum_deal_censor) on a black screen for
+// 8 ticks; ours: the black screen with Void's words, as our cache has no kitten screen
+if_close;
+if_openmain(ahoy_blackout);
+if_settext(ahoy_blackout:com_1, "We interrupt this insult to bring you this soothing picture of a kitten. Normal service will be resumed shortly. Thank you for your patience.");
+p_delay(8);
+if_close;
+~deal_swab_scare($n);
+anim(emote_angry, 0);
+switch_int ($n) {
+    case 1 : ~chatplayer("<p,angry>...meaning you'll need a dozen Ogres and a team of highly skilled surgeons to remove them!");
+    case 2 : ~chatplayer("<p,angry>...leading to the eventual, violent explosion of those organs!");
+    case 3 : ~chatplayer("<p,angry>...and then I'll use a wrench to remove the handles, so you'll see it every time you cough!");
+    case 4, 5 :
+        // Void: he runs off and comes back later (respawns)
+        mes("He seems to have vanished...you must have scared him off.");
+        npc_del;
+        return;
+    case 6 : ~chatplayer("<p,angry>...so that you will know exactly what time it is due to the horrible pain in your earlobes!");
+}
+~chatnpc("<p,scared>That be the most intimidatin' thing I've ever heard! I'm not messin' with you!");

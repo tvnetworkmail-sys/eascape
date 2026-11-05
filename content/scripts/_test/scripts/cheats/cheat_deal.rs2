@@ -1,0 +1,92 @@
+// EASCape: test commands for Rum Deal (quest_deal).
+
+// ::rumpack - what the quest needs you to bring (Void's req_item_ids and the RS wiki): a spade,
+// slayer gloves, two prayer potions, and a rake and seed dibber (the basement cupboard has them
+// too). It also marks Zogre Flesh Eaters and Priest in Peril done (no rewards). The skills (40
+// Farming, 50 Fishing, 47 Prayer, 42 Crafting, 42 Slayer) come from ::setstat.
+[debugproc,rumpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(rake, 1));
+$banked = calc($banked + ~questpack_give(dibber, 1));
+$banked = calc($banked + ~questpack_give(deal_slayer_gloves, 1));
+$banked = calc($banked + ~questpack_give(4doseprayerrestore, 2));
+if (%zogre < ^zogre_complete) %zogre = ^zogre_complete;
+if (%priestperil < ^priestperil_complete) %priestperil = ^priestperil_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Rum Deal", $banked);
+mes("Pirate Pete: ::rumtele 1. Skills: ::setstat farming 40, fishing 50, prayer 47, crafting 42, slayer 42.");
+
+// ::rumstage <n> - sets Rum Deal's stage (deal.constant), with what you would be carrying: 0 not
+// started (clears everything), 1 agreed to find the sword, 2 agreed to slay Barrelor (Pete knocks
+// you out next), 3 met the Captain (no seed), 4 the seed (patch weeded), 41 the seed planted and
+// grown, 5 picked (you get the blindweed), 6 shown to the Captain, 7 blindweed in the hopper, 8 to
+// the stagnant lake (a bucket), 9 water collected, 10 water in the hopper, 11 fish the Sluglings
+// (the fishbowl and net), 12 pressurised (the controls possessed), 13 the wrench (Davey), 14 the
+// spirit banished, 15 the fever spider, 16 its body in the hopper, 17 the 'rum' (a bucket), 18
+// Donnie told you of Rabid Jack, 19 done (no rewards). `::questdone deal` finishes it with its
+// rewards.
+[debugproc,rumstage](int $n)
+if (p_finduid(uid) = false) return;
+cleartimer(deal_blindweed);
+%deal_var = 0;
+%deal_cutscene = 0;
+if ($n <= 0) {
+    %deal_quest = 0;
+    ~send_quest_progress(questlist:deal, 0, ^deal_complete);
+    ~update_questpoints;
+    mes("Rum Deal: reset.");
+    return;
+}
+def_int $s = $n;
+if ($n = 41) $s = ^deal_seeds;
+if ($s > ^deal_complete) {
+    mes("::rumstage 0-19 (41: the blindweed grown)");
+    return;
+}
+%deal_quest = $s;
+if ($s >= ^deal_seeds) %deal_farming = ^deal_patch_weeded;
+if ($n = 41) %deal_farming = ^deal_patch_grown;
+if ($s = ^deal_pressurised | $s = ^deal_bless_wrench) %deal_multi_hopper = 1;
+if ($s >= ^deal_collect_swill) %deal_multi_hopper = 2;
+if ($s >= ^deal_told_donnie) ~deal_swabs_calm;
+switch_int ($s) {
+    case ^deal_seeds : if (inv_total(inv, deal_blindweed_seed) = 0 & $n ! 41) ~questdone_give(deal_blindweed_seed, 1);
+    case ^deal_grown, ^deal_shown : if (inv_total(inv, deal_blindweed) = 0) ~questdone_give(deal_blindweed, 1);
+    case ^deal_fetch_water : if (inv_total(inv, bucket_empty) = 0) ~questdone_give(bucket_empty, 1);
+    case ^deal_collected_water : if (inv_total(inv, deal_stagnant_bucket) = 0) ~questdone_give(deal_stagnant_bucket, 1);
+    case ^deal_catch : if (inv_total(inv, fishbowl_net) = 0) ~questdone_give(fishbowl_net, 1);
+    case ^deal_bless_wrench : if (inv_total(inv, deal_wrench) = 0 & inv_total(inv, deal_wrench_blessed) = 0) ~questdone_give(deal_wrench, 1);
+    case ^deal_collect_swill : if (inv_total(inv, bucket_empty) = 0) ~questdone_give(bucket_empty, 1);
+}
+~send_quest_progress(questlist:deal, %deal_quest, ^deal_complete);
+~update_questpoints;
+mes("Rum Deal: stage <tostring(%deal_quest)>.");
+
+// ::rumtele <n> - 1 Pirate Pete (Port Phasmatys), 2 Captain Braindeath, 3 the blindweed patch,
+// 4 50% Luke's gate (inside), 5 the stagnant lake, 6 the hopper and pressure barrel (attic),
+// 7 Davey, 8 the brewing control, 9 the basement (fever spiders and the tool cupboard), 10 Captain
+// Donnie, 11 a squid fishing spot, 12 Pirate Pete (Braindeath Island)
+[debugproc,rumtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = movecoord(^deal_pete_phasmatys, 0, 0, 1);
+    case 2 : $to = ^deal_braindeath_spot;
+    case 3 : $to = movecoord(^deal_patch, -1, 0, 0);
+    case 4 : $to = movecoord(^deal_luke, 0, 0, 1);
+    case 5 : $to = movecoord(^deal_stagnant_lake, -1, 0, 0);
+    case 6 : $to = movecoord(^deal_hopper, 0, 0, 1); // the hopper's one square (the pressure barrel is used from its west)
+    case 7 : $to = movecoord(^deal_davey, 1, 0, 0);
+    case 8 : $to = movecoord(^deal_spirit_area, 0, 0, 1); // south of the controls
+    case 9 : $to = movecoord(^deal_cupboard, 1, 0, 0); // the cupboard's east side
+    case 10 : $to = movecoord(^deal_donnie, 0, 0, 1);
+    case 11 : $to = movecoord(^deal_squid_spot, 0, 0, 1);
+    case 12 : $to = ^deal_island_landing;
+    case default :
+        mes("::rumtele 1-12: 1 Pete (Phasmatys), 2 Braindeath, 3 patch, 4 Luke's gate, 5 stagnant lake, 6 attic hopper, 7 Davey, 8 brewing control, 9 basement, 10 Donnie, 11 fishing spot, 12 Pete (island)");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 2, ^map_findsquare_lineofwalk));

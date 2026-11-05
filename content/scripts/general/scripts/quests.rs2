@@ -328,6 +328,9 @@ if (%mourning_quest_main >= ^me2_complete) { // EASCape: Mourning's End Part II 
 if (%wanted_main >= ^wanted_complete) { // EASCape: Wanted! (quest_wanted)
     $questpoints = add($questpoints, ^wanted_questpoints);
 }
+if (%deal_quest >= ^deal_complete) { // EASCape: Rum Deal (quest_deal)
+    $questpoints = add($questpoints, ^deal_questpoints);
+}
 if (%onesmallfavour >= ^osf_complete) {
     $questpoints = add($questpoints, ^osf_questpoints);
 }
@@ -446,6 +449,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:twocats, %twocats_quest, ^ttc_complete); // EASCape: A Tail of Two Cats (quest_twocats)
 ~send_quest_progress_colour(questlist:mourning2, %mourning_quest_main, ^me2_complete); // EASCape: Mourning's End Part II (quest_mourning2)
 ~send_quest_progress_colour(questlist:wanted, %wanted_main, ^wanted_complete); // EASCape: Wanted! (quest_wanted)
+~send_quest_progress_colour(questlist:deal, %deal_quest, ^deal_complete); // EASCape: Rum Deal (quest_deal)
 ~send_quest_progress_colour(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);

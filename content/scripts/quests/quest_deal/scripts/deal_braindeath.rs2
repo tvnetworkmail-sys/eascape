@@ -1,0 +1,483 @@
+// EASCape: Rum Deal - Captain Braindeath (Void CaptainBraindeath.kt; the OSRS wiki's transcript for
+// the items used on him). The protest cutscene is Void's camera over the protesters (ours: without
+// its title screen, which isn't in our cache).
+
+[opnpc1,deal_captian_braindeath] @deal_braindeath_talk;
+
+[label,deal_braindeath_talk]
+switch_int (%deal_quest) {
+    case ^deal_barrelor : @deal_braindeath_intro;
+    case ^deal_met_braindeath :
+        if (inv_freespace(inv) > 0) {
+            ~deal_give(deal_blindweed_seed);
+            ~deal_stage(^deal_seeds);
+            ~chatnpc("<p,happy>Finally, <text_gender("lad", "lass")>! Here, take this seed and grow us some Blindweed.");
+            ~chatnpc("<p,neutral>Ye can help yerself to the gardenin' equipment in the basement, just be quick about it!");
+            @deal_blindweed_warnings;
+        }
+    case ^deal_grown : @deal_braindeath_blindweed;
+    case ^deal_blindweed_added : @deal_braindeath_water;
+    case ^deal_water_added : @deal_braindeath_sluglings;
+    case ^deal_pressurised : @deal_braindeath_slugshock;
+    case ^deal_spirit_banished : @deal_braindeath_spider;
+    case ^deal_spider_added : @deal_braindeath_brew;
+    case ^deal_collect_swill :
+        ~chatnpc("<p,quiz>So, what did he say?");
+        ~chatplayer("<p,quiz>Who?");
+        ~chatnpc("<p,angry>The Cap'n!");
+        ~chatplayer("<p,neutral>Oh! I haven't spoken to him yet!");
+        ~chatnpc("<p,angry>Well, get a move on!");
+        if (inv_total(inv, deal_bucket_swill) = 0) ~chatnpc("<p,neutral>And don't ferget the 'rum'!");
+        return;
+    case ^deal_told_donnie : @deal_braindeath_finish;
+    case ^deal_complete :
+        ~chatnpc("<p,quiz>Fancy some 'rum', <text_gender("lad", "lass")>? It's still fresh. Well, fresh-ish...");
+        ~chatplayer("<p,shifty>No... I think I'll pass.");
+        return;
+}
+~chatplayer("<p,quiz>So...");
+@deal_braindeath_options;
+
+[label,deal_braindeath_options]
+switch_int (~p_choice3("What exactly do you want me to do?", 1, "Why do you talk like a pirate?", 2, "So what do you make here anyway?", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>What exactly do you want me to do?");
+        @deal_braindeath_todo;
+    case 2 :
+        ~chatplayer("<p,neutral>Why do you talk like a pirate? Didn't you tell me you were an alchemist?");
+        ~chatnpc("<p,neutral>Arr, <text_gender("lad", "lass")>, 'tis true.");
+        ~chatnpc("<p,neutral>However, 'tis also true that I stumbled across the basic recipe fer my most potent of brews in a terrible alchemical accident.");
+        ~chatnpc("<p,neutral>See, 'twas a dark and stormy night, and the wind was howlin' around the trees as I worked late into the night.");
+        ~chatnpc("<p,neutral>Steppin' too close to a candle with my flask in my hand, I was suddenly swept up in a terrible, yet potently alcoholic, explosion.");
+        ~chatplayer("<p,quiz>And?");
+        ~chatnpc("<p,happy>Well' <text_gender("lad", "lass")>, it seems the fumes from that first batch of me 'rum' did strange things to me brain.");
+        ~chatnpc("<p,neutral>I don't remember the exact words the healers used, but apparently the stuff burned out the tiny, specialised part of me brain that tells me not to talk like a pirate.");
+        ~chatplayer("<p,neutral>That... that... that sounds utterly impossible!");
+        ~chatnpc("<p,angry>Arr! That be what I told them!");
+    case 3 :
+        ~chatplayer("<p,neutral>So what do you make here anyway?");
+        ~chatnpc("<p,happy>'Rum', <text_gender("lad", "lass")>!");
+        ~chatnpc("<p,neutral>The finest, most potent, most flammable and most debilitatin' 'rum' in the whole of RuneScape!");
+        ~chatplayer("<p,neutral>Rum, eh?");
+        ~chatnpc("<p,angry>No, <text_gender("lad", "lass")>, 'rum'!");
+        ~chatplayer("<p,quiz>What's the difference?");
+        ~chatnpc("<p,neutral>Well, see, it's like this.");
+        ~chatnpc("<p,neutral>If we called the stuff we make 'rum' without makin' the little quote gestures every time, then the Cookin' Guild has promised to do entertaininly painful things to us with whisks.");
+        ~chatnpc("<p,neutral>See, technically -");
+        ~chatnpc("<p,shifty>And by that I mean technically according to the Disposal of Hazardous Waste Act and the Health and Safety Laws -");
+        ~chatnpc("<p,neutral>technically, what we're brewin' here is Artificially Produced Hyper Condensed Sweetened 'Rum' Flavour Distillate.");
+        ~chatplayer("<p,quiz>Riiiiiiiight...");
+        ~chatnpc("<p,neutral>So ye see, <text_gender("lad", "lass")>, we just call it 'rum' because the real name be a bit of a mouthful.");
+        ~chatnpc("<p,happy>Want a drop?");
+        ~chatplayer("<p,shifty>No thanks... I think I'll skip it for now.");
+}
+
+// ---------------------------------------------------------------- waking up
+[label,deal_braindeath_intro]
+~chatnpc("<p,quiz>Are ye alright, <text_gender("lad", "lass")>?");
+~chatplayer("<p,drunk>Ohhhh... My head...");
+~chatplayer("<p,neutral>It feels like someone has smacked me one with a bottle...");
+~chatnpc("<p,sad>Arr... Those devils gave ye a nasty knock when ye came to aid us.");
+~chatnpc("<p,happy>But now yer here we'll run those evil brain-eatin' dogs off the island fer good!");
+~chatplayer("<p,quiz>What? What is going on here?");
+~chatplayer("<p,sad>I can't seem to remember anything beyond chatting to a man at the docks.");
+~chatnpc("<p,shifty>Arr. Well, <text_gender("lad", "lass")>, that would be Pete, one of my men.");
+~chatnpc("<p,neutral>He's been out lookin' fer heroes like yerself to aid us in our peril.");
+~chatnpc("<p,shifty>When ye arrived ye took a nasty knock to the head, so ye probably don't remember agreein' to help us out. But I swear to ye that ye did.");
+~chatplayer("<p,quiz>Okay... I'll buy that. It sounds like something I would do.");
+~chatplayer("<p,neutral>So where am I, and what is going on?");
+~chatnpc("<p,neutral>Yer on Braindeath Island!");
+~chatnpc("<p,neutral>Where it lies is a secret, because ye are standin' in the brewery of Cap'n Braindeath, purveyor of the most vitriolic alcoholic beverages in the world!");
+~chatplayer("<p,neutral>Wow!");
+~chatnpc("<p,happy>I am the notorious alchemist Cap'n Braindeath, and this whole operation be my idea!");
+~chatnpc("<p,neutral>With my crew of sturdy, upright pirate brewers, we sail the seven seas, distributing cheap 'alcohol' to all and sundry.");
+~chatnpc("<p,neutral>Well, fer a price, at any rate.");
+~chatplayer("<p,neutral>Oooh!");
+~chatnpc("<p,sad>These be dark times, though, <text_gender("lad", "lass")>. See, a week ago we awoke to find ourselves beseiged.");
+~chatnpc("<p,neutral>The lads and I have held them off so far, but 'tis only a matter of time before they sweep through the buildin' and put us all to the sword.");
+~chatplayer("<p,quiz>Who?");
+~chatnpc("<p,angry>Them!");
+split_init("The Captain points out of the window...", 380, 4, q8_full);
+~mesbox_page(0);
+p_delay(2);
+~deal_protest_cutscene;
+~chatplayer("<p,quiz>Are they...");
+~chatplayer("<p,neutral>...protesting?");
+~chatnpc("<p,angry>Arr, <text_gender("lad", "lass")>! That they are!");
+~chatnpc("<p,neutral>Day and night they seek to break our will with their chantin', and their singin' and their passive resistance!");
+~chatnpc("<p,neutral>Seems they lost their fightin' spirit after the first few days. Now most of them just protest all the time.");
+~chatplayer("<p,quiz>So, what do you want me to do?");
+~chatnpc("<p,neutral>Well, me and the lads got our heads together and decided that if we can get their Cap'n drunk enough, perhaps they'll stop protestin'.");
+~chatnpc("<p,neutral>If that happens, we'll slip out the back and set up shop somewhere else.");
+~chatplayer("<p,neutral>Well, how can I help?");
+~chatnpc("<p,neutral>Well, first of all, we need someone to go out the front and grow us some Blindweed.");
+~chatnpc("<p,neutral>'Tis one of the ingredients of our 'rum'.");
+~chatnpc("<p,neutral>The only problem is that those rottin' fiends have torn up and destroyed all but one of the Blindweed Patches.");
+if (inv_freespace(inv) > 0) {
+    ~deal_give(deal_blindweed_seed);
+    ~deal_stage(^deal_seeds);
+    ~chatnpc("<p,neutral>Here, <text_gender("lad", "lass")>. I'll give ye the seed you'll need fer growin' the herb. Help yerself to the gardenin' equipment in the basement.");
+    @deal_blindweed_warnings;
+}
+~deal_stage(^deal_met_braindeath);
+~chatnpc("<p,neutral>Well, I have some Blindweed seeds fer ye. When ye have some free space fer them, come and talk to me.");
+
+[label,deal_blindweed_warnings]
+~chatnpc("<p,neutral>I'll warn ye again that those devils are sat right on top of the patch.");
+~chatnpc("<p,neutral>Try hecklin' 'em from a distance. Those Swabs may talk a good fight, but if ye can put a scare in 'em they'll keep out of yer way!");
+
+// Void playProtestCutscene: hidden by the brewery's front door, the camera over the protesters
+[proc,deal_protest_cutscene]
+%deal_cutscene = 1;
+~fade_out;
+p_delay(3);
+minimap_toggle(2);
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump(^deal_protest_watch);
+cam_moveto(^deal_protest_cam, 310, 254, 254);
+cam_lookat(^deal_protest_look, 300, 254, 254);
+p_delay(1);
+cam_moveto(^deal_protest_cam2, 310, 2, 0);
+p_delay(2);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+// Void shows the quest's title screen here for 17 ticks (rum_deal_title); ours: the protest alone
+p_delay(15);
+~fade_out;
+p_delay(2);
+p_transmogrify(null);
+minimap_toggle(0);
+p_telejump(^deal_braindeath_spot);
+%deal_cutscene = 0;
+facesquare(^deal_braindeath);
+p_delay(2);
+cam_reset;
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- the blindweed
+[label,deal_braindeath_blindweed]
+if (inv_total(inv, deal_blindweed) > 0) {
+    ~chatplayer("<p,happy>Here! I have your Blindweed!");
+    ~chatnpc("<p,neutral>Splendid, <text_gender("lad", "lass")>! Go shove it in the Intake Hopper upstairs.");
+    ~deal_stage(^deal_shown);
+    ~chatnpc("<p,neutral>We'll beat them zombies yet! Arr!");
+    return;
+}
+~chatplayer("<p,sad>Captain... I grew some blindweed but then I lost it...");
+~chatnpc("<p,neutral>There there, <text_gender("lad", "lass")>. 'Tis all right.");
+if (inv_freespace(inv) > 0) {
+    ~chatnpc("<p,neutral>Here, I've been savin' some fer an emergency.");
+    ~deal_stage(^deal_shown);
+    ~chatnpc("<p,neutral>Go shove that in the Intake Hopper, and try not ter lose this lot!");
+    ~deal_give(deal_blindweed);
+    return;
+}
+~chatnpc("<p,neutral>When ye've quite finished blubbin', come see me and I'll give ye some Blindweed.");
+~chatnpc("<p,neutral>Clear a little space from yer pack first though, <text_gender("lad", "lass")>, or ye'll be hard pressed to hold it.");
+
+// ---------------------------------------------------------------- the stagnant water
+[label,deal_braindeath_water]
+~chatplayer("<p,quiz>Well, that takes care of the Blindweed. What now?");
+~chatnpc("<p,neutral>Well, now ye've shoved the Blindweed into the mix, what we need is a bucket of stagnant water.");
+~chatplayer("<p,quiz>Where can I get some of that?");
+~chatnpc("<p,happy>Ye won't have to go far, <text_gender("lad", "lass")>, we have a pool of the stuff here!");
+~chatplayer("<p,neutral>Here in the brewery?");
+~chatnpc("<p,laugh>No, <text_gender("lad", "lass")>, that would be a strange thing to have in a brewery!");
+~chatnpc("<p,neutral>It's up the mountain to the north.");
+~chatplayer("<p,quiz>Up a mountain?");
+~chatnpc("<p,happy>Well, 'tis technically a volcano, but ye get the general idea.");
+~chatplayer("<p,quiz>And I assume the place is crawling with these zombies?");
+~chatnpc("<p,happy>No <text_gender("lad", "lass")>, there be not a zombie in sight.");
+~chatplayer("<p,neutral>Oh, good!");
+~chatnpc("<p,neutral>All ye have to do is get past the keen-eyed lookout that's been spottin' my men when I send 'em.");
+~chatnpc("<p,neutral>I'll tell ye that it won't be easy!");
+~chatplayer("<p,sad>When is it ever...");
+~chatnpc("<p,happy>Don't ferget yer bucket!");
+if (inv_total(inv, bucket_empty) = 0 & inv_freespace(inv) > 0) ~deal_give(bucket_empty);
+~deal_stage(^deal_fetch_water);
+
+// ---------------------------------------------------------------- the Sluglings
+[label,deal_braindeath_sluglings]
+~chatplayer("<p,quiz>So is that everything?");
+~chatnpc("<p,neutral>No, <text_gender("lad", "lass")>, next ye'll need to go outside and catch five loads of Sluglings fer the brew.");
+~chatplayer("<p,quiz>What? Sluglings? That's disgusting!");
+~chatnpc("<p,neutral>Arr, <text_gender("lad", "lass")>, that it be.");
+~chatnpc("<p,shifty>To a weak-stomached, knock-kneed landlubber...");
+~chatplayer("<p,neutral>Why Sluglings?");
+~chatnpc("<p,neutral>'Cos, <text_gender("lad", "lass")> they're one of our super-secret ingredients!");
+~chatnpc("<p,shifty>Yer not too susceptible to mind control are ye <text_gender("lad", "lass")>?");
+~chatplayer("<p,quiz>Why?");
+~chatnpc("<p,shifty>Because they have been known te, well, influence people every now and again.");
+if (%seaslugquest = ^seaslug_complete) {
+    ~chatplayer("<p,shock>They aren't related to those Seaslugs are they?");
+    ~chatnpc("<p,angry>Aye they're related! Tis a good job they'll starve if they tried te eat yer brains!");
+} else {
+    ~chatnpc("<p,happy>I'm sure ye've got nothing te worry about!");
+}
+~chatplayer("<p,quiz>So what should I do with these Sluglings anyway?");
+~chatnpc("<p,neutral>Well, ye shove them in the Pressure Barrel in the attic.");
+~chatnpc("<p,shifty>And then ye...");
+~chatplayer("<p,quiz>And then I...");
+~chatnpc("<p,neutral>And then ye...");
+~chatnpc("<p,shifty>Pressurise 'em.");
+~chatplayer("<p,shock>Pressurise them?!");
+~chatnpc("<p,neutral>Look, we don't have all day, get movin'.");
+~deal_stage(^deal_catch);
+if (inv_freespace(inv) > 0) {
+    if (inv_total(inv, fishbowl_net) > 0) {
+        ~chatnpc("<p,neutral>Arr! I see ye've already got a fishbowl in a net.");
+    } else {
+        ~deal_give(fishbowl_net);
+        ~chatnpc("<p,neutral>Here. Ye'll need this to catch them.");
+    }
+    ~chatplayer("<p,quiz>What should I do with it?");
+    ~chatnpc("<p,neutral>Just dunk it in the water. I'm sure a clever <text_gender("lad", "lass")> like yerself will have no problem.");
+    ~chatnpc("<p,neutral>Oh, and if ye haul up some squiddy-looking things, don't tate to shove 'em in the barrel too.");
+    ~chatnpc("<p,neutral>They add a special, fishy texture to the drink.");
+    return;
+}
+~chatnpc("<p,neutral>Ye'll be needin' a fishbowl in a big net to help ye catch them slimy little blighters.");
+~chatnpc("<p,neutral>Pity ye ain't got any free space to carry one.");
+
+// ---------------------------------------------------------------- the possessed controls
+[label,deal_braindeath_slugshock]
+~chatplayer("<p,drunk>How could I kill my sluggy brethren...?");
+~chatnpc("<p,angry>Snap out of it, <text_gender("lad", "lass")>! Yer in slug-shock!");
+~chatplayer("<p,quiz>What? Who?");
+~chatplayer("<p,neutral>Gah! Sorry about that.");
+~chatnpc("<p,neutral>No problem. Well, now ye have just one more ingredient to grab, and then we can get this 'rum' flowin!");
+~chatplayer("<p,quiz>Well, how far away will I have to go to grab it?");
+~chatnpc("<p,happy>Not far at all, <text_gender("lad", "lass")>. Ye've just got to get it from the basement!");
+~chatplayer("<p,neutral>Great! What is it?");
+~chatnpc("<p,neutral>Hold yer horses, <text_gender("lad", "lass")>! While ye was off gallivantin' with yer slimy aquatic playmates, the 'rum' achieved spiritual critical mass.");
+~chatnpc("<p,neutral>To put it in terms ye'll understand: the brewin' equipment is possessed.");
+~chatplayer("<p,shock>Possessed!");
+~chatnpc("<p,happy>Don't ye worry yerself about it! This happens all the time.");
+~chatnpc("<p,neutral>Well, to tell the truth, my lads are a little quicker off the mark, so it only happens occasionally.");
+~chatnpc("<p,neutral>Not that I'm criticisin' yer performance, <text_gender("lad", "lass")>.");
+~deal_stage(^deal_bless_wrench);
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, deal_wrench, 1);
+    ~chatnpc("<p,happy>Give the controls a couple of belts with this wrench.");
+    ~chatnpc("<p,neutral>One of the lads did a little priestin' on the side before he came here. Get him to bless it and ye'll do fine.");
+    return;
+}
+~chatnpc("<p,happy>We've got a special item fer dealin' with this problem. Dump some of that stuff yer carryin' and I'll hand it over!");
+
+// ---------------------------------------------------------------- the fever spider
+[label,deal_braindeath_spider]
+~chatnpc("<p,neutral>Well, now that ye've got that spirit out of there ye can dump in the final ingredient.");
+~chatplayer("<p,quiz>And that is?");
+~chatnpc("<p,neutral>We need the body of a diseased Fever Spider!");
+~chatplayer("<p,shock>Remind me never to drink anything you have ever made. Or touched.");
+~chatnpc("<p,neutral>When yer quite done flappin' yer lips, go down into the basement and whack spiders until ye find a fever spider body.");
+~chatnpc("<p,neutral>Shove it in the hopper, and then we're in business.");
+if (inv_total(worn, deal_slayer_gloves) > 0) {
+    ~chatnpc("<p,happy>I see yer already wearin' some Slayer Gloves. That'll keep the Fever Spiders from gnawin' yer hands off!");
+} else if (inv_total(inv, deal_slayer_gloves) > 0) {
+    ~chatnpc("<p,neutral>Ye'll be wanting to put them Slayer Gloves of yours on before ye head off <text_gender("lad", "lass")>, as those Fever Spiders carry a nasty disease.");
+    ~chatnpc("<p,neutral>They'll give it to ye if ye aren't wearin' somethin' too thick fer them to bite through.");
+} else {
+    ~chatnpc("<p,neutral>Ye may want to hop back to the mainland and see a Slayer Master.");
+    ~chatnpc("<p,neutral>These Fever Spiders carry a nasty disease, and ye'll need a pair of Slayer Gloves on to not catch it!");
+}
+~deal_stage(^deal_kill_spider);
+
+// ---------------------------------------------------------------- the brew
+[label,deal_braindeath_brew]
+~chatplayer("<p,neutral>Well, I stuck your spider in the hopper, what now?");
+~chatnpc("<p,happy>Now ye stand well back and watch the glory of brewin' at its best!");
+if_close;
+// Void playBrewCutscene: the camera on the controls as they start working
+cam_moveto(^deal_brew_cam, 250, 254, 254);
+cam_lookat(^deal_brew_look, 100, 254, 254);
+p_delay(3);
+%deal_multi_hopper = 2;
+p_delay(3);
+cam_reset;
+~chatplayer("<p,quiz>Is that it?");
+~chatnpc("<p,happy>Aye <text_gender("lad", "lass")>! Now get outside and feed that stuff to the pirates.");
+~chatnpc("<p,neutral>Try givin' it to the Captain, he's in charge. Get him bladdered and the rest will fall!");
+if (inv_total(inv, bucket_empty) > 0) {
+    ~chatnpc("<p,neutral>Ye'll need to use that bucket of yours.  Most stuff can't stand bein' in contact with our 'rum' fer too long.");
+    ~chatnpc("<p,neutral>Took us a lot of dissolvin' to work that one out.");
+    ~deal_stage(^deal_collect_swill);
+} else if (inv_freespace(inv) > 0) {
+    inv_add(inv, bucket_empty, 1);
+    ~chatnpc("<p,neutral>Here, ye'll need to use one of these.  The rum tends to eat through almost everything else.");
+    ~deal_stage(^deal_collect_swill);
+} else {
+    ~chatnpc("<p,neutral>Oh, and don't try using anything but a bucket. Our 'rum' tends to eat through stuff.");
+}
+
+// ---------------------------------------------------------------- Rabid Jack
+[label,deal_braindeath_finish]
+~chatnpc("<p,quiz>So, what did he say?");
+~chatplayer("<p,neutral>Not much that was coherent.");
+~chatplayer("<p,quiz>Who is Rabid Jack?");
+~chatnpc("<p,shock>Rabid Jack!");
+~chatnpc("<p,neutral>THE Rabid Jack!");
+~chatnpc("<p,neutral>Egad...I haven't heard that name...");
+~chatnpc("<p,shifty>...before.");
+~chatplayer("<p,quiz>So, who is he?");
+~chatnpc("<p,shifty>Dunno <text_gender("lad", "lass")>.");
+~chatnpc("<p,happy>Almost as if I aren't changing subjects, well done!");
+~chatnpc("<p,neutral>With those rottin' dogs legless they'll never keep fighting us now, so we've decided to stay here and keep the 'rum' flowin!");
+~chatnpc("<p,neutral>Thanks, <text_gender("lad", "lass")>. We'd never have managed without ye!");
+if_close;
+~deal_complete;
+
+// ---------------------------------------------------------------- "What exactly do you want me to do?"
+[label,deal_braindeath_todo]
+switch_int (%deal_quest) {
+    case ^deal_met_braindeath : ~chatnpc("<p,neutral>Well, I need ye to go grow me some Blindweed, but ye are carryin' too much stuff fer me to give ye the seed.");
+    case ^deal_seeds : @deal_braindeath_grow;
+    case ^deal_shown :
+        ~chatnpc("<p,neutral>I want ye to go put yer Blindweed in the intake hopper, and to be sharp about it!");
+        if (inv_total(inv, deal_blindweed) > 0) return;
+        ~chatplayer("<p,quiz>And what happens if I lose the Blindweed between here and the intake hopper?");
+        ~chatplayer("<p,shifty>Theoretically, of course, as it would be almost impossible for me to simply lose the stuff in the time it will take me.");
+        ~chatnpc("<p,angry>Gah!");
+        ~chatnpc("<p,neutral>Yer nothin' better than a sea-slug wearin', lilly-legged, bandy-livered landlubber!");
+        if (inv_freespace(inv) > 0) {
+            ~chatnpc("<p,neutral>Here, I was savin' a little fer an emergency, so take this and shove it in the hopper before I bung ye in there and turn the handle!");
+            ~deal_give(deal_blindweed);
+            ~chatplayer("<p,neutral>You had some all the time?");
+            ~chatplayer("<p,neutral>Why was I risking my neck killing pirates to grow some if you had some all along?");
+            ~chatnpc("<p,neutral>Less talk, <text_gender("lad", "lass")>, haven't ye got a hopper to be fillin'?");
+        } else {
+            ~chatnpc("<p,neutral>I've got a little put aside fer an emergency. Drop some of that junk yer carryin', and come see me to get it.");
+        }
+    case ^deal_fetch_water :
+        ~chatnpc("<p,neutral>To get off yer lazy behind and head out to the stagnant lake on top of the volcano.");
+        ~chatnpc("<p,neutral>Chop chop, <text_gender("lad", "lass")>.");
+        if (inv_total(inv, bucket_empty) = 0 & inv_freespace(inv) > 0) inv_add(inv, bucket_empty, 1);
+        ~chatnpc("<p,happy>Don't ferget yer bucket!");
+    case ^deal_collected_water :
+        ~chatnpc("<p,neutral>I want ye to go pour yer bucket into yonder hopper.");
+        ~chatnpc("<p,neutral>Take yer time, <text_gender("lad", "lass")>, we're only bein' besieged by zombies.");
+        if (inv_total(inv, deal_stagnant_bucket) > 0) return;
+        ~chatplayer("<p,shifty>Err... Captain...");
+        ~chatnpc("<p,neutral>Aye, what is it, <text_gender("lad", "lass")>?");
+        ~chatplayer("<p,sad>Well, on my way over to the hopper some big boy stole the bucket and ran away...");
+        ~chatnpc("<p,angry>Give me strength!");
+        ~chatnpc("<p,neutral>If ye weren't so good at distractin' the zombies I'd skin ye alive!");
+        if (inv_freespace(inv) > 0) {
+            inv_add(inv, deal_stagnant_bucket, 1);
+            ~chatnpc("<p,neutral>Take this bucket and pour it into the hopper. If ye don't get it right this time I'll have yer guts fer garters!");
+        } else {
+            ~chatnpc("<p,neutral>Well, 'tis a good job I saved a little, isn't it? Now get rid of something so I can give it to ye.");
+        }
+    case ^deal_catch : @deal_braindeath_net;
+    case ^deal_bless_wrench : @deal_braindeath_wrench;
+    case ^deal_kill_spider :
+        if (inv_total(worn, deal_slayer_gloves) > 0) {
+            ~chatnpc("<p,happy>I see yer already wearin' some Slayer Gloves. That'll keep the Fever Spiders from gnawin' yer hands off!");
+        } else if (inv_total(inv, deal_spider_body) > 0) {
+            ~chatnpc("<p,happy>I want ye to jam that body into the hopper and come see me.");
+            ~chatnpc("<p,neutral>Arr! Yer not as slow as I took ye fer!");
+        } else {
+            ~chatnpc("<p,neutral>I want ye to go kill a Fever Spider and jam its body in the hopper.");
+            ~chatnpc("<p,neutral>Whenever yer ready, <text_gender("lad", "lass")>.");
+        }
+}
+
+[label,deal_braindeath_grow]
+~chatnpc("<p,neutral>Arr, well I want ye to get outside and grow some Blindweed.");
+~chatnpc("<p,neutral>Best be careful, <text_gender("lad", "lass")>, fer them pirates will skin ye alive if they catch ye.");
+if (%deal_farming >= ^deal_patch_seed) {
+    ~chatnpc("<p,happy>Ye'll need ter keep an eye on yer plants, <text_gender("lad", "lass")>.");
+    ~chatnpc("<p,neutral>Wouldn't want them pirates to trample all over 'em, would ye?");
+    return;
+}
+if (inv_total(inv, deal_blindweed_seed) > 0) return;
+~chatplayer("<p,quiz>And what happens if I lose the seed?");
+~chatnpc("<p,angry>Then I'll have ye flogged, hung, slapped with a haddock and sent back out there to fight the zombie hordes with little more than harsh language!");
+if (inv_freespace(inv) > 0) {
+    ~chatnpc("<p,neutral>Arr... Here, <text_gender("lad", "lass")>. Just take this and get goin'!");
+    inv_add(inv, deal_blindweed_seed, 1);
+    return;
+}
+~chatnpc("<p,neutral>Come back and see me when ye ain't loaded down with stuff, and I'll give ye another.");
+
+[label,deal_braindeath_net]
+~chatnpc("<p,neutral>I want ye to go outside and catch five sea creatures from the squid fishin' spot.");
+~chatnpc("<p,neutral>When ye've grabbed them, jam 'em in the barrel in the attic and pressurise 'em.");
+if (inv_total(inv, fishbowl_net) > 0) return;
+~chatplayer("<p,quiz>How am I suppost to catch these things?");
+~chatnpc("<p,neutral>Ye'll be needin' to use a fishbowl in a big net to snare these little devils.");
+~chatplayer("<p,quiz>And if I don't have one?");
+if (inv_total(inv, fishbowl_empty) = 0 & inv_total(inv, big_net) > 0) {
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, fishbowl_empty, 1);
+        ~chatnpc("<p,angry>Yer lucky all my precious fish died last week, <text_gender("lad", "lass")>. Take this and wrap it in that net, then go grab some Sluglings!");
+    } else {
+        ~chatnpc("<p,angry>Well, I'll give ye a fishbowl fer that net of yours if ye'll drop some of that clutter in yer pack.");
+    }
+    return;
+}
+if (inv_total(inv, big_net) = 0 & inv_total(inv, fishbowl_empty) > 0) {
+    ~chatnpc("<p,angry>Gah! I don't believe it!");
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, big_net, 1);
+        ~chatnpc("<p,neutral>Here, wrap this around yer fishbowl and get back out there!");
+    } else {
+        ~chatnpc("<p,neutral>Well, I'll give ye a net fer that fishbowl of yours if ye'll drop some of that clutter in yer pack.");
+    }
+    return;
+}
+~chatnpc("<p,angry>Why, I oughta...");
+if (inv_freespace(inv) > 0) {
+    ~chatnpc("<p,neutral>Here! Try not ter lose this one! These things don't grow on trees, ye know.");
+    inv_add(inv, fishbowl_net, 1);
+    return;
+}
+~chatnpc("<p,neutral>Come see me when yer not so laden down. I've got another one fer ye if ye need it.");
+
+[label,deal_braindeath_wrench]
+~chatnpc("<p,neutral>I want ye to go clear the Evil Spirit out of the brewin' controls. Use the wrench I gave ye, but get it blessed first.");
+if (inv_total(inv, deal_wrench_blessed) > 0) {
+    ~chatnpc("<p,neutral>I see ye've got the wrench good and blessed, so go whack the controls till the Evil Spirit pops out.");
+    return;
+}
+if (inv_total(inv, deal_wrench) > 0) return;
+~chatplayer("<p,shifty>Mumblemumblewhatwrenchmumble...");
+~chatnpc("<p,angry>What were that?");
+~chatplayer("<p,shifty>I said, what if I've lost the wrench?");
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, deal_wrench, 1);
+    ~chatnpc("<p,angry>Arr! I'd get more work out of a minty flavoured brick!");
+    ~chatnpc("<p,neutral>If ye lose this one I'll have ye turned inside out, covered with spiders and turned rightside in so they'll eat ye alive!");
+    ~chatplayer("<p,shock>Steady on!");
+    return;
+}
+~chatnpc("<p,angry>Arr, ye landlubber!");
+~chatnpc("<p,neutral>Calm down, remember yer ulcer...");
+~chatnpc("<p,neutral>Look, I've got another wrench, but ye don't have any free space fer it. Come back when ye do.");
+
+// ---------------------------------------------------------------- items on the Captain
+// Void (Sluglings, Karamthulhu, the spider body); the OSRS wiki's transcript (the seed, the holy
+// wrench)
+[opnpcu,deal_captian_braindeath]
+switch_obj (last_useitem) {
+    case deal_slugling :
+        ~chatplayer("<p,confused>The slugs are talking to me... They tell me to do bad things...");
+        ~chatnpc("<p,angry>Gimme that!");
+        ~mesbox("The Captain takes the Slugling and stamps on it until it stops squirming, then hands it back.");
+        ~chatplayer("<p,shock>Egad... what just happened?");
+        ~chatnpc("<p,angry>What happened is ye were messin' about with Sluglings!");
+        ~chatnpc("<p,angry>Don't ye have anything better to do?");
+    case deal_karamthulhu : ~chatnpc("<p,confused>Gah! Get that slimy thing away from me!");
+    case deal_spider_body :
+        ~chatnpc("<p,confused>What are ye doin', <text_gender("lad", "lass")>? I want ye to shove that in the hopper, not in me face!");
+        ~chatnpc("<p,confused>Ye just can't get good help these days...");
+    case deal_blindweed_seed :
+        ~chatplayer("<p,quiz>What exactly do you want me to do with this?");
+        ~chatnpc("<p,neutral>Arr, well, I want ye to get outside and grow some Blindweed.");
+        ~chatnpc("<p,neutral>Best be careful, <text_gender("lad", "lass")>, fer them pirates will skin ye alive if they catch ye.");
+    case deal_wrench_blessed : ~chatnpc("<p,neutral>I see ye've got the wrench good and blessed, so go whack the hopper 'til the Evil Spirit pops out.");
+    case default : ~displaymessage(^dm_default);
+}

@@ -1,0 +1,147 @@
+// EASCape: Rum Deal (31 October 2005) - the journal, the stage, the reward and the holy wrench.
+// The journal is Void's (RumDeal.kt, "the original's journal is cumulative": each step is struck
+// through once done and the next is added below it). Requirements: Void's journal and Pirate
+// Pete's check (Zogre Flesh Eaters and 42 Slayer to start; 40 Farming, 50 Fishing, 47 Prayer and
+// 42 Crafting to finish). Priest in Peril is the OSRS wiki's (ours: as a journal line; Port
+// Phasmatys is past the Paterdomus temple). The reward (Void, the RS and OSRS wikis): 2 quest
+// points, 7,000 Farming, Fishing and Prayer experience, the holy wrench.
+
+[if_button,questlist:deal]
+def_int $s = %deal_quest;
+if ($s = ^deal_not_started) {
+    def_string $req = "@dbl@I need to speak to @dre@Pirate Pete@dbl@ in Port Phasmatys.||@dbl@To complete this quest I need:|";
+    $req = append($req, ~deal_req_line(stat_base(farming), 40, "40 Farming"));
+    $req = append($req, ~deal_req_line(stat_base(fishing), 50, "50 Fishing"));
+    $req = append($req, ~deal_req_line(stat_base(prayer), 47, "47 Prayer"));
+    $req = append($req, ~deal_req_line(stat_base(crafting), 42, "42 Crafting"));
+    $req = append($req, ~deal_req_line(stat_base(slayer), 42, "42 Slayer"));
+    $req = append($req, ~deal_req_line(%zogre, ^zogre_complete, "I must have completed Zogre Flesh Eaters"));
+    $req = append($req, ~deal_req_line(%priestperil, ^priestperil_complete, "I must have completed Priest in Peril")); // ours (the OSRS wiki)
+    $req = append($req, "@dre@To be able to defeat a level 150 Monster");
+    ~quest_journal("Rum Deal", $req);
+    return;
+}
+def_string $t = ~deal_journal_steps($s);
+if ($s >= ^deal_complete) {
+    $t = append($t, "||@str@I have spoken to Captain Braindeath, who has decided to|@str@stay on the island and keep the Zombie Pirates drunk!|@str@Despite claiming he has never heard of Rabid Jack he was|@str@more than happy with my performance, and rewarded me|@str@with Farming, Fishing and Prayer experience, as well as the|@str@Blessed Wrench.||@red@QUEST COMPLETE!");
+}
+~quest_journal("Rum Deal", $t);
+
+[proc,deal_req_line](int $have, int $need, string $text)(string)
+if ($have >= $need) return("@str@<$text>|");
+return("@dre@<$text>|");
+
+// one step: "" before it, its live text (after a blank line) at it, struck through after it
+[proc,deal_j](int $s, int $at, string $live, string $struck)(string)
+if ($s < $at) return("");
+if ($s = $at) return("||<$live>");
+return("|<$struck>");
+
+[proc,deal_journal_steps](int $s)(string)
+def_string $t;
+if ($s < 2) {
+    $t = "@dbl@I have spoken to @dre@Pirate Pete@dbl@, and I have agreed to help him|@dbl@find his @dre@Family Sword@dbl@.";
+} else {
+    $t = "@str@I have spoken to Pirate Pete, and have agreed to help him|@str@find his Family Sword.";
+}
+$t = append($t, ~deal_j($s, 2, "@dbl@I have agreed to help @dre@Pirate Pete@dbl@ slay @dre@Barrelor the|@dre@Destroyer@dbl@ so that he can reclaim his lands.", "@str@I have agreed to help Pirate Pete slay Barrelor the|@str@Destroyer so that he can reclaim his lands."));
+$t = append($t, ~deal_j($s, 3, "@dbl@I have a splitting headache. @dre@Captain Braindeath@dbl@ has|@dbl@explained the situation to me, and I have agreed to help|@dbl@brew up a batch of @dre@'rum'@dbl@.", "@str@I have a splitting headache. Captain Braindeath has|@str@explained the situation to me, and I have agreed to help|@str@brew up a batch of 'rum'."));
+if ($s = 4) {
+    def_string $seed = "@dbl@I have been given some @dre@Blindweed Seeds@dbl@, and told to grow|@dbl@them in the @dre@Herb Patch@dbl@ outside. @dre@Captain Braindeath|@dbl@recommended that I try and intimidate the @dre@Swabs@dbl@ guarding|@dbl@the @dre@Herb Patch@dbl@ if I want them to stop attacking me.";
+    if (%deal_farming >= ^deal_patch_seed) {
+        $seed = append($seed, "||@dbl@I have planted my @dre@Blindweed Seeds@dbl@, and should wait for|@dbl@them to grow.");
+    }
+    $t = append($t, append("||", $seed));
+} else if ($s > 4) {
+    $t = append($t, "|@str@I have been given some Blindweed Seeds, and told to grow|@str@them in the Herb Patch outside. Captain Braindeath|@str@recommended that I try and intimidate the Swabs guarding|@str@the Herb Patch if I want them to stop attacking me.|@str@I have planted my Blindweed Seeds, and should wait for|@str@them to grow.");
+}
+if ($s = 5) {
+    $t = append($t, "||@dbl@I have grown some @dre@Blindweed@dbl@, I should show it to @dre@Captain|@dre@Braindeath@dbl@ so that he can tell me what to do with it.");
+    if (inv_total(inv, deal_blindweed) = 0) {
+        $t = append($t, "||@dbl@Having lost my @dre@Blindweed@dbl@ I should go and see @dre@Captain|@dre@Braindeath@dbl@, he may have some kept to one side for use in|@dbl@an emergency.");
+    }
+} else if ($s > 5) {
+    $t = append($t, "|@str@I have grown some Blindweed, I should show it to Captain|@str@Braindeath so that he can tell me what to do with it.");
+}
+$t = append($t, ~deal_j($s, 6, "@dbl@I have shown my @dre@Blindweed@dbl@ to @dre@Captain Braindeath@dbl@. He told|@dbl@me to put it into the @dre@Intake Hopper@dbl@.", "@str@I have shown my Blindweed to Captain Braindeath. He told|@str@me to put it into the Intake Hopper."));
+$t = append($t, ~deal_j($s, 7, "@dbl@I have added the @dre@Blindweed@dbl@ to the @dre@Intake Hopper@dbl@. I should|@dbl@ask @dre@Captain Braindeath@dbl@ what he wants me to do next.", "@str@I have added the Blindweed to the hopper. I should ask|@str@Captain Braindeath what he wants me to do next."));
+$t = append($t, ~deal_j($s, 8, "@dre@Captain Braindeath@dbl@ has told me to fetch a bucket of|@dre@Stagnant Water@dbl@ from the @dre@Stagnant Lake@dbl@ near the top of|@dbl@the @dre@Volcano@dbl@ to the North.", "@str@Captain Braindeath has told me to fetch a bucket of|@str@Stagnant Water from the Stagnant Lake near the top of|@str@the Volcano to the North."));
+if ($s = 9) {
+    $t = append($t, "||@dbl@Using superior cunning and stealth I have managed to exit|@dbl@the Brewery compound and have collected a bucket of|@dre@Stagnant Water@dbl@.");
+    if (inv_total(inv, deal_stagnant_bucket) = 0) {
+        $t = append($t, "||@dbl@Due to my inferior ability to hold objects I have lost my|@dre@Bucket of Stagnant Water@dbl@. I should go and see @dre@Captain|@dre@Braindeath@dbl@ to see what he wants me to do about this|@dbl@situation.");
+    }
+} else if ($s > 9) {
+    $t = append($t, "|@str@Using superior cunning and stealth I have managed to exit|@str@the Brewery compound and have collected a bucket of|@str@Stagnant Water.");
+}
+$t = append($t, ~deal_j($s, 10, "@dbl@I have poured the @dre@Stagnant Water@dbl@ into the @dre@Intake Hopper@dbl@. I|@dbl@should speak to @dre@Captain Braindeath@dbl@ again to see what else|@dbl@he needs.", "@str@I have poured the Stagnant Water into the Intake Hopper. I|@str@should speak to Captain Braindeath again to see what else|@str@he needs."));
+$t = append($t, ~deal_j($s, 11, "@dre@Captain Braindeath@dbl@ has told me to fish with a @dre@Fishbowl and|@dre@Big Net@dbl@ in the @dre@Squid Fishing Spot@dbl@. Whatever @dre@5 Sea|@dre@Creatures@dbl@ I dredge up are to be put into a barrel and|@dbl@pressurised.", "@str@Captain Braindeath has told me to fish with a Fishbowl and|@str@Big Net in the Squid Fishing Spot. Whatever 5 Sea|@str@Creatures I dredge up are to be put into a barrel and|@str@pressurised."));
+$t = append($t, ~deal_j($s, 12, "@dbl@I have pressurised the @dre@Assorted Sea Creatures@dbl@ in the|@dre@Pressure Barrel@dbl@. I should see @dre@Captain Braindeath@dbl@ to check|@dbl@if this is all he needs me to do.", "@str@I have pressurised the Assorted Sea Creatures in the|@str@Pressure Barrel. I should see Captain Braindeath to check|@str@if this is all he needs me to do."));
+if ($s = 13) {
+    $t = append($t, "||@str@Apparently the Brewing Equipment has become possessed.|@str@Captain Braindeath has given me a Wrench and told me to|@str@sort it out. I should check amongst the Brewers to see|@str@which of them can bless it for me.||");
+    if (inv_total(inv, deal_wrench_blessed) > 0) {
+        $t = append($t, "@dbl@I am now the proud owner of a @dre@Holy Wrench@dbl@. I will take up|@dbl@this @dre@Holy Wrench@dbl@ and strike the @dre@Brewing Controls@dbl@ until they|@dbl@are @dre@very, very sorry@dbl@.");
+    } else if (inv_total(inv, deal_wrench) = 0) {
+        $t = append($t, "@dbl@I have just realised that I will have a hard time getting my|@dre@Wrench@dbl@ blessed now that I have thrown it away. I think I|@dbl@should see @dre@Captain Braindeath@dbl@ to get a replacement|@dbl@before the situation deteriorates further.");
+    }
+} else if ($s > 13) {
+    $t = append($t, "|@str@Apparently the Brewing Equipment has become possessed.|@str@Captain Braindeath has given me a Wrench and told me to|@str@sort it out. I should check amongst the Brewers to see|@str@which of them can bless it for me.|@str@I am now the proud owner of a Holy Wrench. I will take up|@str@this Holy Wrench and strike the Brewing Controls until they|@str@are very, very sorry.");
+}
+$t = append($t, ~deal_j($s, 14, "@dbl@I have banished the @dre@Evil Spirit@dbl@. @dre@Captain Braindeath@dbl@ told me|@dbl@there is one more ingredient left. I should ask him what|@dbl@this is.", "@str@I have banished the Evil Spirit. Captain Braindeath told me|@str@there is one more ingredient left. I should ask him what|@str@this is."));
+$t = append($t, ~deal_j($s, 15, "@dre@Captain Braindeath@dbl@ wants me to kill a @dre@Fever Spider@dbl@, and put|@dbl@its @dre@Body@dbl@ into the @dre@Intake Hopper@dbl@. He told me to wear @dre@Slayer|@dre@Gloves@dbl@ (Available from the @dre@Slayer Masters@dbl@ apparently)|@dbl@while I did so, as they carry a nasty disease. @dre@Mental Note;|@dbl@do not drink whatever comes out of that machine.", "@str@Captain Braindeath wants me to kill a Fever Spider, and put|@str@its Body into the Intake Hopper. He told me to wear Slayer|@str@Gloves (Available from the Slayer Masters apparently)|@str@while I did so, as they carry a nasty disease. Mental Note;|@str@do not drink whatever comes out of that machine."));
+$t = append($t, ~deal_j($s, 16, "@dbl@I have placed the @dre@Fever Spider Body@dbl@ in the @dre@Hopper@dbl@. @dre@Captain|@dre@Braindeath@dbl@ will be able to produce some @dre@'rum'@dbl@ when I tell|@dbl@him.", "@str@I have placed the Fever Spider Body in the Hopper. Captain|@str@Braindeath will be able to produce some 'rum' when I tell|@str@him."));
+$t = append($t, ~deal_j($s, 17, "@dre@Captain Braindeath@dbl@ has filled the @dre@Output Vat@dbl@ with @dre@'rum'@dbl@. I|@dbl@should take a bucket of the stuff to @dre@Captain Donnie@dbl@ and|@dbl@give it to him.", "@str@Captain Braindeath has filled the Output Vat with 'rum'. I|@str@should take a bucket of the stuff to Captain Donnie and|@str@give it to him."));
+$t = append($t, ~deal_j($s, 18, "@dbl@I have spoken to @dre@Captain Donnie@dbl@, and have found out the|@dbl@name of his boss, @dre@Rabid Jack@dbl@.  I should tell @dre@Captain|@dre@Braindeath@dbl@ about this.", "@str@I have spoken to Captain Donnie, and have found out the|@str@name of his boss, Rabid Jack.  I should tell Captain|@str@Braindeath about this."));
+return($t);
+
+// ---------------------------------------------------------------- the stage
+[proc,deal_stage](int $s)
+%deal_quest = $s;
+~send_quest_progress(questlist:deal, %deal_quest, ^deal_complete);
+
+// ---------------------------------------------------------------- the reward
+// Void completeRumDeal: 7,000 Prayer, Fishing and Farming experience, the holy wrench (on the
+// ground if your pack is full), the barrel's counts cleared, the controls left working, every swab
+// calmed and the blindweed patch left weeded; 2 quest points.
+[proc,deal_complete]
+%deal_quest = ^deal_complete;
+stat_advance(prayer, 70000);
+stat_advance(fishing, 70000);
+stat_advance(farming, 70000);
+~deal_give(deal_wrench_blessed);
+%deal_barrel = 0;
+%deal_slug = 0;
+%deal_thulhu = 0;
+%deal_multi_hopper = 2;
+~deal_swabs_calm;
+%deal_farming = ^deal_patch_weeded;
+cleartimer(deal_blindweed);
+session_log(^log_adventure, "Quest complete: Rum Deal");
+~send_quest_complete(questlist:deal, deal_wrench_blessed, 250, ^deal_questpoints, "You have completed the Rum Deal Quest!", "7,000 Prayer XP|7,000 Fishing XP|7,000 Farming XP|A Holy Wrench");
+
+// Void advanceSwabVarbits: every swab (deal_multi_pirate_a-f) leaves you alone
+[proc,deal_swabs_calm]
+%deal_multi_pirate_a = 1;
+%deal_multi_pirate_b = 1;
+%deal_multi_pirate_c = 1;
+%deal_multi_pirate_d = 1;
+%deal_multi_pirate_e = 1;
+%deal_multi_pirate_f = 1;
+
+// Void addOrDrop: into your pack, or on the ground under you
+[proc,deal_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+    return;
+}
+obj_add(coord, $obj, 1, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- the holy wrench
+// Void PotionEffects.kt: carrying the holy wrench, a prayer potion gives back 27% of your Prayer
+// (and 7) instead of 25% (player/consumption/effects/consume_effects.rs2)
+[proc,deal_holy_wrench_bonus](obj $potion, stat $stat)(int)
+if ($stat ! prayer | inv_total(inv, deal_wrench_blessed) = 0) return(0);
+switch_obj ($potion) {
+    case 1doseprayerrestore, 2doseprayerrestore, 3doseprayerrestore, 4doseprayerrestore : return(2);
+}
+return(0);
