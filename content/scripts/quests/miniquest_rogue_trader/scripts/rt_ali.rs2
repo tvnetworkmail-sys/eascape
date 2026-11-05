@@ -1,0 +1,402 @@
+// EASCape: Rogue Trader (15 August 2005) - Ali Morrisane in Al Kharid once The Feud is done. His
+// words are the OSRS wiki's Transcript:Rogue_Trader and Transcript:Ali_Morrisane; the stock lists
+// are the cache's own (_unpack/727/all.inv: roguetrader_alim_*), the shop multipliers the OSRS
+// wiki's (Ali's Discount Wares.). Where the transcript doesn't say how its sections join up, the
+// joins are ours.
+
+[label,rt_ali]
+~chatnpc("<p,happy>Hello <displayname>. How's the adventuring going?");
+~chatplayer("<p,happy>Hi Ali. Not bad. How are you?");
+~chatnpc("<p,neutral>Still selling.");
+if (%roguetrader_started = 0) @rt_ali_intro;
+if (%roguetrader_started = ^rt_intro_done & %ics_little_var < ^ics_complete & %roguetrader_clothes = 0) {
+    ~chatnpc("<p,sad>~Sigh.");
+    ~chatplayer("<p,quiz>What's up with you?");
+    ~chatnpc("<p,sad>Well, I always fancied that I could be a great draper, but the way things are looking that's not about to happen any time soon.");
+    ~chatplayer("<p,neutral>Is there anything I could do to help?");
+    ~chatnpc("<p,neutral>I have a friend - well, actually more of an acquaintance - who lives in Sophanem, some way to the south of here, and who may be able to help. But, from what I've heard, no one can enter or leave the city.");
+    ~chatplayer("<p,neutral>Maybe I could give it a look.");
+}
+// news of a supplier: one piece a visit (each of the transcript's sections ends there), the
+// runes' then going on to the menu as the transcript's does
+if (%roguetrader_blackjacks = ^rt_bj_agreed & %roguetrader_bjtold_ali = 0) {
+    %roguetrader_bjtold_ali = 1;
+    ~chatnpc("<p,happy>Fantastic job on the blackjacks. I started getting the first batches of them a short time ago, and they've being flying off the shelves, although the demand seems to be dropping off a little.");
+    ~chatplayer("<p,neutral>Not too badly, I hope.");
+    ~chatnpc("<p,neutral>No, no, they're still selling fine, but if you could perhaps convince the blackjack man to send a different variety the next time you see him, I would be more than happy.");
+    ~chatplayer("<p,happy>I should like to have a look at them, at some stage.");
+    return;
+}
+if (%roguetrader_clothes >= ^rt_clothes_menaphite & %roguetrader_justchanged_garments = 1) {
+    %roguetrader_justchanged_garments = 0;
+    ~chatnpc("<p,happy>Siamun's clothes seem to have really struck a chord with the locals in Al Kharid. Menaphite culture seems to be taking off here, rumour has it that one of Prince Ali's servants bought him one of Siamun's robes.");
+    ~chatplayer("<p,happy>Wow, that sounds positive.");
+    ~chatnpc("<p,neutral>Quite, if I don't say so myself. But in order to keep things fresh, the next time you're in Sophanem, could you ask that cranky old so-and-so Siamun to produce a new line of clothing?");
+    ~chatplayer("<p,happy>Sure, why not. The Sultan himself might even buy some of the new range.");
+    ~chatnpc("<p,neutral>That would be the day.");
+    return;
+}
+if (%roguetrader_runes >= ^rt_runes_deal & %roguetrader_justobt_runes = 1) {
+    %roguetrader_justobt_runes = 0;
+    ~chatnpc("<p,happy>Good job on getting the rune shipments sorted. I'm just receiving the first of them. Though there seems to be a funny sort of locking mechanism on them, which I haven't completely figured out.");
+    ~chatplayer("<p,neutral>No problem. I might have a look at it later.");
+    @rt_ali_menu;
+}
+if (%roguetrader_started = ^rt_intro_done & ~rt_all_done = true) {
+    ~chatnpc("<p,happy><displayname>, I would like to commend you on all the selfless help you have given me.");
+    ~chatplayer("<p,neutral>It was nothing, really.");
+    ~chatnpc("<p,happy>I think you underestimate your efforts. Anyway, as a token of my gratitude I have told all my magic carpet attendants to allow you to travel on the carpets at a discounted rate.");
+    ~chatplayer("<p,neutral>Really, Ali, there is no need.");
+    ~chatnpc("<p,happy>I insist.");
+    %roguetrader_cheapflights = 1;
+    %roguetrader_started = ^rt_finished;
+}
+@rt_ali_menu;
+
+// every errand done: both caskets opened, a blackjack and a clothing deal, and Ali told of both (ours)
+[proc,rt_all_done]()(boolean)
+if (%roguetrader_runes = ^rt_runes_both & %roguetrader_blackjacks = ^rt_bj_agreed & %roguetrader_bjtold_ali = 1 & %roguetrader_clothes >= ^rt_clothes_menaphite & %roguetrader_justchanged_garments = 0) {
+    return(true);
+}
+return(false);
+
+// an errand Ali can still send you on (ours: Rune Mysteries and Icthlarin's Little Helper decide
+// whether Aubury and Siamun can be asked, as the transcript's conditions do)
+[proc,rt_errand_left]()(boolean)
+if (%roguetrader_blackjacks < ^rt_bj_agreed) return(true);
+if (%roguetrader_runes < ^rt_runes_deal & %runemysteries = ^runemysteries_complete) return(true);
+if (%roguetrader_clothes < ^rt_clothes_menaphite & %ics_little_var >= ^ics_complete) return(true);
+return(false);
+
+// the stock menu (the transcript's four "selection" lines, each shown once its part is open; the
+// errand line is ours while one is left)
+[label,rt_ali_menu]
+def_int $bj = 0;
+def_int $cl = 0;
+def_int $ru = 0;
+def_int $who = 0;
+if (%roguetrader_justchanged_weapons ! 0 & %roguetrader_bjtold_ali = 1) $bj = 1;
+if (%roguetrader_clothes >= ^rt_clothes_menaphite & %roguetrader_justchanged_garments = 0) $cl = 2;
+if (%roguetrader_runes >= ^rt_runes_deal & %roguetrader_justobt_runes = 0) $ru = 3;
+if (%roguetrader_started = ^rt_intro_done & ~rt_errand_left = true) $who = 5;
+switch_int (~p_choice_some5("I would like to have a look at your selection of blackjacks.", $bj, "I would like to have a look at your selection of clothes.", $cl, "I would like to have a look at your selection of runes.", $ru, "I would like to have a look at your general stock.", 4, "Who did you want me to talk to again?", $who)) {
+    case 1 :
+        ~chatnpc("<p,happy>Hang on a second while I get my stock of blackjacks out.");
+        // the cache's two blackjack invs carry each other's stock: roguetrader_alim_assaultbj_inv
+        // holds the (d) blackjacks and roguetrader_alim_defendbj_inv the (a) ones (727 all.inv)
+        if (%roguetrader_justchanged_weapons = ^rt_bjline_defensive) {
+            ~openshop(roguetrader_alim_assaultbj_inv, 550, 1000, 10, "Ali's Discount Wares.");
+        } else {
+            ~openshop(roguetrader_alim_defendbj_inv, 550, 1000, 10, "Ali's Discount Wares.");
+        }
+    case 2 :
+        ~chatnpc("<p,happy>Hang on a second while I get the garments.");
+        if (%roguetrader_clothes = ^rt_clothes_menaphite) {
+            ~openshop(roguetrader_alim_meanpclothes_inv, 550, 1000, 10, "Ali's Discount Wares.");
+        } else {
+            ~openshop(roguetrader_alim_carpetclothes_inv, 550, 1000, 10, "Ali's Discount Wares.");
+        }
+    case 3 : @rt_ali_runes;
+    case 4 : ~openshop(feud_morrisanes, 550, 1000, 10, "Ali's Discount Wares.");
+    case 5 : @rt_ali_who;
+}
+
+// ---------------------------------------------------------------- the first talk
+[label,rt_ali_intro]
+%roguetrader_started = ^rt_intro_done;
+~chatplayer("<p,quiz>Anything interesting?");
+~chatnpc("<p,happy>For you, always. As a matter of fact I have just acquired a fleet of magic carpets, which operate throughout the Kharidian desert.");
+~chatplayer("<p,happy>Wow, that sounds great, how about your stall?");
+~chatnpc("<p,neutral>Trade is good, but I would like to expand and diversify, but it's proving a little more difficult than I initially thought.");
+~chatplayer("<p,quiz>How so?");
+~chatnpc("<p,neutral>I think the other merchants in this town are conspiring against me.");
+~chatplayer("<p,neutral>Oh come on! You're just being paranoid now.");
+~chatnpc("<p,neutral>Well maybe I can't get any new suppliers then because I'm Pollnivnian.");
+~chatplayer("<p,confused>You're what?");
+~chatnpc("<p,neutral>From Pollnivneach.");
+~chatplayer("<p,neutral>Maybe I could help you then?");
+~chatnpc("<p,neutral>Perhaps you could.");
+if (%ics_little_var >= ^ics_complete) {
+    ~chatnpc("<p,neutral>I have an old friend - a cloth merchant Siamun, who lives in Sophanem - Do you know the place?");
+    ~chatplayer("<p,neutral>Umm..... Images of cats and priests come to mind. Ah yes! There we go, it's the city of the dead South of Pollnivneach isn't it?");
+    ~chatnpc("<p,neutral>That's the one, well if you could convince him to supply me with some of his merchandise, I would be more than willing to sell them to the masses ...... for a small percentage of course.");
+    if (%roguetrader_clothes = 0) %roguetrader_clothes = ^rt_clothes_told;
+    if (~p_choice2("So what's in this for me?", 1, "Ok I'll get on to it.", 2) = 1) {
+        ~rt_ali_whats_in_it;
+    } else {
+        ~chatplayer("<p,neutral>Ok I'll get on to it.");
+    }
+    ~chatplayer("<p,quiz>Is there anyone else you want me to talk to on your behalf?");
+} else {
+    ~chatnpc("<p,neutral>My friend in Sophanem... Ahh never mind him, maybe we might have a look at him another time.");
+    ~chatplayer("<p,quiz>Is there anyone else you want me to talk to on your behalf?");
+}
+~rt_ali_blackjack_lines;
+if (~p_choice2("So what's in this for me?", 1, "Ok I'll get on to it.", 2) = 1) {
+    ~rt_ali_whats_in_it;
+} else {
+    ~chatplayer("<p,neutral>Ok I'll get on to it.");
+}
+~rt_ali_rune_lines;
+if (~p_choice2("So what's in this for me?", 1, "Ok I'll see what I can do.", 2) = 1) {
+    ~rt_ali_whats_in_it;
+} else {
+    ~chatplayer("<p,neutral>Ok I'll see what I can do.");
+}
+@rt_ali_get_going;
+
+[proc,rt_ali_blackjack_lines]
+~chatnpc("<p,neutral>There's a blackjack seller in Pollnivneach, a cautious type of guy, not the usual entrepreneurial sort that I would normally deal with, but...");
+~chatnpc("<p,neutral>I think that he has a product with real potential...");
+~chatplayer("<p,confused>What? .... Blackjacks?");
+~chatnpc("<p,neutral>Yes, but at the moment the product isn't polished enough, if you could convince him to create a larger variety of weapon I would gladly stock his products.");
+if (%roguetrader_blackjacks = 0) %roguetrader_blackjacks = ^rt_bj_told;
+
+[proc,rt_ali_rune_lines]
+~chatnpc("<p,neutral>I think I need just one more product type, something magical ... now what could I stock that's magical, has large demand and a pretty good profit margin...");
+~chatplayer("<p,quiz>How about runes?");
+~chatnpc("<p,sad>Yes, that would be perfect, but who could I get that would supply? There really seems to be a gap in the market in the desert but I don't know anyone in that line of business.");
+// ours: without Rune Mysteries you don't know Aubury, so it stops there (the quick guide: no runes
+// part without it)
+if (%runemysteries ! ^runemysteries_complete) return;
+~chatplayer("<p,happy>Hang on, I know somebody called Aubury, decent fella. I helped him out a while back. Perhaps I could approach him about the idea.");
+~chatnpc("<p,happy>Oh yes, the rune seller from Varrock. That would be perfect. He's far enough away that he wouldn't end up competing with himself.");
+if (%roguetrader_runes = 0) %roguetrader_runes = ^rt_runes_aubury;
+~chatplayer("<p,quiz>What do you mean?");
+~chatnpc("<p,neutral>Well the rune market is a limited one, if I were to sell his runes from a location nearby his shop, then I would take part of his market share so he would in fact not benefit from me selling runes.");
+~chatplayer("<p,happy>Ah ha I think I know where this is going. So because you're located far enough away from him you will take up someone else's share in the market and Aubury will make more money as a result.");
+~chatnpc("<p,happy>Very well anticipated.");
+
+[proc,rt_ali_whats_in_it]
+~chatplayer("<p,quiz>What's in this for me?");
+~chatnpc("<p,confused>I thought you wanted to help.");
+~chatplayer("<p,neutral>Of course, but everyone seems to be benefiting here but me.");
+~chatnpc("<p,quiz>What do you mean?");
+~chatplayer("<p,neutral>Well the trader gets their product sold, you get your cut, but what do I get?");
+~chatnpc("<p,neutral>You get access to more products. Is that not reward enough?");
+~chatnpc("<p,neutral>Hmmm... Perhaps not.");
+if (%roguetrader_cheapflights = 0) {
+    ~chatnpc("<p,happy>I'll tell you what then, how about I let you have discounted flights on my magic carpet rides?");
+    %roguetrader_cheapflights = 1;
+    ~chatplayer("<p,happy>Wow that would be great.");
+    ~chatnpc("<p,happy>Fair enough so, we have a win, win, win situation on our hands then.");
+    return;
+}
+~chatnpc("<p,neutral>Didn't we also agree that you would get discounted travel on my magic carpet network?");
+~chatplayer("<p,neutral>Oh ya, I forgot.");
+~chatnpc("<p,quiz>So what's your problem then?");
+~chatplayer("<p,neutral>I don't have one I guess.");
+~chatnpc("<p,happy>Good, that's what I like to hear. Now where were we?");
+
+[label,rt_ali_get_going]
+~chatnpc("<p,neutral>Well you had better get going, you've a fair bit of travelling ahead of you. Unless you want to make a small purchase from me first?");
+~rt_ali_junk;
+if (~p_choice2("No I'm really too busy.", 1, "Ok", 2) = 1) {
+    ~chatplayer("<p,neutral>No, I'm really too busy.");
+    return;
+}
+~openshop(feud_morrisanes, 550, 1000, 10, "Ali's Discount Wares.");
+
+// the junk he sells you: 10 coins for one of five things, if you have 10 coins and a free slot
+// (the OSRS wiki's Ali's Discount Wares., each 1/5)
+[proc,rt_ali_junk]
+if (inv_total(inv, coins) < 10) return;
+if (inv_freespace(inv) = 0 & inv_total(inv, coins) > 10) return;
+inv_del(inv, coins, 10);
+switch_int (random(5)) {
+    case 0 : inv_add(inv, bronze_pickaxe, 1);
+    case 1 : inv_add(inv, bucket_empty, 1);
+    case 2 : inv_add(inv, knife, 1);
+    case 3 : inv_add(inv, raw_chicken, 1);
+    case default : inv_add(inv, tinderbox, 1);
+}
+mes("Despite your best efforts Ali M still manages to sell you some junk.");
+
+// ---------------------------------------------------------------- who to talk to
+[label,rt_ali_who]
+~chatplayer("<p,quiz>Who did you want me to talk to again?");
+// ours: only the errands still to do
+if (%ics_little_var >= ^ics_complete & %roguetrader_clothes < ^rt_clothes_menaphite) {
+    ~chatnpc("<p,neutral>Go see Siamun in Sophanem about some clothes.");
+    ~chatplayer("<p,neutral>Right, so I'll go see Siamun of Sophanem.");
+    ~chatnpc("<p,happy>Good, good.");
+    if (%roguetrader_clothes = 0) %roguetrader_clothes = ^rt_clothes_told;
+}
+if (%runemysteries = ^runemysteries_complete & %roguetrader_runes < ^rt_runes_deal) {
+    ~chatnpc("<p,neutral>Could you talk to your friend Aubury in Varrock about supplying me with runes?");
+    ~chatplayer("<p,neutral>Hmm, that could work out quite well. Varrock is always quite busy, so I might try to get a couple of other things done while I'm there.");
+    ~chatnpc("<p,neutral>Don't tarry there too long, I'm quite anxious to get a rune store open before anyone else in this area.");
+    if (%roguetrader_runes = 0) %roguetrader_runes = ^rt_runes_aubury;
+}
+if (%roguetrader_blackjacks < ^rt_bj_agreed) {
+    ~chatnpc("<p,neutral>In Pollnivneach go and talk to the blackjack seller. Convince him to supply me with his produce.");
+    ~chatplayer("<p,quiz>Any ideas how I should go about that?");
+    ~chatnpc("<p,happy>You're a bright chap. I'm sure you'll work something out.");
+    ~chatplayer("<p,happy>I'll get to it right away.");
+    if (%roguetrader_blackjacks = 0) %roguetrader_blackjacks = ^rt_bj_told;
+}
+~chatnpc("<p,quiz>Is there any chance of getting you to look up a merchant to supply me?");
+if (~p_choice2("Who did you want me to talk to again?", 1, "Ya, I'll get to it soon.", 2) = 1) @rt_ali_who;
+~chatplayer("<p,neutral>Ya, I'll get to it soon.");
+@rt_ali_get_going;
+
+// ---------------------------------------------------------------- runes
+[label,rt_ali_runes]
+// ours: once a casket of a kind has been opened, its rune stock can be looked at here
+if (%roguetrader_runes >= ^rt_runes_small) {
+    def_int $el = 0;
+    def_int $cat = 0;
+    if (%roguetrader_runes ! ^rt_runes_large) $el = 1;
+    if (%roguetrader_runes >= ^rt_runes_large) $cat = 2;
+    switch_int (~p_choice_some5("Show me your elemental runes.", $el, "Show me your catalytic runes.", $cat, "I'd like to try opening a casket.", 3, "", 0, "", 0)) {
+        case 1 :
+            ~chatnpc("<p,happy>Hang on a second.");
+            ~openshop(roguetrader_alim_runeretail_inv, 500, 1300, 0, "Ali's Discount Wares.");
+            return;
+        case 2 :
+            ~chatnpc("<p,happy>Hang on a second.");
+            ~openshop(roguetrader_alim_runewholesale_inv, 500, 1250, 0, "Ali's Discount Wares.");
+            return;
+    }
+}
+~chatnpc("<p,neutral>Hang on a second.");
+~chatnpc("<p,neutral>Well at the moment I don't exactly have a selection of runes.");
+~chatplayer("<p,confused>You don't?");
+~chatnpc("<p,neutral>Those boxes from your friend Aubury have a very odd locking mechanism.");
+~chatplayer("<p,quiz>You have managed to get them off?");
+~chatnpc("<p,neutral>Not exactly.");
+~chatplayer("<p,quiz>What do you mean by 'not exactly'?");
+~chatnpc("<p,neutral>What I mean by 'not exactly' is 'no, I haven't managed to get the lock off'.");
+~chatplayer("<p,neutral>Oh.");
+~chatnpc("<p,neutral>I was kind of hoping that you would have a look at them. There are two distinctive types of caskets one with a simple locking mechanism and another, which ummm... looks a little tricky to say the least.");
+switch_int (~p_choice3("Try opening a small casket of runes", 1, "Try opening a large casket of runes", 2, "On second thoughts I don't really need any runes.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I think I'll have a go at opening a small casket of runes.");
+        switch_int (~p_choice3("Force box.", 1, "Pick lock.", 2, "Examine lock.", 3)) {
+            case 1 : ~rt_casket_force;
+            case 2 : ~rt_casket_pick(false);
+            case 3 : ~rt_sudoku_open(false);
+        }
+    case 2 :
+        ~chatplayer("<p,happy>I'm feeling lucky, let's have a look at opening one of those large caskets.");
+        switch_int (~p_choice3("Force box.", 1, "Pick lock.", 2, "Examine lock.", 3)) {
+            case 1 :
+                ~mesbox("Your arms tire from the exertions of trying to open the casket...");
+                ~chatplayer("<p,confused>Hmmm... This lock looks like it may be impossible to prise open.");
+            case 2 : ~rt_casket_pick(true);
+            case 3 : ~rt_sudoku_open(true);
+        }
+    case 3 : ~chatplayer("<p,neutral>On second thoughts I don't really need any runes.");
+}
+
+// Force box on a small casket: pass a Strength roll (70/170) and an Agility roll (120/255); 2.5
+// Strength and 2.5 Agility xp; a miss drains both by the same 0-3 (the OSRS wiki)
+[proc,rt_casket_force]
+if (stat_random(strength, 70, 170) = true & stat_random(agility, 120, 255) = true) {
+    stat_advance(strength, 25);
+    stat_advance(agility, 25);
+    ~rt_casket_opened(false);
+    return;
+}
+def_int $drain = random(4);
+if ($drain > 0) {
+    stat_sub(strength, $drain, 0);
+    stat_sub(agility, $drain, 0);
+}
+~mesbox("Your arms tire from the exertions of trying to open the casket...");
+mes("You fail to open the chest.");
+
+// Pick lock: Thieving 70/170, or 70/240 with a lockpick; 5 Thieving xp. A miss drains Thieving
+// 0-3 and breaks a carried lockpick 1 time in 5 (0.5 Thieving xp). A large casket always fails
+// (the OSRS wiki).
+[proc,rt_casket_pick](boolean $large)
+def_boolean $lockpick = false;
+if (inv_total(inv, lockpick) > 0) $lockpick = true;
+if ($large = false) {
+    def_int $high = 170;
+    if ($lockpick = true) $high = 240;
+    if (stat_random(thieving, 70, $high) = true) {
+        stat_advance(thieving, 50);
+        ~rt_casket_opened(false);
+        return;
+    }
+}
+def_int $drain = random(4);
+if ($drain > 0) stat_sub(thieving, $drain, 0);
+if ($lockpick = true & random(5) = 0) {
+    inv_del(inv, lockpick, 1);
+    stat_advance(thieving, 5);
+    mes("Your lockpick breaks."); // ours
+}
+~mesbox("You fail to pick the lock - your fingers get numb from fumbling with the lock.");
+if ($large = true) ~chatplayer("<p,confused>Hmmm... This lock looks like it may be impossible to pick open.");
+
+// a casket is open: its runes go to Ali's rune dump (the cache's roguetrader_alim_runedump), the
+// kind's rune stock opens up, and you can buy the lot unseen or look first (the OSRS wiki). What
+// is in a casket and the prices are ours (no source gives them): small 20-60 of each elemental
+// rune; large 20-60 mind and body, 5-20 chaos, 2-10 death and law; looking first costs 12%/15%
+// over Ali's cost for that kind (1200/1150 against his 1300/1250 rune shops), buying unseen 8%
+// less again (the wiki: "about a 6-10% cost difference").
+[proc,rt_casket_opened](boolean $large)
+inv_clear(roguetrader_alim_runedump);
+def_int $mult = 1200;
+if ($large = false) {
+    inv_add(roguetrader_alim_runedump, airrune, calc(20 + random(41)));
+    inv_add(roguetrader_alim_runedump, waterrune, calc(20 + random(41)));
+    inv_add(roguetrader_alim_runedump, earthrune, calc(20 + random(41)));
+    inv_add(roguetrader_alim_runedump, firerune, calc(20 + random(41)));
+    if (%roguetrader_runes = ^rt_runes_deal) %roguetrader_runes = ^rt_runes_small;
+    else if (%roguetrader_runes = ^rt_runes_large) %roguetrader_runes = ^rt_runes_both;
+} else {
+    $mult = 1150;
+    inv_add(roguetrader_alim_runedump, mindrune, calc(20 + random(41)));
+    inv_add(roguetrader_alim_runedump, bodyrune, calc(20 + random(41)));
+    inv_add(roguetrader_alim_runedump, chaosrune, calc(5 + random(16)));
+    inv_add(roguetrader_alim_runedump, deathrune, calc(2 + random(9)));
+    inv_add(roguetrader_alim_runedump, lawrune, calc(2 + random(9)));
+    if (%roguetrader_runes = ^rt_runes_deal) %roguetrader_runes = ^rt_runes_large;
+    else if (%roguetrader_runes = ^rt_runes_small) %roguetrader_runes = ^rt_runes_both;
+}
+def_int $price = 0;
+def_int $slot = 0;
+def_obj $rune = null;
+while ($slot < inv_size(roguetrader_alim_runedump)) {
+    $rune = inv_getobj(roguetrader_alim_runedump, $slot);
+    if ($rune ! null) {
+        $price = calc($price + scale($mult, 1000, calc(oc_cost($rune) * inv_total(roguetrader_alim_runedump, $rune))));
+    }
+    $slot = calc($slot + 1);
+}
+$price = scale(92, 100, $price);
+mes("The casket springs open."); // ours
+if (~p_choice2("Buy all the runes for <tostring($price)>.", 1, "Find out what the runes are.", 2) = 2) {
+    ~openshop(roguetrader_alim_runedump, 0, $mult, 0, "Ali's Discount Wares.");
+    return;
+}
+if (inv_total(inv, coins) < $price) {
+    mes("You don't have enough coins."); // ours
+    return;
+}
+// a slot for each kind not already stacked in your pack (paying with every coin you have frees one)
+def_int $need = 0;
+$slot = 0;
+while ($slot < inv_size(roguetrader_alim_runedump)) {
+    $rune = inv_getobj(roguetrader_alim_runedump, $slot);
+    if ($rune ! null & inv_total(inv, $rune) = 0) $need = calc($need + 1);
+    $slot = calc($slot + 1);
+}
+def_int $space = inv_freespace(inv);
+if (inv_total(inv, coins) = $price) $space = calc($space + 1);
+if ($space < $need) {
+    mes("You don't have enough space in your inventory."); // ours
+    return;
+}
+inv_del(inv, coins, $price);
+$slot = 0;
+while ($slot < inv_size(roguetrader_alim_runedump)) {
+    $rune = inv_getobj(roguetrader_alim_runedump, $slot);
+    if ($rune ! null) inv_moveitem(roguetrader_alim_runedump, inv, $rune, inv_total(roguetrader_alim_runedump, $rune));
+    $slot = calc($slot + 1);
+}
+inv_clear(roguetrader_alim_runedump);
+mes("You buy the runes."); // ours

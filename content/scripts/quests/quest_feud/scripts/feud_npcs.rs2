@@ -7,10 +7,7 @@
 def_int $s = %feud_var;
 if ($s = ^feud_not_started) @feud_alim_start;
 if ($s = ^feud_mayor_thanked) @feud_alim_finish;
-if ($s >= ^feud_complete) {
-    ~chatnpc("<p,happy>Hello again my friend. Would you like to see my wares?"); // ours
-    @feud_alim_wares;
-}
+if ($s >= ^feud_complete) @rt_ali; // Rogue Trader (miniquest_rogue_trader/rt_ali.rs2)
 ~chatnpc("<p,neutral>I sent you to learn the whereabouts of my nephew, Ali. Is there any word of him in Pollnivneach?");
 ~chatplayer("<p,sad>Not yet, I'm afraid.");
 ~chatnpc("<p,sad>That's not really the news I was hoping for.");
@@ -732,6 +729,7 @@ if ($s >= ^feud_distracted & $s < ^feud_menaphites_beaten) {
     ~chatplayer("<p,neutral>I think I need to try a different tactic. Sorry, kid!");
     return;
 }
+if ($s >= ^feud_complete & ~rt_urchin_wants = true) @rt_urchin; // Rogue Trader (rt_npcs.rs2)
 if ($s >= ^feud_menaphites_beaten) {
     ~chatplayer("<p,happy>Hey there!");
     ~chatnpc("<p,happy>Hi! Do you want to go rob some more people? I could do with some more money.");
@@ -1444,8 +1442,8 @@ inv_add(inv, $dye, 1);
 // the blackjack seller stands in town once the feud is over (ours: no transcript)
 [opnpc1,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
 [opnpc3,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
-[opnpc1,feud_bjseller] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
-[opnpc3,feud_bjseller] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
+[opnpc1,feud_bjseller] @rt_bjseller; // Rogue Trader (miniquest_rogue_trader/rt_npcs.rs2)
+[opnpc3,feud_bjseller] @rt_bjseller_trade;
 
 // Transcript:Aristarchus ("Before Enakhra's Lament", which we don't have)
 [opnpc1,enakh_aristarchus]

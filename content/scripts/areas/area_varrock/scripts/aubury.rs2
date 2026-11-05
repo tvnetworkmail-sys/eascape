@@ -20,7 +20,16 @@ if(%runemysteries = ^runemysteries_given_package) {
     return;
 } else {
     ~chatnpc("<p,happy>Do you want to buy some runes?");
-    if(%runemysteries = ^runemysteries_complete) {
+    // Rogue Trader (miniquest_rogue_trader/rt_npcs.rs2)
+    if (%roguetrader_runes = ^rt_runes_deal & %roguetrader_justobt_runes = 1) ~rt_aubury_waiting;
+    if(%runemysteries = ^runemysteries_complete & %roguetrader_runes = ^rt_runes_aubury) {
+        switch_int (~p_choice4("Yes please!", 1, "Oh, it's a rune shop. No thank you, then.", 2, "Can you teleport me to the Rune Essence?", 3, "Actually, I'm here with a business proposal from Ali Morrisane.", 4)) {
+            case 1 : @aubury_shop;
+            case 2 : @aubury_no;
+            case 3 : @aubury_ess;
+            case 4 : @rt_aubury_proposal;
+        }
+    } else if(%runemysteries = ^runemysteries_complete) {
         @multi3("Yes please!", aubury_shop, "Oh, it's a rune shop. No thank you, then.", aubury_no, "Can you teleport me to the Rune Essence?", aubury_ess);
     } else if (%runemysteries = ^runemysteries_received_package & inv_total(inv, research_package) > 0) {
         @multi3("Yes please!", aubury_shop, "Oh, it's a rune shop. No thank you, then.", aubury_no, "I have been sent here with a package for you.", aubury_package);

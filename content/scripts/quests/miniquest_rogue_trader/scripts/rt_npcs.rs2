@@ -1,0 +1,393 @@
+// EASCape: Rogue Trader's suppliers: Aubury (Varrock), the blackjack seller and the street urchin
+// (Pollnivneach), Siamun (Sophanem). Their words are the OSRS wiki's Transcript:Rogue_Trader and
+// the RuneScape wiki's Transcript:Blackjack_seller.
+
+// ---------------------------------------------------------------- Aubury
+[label,rt_aubury_proposal]
+~chatplayer("<p,neutral>Actually, I'm here with a business proposal from Ali Morrisane.");
+~chatnpc("<p,confused>Ali who?");
+~chatplayer("<p,neutral>Ali Morrisane, a salesman of great repute based in Al Kharid.");
+~chatnpc("<p,quiz>What is this proposal then?");
+~chatplayer("<p,neutral>He wants to set up a rune-selling franchise in the markets of Al Kharid and he wants you to supply him with the stock.");
+~chatnpc("<p,quiz>Why doesn't he get his own runes and sell them?");
+~chatplayer("<p,neutral>His talents don't lie in that area. What he's good at is selling things, and lots of them.");
+~chatnpc("<p,neutral>Hmm, interesting... So let's get this straight, he wants me to supply him with runes, which he will sell, and send me the profits?");
+~chatplayer("<p,neutral>Nearly. He will charge a small commission on the runes.");
+~chatnpc("<p,quiz>Do you think that it will work? Will people actually buy these runes off him?");
+~chatplayer("<p,happy>I wouldn't be surprised. Supply and demand are his rune essence and ore.");
+~chatnpc("<p,neutral>Now this is very important, is he trustworthy?");
+~chatplayer("<p,neutral>Yes, I believe so. Trust is a key part of commerce and something, which I doubt he would neglect.");
+~chatnpc("<p,neutral>Fair enough, I'll trust your judgement.");
+~chatplayer("<p,quiz>So you'll supply him with runes then?");
+%roguetrader_runes = ^rt_runes_deal;
+%roguetrader_justobt_runes = 1;
+~chatnpc("<p,happy>Well if he's half as good a salesman as you suggest I should have no problem in funding my research and maybe even redecorating this place.");
+
+// Aubury after agreeing, until Ali has the first shipment
+[proc,rt_aubury_waiting]
+~chatnpc("<p,happy>Oh, sorry <displayname>, I didn't recognise you for a second, you're back again so soon. Have you spoken to Ali Morrisane yet about the runes?");
+~chatplayer("<p,neutral>Umm... not yet, I'll try to get around to doing that soon.");
+~chatnpc("<p,happy>Great! Now, do want to buy some runes?");
+
+// ---------------------------------------------------------------- the blackjack seller
+// he stands as a multinpc (feud_black_jack_seller_multi), whose own name and head are blank, so
+// his lines name him and show feud_bjseller's head
+[proc,rt_seller_says](string $text)
+~chatnpc_specific("Blackjack seller", feud_bjseller, $text);
+
+[label,rt_bjseller]
+~rt_seller_says("<p,neutral>Hello. Could I interest you in a Blackjack?");
+def_int $s = %roguetrader_blackjacks;
+if ($s = ^rt_bj_told) {
+    ~chatplayer("<p,neutral>Can I interest you in a proposal?");
+    ~rt_seller_says("<p,neutral>What are we talking about here? Nothing dodgy I hope. I don't like anything dodgy, I had enough of that sort of thing when the bandits and those rogue Menaphites were running things here, so I packed up my things and left.");
+    ~chatplayer("<p,neutral>No no nothing of the sort, a friend of mine Ali Morrisane, have you ever heard of him?");
+    ~rt_seller_says("<p,happy>Have I what? He's my idol, he's the greatest salesman in all of Gielinor. Word has it that he even sold...");
+    ~chatplayer("<p,neutral>...yeah yeah, sand to the Bedabin. Hmpf!! I have heard that story more times that I care for.. Anyway he has a proposal for you...");
+    ~rt_seller_says("<p,happy>I'm all ears. Does he want to take me on as an apprentice?");
+    ~chatplayer("<p,neutral>No no nothing of the sort.");
+    ~rt_seller_says("<p,sad>Oh...?");
+    ~chatplayer("<p,neutral>He sees quite a bit of potential in your product.");
+    ~rt_seller_says("<p,neutral>The urchins of the town do too, they're always trying to steal my products.");
+    ~chatplayer("<p,neutral>Yes, but Ali says if he were to stock your products he would need a larger variation of product.");
+    ~rt_seller_says("<p,neutral>I don't know. I'm quite happy with the product that I'm making at the moment.");
+    ~chatplayer("<p,neutral>Hmm.. Ali did voice some concerns about you. He said you were an over cautious individual and ...");
+    ~rt_seller_says("<p,shock>He did?");
+    %roguetrader_blackjacks = ^rt_bj_asked;
+    @rt_bj_convince;
+}
+if ($s = ^rt_bj_asked | $s = ^rt_bj_urchin) @rt_bj_convince; // ours: back again before it's settled
+if ($s = ^rt_bj_robbed) {
+    ~rt_seller_says("<p,angry>That pesky little urchin has done it again! I can't believe it he's managed to rob me again.");
+    ~chatplayer("<p,neutral>Well maybe you should modify the blackjack to have better defensive qualities.");
+    ~rt_seller_says("<p,neutral>I might as well. Next time I'll get him.");
+    ~chatplayer("<p,quiz>So I take it you will be supplying Ali Morrisane with the new variety of blackjack then?");
+    ~rt_seller_says("<p,happy>Yes, yes. I'll start shipping it by carpet as soon as the first batch is ready.");
+    ~rt_bj_agree(^rt_bjline_defensive);
+    return;
+}
+if ($s = ^rt_bj_agreed) {
+    if (%roguetrader_bjtold_ali = 0) {
+        ~rt_seller_says("<p,neutral>Oh sorry <displayname>. I mistook you for another customer.");
+        ~chatplayer("<p,neutral>No problem.");
+        ~rt_seller_says("<p,quiz>Have you checked with Ali Morrisane whether my blackjacks are selling or not?");
+        ~chatplayer("<p,neutral>Not yet, I have a few thing to do first.");
+        ~rt_seller_says("<p,neutral>Well I would be very grateful if you could have a talk with him sooner rather than later, I am still a little nervous about the new variation of my blackjack.");
+        ~chatplayer("<p,neutral>Don't worry, I'll get to it.");
+        return;
+    }
+    // asked by Ali for a different kind (the RuneScape wiki's transcript)
+    ~rt_seller_says("<p,happy>Ah, it's you again <displayname>. Tell me how are the blackjack sales going?");
+    ~chatplayer("<p,neutral>Not too bad, Ali was well impressed by the reaction and demand they had initially but he's a little concerned about how the sales have dropped off of recent.");
+    ~chatplayer("<p,neutral>Maybe you could produce a different range of products?");
+    ~rt_seller_says("<p,neutral>I'm not too sure, I'm quite happy to stick with what I've got unless, I had a good reason to change.");
+    if (%roguetrader_justchanged_weapons = ^rt_bjline_offensive) {
+        if (~p_choice2("Hmm... I'll have to think of a cunning plan.", 1, "Hmmm... I'll get back to you on this.", 2) = 1) @rt_bj_cunning;
+    } else if (~p_choice2("I bet you couldn't knock me out with your blackjack.", 1, "Hmmm... I'll get back to you on this.", 2) = 1) {
+        @rt_bj_bet;
+    }
+    ~chatplayer("<p,neutral>Hmmm... I'll get back to you on this.");
+    return;
+}
+~rt_seller_says("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway."); // the old line, before Rogue Trader
+
+[label,rt_bj_convince]
+~chatplayer("<p,angry>Look will you create a larger variety of blackjacks or not?");
+~rt_seller_says("<p,neutral>I don't know.");
+~chatplayer("<p,quiz>What do I have to do to convince you that you should make a larger variety?");
+~rt_seller_says("<p,neutral>Well I suppose if you could demonstrate to me that they weren't up to the job.");
+if (~p_choice2("Hmm... I'll have to think of a cunning plan.", 1, "I bet you couldn't knock me out with your blackjack.", 2) = 1) @rt_bj_cunning;
+@rt_bj_bet;
+
+[label,rt_bj_cunning]
+~chatplayer("<p,neutral>Hmm... I'll have to think of a cunning plan.");
+~rt_seller_says("<p,quiz>What was that?");
+~chatplayer("<p,neutral>What was what? Oh I must have been thinking out loud again, sorry.");
+%roguetrader_blackjacks = ^rt_bj_urchin;
+%roguetrader_bj_urchingloat = 0;
+mes("Psst... <displayname> Come here.");
+~chatnpc_specific("Street urchin", feud_street_urchin, "<p,neutral>Psst... <displayname> Come here.");
+
+[label,rt_bj_bet]
+~chatplayer("<p,neutral>I bet you couldn't knock me out with your blackjack.");
+~rt_seller_says("<p,neutral>I reckon I could.");
+~chatplayer("<p,neutral>I'll tell you what, if you can't knock me out with one blow, you should make better blackjacks.");
+~rt_seller_says("<p,neutral>Nah, I don't like the sounds of that. It leaves a lot up to chance.");
+~chatplayer("<p,neutral>Ok, ok, how about two blows to the head?");
+~rt_seller_says("<p,shock>Are you sure? I could possibly kill you?");
+if (~p_choice2("Umm... on second thoughts I might give it a skip.", 1, "I'm sure. No pain no gain. Grrr!", 2) = 1) @rt_bj_skip;
+~chatplayer("<p,angry>I'm sure. No pain no gain. Grrr!");
+~rt_seller_says("<p,neutral>You adventurers are crazy.");
+if (~rt_bj_hit = false) return;
+if (~p_choice2("Go again.", 1, "Chicken out.", 2) = 2) @rt_bj_skip;
+~rt_seller_says("<p,shock>You really are truly mad.");
+~chatplayer("<p,neutral>Are you going to hit me again? I really want to get this over with.");
+if (~rt_bj_hit = false) return;
+~rt_seller_says("<p,neutral>Either your head is thicker than it looks or else I need to rework my blackjack.");
+~chatplayer("<p,neutral>Umm... definitely the blackjack.");
+mes("You just about fight off another bout of dizziness and nausea.");
+~rt_seller_says("<p,neutral>I suppose I'll just have to modify the blackjack so that it has a better attack.");
+~chatplayer("<p,happy>Great, so I take it you will be supplying Ali Morrisane with the new variety of blackjack then?");
+~rt_seller_says("<p,happy>Yes, yes. I'll start shipping it by carpet as soon as the first batch is ready.");
+~rt_bj_agree(^rt_bjline_offensive);
+
+[label,rt_bj_skip]
+~chatplayer("<p,neutral>Umm... on second thoughts I might give it a skip. I just had my hair done, I wouldn't want to mess it up.");
+~rt_seller_says("<p,happy>Phew! Sighs with relief. At last the voice of reason speaks.");
+~rt_seller_says("<p,neutral>Now if you don't mind I'll be getting back to work. Thank you.");
+
+// one blow: a Defence roll (100/255, the OSRS wiki) keeps you standing; otherwise you're knocked
+// out for 3 damage and must start again (the OSRS wiki). The swing is the Feud's blackjack swing
+// and the knock-out messages are ours.
+[proc,rt_bj_hit]()(boolean)
+npc_facesquare(coord);
+npc_anim(human_blunt_pound, 0);
+p_delay(1);
+if (stat_random(defence, 100, 255) = false) {
+    anim(human_stunned, 0);
+    damage(uid, ^hitmark_damage, 3);
+    ~mesbox("The blackjack seller knocks you out cold."); // ours
+    return(false);
+}
+switch_int (random(3)) {
+    case 0 : ~chatplayer("<p,happy>Ow! Ha! You didn't knock me down.");
+    case 1 : ~chatplayer("<p,happy>Pah, you didn't even draw blood.");
+    case default : ~chatplayer("<p,happy>Yeeeoouch that hurt! I'm still standing though. You can't knock me down.");
+}
+return(true);
+
+[proc,rt_bj_agree](int $line)
+%roguetrader_blackjacks = ^rt_bj_agreed;
+%roguetrader_justchanged_weapons = $line;
+%roguetrader_bjtold_ali = 0;
+
+// Trade: the RuneScape wiki's Transcript:Blackjack_seller (one willow blackjack, 600 coins)
+[label,rt_bjseller_trade]
+~rt_seller_says("<p,neutral>I've only got one model in stock at the moment. It's a willow black jack which I'd be willing to let go for 600 coins.");
+if (~p_choice2("I'll take it.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+~chatplayer("<p,happy>I'll take it.");
+if (inv_total(inv, coins) < 600) {
+    mes("You can not afford that.");
+    ~chatplayer("<p,quiz>Can I get that on credit?");
+    ~rt_seller_says("<p,angry>Get out of here!");
+    return;
+}
+if (inv_freespace(inv) = 0 & inv_total(inv, coins) > 600) {
+    mes("You don't have enough space in your inventory."); // ours
+    return;
+}
+inv_del(inv, coins, 600);
+inv_add(inv, blackjack_willow, 1);
+
+// ---------------------------------------------------------------- the street urchin
+[proc,rt_urchin_wants]()(boolean)
+if (%roguetrader_blackjacks = ^rt_bj_urchin) return(true);
+if (%roguetrader_blackjacks >= ^rt_bj_robbed & %roguetrader_bj_urchingloat = 1) return(true);
+return(false);
+
+[label,rt_urchin]
+if (%roguetrader_blackjacks ! ^rt_bj_urchin) {
+    ~chatnpc("<p,happy>Hah! Did you see the face on the blackjack seller! Ha boyo! I had to move quick to get out of the way of his blackjack.");
+    ~chatplayer("<p,happy>You did well. I thought he hit you when swung his blackjack at you.");
+    ~chatnpc("<p,neutral>Ya he nearly did. Boyo, does my head still hurt.");
+    ~chatplayer("<p,quiz>You mean he hit you?");
+    ~chatnpc("<p,happy>Barely, the trick is in moving with the blow.");
+    ~chatplayer("<p,neutral>I might bear that in mind for next time.");
+    return;
+}
+// ours: "10 tiles" measured from where the blackjack seller stands
+if (distance(npc_coord, 0_52_46_23_27) <= 10) {
+    ~chatnpc("<p,neutral>Word has it that you're trying to get the blackjack man to change his kit.");
+    ~chatplayer("<p,shock>How did you know that?");
+} else {
+    ~chatnpc("<p,neutral>Hey there I heard that you were trying to get the blackjack man to change his gear.");
+    ~chatplayer("<p,quiz>You did?");
+}
+~chatnpc("<p,neutral>Do you forget who you're talking to? I'm the fastest and sneakiest urchin in this town.");
+~chatplayer("<p,neutral>Ok, so what's it to you then?");
+~chatnpc("<p,neutral>Well it suits my purpose nearly as much as yours if the blackjack seller produces a wider variety of wares.");
+~chatplayer("<p,quiz>How so?");
+~chatnpc("<p,happy>Well chances are, he'll produce some even higher quality items for me to steal");
+~chatplayer("<p,neutral>Aha so if you can rob the blackjack seller and get away with it, it should prove to him that his blackjack isn't up to the job?");
+~chatnpc("<p,happy>There's hope for you yet.");
+def_int $price = 300;
+if (%feud_var_urchin = 1) {
+    $price = 100;
+    ~chatnpc("<p,neutral>Seeing as we've worked successfully together in the past I will only charge you 100 gold.");
+} else {
+    ~chatnpc("<p,angry>Seeing as you owe me from the last bit of work we did together this is going to cost you 300 gold.");
+}
+if (inv_total(inv, coins) < $price) {
+    ~chatplayer("<p,sad>I don't have that much money on me.");
+    ~chatnpc("<p,neutral>Pity, maybe we can do it again sometime.");
+    return;
+}
+if (~p_choice2("Woah! That's far too much.", 1, "Fair enough, here you go.", 2) = 1) {
+    ~chatplayer("<p,shock>Woah! That's far too much.");
+    return;
+}
+~chatplayer("<p,neutral>Fair enough, here you go.");
+inv_del(inv, coins, $price);
+~chatnpc("<p,happy>Now walk up to the merchant, engage him in conversation and leave the rest up to me.");
+// the robbery (ours: the walks and the swing; the words are the transcript's)
+def_coord $home = npc_coord;
+def_coord $front = 0_52_46_23_25;
+p_walk($front);
+p_delay(4);
+if (.npc_find(0_52_46_23_27, feud_black_jack_seller_multi, 10, 0) = true) {
+    .npc_facesquare(coord);
+    facesquare(.npc_coord);
+}
+~chatplayer("<p,happy>Hi, I'm back.");
+~chatnpc_specific("Blackjack seller", feud_bjseller, "<p,neutral>What is it now?");
+npc_walk(movecoord($front, 1, 0, 0));
+p_delay(3);
+npc_say("Yoink!");
+~chatnpc("<p,happy>Yoink!");
+if (.npc_find(0_52_46_23_27, feud_black_jack_seller_multi, 10, 0) = true) {
+    .npc_say("Hey come back you thief!");
+    .npc_anim(human_blunt_pound, 0);
+}
+~chatnpc_specific("Blackjack seller", feud_bjseller, "<p,angry>Hey come back you thief!");
+~mesbox("The blackjack seller takes a swing at the urchin, but the blow only glances off the urchin's head.");
+%roguetrader_blackjacks = ^rt_bj_robbed;
+%roguetrader_bj_urchingloat = 1;
+npc_walk($home);
+
+// ---------------------------------------------------------------- Siamun
+[label,rt_siamun]
+def_int $s = %roguetrader_clothes;
+if ($s = 0) {
+    // after Icthlarin's Little Helper (the OSRS wiki's Transcript:Siamun)
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,angry>Do you need something?");
+    ~chatplayer("<p,neutral>No.");
+    ~chatnpc("<p,angry>Well I have lots to do, so good day.");
+    return;
+}
+if ($s = ^rt_clothes_told) {
+    ~chatplayer("<p,neutral>Hello, Siamun?");
+    ~chatnpc("<p,angry>What?");
+    ~chatplayer("<p,quiz>So you are Siamun then?");
+    ~chatnpc("<p,angry>Yes now what do you want?");
+    ~chatplayer("<p,quiz>Wow, are you this friendly to everyone?");
+    ~chatnpc("<p,angry>Just you. Now what do you want?");
+    ~chatplayer("<p,neutral>A mutual friend of ours, Ali Morrisane, wants you to supply his stall in Al Kharid with your garments.");
+    ~chatnpc("<p,angry>Now why would I do that?");
+    ~chatplayer("<p,neutral>Well for one, you'd probably sell more clothes and once the people of Al Kharid see your amazing works of tailoring, I'm sure they'd spread the word of your clothes far and wide.");
+    ~chatnpc("<p,neutral>Interesting, but I would need more materials to accomplish what you ask of me.");
+    ~chatplayer("<p,quiz>Well than what do you need?");
+    ~chatnpc("<p,neutral>Either get me 3 pots of dye, or 3 animal pelts of the same variety and whatever you do, don't bring me banknotes!");
+    %roguetrader_clothes = ^rt_clothes_asked;
+    @rt_siamun_pelt_menu(0);
+}
+if ($s = ^rt_clothes_asked) {
+    // ours: back again before the first delivery
+    ~chatplayer("<p,neutral>Hello Siamun.");
+    @rt_siamun_unless(0);
+}
+if (%roguetrader_justchanged_garments = 1) {
+    ~chatnpc("<p,neutral>Hello adventurer. Have you checked with Ali M whether my garments are selling or not?");
+    ~chatplayer("<p,neutral>Not yet, I have a few things to do first.");
+    ~chatnpc("<p,neutral>Well I would be very much obliged it you could have a talk with him sooner rather than later, I'm not all that sure of the trustworthiness of those carpet men.");
+    ~chatplayer("<p,neutral>Don't worry, I'll get to it.");
+    return;
+}
+if ($s = ^rt_clothes_desert) {
+    ~chatnpc("<p,neutral>Hello adventurer. How are sales going?");
+    ~chatplayer("<p,neutral>Not too bad, Ali was well impressed by the reaction and demand they had initially but he's a little concerned about how the sales have dropped off of recent.");
+    ~chatnpc("<p,neutral>Hmmm... Maybe I could produce a different range of products.");
+    ~chatnpc("<p,neutral>I'll tell you what, get me 3 pots of dye and I'll change the type of garments I'm sending to Ali and, remember, I won't accept banknotes.");
+    ~chatplayer("<p,neutral>Ok, I'll get you the materials.");
+    @rt_siamun_unless(1);
+}
+~chatplayer("<p,neutral>Hello Siamun.");
+~chatnpc("<p,neutral>Hello adventurer. How are sales going?");
+~chatplayer("<p,neutral>Not too bad, Ali was well impressed by the reaction and demand they had initially but he's a little concerned about how the sales have dropped off of recent.");
+~chatnpc("<p,neutral>Hmmm... Maybe I could produce a different range of products.");
+~chatnpc("<p,neutral>I tell you what, get me 3 animal pelts of the same variety and I'll change the shipments around and, remember, I won't accept banknotes.");
+@rt_siamun_pelt_menu(2);
+
+// $want: 0 either, 1 dyes, 2 pelts
+[label,rt_siamun_pelt_menu](int $want)
+if (~p_choice2("What do you mean by animal pelt?", 1, "Ok, I'll get you the materials.", 2) = 1) {
+    ~chatplayer("<p,quiz>What do you mean by animal pelt?");
+    ~chatnpc("<p,neutral>Just get me 3 cowhides, 3 wolf or snake skins or the shearings of 3 sheep. Simpler still get me 3 pots of dye and, remember, I won't accept banknotes.");
+}
+~chatplayer("<p,neutral>Ok, I'll get you the materials.");
+@rt_siamun_unless($want);
+
+[label,rt_siamun_unless](int $want)
+~chatnpc("<p,quiz>Unless you've got the materials on you?");
+def_int $have = ~rt_siamun_has($want);
+if ($have = 0) {
+    ~chatplayer("<p,neutral>Ummm.. No.");
+    ~chatnpc("<p,angry>Keh! Come back when you have what I need.");
+    if (~p_choice2("Umm... What do you need again?", 1, "Ok.", 2) = 2) {
+        ~chatplayer("<p,neutral>Ok.");
+        return;
+    }
+    ~chatplayer("<p,quiz>Umm... What do you need again?");
+    if ($want = 1) {
+        ~chatnpc("<p,angry>Three pots of dye, no banknotes. Can you remember that?");
+        ~chatplayer("<p,neutral>I think so.");
+        ~chatnpc("<p,neutral>Good, good.");
+        return;
+    }
+    ~chatnpc("<p,neutral>Just get me 3 cowhides, 3 wolf or snake skins or the shearings of 3 sheep and, remember, I won't accept banknotes.");
+    return;
+}
+~chatplayer("<p,happy>Yup, I've got what you want with me.");
+if ($have = 1) {
+    ~rt_siamun_take_dyes;
+    ~mesbox("You give the merchant the dye.");
+    %roguetrader_clothes = ^rt_clothes_menaphite;
+} else {
+    ~rt_siamun_take_pelts;
+    ~mesbox("You give the merchant the animal pelts.");
+    %roguetrader_clothes = ^rt_clothes_desert;
+}
+%roguetrader_justchanged_garments = 1;
+~chatnpc("<p,neutral>Thank you adventurer. I will get my goods up to that merchant thief - Ali Morrisane as quickly as possible.");
+~chatplayer("<p,happy>Think nothing of it. I'm looking forward to seeing what you've produced for the Al Kharid market.");
+
+// 1 if you carry 3 dyes (any colours), 2 if 3 pelts of one kind (cowhide, grey wolf fur, snakeskin,
+// bear fur or wool: the OSRS wiki); banknotes don't count. $want limits it to one (ours: when
+// changing the line he only takes the other material).
+[proc,rt_siamun_has](int $want)(int)
+if ($want ! 2) {
+    if (calc(inv_total(inv, reddye) + inv_total(inv, yellowdye) + inv_total(inv, bluedye) + inv_total(inv, orangedye) + inv_total(inv, greendye) + inv_total(inv, purpledye)) >= 3) return(1);
+}
+if ($want ! 1) {
+    if (~rt_pelt_kind ! null) return(2);
+}
+return(0);
+
+[proc,rt_pelt_kind]()(obj)
+if (inv_total(inv, cow_hide) >= 3) return(cow_hide);
+if (inv_total(inv, grey_wolf_fur) >= 3) return(grey_wolf_fur);
+if (inv_total(inv, village_snake_skin) >= 3) return(village_snake_skin);
+if (inv_total(inv, fur) >= 3) return(fur);
+if (inv_total(inv, wool) >= 3) return(wool);
+return(null);
+
+[proc,rt_siamun_take_dyes]
+def_int $left = 3;
+$left = ~rt_take_upto(reddye, $left);
+$left = ~rt_take_upto(yellowdye, $left);
+$left = ~rt_take_upto(bluedye, $left);
+$left = ~rt_take_upto(orangedye, $left);
+$left = ~rt_take_upto(greendye, $left);
+$left = ~rt_take_upto(purpledye, $left);
+
+[proc,rt_take_upto](obj $obj, int $left)(int)
+def_int $n = min($left, inv_total(inv, $obj));
+if ($n > 0) inv_del(inv, $obj, $n);
+return(calc($left - $n));
+
+[proc,rt_siamun_take_pelts]
+def_obj $kind = ~rt_pelt_kind;
+if ($kind ! null) inv_del(inv, $kind, 3);

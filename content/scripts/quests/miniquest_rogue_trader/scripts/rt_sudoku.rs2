@@ -1,0 +1,369 @@
+// EASCape: Rogue Trader's rune locks ("Examine lock"): the 377 cache's own windows, inter_296
+// for a small casket (4x4: earth, water, air, fire and a blank) and inter_295 for a large one (9x9:
+// air, water, earth, fire, mind, body, death, chaos, law and a blank; its grid is the cache's
+// roguetrader_toughsudukuinv). Which rune each button shows comes from matching its model to the
+// rune models. Every row, column and box must hold one of each rune (the OSRS wiki).
+//
+// Ours: how a lock is made. A small lock is always the OSRS wiki's pattern (1234/4321/3412/2143)
+// under a random choice of runes; a large one is the usual Sudoku pattern shuffled (bands, stacks,
+// rows and columns within them, a transpose (the cache's roguetrader_sudokutranspose suggests the
+// same) and the runes). 6 / 30 runes start in place and can't be moved (eascape_rt_given); any
+// filled grid that keeps the rules opens the lock. The picked rune is shown by the frame around
+// its button (the other frames hidden).
+
+[proc,rt_sudoku_open](boolean $large)
+if_close;
+%roguetrader_playing_sudoku = 1;
+%roguetrader_stallvar = 0;
+inv_clear(eascape_rt_given);
+if ($large = true) {
+    ~rt_sudoku_make_large;
+    if_openmain(inter_295);
+    inv_transmit(roguetrader_toughsudukuinv, inter_295:com_132);
+} else {
+    ~rt_sudoku_make_small;
+    if_openmain(inter_296);
+    inv_transmit(eascape_rt_easysudoku, inter_296:com_63);
+}
+~rt_sudoku_frames($large);
+
+[if_close,inter_295]
+inv_stoptransmit(inter_295:com_132);
+
+[if_close,inter_296]
+inv_stoptransmit(inter_296:com_63);
+
+// rune n (1-9, 10 blank) as the lock's own rune objects (the cache's roguetrader_*rune)
+[proc,rt_rune_obj](int $n)(namedobj)
+switch_int ($n) {
+    case 1 : return(roguetrader_airrune);
+    case 2 : return(roguetrader_waterrune);
+    case 3 : return(roguetrader_earthrune);
+    case 4 : return(roguetrader_firerune);
+    case 5 : return(roguetrader_mindrune);
+    case 6 : return(roguetrader_bodyrune);
+    case 7 : return(roguetrader_deathrune);
+    case 8 : return(roguetrader_chaosrune);
+    case 9 : return(roguetrader_lawrune);
+}
+return(null);
+
+[proc,rt_rune_index](obj $obj)(int)
+switch_obj ($obj) {
+    case roguetrader_airrune : return(1);
+    case roguetrader_waterrune : return(2);
+    case roguetrader_earthrune : return(3);
+    case roguetrader_firerune : return(4);
+    case roguetrader_mindrune : return(5);
+    case roguetrader_bodyrune : return(6);
+    case roguetrader_deathrune : return(7);
+    case roguetrader_chaosrune : return(8);
+    case roguetrader_lawrune : return(9);
+}
+return(0);
+
+// the six orders of three things
+[proc,rt_perm3](int $p, int $i)(int)
+switch_int ($p) {
+    case 0 : return($i);
+    case 1 : if ($i = 0) return(0); if ($i = 1) return(2); return(1);
+    case 2 : if ($i = 0) return(1); if ($i = 1) return(0); return(2);
+    case 3 : if ($i = 0) return(1); if ($i = 1) return(2); return(0);
+    case 4 : if ($i = 0) return(2); if ($i = 1) return(0); return(1);
+}
+if ($i = 0) return(2);
+if ($i = 1) return(1);
+return(0);
+
+[proc,rt_pick3](int $i, int $a, int $b, int $c)(int)
+if ($i = 0) return($a);
+if ($i = 1) return($b);
+return($c);
+
+[proc,rt_sudoku_make_small]
+inv_clear(eascape_rt_easysudoku);
+def_int $k = random(4);
+def_int $flip = random(2);
+def_int $n = 0;
+def_int $s = 0;
+def_int $r = 0;
+def_int $c = 0;
+def_int $v = 0;
+while ($n < 6) {
+    $s = random(16);
+    if (inv_getobj(eascape_rt_given, $s) = null) {
+        $r = calc($s / 4);
+        $c = calc($s % 4);
+        // 1234 / 4321 / 3412 / 2143
+        if ($r = 0) $v = $c;
+        else if ($r = 1) $v = calc(3 - $c);
+        else if ($r = 2) $v = calc(($c + 2) % 4);
+        else $v = calc($c + 1 - 2 * ($c % 2));
+        $v = calc(($v + $k) % 4);
+        if ($flip = 1) $v = calc(3 - $v);
+        inv_setslot(eascape_rt_given, $s, ~rt_rune_obj(calc($v + 1)), 1);
+        inv_setslot(eascape_rt_easysudoku, $s, ~rt_rune_obj(calc($v + 1)), 1);
+        $n = calc($n + 1);
+    }
+}
+
+[proc,rt_sudoku_make_large]
+inv_clear(roguetrader_toughsudukuinv);
+def_int $bands = random(6);
+def_int $r0 = random(6);
+def_int $r1 = random(6);
+def_int $r2 = random(6);
+def_int $stacks = random(6);
+def_int $c0 = random(6);
+def_int $c1 = random(6);
+def_int $c2 = random(6);
+def_int $gb = random(6);
+def_int $g0 = random(6);
+def_int $g1 = random(6);
+def_int $g2 = random(6);
+def_int $k = random(9);
+def_int $tr = random(2);
+def_int $n = 0;
+def_int $s = 0;
+def_int $r = 0;
+def_int $c = 0;
+def_int $t = 0;
+def_int $v = 0;
+while ($n < 30) {
+    $s = random(81);
+    if (inv_getobj(eascape_rt_given, $s) = null) {
+        $r = calc($s / 9);
+        $c = calc($s % 9);
+        if ($tr = 1) {
+            $t = $r;
+            $r = $c;
+            $c = $t;
+        }
+        $r = calc(~rt_perm3($bands, calc($r / 3)) * 3 + ~rt_perm3(~rt_pick3(calc($r / 3), $r0, $r1, $r2), calc($r % 3)));
+        $c = calc(~rt_perm3($stacks, calc($c / 3)) * 3 + ~rt_perm3(~rt_pick3(calc($c / 3), $c0, $c1, $c2), calc($c % 3)));
+        $v = calc((3 * ($r % 3) + $r / 3 + $c + $k) % 9);
+        $v = calc(~rt_perm3($gb, calc($v / 3)) * 3 + ~rt_perm3(~rt_pick3(calc($v / 3), $g0, $g1, $g2), calc($v % 3)));
+        inv_setslot(eascape_rt_given, $s, ~rt_rune_obj(calc($v + 1)), 1);
+        inv_setslot(roguetrader_toughsudukuinv, $s, ~rt_rune_obj(calc($v + 1)), 1);
+        $n = calc($n + 1);
+    }
+}
+
+// show the frame of the picked rune only
+[proc,rt_sudoku_frames](boolean $large)
+def_int $sel = %roguetrader_stallvar;
+if ($large = true) {
+    if_sethide(inter_295:com_94, ~rt_hide($sel, 1));
+    if_sethide(inter_295:com_93, ~rt_hide($sel, 2));
+    if_sethide(inter_295:com_92, ~rt_hide($sel, 3));
+    if_sethide(inter_295:com_95, ~rt_hide($sel, 4));
+    if_sethide(inter_295:com_96, ~rt_hide($sel, 5));
+    if_sethide(inter_295:com_97, ~rt_hide($sel, 6));
+    if_sethide(inter_295:com_98, ~rt_hide($sel, 7));
+    if_sethide(inter_295:com_99, ~rt_hide($sel, 8));
+    if_sethide(inter_295:com_100, ~rt_hide($sel, 9));
+    if_sethide(inter_295:com_101, ~rt_hide($sel, ^rt_sel_blank));
+    return;
+}
+if_sethide(inter_296:com_49, ~rt_hide($sel, 1));
+if_sethide(inter_296:com_46, ~rt_hide($sel, 2));
+if_sethide(inter_296:com_43, ~rt_hide($sel, 3));
+if_sethide(inter_296:com_52, ~rt_hide($sel, 4));
+if_sethide(inter_296:com_55, ~rt_hide($sel, ^rt_sel_blank));
+
+[proc,rt_hide](int $sel, int $n)(boolean)
+if ($sel = $n) return(false);
+return(true);
+
+[proc,rt_sudoku_pick](boolean $large, int $n)
+%roguetrader_stallvar = $n;
+~rt_sudoku_frames($large);
+
+[proc,rt_sudoku_place](boolean $large, int $slot)
+def_inv $grid = eascape_rt_easysudoku;
+if ($large = true) $grid = roguetrader_toughsudukuinv;
+if (inv_getobj(eascape_rt_given, $slot) ! null) {
+    mes("That rune is fixed in place."); // ours
+    return;
+}
+def_int $sel = %roguetrader_stallvar;
+if ($sel = 0) {
+    mes("Choose a rune first."); // ours
+    return;
+}
+if ($sel = ^rt_sel_blank) {
+    inv_delslot($grid, $slot);
+    return;
+}
+inv_setslot($grid, $slot, ~rt_rune_obj($sel), 1);
+
+// every row, column and box holds each rune once
+[proc,rt_sudoku_solved](inv $grid, int $size, int $box)(boolean)
+def_int $full = 15;
+if ($size = 9) $full = 511;
+def_int $g = 0;
+def_int $i = 0;
+def_int $mrow = 0;
+def_int $mcol = 0;
+def_int $mbox = 0;
+def_int $r = 0;
+def_int $c = 0;
+def_int $n = 0;
+while ($g < $size) {
+    $mrow = 0;
+    $mcol = 0;
+    $mbox = 0;
+    $i = 0;
+    while ($i < $size) {
+        $n = ~rt_rune_index(inv_getobj($grid, calc($g * $size + $i)));
+        if ($n = 0) return(false);
+        $mrow = setbit($mrow, calc($n - 1));
+        $n = ~rt_rune_index(inv_getobj($grid, calc($i * $size + $g)));
+        if ($n = 0) return(false);
+        $mcol = setbit($mcol, calc($n - 1));
+        $r = calc(($g / $box) * $box + $i / $box);
+        $c = calc(($g % $box) * $box + $i % $box);
+        $n = ~rt_rune_index(inv_getobj($grid, calc($r * $size + $c)));
+        if ($n = 0) return(false);
+        $mbox = setbit($mbox, calc($n - 1));
+        $i = calc($i + 1);
+    }
+    if ($mrow ! $full | $mcol ! $full | $mbox ! $full) return(false);
+    $g = calc($g + 1);
+}
+return(true);
+
+[proc,rt_sudoku_try](boolean $large)
+def_boolean $ok = false;
+if ($large = true) $ok = ~rt_sudoku_solved(roguetrader_toughsudukuinv, 9, 3);
+else $ok = ~rt_sudoku_solved(eascape_rt_easysudoku, 4, 2);
+if ($ok = false) {
+    mes("The lock won't open: a row, column or square still has a rune missing or twice."); // ours
+    return;
+}
+if_close;
+%roguetrader_playing_sudoku = 0;
+~rt_casket_opened($large);
+
+[if_button,inter_295:com_9] ~rt_sudoku_try(true);
+[if_button,inter_295:com_10] if_close;
+[if_button,inter_296:com_41] ~rt_sudoku_try(false);
+[if_button,inter_296:com_42] if_close;
+
+// the large lock's rune buttons (by model: earth, water, air, mind, fire, body, death, chaos, law, blank)
+[if_button,inter_295:com_122] ~rt_sudoku_pick(true, 3);
+[if_button,inter_295:com_123] ~rt_sudoku_pick(true, 2);
+[if_button,inter_295:com_124] ~rt_sudoku_pick(true, 1);
+[if_button,inter_295:com_125] ~rt_sudoku_pick(true, 5);
+[if_button,inter_295:com_126] ~rt_sudoku_pick(true, 4);
+[if_button,inter_295:com_127] ~rt_sudoku_pick(true, 6);
+[if_button,inter_295:com_128] ~rt_sudoku_pick(true, 7);
+[if_button,inter_295:com_129] ~rt_sudoku_pick(true, 8);
+[if_button,inter_295:com_130] ~rt_sudoku_pick(true, 9);
+[if_button,inter_295:com_131] ~rt_sudoku_pick(true, ^rt_sel_blank);
+
+// the small lock's (earth, water, air, fire, blank)
+[if_button,inter_296:com_58] ~rt_sudoku_pick(false, 3);
+[if_button,inter_296:com_59] ~rt_sudoku_pick(false, 2);
+[if_button,inter_296:com_60] ~rt_sudoku_pick(false, 1);
+[if_button,inter_296:com_61] ~rt_sudoku_pick(false, 4);
+[if_button,inter_296:com_62] ~rt_sudoku_pick(false, ^rt_sel_blank);
+
+// the grid squares, row by row (inter_295 com_11-com_91, inter_296 com_20-com_35)
+[if_button,inter_295:com_11] ~rt_sudoku_place(true, 0);
+[if_button,inter_295:com_12] ~rt_sudoku_place(true, 1);
+[if_button,inter_295:com_13] ~rt_sudoku_place(true, 2);
+[if_button,inter_295:com_14] ~rt_sudoku_place(true, 3);
+[if_button,inter_295:com_15] ~rt_sudoku_place(true, 4);
+[if_button,inter_295:com_16] ~rt_sudoku_place(true, 5);
+[if_button,inter_295:com_17] ~rt_sudoku_place(true, 6);
+[if_button,inter_295:com_18] ~rt_sudoku_place(true, 7);
+[if_button,inter_295:com_19] ~rt_sudoku_place(true, 8);
+[if_button,inter_295:com_20] ~rt_sudoku_place(true, 9);
+[if_button,inter_295:com_21] ~rt_sudoku_place(true, 10);
+[if_button,inter_295:com_22] ~rt_sudoku_place(true, 11);
+[if_button,inter_295:com_23] ~rt_sudoku_place(true, 12);
+[if_button,inter_295:com_24] ~rt_sudoku_place(true, 13);
+[if_button,inter_295:com_25] ~rt_sudoku_place(true, 14);
+[if_button,inter_295:com_26] ~rt_sudoku_place(true, 15);
+[if_button,inter_295:com_27] ~rt_sudoku_place(true, 16);
+[if_button,inter_295:com_28] ~rt_sudoku_place(true, 17);
+[if_button,inter_295:com_29] ~rt_sudoku_place(true, 18);
+[if_button,inter_295:com_30] ~rt_sudoku_place(true, 19);
+[if_button,inter_295:com_31] ~rt_sudoku_place(true, 20);
+[if_button,inter_295:com_32] ~rt_sudoku_place(true, 21);
+[if_button,inter_295:com_33] ~rt_sudoku_place(true, 22);
+[if_button,inter_295:com_34] ~rt_sudoku_place(true, 23);
+[if_button,inter_295:com_35] ~rt_sudoku_place(true, 24);
+[if_button,inter_295:com_36] ~rt_sudoku_place(true, 25);
+[if_button,inter_295:com_37] ~rt_sudoku_place(true, 26);
+[if_button,inter_295:com_38] ~rt_sudoku_place(true, 27);
+[if_button,inter_295:com_39] ~rt_sudoku_place(true, 28);
+[if_button,inter_295:com_40] ~rt_sudoku_place(true, 29);
+[if_button,inter_295:com_41] ~rt_sudoku_place(true, 30);
+[if_button,inter_295:com_42] ~rt_sudoku_place(true, 31);
+[if_button,inter_295:com_43] ~rt_sudoku_place(true, 32);
+[if_button,inter_295:com_44] ~rt_sudoku_place(true, 33);
+[if_button,inter_295:com_45] ~rt_sudoku_place(true, 34);
+[if_button,inter_295:com_46] ~rt_sudoku_place(true, 35);
+[if_button,inter_295:com_47] ~rt_sudoku_place(true, 36);
+[if_button,inter_295:com_48] ~rt_sudoku_place(true, 37);
+[if_button,inter_295:com_49] ~rt_sudoku_place(true, 38);
+[if_button,inter_295:com_50] ~rt_sudoku_place(true, 39);
+[if_button,inter_295:com_51] ~rt_sudoku_place(true, 40);
+[if_button,inter_295:com_52] ~rt_sudoku_place(true, 41);
+[if_button,inter_295:com_53] ~rt_sudoku_place(true, 42);
+[if_button,inter_295:com_54] ~rt_sudoku_place(true, 43);
+[if_button,inter_295:com_55] ~rt_sudoku_place(true, 44);
+[if_button,inter_295:com_56] ~rt_sudoku_place(true, 45);
+[if_button,inter_295:com_57] ~rt_sudoku_place(true, 46);
+[if_button,inter_295:com_58] ~rt_sudoku_place(true, 47);
+[if_button,inter_295:com_59] ~rt_sudoku_place(true, 48);
+[if_button,inter_295:com_60] ~rt_sudoku_place(true, 49);
+[if_button,inter_295:com_61] ~rt_sudoku_place(true, 50);
+[if_button,inter_295:com_62] ~rt_sudoku_place(true, 51);
+[if_button,inter_295:com_63] ~rt_sudoku_place(true, 52);
+[if_button,inter_295:com_64] ~rt_sudoku_place(true, 53);
+[if_button,inter_295:com_65] ~rt_sudoku_place(true, 54);
+[if_button,inter_295:com_66] ~rt_sudoku_place(true, 55);
+[if_button,inter_295:com_67] ~rt_sudoku_place(true, 56);
+[if_button,inter_295:com_68] ~rt_sudoku_place(true, 57);
+[if_button,inter_295:com_69] ~rt_sudoku_place(true, 58);
+[if_button,inter_295:com_70] ~rt_sudoku_place(true, 59);
+[if_button,inter_295:com_71] ~rt_sudoku_place(true, 60);
+[if_button,inter_295:com_72] ~rt_sudoku_place(true, 61);
+[if_button,inter_295:com_73] ~rt_sudoku_place(true, 62);
+[if_button,inter_295:com_74] ~rt_sudoku_place(true, 63);
+[if_button,inter_295:com_75] ~rt_sudoku_place(true, 64);
+[if_button,inter_295:com_76] ~rt_sudoku_place(true, 65);
+[if_button,inter_295:com_77] ~rt_sudoku_place(true, 66);
+[if_button,inter_295:com_78] ~rt_sudoku_place(true, 67);
+[if_button,inter_295:com_79] ~rt_sudoku_place(true, 68);
+[if_button,inter_295:com_80] ~rt_sudoku_place(true, 69);
+[if_button,inter_295:com_81] ~rt_sudoku_place(true, 70);
+[if_button,inter_295:com_82] ~rt_sudoku_place(true, 71);
+[if_button,inter_295:com_83] ~rt_sudoku_place(true, 72);
+[if_button,inter_295:com_84] ~rt_sudoku_place(true, 73);
+[if_button,inter_295:com_85] ~rt_sudoku_place(true, 74);
+[if_button,inter_295:com_86] ~rt_sudoku_place(true, 75);
+[if_button,inter_295:com_87] ~rt_sudoku_place(true, 76);
+[if_button,inter_295:com_88] ~rt_sudoku_place(true, 77);
+[if_button,inter_295:com_89] ~rt_sudoku_place(true, 78);
+[if_button,inter_295:com_90] ~rt_sudoku_place(true, 79);
+[if_button,inter_295:com_91] ~rt_sudoku_place(true, 80);
+[if_button,inter_296:com_20] ~rt_sudoku_place(false, 0);
+[if_button,inter_296:com_21] ~rt_sudoku_place(false, 1);
+[if_button,inter_296:com_22] ~rt_sudoku_place(false, 2);
+[if_button,inter_296:com_23] ~rt_sudoku_place(false, 3);
+[if_button,inter_296:com_24] ~rt_sudoku_place(false, 4);
+[if_button,inter_296:com_25] ~rt_sudoku_place(false, 5);
+[if_button,inter_296:com_26] ~rt_sudoku_place(false, 6);
+[if_button,inter_296:com_27] ~rt_sudoku_place(false, 7);
+[if_button,inter_296:com_28] ~rt_sudoku_place(false, 8);
+[if_button,inter_296:com_29] ~rt_sudoku_place(false, 9);
+[if_button,inter_296:com_30] ~rt_sudoku_place(false, 10);
+[if_button,inter_296:com_31] ~rt_sudoku_place(false, 11);
+[if_button,inter_296:com_32] ~rt_sudoku_place(false, 12);
+[if_button,inter_296:com_33] ~rt_sudoku_place(false, 13);
+[if_button,inter_296:com_34] ~rt_sudoku_place(false, 14);
+[if_button,inter_296:com_35] ~rt_sudoku_place(false, 15);

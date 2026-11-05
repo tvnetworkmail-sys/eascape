@@ -2663,3 +2663,89 @@ if ($n < 1 | $n > 9) {
     return;
 }
 ~tbw_spawn_event($n, coord);
+
+// ---------------------------------------------------------------- Rogue Trader (miniquest_rogue_trader)
+// ::rtpack - what Rogue Trader needs: 3 red dyes and 3 cowhides (Siamun), a lockpick (the small
+// casket), 2,000 coins (the urchin, the carpets, the caskets). It also marks The Feud, Rune
+// Mysteries and Icthlarin's Little Helper done (no rewards) if they aren't.
+[debugproc,rtpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(reddye, 3));
+$banked = calc($banked + ~questpack_give(cow_hide, 3));
+$banked = calc($banked + ~questpack_give(lockpick, 1));
+$banked = calc($banked + ~questpack_give(coins, 2000));
+if (%feud_var < ^feud_complete) %feud_var = ^feud_complete;
+if (%runemysteries ! ^runemysteries_complete) %runemysteries = ^runemysteries_complete;
+if (%ics_little_var < ^ics_complete) %ics_little_var = ^ics_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Rogue Trader", $banked);
+mes("Ali Morrisane is in Al Kharid (::rttele 1). ::rtstage sets how far you are.");
+
+// ::rtstage <n> - Rogue Trader (rogue_trader.constant): 0 not started (clears it all), 1 Ali has
+// sent you to Aubury, the blackjack seller and Siamun, 2 Aubury agreed (Ali has the caskets),
+// 3 the blackjack seller heard the proposal, 4 cunning plan (pay the urchin), 5 Siamun asked for
+// materials, 6 every part done, Ali not told yet (tell him three times, then the discount),
+// 7 all done (both rune shops, defensive blackjacks, Menaphite clothes, the carpet discount).
+[debugproc,rtstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 7) {
+    mes("::rtstage 0-7: 0 reset, 1 sent out by Ali, 2 Aubury agreed, 3 blackjack proposal heard, 4 go to the urchin,");
+    mes("5 Siamun asked for materials, 6 all three done (Ali not told), 7 finished.");
+    return;
+}
+%roguetrader_var = 0;
+%roguetrader_playing_sudoku = 0;
+inv_clear(roguetrader_alim_runedump);
+if ($n = 0) {
+    mes("Rogue Trader: reset.");
+    return;
+}
+%roguetrader_started = ^rt_intro_done;
+%roguetrader_runes = ^rt_runes_aubury;
+%roguetrader_blackjacks = ^rt_bj_told;
+%roguetrader_clothes = ^rt_clothes_told;
+if ($n >= 2) {
+    %roguetrader_runes = ^rt_runes_deal;
+    %roguetrader_justobt_runes = 1;
+}
+if ($n >= 3) %roguetrader_blackjacks = ^rt_bj_asked;
+if ($n >= 4) %roguetrader_blackjacks = ^rt_bj_urchin;
+if ($n >= 5) %roguetrader_clothes = ^rt_clothes_asked;
+if ($n >= 6) {
+    %roguetrader_runes = ^rt_runes_both;
+    %roguetrader_justobt_runes = 0;
+    %roguetrader_blackjacks = ^rt_bj_agreed;
+    %roguetrader_justchanged_weapons = ^rt_bjline_defensive;
+    %roguetrader_bjtold_ali = 0;
+    %roguetrader_bj_urchingloat = 1;
+    %roguetrader_clothes = ^rt_clothes_menaphite;
+    %roguetrader_justchanged_garments = 1;
+}
+if ($n >= 7) {
+    %roguetrader_bjtold_ali = 1;
+    %roguetrader_justchanged_garments = 0;
+    %roguetrader_cheapflights = 1;
+    %roguetrader_started = ^rt_finished;
+}
+mes("Rogue Trader: stage <tostring($n)>.");
+
+// ::rttele <n> - 1 Ali Morrisane (Al Kharid), 2 Aubury (Varrock), 3 the blackjack seller, 4 the
+// street urchin (Pollnivneach), 5 Siamun (Sophanem), 6 the Shantay Pass carpets
+[debugproc,rttele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $c = null;
+switch_int ($n) {
+    case 1 : $c = 0_51_50_40_11;
+    case 2 : $c = 0_50_53_53_10;
+    case 3 : $c = 0_52_46_23_25;
+    case 4 : $c = 0_52_46_24_14;
+    case 5 : $c = 0_51_43_51_34;
+    case 6 : $c = 0_51_48_47_37;
+    case default :
+        mes("::rttele 1-6: 1 Ali Morrisane, 2 Aubury, 3 the blackjack seller, 4 the street urchin, 5 Siamun (Sophanem),");
+        mes("6 the Shantay Pass carpets.");
+        return;
+}
+p_telejump(map_findsquare($c, 1, 3, ^map_findsquare_lineofwalk));

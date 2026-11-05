@@ -3,7 +3,7 @@
 // (configs/magic_carpet.dbrow, Void's patrols). Uzer's merchant shows once The Golem is done (a
 // multinpc in the 377 cache); Sophanem's and Menaphos's show once Icthlarin's Little Helper's
 // passage is open (the cache's multinpc), and fly once the quest is done (Void). The flight uses
-// the 377 cache's carpet animations.
+// the 377 cache's carpet animations. Rogue Trader halves the fare (miniquest_rogue_trader).
 
 [opnpc1,magic_carpet_seller1] ~carpet_merchant("shantay_pass");
 [opnpc1,magic_carpet_seller2] ~carpet_merchant("bedabin_camp");
@@ -74,14 +74,33 @@ if (string_length($to) = 0) {
     ~chatnpc("<p,neutral>Fair enough, magic carpet travel isn't for everyone. Enjoy the walk.");
     return;
 }
-~chatnpc("<p,neutral>There is a fare for this service you know: it's 200 gold per journey.");
-if (inv_total(inv, coins) < 200) {
+// Rogue Trader's discount: 100 instead of 200, and with the Ring of Charos (a) a charm for 75 (or
+// 100 without the discount) - Void's RugMerchant.kt
+def_int $fare = ^rt_fare;
+if (%roguetrader_cheapflights = 1) {
+    $fare = ^rt_fare_cheap;
+    ~chatnpc("<p,neutral>There is a fare for this service you know - normally it's 200 gold per journey, but for you, I'll let you go for 100.");
+} else {
+    ~chatnpc("<p,neutral>There is a fare for this service you know: it's 200 gold per journey.");
+}
+def_boolean $charmed = false;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    def_int $cheaper = 100;
+    if ($fare = ^rt_fare_cheap) $cheaper = 75;
+    if (~p_choice2("Here you go.", 1, "[Charm] Seeing as you've reduced it already, how about <tostring($cheaper)>gp?", 2) = 2) {
+        ~chatplayer("<p,quiz>Seeing as you've reduced it already, how about <tostring($cheaper)>gp?");
+        ~chatnpc("<p,neutral>Ah, a world-class haggler, I see. Very well, <tostring($cheaper)>gp it is.");
+        $fare = $cheaper;
+        $charmed = true;
+    }
+}
+if (inv_total(inv, coins) < $fare) {
     ~chatplayer("<p,sad>I don't have enough money with me.");
     ~chatnpc("<p,neutral>Looks like you're walking then.");
     return;
 }
-~chatplayer("<p,happy>Here you go.");
-inv_del(inv, coins, 200);
+if ($charmed = false) ~chatplayer("<p,happy>Here you go.");
+inv_del(inv, coins, $fare);
 ~carpet_fly($here, $to);
 
 [proc,carpet_fly](string $from, string $to)
