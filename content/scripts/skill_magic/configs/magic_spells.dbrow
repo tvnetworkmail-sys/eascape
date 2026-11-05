@@ -61,6 +61,28 @@ data=convertobj,strung_dragonstone_amulet,amulet_of_glory,human_enchantamuletlvl
 data=additional_reqmessage,This spell can only be cast on Dragonstone Amulets and Rings.
 data=amulet_reqmessage,unstrung_dragonstone_amulet,You need to string the Dragonstone Amulet before enchanting it.
 
+// EASCape: Lvl-6 Enchant (TzHaar Fight Caves, 4 Oct 2005). Level 87, 20 earth, 20 fire, 1 cosmic,
+// 97 xp: the RS wiki, Void (enchanting.tables.toml), 2006Scape (Enchanting.java) and 2009scape
+// (EnchantSpell.kt) agree, as does the cache's own spell tooltip (com_550). Onyx ring -> ring of
+// stone (enchanted_onyx_ring, 6583), onyx amulet -> amulet of fury (enchanted_onyx_amulet, 6585).
+// The onyx necklace isn't enchantable: the update says rings and amulets, and the berserker
+// necklace is 30 Apr 2007 (not in the 377 cache). Ring: Void's enchant_ring anim and spotanim and
+// enchant_onyx_ring sound. Amulet: anim 721 and spotanim 452 (Void and 2006Scape) and Void's
+// enchant_onyx_amulet sound.
+[magic_spell_enchant_level6]
+table=magic_spell_table
+data=spell,^enchant_lvl6
+data=members,true
+data=levelrequired,87
+data=runesrequired,earthrune,20,firerune,20,cosmicrune,1
+data=experience,970
+data=convertobj,onyx_ring,enchanted_onyx_ring,human_cast_enchantring,enchant_ring,enchant_onyx_ring
+data=convertobj,strung_onyx_amulet,enchanted_onyx_amulet,human_enchantamuletlvl3,enchant_amulet2_lvl6,enchant_onyx_amulet
+// ours: worded like Lvl-3 to Lvl-5's
+data=additional_reqmessage,This spell can only be cast on Onyx Amulets and Rings.
+// ours: worded like Lvl-3 to Lvl-5's
+data=amulet_reqmessage,unstrung_onyx_amulet,You need to string the Onyx Amulet before enchanting it.
+
 [magic_spell_teleport_varrock]
 table=magic_spell_table
 data=spell,^varrock_teleport

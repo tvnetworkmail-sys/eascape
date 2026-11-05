@@ -2824,3 +2824,22 @@ if (npc_find(0_37_80_31_58, tzhaar_fightpit_master, 6, 0) = true) {
 ~headicon_add(^headicon_pits_champion);
 softtimer(fightpit_champion, ^fightpit_skull_ticks);
 mes("You're the Fight Pit champion, with <tostring(%tzhaar_fightpit_tokkul)> tokkul waiting.");
+
+// ::enchant6pack - for Lvl-6 Enchant (TzHaar Fight Caves, 4 Oct 2005): 99 Magic if you're below,
+// 80 earth, 80 fire and 4 cosmic runes (four casts), 2 onyx rings, 2 onyx amulets, an unstrung
+// onyx amulet and an onyx necklace (both should be refused). Bank if the pack is full.
+[debugproc,enchant6pack]
+if (p_finduid(uid) = false) return;
+if (stat_base(magic) < 99) {
+    stat_advance(magic, 130344310);
+}
+inv_add(inv, earthrune, 80);
+inv_add(inv, firerune, 80);
+inv_add(inv, cosmicrune, 4);
+~eascape_give(onyx_ring);
+~eascape_give(onyx_ring);
+~eascape_give(strung_onyx_amulet);
+~eascape_give(strung_onyx_amulet);
+~eascape_give(unstrung_onyx_amulet);
+~eascape_give(onyx_necklace);
+mes("Lvl-6 Enchant: cast it on the onyx rings and amulets (the unstrung amulet and necklace say no).");
