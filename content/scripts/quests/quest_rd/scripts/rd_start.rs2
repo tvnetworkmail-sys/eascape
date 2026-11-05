@@ -330,7 +330,7 @@ return(0_50_50_21_18);
 // Transcript:Recruitment Drive; the "Tell me about this organization..." choice is 2009scape's,
 // its words the RS wiki's.
 [label,rcd_amik]
-if (%rd_main = ^rcd_complete) return;
+if (%rd_main = ^rcd_complete) @wanted_amik; // EASCape: Wanted! (quest_wanted/wanted_start.rs2)
 ~chatplayer("<p,quiz>Do you have any other quests for me to do?");
 if (%rd_main = ^rcd_started) {
     ~chatnpc("<p,neutral>No, I am afraid not. I suggest you go meet Sir Tiffy in Falador Park, he will be expecting you.");
@@ -476,11 +476,11 @@ switch_int (~p_choice2("Yes, let's go!", 1, "No, I've changed my mind.", 2)) {
 @rcd_tiffy_member_menu;
 
 [label,rcd_tiffy_member_menu]
-switch_int (~p_choice5("Do you have any jobs for me yet?", 1, "Can you explain the Gaze of Saradomin to me?", 2, "Can I buy some armour?", 3, "Can I switch respawns please?", 4, "Goodbye.", 5)) {
-    case 1 :
-        ~chatplayer("<p,quiz>Do you have any jobs for me yet?");
-        ~chatnpc("<p,neutral>Sorry dear <text_gender("boy", "gal")> but we are still in the process of organising.");
-        ~chatnpc("<p,happy>I'm sure that we will have something for you soon, so please feel free to check back later.");
+// EASCape: Wanted! - once started, "Ask about the Wanted! quest." (the RS wiki's transcript)
+def_string $jobs = "Do you have any jobs for me yet?";
+if (%wanted_main > ^wanted_not_started & %wanted_main < ^wanted_complete) $jobs = "Ask about the Wanted! quest.";
+switch_int (~p_choice5($jobs, 1, "Can you explain the Gaze of Saradomin to me?", 2, "Can I buy some armour?", 3, "Can I switch respawns please?", 4, "Goodbye.", 5)) {
+    case 1 : @wanted_tiffy_jobs; // EASCape: Wanted! (quest_wanted/wanted_start.rs2)
     case 2 :
         ~chatplayer("<p,confused>I don't really understand this 'Gaze of Saradomin' thing... Do you think you could explain what it does for me?");
         ~chatnpc("<p,happy>Certainly <text_gender("sirrah", "milady")>! As you know, we Temple Knights are personally favoured by Saradomin himself.");

@@ -196,6 +196,10 @@ stat_advance(runecraft, 10000); // EASCape: the 1000 Runecrafting experience he 
 ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>And so I have done.|Read my research notes, they may enlighten you somewhat.");
 
 [label,rcu_zmmy_mage1_edge_post_quest]
+if (~wanted_mage_ready = true) @wanted_mage; // EASCape: Wanted! (quest_wanted/wanted_leads.rs2)
+@rcu_zmmy_mage1_edge_post_quest_menu;
+
+[label,rcu_zmmy_mage1_edge_post_quest_menu]
 def_int $choice = ~p_choice3("So what is this 'abyss' stuff?", 1, "Is this abyss dangerous?", 2, "Can you teleport me there now?", 3);
 
 while ($choice ! 0) {

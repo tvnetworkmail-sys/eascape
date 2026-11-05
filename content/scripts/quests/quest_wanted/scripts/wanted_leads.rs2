@@ -1,0 +1,170 @@
+// EASCape: Wanted! - Savant's two leads. Words: the OSRS wiki's quest transcript. Lord Daquarius
+// won't talk until you kill one of his Black Knights after speaking to him (the OSRS wiki: a kill
+// before talking to him doesn't count); the Mage of Zamorak in Varrock's chaos temple trades what
+// he knows for 20 unnoted rune or pure essence, all of one kind, and won't speak to you while you
+// wear Saradomin or Guthix items (the OSRS wiki). Ours: the room's extent (16 squares of Lord
+// Daquarius), that the mage's Solus talk waits for Daquarius's clue (Savant's words after it
+// count on it), and the words he refuses you with.
+
+// ---------------------------------------------------------------- Lord Daquarius
+// (he had no dialogue here before: areas/area_taverly/dungeon/scripts/lord_daquarius.rs2)
+[opnpc1,lord_daquarius]
+if (%wanted_main < ^wanted_investigating | %wanted_main >= ^wanted_complete) {
+    mes("Nothing interesting happens."); // as before (the engine's line for an npc with no script)
+    return;
+}
+~chatplayer("<p,neutral>Hello.");
+~chatnpc("<p,angry>What want you, with the Lord of the Kinshra? Speak!");
+if (%wanted_daquarius_hint = ^wanted_daq_told) {
+    ~chatplayer("<p,angry>Okay Daquarius, tell me all that you know of Solus, or I will kill some more Black Knights!");
+    ~chatnpc("<p,angry>I have already told you, I know nothing except that he left some fur behind.");
+    ~chatnpc("<p,angry>Now leave me and my men be, or it will be the worse for you!");
+    return;
+}
+if (%wanted_black_knight_dead = 1) {
+    ~chatplayer("<p,angry>Okay Daquarius, you tell me the whereabouts of Solus Dellagar right now, or I will put every Black Knight here to their death in front of you!");
+    ~chatnpc("<p,sad>*sigh* I should have known the White Knights would be my ruin once again...");
+    ~chatnpc("<p,neutral>I do not know his exact whereabouts, and when last we met we did not leave... on the best of terms.");
+    ~chatnpc("<p,neutral>All I know is that he left behind some fur when he left, I would expect him to be in an area with furred creatures of some sort.");
+    ~chatplayer("<p,quiz>What kind of fur? Dog? Bear? Wolf?");
+    ~chatnpc("<p,angry>I do not know, I am a warrior, not a zookeeper. It was not bear fur, I know that much.");
+    %wanted_daquarius_hint = ^wanted_daq_told;
+    ~chatplayer("<p,angry>That's it? That's your help? You'd better not be lying Daquarius, or...");
+    ~wanted_savant("<p,neutral>Calm yourself <displayname>, he is telling the truth.");
+    ~chatplayer("<p,quiz>How do you know?");
+    ~wanted_savant("<p,neutral>I am monitoring your conversation through the CommOrb, his physiology shows none of the changes we usually get when someone lies to us.");
+    ~chatplayer("<p,happy>So this CommOrb thing can work as a lie-detector? That's pretty useful!");
+    ~wanted_savant("<p,neutral>Yes, it is, but back to the task at hand. I suggest you head to the next subject of our observations, he might be more help in locating Solus.");
+    ~chatplayer("<p,quiz>You mean that Zamorakian mage in Varrock?");
+    ~wanted_savant("<p,neutral>Yes, he would seem a likely bet. Savant out.");
+    return;
+}
+if (%wanted_daquarius_hint = ^wanted_daq_talked) {
+    ~chatplayer("<p,angry>I still want to know the whereabouts of Solus Dellagar!");
+    ~chatnpc("<p,angry>Well you will not hear that from me, White Knight dog!");
+    ~chatnpc("<p,angry>And you can threaten me all you want, I care for nothing in this world save the welfare of my Kinshra brothers!");
+    return;
+}
+~chatplayer("<p,neutral>I am here on behalf of the White Knights...");
+~chatnpc("<p,angry>Pah! Begone, fool, or prepare to taste my blade!");
+~chatplayer("<p,neutral>Now wait a minute, this concerns a friend of yours...");
+~chatnpc("<p,confused>A friend of mine? What friend of mine would the Temple Knights show any intere-");
+~chatnpc("<p,neutral>Oh. This... This is about Solus, isn't it?");
+~chatplayer("<p,happy>Bingo.");
+~chatnpc("<p,angry>Then let me assure you, that monster is no 'friend' of mine - if indeed such a creature even has 'friends'!");
+~chatnpc("<p,angry>No, that man is certainly no friend of mine nor of the Kinshra.");
+~chatplayer("<p,quiz>So you will help me find him?");
+~chatnpc("<p,angry>No fool... You and your White Knight cronies are no friend of the Kinshra either.");
+~chatnpc("<p,angry>I will help neither of you, and I wish you all a slow and painful death.");
+~chatplayer("<p,angry>You know... I'm sure I could MAKE you tell me where he is...");
+~chatnpc("<p,angry>Is that a threat, whelp? Do your worst. I care not for my own life, I stand only for the protection of the Kinshra!");
+%wanted_daquarius_hint = ^wanted_daq_talked;
+~wanted_savant("<p,neutral><displayname>? I've been monitoring you. He's telling the truth, so don't try to bluff him by starting a fight.");
+~wanted_savant("<p,neutral>All of our records show that the only thing he will make a stand for is the protection of his men, and he has little regard for his own safety in comparison.");
+~wanted_savant("<p,neutral>You're going to have to find some other way to intimidate him into giving you the information we need.");
+~chatplayer("<p,neutral>Understood. <displayname> out.");
+
+// a Black Knight killed in his room after you've spoken to him (from black_knight_drops,
+// drop_tables/black_knight.rs2)
+[queue,wanted_daquarius_kill](coord $at)
+if (%wanted_daquarius_hint ! ^wanted_daq_talked | %wanted_black_knight_dead = 1) return;
+if (distance($at, ^wanted_daquarius) > 16 | distance(coord, ^wanted_daquarius) > 16) return;
+%wanted_black_knight_dead = 1;
+if (npc_find(^wanted_daquarius, lord_daquarius, 16, 0) = true) {
+    npc_say("Stop! I will tell you what you want! Please... leave my men be...");
+}
+%wanted_lord_d_exposition = 1;
+
+// ---------------------------------------------------------------- the Mage of Zamorak
+// (miniquest_abyssal/rcu_zammy_mage1_edge.rs2, after Enter the Abyss)
+[proc,wanted_mage_ready]()(boolean)
+if (%wanted_main ! ^wanted_investigating) return(false);
+if (%wanted_daquarius_hint ! ^wanted_daq_told) return(false);
+return(true);
+
+[label,wanted_mage]
+switch_int (~p_choice2_header("Solus Dellagar.", 1, "Something else.", 2, "What would you like to talk about?")) {
+    case 1 : @wanted_mage_solus;
+    case 2 : @rcu_zmmy_mage1_edge_post_quest_menu;
+}
+
+// ours: no source has his words
+[proc,wanted_godly_worn]()(boolean)
+def_int $slot = 0;
+def_obj $obj;
+while ($slot < inv_size(worn)) {
+    $obj = inv_getobj(worn, $slot);
+    if ($obj ! null) {
+        if (string_indexof_string("Saradomin", oc_name($obj)) ! -1 | string_indexof_string("Guthix", oc_name($obj)) ! -1) return(true);
+    }
+    $slot = calc($slot + 1);
+}
+return(false);
+
+[label,wanted_mage_solus]
+if (~wanted_godly_worn = true) {
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,angry>I will not speak with you while you wear the colours of Saradomin or Guthix."); // ours
+    return;
+}
+if (%wanted_zammy_mage_hint = 0) {
+    ~chatplayer("<p,neutral>I am looking for information about a very dangerous man... I believe he visited you quite recently.");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,angry>Ah, you mean that accursed Solus!");
+    ~chatplayer("<p,neutral>Yes, him. I need to find him and make sure he doesn't come back to these lands.");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>You are working for the Temple Knights, correct?");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>No, don't deny it, I recognise the magical signature of your Communication Orb, a very nice piece of equipment indeed.");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>I will tell you what I know in exchange for it, I believe such a device could be very useful to my research...");
+    ~wanted_savant("<p,angry><displayname>, I've been monitoring your conversation; You can't let him have Temple Knight equipment, he is a Zamorakian!");
+    ~wanted_savant("<p,neutral>Even if we wanted to let the Z.M.I. have access to our research, the built in security magics would destroy it before trading anyway!");
+    ~chatplayer("<p,neutral>Sorry, I cannot trade you my Communications Orb...");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>Ah well, it was worth a try, but I did not seriously expect you to part with it.");
+    ~chatplayer("<p,quiz>Then perhaps you will be willing to trade something else for your information...?");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,sad>I have little information, and would give it freely to make sure Solus is... disposed of... but unfortunately I am somewhat... financially distraught at the moment due to a recent... incident.");
+    ~chatplayer("<p,quiz>You mean Solus robbed you of all of your money?");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,sad>...Yes. He took a large degree of my research into various things as well, but my research is inside my mind and easily replaceable, the money I possessed was essential");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,sad>for my experimentation, and as I have no real skills to speak of, is not so easily replacable...");
+    ~chatplayer("<p,quiz>You want me to pay you for information?");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>No... not as such. You know of the substance known as 'rune essence' yes?");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>A small number of those will allow me to create runes from them, which I may then sell and get myself back on my feet.");
+    ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>Twenty parts of rune essence is my price for my information. You may take it or leave it...");
+    %wanted_zammy_mage_hint = ^wanted_mage_price;
+    ~wanted_savant("<p,neutral>Hi <displayname>, it sounds like a pretty good deal for this kind of information to me, but it's your call. We REALLY need to find Solus as soon as possible though, who knows what kind of damage he might cause");
+    ~wanted_savant("<p,neutral>now he is at large again!");
+    ~chatplayer("<p,neutral>Okay, I'll see what I can do.");
+    return;
+}
+~chatplayer("<p,quiz>So you have information about the whereabouts of Solus Dellagar?");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>I do indeed. My price for this information is 20 pieces of rune essence.");
+def_obj $ess = null;
+if (inv_total(inv, blankrune) >= 20) {
+    $ess = blankrune;
+} else if (inv_total(inv, blankrune_high) >= 20) {
+    $ess = blankrune_high;
+}
+if ($ess = null) {
+    if (inv_total(inv, blankrune) > 0 | inv_total(inv, blankrune_high) > 0) {
+        ~chatplayer("<p,quiz>I have some essences with me, if you would take those...?");
+        ~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,angry>I will not haggle with you on my price. 20 Rune essences, and not a single essence less.");
+        ~chatplayer("<p,neutral>Okay, I'll go get those for you then.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Okay. I'll go get those for you then.");
+    return;
+}
+~chatplayer("<p,neutral>I have your essences right here, take them.");
+inv_del(inv, $ess, 20);
+%wanted_zammy_mage_hint = ^wanted_mage_told;
+%wanted_main = ^wanted_hunt;
+~wanted_set_target(^wanted_m_canifis);
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+~chatplayer("<p,angry>Okay, now you have your essence, give me my information.");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>Certainly. As I say, I have little information, but the cost was not too dear, was it?");
+~chatplayer("<p,angry>Get on with it, I haven't got all day to waste.");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,neutral>As you wish. As a powerful magician, I could sense his aura once I had encountered him, and it definitely moved East of here when he left me.");
+~chatplayer("<p,angry>He went East. That's it? That's your 'information'?");
+~chatnpc_specific("Mage of Zamorak", rcu_zammy_mage1_edgeb, "<p,sad>I am sorry I cannot be more specific, but that is all of the information I have to offer...");
+~wanted_savant("<p,neutral>Okay, so Daquarius told us he was probably somewhere with furry animals of some kind, and this mage has told us that he is East of here...");
+~wanted_savant("<p,confused>Any ideas? Frankly, I'm stumped. I just don't have enough information to work out where he might be...");
+~chatplayer("<p,neutral>Hmmm. Wolf fur... and the East... I know where he is.");
+~wanted_savant("<p,shock>You do?");
+~chatplayer("<p,happy>He will be in Canifis. He must be.");
+~wanted_savant("<p,happy>Wow, that's some good thinking <displayname>! Okay, let's head there and get him!");

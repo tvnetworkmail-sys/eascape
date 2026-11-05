@@ -1,0 +1,58 @@
+// Wanted! (17 October 2005). The stage is the 377 cache's own %wanted_main (varbit, bits 0-10 of
+// quest_wanted). Void's wanted varbit has 0 unstarted and 10 completed; the numbers in between are
+// ours (no source numbers them). The cache's other wanted_ varbits hold the rest: the squire joke,
+// the CommOrb, Savant, Lord Daquarius, the Mage of Zamorak, the nineteen scan places
+// (wanted_mission1-19 and their complete bits) and the six rank announcements.
+^wanted_not_started = 0
+^wanted_tiffy_plan = 1      // Sir Tiffy's loophole: go and see Sir Amik
+^wanted_no_crisis = 2       // Sir Amik: there must be a crisis (or you became his squire)
+^wanted_crisis = 3          // Sir Tiffy has a crisis: back to Sir Amik
+^wanted_deputised = 4       // a deputised White Knight: back to Sir Tiffy (kills count from here)
+^wanted_commorb = 5         // you have a CommOrb: contact Savant
+^wanted_investigating = 6   // Savant's records: Lord Daquarius and the Mage of Zamorak
+^wanted_hunt = 7            // Canifis and the chase
+^wanted_cornered = 8        // Solus is trapped in the rune essence mine
+^wanted_defeated = 9        // Solus beaten: his hat to Sir Amik
+^wanted_complete = 10
+^wanted_questpoints = 1
+
+// %wanted_daquarius_hint (2 bits): ours
+^wanted_daq_talked = 1      // he won't talk (Savant: protect his men)
+^wanted_daq_told = 2        // he told you of the fur
+// %wanted_zammy_mage_hint (2 bits): ours
+^wanted_mage_price = 1      // he wants 20 rune essence
+^wanted_mage_told = 2       // he said "East": Canifis
+^wanted_mage_canifis = 3    // Savant's long call at Canifis
+
+// The scan places, numbered as the cache's wanted_mission1-19 and wanted_solus1-19. The cache
+// fixes one: the woman of the Dorgeshuun mine (wanted_solus_fake_woman) shows on wanted_mission3.
+// The other numbers are ours; the places and their clue items are the OSRS wiki's.
+^wanted_m_canifis = 1       // always 1st (wiki)
+^wanted_m_champions = 2     // always 3rd: a blue cape
+^wanted_m_dorgeshuun = 3    // always 5th: a bone spear (cache: the woman)
+^wanted_m_essence = 4       // always 7th: 20 noted pure essence
+^wanted_m_first_random = 5  // 5-19: the 2nd, 4th and 6th places are drawn from these
+^wanted_m_last = 19
+
+// White Knight ranks (the OSRS wiki: Novice 100, Peon 200, Page 300, Noble 500, Adept 800,
+// Master 1,300)
+^wanted_rank_novice = 100
+^wanted_rank_peon = 200
+^wanted_rank_page = 300
+^wanted_rank_noble = 500
+^wanted_rank_adept = 800
+^wanted_rank_master = 1300
+^wanted_kill_bonus = 100    // Mod Ash: "you get a +100 bonus on it at the end of the quest"
+
+// places
+^wanted_tiffy = 0_46_52_53_45           // Sir Tiffy Cashien (the map's spawn)
+^wanted_amik = 2_46_52_16_8             // Sir Amik Varze (the map's spawn)
+^wanted_vyvin = 2_46_52_39_7            // Sir Vyvin (the map's spawn)
+^wanted_daquarius = 0_45_151_12_16      // Lord Daquarius (the map's spawn)
+^wanted_zammy_mage = 0_50_52_60_55      // the Mage of Zamorak in Varrock's chaos temple (the map's spawn)
+// ours: where Savant brings you after the Flames of Zamorak (the courtyard of the castle)
+^wanted_castle_yard = 0_46_52_28_17
+// ours: the White Knights' Castle, for the observation records (its knights' spawns, 2956-2990,
+// 3328-3352, all floors)
+^wanted_castle_sw = 0_46_52_10_0
+^wanted_castle_ne = 3_46_52_48_28

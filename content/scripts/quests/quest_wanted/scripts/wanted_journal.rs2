@@ -1,0 +1,240 @@
+// EASCape: Wanted! - the journal, the reward, the White Knight ranks and Sir Vyvin's armoury.
+// The reward (the OSRS and RS wikis): 1 quest point, 5,000 Slayer experience, the White Knight
+// armoury. The ranks (the OSRS wiki's White equipment and Sir Vyvin pages): your Black Knight kill
+// score counts from being deputised (Mod Ash: "It starts counting once you reach the bit of the
+// quest where the QJ says 'I should go and speak to Sir Tiffy for advice on finding this Solus
+// character...' And you get a +100 bonus on it at the end of the quest"); +1 a Black Knight (not
+// Port Sarim's jailed one nor the Black Knights' Fortress's wall guard), -1 a White Knight, none
+// once Master and never above 1,300; "Congratulations! You are now a White Knight <rank>!" the
+// first time each rank is reached (the cache's wanted_<rank>_spam varbits); before the kill score
+// went into the journal there was a 1 in 1,001 chance a Black Knight added 1-50 more (Mod Ash).
+// Sir Vyvin's words and the armoury's prices (at cost, both ways: Sir Vyvin's 1440 and 1920 coins
+// are the cache's costs): the OSRS wiki. The armouries are the cache's whiteknight_armoury2-6.
+
+// ---------------------------------------------------------------- the journal
+// Ours: no source has the 2005 journal's text, so these lines say what the OSRS wiki's
+// walkthrough has you do next. The deputised line is Mod Ash's quote of the journal; the rank
+// line is the OSRS wiki's (the kill score was added to it on 21 March 2019, so it is left out).
+[if_button,questlist:wanted]
+def_int $s = %wanted_main;
+if ($s = ^wanted_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Sir Tiffy Cashien@dbl@ in|@dre@Falador Park@dbl@.||";
+    def_boolean $met = false;
+    if (%qp >= 32) $met = true;
+    $req = append($req, ~wanted_req_line($met, "I need 32 quest points"));
+    $met = false;
+    if (%rd_main = ^rcd_complete) $met = true;
+    $req = append($req, ~wanted_req_line($met, "I need to have completed Recruitment Drive"));
+    $met = false;
+    if (%lt_stage >= ^lt_complete) $met = true;
+    $req = append($req, ~wanted_req_line($met, "I need to have completed The Lost Tribe"));
+    $met = false;
+    if (%priestperil >= ^priestperil_complete) $met = true;
+    $req = append($req, ~wanted_req_line($met, "I need to have completed Priest in Peril"));
+    $met = false;
+    if (%abyssal_miniquest = ^miniquest_abyssal_complete) $met = true;
+    $req = append($req, ~wanted_req_line($met, "I need to have helped the Mage of Zamorak into the Abyss"));
+    ~quest_journal("Wanted!", $req);
+    return;
+}
+if ($s >= ^wanted_complete) {
+    ~quest_journal("Wanted!", append("@str@Sir Tiffy found a loophole to make me a White Knight: Sir Amik|@str@deputised me in a crisis, and I tracked the murder-mage Solus|@str@Dellagar across the land with Savant and my CommOrb, and beat|@str@him in the rune essence mine. Sir Amik made me a White Knight.||@red@QUEST COMPLETE!||", ~wanted_rank_line));
+    return;
+}
+def_string $t = "@str@Sir Tiffy Cashien told me only White Knights may join the|@str@Temple Knights.||";
+def_string $next;
+switch_int ($s) {
+    case ^wanted_tiffy_plan : $next = "@dbl@I should tell @dre@Sir Amik Varze@dbl@ in the White Knights' Castle that|@dbl@I want to be a White Knight, turn down his offer to be his squire,|@dbl@and ask to be deputised instead.";
+    case ^wanted_no_crisis :
+        if (%wanted_joke_option = 1) {
+            $next = "@dbl@I became Sir Amik's squire. Perhaps I should tell @dre@Sir Tiffy@dbl@.";
+        } else {
+            $next = "@dbl@Sir Amik can only deputise me in a time of crisis. @dre@Sir Tiffy@dbl@|@dbl@may be able to arrange one.";
+        }
+    case ^wanted_crisis : $next = "@dbl@A dangerous criminal is on the loose. I should report to @dre@Sir|@dre@Amik@dbl@ for orders.";
+    case ^wanted_deputised : $next = "@dbl@Sir Amik deputised me to find Solus Dellagar.|@dbl@I should go and speak to Sir Tiffy for advice on finding this Solus|@dbl@character...";
+    case ^wanted_commorb : $next = "@dbl@Sir Tiffy gave me a @dre@CommOrb@dbl@. I should contact @dre@Savant@dbl@ with it.";
+    case ^wanted_investigating :
+        if (%wanted_daquarius_hint ! ^wanted_daq_told) {
+            $next = "@dbl@Savant sent me records of two people who saw Solus. I should|@dbl@question @dre@Lord Daquarius@dbl@ in Taverley Dungeon, and the @dre@Mage of|@dre@Zamorak@dbl@ in Varrock.";
+        } else if (%wanted_zammy_mage_hint = ^wanted_mage_price) {
+            $next = "@dbl@Lord Daquarius said Solus left some fur behind. The @dre@Mage of|@dre@Zamorak@dbl@ in Varrock wants @dre@20 rune essence@dbl@ for what he knows.";
+        } else {
+            $next = "@dbl@Lord Daquarius said Solus left some fur behind. I should ask the|@dre@Mage of Zamorak@dbl@ in Varrock's chaos temple about Solus.";
+        }
+    case ^wanted_hunt :
+        if (~wanted_target = ^wanted_m_canifis) {
+            $next = "@dbl@Fur, and East of Varrock: Solus must be in @dre@Canifis@dbl@. I should scan|@dbl@for him there with my CommOrb.";
+        } else {
+            $next = "@dbl@Solus keeps escaping by teleport. I should follow the item Savant|@dbl@pulled from his teleport and @dre@scan@dbl@ for him there. @dre@Savant@dbl@ can remind|@dbl@me of the clue.";
+        }
+    case ^wanted_cornered : $next = "@dbl@Solus is trapped in the @dre@rune essence mine@dbl@. I must defeat him!";
+    case default : $next = "@dbl@I defeated Solus Dellagar. I should take his @dre@hat@dbl@ to @dre@Sir Amik|@dre@Varze@dbl@ as proof.";
+}
+~quest_journal("Wanted!", append($t, $next));
+
+[proc,wanted_req_line](boolean $met, string $text)(string)
+if ($met = true) return("@str@<$text>.|");
+return("@dbl@<$text>.|");
+
+[proc,wanted_rank_line]()(string)
+def_string $rank = ~wanted_rank_name;
+if (compare($rank, "") = 0) return("@dbl@I am currently not ranked as a White Knight."); // ours
+return("@dbl@I am currently <~wanted_rank_article($rank)> @dre@<$rank>@dbl@ White Knight.");
+
+[proc,wanted_rank_article](string $rank)(string)
+if (compare($rank, "Adept") = 0) return("an");
+return("a");
+
+// ---------------------------------------------------------------- the reward
+[proc,wanted_complete]
+%wanted_main = ^wanted_complete;
+~wanted_clear_missions;
+stat_advance(slayer, 50000);
+~wanted_kills_change(^wanted_kill_bonus, true);
+~send_quest_complete(questlist:wanted, wanted_solus_trophy, 250, ^wanted_questpoints, "You have completed the Wanted! Quest!", "5,000 Slayer XP|Access to the White Knight armoury");
+
+// ---------------------------------------------------------------- ranks
+[proc,wanted_rank]()(int)
+if (%wanted_main < ^wanted_complete) return(0);
+if (%wanted_kills >= ^wanted_rank_master) return(6);
+if (%wanted_kills >= ^wanted_rank_adept) return(5);
+if (%wanted_kills >= ^wanted_rank_noble) return(4);
+if (%wanted_kills >= ^wanted_rank_page) return(3);
+if (%wanted_kills >= ^wanted_rank_peon) return(2);
+if (%wanted_kills >= ^wanted_rank_novice) return(1);
+return(0);
+
+[proc,wanted_rank_name]()(string)
+switch_int (~wanted_rank) {
+    case 1 : return("Novice");
+    case 2 : return("Peon");
+    case 3 : return("Page");
+    case 4 : return("Noble");
+    case 5 : return("Adept");
+    case 6 : return("Master");
+}
+return("");
+
+// counting: from being deputised; a promotion announced the first time each rank is reached
+[proc,wanted_kills_change](int $by, boolean $bonus)
+if (%wanted_main < ^wanted_deputised) return;
+if ($by < 0 & %wanted_kills >= ^wanted_rank_master) return;
+%wanted_kills = max(0, min(^wanted_rank_master, calc(%wanted_kills + $by)));
+switch_int (~wanted_rank) {
+    case 1 : if (%wanted_novice_spam = 0) { %wanted_novice_spam = 1; mes("Congratulations! You are now a White Knight Novice!"); }
+    case 2 : if (%wanted_peon_spam = 0) { %wanted_peon_spam = 1; mes("Congratulations! You are now a White Knight Peon!"); }
+    case 3 : if (%wanted_page_spam = 0) { %wanted_page_spam = 1; mes("Congratulations! You are now a White Knight Page!"); }
+    case 4 : if (%wanted_noble_spam = 0) { %wanted_noble_spam = 1; mes("Congratulations! You are now a White Knight Noble!"); }
+    case 5 : if (%wanted_adept_spam = 0) { %wanted_adept_spam = 1; mes("Congratulations! You are now a White Knight Adept!"); }
+    case 6 : if (%wanted_master_spam = 0) { %wanted_master_spam = 1; mes("Congratulations! You are now a White Knight Master!"); }
+}
+
+// a Black Knight killed (drop_tables/black_knight.rs2, as its killer)
+[queue,wanted_black_knight_killed](coord $at)
+def_int $by = 1;
+if (random(1001) = 0) $by = calc($by + 1 + random(50)); // Mod Ash: 1 in 1,001, 1-50 more
+~wanted_kills_change($by, false);
+if (%wanted_main >= ^wanted_investigating & %wanted_main < ^wanted_complete) {
+    queue*(wanted_daquarius_kill, 0)($at);
+}
+
+// a White Knight killed (drop_tables/white_knight.rs2 and the proselytes below)
+[queue,wanted_white_knight_killed]
+~wanted_kills_change(-1, false);
+
+// the cache's three White Knight proselytes in the castle (the 377 cache's white_knight_*_plumes_f,
+// "A White Knight proselyte."): ours, they count as White Knights too
+[ai_queue3,white_knight_yellow_plumes_f] @wanted_proselyte_death;
+[ai_queue3,white_knight_green_plumes_f] @wanted_proselyte_death;
+[ai_queue3,white_knight_blue_plumes_f] @wanted_proselyte_death;
+
+[label,wanted_proselyte_death]
+gosub(npc_default_death);
+if (npc_findhero = ^true) queue(wanted_white_knight_killed, 0, 0);
+
+// ---------------------------------------------------------------- Sir Vyvin's armoury
+[label,wanted_vyvin_trade]
+~chatplayer("<p,quiz>Do you have anything to trade?");
+if (%wanted_main < ^wanted_complete) {
+    ~chatnpc("<p,neutral>No, I'm sorry.");
+    return;
+}
+switch_int (~wanted_rank) {
+    case 0 :
+        ~chatnpc("<p,neutral>Well, maybe I do, but you need to prove yourself worthy as a White Knight before I will sell you anything.");
+        ~chatplayer("<p,quiz>And how can I do that?");
+        ~chatnpc("<p,neutral>Kill Black Knights and make sure you don't kill any White Knights!");
+        ~chatplayer("<p,neutral>Well, okay then.");
+    case 1 :
+        ~chatnpc("<p,neutral>You are currently at Novice level within the White Knights, so your access to equipment is limited.");
+        ~chatnpc("<p,neutral>I can sell you a White Knight Chainmail body for 1440 coins, and White Platemail legs for 1920 coins.");
+        switch_int (~p_choice3_header("White Chainmail Body", 1, "White Chainmail Legs", 2, "Nothing", 3, "What would you like to buy?")) {
+            case 1 : ~wanted_vyvin_buy(white_chainbody);
+            case 2 : ~wanted_vyvin_buy(white_platelegs);
+            case 3 : ~chatplayer("<p,neutral>No thanks.");
+        }
+    case 2 :
+        ~chatnpc("<p,neutral>You are at Peon level within the White Knights, not much to choose from I'm afraid.");
+        ~openshop(whiteknight_armoury2, 1000, 1000, 0, "White Knight Armoury");
+    case 3 :
+        ~chatnpc("<p,happy>You've reached Page level, that shows a bit of dedication you know! Your available equipment will reflect that!");
+        ~openshop(whiteknight_armoury3, 1000, 1000, 0, "White Knight Armoury");
+    case 4 :
+        ~chatnpc("<p,happy>And may I say what a pleasure it is to serve any Knight who has achieved Noble level!");
+        ~openshop(whiteknight_armoury4, 1000, 1000, 0, "White Knight Armoury");
+    case 5 :
+        ~chatnpc("<p,happy>And it is so very rare that I see any White Knight who has reached Adept level!");
+        ~openshop(whiteknight_armoury5, 1000, 1000, 0, "White Knight Armoury");
+    case 6 :
+        ~chatnpc("<p,happy>Well of course! I AM the White Knights armourer after all!");
+        ~chatnpc("<p,happy>And for a dedicated White Knight to have reached Master level like yourself, you get only the very best of all equipment available!");
+        ~openshop(whiteknight_armoury6, 1000, 1000, 0, "White Knight Armoury");
+}
+
+// Novice: the OSRS wiki's transcript stops at the choice (ours: he sells it for its cost, as the
+// armoury does)
+[proc,wanted_vyvin_buy](namedobj $obj)
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+if (inv_total(inv, coins) < oc_cost($obj)) {
+    mes("You don't have enough coins."); // ours
+    return;
+}
+inv_del(inv, coins, oc_cost($obj));
+inv_add(inv, $obj, 1);
+
+// ---------------------------------------------------------------- white equipment
+// The OSRS wiki: white weapons need 10 Attack, the warhammer 10 Strength; white armour 10 Defence.
+[opheld2,white_claws] @levelrequire_attack(10, last_slot);
+[opheld2,white_battleaxe] @levelrequire_attack(10, last_slot);
+[opheld2,white_dagger] @levelrequire_attack(10, last_slot);
+[opheld2,white_dagger_p] @levelrequire_attack(10, last_slot);
+[opheld2,white_dagger_p+] @levelrequire_attack(10, last_slot);
+[opheld2,white_dagger_p++] @levelrequire_attack(10, last_slot);
+[opheld2,white_halberd] @levelrequire_attack(10, last_slot);
+[opheld2,white_mace] @levelrequire_attack(10, last_slot);
+[opheld2,white_magic_staff] @levelrequire_attack(10, last_slot);
+[opheld2,white_sword] @levelrequire_attack(10, last_slot);
+[opheld2,white_longsword] @levelrequire_attack(10, last_slot);
+[opheld2,white_2h_sword] @levelrequire_attack(10, last_slot);
+[opheld2,white_scimitar] @levelrequire_attack(10, last_slot);
+[opheld2,white_warhammer]
+if (stat_base(strength) < 10) {
+    mes("You are not a high enough level to use this item.");
+    mes("You need to have a strength level of 10."); // as levelrequire.rs2's lines
+    return;
+}
+~equip(last_slot);
+[opheld2,white_chainbody] @levelrequire_defence(10, last_slot);
+[opheld2,white_platebody] @levelrequire_defence(10, last_slot);
+[opheld2,white_armoured_boots] @levelrequire_defence(10, last_slot);
+[opheld2,white_med_helm] @levelrequire_defence(10, last_slot);
+[opheld2,white_full_helm] @levelrequire_defence(10, last_slot);
+[opheld2,white_platelegs] @levelrequire_defence(10, last_slot);
+[opheld2,white_plateskirt] @levelrequire_defence(10, last_slot);
+[opheld2,white_gloves] @levelrequire_defence(10, last_slot);
+[opheld2,white_sq_shield] @levelrequire_defence(10, last_slot);
+[opheld2,white_kiteshield] @levelrequire_defence(10, last_slot);

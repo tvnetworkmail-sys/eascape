@@ -3,10 +3,12 @@
 
 
 [label,black_knight_drops]
+def_coord $at = npc_coord; // EASCape: Wanted!
 gosub(npc_death);
 if (npc_findhero = ^false) {
     return;
 }
+queue*(wanted_black_knight_killed, 0)($at); // EASCape: Wanted!'s kill score and Lord Daquarius (quest_wanted/wanted_journal.rs2)
 
 // Default drop from config.
 obj_add(npc_coord, npc_param(death_drop), 1, ^lootdrop_duration);

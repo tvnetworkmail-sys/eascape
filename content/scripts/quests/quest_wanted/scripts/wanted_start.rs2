@@ -1,0 +1,452 @@
+// EASCape: Wanted! - Sir Tiffy Cashien and Sir Amik Varze. Words: the OSRS wiki's quest transcript
+// (the RS wiki's where noted). Requirements (the OSRS wiki): 32 quest points, Recruitment Drive,
+// The Lost Tribe, Priest in Peril and Enter the Abyss (the RS wiki: 33 quest points before
+// 19 February 2024; 32 is the OSRS wiki's).
+
+[proc,wanted_can_start]()(boolean)
+if (%qp < 32) return(false);
+if (%rd_main ! ^rcd_complete) return(false);
+if (%lt_stage < ^lt_complete) return(false);
+if (%priestperil < ^priestperil_complete) return(false);
+if (%abyssal_miniquest ! ^miniquest_abyssal_complete) return(false);
+return(true);
+
+// ---------------------------------------------------------------- Sir Tiffy: "Do you have any jobs
+// for me yet?" (rd_start.rs2's member menu); once started, "Ask about the Wanted! quest." (the RS
+// wiki's transcript)
+[label,wanted_tiffy_jobs]
+if (%wanted_main = ^wanted_not_started) @wanted_tiffy_start;
+switch_int (%wanted_main) {
+    case ^wanted_tiffy_plan : @wanted_tiffy_plan_again;
+    case ^wanted_no_crisis : @wanted_tiffy_crisis;
+    case ^wanted_crisis :
+        ~chatplayer("<p,quiz>Hi Tiffy. What am I supposed to be doing again?");
+        ~chatnpc("<p,neutral>Go and report to Sir Amik for 'orders'. You will be unsurprised to find out he will now be prepared to deputise you.");
+        ~chatnpc("<p,neutral>After you have spoken to him return here immediately, your life will be at risk without our assistance, and we don't want you dying on your first mission for us, what?");
+    case ^wanted_deputised :
+        if (%wanted_commorb_intel = 1) @wanted_tiffy_orb_offer;
+        @wanted_tiffy_mission;
+    case ^wanted_defeated :
+        ~chatplayer("<p,happy>I did it Tiffy! I brought Solus in for capture!");
+        ~chatnpc("<p,happy>Had a little help doing it though, didn't you, what?");
+        ~chatplayer("<p,neutral>Yes... But I did all the legwork...");
+        ~chatnpc("<p,laugh>Haw Haw Haw!");
+        ~chatnpc("<p,happy>That you did Initiate, that you did.");
+        ~chatnpc("<p,neutral>Now take that hat of Solus over to Sir Amik, and we can begin to process your application form as a Temple Knight again, what?");
+        ~chatplayer("<p,happy>Okay Tiffy, I'll be back in a jiffy!");
+    case ^wanted_complete :
+        // 2009scape's, from before the quest (no source has him between Wanted! and The Slug Menace)
+        ~chatplayer("<p,quiz>Do you have any jobs for me yet?");
+        ~chatnpc("<p,neutral>Sorry dear <text_gender("boy", "gal")> but we are still in the process of organising.");
+        ~chatnpc("<p,happy>I'm sure that we will have something for you soon, so please feel free to check back later.");
+    case default :
+        if (inv_total(inv, wanted_crystal_ball) = 0 & inv_total(bank, wanted_crystal_ball) = 0) {
+            ~chatplayer("<p,sad>Hey Tiffy, I lost my CommOrb...");
+            ~chatnpc("<p,neutral>Very careless of you, what? Here, take another, but be careful of this one!");
+            ~wanted_give(wanted_crystal_ball, 1);
+            return;
+        }
+        ~chatplayer("<p,quiz>Hi Tiffy. What am I supposed to be doing again?");
+        ~chatnpc("<p,neutral>You are hunting for Solus Dellagar, the evil criminal mastermind.");
+        ~chatnpc("<p,neutral>I suggest you contact Savant through your CommOrb and see if she can send you any relevant information about your assignment.");
+}
+
+[label,wanted_tiffy_start]
+~chatplayer("<p,quiz>Do you have any jobs for me yet?");
+if (~wanted_can_start = false) {
+    // 2009scape's lines; the mesbox is ours (as Recruitment Drive's Sir Amik)
+    ~chatnpc("<p,neutral>Sorry dear <text_gender("boy", "gal")> but we are still in the process of organising.");
+    ~chatnpc("<p,happy>I'm sure that we will have something for you soon, so please feel free to check back later.");
+    ~mesbox("You do not meet all of the requirements to start the Wanted! quest.");
+    return;
+}
+~chatnpc("<p,neutral>Well old <text_gender("boy", "gal")>, looking at the old dossier we have on you here there seems to be a tiny problem, what?");
+~chatplayer("<p,shock>Problem? What problem? Er...  and you have a dossier on me???");
+~chatnpc("<p,laugh>Well OF COURSE we have a dossier on you! We have a dossier on EVERYONE! It's our job, dontchaknow!");
+~chatplayer("<p,confused>Um... okay... So what's the problem?");
+~chatnpc("<p,shifty>Well now, seems we made a tiny blunder when we first contacted you to join the Temple Knights, what?");
+~chatnpc("<p,shifty>Entirely our own fault, could have been avoided and all that, but bit of a show-stopper, what?");
+~chatplayer("<p,quiz>What is?");
+~chatnpc("<p,neutral>Well old <text_gender("boy", "gal")>, here's the thing; Only members of the White Knights may join the Temple Knights. By ancient decree, dontchaknow.");
+~chatplayer("<p,angry>What? But I am a member of the White Knights! I went and did that stuff with the cabbage and the potion!");
+~chatplayer("<p,angry>And I've already done your stupid little mind test thing! You can't get rid of me that easily!");
+~chatnpc("<p,neutral>Calm yourself down old <text_gender("boy", "gal")>... We have no intention of 'getting rid of you', we are very keen on seeing you join us...");
+~chatplayer("<p,quiz>Then what's the problem?");
+~chatnpc("<p,neutral>Well, it's like this: Although you have performed a mission on behalf of the White Knights, you were never actually working for them.");
+~chatnpc("<p,neutral>As I say, when our order was founded, we were expected to take the best of the best, and it was assumed that anyone worth having on the team would have been a White Knight already, what?");
+~chatnpc("<p,neutral>Sadly, this is not the case anymore, and the fact that you have to serve as a Squire to a White Knight for a minimum period of five years before you can actually become one tends to put the more short-attention");
+~chatnpc("<p,neutral>spanned adventurers off joining, what?");
+~chatplayer("<p,shock>You want me to be a squire for five years?!?!");
+~chatnpc("<p,laugh>Haw Haw Haw! No, no, goodness me, no!");
+~chatnpc("<p,neutral>Five years is a very long period of time nowadays - ANYTHING could happen in that time, and we need capable heroes like yourself as soon as possible.");
+~chatnpc("<p,neutral>No, I had a bit of a chat with Sir Vey, and we came up with... A different solution to the problem. Assuming you're still interested of course.");
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Wanted! quest?") = 2) {
+    ~chatplayer("<p,angry>No, to be honest I'm getting sick of all these excuses and procrastination. Plus being an inititiate was nowhere near as fun as I thought it would be.");
+    ~chatplayer("<p,neutral>I'd rather just go off by myself and kill stuff for cash.");
+    ~chatnpc("<p,sad>Well, sorry to hear you say that old <text_gender("boy", "gal")>, but I can't hold it against you.");
+    ~chatnpc("<p,neutral>You will of course still be entitled to all that we can provide you with at an initiate level, but sadly you will never advance beyond that in our order. Was there anything you wanted?");
+    @rcd_tiffy_member_menu;
+}
+~chatplayer("<p,neutral>I'm still up for joining the Temple Knights, I just don't really feel like spending five years running around shining peoples boots for them.");
+%wanted_main = ^wanted_tiffy_plan;
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+~chatnpc("<p,laugh>Haw Haw Haw!");
+~chatnpc("<p,happy>I quite understand, what? No, don't worry, we were doing a little research into the White Knight Charter, and found an interesting loophole, what?");
+~chatplayer("<p,quiz>Loophole? What kind of loophole?");
+~chatnpc("<p,neutral>Well, you don't need to worry about the details, you just do as I tell you and it will all work out for us both, what?");
+~chatplayer("<p,shifty>I guess... I don't really like blindly following orders though...");
+@wanted_tiffy_plan;
+
+[label,wanted_tiffy_plan]
+~chatplayer("<p,quiz>So what exactly do you want me to do?");
+~chatnpc("<p,neutral>Well now, it's really very simple. I want you to go to Sir Amik, tell him that you have decided to not join the Temple Knights, and that you have decided to become a White Knight instead.");
+~chatnpc("<p,neutral>He will then offer you to join as a squire; You will then decline his offer, and ask if you can be deputised instead.");
+~chatplayer("<p,confused>Okaaaay....");
+~chatnpc("<p,neutral>If you run into any problems with that, come and see me.");
+@wanted_tiffy_plan_menu;
+
+[label,wanted_tiffy_plan_again]
+@wanted_tiffy_plan_menu;
+
+[label,wanted_tiffy_plan_menu]
+switch_int (~p_choice3("How will all that help?", 1, "Do I really have to quit the Temple Knights?", 2, "What am I supposed to be doing again?", 3)) {
+    case 1 :
+        ~chatplayer("<p,confused>I don't exactly understand how that will help me become a White Knight...");
+        ~chatnpc("<p,happy>Ah, your curiosity does you credit old <text_gender("boy", "gal")>! Let me tell you a little history lesson;");
+        ~chatnpc("<p,neutral>Many centuries ago, the founders of the White Knights realised that in times of crisis, a long waiting period for new Knights could be disastrous for the kingdom, so they added a clause to the founding charter that would");
+        ~chatnpc("<p,neutral>allow any citizen who has performed an act in the name of the White Knights to become deputised on a purely temporary basis to a full-fledged White Knight.");
+        ~chatplayer("<p,quiz>So how does that affect me?");
+        ~chatnpc("<p,neutral>Well now, your actions in the Black Knights' Fortress on behalf of the White Knights make you eligible to be deputised.");
+        ~chatplayer("<p,confused>But if that's only temporary, and I have to be a 'proper' White Knight to then become a Temple Knight, doesn't that mean that I am still going to have to squire for Amik for five years?");
+        ~chatnpc("<p,happy>Ah, well this is where the beauty of the plan lies, dontchaknow?");
+        ~chatnpc("<p,neutral>Once you have been deputised, for the time that you are still working for their order, you are subject to all of the same rules and regulations that normal White Knights are, which means you are also eligible for");
+        ~chatnpc("<p,neutral>battlefield promotions.");
+        ~chatplayer("<p,confused>I... don't understand...");
+        ~chatnpc("<p,neutral>Let me put it like this; As a deputy you will be considered the lowest possible rank of White Knight, and may be removed entirely from their order at a whim.");
+        ~chatnpc("<p,neutral>However, should you achieve some great feat while serving as a White Knight that you would be eligible for a promotion from, then by their own rules you would then have to be raised to a higher level within their");
+        ~chatnpc("<p,neutral>order, and it would therefore become impossible to remove your rank, or make you no longer a deputy.");
+        ~chatplayer("<p,happy>So I get to be a White Knight without having to do five years of pointless busywork?");
+        ~chatnpc("<p,happy>Indeed. We Temple Knights have our reputation for a reason, dontchaknow?");
+        ~chatplayer("<p,quiz>Okay, I guess that makes sense... But we're not in a time of crisis, so doesn't that mean I won't actually get deputised?");
+        ~chatnpc("<p,neutral>Ah, do not concern yourself with THAT old <text_gender("boy", "gal")>; Crisis is such a subjective term, and as you will find out when you join us fully in the Temple Knights, there is always some potential crisis or other brewing.");
+        ~chatnpc("<p,laugh>If we weren't as good at our jobs as we were, almost every day would be a day of crisis!");
+        ~chatnpc("<p,neutral>All we really need to do is allow the old White Knights to handle a problem that we would normally deal with, and that should be a sufficient crisis to allow you to be deputised, dontchaknow.");
+        @wanted_tiffy_plan_menu;
+    case 2 :
+        ~chatplayer("<p,sad>But... Do I really need to quit the Temple Knights?");
+        ~chatplayer("<p,sad>You seem pretty cool, and I really like the armour...");
+        ~chatnpc("<p,laugh>Haw Haw Haw!");
+        ~chatnpc("<p,neutral>No, not at all, this is merely a ruse; Sir Amik knows full well that his authority over our organisation is limited, so he will not deputise you unless he thinks that you are entirely unaffiliated with us.");
+        ~chatnpc("<p,neutral>You are simply going to tell him that you have decided not to join us so that he will in turn deputise you to join the White Knights! We of course still want you to join us, it is just a");
+        ~chatnpc("<p,shifty>little... misdirection.");
+        @wanted_tiffy_plan_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>What am I supposed to be doing again?");
+        ~chatnpc("<p,neutral>You are to go to Sir Amik Varze, leader of the White Knights of Falador, and are to tell him that you have decided not to join the Temple Knights.");
+        ~chatnpc("<p,neutral>We will send him a messenger confirming this. He will offer you the opportunity to become his squire, you are to decline, and ask if you can be deputised instead.");
+        ~chatnpc("<p,neutral>If you run into any problems with that, you are then to come and see me for further advice.");
+        ~chatnpc("<p,quiz>Understood?");
+        ~chatplayer("<p,neutral>Um, yeah, I think so...");
+}
+
+// back from Sir Amik: no crisis yet, or a squire
+[label,wanted_tiffy_crisis]
+if (%wanted_joke_option = 1) {
+    ~chatplayer("<p,happy>I did it Tiffy! I became Sir Amik's squire!");
+    ~chatplayer("<p,happy>That means in just five short years I can be a White Knight!");
+    ~chatnpc("<p,shock>...What? I told you to decline!");
+    ~chatplayer("<p,shifty>Yeeeesssssss.... But I thought it would be more fun to do this?");
+    ~chatnpc("<p,sad>*sigh* This is a less than illustrious start to your career with us <displayname>.");
+    %wanted_joke_option = 0;
+    %wanted_main = ^wanted_crisis;
+    ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+    ~chatnpc("<p,neutral>Never mind, all is not lost, I have sent word to Amik that a dangerous criminal we once thought exiled is on the loose again, and that he should send all available White Knights to confront him.");
+    ~chatnpc("<p,neutral>This should give him enough of a scare to deputise you immediately.");
+    ~chatnpc("<p,neutral>Go and speak to Amik again, and then immediately come back here, we will need to prepare you for your mission.");
+    return;
+}
+~chatplayer("<p,neutral>Hello again Tiffy. I've just spoken to Amik, and he says he's fine for me to be deputised as a White Knight, there just needs to be a crisis first.");
+~chatplayer("<p,shifty>I assume you can arrange a small crisis for me?");
+~chatnpc("<p,laugh>Haw Haw Haw, fitting right in with the Temple Knight way of thinking, what?");
+~chatnpc("<p,neutral>Well, as a matter of fact, I will not have to organise anything, there is a particularly vicious and dangerous criminal currently at loose!");
+%wanted_main = ^wanted_crisis;
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+~chatnpc("<p,neutral>I have already notified Sir Amik through the usual channels, so just go and speak to him quickly, then pop back here and we'll get you equipped for the hunt, what?");
+~chatplayer("<p,confused>You know... Is all this back and forth strictly necessary?");
+~chatplayer("<p,angry>I don't mean to sound ungrateful for the help you're giving me here, but you could have just got this sorted out before sending me off there in the first place!");
+~chatnpc("<p,shifty>Ah, yes, well most awfully sorry about all the running around you've been doing old bean, but when it comes to our line of work, sometimes the indirect route is the best, what?");
+~chatplayer("<p,confused>I don't understand...?");
+~chatplayer("<p,angry>And stop calling me bean! I am not a vegetable, I am a human bean, er, being!");
+~chatnpc("<p,happy>Awfully sorry dear heart, it's just a term of affection, what? Anyway...");
+~chatnpc("<p,neutral>This criminal is a very dangerous fellow, and has some very dangerous friends.");
+~chatnpc("<p,neutral>If he has no reason to suspect you to be working for us, then he will be a little sloppier than he otherwise might be, because he will just assume you to be one of those stupid White Knights.");
+~chatnpc("<p,neutral>We want this man caught, for the good of the country, and if we need to fool a few people into thinking you're nothing to do with us, and you have to do a little extra walking, then that's what is going to happen, what?");
+~chatplayer("<p,sad>I guess... But this spy stuff is a lot more boring than it sounded at first...");
+
+// deputised: the mission and the CommOrb
+[label,wanted_tiffy_mission]
+~chatplayer("<p,happy>Tiffy, it worked exactly to plan! Sir Amik deputised me to take care of this Solus Doolally dude, so let's go get him!");
+~chatnpc("<p,neutral>His name is Solus Dellagar, and honestly, he is one of the most dangerous men in Gielinor.");
+~chatnpc("<p,neutral>Not only is he extremely adept at magic, he is also quite prepared to use that magic at a moments notice, because he is quite, quite mad.");
+~chatplayer("<p,happy>So... Dragonhide armour and an elemental shield and I'm laughing?");
+~chatnpc("<p,angry>No, no, no. Listen to me <text_gender("boy", "girl")>; You are under NO CIRCUMSTANCES to engage him directly in combat!");
+~chatnpc("<p,neutral>You are to act as our agent and track him down, when you have managed to corner him somewhere then we will send in a field recovery team directly to take him away without incident.");
+~chatnpc("<p,angry>I cannot stress this enough; You are to observe and locate, you are NOT to enter a combat situation!");
+~chatplayer("<p,neutral>Riiiiight... So I'm just going to scout him out for you then.");
+~chatplayer("<p,quiz>Any tips on how to find him?");
+~chatnpc("<p,neutral>Well old bean, we will need to equip you for the task, but you'll need to get something for me first, what?");
+~chatplayer("<p,quiz>What kind of stuff?");
+~chatnpc("<p,neutral>Well, we teach our operatives the value of their equipment by making them pay for it, what?");
+~chatnpc("<p,neutral>You have two choices here, you can either give me cash directly, and I will hand it over, or you can bring me the raw materials and I will make you one.");
+%wanted_commorb_intel = 1;
+switch_int (~p_choice2_header("Buy One", 1, "Have One Made", 2, "What would you like to do?")) {
+    case 1 : @wanted_tiffy_orb_buy;
+    case 2 : @wanted_tiffy_orb_make;
+}
+
+// "Talking to Tiffy after being told what you need ... but before making it"
+[label,wanted_tiffy_orb_offer]
+@wanted_tiffy_orb_buy;
+
+[label,wanted_tiffy_orb_buy]
+if (inv_freespace(inv) = 0) {
+    ~chatnpc("<p,neutral>Well we in the Temple Knights have some specific equipment for situations such as this dontchaknow, but you'll need to free up some inventory space first!");
+    return;
+}
+~chatnpc("<p,quiz>It's 10,000 coins for the Temple Knight Communication Orb. You have that kind of money with you?");
+if (~p_choice2("YES", 1, "NO", 2) = 1 & inv_total(inv, coins) >= 10000) {
+    ~chatplayer("<p,happy>Oh yeah, I got your money.");
+    ~chatnpc("<p,quiz>Then you wish to purchase a Temple Knight Communication Orb?");
+    if (~p_choice2("YES", 1, "NO", 2) = 2) {
+        ~chatplayer("<p,neutral>Actually, no thanks.");
+        ~chatnpc("<p,neutral>As you wish, what?");
+        return;
+    }
+    if (inv_total(inv, coins) < 10000) return;
+    inv_del(inv, coins, 10000);
+    @wanted_tiffy_orb_given;
+}
+~chatplayer("<p,sad>I don't have that kind of money with me...");
+~chatnpc("<p,neutral>Perhaps you would like to just bring me the components of it then, what?");
+@wanted_tiffy_orb_components;
+
+[label,wanted_tiffy_orb_make]
+if (inv_total(inv, lawrune) > 0 & inv_total(inv, slayer_gem) > 0 & inv_total(inv, molten_glass) > 0) {
+    ~chatplayer("<p,happy>I have all three components for you to make me a Communication Orb out of now Tiffy.");
+    ~chatnpc("<p,happy>Excellent! You wish me to make you one now then, what?");
+    if (~p_choice2("Yes", 1, "No", 2) = 2) {
+        ~chatplayer("<p,neutral>Actually, no thanks.");
+        ~chatnpc("<p,neutral>As you wish, what?");
+        return;
+    }
+    if (inv_total(inv, lawrune) = 0 | inv_total(inv, slayer_gem) = 0 | inv_total(inv, molten_glass) = 0) return;
+    inv_del(inv, lawrune, 1);
+    inv_del(inv, slayer_gem, 1);
+    inv_del(inv, molten_glass, 1);
+    @wanted_tiffy_orb_given;
+}
+@wanted_tiffy_orb_components;
+
+[label,wanted_tiffy_orb_components]
+~chatnpc("<p,neutral>Bring me one Law Rune, one Slayer Gem and one piece of Molten Glass and I will make you a Communication Orb.");
+if (inv_total(inv, lawrune) > 0 | inv_total(inv, slayer_gem) > 0 | inv_total(inv, molten_glass) > 0) {
+    ~chatplayer("<p,quiz>Can I give you the components I have with me now?");
+    ~chatnpc("<p,shock>Heavens, <text_gender("boy", "kid")>! I am not a pawn shop, to be holding bits and pieces for you while you go off and do something else!");
+    ~chatnpc("<p,neutral>No, no you bring me all three components at the same time, what?");
+    ~chatplayer("<p,neutral>Okay Tiffy.");
+}
+
+[label,wanted_tiffy_orb_given]
+~wanted_give(wanted_crystal_ball, 1);
+if (%wanted_main < ^wanted_commorb) {
+    %wanted_main = ^wanted_commorb;
+    ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+}
+~chatnpc("<p,neutral>Here, take this Communications Orb, or 'CommOrb' for short.");
+~chatnpc("<p,neutral>It is a precise magical mechanism that we can use to track him, by sending data of the surrounding area back to one of our information operatives at the Temple Knight headquarters.");
+~chatnpc("<p,neutral>Your information operative is known as Savant, I suggest you contact them using your CommOrb at your earliest convenience.");
+~chatnpc("<p,neutral>They will be able to send you any useful data about Solus directly through it for your perusal, dontchaknow.");
+~chatplayer("<p,happy>Okay, thanks Tiffy!");
+
+// ---------------------------------------------------------------- Sir Amik Varze
+// After "Hello Sir Amik." / "Hello, friend!" (sir_amik_varze.rs2), Recruitment Drive done
+// (quest_rd/rd_start.rs2)
+[label,wanted_amik]
+switch_int (%wanted_main) {
+    case ^wanted_not_started :
+        ~chatnpc("<p,neutral>Well, I did have something you may have been interested in, but I've been given orders not to approach you for trivial matters now that you are a member of the Temple Knights.");
+        ~chatplayer("<p,sad>Aaaaawwwww...");
+    case ^wanted_tiffy_plan : @wanted_amik_first;
+    case ^wanted_no_crisis :
+        if (%wanted_joke_option = 1) @wanted_amik_squire;
+        ~chatplayer("<p,quiz>Got any jobs for me to do today?");
+        ~chatnpc("<p,neutral>Only to become my Squire. Do you wish to become my squire?");
+        ~chatplayer("<p,neutral>No, not really. So there isn't a crisis yet?");
+        ~chatnpc("<p,happy>Thank Saradomin, no! We have not had a crisis for many years now!");
+        ~chatplayer("<p,shifty>Right. Well, I'll go and see if Tiffy can fix that for me then.");
+        ~chatplayer("<p,shifty>Er, I mean: How fortunate for us all that nothing terrible has happened or is conveniently about to happen.");
+        ~chatnpc("<p,happy>Indeed!");
+    case ^wanted_crisis : @wanted_amik_crisis;
+    case ^wanted_defeated : @wanted_amik_proof;
+    case ^wanted_complete : return;
+    case default :
+        ~chatnpc("<p,sad><displayname>... Solus Dellagar is still loose... Please, for the safety of my lands you must find him immediately...");
+        ~chatplayer("<p,quiz>Any hints on where he might be?");
+        ~chatnpc("<p,sad>We have no idea where he might be now... His magic is too powerful for us, I do not know how to stop him...");
+        ~chatplayer("<p,neutral>Hum. I wonder if Sir Tiffy might be able to help?");
+}
+
+[label,wanted_amik_first]
+~chatplayer("<p,quiz>Got any jobs for me to do today?");
+~chatnpc("<p,neutral>Well, I did have something you may have been interested in, but I've been given orders not to-");
+~chatplayer("<p,neutral>Can I just stop you right there?");
+~chatplayer("<p,neutral>I am no longer a member of the Temple Knights, I have entirely renounced my application because after many hours of soul searching I have come to the conclusion that I desperately want to become a White");
+~chatplayer("<p,neutral>Knight instead!");
+if (inv_total(worn, basic_tk_helm) > 0 | inv_total(worn, basic_tk_body) > 0 | inv_total(worn, basic_tk_legs) > 0) {
+    ~chatnpc("<p,confused>You don't want to be a Temple Knight anymore?");
+    ~chatplayer("<p,neutral>That is correct, yes.");
+    ~chatnpc("<p,shock>But you are wearing their armour!");
+    ~chatplayer("<p,angry>So? Did you hear me bad mouth the armour? The armour is cool, I keep the armour!");
+}
+~chatnpc("<p,confused>I'm not sure I understand... You wish to desert the Temple Knights in favour of my own humble White Knights?");
+~chatplayer("<p,happy>Absolutely!");
+~chatplayer("<p,shifty>And this is definitely not some kind of elaborate hoax to get my application processed faster.");
+~chatnpc("<p,confused>I'm sorry, did you say something just then?");
+~chatplayer("<p,shifty>No... Not if you didn't hear it...");
+~chatnpc("<p,neutral>... Well anyway, for the fine work you achieved at that incident in the Black Knights Fortress, I would be honoured to accept you as my Squire.");
+~chatnpc("<p,quiz>So what do you say?");
+@wanted_amik_squire_menu;
+
+[label,wanted_amik_squire_menu]
+switch_int (~p_choice3("What does being a Squire entail?", 1, "Yes please!", 2, "No, not right now...", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>So what exactly does being a squire consist of, then?");
+        ~chatnpc("<p,neutral>You will spend the next five years of your life running various errands for me.");
+        ~chatnpc("<p,neutral>If I consider you to have done a more than adequate job of this, then I will begin to consider possibly moving your name forwards to becoming a full-fledged member of the Order of the White Knights.");
+        ~chatplayer("<p,confused>So... No killing stuff for you, or anything fun like that...?");
+        ~chatnpc("<p,neutral>Not as such, no. Unless you consider killing time by running errands fun...?");
+        ~chatplayer("<p,shifty>Well, erm...");
+        ~chatnpc("<p,quiz>So what say you <displayname>? Spend five long years of your life doing pointless busywork without pay for me, on the off chance that at some point in the future I may put your name forward");
+        ~chatnpc("<p,quiz>as a novice White Knight?");
+        @wanted_amik_squire_menu;
+    case 2 :
+        ~chatplayer("<p,happy>Yes please! I would LOVE to be your squire!");
+        ~chatplayer("<p,confused>Wait... Didn't Sir Tiffy tell me to decline...?");
+        ~chatplayer("<p,happy>Nah, Squire me up, Amik!");
+        %wanted_joke_option = 1;
+        %wanted_main = ^wanted_no_crisis;
+        ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+        ~chatnpc("<p,happy>As you wish, from this day forth you are my Squire!");
+    case 3 :
+        ~chatplayer("<p,neutral>Um... As tempting an offer as that sounds Sir Amik, I am really not a fan of waiting around...");
+        ~chatplayer("<p,shifty>Now, I heard from some completely random stranger that was definitely not Sir Tiffy Cashien as part of an elaborate ruse to fast track my application into the White Knights, that I could be deputised directly as a");
+        ~chatplayer("<p,shifty>White Knight, and entirely bypass that whole boring waiting for five years thing...");
+        ~chatnpc("<p,neutral>That is entirely correct <displayname>, but I have no idea where you may have heard that, for it is a secret guarded only to members of our order!");
+        ~chatplayer("<p,quiz>Right. Well anyway, can I do that instead?");
+        %wanted_main = ^wanted_no_crisis;
+        ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+        ~chatnpc("<p,neutral>Well, a fine adventurer such as yourself would be a perfect candidate as a deputy in my eyes, but fortunately this can only be done in a time of crisis, and all is currently well.");
+        ~chatplayer("<p,shifty>All is well, huh? I'll be right back, I just have to go and ask...");
+        ~chatplayer("<p,shifty>nobody in particular if they can organise... nothing at all to happen.");
+        ~chatnpc("<p,confused>You are a strange one <displayname>...");
+}
+
+// his squire: an Asgarnian Ale, and another (ours: he takes the ale you bring)
+[label,wanted_amik_squire]
+if (inv_total(inv, asgarnian_ale) > 0) {
+    ~chatplayer("<p,happy>Hi boss.");
+    ~chatnpc("<p,neutral>Call me Sir Amik, or liege.");
+    inv_del(inv, asgarnian_ale, 1);
+    ~chatplayer("<p,happy>Sure thing, boss. I brought you a beer.");
+    ~chatplayer("<p,happy>Anything else you want boss?");
+    ~chatnpc("<p,neutral>Well, another Asgarnian Ale would be greatly appreciated. And stop calling me Boss.");
+    ~chatplayer("<p,happy>Sure thing boss!");
+    return;
+}
+~chatplayer("<p,quiz>So do you have any squiring for me today Amik?");
+~chatnpc("<p,neutral>Yes, yes in fact I do. I would like you to bring me an Asgarnian Ale.");
+~chatnpc("<p,neutral>No matured Ale, no other brand, simply an Asgarnian Ale.");
+~chatplayer("<p,happy>Okay boss.");
+~chatnpc("<p,angry>That is 'Sir Amik' or 'My Liege' - not 'Boss'.");
+~chatplayer("<p,happy>Gotcha, boss.");
+
+[label,wanted_amik_crisis]
+~chatnpc("<p,shock>Thank Saradomin you have come back here!");
+~chatnpc("<p,scared>We have received word from one of our scouts that the evil Solus Dellagar has returned to Asgarnia!");
+~chatnpc("<p,scared>What is worse, it seems he is in possession of dangerous new magics that we are powerless against!");
+~chatnpc("<p,sad>Please, I implore you in the name of all that is holy, assist us in banishing him from our kingdom once more!");
+~chatnpc("<p,sad>I cannot bear to think of the troubles he may bring us...");
+@wanted_amik_crisis_menu;
+
+[label,wanted_amik_crisis_menu]
+switch_int (~p_choice4("Who is Solus?", 1, "What will I get for helping?", 2, "Sure, I'll help you!", 3, "I don't feel like helping you right now.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Solus Dellagar? Who - or what - is that?");
+        ~chatnpc("<p,neutral>You have not heard of the infamous murder-mage? He terrorised these lands many years past, thinking himself above the law with his powerful enchantments, but the White Knights finally managed to bring him to");
+        ~chatnpc("<p,neutral>justice and he was permanently exiled.");
+        ~chatplayer("<p,confused>Exiled? Why didn't you just kill him? Or, you know, imprison him or whatever?");
+        ~chatnpc("<p,angry>Kill an unarmed foe? That is not the way of Saradomin, nor of the White Knights.");
+        ~chatnpc("<p,neutral>As for imprisonment... Solus is a highly dangerous man not just because of his mastery of the magical arts, but for his uncanny resourcefulness.");
+        ~chatnpc("<p,sad>To tell you the truth, I fear that I would be unable to guarantee his captivity in any holding cell belonging to us...");
+        ~chatplayer("<p,quiz>So if you can't imprison him, and exile obviously didn't work, you want me to kill him?");
+        ~chatnpc("<p,shock>I did not say that. I did not say that at all. That is against all of our codes of honour.");
+        ~chatnpc("<p,shifty>However, should you find yourself in combat with him, and there is no other way, then perhaps for him to die would be best for us all.");
+        ~chatnpc("<p,shifty>You understand me, <displayname>?");
+        ~chatplayer("<p,neutral>Oh yes. You've made yourself very clear.");
+        ~chatnpc("<p,quiz>So will you aid us in this fight?");
+        @wanted_amik_crisis_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>So what will I get if I help you out against this, er, solus doolalala guy then?");
+        ~chatnpc("<p,happy>Why, you will help keep Asgarnia free of malicious influence, and perform a good deed in the name of King Vallance and of the White Knights!");
+        ~chatplayer("<p,quiz>Yes, yes I see. So... No monetary compensation or other actual reward then?");
+        ~chatnpc("<p,neutral>As Saradomin has told us, 'a good deed is its own reward'.");
+        ~chatplayer("<p,sad>So I don't actually get anything out of this then?");
+        ~chatnpc("<p,happy>Nothing tangible, no, but you will be deputized to act as a White Knight, and you will feel a warm glow inside of having done the right thing.");
+        ~chatplayer("<p,sad>But you can't buy things with a warm glow...");
+        ~chatnpc("<p,quiz>So what say you <displayname>? Fight with honour in the name of the White Knights against the terrible Solus?");
+        @wanted_amik_crisis_menu;
+    case 3 :
+        ~chatplayer("<p,happy>Hey, there's nothing I like more than fighting! Deputise me up, and I'll go get this guy for you!");
+        %wanted_main = ^wanted_deputised;
+        ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+        ~chatnpc("<p,happy>Very well then; In the name of King Valence, and for the honour of Saradomin, I now pronounce you a fully deputised White Knight.");
+        ~chatnpc("<p,happy>May honour and glory follow you in every action.");
+        ~chatplayer("<p,quiz>So where should I start looking for this Solus guy anyway?");
+        ~chatnpc("<p,happy>I haven't the faintest idea. Good luck!");
+    case 4 :
+        ~chatplayer("<p,scared>A scary mage huh? Sounds like I could get KILLED!");
+        ~chatplayer("<p,angry>Forget that, and forget you! No way am I risking my neck unless there's a big fat reward on the table for it!");
+        ~chatplayer("<p,shifty>And sometimes not even then...");
+        ~chatnpc("<p,sad>It is a tragedy to hear you speak so, but we must trust in our valour and the wisdom of Saradomin to protect us from this evil man if we cannot enlist help against him.");
+}
+
+[label,wanted_amik_proof]
+~chatnpc("<p,angry>You are supposed to be looking for Solus Dellagar!");
+~chatnpc("<p,angry>The insane magician who is loose once more upon these lands? Remember?");
+~chatplayer("<p,confused>But... I've already done that!");
+~chatnpc("<p,shock>You have??? Then you must have some proof of your encounter!");
+~chatnpc("<p,quiz>A weapon perhaps, or an item of clothing?");
+if (inv_total(inv, wanted_solus_trophy) > 0) {
+    ~chatplayer("<p,happy>Well of course I do! I have it right here!");
+    ~chatnpc("<p,happy>Well hand it over then, and let's see it!");
+    inv_del(inv, wanted_solus_trophy, 1);
+    ~wanted_complete;
+    ~chatnpc("<p,neutral>Now that you are a White Knight I should perhaps explain a little about how our system works.");
+    ~chatnpc("<p,sad>Sadly we are not as rich as we once were, and there are many White Knights who foolishly lose their combat equipment.");
+    ~chatnpc("<p,neutral>We do not think it fair to make a profit from our brethren, so we will sell you equipment at cost, and rebuy it at the same cost, but we will only sell equipment to those we consider responsible enough to");
+    ~chatnpc("<p,neutral>wield it correctly.");
+    ~chatnpc("<p,neutral>By killing Black Knights, you will increase your reputation with us, by killing White Knights we will obviously think less of you.");
+    ~chatnpc("<p,neutral>You can check your White Knight reputation level by looking at your quest journal for the Wanted! Quest, or Sir Vyvin will let you know what level you are at when you go to purchase equipment.");
+    ~chatnpc("<p,neutral>Sir Vyvin can be found in Falador Castle, and he will sell you any equipment appropriate to your reputation level.");
+    ~chatnpc("<p,happy>Have fun, and go kill some Black Knights for me!");
+    ~chatplayer("<p,happy>Okay Amik, thanks for explaining!");
+    return;
+}
+if (inv_total(bank, wanted_solus_trophy) > 0) {
+    ~chatplayer("<p,shifty>Well of course I do! I just happened to think it would be a good idea to leave it in the bank for safe keeping.");
+    ~chatnpc("<p,neutral>Well bring it here so that I can authenticate your claim and make you a White Knight!");
+    return;
+}
+~chatplayer("<p,angry>Well of course I do! I mean I did... Look, I lost it okay? Stop hassling me!");
+~chatnpc("<p,sad>Look, I am very sorry <displayname>, but if you have no proof of your encounter, I can hardly promote you to be a full White Knight, now can I?");
+~chatplayer("<p,sad>Oh man... I think I've messed up... Maybe Savant can help me out somehow? I'd better speak to her.");

@@ -1,0 +1,399 @@
+// EASCape: Wanted! - the Commorb (the cache's wanted_crystal_ball: Scan, Contact, Playback; Scan is
+// in wanted_hunt.rs2). Savant's words, the dossiers and the two observation records: the OSRS
+// wiki's quest transcript. The records' cast is the cache's own (wanted_solus_for_cutscene,
+// wanted_lord_daquarius_for_cutscene and _cutscene2, wanted_black_knight_for_cutscene,
+// wanted_zammy_mage_for_cutscene, _pray and _telly) at the real places (Lord Daquarius's room in
+// Taverley Dungeon, Varrock's chaos temple); ours: where they stand, the timing, and that you
+// watch hidden (the cache's desert_treasure_invisible_npc, as A Tail of Two Cats does). The
+// dossiers show in the quest journal scroll (ours: no interface of its own in the 377 cache).
+
+// ---------------------------------------------------------------- dropping it
+// The 377 cache's Commorb drops (the Destroy option came on 29 January 2007, OSRS wiki); its
+// destroy text says it "will automatically self destruct when dropped" (ours: so dropping it
+// destroys it, with that line).
+[opheld5,wanted_crystal_ball]
+inv_del(inv, wanted_crystal_ball, 1);
+mes("Your CommOrb will automatically self destruct when dropped.");
+mes("Please speak to your Temple Knight superior to receive another.");
+
+// ---------------------------------------------------------------- Contact
+[opheld2,wanted_crystal_ball]
+if (%wanted_cutscene = 1) return;
+if (%wanted_contacted_savant = 0) @wanted_savant_first;
+~wanted_savant("<p,happy>Hello there <displayname>. What can I help you with?");
+@wanted_savant_menu;
+
+[label,wanted_savant_first]
+~chatplayer("<p,quiz>Hello...?");
+~wanted_savant("<p,happy>Well, hello! You must be <displayname>? Sir Tiffy told me to expect you to call in on this frequency!");
+~wanted_savant("<p,happy>So what do you think? Pretty nifty little piece of kit this crystal, huh?");
+~chatplayer("<p,neutral>Yeah, it must be very useful.");
+~wanted_savant("<p,happy>Oh, trust me you'll find out exactly how useful! Now, was there something you wanted?");
+@wanted_savant_menu;
+
+[label,wanted_savant_menu]
+switch_int (~p_choice4_header("Current Assignment", 1, "Savant", 2, "The Temple Knights", 3, "Nothing", 4, "What would you like to ask about?")) {
+    case 1 : @wanted_savant_assignment;
+    case 2 : @wanted_savant_herself;
+    case 3 : @wanted_savant_tk;
+    case 4 :
+        ~chatplayer("<p,neutral>Nothing thanks Savant, I was just checking this thing still worked!");
+        ~wanted_savant("<p,neutral>You shouldn't really waste my time like this, <displayname>...");
+        ~wanted_savant("<p,happy>Still no harm done, I guess! Call me if you need me!");
+        ~chatplayer("<p,neutral>Okay Savant, will do.");
+        ~wanted_savant("<p,neutral>Savant out.");
+}
+
+[label,wanted_savant_assignment]
+if (%wanted_main >= ^wanted_complete) {
+    // ours: no source has her after the quest
+    ~chatplayer("<p,quiz>Hi Savant! Any news on my current assignment?");
+    ~wanted_savant("<p,happy>You have no current assignment, <displayname>. Solus is in our custody now. Savant out.");
+    return;
+}
+if (%wanted_main = ^wanted_defeated) {
+    ~chatplayer("<p,quiz>Hi Savant. Where am I supposed to be looking for Solus again?");
+    ~wanted_savant("<p,neutral>You're not looking for Solus <displayname>, you are supposed to be taking his hat to Sir Amik of the White Knights as proof that you have defeated him.");
+    if (inv_total(inv, wanted_solus_trophy) = 0 & inv_total(bank, wanted_solus_trophy) = 0) {
+        ~chatplayer("<p,sad>But I lost his hat...");
+        ~wanted_give(wanted_solus_trophy, 1);
+        ~wanted_savant("<p,neutral>I have sent you a duplicate, try not to lose it.");
+        ~wanted_savant("<p,neutral>Go and take it to Sir Amik so that he can make you a full-fledged White Knight!");
+    }
+    return;
+}
+if (%wanted_main = ^wanted_cornered) {
+    ~chatplayer("<p,quiz>Hi Savant. Where am I supposed to be looking for Solus again?");
+    ~wanted_clue_reminder(^wanted_m_essence);
+    return;
+}
+if (%wanted_main = ^wanted_hunt) {
+    ~chatplayer("<p,quiz>Hi Savant. Where am I supposed to be looking for Solus again?");
+    ~wanted_clue_reminder(~wanted_target);
+    return;
+}
+if (%wanted_contacted_savant = 1) {
+    ~chatplayer("<p,quiz>Hi Savant! Any ideas on how I should track down Solus?");
+    ~wanted_savant("<p,neutral>Yes, you should investigate the two people in the observation records I sent you!");
+    ~wanted_savant("<p,neutral>Record 1 shows Lord Daquarius in his lair in Taverley Dungeon and Record 2 is some Zamorakian mage that runs a rune-smuggling business between the wilderness north of Edgeville and Varrock.");
+    ~wanted_savant("<p,neutral>They are the last known people to have seen Solus, so they must have some information about where he is hiding out!");
+    ~chatplayer("<p,neutral>Okay, thanks Savant.");
+    return;
+}
+~chatplayer("<p,quiz>Hi Savant! I was wondering if you could give me details on my current assignment?");
+~wanted_savant("<p,neutral>Okaaaaay... Bringing up your current assignment details...");
+~wanted_savant("<p,shock>Oh! You're chasing Solus Dellagar?");
+~chatplayer("<p,happy>Oh yeah! So any information you can give me?");
+~wanted_savant("<p,neutral>Listen <displayname>. Solus is an incredibly dangerous criminal, and I don't think his grasp on reality is too tight, if you understand what I'm saying.");
+~wanted_savant("<p,neutral>You really need to take care with this one. I'm amazed you got an assignment as tough as this one as a first assignment to be honest!");
+~chatplayer("<p,quiz>So, how would you suggest I go about finding him?");
+~wanted_savant("<p,neutral>Well, this CommOrb can use the scan function to find him, but its range is very limited.");
+~chatplayer("<p,confused>So I have to just wander around the place looking for him?");
+~wanted_savant("<p,neutral>No, that would take far too long... Listen, I am going to transfer all information on Solus that we currently have to your CommOrb.");
+%wanted_contacted_savant = 1;
+%wanted_commorb_intel = 1;
+if (%wanted_main < ^wanted_investigating) {
+    %wanted_main = ^wanted_investigating;
+    ~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+}
+~wanted_savant("<p,neutral>You should be able to find a hint of where to find him by examining it.");
+~wanted_savant("<p,neutral>The Library tells me that we have two visual recordings from SpyOrbs available to you, as well as a standard dossier.");
+~wanted_savant("<p,neutral>I would suggest the people that the SpyOrbs were observing, when they picked up records of Solus, would be a good place to start your investigation.");
+~chatplayer("<p,quiz>Who are these people then?");
+~wanted_savant("<p,neutral>Okay, just checking now...");
+~wanted_savant("<p,neutral>Record one is from a routine monitoring of Lord Daquarius.");
+~wanted_savant("<p,neutral>In case you haven't heard of him, he is the leader of the Kinshra, also known as the Black Knights.");
+~wanted_savant("<p,neutral>As a major enemy of the White Knights we have had him under observation for some time now, so it was pretty lucky that Solus decided to visit him.");
+~chatplayer("<p,quiz>So where would I find this Lord Daquarius?");
+~wanted_savant("<p,neutral>He has a secret Black Knight training ground deep in the heart of Taverley dungeon, along with holding facilities for prisoners who they wish to interrogate later.");
+~wanted_savant("<p,neutral>He is almost certain to be found thereabouts.");
+~chatplayer("<p,quiz>And what is Record 2 about?");
+~wanted_savant("<p,neutral>Just checking... Ah yes.");
+~wanted_savant("<p,neutral>This shady fellow is a member of the Zamorakian Magical Institute.");
+~wanted_savant("<p,neutral>We suspect them to be the group responsible for destroying the Wizards Tower all of those years ago, as well as other more recent acts of sabotage.");
+~wanted_savant("<p,neutral>We also suspect that they have been responsible for a number of thefts of a mysterious rock that the Wizards Tower has started producing, but don't have much intelligence about that.");
+~wanted_savant("<p,neutral>We set up an observation SpyOrb in a known Zamorakian shrine in south-east Varrock, but he moves between there and the wilderness just north of Edgeville quite frequently.");
+~wanted_savant("<p,neutral>He doesn't seem much of a threat, but we placed him under observation anyway, which seems to have paid off by getting some more information about Solus.");
+~wanted_savant("<p,neutral>From the look of the record, he would be worth talking to as well.");
+~chatplayer("<p,happy>Thanks Savant!");
+~wanted_savant("<p,happy>Any time, <displayname>. Over and out.");
+
+[label,wanted_savant_herself]
+~chatplayer("<p,quiz>So... Savant... That's an unusual name...");
+~wanted_savant("<p,laugh>Well, obviously it's not my real name!");
+~wanted_savant("<p,neutral>My real name is Elyssa Van Lendes, but for operational purposes I am called Savant.");
+~chatplayer("<p,quiz>So what exactly do you do for the Temple Knights?");
+~wanted_savant("<p,neutral>I am the S.M.R and Chief Librarian for the Temple Knights.");
+~chatplayer("<p,quiz>S.M.R? What's that?");
+~wanted_savant("<p,neutral>It stands for Senior Mystical Researcher. The Temple Knights have a world class research team investigating new types of magic constantly. As senior researcher, and field liaison, I can pass on");
+~wanted_savant("<p,neutral>information to the rest of the Temple Knights.");
+~wanted_savant("<p,happy>Many of the devices used by the Temple Knights such as our CommOrbs and SpyOrbs were first designed by my team as experimental devices, and have since become standard field equipment!");
+~wanted_savant("<p,neutral>I have always had a gift for magic, and have spent most of my life trying to find applications for it that would serve our order and give us an edge over our opponents.");
+~chatplayer("<p,quiz>Your opponents?");
+~wanted_savant("<p,neutral>Oh yes, don't think for a second that we are the only secret organisation in Gielinor!");
+~wanted_savant("<p,neutral>There are many factions in these lands, some almost as magically advanced and organised as ourselves!");
+~wanted_savant("<p,neutral>It is a constant struggle to keep our operatives with advanced magical equipment that our opponents don't have - this is why we have the self-destruct safeguards, to prevent our equipment ever falling into unfriendly");
+~wanted_savant("<p,neutral>hands.");
+~chatplayer("<p,quiz>So how did you end up working for the Temple Knights?");
+~chatplayer("<p,quiz>I would have thought someone like you would have ended up researching at the Wizards' Tower or something instead...");
+~wanted_savant("<p,angry>Oh yes... The Wizards' Tower...");
+~wanted_savant("<p,angry>Let me tell you something, the mages who work there are idiots! They told me that magical research wasn't suitable for 'just a girl' and that I would be 'too scared' to research");
+~wanted_savant("<p,angry>for them effectively!");
+~wanted_savant("<p,happy>Luckily the Temple Knights are far more open minded about things, and I really feel like my work is making a difference to them!");
+~chatplayer("<p,neutral>Ok, thanks Savant, that was very interesting.");
+~wanted_savant("<p,happy>Hey, we're all Temple Knights here, right? Glad I could help, <displayname>");
+~wanted_savant("<p,neutral>Savant over and out.");
+
+[label,wanted_savant_tk]
+~chatplayer("<p,quiz>Hi Savant. I was just wondering if you could give me a little information about the Temple Knights?");
+~chatplayer("<p,neutral>I've just realised that I really don't know very much about them...");
+~wanted_savant("<p,neutral>Well, you are not yet officially a full fledged Temple Knight now, are you Initiate <displayname>?");
+~wanted_savant("<p,neutral>I am afraid that means for security reasons I can only give you a brief overview of the organisation...");
+~chatplayer("<p,neutral>Well, that's better than nothing right?");
+~wanted_savant("<p,neutral>That is usually the case, yes, I agree. Well, let's see if I remember how this goes... 'Legends tell us that Lord Saradomin once walked these lands amongst us, and delivered his wisdom unto us");
+~wanted_savant("<p,neutral>personally, so that we could grow wise in his honour.");
+~wanted_savant("<p,neutral>But then came the war, that shattered our lands, and the interloper banished our land from us!");
+~wanted_savant("<p,neutral>But the wisdom of Saradomin knew that such events might occur, and he laid plans in secret amongst his most devout followers!");
+~wanted_savant("<p,neutral>Those warriors whose hearts were as pure as their minds were sharp were called to him, and were made into his Temple Knights, for they were the Knights that guarded his very first Temple.");
+~wanted_savant("<p,neutral>All who dwelled in his lands knew that the Temple Knights were the honoured, the blessed, the personally chosen warriors of Saradomin, and thus were they given great freedom and authority in all of our Lords");
+~wanted_savant("<p,neutral>lands.");
+~wanted_savant("<p,sad>But with Saradomin no longer with us, the Temple Knights were no longer honoured and respected by all!");
+~wanted_savant("<p,angry>Rather, they were made targets by Saradomin's enemies, and driven from the lands unjustly!");
+~wanted_savant("<p,neutral>Thus it was that they became a secret force, hidden from the eyes of Saradomin's enemies, that could strike against evil in his name swiftly and quietly whenever they may be needed.'");
+~wanted_savant("<p,confused>Something like that I think, it's been a long time since I heard it last...");
+~chatplayer("<p,neutral>Okay, thanks Savant.");
+
+// ---------------------------------------------------------------- Playback
+[opheld4,wanted_crystal_ball]
+if (%wanted_cutscene = 1) return;
+switch_int (~p_choice2_header("Current Assignment", 1, "Previous Assignments", 2, "Select Information")) {
+    case 1 : @wanted_playback_current;
+    case 2 : mes("You have no previous information recorded for playback.");
+}
+
+[label,wanted_playback_current]
+if (%wanted_contacted_savant = 0) {
+    mes("You have no information recorded for playback."); // ours: Savant hasn't sent it yet
+    return;
+}
+switch_int (~p_choice5_header("Dossier on Solus Dellagar", 1, "Solus Observation Record 1", 2, "Solus Observation Record 2", 3, "Related Dossiers", 4, "Cancel", 5, "Select Information Log")) {
+    case 1 : ~wanted_dossier_solus;
+    case 2 :
+        if (~wanted_in_castle = false) {
+            ~wanted_savant("<p,neutral>Our observation records are classified, you can't go viewing them in unsecure areas. I recommend you secure youself within the White Knights' Castle if you want to watch it.");
+            return;
+        }
+        @wanted_record1;
+    case 3 :
+        if (~wanted_in_castle = false) {
+            ~wanted_savant("<p,neutral>Our observation records are classified, you can't go viewing them in unsecure areas. I recommend you secure youself within the White Knights' Castle if you want to watch it.");
+            return;
+        }
+        @wanted_record2;
+    case 4 :
+        switch_int (~p_choice3_header("Lord Daquarius", 1, "Zamorakian Research Mage", 2, "Cancel", 3, "Select Dossier")) {
+            case 1 : ~wanted_dossier_daquarius;
+            case 2 : ~wanted_dossier_mage;
+        }
+}
+
+[proc,wanted_in_castle]()(boolean)
+return(inzone(^wanted_castle_sw, ^wanted_castle_ne, coord));
+
+[proc,wanted_dossier_solus]
+~quest_journal("CLASSIFIED", append(append(append("@red@Solus Dellagar||@blu@Age:|Unknown.|@blu@Place of Birth:|Unknown.|@blu@Known aliases:|Solus Darkheart|The Murder-mage|'Mad Solus'|Stealthy Pete|@blu@Known affiliates:|Solus Dellagar has shown time and time again that he|considers others to be mere pawns in his schemes, and will|discard them at the first viable opportunity.|Despite having been associated with many criminal and|undesirable elements known to us, these will not be listed|as affiliates, because as a general rule, if you have|worked with Solus once you are unlikely to ever do so|again.|The only loyalty he has ever managed to inspire in others|is through threat of force, and he is indeed powerful, but|", "the general hatred of him amongst those he has|encountered means that an experienced field operative|will find opportunities to turn associates against him.|@blu@Known History:|Solus' exact history is still unknown to us, but we suspect|he originated in or close to the city of Ardougne.||He was first brought to our attention as a possible threat|in the infamous zombie attack of Varrock masterminded|by the Mahjarrat Lucien, but did not serve a particularly|key role.||Reports of his whereabouts after that are somewhat|sketchy, but he seems to have trained a quite formidable|magical aptitude in the decades immediately following.||Although he has kept a low profile from conventional|"), "authorities, he has made quite a name for himself|amongst various underworld circles, especially amongst|Zamorakians, where his particularly brutal method have|been cause from some concern.||He earned the nickname 'Murder-mage' and 'Mad Solus' in|the incident at Edgeville where he was eventually|apprehended by one of our field teams, but not after the|wilful slaughter of over 800 civilians, as well as an equal|number of White and Black Knights - we are still unsure as|to why Lord Daquarius allowed his men to be involved in|this affair, because it was distinctly against his usual|methods, and this is the only report on file of him making|an action under someone else's direct command.||"), "Solus' reputation as an evil, bloodthirsty, greedy and|dangerous individual is well deserved, and field|operatives should avoid direct confrontation at all costs.||Standard observation rules apply, and if you find|yourself in a position where confrontation seems likely,|then guidelines suggest you immediately contact your|handler who will provide you ample backup - your chances|of surviving a one on one assault are slim to none.||End of Report."));
+
+[proc,wanted_dossier_daquarius]
+~quest_journal("CLASSIFIED", append(append("@red@Lord Daquarius||@blu@Age:|34.|@blu@Place of Birth:|Falador.|@blu@Known aliases:|Lord of the Kinshra|Daquarius Rennard|@blu@Known affiliates:|Leader of the Kinshra, commonly known as the Black|Knights.|Has occasional ties to various other Zamorakian agencies.|Has been linked with the Witch Lensig and her familiar|Greebo most recently.|Has a number of jail guard in his employ deep in the|Taverley dungeon, where enemies of the Kinshra are often|imprisoned.|@blu@Known History:|The charismatic Lord Daquarius was the youngest Black|Knight to ever take lead of the Kinshra, being unanimously|voted into leadership after the death of Lord Shadwell in|the infamous incident at Edgeville.||", "As leader of the Kinshra, he has been a high priority|threat to the White Knights, and his activities with the|Black Knights have been a constant thorn in both the side|of the White Knights and of the Temple Knights.||However, while the White Knights still actively seek his|capture and execution for crimes against the state,|the Temple Knights have taken a more reactive position of|observation.||Those of us who survived the Edgeville incident and recall|what the Black Knights activities under Lord Shadwell were|like, can see that Lord Daquarius is better to keep around|than risk another fanatical extremist taking his place.||For all of his misguided belief in Zamorak, Daquarius is an|"), "undeniably noble man; we have numerous reports of him|risking personal injury so that he may save a fellow|Kinshra from harm or death.||His belief in his men as more than simply subjects to be|used in war against the White Knights makes him a|predictable and easily manipulated enemy that is worth|keeping in place, and also accounts for the high regard|in which he is held by the rest of the Kinshra.||End of Report."));
+
+[proc,wanted_dossier_mage]
+~quest_journal("CLASSIFIED", append(append("@red@Name Unknown||@blu@Age:|Unknown.|@blu@Place of Birth:|Unknown.|@blu@Known aliases:|Unknown|@blu@Known affiliates:|The Zamorakian Magical Institute, a research group that|we have classified as fairly innocuous that primarily|focuses on magical research dedicated to assisting|Zamorak.|Observation suggests that the Z.M.I. is the same faction|of Zamorakians that burnt down the Wizards Tower in|Operation: Phoenix, but firm conclusions as to the reason|for this remain at best sketchy and unsupported by|evidence.|It is certainly worthwhile to keep any known members of|the Z.M.I. under observation, however.|@blu@Known History:|Recently this unidentified mage has begun to base his|", "activities in and around the area of Varrock, specifically|the Temple to Zamorak that was foolishly allowed to be|built there.||We have some evidence that this Mage also works as a|rune-dealer in the vicinity of Edgeville, but preventing his|operations in the Wilderness is far beyond our|jurisdiction, and any actions taken there would bring|unwanted attention to our own order by various entities.||We have installed standard observation devices in the|Zamorakian temple, but his activities have apparently|been limited to a small degree of smuggling and the|purchasing and resale of various pieces of contraband.||Although no obvious threat from his presence has been|"), "detected, we will continue standard observation in case he|turns out to be a bigger fish than he at first glance|seems.||End of Report."));
+
+// ---------------------------------------------------------------- the observation records
+// A line said aloud and in the chatbox ("both records also have overhead dialogue repeating the
+// same dialogue", the OSRS wiki's transcript)
+[proc,wanted_cs](npc_uid $who, string $name, npc $head, string $text, string $overhead)
+if (npc_finduid($who) = true) npc_say($overhead);
+~chatnpc_specific($name, $head, $text);
+
+[proc,wanted_cs_start](coord $watch)
+%wanted_cutscene = 1;
+if_close;
+~fade_out;
+p_delay(2);
+minimap_toggle(2);
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump($watch);
+
+[proc,wanted_cs_end](coord $back)
+~fade_out;
+p_delay(2);
+p_transmogrify(null);
+minimap_toggle(0);
+p_telejump($back);
+%wanted_cutscene = 0;
+p_delay(1);
+~fade_in;
+
+// logged out while watching: back to the castle
+[proc,wanted_login]
+if (%wanted_cutscene = 1) {
+    %wanted_cutscene = 0;
+    p_transmogrify(null);
+    minimap_toggle(0);
+    p_telejump(map_findsquare(^wanted_castle_yard, 0, 2, ^map_findsquare_lineofwalk));
+}
+
+// Record 1: Lord Daquarius's room in Taverley Dungeon (ours: a few squares east of where he stands)
+[label,wanted_record1]
+def_coord $back = coord;
+~wanted_cs_start(0_45_151_17_16);
+def_coord $daq_at = map_findsquare(0_45_151_15_14, 0, 1, ^map_findsquare_lineofwalk);
+npc_add($daq_at, wanted_lord_daquarius_for_cutscene, 300);
+def_npc_uid $daq = npc_uid;
+npc_add(map_findsquare(movecoord($daq_at, -1, 0, 0), 0, 1, ^map_findsquare_lineofwalk), wanted_black_knight_for_cutscene, 300);
+def_npc_uid $bk1 = npc_uid;
+npc_facesquare(movecoord($daq_at, 0, 0, 4));
+npc_add(map_findsquare(movecoord($daq_at, 1, 0, 0), 0, 1, ^map_findsquare_lineofwalk), wanted_black_knight_for_cutscene, 300);
+def_npc_uid $bk2 = npc_uid;
+npc_facesquare(movecoord($daq_at, 0, 0, 4));
+def_coord $solus_at = map_findsquare(movecoord($daq_at, 0, 0, 4), 0, 1, ^map_findsquare_lineofwalk);
+npc_add($solus_at, wanted_solus_for_cutscene, 300);
+def_npc_uid $solus = npc_uid;
+spotanim_npc(wanted_teleport, 0, 0);
+npc_facesquare($daq_at);
+if (npc_finduid($daq) = true) npc_facesquare($solus_at);
+p_delay(1);
+~fade_in;
+~mesbox("Observation Orb #BK-LD-577786 Record begins...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Lord Daquarius!", "Lord Daquarius!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Still festering in your pathetic little dungeon, I see.", "Still festering in your pathetic little dungeon, I see.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Solus.", "Solus.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>I thought you dead many moons past...", "I thought you dead many moons past...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Ha!", "Ha!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Wishful thinking, perhaps?", "Wishful thinking, perhaps?");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Cut the banter, Solus.", "Cut the banter, Solus.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>What do you want?", "What do you want?");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>You know you are not welcome here.", "You know you are not welcome here.");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,neutral>Now is that any way to talk to a fellow Zamorakian?", "Now is that any way to talk to a fellow Zamorakian?");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>You are not a Zamorakian! You worship nothing but your own selfish greed.", "You are not a Zamorakian! You worship nothing but your own selfish greed.");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,sad>Ah...", "Ah...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,sad>Such mistrust of your forgotten ally!", "Such mistrust of your forgotten ally!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,sad>Why did I ever leave these lands?", "Why did I ever leave these lands?");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>You left because your own stupidity brought the wrath of the Temple Knights upon you.", "You left because your own stupidity brought the wrath of the Temple Knights upon you.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Now I ask you a final time before I draw my blade:", "Now I ask you a final time before I draw my blade:");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>WHAT do you WANT?", "WHAT do you WANT?");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,neutral>Oh... nothing much.", "Oh... nothing much.");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>I just thought you would like to know that I have returned as your new master.", "I just thought you would like to know that I have returned as your new master.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>The Kinshra are not your personal soldiers Solus!", "The Kinshra are not your personal soldiers Solus!");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>I will not waste any of my warriors in your foolish schemes!", "I will not waste any of my warriors in your foolish schemes!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,quiz>And is that your final answer Daquarius?", "And is that your final answer Daquarius?");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Leave.", "Leave.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Now.", "Now.");
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Or there will be blood shed between us.", "Or there will be blood shed between us.");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,angry>You would threaten Solus Dellagar?", "You would threaten Solus Dellagar?");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,angry>Have you forgotten just who I am?", "Have you forgotten just who I am?");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,angry>Perhaps you need reminding!", "Perhaps you need reminding!");
+if_close;
+// Ice Barrage: the two Black Knights die, Daquarius is left barely alive
+if (npc_finduid($solus) = true) npc_anim(zaros_vertical_casting, 0);
+sound_synth(ice_magic_all, 1, 0);
+p_delay(1);
+if (npc_finduid($bk1) = true) {
+    spotanim_npc(ice_barrage_impact, 0, 0);
+    npc_anim(human_death, 1);
+}
+if (npc_finduid($bk2) = true) {
+    spotanim_npc(ice_barrage_impact, 0, 0);
+    npc_anim(human_death, 1);
+}
+if (npc_finduid($daq) = true) {
+    spotanim_npc(ice_barrage_impact, 0, 0);
+    npc_changetype(wanted_lord_daquarius_for_cutscene2, 300);
+}
+p_delay(3);
+if (npc_finduid($bk1) = true) npc_del;
+if (npc_finduid($bk2) = true) npc_del;
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Still alive Daquarius?", "Still alive Daquarius?");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Good!", "Good!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>I won't have to remind you of my power again next time!", "I won't have to remind you of my power again next time!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,angry>Make sure you are more prepared to follow orders next time I come to your little Taverley hideout!", "Make sure you are more prepared to follow orders next time I come to your little Taverley hideout!");
+if_close;
+~wanted_solus_vanish($solus);
+~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>I swear... in the name of *cough* Zamorak... I will see you rot for this Solus...", "I swear... in the name of *cough* Zamorak... I will see you rot for this Solus...");
+if (npc_finduid($daq) = true) npc_del;
+~wanted_cs_end($back);
+
+// Record 2: Varrock's chaos temple (the OSRS wiki's map of it: 3253-3264, 3380-3391). Ours: the
+// mage a square north of his spot, Solus four squares north of him, you at the west side.
+[label,wanted_record2]
+def_coord $back = coord;
+def_coord $mage_at = map_findsquare(movecoord(^wanted_zammy_mage, 0, 0, 1), 0, 1, ^map_findsquare_lineofwalk);
+~wanted_cs_start(map_findsquare(0_50_52_56_56, 0, 1, ^map_findsquare_lineofwalk));
+npc_add($mage_at, wanted_zammy_mage_for_cutscene_pray, 300);
+def_npc_uid $mage = npc_uid;
+p_delay(1);
+~fade_in;
+~mesbox("Observation Orb #VA-ZM-000964 Record begins...");
+def_coord $solus_at = map_findsquare(movecoord($mage_at, 0, 0, 4), 0, 1, ^map_findsquare_lineofwalk);
+npc_add($solus_at, wanted_solus_for_cutscene, 300);
+def_npc_uid $solus = npc_uid;
+spotanim_npc(wanted_teleport, 0, 0);
+sound_synth(teleport_all, 1, 0);
+npc_facesquare($mage_at);
+p_delay(2);
+if (npc_finduid($mage) = true) {
+    npc_changetype(wanted_zammy_mage_for_cutscene, 300);
+    npc_facesquare($solus_at);
+}
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,angry>What?", "What?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,angry>Who dares...", "Who dares...");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,shock>Oh.", "Oh.");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>Oh no.", "Oh no.");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>Oh no, no, no...", "Oh no, no, no...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Well, what have we here?", "Well, what have we here?");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>A shrine to Zamorak in the middle of Varrock?", "A shrine to Zamorak in the middle of Varrock?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>S-S-Solus???", "S-S-Solus???");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>I assume my reputation precedes me!", "I assume my reputation precedes me!");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>Please...", "Please...");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>Please don't kill me...", "Please don't kill me...");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>I have no riches, I am but a magical researcher...", "I have no riches, I am but a magical researcher...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,quiz>Kill you?", "Kill you?");
+if (npc_finduid($solus) = true) npc_anim(emote_laugh, 0);
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>HAH HAH HAH!", "HAH HAH HAH!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>My dear fellow, if I wanted you dead, you ALREADY WOULD BE!", "My dear fellow, if I wanted you dead, you ALREADY WOULD BE!");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>I... I don't know w-what you want Solus, but whatever it is, please, just t-take it and leave, please...", "I... I don't know w-what you want Solus, but whatever it is, please, just t-take it and leave, please...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Well I am particularly interested in your brains at the moment!", "Well I am particularly interested in your brains at the moment!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>But you wouldn't want me taking those and leaving, now would you?", "But you wouldn't want me taking those and leaving, now would you?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>My b-brains?", "My b-brains?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,confused>I... I don't understand...", "I... I don't understand...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,neutral>I am interested in your research!", "I am interested in your research!");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,confused>My... r-research?", "My... r-research?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>I...", "I...");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>I c-cannot let you have my research, it is being done in order to assist my lord Zamorak...", "I c-cannot let you have my research, it is being done in order to assist my lord Zamorak...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Ah!", "Ah!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>But he is not here, is he?", "But he is not here, is he?");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>No... I...", "No... I...");
+if_close;
+// he tries to teleport away; Solus binds him (Entangle, the RS wiki) - the cache's _telly
+if (npc_finduid($mage) = true) npc_changetype(wanted_zammy_mage_for_cutscene_telly, 300);
+p_delay(1);
+if (npc_finduid($solus) = true) npc_anim(human_castentangle, 0);
+sound_synth(entangle_all, 1, 0);
+if (npc_finduid($mage) = true) spotanim_npc(entangle_impact, 0, 0);
+p_delay(2);
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Ah-ah-ah!", "Ah-ah-ah!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>You are going nowhere just yet sir", "You are going nowhere just yet sir");
+if (npc_finduid($mage) = true) npc_changetype(wanted_zammy_mage_for_cutscene, 300);
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>P-please...", "P-please...");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>I meant no disrespect Solus, please do not kill me...", "I meant no disrespect Solus, please do not kill me...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,neutral>If I killed you then you would no longer continue with your most interesting research!", "If I killed you then you would no longer continue with your most interesting research!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>No, I will be content with simply taking your money sir!", "No, I will be content with simply taking your money sir!");
+~wanted_cs($mage, "Mage of Zamorak", wanted_zammy_mage_for_cutscene, "<p,scared>Take it, take it all!", "Take it, take it all!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Well, a most productive trip on all accounts!", "Well, a most productive trip on all accounts!");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>I will see you again...", "I will see you again...");
+~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Very soon!", "Very soon!");
+if_close;
+~wanted_solus_vanish($solus);
+if (npc_finduid($mage) = true) npc_del;
+~wanted_cs_end($back);

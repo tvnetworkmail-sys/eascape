@@ -1,0 +1,146 @@
+// EASCape: test commands for Wanted! (quest_wanted).
+
+// ::wantedpack - what the quest needs (the OSRS wiki): 10,000 coins (or a law rune, an enchanted
+// gem and molten glass), 20 pure essence and a light source (a lit candle lantern). It also marks
+// Recruitment Drive, The Lost Tribe, Priest in Peril and Enter the Abyss done (no rewards); the 32
+// quest points still have to come from quests (::questdone).
+[debugproc,wantedpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(coins, 10000));
+$banked = calc($banked + ~questpack_give(lawrune, 1));
+$banked = calc($banked + ~questpack_give(slayer_gem, 1));
+$banked = calc($banked + ~questpack_give(molten_glass, 1));
+$banked = calc($banked + ~questpack_give(blankrune_high, 20));
+$banked = calc($banked + ~questpack_give(candle_lantern_lit, 1));
+if (%rd_main < ^rcd_complete) %rd_main = ^rcd_complete;
+if (%lt_stage < ^lt_complete) %lt_stage = ^lt_complete;
+if (%priestperil < ^priestperil_complete) %priestperil = ^priestperil_complete;
+%abyssal_miniquest = ^miniquest_abyssal_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Wanted!", $banked);
+mes("Quest points: <tostring(%qp)> (32 needed). Sir Tiffy: ::wantedtele 1. ::wantedstage sets the stage.");
+
+// ::wantedstage <n> - sets Wanted!'s stage (wanted.constant): 0 not started (clears everything, the
+// kill score too), 1 Sir Tiffy's plan, 2 no crisis (talk to Sir Tiffy), 3 a crisis (talk to Sir
+// Amik), 4 deputised (Sir Tiffy sells the CommOrb), 5 a CommOrb (contact Savant), 6 Savant's
+// records (see Lord Daquarius), 61 Daquarius has told you of the fur (see the Mage of Zamorak),
+// 7 the hunt (Canifis, Savant's call still to come). The chase, each with the places before it
+// done as Canifis, the banana plantation, the Champions' Guild, the Wizards' Tower, the Dorgeshuun
+// mine, Ardougne market, the essence mine: 71 scan in Canifis, 72 the banana plantation (Camelot),
+// 73 the Champions' Guild (smoke), 74 the Wizards' Tower (the flames), 75 the Dorgeshuun mine (the
+// woman), 76 Ardougne market (the Black Knight), 77 teleport to the essence mine (the last fight).
+// 9 Solus beaten (you get his hat), 10 done (no rewards). `::questdone wanted` finishes it with
+// its rewards.
+[debugproc,wantedstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n <= 0) {
+    %quest_wanted = 0;
+    %quest_wanted2 = 0;
+    %wanted_kills = 0;
+    ~send_quest_progress(questlist:wanted, 0, ^wanted_complete);
+    ~update_questpoints;
+    mes("Wanted!: reset.");
+    return;
+}
+def_int $main = $n;
+if ($n = 61) $main = ^wanted_investigating;
+if ($n > 70 & $n < 80) $main = ^wanted_hunt;
+%wanted_main = $main;
+%wanted_joke_option = 0;
+%wanted_commorb_intel = 0;
+%wanted_contacted_savant = 0;
+%wanted_daquarius_hint = 0;
+%wanted_zammy_mage_hint = 0;
+%wanted_black_knight_dead = 0;
+%wanted_lord_d_exposition = 0;
+~wanted_clear_missions;
+if ($main >= ^wanted_deputised) %wanted_commorb_intel = 1;
+if ($main >= ^wanted_commorb & inv_total(inv, wanted_crystal_ball) = 0) ~wanted_give(wanted_crystal_ball, 1);
+if ($main >= ^wanted_investigating) %wanted_contacted_savant = 1;
+if ($n = 61 | $main >= ^wanted_hunt) %wanted_daquarius_hint = ^wanted_daq_told;
+if ($n = 61 | $main >= ^wanted_hunt) %wanted_black_knight_dead = 1;
+if ($main >= ^wanted_hunt) %wanted_zammy_mage_hint = ^wanted_mage_told;
+if ($main = ^wanted_hunt) {
+    ~wanted_set_target(^wanted_m_canifis);
+    if ($n > 70) @wanted_cheat_chase($n);
+}
+if ($main >= ^wanted_cornered) {
+    %wanted_zammy_mage_hint = ^wanted_mage_canifis;
+    ~wanted_cheat_done(6);
+    ~wanted_set_target(^wanted_m_essence);
+}
+if ($main >= ^wanted_defeated) {
+    ~wanted_mission_setdone(^wanted_m_essence, 1);
+    ~wanted_set_target(0);
+    if ($main = ^wanted_defeated & inv_total(inv, wanted_solus_trophy) = 0) ~wanted_give(wanted_solus_trophy, 1);
+}
+if ($main >= ^wanted_complete) ~wanted_clear_missions;
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+~update_questpoints;
+mes("Wanted!: stage <tostring(%wanted_main)>.");
+
+// the chase's places, in the order ::wantedstage 71-77 walks them
+[proc,wanted_cheat_place](int $pos)(int)
+switch_int ($pos) {
+    case 1 : return(^wanted_m_canifis);
+    case 2 : return(6);   // the banana plantation
+    case 3 : return(^wanted_m_champions);
+    case 4 : return(7);   // the Wizards' Tower
+    case 5 : return(^wanted_m_dorgeshuun);
+    case 6 : return(8);   // Ardougne market
+}
+return(^wanted_m_essence);
+
+[proc,wanted_cheat_done](int $count)
+def_int $i = 1;
+while ($i <= $count) {
+    ~wanted_mission_setdone(~wanted_cheat_place($i), 1);
+    $i = calc($i + 1);
+}
+
+[label,wanted_cheat_chase](int $n)
+def_int $pos = calc($n - 70);
+%wanted_zammy_mage_hint = ^wanted_mage_canifis;
+~wanted_cheat_done(calc($pos - 1));
+~wanted_set_target(~wanted_cheat_place($pos));
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+mes("Wanted!: the chase at place <tostring($pos)> of 7. ::wantedtele 6 takes you there.");
+
+// ::wantedtele <n> - 1 Sir Tiffy, 2 Sir Amik, 3 Lord Daquarius (Taverley Dungeon), 4 the Mage of
+// Zamorak (Varrock), 5 Sir Vyvin, 6 the place Solus is at now, 7 the rune essence mine (as if
+// teleported there), 11-29 the scan places 1-19 (wanted_hunt.rs2's list)
+[debugproc,wantedtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^wanted_tiffy;
+    case 2 : $to = ^wanted_amik;
+    case 3 : $to = ^wanted_daquarius;
+    case 4 : $to = ^wanted_zammy_mage;
+    case 5 : $to = ^wanted_vyvin;
+    case 6 :
+        if (~wanted_target = 0) {
+            mes("Solus isn't anywhere yet (::wantedstage 71-77).");
+            return;
+        }
+        $to = ~wanted_place_coord(~wanted_target);
+    case 7 : $to = ~wanted_place_coord(^wanted_m_essence);
+    case default :
+        if ($n >= 11 & $n <= 29) {
+            $to = ~wanted_place_coord(calc($n - 10));
+        } else {
+            mes("::wantedtele 1-7, 11-29: 1 Tiffy, 2 Amik, 3 Daquarius, 4 Zamorak mage, 5 Vyvin, 6 Solus now, 7 essence mine, 11-29 the 19 scan places");
+            return;
+        }
+}
+p_telejump(map_findsquare($to, 0, 2, ^map_findsquare_lineofwalk));
+if ($n = 7 | ($n = 6 & ~wanted_target = ^wanted_m_essence)) ~wanted_essence_mine;
+
+// ::wantedkills <n> - sets your White Knight kill score (100 Novice, 200 Peon, 300 Page, 500 Noble,
+// 800 Adept, 1300 Master)
+[debugproc,wantedkills](int $n)
+if (p_finduid(uid) = false) return;
+%wanted_kills = max(0, min(^wanted_rank_master, $n));
+mes("White Knight kill score: <tostring(%wanted_kills)>. Rank: <~wanted_rank_name>.");

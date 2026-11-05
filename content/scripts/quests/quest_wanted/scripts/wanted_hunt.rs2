@@ -1,0 +1,818 @@
+// EASCape: Wanted! - the hunt for Solus Dellagar. The OSRS wiki's walkthrough and transcript: seven
+// scan places, Canifis 1st, the Champions' Guild 3rd, the Dorgeshuun mine 5th and the rune essence
+// mine 7th, the 2nd, 4th and 6th drawn at random; Solus teleports you to Camelot at the 2nd, blinds
+// you with smoke at the 3rd, hits you with the Flames of Zamorak at the 4th (never killing you:
+// Savant takes you to the White Knights' Castle), plays a woman at the 5th and summons a level 32
+// Black Knight at the 6th (kill it, or after 5 minutes it goes, the RS wiki); in the essence mine
+// Savant's fifteen rangers die to his Ice Barrage and you fight him, weakened (40 hitpoints, melee).
+// The cache's own pieces: the Commorb's Scan (wanted_crystal_ball_scan, its spotanim and the
+// wanted_scan sound), wanted_solus1-19 (each shows only while its wanted_mission varbit is 1),
+// the woman (wanted_solus_fake_woman, on wanted_mission3), wanted_summoned_black_knight,
+// wanted_white_ranger, wanted_solus_attackable, wanted_solus_summon and the wanted_teleport
+// spotanim. Ours: where in each place Solus stands (next to you), the size of each place, the
+// timing, the share of your hitpoints the flames take (95%, leaving at least 1).
+
+// ---------------------------------------------------------------- the nineteen places
+[proc,wanted_mission](int $m)(int)
+switch_int ($m) {
+    case 1 : return(%wanted_mission1);
+    case 2 : return(%wanted_mission2);
+    case 3 : return(%wanted_mission3);
+    case 4 : return(%wanted_mission4);
+    case 5 : return(%wanted_mission5);
+    case 6 : return(%wanted_mission6);
+    case 7 : return(%wanted_mission7);
+    case 8 : return(%wanted_mission8);
+    case 9 : return(%wanted_mission9);
+    case 10 : return(%wanted_mission10);
+    case 11 : return(%wanted_mission11);
+    case 12 : return(%wanted_mission12);
+    case 13 : return(%wanted_mission13);
+    case 14 : return(%wanted_mission14);
+    case 15 : return(%wanted_mission15);
+    case 16 : return(%wanted_mission16);
+    case 17 : return(%wanted_mission17);
+    case 18 : return(%wanted_mission18);
+    case 19 : return(%wanted_mission19);
+}
+return(0);
+
+[proc,wanted_mission_set](int $m, int $v)
+switch_int ($m) {
+    case 1 : %wanted_mission1 = $v;
+    case 2 : %wanted_mission2 = $v;
+    case 3 : %wanted_mission3 = $v;
+    case 4 : %wanted_mission4 = $v;
+    case 5 : %wanted_mission5 = $v;
+    case 6 : %wanted_mission6 = $v;
+    case 7 : %wanted_mission7 = $v;
+    case 8 : %wanted_mission8 = $v;
+    case 9 : %wanted_mission9 = $v;
+    case 10 : %wanted_mission10 = $v;
+    case 11 : %wanted_mission11 = $v;
+    case 12 : %wanted_mission12 = $v;
+    case 13 : %wanted_mission13 = $v;
+    case 14 : %wanted_mission14 = $v;
+    case 15 : %wanted_mission15 = $v;
+    case 16 : %wanted_mission16 = $v;
+    case 17 : %wanted_mission17 = $v;
+    case 18 : %wanted_mission18 = $v;
+    case 19 : %wanted_mission19 = $v;
+}
+
+[proc,wanted_mission_done](int $m)(int)
+switch_int ($m) {
+    case 1 : return(%wanted_mission1complete);
+    case 2 : return(%wanted_mission2complete);
+    case 3 : return(%wanted_mission3complete);
+    case 4 : return(%wanted_mission4complete);
+    case 5 : return(%wanted_mission5complete);
+    case 6 : return(%wanted_mission6complete);
+    case 7 : return(%wanted_mission7complete);
+    case 8 : return(%wanted_mission8complete);
+    case 9 : return(%wanted_mission9complete);
+    case 10 : return(%wanted_mission10complete);
+    case 11 : return(%wanted_mission11complete);
+    case 12 : return(%wanted_mission12complete);
+    case 13 : return(%wanted_mission13complete);
+    case 14 : return(%wanted_mission14complete);
+    case 15 : return(%wanted_mission15complete);
+    case 16 : return(%wanted_mission16complete);
+    case 17 : return(%wanted_mission17complete);
+    case 18 : return(%wanted_mission18complete);
+    case 19 : return(%wanted_mission19complete);
+}
+return(0);
+
+[proc,wanted_mission_setdone](int $m, int $v)
+switch_int ($m) {
+    case 1 : %wanted_mission1complete = $v;
+    case 2 : %wanted_mission2complete = $v;
+    case 3 : %wanted_mission3complete = $v;
+    case 4 : %wanted_mission4complete = $v;
+    case 5 : %wanted_mission5complete = $v;
+    case 6 : %wanted_mission6complete = $v;
+    case 7 : %wanted_mission7complete = $v;
+    case 8 : %wanted_mission8complete = $v;
+    case 9 : %wanted_mission9complete = $v;
+    case 10 : %wanted_mission10complete = $v;
+    case 11 : %wanted_mission11complete = $v;
+    case 12 : %wanted_mission12complete = $v;
+    case 13 : %wanted_mission13complete = $v;
+    case 14 : %wanted_mission14complete = $v;
+    case 15 : %wanted_mission15complete = $v;
+    case 16 : %wanted_mission16complete = $v;
+    case 17 : %wanted_mission17complete = $v;
+    case 18 : %wanted_mission18complete = $v;
+    case 19 : %wanted_mission19complete = $v;
+}
+
+// the place Solus is at now (the one wanted_mission bit set), 0 if none
+[proc,wanted_target]()(int)
+def_int $m = 1;
+while ($m <= ^wanted_m_last) {
+    if (~wanted_mission($m) = 1) return($m);
+    $m = calc($m + 1);
+}
+return(0);
+
+// how far along the chase is: 1 Canifis ... 7 the essence mine
+[proc,wanted_position]()(int)
+def_int $n = 1;
+def_int $m = 1;
+while ($m <= ^wanted_m_last) {
+    if (~wanted_mission_done($m) = 1) $n = calc($n + 1);
+    $m = calc($m + 1);
+}
+return($n);
+
+[proc,wanted_set_target](int $m)
+def_int $i = 1;
+while ($i <= ^wanted_m_last) {
+    ~wanted_mission_set($i, 0);
+    $i = calc($i + 1);
+}
+if ($m > 0) ~wanted_mission_set($m, 1);
+
+[proc,wanted_clear_missions]
+def_int $i = 1;
+while ($i <= ^wanted_m_last) {
+    ~wanted_mission_set($i, 0);
+    ~wanted_mission_setdone($i, 0);
+    $i = calc($i + 1);
+}
+
+// one of the places 5-19 not yet visited
+[proc,wanted_pick_random]()(int)
+def_int $free = 0;
+def_int $m = ^wanted_m_first_random;
+while ($m <= ^wanted_m_last) {
+    if (~wanted_mission_done($m) = 0) $free = calc($free + 1);
+    $m = calc($m + 1);
+}
+if ($free = 0) return(^wanted_m_first_random);
+def_int $pick = random($free);
+$m = ^wanted_m_first_random;
+while ($m <= ^wanted_m_last) {
+    if (~wanted_mission_done($m) = 0) {
+        if ($pick = 0) return($m);
+        $pick = calc($pick - 1);
+    }
+    $m = calc($m + 1);
+}
+return(^wanted_m_first_random);
+
+// the places (the OSRS wiki's list). Ours: their extent, around the cache map's own npcs there.
+[proc,wanted_in_place](int $m, coord $c)(boolean)
+switch_int ($m) {
+    case 1 : return(inzone(0_54_54_0_0, 0_54_54_63_63, $c)); // Canifis (its map square)
+    case 2 : return(inzone(0_49_52_51_21, 1_49_52_61_37, $c)); // inside the Champions' Guild (Guildmaster, Valaine, Scavvo)
+    case 3 : return(inzone(0_51_150_36_5, 0_52_150_2_60, $c)); // the Dorgeshuun mine (the cave goblin miners)
+    case 5 : return(inzone(0_40_56_55_56, 0_41_58_61_3, $c)); // Rellekka (the Fremennik cloak and fur sellers)
+    case 6 : return(inzone(0_45_49_20_9, 0_46_49_1_39, $c)); // Musa Point's banana plantation (Luthas)
+    case 7 : return(inzone(0_48_49_28_16, 0_48_49_46_36, $c)); // the Wizards' Tower, ground floor
+    case 8 : return(inzone(0_41_51_24_26, 0_41_51_51_56, $c)); // Ardougne market (the fur merchant)
+    case 9 : return(inzone(0_38_48_3_8, 0_38_48_16_26, $c)); // Castle Wars (by the portals and judge)
+    case 10 : return(inzone(0_38_54_27_34, 0_38_54_41_48, $c)); // the Grand Tree, by King Narnode
+    case 11 : return(inzone(0_53_55_13_10, 0_53_55_60_60, $c)); // the Slayer Tower (the banshees)
+    case 12 : return(inzone(0_43_49_38_16, 0_43_49_52_26, $c)); // Brimhaven's pub, the Dead Man's Chest
+    case 13 : return(inzone(0_51_50_34_5, 0_51_50_46_17, $c)); // Ali Morrisane's stall, Al Kharid
+    case 14 : return(inzone(0_50_148_10_63, 0_50_149_40_24, $c)); // the Lumbridge Swamp Caves' giant frogs
+    case 15 : return(inzone(0_46_54_1_39, 0_46_55_21_0, $c)); // Goblin Village
+    case 16 : return(inzone(0_39_48_54_2, 0_40_48_2_12, $c)); // the Dragon Inn, Yanille
+    case 17 : return(inzone(0_41_54_1_9, 0_41_54_51_54, $c)); // McGrubor's Wood
+    case 18 : return(inzone(0_48_50_0_43, 0_48_50_18_58, $c)); // Draynor Village market, by the seed stall
+    case 19 : return(inzone(0_38_50_23_18, 0_38_50_43_38, $c)); // the Grave of Scorpius
+}
+return(false);
+
+// a spot in each place (the cache map's own npc there), for ::wantedtele
+[proc,wanted_place_coord](int $m)(coord)
+switch_int ($m) {
+    case 1 : return(0_54_54_58_23);   // Canifis' bank
+    case 2 : return(0_49_52_55_34);   // the Guildmaster
+    case 3 : return(0_51_150_52_32);  // a cave goblin miner
+    case 4 : return(enum(int, coord, essence_mine_teleports, 0));
+    case 5 : return(0_41_57_16_27);   // Rellekka's fur trader
+    case 6 : return(0_45_49_59_18);   // Luthas
+    case 7 : return(0_48_49_35_22);   // a wizard
+    case 8 : return(0_41_51_42_31);   // the fur merchant
+    case 9 : return(0_38_48_9_17);    // the Castle Wars judge
+    case 10 : return(0_38_54_34_41);  // King Narnode
+    case 11 : return(0_53_55_41_32);  // a banshee
+    case 12 : return(0_43_49_45_19);  // the Dead Man's Chest's bartender
+    case 13 : return(0_51_50_40_11);  // Ali Morrisane
+    case 14 : return(0_50_149_24_8);  // a giant frog
+    case 15 : return(0_46_54_14_55);  // General Bentnoze
+    case 16 : return(0_39_48_60_6);   // the Dragon Inn's bartender
+    case 17 : return(0_41_54_21_32);  // a guard dog
+    case 18 : return(0_48_50_6_51);   // the seed merchant
+    case 19 : return(0_38_50_33_27);  // the spirit of Scorpius
+}
+return(^wanted_tiffy);
+
+[proc,wanted_solus_npc](int $m)(npc)
+switch_int ($m) {
+    case 1 : return(wanted_solus1);
+    case 2 : return(wanted_solus2);
+    case 3 : return(wanted_solus3);
+    case 4 : return(wanted_solus4);
+    case 5 : return(wanted_solus5);
+    case 6 : return(wanted_solus6);
+    case 7 : return(wanted_solus7);
+    case 8 : return(wanted_solus8);
+    case 9 : return(wanted_solus9);
+    case 10 : return(wanted_solus10);
+    case 11 : return(wanted_solus11);
+    case 12 : return(wanted_solus12);
+    case 13 : return(wanted_solus13);
+    case 14 : return(wanted_solus14);
+    case 15 : return(wanted_solus15);
+    case 16 : return(wanted_solus16);
+    case 17 : return(wanted_solus17);
+    case 18 : return(wanted_solus18);
+    case 19 : return(wanted_solus19);
+}
+return(wanted_solus1);
+
+// the item Savant pulls from Solus's teleport, pointing at a place (the OSRS wiki's table)
+[proc,wanted_clue_obj](int $m)(namedobj)
+switch_int ($m) {
+    case 2 : return(blue_cape);
+    case 3 : return(cave_goblin_bone_spear);
+    case 4 : return(cert_blankrune_high);
+    case 5 : return(viking_cloak_green);
+    case 6 : return(banana);
+    case 7 : return(bluewizhat);
+    case 8 : return(fur);
+    case 9 : return(castlewars_ticket);
+    case 10 : return(gnome_hat_cream);
+    case 11 : return(slayer_earmuffs);
+    case 12 : return(eye_patch);
+    case 13 : return(feud_karidian_fakebeard);
+    case 14 : return(giant_frog_legs);
+    case 15 : return(goblin_armour);
+    case 16 : return(greenmans_ale);
+    case 17 : return(red_vine_worm);
+    case 18 : return(horsey_black);
+    case 19 : return(blessedsnake);
+}
+return(blue_cape);
+
+// ---------------------------------------------------------------- talking
+[proc,wanted_savant](string $text)
+~chatnpc_specific("Savant", wanted_savant, $text);
+
+[proc,wanted_solus_says](string $text)
+~chatnpc_specific("Solus Dellagar", wanted_solus, $text);
+
+[proc,wanted_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+// Savant's random lines when the scan finds nothing (the OSRS wiki's ten)
+[proc,wanted_scan_fail]
+switch_int (random(10)) {
+    case 0 : ~wanted_savant("<p,neutral>There doesn't seem to be anything unusual about these readings <displayname>... Looks like your hunch was wrong. Savant out.");
+    case 1 : ~wanted_savant("<p,neutral>Negative result, <displayname>. Looks like you're barking up the wrong tree. Savant out.");
+    case 2 : ~wanted_savant("<p,neutral>Scan results are negative, <displayname>. Savant out.");
+    case 3 :
+        ~wanted_savant("<p,neutral>Background magical levels all seem within normal tolerable limits <displayname>...");
+        ~wanted_savant("<p,neutral>I don't think this can be the right place... Savant out.");
+    case 4 :
+        ~wanted_savant("<p,neutral>Checking incoming data...");
+        ~wanted_savant("<p,neutral>Nope, all clear here. Savant out.");
+    case 5 : ~wanted_savant("<p,neutral>Nope... I'm not picking up anything unusual near here... Savant out.");
+    case 6 : ~wanted_savant("<p,neutral>Analysis is negative I'm afraid, <displayname>. Savant out.");
+    case 7 :
+        ~wanted_savant("<p,neutral>The background magical levels are slightly above average here, but not enough to signify anything.");
+        ~wanted_savant("<p,neutral>I think you're in the wrong place. Savant out.");
+    case 8 : ~wanted_savant("<p,neutral>Results are all-clear, <displayname>. Savant out.");
+    case default : ~wanted_savant("<p,neutral>Not picking up any unusual readings here, <displayname>... Savant out.");
+}
+
+// Savant transfers the item to you, and what she makes of it (the OSRS wiki's transcript)
+[proc,wanted_clue](int $m)
+def_namedobj $obj = ~wanted_clue_obj($m);
+if ($m = ^wanted_m_essence) {
+    ~wanted_give($obj, 20);
+} else {
+    ~wanted_give($obj, 1);
+}
+~objbox($obj, "Savant transfers the item to you.", 250, 0, divide(^objbox_height, 2));
+switch_int ($m) {
+    case 5 :
+        ~wanted_savant("<p,quiz>It's... a cloak?");
+        ~chatplayer("<p,neutral>Very stylish, but it doesn't seem to be his colour.");
+        ~wanted_savant("<p,neutral>I don't think he would have been wearing it... But he might be nearby somewhere that sells this type of cloak.");
+    case 6 :
+        ~wanted_savant("<p,quiz>It's... a banana?");
+        ~chatplayer("<p,confused>A banana? How is that a clue to where he is?");
+        ~wanted_savant("<p,neutral>Well, for it to have got caught in his teleport, it must be a place where there are many around...");
+    case 7 :
+        ~wanted_savant("<p,quiz>It's... a wizard hat?");
+        ~chatplayer("<p,quiz>So he is improving his dress sense you think?");
+        ~wanted_savant("<p,neutral>I think it's more likely he happens to be in an area where there are many wizards around.");
+    case 8 :
+        ~wanted_savant("<p,quiz>It's... fur?");
+        ~chatplayer("<p,confused>Fur? How does that help us find him?");
+        ~wanted_savant("<p,neutral>Well, this is not fur directly from an animal, look it has been prepared for sale...");
+    case 9 :
+        ~wanted_savant("<p,quiz>It's... a ticket?");
+        ~chatplayer("<p,neutral>I am sure I have seen tickets like that somewhere before...");
+        ~wanted_savant("<p,neutral>Well, wherever it is that you have seen them, I would guess he is nearby!");
+    case 10 :
+        ~wanted_savant("<p,quiz>It's... a hat?");
+        ~chatplayer("<p,quiz>How does a hat help us?");
+        ~wanted_savant("<p,neutral>I'm sorry, I don't know. Maybe somewhere where hats like this are common?");
+    case 11 :
+        ~wanted_savant("<p,quiz>It's... ear muffs?");
+        ~chatplayer("<p,confused>Why on gielinor would he be wearing those?");
+        ~wanted_savant("<p,neutral>Well, they are standard equipment for any slayer looking to kill Banshees...");
+    case 12 :
+        ~wanted_savant("<p,quiz>It's... an eye patch?");
+        ~chatplayer("<p,quiz>Do you think he might be injured?");
+        ~wanted_savant("<p,neutral>No, I think he must be somewhere where there are a lot of people who wear eye patches...");
+    case 13 :
+        ~wanted_savant("<p,quiz>It's...a fake beard?");
+        ~chatplayer("<p,shock>What the...? You think he is in disguise somewhere?");
+        ~wanted_savant("<p,neutral>I've seen this design of beard before... But I cannot remember where...");
+    case 14 :
+        ~wanted_savant("<p,quiz>It's... some big frog legs?");
+        ~chatplayer("<p,shock>The frog those came from must be huge!");
+        ~wanted_savant("<p,neutral>I have heard rumours of giant frogs in a subterranean area...");
+    case 15 :
+        ~wanted_savant("<p,quiz>It's... goblin armour?");
+        ~chatplayer("<p,confused>Goblin armour? Why would he wear that?");
+        ~wanted_savant("<p,neutral>Well, it must be a place here there is a lot of it around for it to have been caught in his teleport...");
+    case 16 :
+        ~wanted_savant("<p,quiz>It's... a beer?");
+        ~chatplayer("<p,neutral>I doubt he's getting drunk in hiding...");
+        ~wanted_savant("<p,neutral>That type of beer is only sold in one place that I know of.");
+    case 17 :
+        ~wanted_savant("<p,quiz>It's... a worm?");
+        ~chatplayer("<p,quiz>Maybe he's doing a little fishing?");
+        ~wanted_savant("<p,neutral>No, this is a very specific worm that is only found in one place...");
+    case 18 :
+        ~wanted_savant("<p,quiz>It's... a toy horse?");
+        ~chatplayer("<p,confused>What a weird thing to be carrying...");
+        ~wanted_savant("<p,neutral>Well <displayname>, bear in mind that it might just be an object that as in the vicinity rather than something he was carrying...");
+    case 19 :
+        ~wanted_savant("<p,shock>It's... an Unholy Symbol!");
+        ~chatplayer("<p,neutral>The symbol of Zamorak? That tells us nothing.");
+        ~wanted_savant("<p,neutral>Yes, sadly there are many Zamorakians in these lands...But it must be somewhere of special significance...");
+}
+
+// "Where am I supposed to be looking for Solus again?" (the OSRS wiki's transcript; the bear fur's
+// line is missing there, ours)
+[proc,wanted_clue_reminder](int $m)
+switch_int ($m) {
+    case 1 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find Fur, East of Varrock...");
+    case 2 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find Blue Capes...");
+    case 3 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find strange weapons made of bone...");
+    case 4 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find those strange magical rocks...");
+    case 5 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find that distinctive type of cloak...");
+    case 6 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find bananas...");
+    case 7 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere that has blue wizard hats...");
+    case 8 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find fur that has been prepared for sale..."); // ours
+    case 9 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find those tickets...");
+    case 10 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find that pastel shaded wizard hat...");
+    case 11 : ~wanted_savant("<p,neutral>The clues seem to point towards a place filled with Banshees...");
+    case 12 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find eyepatches...");
+    case 13 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find Fake Beards...");
+    case 14 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere that has REALLY BIG frogs!");
+    case 15 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find goblin mail...");
+    case 16 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find Greenmans Ale...");
+    case 17 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where red vine worms might be...");
+    case 18 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere where you might find seeds for sale...");
+    case 19 : ~wanted_savant("<p,neutral>The clue was that Solus is somewhere which has some significance to Zamorakians...");
+}
+
+// ---------------------------------------------------------------- Canifis: Savant's call
+// "Once you enter the village of werewolves, Savant contacts you" (RS wiki); leaving and coming back
+// calls again until you've heard it (OSRS wiki). From the Canifis mapzone (music/move.rs2).
+[proc,wanted_canifis_entered]
+if (%wanted_main = ^wanted_hunt & %wanted_zammy_mage_hint = ^wanted_mage_told & inv_total(inv, wanted_crystal_ball) > 0) {
+    queue(wanted_canifis_call, 2, 0);
+}
+
+[queue,wanted_canifis_call]
+if (%wanted_main ! ^wanted_hunt | %wanted_zammy_mage_hint ! ^wanted_mage_told) return;
+if (~wanted_in_place(^wanted_m_canifis, coord) = false) return;
+@wanted_canifis_talk;
+
+[label,wanted_canifis_talk]
+~wanted_savant("<p,neutral>Okay <displayname>, I'm going to begin a low level scan for Solus now...");
+~chatplayer("<p,quiz>Any signs?");
+~wanted_savant("<p,confused>Hmmm... These readings are very strange...");
+~wanted_savant("<p,confused>There's... SOMETHING here... You know, I'm sure I've seen readings like this somewhere before...");
+~chatplayer("<p,quiz>What's wrong?");
+~wanted_savant("<p,neutral>Just give me a minute to cross reference the records in the Library, I KNOW that I've seen readings like this before...");
+~wanted_savant("<p,angry>GAH! This is infuriating! It's on the tip of my tongue...");
+~chatplayer("<p,neutral>Well, that Zamorakian mage mentioned that he had a strong magical aura, perhaps that is it?");
+~wanted_savant("<p,confused>No... no, it is something...");
+~wanted_savant("<p,shock>Oh my! I know what it is!");
+~chatplayer("<p,quiz>Savant...?");
+~wanted_savant("<p,neutral>Many years ago the Temple Knights were studying teleportation techniques, and found a strange dimension that was accessed when teleporting..");
+~wanted_savant("<p,neutral>We stopped the research as it was too dangerous to be practically useful, but our initial studies showed that we could use the entire dimension as a kind of scrying glass to see a precise point where we wished to teleport");
+~wanted_savant("<p,neutral>to, then teleport extremely slowly between two points.");
+~chatplayer("<p,confused>How is teleporting really slowly particularly useful?");
+~wanted_savant("<p,neutral>Well, basically, you are stretched so thinly between dimensions that you effectively become invisible!");
+~wanted_savant("<p,neutral>From your perspective you can see three places simultaneously, and can choose to move between all three at will!");
+~chatplayer("<p,confused>I'm... not sure I follow...");
+~wanted_savant("<p,neutral>Let me give you an example: If you were in Falador castle, and you wished to teleport to Varrock, then you could use this 'slow- teleport' technique to be in both places simultaneously,");
+~wanted_savant("<p,neutral>but invisible to anyone in either.");
+~wanted_savant("<p,neutral>You could also move freely between the two invisibly and then choose which place you wished to end up, simply by concentrating on the location you wanted to appear in.");
+~wanted_savant("<p,neutral>Needless to say, in our line of work this could come in very handy for sneaking around unobserved...");
+~chatplayer("<p,quiz>But you abandoned this research? Why?");
+~wanted_savant("<p,neutral>It is far too dangerous. In my example I only used two places, but in practice there is a third place involved. It is a strange, empty dimension that teleports seem to");
+~wanted_savant("<p,neutral>pass through.");
+~wanted_savant("<p,neutral>Frankly, the human mind isn't equipped to cope with processing so much information simultaneously, and the test subjects started to display... behavioural problems...");
+~chatplayer("<p,scared>Er... That doesn't sound good...");
+~wanted_savant("<p,neutral>No, it wasn't: Aggressiveness was highly increased, and there were numerous perceptual faults, hallucinations and the like.");
+~wanted_savant("<p,neutral>We ceased experimentation immediately, there are enough things in this world to haunt a Temple Knight, we did not see the need to create anymore.");
+~chatplayer("<p,quiz>But this signature you are finding is the same as this 'slow-teleport' experiment created?");
+~wanted_savant("<p,neutral>No... it is not exactly the same...");
+~wanted_savant("<p,neutral>But it is close enough to be a cause of concern.");
+~wanted_savant("<p,neutral>Either someone else has found this strange dimension and begun their own research, and reached the same conclusions that we did...");
+~wanted_savant("<p,scared>Or... We have had a security leak within the Temple Knights and abandoned research has been sold to our enemies!");
+~chatplayer("<p,neutral>Well, I can see how that might be a cause for concern, but right now our priority is Solus, right?");
+~wanted_savant("<p,neutral>Yes <displayname>, you're right. But if he is using this 'slow-teleport' technique, then that means it is going to be a lot harder to catch him!");
+~chatplayer("<p,quiz>Because he is invisible and in three separate places simultaneously?");
+~wanted_savant("<p,neutral>Exactly. Listen, I might be able to block his teleportation magics using your CommOrb, but I will need you to get close to him, and if we're unlucky then he will end up");
+~wanted_savant("<p,neutral>teleporting to the point away from you instead of appearing in front of you");
+~chatplayer("<p,neutral>Well, we have nothing else to try, right? What will I have to do?");
+~wanted_savant("<p,neutral>Use the 'Scan' function of your CommOrb, if he is in the vicinity it should knock him out of his 'in-between' state, and make him appear.");
+~chatplayer("<p,quiz>So I should try a scan here in Canifis?");
+%wanted_zammy_mage_hint = ^wanted_mage_canifis;
+~wanted_savant("<p,neutral>That would seem best... Savant over and out.");
+
+// ---------------------------------------------------------------- Scan
+[opheld1,wanted_crystal_ball]
+if (%wanted_cutscene = 1) return;
+p_stopaction;
+anim(wanted_crystal_ball_scan, 0);
+spotanim_pl(wanted_crystal_ball_scan_spotanim, 0, 0);
+sound_synth(wanted_scan, 1, 0);
+p_delay(3); // ours
+if (%wanted_main = ^wanted_hunt) {
+    def_int $target = ~wanted_target;
+    if ($target = ^wanted_m_canifis & %wanted_zammy_mage_hint = ^wanted_mage_told & ~wanted_in_place($target, coord) = true) {
+        @wanted_canifis_talk; // ours: the scan gives the call you walked away from
+    }
+    if ($target > 0 & $target ! ^wanted_m_essence & ~wanted_in_place($target, coord) = true) {
+        if ($target ! ^wanted_m_canifis | %wanted_zammy_mage_hint = ^wanted_mage_canifis) {
+            @wanted_found($target, ~wanted_position);
+        }
+    }
+}
+~wanted_scan_fail;
+
+// Solus appears next to you (ours: a free square 1-2 away) as wanted_solusN, seen only by you
+[proc,wanted_solus_appears](int $m)(npc_uid)
+def_coord $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+npc_add($at, ~wanted_solus_npc($m), 200);
+def_npc_uid $solus = npc_uid;
+spotanim_npc(wanted_teleport, 0, 0);
+npc_facesquare(coord);
+facesquare($at);
+p_delay(1);
+return($solus);
+
+// he teleports away (the RS wiki: a teleport of Ancient Magicks; the cache's wanted_teleport)
+[proc,wanted_solus_vanish](npc_uid $solus)
+if (npc_finduid($solus) = false) return;
+npc_anim(zaros_vertical_casting, 0);
+spotanim_npc(wanted_teleport, 0, 0);
+sound_synth(teleport_all, 1, 0);
+p_delay(2);
+if (npc_finduid($solus) = true) npc_del;
+
+// one place done, the next one set
+[proc,wanted_next](int $done, int $next)
+~wanted_mission_setdone($done, 1);
+~wanted_set_target($next);
+
+[label,wanted_found](int $m, int $pos)
+if_close;
+switch_int ($pos) {
+    case 1 : @wanted_found_canifis($m);
+    case 2 : @wanted_found_camelot($m);
+    case 3 : @wanted_found_champions($m);
+    case 4 : @wanted_found_flames($m);
+    case 5 : @wanted_found_woman($m);
+    case 6 : @wanted_found_knight($m);
+}
+~wanted_scan_fail;
+
+// 1st: Canifis
+[label,wanted_found_canifis](int $m)
+def_npc_uid $solus = ~wanted_solus_appears($m);
+~wanted_solus_says("<p,shock>What the...?");
+~wanted_solus_says("<p,laugh>Well well well! I was wondering when the White Knights would come looking for me!");
+~wanted_solus_says("<p,laugh>Well you'll have to be quicker than that, my friend!");
+if_close;
+~wanted_solus_vanish($solus);
+~wanted_savant("<p,angry>Argh!");
+~wanted_savant("<p,sad>He got away...");
+~chatplayer("<p,quiz>So what can we do now?");
+~wanted_savant("<p,neutral>Wait a second...");
+~wanted_savant("<p,neutral>There was another item in the teleport with him...");
+~chatplayer("<p,quiz>What does that mean?");
+~wanted_savant("<p,happy>Well, I might be able to retrieve it from the slow-teleport!");
+~wanted_savant("<p,neutral>It might give us a clue as to the second location Solus is in!");
+~chatplayer("<p,neutral>Well what are you waiting for? Try and get it!");
+def_int $next = ~wanted_pick_random;
+~wanted_next($m, $next);
+~wanted_clue($next);
+~wanted_savant("<p,neutral><displayname>, I want you to search for him, and use your Comm-Orb to scan for him if you think he is nearby!");
+~chatplayer("<p,neutral>Okay I'll head off immediately. Let's hope we're not too late.");
+
+// 2nd: Solus teleports you to Camelot (the OSRS wiki: Teleother Camelot)
+[label,wanted_found_camelot](int $m)
+def_npc_uid $solus = ~wanted_solus_appears($m);
+~wanted_solus_says("<p,shock>You again???");
+~wanted_solus_says("<p,angry>I warn you, if you interfere with my plans I will see you suffer!");
+~chatplayer("<p,angry>Solus! I am here by authority of the White Knights of Falador!");
+~wanted_solus_says("<p,laugh>Ha! Like I care!");
+~wanted_savant("<p,neutral>Okay, I am attempting to block his teleport...");
+~wanted_solus_says("<p,laugh>Oh, we have a little magical skill do we?");
+~wanted_solus_says("<p,angry>Then let's see how you deal with this!");
+if_close;
+if (npc_finduid($solus) = true) {
+    npc_anim(human_teleport_other_casting, 0);
+    spotanim_npc(teleport_other_casting, 92, 0);
+}
+sound_synth(tele_other_cast, 1, 0);
+p_delay(2);
+anim(human_teleport_other_impact, 0);
+spotanim_pl(teleport_other_impact, 92, 0);
+sound_synth(teleport_all, 1, 0);
+p_delay(2);
+if (npc_finduid($solus) = true) npc_del;
+~wanted_next($m, ^wanted_m_champions);
+p_telejump(map_findsquare(db_getfield(~get_spell_data(^camelot_teleport), magic_spell_table:tele_coord, 0), 0, 2, ^map_findsquare_lineofwalk));
+p_delay(1);
+~wanted_savant("<p,angry>Argh!");
+~wanted_savant("<p,sad>I should have known he would try something like that!");
+~wanted_savant("<p,sad>I'm sorry <displayname>, I should have stopped him using that spell...");
+~chatplayer("<p,neutral>That doesn't matter right now Savant, did you get a reading of where his teleport was coming from?");
+~wanted_savant("<p,neutral>The spell is still running, wait a moment... There!");
+~chatplayer("<p,quiz>Well?");
+~wanted_give(blue_cape, 1);
+~objbox(blue_cape, "Savant transfers the item to you.", 250, 0, divide(^objbox_height, 2));
+~wanted_savant("<p,neutral>It's a cape...");
+~wanted_savant("<p,confused>I'm not sure how much help in tracking him that is.");
+~chatplayer("<p,neutral>More than you might think Savant. This type of cape used to be called the Cape of Champions...");
+~wanted_savant("<p,neutral>Well I still don't know what help that is, but if you have an idea where he might be you should head there immediately!");
+
+// 3rd: the Champions' Guild - Smoke Barrage, the screen goes black
+[label,wanted_found_champions](int $m)
+def_npc_uid $solus = ~wanted_solus_appears($m);
+~wanted_solus_says("<p,angry>Well now, I am beginning to get sick of your constant interference!");
+~wanted_solus_says("<p,laugh>Or at least I would be if you weren't so laughably easy to escape from!");
+if_close;
+if (npc_finduid($solus) = true) npc_anim(zaros_vertical_casting, 0);
+sound_synth(smoke_barrage_impact, 1, 0);
+spotanim_pl(smoke_barrage_impact, 0, 0);
+p_delay(1);
+~fade_out;
+p_delay(2);
+if (npc_finduid($solus) = true) npc_del;
+~chatplayer("<p,scared>*cough* Savant? *cough* I can't... *cough*");
+~chatplayer("<p,scared>He threw some kind of smoke at me or something...");
+~wanted_savant("<p,neutral>Don't worry about it <displayname>, he may have escaped AGAIN, but I still have him on my tracking spell...");
+~fade_in;
+~wanted_savant("<p,happy>Okay, the smoke's cleared, and you don't seem to have been damaged by it!");
+~wanted_savant("<p,neutral>You're lucky I think, readings show it was highly poisonous!");
+~wanted_savant("<p,neutral>Let's see if I grabbed anything useful from him while he was teleporting...");
+def_int $next = ~wanted_pick_random;
+~wanted_next($m, $next);
+~wanted_clue($next);
+~chatplayer("<p,angry>Okay, I'm on my way. This Solus guy is really beginning to get on my nerves!");
+
+// 4th: the Flames of Zamorak; Savant shields you and takes you to the White Knights' Castle
+[label,wanted_found_flames](int $m)
+def_npc_uid $solus = ~wanted_solus_appears($m);
+~wanted_solus_says("<p,angry>This is getting very tiresome!");
+~wanted_solus_says("<p,angry>Little White Knight, I command powers beyond your imagination!");
+~wanted_solus_says("<p,angry>If you do not cease pursuing me, I will be forced to use them upon you!");
+~chatplayer("<p,angry>You can't threaten me old man...");
+~chatplayer("<p,angry>Dead or alive, you're coming with me.");
+~wanted_solus_says("<p,angry>This charade bores me!");
+~wanted_savant("<p,scared><displayname> I am reading a huge power surge from Solus, be very careful...");
+if_close;
+if (npc_finduid($solus) = true) npc_anim(human_casting, 0);
+p_delay(1);
+spotanim_pl(zamorak_flame, 0, 0);
+sound_synth(flames_of_zamorak, 1, 0);
+def_int $hp = stat(hitpoints);
+def_int $hit = min(calc($hp * 95 / 100), calc($hp - 1)); // ours
+if ($hit > 0) damage(uid, ^hitmark_damage, $hit);
+p_delay(1);
+~wanted_savant("<p,shock><displayname>!!!");
+~fade_out;
+p_delay(2);
+if (npc_finduid($solus) = true) npc_del;
+~wanted_next($m, ^wanted_m_dorgeshuun);
+p_telejump(map_findsquare(^wanted_castle_yard, 0, 2, ^map_findsquare_lineofwalk));
+p_delay(1);
+~fade_in;
+~chatplayer("<p,scared>Ow! What happened?");
+~wanted_savant("<p,neutral>I managed to shield you from most of his attack, and bring you back to Falador Castle, but you are lucky I was monitoring, that could have killed you!");
+~chatplayer("<p,confused>I don't understand though Savant, you said he could only be in a few places simultaneously...");
+~chatplayer("<p,angry>But he keeps getting away! And he keeps moving around!");
+~wanted_savant("<p,neutral>You're right <displayname>, I don't know how he is doing it...");
+~wanted_savant("<p,neutral>But he can't run forever, and every time he tries something against you, I can update your CommOrb to prevent it.");
+~chatplayer("<p,quiz>So he isn't going to shoot me like that again?");
+~wanted_savant("<p,sad>No, <displayname>. I am sorry that I let him hurt you like that...");
+~wanted_savant("<p,neutral>But keep chasing him, together we are going to bring him to justice!");
+~chatplayer("<p,angry>You're right about that, there's no way I'm letting him get away with treating me like that!");
+~chatplayer("<p,quiz>So did we get any clues to his real location from that last scan?");
+~wanted_savant("<p,happy>That's the spirit <displayname>! Just awaiting the data to come through...");
+~wanted_give(cave_goblin_bone_spear, 1);
+~objbox(cave_goblin_bone_spear, "Savant transfers the item to you.", 250, 0, divide(^objbox_height, 2));
+~wanted_savant("<p,quiz>It's... a very strange weapon?");
+~chatplayer("<p,neutral>I recognise that...");
+~chatplayer("<p,neutral>It's the type of spear used by the Dorgeshuun goblins.");
+~wanted_savant("<p,confused>The who? I've never heard of them before...");
+~wanted_savant("<p,neutral>Well, if you know who or what they are, you should go and see them, Solus must be nearby!");
+~wanted_savant("<p,neutral>You should probably take a minute to restock on supplies and heal up though <displayname>.");
+~wanted_savant("<p,neutral>I know we can find him and bring him to justice, but we don't want you dying while doing so!");
+~chatplayer("<p,neutral>Okay Savant, I'll heal up, then go looking for him amongst the Dorgeshuun.");
+
+// 5th: the Dorgeshuun mine - the "woman" (the cache's wanted_solus_fake_woman) and a sucker punch
+[label,wanted_found_woman](int $m)
+def_coord $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+npc_add($at, wanted_solus_fake_woman, 200);
+def_npc_uid $woman = npc_uid;
+npc_facesquare(coord);
+facesquare($at);
+p_delay(1);
+~chatnpc_specific("Woman", wanted_solus_fake_woman_base_config, "<p,happy>Oh thank you, you have freed me!");
+~chatplayer("<p,confused>W-what? Who are you?");
+~chatnpc_specific("Woman", wanted_solus_fake_woman_base_config, "<p,sad>Oh, I am but a poor maiden kidnapped by the evil Solus!");
+~chatnpc_specific("Woman", wanted_solus_fake_woman_base_config, "<p,happy>But you chased him so hard, that now I am free...");
+~wanted_savant("<p,scared><displayname>, I am getting some strange readings from this 'maiden'...");
+if (npc_finduid($woman) = true) npc_changetype(wanted_solus3, 200);
+~wanted_solus_says("<p,laugh>Muhahaha! Sucker!");
+if_close;
+if (npc_finduid($woman) = true) npc_anim(human_unarmedpunch, 0);
+sound_synth(unarmed_punch, 1, 0);
+p_delay(1);
+anim(human_stunned, 0);
+spotanim_pl(stunned, 92, 0);
+p_delay(2);
+~wanted_solus_vanish($woman);
+~wanted_savant("<p,sad>Sorry <displayname>, I should have spotted his little trick earlier...");
+~wanted_savant("<p,scared>Are you okay? That looked like a nasty sucker punch...");
+~chatplayer("<p,scared>Oooohhhh...");
+~chatplayer("<p,confused>Did anyone get the number of that wagon?");
+~wanted_savant("<p,neutral>Don't worry <displayname>, I am reconfiguring your CommOrb to compensate for any camouflage magics.");
+~chatplayer("<p,angry>Please tell me you have a reading on his actual location by now, this chasing him around the houses is becoming irritating...");
+~wanted_savant("<p,neutral>No, but every time he escapes you I am shutting down his teleport to a specific area.");
+~wanted_savant("<p,happy>I think we are on the final stretch now <displayname>!");
+~wanted_savant("<p,neutral>I will be able to shut his teleports down permanently in 2, perhaps 3, more scans...");
+~wanted_savant("<p,happy>Keep up the chase <displayname>! We nearly have him cornered!");
+~chatplayer("<p,quiz>Uh... Out of interest, what am I going to do with an insane super-powerful murderous mage when he's cornered?");
+~wanted_savant("<p,neutral>Leave that to me and the Temple Knights <displayname>.");
+~wanted_savant("<p,neutral>Just follow your orders and continue the chase, and his days are numbered.");
+~chatplayer("<p,quiz>Well okay then, where should I head now?");
+~wanted_savant("<p,neutral>Examining readings now...");
+~wanted_savant("<p,happy>Let's see what we managed to snag in the scan this time!");
+def_int $next = ~wanted_pick_random;
+~wanted_next($m, $next);
+~wanted_clue($next);
+~chatplayer("<p,angry>Okay, I'm on my way - and Solus had better watch out, I am up to here with his annoying tricks!");
+
+// 6th: "Say hello to my little friend!" - a level 32 Black Knight
+[label,wanted_found_knight](int $m)
+if (npc_find(coord, wanted_summoned_black_knight, 10, 0) = true) {
+    ~wanted_scan_fail;
+    return;
+}
+def_npc_uid $solus = ~wanted_solus_appears($m);
+~wanted_solus_says("<p,laugh>Well you ARE a persistent one, aren't you?");
+~chatplayer("<p,angry>I am here to take you in, Solus. You can forget your little tricks.");
+~wanted_solus_says("<p,laugh>Little tricks, you say? Well how about this one!");
+~chatnpc_specific("Solus", wanted_solus, "<p,laugh>Say hello to my little friend! And goodbye to me!");
+if_close;
+if (npc_finduid($solus) = true) npc_anim(wanted_solus_summon, 0);
+p_delay(1);
+def_coord $at = map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk);
+npc_add($at, wanted_summoned_black_knight, 500); // the RS wiki: gone after 5 minutes
+spotanim_npc(wanted_teleport, 0, 0);
+npc_say("Solus commands you die now!");
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+~wanted_solus_vanish($solus);
+queue(wanted_knight_gone, 500, 0);
+
+[ai_queue3,wanted_summoned_black_knight]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(wanted_knight_beaten, 0, 0);
+
+// the RS wiki: not killed within 5 minutes, "the quest will progress normally"
+[queue,wanted_knight_gone]
+@wanted_knight_beaten;
+
+[queue,wanted_knight_beaten]
+@wanted_knight_beaten;
+
+[label,wanted_knight_beaten]
+if (%wanted_main ! ^wanted_hunt | ~wanted_position ! 6) return;
+def_int $m = ~wanted_target;
+if ($m < ^wanted_m_first_random) return;
+~wanted_next($m, ^wanted_m_essence);
+~wanted_give(cert_blankrune_high, 20);
+~objbox(cert_blankrune_high, "Savant transfers the item to you.", 250, 0, divide(^objbox_height, 2));
+~wanted_savant("<p,neutral>Okay, we have our scan results...");
+~wanted_savant("<p,neutral>It's some kind of highly magically susceptible rock...");
+~wanted_savant("<p,quiz>Isn't that the same rock that you gave that Zamorakian mage in Varrock?");
+~chatplayer("<p,happy>Yeah it is, which means I know where he is, and how to get there!");
+~chatplayer("<p,neutral>It's a mine for Rune Essence, but there are only supposed to be a few people who know how to get there...");
+~wanted_savant("<p,angry>Let's worry about that later; Go get Solus!");
+
+// ---------------------------------------------------------------- 7th: the rune essence mine
+// After any teleport into the mine (skill_runecraft/essence_mine.rs2)
+[proc,wanted_essence_mine]
+if ((%wanted_main = ^wanted_hunt & ~wanted_target = ^wanted_m_essence) | %wanted_main = ^wanted_cornered) {
+    queue(wanted_cornered, 1, 0);
+}
+
+[queue,wanted_cornered]
+if (npc_find(coord, wanted_solus_attackable, 20, 0) = true) return;
+%wanted_main = ^wanted_cornered;
+def_coord $at = map_findsquare(coord, 3, 4, ^map_findsquare_lineofwalk);
+npc_add($at, wanted_solus4, 1000);
+def_npc_uid $solus = npc_uid;
+spotanim_npc(wanted_teleport, 0, 0);
+npc_facesquare(coord);
+facesquare($at);
+p_delay(1);
+~wanted_savant("<p,shock>There he is!");
+~wanted_savant("<p,neutral>Okay, I've blocked all exits from this place except for Temple Knight teleports...");
+~wanted_savant("<p,happy>I think we finally have him!");
+~wanted_solus_says("<p,angry>Argh! I am so sick of your interference!");
+~wanted_solus_says("<p,angry>I think it is time we end this once and for all!");
+~chatplayer("<p,angry>Agreed.");
+~chatplayer("<p,angry>In the name of the White Knights of Falador, and of the Temple Knights of Saradomin, I am placing you under arrest!");
+~wanted_solus_says("<p,laugh>Oh yes?");
+~wanted_solus_says("<p,laugh>You and what army?");
+if_close;
+// Savant's fifteen rangers (the RS wiki), around him (ours: 2-4 squares)
+def_int $i = 0;
+while ($i < 15) {
+    npc_add(map_findsquare($at, 2, 4, ^map_findsquare_lineofwalk), wanted_white_ranger, 100);
+    spotanim_npc(wanted_teleport, 0, 0);
+    npc_facesquare($at);
+    $i = calc($i + 1);
+}
+sound_synth(teleport_all, 1, 0);
+p_delay(2);
+~wanted_savant("<p,angry>This one, Solus!");
+~wanted_solus_says("<p,laugh>Ha!");
+~wanted_solus_says("<p,angry>You'll never take me alive!");
+if_close;
+if (npc_finduid($solus) = true) npc_anim(zaros_vertical_casting, 0);
+sound_synth(ice_magic_all, 1, 0);
+p_delay(1);
+npc_findall($at, wanted_white_ranger, 6, 0);
+while (npc_findnext = true) {
+    spotanim_npc(ice_barrage_impact, 0, 0);
+    npc_anim(human_death, 1);
+}
+p_delay(3);
+npc_findall($at, wanted_white_ranger, 6, 0);
+while (npc_findnext = true) {
+    npc_del;
+}
+~wanted_solus_says("<p,angry>You... You meddlesome... You meddlesome freak!");
+~wanted_savant("<p,scared><displayname>, Solus is very weakened, and we don't have any more men to spare!");
+~wanted_savant("<p,angry>Take him out now! This might be your only chance!");
+if_close;
+if (npc_finduid($solus) = true) {
+    npc_changetype(wanted_solus_attackable, 1000);
+    npc_say("YOU DIE NOW!");
+    %npc_aggressive_player = uid;
+    npc_setmode(opplayer2);
+}
+
+[ai_queue3,wanted_solus_attackable]
+gosub(npc_death);
+if (npc_findhero = ^true) queue(wanted_solus_beaten, 0, 0);
+
+[queue,wanted_solus_beaten]
+if (%wanted_main ! ^wanted_cornered) return;
+%wanted_main = ^wanted_defeated;
+~wanted_next(^wanted_m_essence, 0);
+// the OSRS wiki: the hat is lost if your pack is full at the end of the fight
+if (inv_freespace(inv) > 0) inv_add(inv, wanted_solus_trophy, 1);
+~send_quest_progress(questlist:wanted, %wanted_main, ^wanted_complete);
+~wanted_savant("<p,neutral>Now that Solus is defeated you should take his hat to Sir Amik to prove that you were responsible.");
+~wanted_savant("<p,neutral>Now let's head back...");
+~wanted_savant("<p,happy>...and may I say:");
+~wanted_savant("<p,happy>VERY well done, <displayname>. Very well done indeed.");
