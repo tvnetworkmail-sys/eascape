@@ -1,0 +1,196 @@
+// EASCape: Spirits of the Elid - the crevice west of Nardah and the genie under it.
+// Words: the OSRS wiki's Transcript:Genie (Spirits of the Elid) and quest transcript.
+// The crevice needs a rope (the OSRS wiki's Crevice: "Players need to attach a rope"; its walkthrough:
+// come back later and "you must bring an extra rope", so the rope stays tied there: used up) and a
+// light, "or else you'll be eaten alive by tiny bugs" (the swamp caves' biting insects,
+// area_lumbridge/lumbridge_swamp_caves.rs2). The cache's own elid_climb_rope seq and ropeclimb sound.
+
+[oploc1,elid_crevice_clickzone] ~elid_crevice_down;
+
+[oplocu,elid_crevice_clickzone]
+if (last_useitem ! rope) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~elid_crevice_down;
+
+[proc,elid_crevice_down]
+if (inv_total(inv, rope) = 0) {
+    mes("I'm not going down there without a rope."); // the crevice's own examine
+    return;
+}
+p_arrivedelay;
+inv_del(inv, rope, 1);
+mes("You tie the rope and climb down into the crevice."); // ours
+anim(elid_climb_rope, 0);
+sound_synth(ropeclimb, 1, 0);
+p_delay(1);
+p_telejump(map_findsquare(^elid_crevice_bottom, 0, 2, ^map_findsquare_lineofwalk));
+
+// the genie's cave: dark (the insects), and its music (the OSRS wiki: The Genie unlocks here)
+[mapzone,0_52_145]
+~swamp_cave_dark_refresh;
+@music_playbyregion(coord);
+[mapzoneexit,0_52_145] ~swamp_cave_dark_refresh;
+
+// ---------------------------------------------------------------- the genie
+[opnpc1,elid_genie]
+def_int $s = %elidquest;
+if ($s = ^elid_deal & %elid_traded = 0) @elid_genie_deal_waiting;
+if ($s = ^elid_deal & %elid_traded = 1 & ~elid_has(elid_statuette) = false) @elid_genie_lost;
+~chatnpc("<p,angry>I am a mighty and powerful genie. Why do you come here? Speak now or I'll have to think of something exceedingly nasty to do to you.");
+if ($s = ^elid_crevice) {
+    switch_int (~p_choice4("I'm after a statue that was thrown down here.", 1, "You're a genie, grant me a wish.", 2, "Why are you sitting here in the dark?", 3, "I'm just looking around.", 4)) {
+        case 1 : @elid_genie_statue;
+        case 2 : @elid_genie_wish;
+        case 3 : @elid_genie_dark;
+        case 4 : @elid_genie_looking;
+    }
+}
+switch_int (~p_choice3("You're a genie, grant me a wish.", 2, "Why are you sitting here in the dark?", 3, "I'm just looking around.", 4)) {
+    case 2 : @elid_genie_wish;
+    case 3 : @elid_genie_dark;
+    case 4 : @elid_genie_looking;
+}
+
+[label,elid_genie_wish]
+~chatplayer("<p,quiz>You're a genie, grant me a wish.");
+~chatnpc("<p,angry>Not all genies are goody two shoes who go round granting wishes. It's something that my pathetic brother does to make people like him, but that's not my style.");
+~chatnpc("<p,evillaugh>I like to think of myself more as an evil and scary sort of genie, who people talk about in hushed and fearful tones.");
+@elid_genie_wish_menu;
+
+[label,elid_genie_wish_menu]
+def_int $c;
+if (%elidquest = ^elid_crevice) {
+    $c = ~p_choice4("Well you seem quite scary.", 1, "I'm after a statue that was thrown down here.", 2, "Why are you sitting here in the dark.", 3, "Well I must be off now.", 4);
+} else {
+    $c = ~p_choice3("Well you seem quite scary.", 1, "Why are you sitting here in the dark.", 3, "Well I must be off now.", 4);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,neutral>Well you seem quite scary.");
+        ~chatnpc("<p,happy>Why thank you, I put a lot of effort into my terrifyingness.");
+        ~chatnpc("<p,angry>Wait! Did you say quite scary? I'll have you know I am VERY scary!");
+        ~chatplayer("<p,scared>Erm yes that's what I meant.");
+        @elid_genie_wish_menu;
+    case 2 : @elid_genie_statue;
+    case 3 : @elid_genie_dark;
+    case 4 : @elid_genie_off;
+}
+
+[label,elid_genie_off]
+~chatplayer("<p,neutral>Well I must be off now.");
+~chatnpc("<p,evillaugh>Yes, run. Ruuuun in fear of.. The crevice genie of Nardah! Muhahaha!");
+
+[label,elid_genie_dark]
+~chatplayer("<p,quiz>Why are you sitting here in the dark?");
+~chatnpc("<p,neutral>Two reasons really. Firstly, I can see in the dark, so light or dark makes little difference to me.");
+~chatnpc("<p,happy>Lastly, I gather it's normal for powerful terrifying creatures to lurk around in dark caves, so I found this one to lurk in myself, nice isn't it?");
+@elid_genie_dark_menu;
+
+[label,elid_genie_dark_menu]
+def_int $c;
+if (%elidquest = ^elid_crevice) {
+    $c = ~p_choice4("Very pleasant, the snakes are a nice touch.", 1, "I'm after a statue that was thrown down here.", 2, "You're a genie, grant me a wish.", 3, "Well I must be off now.", 4);
+} else {
+    $c = ~p_choice3("Very pleasant, the snakes are a nice touch.", 1, "You're a genie, grant me a wish.", 3, "Well I must be off now.", 4);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,neutral>Very pleasant, the snakes are a nice touch.");
+        ~chatnpc("<p,angry>Why do I get the sense that I'm not being taken seriously here? Please try to remember I am very dangerous and not to be trifled with.");
+        @elid_genie_dark_menu;
+    case 2 : @elid_genie_statue;
+    case 3 : @elid_genie_wish;
+    case 4 : @elid_genie_off;
+}
+
+[label,elid_genie_looking]
+~chatplayer("<p,neutral>I'm just looking around.");
+~chatnpc("<p,neutral>I don't know about that. I can't have just anybody traipsing in here. I have a reputation to keep you see.");
+~chatnpc("<p,evillaugh>Actually I'll tell you what, you can hang around here for a bit, but be sure to spread the word about what a terrifying experience you had when you ran into... The crevice genie of Nardah!");
+~chatplayer("<p,neutral>...Ok I think I can manage that.");
+
+// the statue, and his price
+[label,elid_genie_statue]
+~chatplayer("<p,neutral>I'm after a statue that was thrown down here.");
+~chatnpc("<p,happy>Ahh yes someone did drop a statue on my head recently. Very nice workmanship, looks quite old and valuable too. I'm surprised someone threw it away!");
+~chatnpc("<p,happy>I have accepted it as a gift as they clearly respect my terrible powers. They seek to keep me at bay by giving me valuables.");
+if (~p_choice2("Maybe I can make a deal for it?", 1, "I'm not sure they know you're down here.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'm not sure they know you're down here.");
+    ~chatnpc("<p,angry>Silence cur! They fear and respect me and that's an end to it.");
+}
+~chatplayer("<p,quiz>Maybe I can make a deal for the statuette?");
+~chatnpc("<p,neutral>Hmm a deal eh? I think we can come to some sort of arrangement. I'll give you the valuable statuette in return for, let me think ....");
+~chatnpc("<p,evillaugh>How about I give you the statue in exchange for the sole of the mayor of Nardah?");
+@elid_genie_deal_menu;
+
+[label,elid_genie_deal_menu]
+switch_int (~p_choice4("Isn't that a little harsh?", 1, "How am I meant to remove someone's soul?", 2, "Ok I agree to the deal.", 3, "No way am I agreeing to that.", 4)) {
+    case 1 :
+        ~chatplayer("<p,shock>Isn't that a little harsh?");
+        ~chatnpc("<p,neutral>I wouldn't have said so. It seems a perfectly reasonable thing to request to me. I can think of many things a lot worse I could have asked for.");
+        @elid_genie_deal_menu;
+    case 2 :
+        ~elid_genie_soul;
+        @elid_genie_deal_menu;
+    case 3 :
+        ~chatplayer("<p,neutral>Ok I agree to the deal.");
+        if (%elidquest = ^elid_crevice) ~elid_set(^elid_deal);
+    case 4 :
+        ~chatplayer("<p,angry>No way am I agreeing to that.");
+        ~chatnpc("<p,neutral>Ah well it's your loss. No sole, then no statuette.");
+}
+
+[proc,elid_genie_soul]
+~chatplayer("<p,quiz>How am I meant to remove someone's soul?");
+~chatnpc("<p,happy>Oh that's easy. In my experience soles are very easy to remove with just a knife.");
+
+// waiting for the sole
+[label,elid_genie_deal_waiting]
+~chatnpc("<p,quiz>Do you have the sole of Awusah, so that we can make our trade?");
+if (inv_total(inv, elid_sole) > 0) {
+    ~chatplayer("<p,happy>Yes I have it here.");
+    ~chatnpc("<p,happy>Ah excellent, here's the statuette then.");
+    inv_del(inv, elid_sole, 1);
+    ~elid_give(elid_statuette, 1);
+    %elid_traded = 1;
+    ~objbox(elid_statuette, "You trade the sole for the statuette.", 250, 0, ^objbox_height);
+    ~chatplayer("<p,quiz>So um, why do you need part of Awusah's footwear anyway? I hope you're not going to do some nasty magic on his feet or something.");
+    ~chatnpc("<p,neutral>I hadn't thought of that. I just read that a lot of the most powerful beings are collecting soles these days. I haven't really got many yet though. You provided me with an opportunity to expand my collection.");
+    ~send_quest_progress(questlist:elid, %elidquest, ^elid_complete);
+    return;
+}
+switch_int (~p_choice3("How am I meant to remove someone's soul?", 1, "I'm still working on it.", 2, "No, it's not an easy thing to get.", 3)) {
+    case 1 : ~elid_genie_soul;
+    case 2 :
+        ~chatplayer("<p,neutral>I'm still working on it.");
+        ~chatnpc("<p,happy>Well no rush, I quite like the statuette too.");
+    case 3 :
+        ~chatplayer("<p,sad>No, it's not an easy thing to get.");
+        ~chatnpc("<p,laugh>Haha, even a pathetic human should be able to manage to get another human's sole.");
+}
+
+// traded, then lost it
+[label,elid_genie_lost]
+~chatplayer("<p,sad>I have lost my statuette.");
+~chatnpc("<p,happy>Well fortunately for you, I am a mighty and powerful genie and managed to reacquire it. I will give it to you for another sole.");
+if (inv_total(inv, elid_sole) > 0) {
+    ~chatplayer("<p,happy>Yes I have one here.");
+    ~chatnpc("<p,happy>Ah excellent here's the statuette then.");
+    inv_del(inv, elid_sole, 1);
+    ~elid_give(elid_statuette, 1);
+    ~objbox(elid_statuette, "You trade the sole for the statuette.", 250, 0, ^objbox_height);
+    ~chatnpc("<p,happy>It's good doing business with you again.");
+    return;
+}
+~chatplayer("<p,neutral>I will go and get one then.");
+~chatnpc("<p,happy>Great! Another one for my collection.");
+
+// his lamp on the table (the OSRS wiki's Transcript:Genie; the telegrab is in telegrab.rs2)
+[opobj3,elid_genilamp]
+if (npc_find(coord, elid_genie, 10, 0) = true) {
+    ~chatnpc("<p,angry>Hey get your hands off my house.");
+    return;
+}
+mes("You can't take that."); // ours: with no genie to stop you

@@ -1,0 +1,56 @@
+// Spirits of the Elid (5 December 2005). Everything lives in the 377 cache's own elid_main varp
+// (varp 616, now perm) and its varbits:
+//   elidquest (bits 0-6)          the quest's stage
+//   elid_shiratti (7)             (unused: no source says what it holds)
+//   elid_blackgolem (11)          1 once you have beaten the black golem (north-east door)
+//   elid_whitegolem (12)          1 once you have beaten the white golem (south door)
+//   elid_greygolem (13)           1 once you have beaten the grey golem (east door)
+//   elid_miningchannel (14)       1 once the grey golem's channel is clear (its multilocs)
+//   elid_thievingchannel (15)     1 once the white golem's channel is clear
+//   elid_rangingchannel (16)      1 once the black golem's target is shot (multilocs, multinpc)
+// The stage values are the cache's own: the fountain's and the plinth's multilocs switch on
+// 0, 10, 20, 25, 27, 30, 35, 40, 50, 55 and 60 (60 the fountain flowing and the statuette back).
+// What each value between means is ours, in the order of the RS wiki's journal transcript.
+^elid_not_started = 0
+^elid_started = 10           // Awusah asked you to look around
+^elid_ballad = 20            // Ghaslor gave you the ballad of Jareesh
+^elid_read_ballad = 25       // you read it: the cave at the source of the river
+^elid_doors = 27             // the ancestral key and the robes opened the cave's doors
+^elid_channels = 30          // the three golems beaten and the three channels clear
+^elid_spoke_spirits = 35     // you have spoken to the spirits
+^elid_statuette = 40         // the spirits told you of the statuette
+^elid_crevice = 50           // Awusah told you of the crevice
+^elid_deal = 55              // the genie wants the sole of Awusah
+^elid_complete = 60
+^elid_questpoints = 2
+
+// where the people stand (the 377 maps' own spawns)
+^elid_awusah = 0_53_45_50_32          // 3442,2912, the mayor's house
+^elid_ghaslor = 0_53_45_49_53         // 3441,2933
+^elid_shiratti_at = 0_53_45_32_49     // 3424,2929, the shrine
+^elid_zahur = 0_53_45_32_26           // 3424,2906
+^elid_rokuh = 0_53_45_38_34           // 3430,2914, the market
+^elid_genie = 0_52_145_43_40          // 3371,9320
+^elid_spirits = 0_52_149_40_50        // 3368,9586
+
+// the mayor's house (its walls in the 377 map): cut his shoes in here and he sees you
+^elid_house_sw = 0_53_45_46_29        // 3438,2909
+^elid_house_ne = 0_53_45_58_41        // 3450,2921
+
+// the waterfall at the river's source and the cave behind it (the 377 maps' locs); where you
+// land is ours: the nearest open square to the root and to the cave exit
+^elid_root_top = 0_52_48_42_59        // 3370,3131, at the foot of the root (desert_water_cave_root 3369,3132)
+^elid_cave_in = 0_52_149_21_1         // 3349,9537, by the cave exit (elid_underground_exit 3347,9533)
+^elid_corridor = 0_52_149_41_10       // 3369,9546, between the three golem doors
+^elid_lake = 0_52_149_38_47           // 3366,9583, by the spirits
+
+// the crevice west of Nardah and the genie's cave under it (eascape_links' rows, Void's)
+^elid_crevice_top = 0_52_45_45_25     // 3373,2905
+^elid_crevice_bottom = 0_52_145_45_25 // 3373,9305, the rope
+
+// the doors (the 377 map): which side of each is the far side
+^elid_robe_door_z = 9545              // the double doors at 3353-3354,9544: the cave beyond is north
+^elid_lake_door_z = 9559              // the double doors at 3354-3355,9558: the lake beyond is north
+^elid_white_room_z = 9542             // the white golem's door 3365,9542: its room is south
+^elid_grey_room_x = 3374              // the grey golem's door 3374,9547: its room is east
+^elid_black_room_x = 3372             // the black golem's door 3372,9556: its room is east

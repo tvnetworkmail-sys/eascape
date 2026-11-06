@@ -132,6 +132,10 @@ if (npc_category = wg_animated_armour) {
 if (npc_type = deal_evil_spirit) {
     return(~deal_spirit_attackable);
 }
+// EASCape: Spirits of the Elid's target, shot with ranged or magic and 37 Ranged (quest_elid/elid_cave.rs2)
+if (npc_type = elid_ranging_target_multinpc) {
+    return(~elid_target_attackable(false));
+}
 // TODO 377: re-enable these!!
 // https://web.archive.org/web/20060828222012/http://www.trillionareguild.com/runescape/dragon.php at the very end of the guide
 // it says "You have no reason to do that.", so its prob this osrs message.
@@ -229,6 +233,10 @@ return (false);
 // EASCape: Waterbirth's door-supports can't be knocked down from the front (areas/area_waterbirth)
 if (~wb_door_support = true) {
     return(~wb_support_attackable);
+}
+// EASCape: Spirits of the Elid's target (quest_elid/elid_cave.rs2)
+if (npc_type = elid_ranging_target_multinpc) {
+    return(~elid_target_attackable(true));
 }
 if (npc_type = wormbrain & (~quest_dragon_getting_map_parts = false | inv_total(inv, mappart2) > 0 | %dragon_goblin ! ^quest_dragon_knows_about_goblin)) {
     mes("The goblin is already in prison. You have no reason to attack him.");

@@ -1,0 +1,125 @@
+// EASCape: Spirits of the Elid (5 December 2005) - the journal, the reward and the shared pieces.
+// Words: the OSRS wiki's quest transcript and NPC transcripts (the RS wiki's where the OSRS one is
+// missing a part); the RS wiki's update page for what came with it. Things: the 377 cache's own
+// elid_main varp and varbits, elid_ npcs, objs, locs, seqs, spotanim and SE_ sounds. The reward
+// (both wikis): 2 quest points, 8,000 Prayer, 1,000 Thieving and 1,000 Magic experience, the
+// fountain and the shrine. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- the journal
+// The RS wiki's Transcript:Spirits of the Elid/Journal has the lines as they read once done (it is
+// marked incomplete: "journal during the quest missing"); the lines for what to do next are ours,
+// from the OSRS and RS wikis' walkthroughs.
+[if_button,questlist:elid]
+def_int $s = %elidquest;
+if ($s = ^elid_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Awusah the Mayor@dbl@ in|@dre@Nardah@dbl@, south-east of Pollnivneach.||@dbl@To complete this quest I will need:|";
+    $req = append($req, ~elid_req_line(magic, 33));
+    $req = append($req, ~elid_req_line(ranged, 37));
+    $req = append($req, ~elid_req_line(mining, 37));
+    $req = append($req, ~elid_req_line(thieving, 37));
+    $req = append($req, "@dbl@and to be able to defeat three level 75 golems.");
+    ~quest_journal("Spirits of the Elid", $req);
+    return;
+}
+def_string $t = "@str@I spoke to Awusah the mayor of Nardah.|";
+if ($s = ^elid_started) {
+    $t = append($t, "@dbl@Awusah asked me to look around @dre@Nardah@dbl@ for clues as to why the|@dbl@town's water source had dried up.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@Awusah asked me to look around Nardah for clues as to why the|@str@town's water source had dried up.|");
+if ($s = ^elid_ballad) {
+    $t = append($t, "@dbl@@dre@Ghaslor@dbl@ the village elder gave me an item called the @dre@Ballad of|@dre@Jareesh@dbl@ that seems to contain lots of clues.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@Ghaslor the village elder gave me an item called the Ballad of|@str@Jareesh that seems to contain lots of clues.|");
+if ($s = ^elid_read_ballad) {
+    $t = append($t, "@dbl@I worked out that I needed to enter a @dre@cave@dbl@ at the source of the|@dre@river Elid@dbl@. The ballad speaks of @dre@robes@dbl@ and an @dre@ancestral key@dbl@; the shrine in|@dbl@Nardah might have them.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I worked out that I needed to enter a cave at the source of the|@str@river Elid.|");
+if ($s = ^elid_doors) {
+    $t = append($t, "@dbl@I used an @dre@ancestral key@dbl@ and wore some @dre@robes of Elidinis@dbl@ that I had|@dbl@found in the shrine in Nardah to get through some double doors in|@dbl@the cave.|");
+    $t = append($t, ~elid_journal_golems);
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I used an ancestral key and wore some robes of Elidinis that I had|@str@found in the shrine in Nardah to get through some double doors in|@str@the cave.|");
+if ($s = ^elid_channels) {
+    $t = append($t, "@dbl@I killed 3 golems and unblocked three water channels in various|@dbl@ways. This allowed me to get through another pair of double doors,|@dbl@to the @dre@Spirits of the Elid@dbl@.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I killed 3 golems and unblocked three water channels in various|@str@ways. This allowed me to get through another pair of double doors.|");
+if ($s = ^elid_spoke_spirits) {
+    $t = append($t, "@dbl@I have spoken to the @dre@Spirits of the Elid@dbl@. I should ask them what it|@dbl@would take to give Nardah its water back.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I have spoken to the Spirits of the Elid.|");
+if ($s = ^elid_statuette) {
+    $t = append($t, "@dbl@The spirits told me the townspeople of Nardah threw away a statue|@dbl@of Elidinis. As a result they were cursed to have no water. As long|@dbl@as they did not have the statue the curse will stand. I should tell|@dre@Awusah@dbl@.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@The spirits told me the townspeople of Nardah threw away a statue|@str@of Elidinis. As a result they were cursed to have no water. As long|@str@as they did not have the statue the curse will stand.|");
+if ($s = ^elid_crevice) {
+    $t = append($t, "@dbl@I spoke to Awusah again. He told me the statuette was thrown down a|@dre@crevice@dbl@ to the west of Nardah.");
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I spoke to Awusah again. He told me the statuette was thrown down a|@str@crevice to the west of Nardah.|");
+if ($s = ^elid_deal) {
+    if (%elid_traded = 0) {
+        $t = append($t, "@dbl@I met a @dre@genie@dbl@ down the crevice. He told me that he had the statuette|@dbl@which he would give me in exchange for the @dre@sole of Awusah@dbl@!");
+    } else {
+        $t = append($t, "@str@I met a genie down the crevice. He told me that he had the statuette|@str@which he would give me in exchange for the sole of Awusah!|");
+        $t = append($t, "@dbl@I have cut the soles from Awusah's shoes. Fortunately the genie|@dbl@wanted Awusah's soles and not Awusah's soul. We have completed the|@dbl@trade. I should put the @dre@statuette@dbl@ back in the @dre@shrine@dbl@ in Nardah.");
+    }
+    ~quest_journal("Spirits of the Elid", $t);
+    return;
+}
+$t = append($t, "@str@I met a genie down the crevice. He told me that he had the statuette|@str@which he would give me in exchange for the sole of Awusah!|");
+$t = append($t, "@str@I have cut the soles from Awusah's shoes. Fortunately the genie|@str@wanted Awusah's soles and not Awusah's soul. We have completed the|@str@trade.|");
+$t = append($t, "@str@I have returned the statuette to the shrine of Elidinis. The curse is|@str@lifted and the town has its water supply back.||@red@QUEST COMPLETE!");
+~quest_journal("Spirits of the Elid", $t);
+
+[proc,elid_req_line](stat $stat, int $level)(string)
+def_string $line = "Level <tostring($level)> <~stat_name($stat)>";
+if (stat_base($stat) >= $level) return("@str@<$line>|");
+return("@dbl@<$line>|");
+
+// ours: the doors still to pass, while the golems are being beaten
+[proc,elid_journal_golems]()(string)
+def_int $done = calc(%elid_miningchannel + %elid_thievingchannel + %elid_rangingchannel);
+return("|@dbl@Three @dre@golems@dbl@ guard three doors beyond. <tostring($done)> of the 3 @dre@water channels@dbl@|@dbl@behind them run again.");
+
+[proc,elid_set](int $stage)
+%elidquest = $stage;
+~send_quest_progress(questlist:elid, %elidquest, ^elid_complete);
+
+// into your pack, or on the ground under you when it's full (ours)
+[proc,elid_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+[proc,elid_has](obj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(bank, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the reward
+[proc,elid_complete]
+~elid_set(^elid_complete);
+// the RS wiki's statuette page: any statuettes in your bank vanish as the quest ends
+if (inv_total(inv, elid_statuette) > 0) inv_del(inv, elid_statuette, inv_total(inv, elid_statuette));
+if (inv_total(bank, elid_statuette) > 0) inv_del(bank, elid_statuette, inv_total(bank, elid_statuette));
+stat_advance(prayer, 80000);
+stat_advance(thieving, 10000);
+stat_advance(magic, 10000);
+session_log(^log_adventure, "Quest complete: Spirits of the Elid");
+~send_quest_complete(questlist:elid, elid_statuette, 250, ^elid_questpoints, "You have completed the Spirits of the Elid Quest!", "8,000 Prayer XP|1,000 Thieving XP|1,000 Magic XP|Access to Nardah's fountain|and the shrine of Elidinis");

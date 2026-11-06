@@ -1,8 +1,8 @@
-// EASCape: Farming step 2d: the Tool Leprechauns. After Void (ToolLeprechaun.kt: the talk,
-// "Exchange" and notes for produce used on him; FarmingEquipmentStore.kt: what's stored, the
-// limits, the messages). The store is the 2006 "Amazing Farming Equipment Store" (tool_leprechaun
-// + tool_leprechaun_side); the counts are the cache's own farming_tools varbits, which its text
-// reads. Our choices: magic secateurs are remembered with a varp of ours; the fullest watering can
+// EASCape: Farming step 2d: the Tool Leprechauns. After Void (ToolLeprechaun.kt: the talk and
+// "Exchange"; its notes for produce used on him came in 2013 and are left out, the OSRS wiki;
+// FarmingEquipmentStore.kt: what's stored, the limits, the messages). The store is the 2006
+// "Amazing Farming Equipment Store" (tool_leprechaun + tool_leprechaun_side); the counts are the
+// cache's own farming_tools varbits, which its text reads. Our choices: magic secateurs are remembered with a varp of ours; the fullest watering can
 // is the one stored.
 
 [opnpc1,farming_tools_leprechaun]
@@ -19,8 +19,10 @@ switch_int (~p_choice4("Yes please.", 1, "What can you store?", 2, "What do you 
     case 2 :
         ~chatplayer("<p,quiz>What can you store?");
         ~chatnpc("<p,happy>We'll hold onto yer rake, yer seed dibber, yer spade, yer secateurs, yer waterin' can and yer trowel - but mind it's not one of them fancy trowels only archaeologists use!");
-        ~chatnpc("<p,bored>We'll take a few buckets off yer hands too, and even yer compost, supercompost an' ultracompost! Also plant cure vials.");
-        ~chatnpc("<p,happy>Aside from that, if ye hands me yer farming produce, I can mebbe change it into banknotes for ye.");
+        // EASCape: Nardah, Tool Sheds & Spirits of the Elid (5 December 2005): buckets, compost and
+        // supercompost only (2009scape's ToolLeprechaunDialogue; ultracompost, plant cure and noting
+        // came later: the OSRS wiki has noting from 23 May 2013)
+        ~chatnpc("<p,bored>We'll take a few buckets off yer hands too, and even yer compost and supercompost! There's room in our shed for plenty of compost, so bring it on.");
         ~chatnpc("<p,quiz>So... do ye want to be using the store?");
         ~farming_leprechaun_menu;
     case 3 :
@@ -32,21 +34,6 @@ switch_int (~p_choice4("Yes please.", 1, "What can you store?", 2, "What do you 
         ~chatplayer("<p,neutral>No thanks, I'll keep hold of my stuff.");
         ~chatnpc("<p,laugh>Ye must be dafter than ye look if ye likes luggin' yer tools everywhere ye goes!");
 }
-
-// produce used on him: banknotes (Void: only things that go in a compost bin)
-[opnpcu,farming_tools_leprechaun]
-def_obj $item = last_useitem;
-if (oc_cert($item) = $item) {
-    ~chatnpc("<p,neutral>Nay, there's no such thing as a banknote for that.");
-    return;
-}
-if (enum(obj, int, farming_compostable, $item) = 0) {
-    ~chatnpc("<p,neutral>Nay, I've got no banknotes to exchange for that item.");
-    return;
-}
-def_int $n = inv_total(inv, $item);
-inv_moveitem_cert(inv, inv, $item, $n);
-~mesbox("The leprechaun exchanges your items for banknotes.");
 
 // ---------------------------------------------------------------- the store
 [proc,farming_store_open]

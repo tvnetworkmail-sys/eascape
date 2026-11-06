@@ -337,6 +337,9 @@ if (%deal_quest >= ^deal_complete) { // EASCape: Rum Deal (quest_deal)
 if (%makinghistory_prog >= ^mh_complete) { // EASCape: Making History (quest_makinghistory)
     $questpoints = add($questpoints, ^mh_questpoints);
 }
+if (%elidquest >= ^elid_complete) { // EASCape: Spirits of the Elid (quest_elid)
+    $questpoints = add($questpoints, ^elid_questpoints);
+}
 if (%ratcatch_var >= ^rc_complete) { // EASCape: Rat Catchers (quest_ratcatchers)
     $questpoints = add($questpoints, ^rc_questpoints);
 }
@@ -462,6 +465,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:deal, %deal_quest, ^deal_complete); // EASCape: Rum Deal (quest_deal)
 ~send_quest_progress_colour(questlist:makinghistory, %makinghistory_prog, ^mh_complete); // EASCape: Making History (quest_makinghistory)
 ~send_quest_progress_colour(questlist:ratcatch, %ratcatch_var, ^rc_complete); // EASCape: Rat Catchers (quest_ratcatchers)
+~send_quest_progress_colour(questlist:elid, %elidquest, ^elid_complete); // EASCape: Spirits of the Elid (quest_elid)
 ~send_quest_progress_colour(questlist:dwarfrock, %dwarfrock_quest, ^bar_complete);
 ~send_quest_progress_colour(questlist:mm, %mm_main, ^mm_complete);
 ~send_quest_progress_colour(questlist:mortton, %morttonquest, ^mortton_quest_complete);

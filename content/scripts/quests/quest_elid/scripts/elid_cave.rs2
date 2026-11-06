@@ -1,0 +1,456 @@
+// EASCape: Spirits of the Elid - the cave at the source of the River Elid: the root, the doors,
+// the three golems, the three water channels and the spirits.
+// Words: the OSRS wiki's quest transcript; the golems' stats: the OSRS wiki (all.npc). The cache's
+// own elid_rope_lasso, elid_rope_climb_long seqs, elid_rope_hold_spotanim, clay_golem seqs and the
+// SE_lassoo, ropeclimb, SE_waterdoor_unlock, SE_remove_rock, SE_waterpour, machinery and golem
+// sounds. Ours: the timings, the landing squares and the messages marked "ours".
+
+// ---------------------------------------------------------------- the waterfall
+// A rope on the root takes you in (the OSRS and RS wikis: "use your rope on the root"); the OSRS
+// wiki's Rope: 1 for the whole quest, so this one is not used up (ours, from that). The OSRS
+// wiki's River Elid cave: "Players must have started the quest".
+[oplocu,desert_water_cave_root]
+if (last_useitem ! rope) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%elidquest < ^elid_started) {
+    ~displaymessage(^dm_default);
+    return;
+}
+p_arrivedelay;
+anim(elid_rope_lasso, 0);
+sound_synth(SE_lassoo, 1, 0);
+p_delay(2);
+anim(elid_rope_climb_long, 0);
+spotanim_pl(elid_rope_hold_spotanim, 0, 0);
+sound_synth(ropeclimb, 1, 0);
+p_delay(2);
+p_telejump(map_findsquare(^elid_cave_in, 0, 3, ^map_findsquare_lineofwalk));
+
+// the cave's way out, back to the top of the waterfall; the golems' doors guarded again (ours:
+// "the Golem disappears, but will be back to defend his door")
+[oploc1,elid_underground_exit]
+p_arrivedelay;
+%elid_blackgolem = 0;
+%elid_whitegolem = 0;
+%elid_greygolem = 0;
+p_telejump(map_findsquare(^elid_root_top, 0, 3, ^map_findsquare_lineofwalk));
+
+// ---------------------------------------------------------------- the ancestral doors
+// The key in your pack and both robes on (the OSRS wiki); during the quest the ballad too (the
+// OSRS wiki: "or do not have the ballad"; after it: "players may use the robes to continue to
+// access the dungeon"). From inside they just open (ours).
+[oploc1,elid_underground_robe_door] ~elid_robe_door;
+[oploc1,elid_underground_robe_door_mirror] ~elid_robe_door;
+
+[proc,elid_robe_door]
+if (coordz(coord) >= ^elid_robe_door_z) {
+    ~eascape_door_walk;
+    return;
+}
+if (inv_total(inv, elid_key) = 0) {
+    mes("The doors are locked."); // ours
+    return;
+}
+if (inv_total(worn, elid_robetop) = 0 | inv_total(worn, elid_robebottoms) = 0 | (%elidquest < ^elid_complete & (%elidquest < ^elid_ballad | inv_total(inv, elid_ballad) = 0))) {
+    ~mesbox("The ancestral key seems to fit the lock perfectly, but for some reason the doors still won't open.");
+    ~chatplayer("<p,confused>That's odd. I wonder what I can have forgotten.");
+    return;
+}
+mes("You use your ancestral key to unlock the doors.");
+sound_synth(SE_waterdoor_unlock, 1, 0);
+if (%elidquest >= ^elid_ballad & %elidquest < ^elid_doors) ~elid_set(^elid_doors);
+~eascape_door_walk;
+
+// the doors to the lake open once the three channels run (the RS wiki); ours: the message
+[oploc1,elid_underground_lake_door] ~elid_lake_door;
+[oploc1,elid_underground_lake_door_mirror] ~elid_lake_door;
+
+[proc,elid_lake_door]
+if (coordz(coord) >= ^elid_lake_door_z | ~elid_channels_done = true) {
+    ~eascape_door_walk;
+    return;
+}
+mes("The doors won't open."); // ours
+
+[proc,elid_channels_done]()(boolean)
+if (%elid_miningchannel = 1 & %elid_thievingchannel = 1 & %elid_rangingchannel = 1) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the golems
+// Opening a door brings its golem out in front of you (the OSRS wiki: "appears in front of the
+// player, exclaiming You may not pass!"; another one if you try again before it has finished dying).
+// Beaten, the door opens (the cache's elid_ golem varbits). Out of its room you just leave.
+[oploc1,elid_whitegolem_door]
+if (coordz(coord) <= ^elid_white_room_z | %elid_whitegolem = 1) {
+    ~eascape_door_walk;
+    return;
+}
+~elid_golem_appear(elid_golem_white);
+
+[oploc1,elid_greygolem_door]
+if (coordx(coord) >= ^elid_grey_room_x | %elid_greygolem = 1) {
+    ~eascape_door_walk;
+    return;
+}
+~elid_golem_appear(elid_golem_grey);
+
+[oploc1,elid_blackgolem_door]
+if (coordx(coord) >= ^elid_black_room_x | %elid_blackgolem = 1) {
+    ~eascape_door_walk;
+    return;
+}
+~elid_golem_appear(elid_golem_black);
+
+[proc,elid_golem_appear](npc $golem)
+if (npc_find(coord, $golem, 6, 0) = true) {
+    if (%npc_aggressive_player = uid & %npc_attacking_uid = uid) return;
+}
+npc_add(map_findsquare(coord, 1, 1, ^map_findsquare_lineofwalk), $golem, 500); // ours: 5 minutes
+npc_say("You may not pass!");
+npc_facesquare(coord);
+%npc_aggressive_player = uid;
+%npc_attacking_uid = uid;
+npc_setmode(opplayer2);
+
+[ai_queue3,elid_golem_black] ~elid_golem_death(1);
+[ai_queue3,elid_golem_white] ~elid_golem_death(2);
+[ai_queue3,elid_golem_grey] ~elid_golem_death(3);
+
+[proc,elid_golem_death](int $which)
+gosub(npc_death);
+if (finduid(%npc_aggressive_player) = true) queue*(elid_golem_beaten, 0)($which);
+
+[queue,elid_golem_beaten](int $which)
+switch_int ($which) {
+    case 1 : %elid_blackgolem = 1;
+    case 2 : %elid_whitegolem = 1;
+    case 3 : %elid_greygolem = 1;
+}
+mes("The Golem disappears, but will be back to defend his door.");
+
+// gone when the one it came out for is
+[ai_timer,elid_golem_black] ~elid_golem_check;
+[ai_timer,elid_golem_white] ~elid_golem_check;
+[ai_timer,elid_golem_grey] ~elid_golem_check;
+
+[proc,elid_golem_check]
+if (finduid(%npc_aggressive_player) = false) {
+    npc_del;
+    return;
+}
+if (npc_range(coord) > 15) npc_del;
+
+// ---------------------------------------------------------------- the water channels
+// The OSRS wiki's quest transcript: the messages; the requirements: 37 Thieving, 37 Mining and a
+// pickaxe, 37 Ranged (Magic too, but still 37 Ranged). Ours: the level messages, the timings.
+[oploc1,elid_waterchannel_thieving_multiloc]
+if (%elid_thievingchannel = 1) return;
+if (stat(thieving) < 37) {
+    mes("You need a Thieving level of 37 to remove the block safely."); // ours
+    return;
+}
+p_arrivedelay;
+anim(human_pickuptable, 0);
+p_delay(2);
+mes("You use your your Thieving skills to remove the block without triggering the spikes.");
+%elid_thievingchannel = 1;
+~elid_water_flows;
+
+[oploc1,elid_waterchannel_mining_multiloc]
+if (%elid_miningchannel = 1) return;
+def_obj $pickaxe = ~pickaxe_checker;
+if ($pickaxe = null) {
+    mes("You need a pickaxe to clear the rocks."); // ours
+    return;
+}
+if (stat(mining) < 37) {
+    mes("You need a Mining level of 37 to clear the rocks."); // ours
+    return;
+}
+p_arrivedelay;
+anim(oc_param($pickaxe, mining_animation), 0);
+sound_synth(SE_remove_rock, 1, 0);
+p_delay(3);
+mes("You manage to clear the channel of rocks.");
+%elid_miningchannel = 1;
+~elid_water_flows;
+
+[proc,elid_water_flows]
+sound_synth(SE_waterpour, 1, 0);
+mes("The water flows into the hole.");
+sound_synth(machinery, 1, 30);
+mes("You hear the whirr of machinery.");
+if (~elid_channels_done = true & %elidquest >= ^elid_doors & %elidquest < ^elid_channels) ~elid_set(^elid_channels);
+
+// the target across the black golem's channel: Shoot (op2) goes through ordinary ranged or magic
+// combat (npc_combat.rs2's attackable checks call this); a hit that does damage brings it down
+[proc,elid_target_attackable](boolean $spell)(boolean)
+if (%elid_rangingchannel = 1) {
+    mes("The target has already been shot down."); // ours
+    return(false);
+}
+if (stat(ranged) < 37) {
+    mes("You need a Ranged level of 37 to hit the target."); // ours
+    return(false);
+}
+if ($spell = false & %damagetype ! ^ranged_style & ~player_autocast_enabled = false) {
+    mes("You will need a ranged weapon or a spell to reach the target."); // ours
+    return(false);
+}
+return(true);
+
+// it never fights back (a heal here would forget who shot it)
+[ai_queue1,elid_ranging_target_multinpc] return;
+[ai_queue3,elid_ranging_target_multinpc] npc_statheal(hitpoints, 255, 0);
+
+[ai_queue2,elid_ranging_target_multinpc]
+if (last_int <= 0) {
+    npc_damage(^hitmark_block, 0);
+    return;
+}
+npc_damage(^hitmark_damage, min(last_int, sub(npc_stat(hitpoints), 1)));
+// who shot it, before healing it back up (a full heal forgets them)
+if (npc_findhero = ^true) queue(elid_target_hit, 0, 0);
+npc_statheal(hitpoints, 255, 0);
+
+[queue,elid_target_hit]
+if (%elid_rangingchannel = 1) return;
+mes("You manage to shoot down the target.");
+%elid_rangingchannel = 1;
+~elid_water_flows;
+
+// ---------------------------------------------------------------- the Spirits of the Elid
+// the OSRS wiki's quest transcript (during) and Transcript:Nirrie (after); they finish each
+// other's sentences, so each line is spoken by the one the transcript names
+[proc,elid_nirrie](string $text) ~chatnpc_specific("Nirrie", elid_waterspirit, $text);
+[proc,elid_tirrie](string $text) ~chatnpc_specific("Tirrie", elid_waterspirit_sitting, $text);
+[proc,elid_hallak](string $text) ~chatnpc_specific("Hallak", elid_waterspirit_male, $text);
+
+[opnpc1,elid_waterspirit] @elid_spirits;
+[opnpc1,elid_waterspirit_sitting] @elid_spirits;
+[opnpc1,elid_waterspirit_male] @elid_spirits;
+
+[label,elid_spirits]
+def_int $s = %elidquest;
+if ($s >= ^elid_complete) @elid_spirits_after;
+if ($s >= ^elid_statuette) @elid_spirits_again;
+if ($s >= ^elid_channels & $s < ^elid_spoke_spirits) ~elid_set(^elid_spoke_spirits);
+~elid_nirrie("<p,neutral>What brings thee to our domain? It has been a long time since");
+~elid_tirrie("<p,neutral>we have seen any of your kind. Thou art not even");
+~elid_hallak("<p,neutral>one of the desert peoples!");
+@elid_spirits_menu;
+
+[label,elid_spirits_menu]
+switch_int (~p_choice5("Wow how do you finish each others sentences like that?", 1, "Give Nardah its water back!", 2, "Yes, it wasn't so easy getting in here.", 3, "I come as an emissary from the people of Nardah.", 4, "What manner of beings are you?", 5)) {
+    case 1 :
+        ~elid_spirits_wow;
+        @elid_spirits_menu;
+    case 2 : @elid_spirits_give;
+    case 3 :
+        ~elid_spirits_not_easy;
+        @elid_spirits_menu;
+    case 4 : @elid_spirits_emissary;
+    case 5 :
+        ~elid_spirits_beings;
+        @elid_spirits_beings_menu;
+}
+
+[proc,elid_spirits_wow]
+~chatplayer("<p,quiz>Wow how do you finish each others sentences like that?");
+~elid_nirrie("<p,neutral>We are a gestalt entity. We each have our own body, but our minds");
+~elid_tirrie("<p,neutral>are united and we all think as one. Well except when Hallak doth leaveth");
+~elid_nirrie("<p,angry>the toilet seat up.");
+~elid_hallak("<p,angry>That's the way it's meant to be!");
+~elid_nirrie("<p,neutral>Ok we're a mostly gestalt entity. We each have own body, but");
+~elid_hallak("<p,neutral>our minds are united, except for some little parts which aren't. We mostly");
+~elid_tirrie("<p,neutral>think as one.");
+~chatplayer("<p,neutral>That doesn't really have the same ring to it.");
+
+[proc,elid_spirits_not_easy]
+~chatplayer("<p,neutral>Yes, it wasn't so easy getting in here. Why have you made it so tough? You must really not like guests.");
+~elid_nirrie("<p,neutral>We are powerful spirits with direct contact to the great goddess Elidinis, we do not need to be bothered by the trifles of");
+~elid_tirrie("<p,neutral>each and every human. This way only those of much resource and intellect, may gain audience with us.");
+
+[proc,elid_spirits_beings]
+~chatplayer("<p,quiz>What manner of beings are you?");
+~elid_nirrie("<p,neutral>We are the spirits of the river Elid, many ages ago we used to be mindless wandering spirits, with little mind or purpose, we were here even in the first age. Then great Elidinis came to the desert and bound us to her");
+~elid_nirrie("<p,neutral>river, we've");
+~elid_tirrie("<p,neutral>become one with the river and over the centuries become full of the power of Elidinis that was in her river. We are now her trusted guardians of the Elid, we can control the river and anything which happens");
+~elid_tirrie("<p,neutral>near the river we know about.");
+
+[label,elid_spirits_beings_menu]
+switch_int (~p_choice5("Wow how do you finish each others sentences like that?", 1, "Give Nardah its water back!", 2, "Yes, it wasn't so easy getting in here.", 3, "I come as an emissary from the people of Nardah.", 4, "Tell me more of Elidinis.", 5)) {
+    case 1 :
+        ~elid_spirits_wow;
+        @elid_spirits_beings_menu;
+    case 2 : @elid_spirits_give;
+    case 3 :
+        ~elid_spirits_not_easy;
+        @elid_spirits_beings_menu;
+    case 4 : @elid_spirits_emissary;
+    case 5 :
+        ~chatplayer("<p,quiz>Tell me more of Elidinis.");
+        ~elid_nirrie("<p,neutral>Elidinis is one of a group of gods, known as the Menaphite Pantheon. She is the wife of their leader Tumeken. She is the Menaphite goddess of growth and fertility, and goddess of the river.");
+        @elid_spirits_elidinis_menu;
+}
+
+[label,elid_spirits_elidinis_menu]
+switch_int (~p_choice3("Wow how do you finish each others sentences like that?", 1, "Give Nardah its water back!", 2, "I come as an emissary from the people of Nardah.", 3)) {
+    case 1 :
+        ~elid_spirits_wow;
+        @elid_spirits_elidinis_menu;
+    case 2 : @elid_spirits_give;
+    case 3 : @elid_spirits_emissary;
+}
+
+// "Give Nardah its water back!" and the poor diplomacy after it
+[label,elid_spirits_give]
+~chatplayer("<p,angry>Give Nardah its water back!");
+~elid_nirrie("<p,angry>This little one doth come blundering into our abode making demands, with no thought for");
+~elid_tirrie("<p,angry>diplomacy or decorum.");
+@elid_spirits_little_menu;
+
+[label,elid_spirits_little_menu]
+switch_int (~p_choice3("I come as an emissary from the people of Nardah", 1, "Who are you calling little?", 2, "Just tell me what it takes to get Nardah some water.", 3)) {
+    case 1 : @elid_spirits_emissary;
+    case 2 :
+        ~chatplayer("<p,angry>Who are you calling little?");
+        ~elid_nirrie("<p,neutral>You are little in power compared to us.");
+        @elid_spirits_little_menu;
+    case 3 :
+        ~chatplayer("<p,angry>Just tell me what it takes to get Nardah some water.");
+        ~elid_tirrie("<p,neutral>Thou shouldst calm down, getting worked up like that will not help thee.");
+        switch_int (~p_choice3("I come as an emissary from the people of Nardah", 1, "Tell me what I need and I'll leave.", 2, "I haven't time for this nonsense.", 3)) {
+            case 1 : @elid_spirits_emissary;
+            case 2 :
+                ~chatplayer("<p,angry>Tell me what I need and I'll leave.");
+                ~elid_tirrie("<p,neutral>Well maybe we're not that desperate for thee to leave.");
+                switch_int (~p_choice3("I come as an emissary from the people of Nardah", 1, "Look you don't want me to get annoyed.", 2, "I haven't time for this nonsense.", 3)) {
+                    case 1 : @elid_spirits_emissary;
+                    case 2 :
+                        ~chatplayer("<p,angry>Look you don't want me to get annoyed.");
+                        ~elid_nirrie("<p,neutral>That's a shame because thou art annoyed already.");
+                        switch_int (~p_choice3("I come as an emissary from the people of Nardah", 1, "Oh yes I'm annoyed, now give them their water.", 2, "I haven't time for this nonsense.", 3)) {
+                            case 1 : @elid_spirits_emissary;
+                            case 2 :
+                                ~chatplayer("<p,angry>Oh yes I'm annoyed, now give them their water.");
+                                ~elid_nirrie("<p,neutral>You know thou art really not skilled at diplomacy.");
+                                if (~p_choice2("I come as an emissary from the people of Nardah", 1, "I haven't time for this nonsense.", 2) = 1) @elid_spirits_emissary;
+                                @elid_spirits_nonsense;
+                            case 3 : @elid_spirits_nonsense;
+                        }
+                    case 3 : @elid_spirits_nonsense;
+                }
+            case 3 : @elid_spirits_nonsense;
+        }
+}
+
+[label,elid_spirits_nonsense]
+~chatplayer("<p,angry>I haven't time for this nonsense.");
+~elid_nirrie("<p,neutral>Well we know ye mortals are always in a rush with");
+~elid_tirrie("<p,neutral>your very busy little lives. We'd better let thee get on. We");
+~elid_hallak("<p,neutral>enjoyed thy visit.");
+
+// the emissary: why Nardah, and what it would take
+[label,elid_spirits_emissary]
+~chatplayer("<p,neutral>I come as an emissary from the people of Nardah. Their fountain has dried up and water they bring from the river dries up. What advice can you give on this matter?");
+~elid_nirrie("<p,neutral>How unusual, that the one who would come unto us on this issue isn't even from Nardah. Yes, it was indeed we");
+~elid_hallak("<p,neutral>who have withheld their water from them.");
+~chatplayer("<p,quiz>Was this due to the death of the Saradominist priest as the towns people think?");
+~elid_nirrie("<p,angry>No that also was our doing!");
+~elid_hallak("<p,angry>He did not respect our ways and the ways of the desert! He did not respect the ways of Elidinis!");
+~elid_nirrie("<p,angry>He came preaching the ways of Saradomin. Which is all well and good, but he also did turneth them from the path of the desert gods, especially Elidinis. Elidinis is happy to share the worship of followers, indeed Elidinis");
+~elid_nirrie("<p,angry>was allied with Saradomin many ages past. Saradominist mages even gave us those golems you met as a diplomatic gesture, so you can see we have been on good terms. However this is an outrage.");
+@elid_spirits_emissary_menu;
+
+[label,elid_spirits_emissary_menu]
+switch_int (~p_choice3("Is there anything they can do to get their fountain working again?", 1, "Hey you've stopped finishing each others sentences.", 2, "Don't many other towns not follow Elidinis though?", 3)) {
+    case 1 : @elid_spirits_anything;
+    case 2 :
+        ~chatplayer("<p,quiz>Hey you've stopped finishing each others sentences!");
+        ~elid_nirrie("<p,neutral>That seems to be something which happens when we get emotional");
+        ~elid_hallak("<p,neutral>We are");
+        ~elid_tirrie("<p,neutral>calmer now though.");
+        @elid_spirits_emissary_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Don't many other towns not follow Elidinis though? Why pick on Nardah specifically?");
+        ~elid_tirrie("<p,neutral>This is the truth, but there is more to the story than that. The answers");
+        ~elid_hallak("<p,neutral>lie in the story of Nardarine. Wouldst thou likest to hear the telling of this tale? It is not a short one.");
+        if (~p_choice2("Yes I would like to hear this story.", 1, "Is there anything they can do to get their fountain working again?", 2) = 2) @elid_spirits_anything;
+        ~chatplayer("<p,neutral>Yes I would like to hear this story.");
+        ~elid_spirits_story;
+        @elid_spirits_anything;
+}
+
+[proc,elid_spirits_story]
+~elid_tirrie("<p,neutral>Nardarine came from a town towards the north side of the desert which does not exist today. This was in the third age in the time thou callest");
+~elid_hallak("<p,neutral>the God Wars. Her town was once controlled by Saradomin, but there was a great battle there between Saradominist and Zamorakian forces which pretty much levelled the town");
+~elid_nirrie("<p,neutral>to the ground. Most of the human citizens perished. Nardarine had the wisdom to escape into the desert before the fighting got really serious and thus survived. However she found herself wandering lost and alone in");
+~elid_tirrie("<p,neutral>the desert. She prayed to Saradomin for help, but Saradomin was too concerned with the loss of a strategic outpost to worry about the fate of one small human. Nardarine had wandered towards the realm of");
+~elid_hallak("<p,neutral>the Menaphite God Pantheon. Elidinis heard the prayers of Nardarine, she took pity on the wandering human and came unto her with water. 'Oh great goddess' exclaimed Nardarine 'I wish not to be involved more in");
+~elid_nirrie("<p,neutral>the wars of the gods for they have caused me so much hardship already, I wish only for a quiet life somewhere'. Elidinis replied 'I will grant this unto thee on the condition that thou swearest to forever pay fealty and");
+~elid_tirrie("<p,neutral>homage to me and I grant this also unto thine descendents as long as they too will pay an oath of fealty and homage to me'. Nardarine said 'If you would grant me a safe home, with a");
+~elid_hallak("<p,neutral>supply of food and water, then I would surely do this for it is more than any other God would seem to do for me'. Then Elidinis made");
+~elid_nirrie("<p,neutral>a spring of water appear at Nardarines feet and brought stone from below the sand so that she");
+~elid_tirrie("<p,neutral>might have something to build with. She called forth camels which have many uses and taste good in kebabs. She then provided Nardarine with a statuette in her image to worship. Nardarine built up her home. Over");
+~elid_hallak("<p,neutral>time more refugees from the God Wars found Nardarine's home. Nardarine let them stay with her as long as they did make the same oath as her. Hence the town of Nardah was born and Nardarine lived the rest");
+~elid_nirrie("<p,neutral>of her days in the peacefulness that she craved. The oath was passed down the generations for many ages, but now seemeth to be forgotten. Now maybe thou canst see why we are not best pleased.");
+~chatplayer("<p,neutral>That does make some sense.");
+
+[label,elid_spirits_anything]
+~chatplayer("<p,quiz>Is there anything they can do to get their fountain working again?");
+~elid_nirrie("<p,neutral>I do not know. The Saradominist priest persuaded the people of Nardah to throw away a statuette of Elidinis which was in the temple. As long as they do not have that image of Elidinis to pray to, then we must consider");
+~elid_nirrie("<p,neutral>them turned away from her and the curse shalt stand.");
+~chatplayer("<p,neutral>Well that's all very interesting, I wonder what the people of Nardah will think of this.");
+if (%elidquest >= ^elid_channels & %elidquest < ^elid_statuette) ~elid_set(^elid_statuette);
+
+// back again before the statuette is home
+[label,elid_spirits_again]
+~elid_hallak("<p,neutral>Thou art back already?");
+switch_int (~p_choice3("Give Nardah its water back!", 1, "Yes, it's nice and cool here.", 2, "What did the townspeople need to do again?", 3)) {
+    case 1 :
+        ~chatplayer("<p,angry>Give Nardah its water back!");
+        ~elid_hallak("<p,angry>I thought we had been through this already. You are not in any position to make such demands. As long as they do not have their statuette of Elidinis to pray to, then we");
+        ~elid_tirrie("<p,neutral>must consider them turned away from her and the curse shalt stand.");
+    case 2 :
+        ~chatplayer("<p,happy>Yes, it's nice and cool here.");
+        ~elid_hallak("<p,happy>That it is, praise the power of Elidinis.");
+    case 3 :
+        ~chatplayer("<p,quiz>What did the townspeople need to do again?");
+        ~elid_nirrie("<p,neutral>As long as they do not have their statuette of Elidinis to pray to, then we");
+        ~elid_tirrie("<p,neutral>must consider them turned away from her and the curse shalt stand.");
+}
+
+// after the quest (the OSRS wiki's Transcript:Nirrie)
+[label,elid_spirits_after]
+~chatplayer("<p,happy>Well I got the people of Nardah their statuette back.");
+~elid_nirrie("<p,happy>We noticed and removed the curse. Hopefully they");
+~elid_tirrie("<p,happy>will get the message and begin to follow Elidinis properly again.");
+switch_int (~p_choice3("Wow how do you finish each others sentences like that?", 1, "What manner of beings are you?", 2, "Don't many other towns not follow Elidinis?", 3)) {
+    case 1 : ~elid_spirits_wow;
+    case 2 :
+        ~elid_spirits_beings;
+        if (~p_choice2("Wow how do you finish each others sentences like that?", 1, "Tell me more of Elidinis.", 2) = 1) {
+            ~elid_spirits_wow;
+            return;
+        }
+        ~chatplayer("<p,quiz>Tell me more of Elidinis.");
+        ~elid_nirrie("<p,neutral>Elidinis is one of a group of gods, known as the Menaphite Pantheon. She is wife of their leader Tumeken. She is the Menaphite goddess of growth and fertility and goddess of the river.");
+    case 3 :
+        ~chatplayer("<p,quiz>Don't many other towns not follow Elidinis though? Why did you pick on Nardah specifically?");
+        ~elid_tirrie("<p,neutral>It is true many do not follow Elidinis, but there is more to the story than that. The answers");
+        ~elid_hallak("<p,neutral>lie in the story of Nardarine. Wouldst thou likest to hear the telling of this tale? It is not a short one.");
+        if (~p_choice2("Yes I would like to hear this story.", 1, "Maybe another day.", 2) = 1) {
+            ~chatplayer("<p,neutral>Yes I would like to hear this story.");
+            ~elid_spirits_story;
+            return;
+        }
+        ~chatplayer("<p,neutral>Maybe another day.");
+}
+
+// ---------------------------------------------------------------- music
+// the OSRS wiki: Spirits of the Elid unlocks "inside the waterfall at the source of the River Elid"
+[mapzone,0_52_148] @music_playbyregion(coord);
+[mapzone,0_52_149] @music_playbyregion(coord);

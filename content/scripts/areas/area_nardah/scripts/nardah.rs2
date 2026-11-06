@@ -1,0 +1,199 @@
+// EASCape: Nardah (5 December 2005, "Nardah, Tool Sheds & Spirits of the Elid"): the town's
+// traders. The people, the shops and their stock are the 377 cache's own (elid_ npcs, the maps'
+// spawns, generalshopnardah, armourshopnardah and chociceshopnardah); the shops' prices are the
+// OSRS wiki's (all.npc). Words: the OSRS wiki's NPC transcripts and the quest transcript. The
+// quest's own people are in quests/quest_elid.
+
+// ---------------------------------------------------------------- Zahur the herbalist
+// The RS wiki's update page: "a herbalist called Zahur who will identify herbs for 200 coins each
+// (which should be handy for people wishing to trade high-level herbs)"; the RS wiki's Zahur: she
+// "could identify a player's higher level unids for 200 coins each" (herbs were unidentified until
+// 2007; potion decanting came later and is left out). No source has her 2005 words: these are the
+// OSRS wiki's Transcript:Zahur with "clean" read as "identify" (ours), and the RS wiki's for the
+// finished and short-of-coins lines. No experience: she does the work (ours).
+[opnpc1,elid_herbalist]
+if (%elid_zahur_met = 0) {
+    ~chatnpc("<p,happy>Hi there. Do you need anything? I can identify herbs for a fee of 200 coins per herb. I can identify all of your herbs at once, or I can do individual herbs if you show them to me.");
+    %elid_zahur_met = 1;
+} else {
+    ~chatnpc("<p,happy>Hello again. Do you need anything?");
+}
+@nardah_zahur_menu;
+
+[label,nardah_zahur_menu]
+switch_int (~p_choice3("Please identify all my herbs.", 1, "Why would I pay for you to identify herbs?", 2, "Maybe another time.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Please identify all my herbs.");
+        ~nardah_zahur_identify_all;
+    case 2 :
+        ~chatplayer("<p,quiz>Why would I pay for you to identify herbs?");
+        ~chatnpc("<p,happy>Many of my customers wish to sell the herbs which they can't identify to other adventurers. They might hope for a better price by doing this.");
+        switch_int (~p_choice2("Please identify all my herbs.", 1, "Maybe another time.", 2)) {
+            case 1 :
+                ~chatplayer("<p,neutral>Please identify all my herbs.");
+                ~nardah_zahur_identify_all;
+            case 2 : ~chatplayer("<p,neutral>Maybe another time.");
+        }
+    case 3 : ~chatplayer("<p,neutral>Maybe another time.");
+}
+
+[proc,nardah_zahur_identify_all]
+def_int $done = 0;
+def_int $jungle = 0;
+def_boolean $poor = false;
+def_int $slot = 0;
+def_obj $obj;
+def_namedobj $herb;
+while ($slot < inv_size(inv)) {
+    $obj = inv_getobj(inv, $slot);
+    if ($obj ! null) {
+        $herb = enum(obj, namedobj, nardah_zahur_herbs, $obj);
+        if ($herb ! null) {
+            if (inv_total(inv, coins) < 200) {
+                $poor = true;
+            } else {
+                inv_del(inv, coins, 200);
+                inv_setslot(inv, $slot, $herb, 1);
+                $done = calc($done + 1);
+            }
+        } else if (enum(obj, int, nardah_zahur_jungle, $obj) = 1) {
+            $jungle = calc($jungle + 1);
+        }
+    }
+    $slot = calc($slot + 1);
+}
+if ($poor = true) {
+    mes("You can not afford that.");
+    ~chatnpc("<p,sad>You don't have enough coins to identify any more herbs.");
+    return;
+}
+if ($done > 0) {
+    ~chatnpc("<p,happy>Okay, that's all the herbs in your inventory identified.");
+    return;
+}
+if ($jungle > 0) {
+    ~chatnpc("<p,sad>I didn't find anything that I could identify. Unfortunately I'm not very good at identifying jungle herbs.");
+    return;
+}
+~chatnpc("<p,sad>I didn't find anything that I could identify.");
+
+// one herb shown to her (the OSRS wiki: "or I can do individual herbs if you show them to me")
+[opnpcu,elid_herbalist]
+def_namedobj $herb = enum(obj, namedobj, nardah_zahur_herbs, last_useitem);
+if ($herb = null) {
+    if (enum(obj, int, nardah_zahur_jungle, last_useitem) = 1) {
+        ~chatnpc("<p,sad>Unfortunately I'm not very good at identifying jungle herbs.");
+        return;
+    }
+    ~chatnpc("<p,sad>I didn't find anything that I could identify.");
+    return;
+}
+if (inv_total(inv, coins) < 200) {
+    mes("You can not afford that.");
+    ~chatnpc("<p,sad>You don't have enough coins to identify any more herbs.");
+    return;
+}
+inv_del(inv, coins, 200);
+inv_setslot(inv, last_useslot, $herb, 1);
+~objbox($herb, "Zahur identifies the herb: <oc_name($herb)>.", 250, 0, ^objbox_height); // ours
+
+// ---------------------------------------------------------------- Rokuh's choc-ices
+[opnpc1,elid_choc_ice_seller]
+~chatnpc("<p,happy>Come one, come all, buy my amazing choc ice invention here! Chocolate on the outside. Iced cream on the inside. Oh I also have some chocolate left over from making choc ices which I'm selling too.");
+def_int $c;
+if (%elidquest >= ^elid_complete) {
+    $c = ~p_choice4("Cool I'd like to buy some.", 1, "No thanks, I'm not interested.", 2, "How do you stop your icy snacks melting?", 3, "How's business, now that the curse has gone?", 5);
+} else if (%elidquest >= ^elid_started) {
+    $c = ~p_choice4("Cool I'd like to buy some.", 1, "No thanks, I'm not interested.", 2, "How do you stop your icy snacks melting?", 3, "I am trying to find out the cause of this town's curse.", 4);
+} else {
+    $c = ~p_choice3("Cool I'd like to buy some.", 1, "No thanks, I'm not interested.", 2, "How do you stop your icy snacks melting?", 3);
+}
+switch_int ($c) {
+    case 1 : ~openshop_activenpc;
+    case 2 : ~chatplayer("<p,neutral>No thanks, I'm not interested.");
+    case 3 :
+        ~chatplayer("<p,quiz>How do you stop your icy snacks melting? The middle of the desert is the last place I'd expect to see ice.");
+        ~chatnpc("<p,happy>It's quite a surprise, isn't it, my friend. I actually have this special magic box of ice, which I bought for a princely sum, from a strange man while adventuring in lands far away. He said it is imbued with some sort of");
+        ~chatnpc("<p,happy>powerful ice magic which keeps it cold all the time. I had never seen any ice magic before, it's clearly very rare and powerful, so I felt I had to buy it.");
+    case 4 :
+        ~chatplayer("<p,neutral>I am trying to find out the cause of this town's curse.");
+        ~chatnpc("<p,sad>I really have no idea. It's most regrettable. Fortunately my innovation with my choc ice invention is helping people stay at least slightly cool.");
+    case 5 :
+        ~chatplayer("<p,quiz>How's business, now that the curse has gone?");
+        ~chatnpc("<p,happy>Ohh as good as ever. The people of Nardah seem to have taken well to the taste of chocolate and iced cream combined and, with the curse gone, all my friends are much happier too, so it's all good.");
+}
+
+[opnpc3,elid_choc_ice_seller] ~openshop_activenpc;
+
+// ---------------------------------------------------------------- Seddu and Kazemde
+[opnpc1,elid_shield_seller]
+~chatnpc("<p,happy>I buy and sell adventurer's equipment, do you want to trade?");
+if (~p_choice2("Yes please.", 1, "No thank you.", 2) = 1) {
+    ~openshop_activenpc;
+    return;
+}
+~chatplayer("<p,neutral>No thank you.");
+
+[opnpc3,elid_shield_seller] ~openshop_activenpc;
+
+[opnpc1,elid_general_seller]
+~chatnpc("<p,happy>Can I help you at all?");
+if (~p_choice2("Yes please. What are you selling?", 1, "No thanks.", 2) = 1) {
+    ~openshop_activenpc;
+    return;
+}
+~chatplayer("<p,neutral>No thanks.");
+
+[opnpc3,elid_general_seller] ~openshop_activenpc;
+
+// ---------------------------------------------------------------- Ali the Carter's water
+// the OSRS wiki's Transcript:Ali the Carter and the quest transcript; a full waterskin for 1000
+[opnpc1,ali_the_carter]
+if (%elidquest >= ^elid_complete) {
+    ~chatplayer("<p,neutral>You look glum.");
+    ~chatnpc("<p,sad>Business here really seems to have dried up. I had a good thing going here and you spoiled it.");
+    ~chatplayer("<p,neutral>Well it serves you right really. Taking advantage of people like that.");
+    ~chatnpc("<p,quiz>So want to buy some water?");
+    ~chatplayer("<p,quiz>How much?");
+    ~chatnpc("<p,happy>To you 1000 coins for a waterskin!");
+    if (~p_choice2("Ok, I feel sorry for you.", 1, "I think I'll give it a miss.", 2) = 1) {
+        ~nardah_ali_buy;
+        return;
+    }
+    ~chatplayer("<p,neutral>I think I'll give it a miss.");
+    return;
+}
+~chatnpc("<p,happy>Water, water get your fresh water here, 1000 coins a waterskin, a bargain in these difficult times.");
+switch_int (~p_choice3("That's extortionate! Why so much?", 1, "Ok, I'll buy some!", 2, "I think I'll give it a miss.", 3)) {
+    case 1 :
+        ~chatplayer("<p,shock>That's extortionate! Why so much?");
+        ~chatnpc("<p,neutral>Well it's the cheapest water you'll find in this town.");
+        if (%elidquest >= ^elid_started) {
+            ~chatplayer("<p,quiz>Would you happen to know anything about the curse?");
+            ~chatnpc("<p,happy>Yes the people round here can't seem to get the water themselves. It's an ideal business opportunity for one such as myself.");
+            ~chatplayer("<p,neutral>It does seem to be slightly exploiting their unfortunate situation.");
+            ~chatnpc("<p,neutral>I don't see it like that. Without me they'd be in even more of a mess. I'm doing them a favour and in true Pollnivneachian spirit making a profit along the way.");
+        }
+    case 2 : ~nardah_ali_buy;
+    case 3 : ~chatplayer("<p,neutral>I think I'll give it a miss.");
+}
+
+[proc,nardah_ali_buy]
+if (inv_total(inv, coins) < 1000) {
+    ~mesbox("You don't have 1000 coins to buy the water with.");
+    return;
+}
+inv_del(inv, coins, 1000);
+~elid_give(water_skin4, 1);
+~mesbox("You buy a full waterskin for 1000 coins!");
+
+// his cart and barrel
+[oplocu,elid_cart_water] ~nardah_ali_mine;
+[oplocu,elid_waterbarrel] ~nardah_ali_mine;
+
+[proc,nardah_ali_mine]
+if (npc_find(coord, ali_the_carter, 10, 0) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatnpc("<p,angry>If you want water you need to buy it off me.");

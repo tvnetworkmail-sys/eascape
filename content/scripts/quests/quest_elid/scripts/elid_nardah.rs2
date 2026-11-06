@@ -1,0 +1,498 @@
+// EASCape: Spirits of the Elid - the people of Nardah, the shrine and the mayor's shoes.
+// Words: the OSRS wiki's quest transcript and its NPC transcripts (Awusah, Ghaslor, Shiratti, the
+// villagers before and after); "ours" where neither wiki has the line.
+
+[proc,elid_awusah](string $text) ~chatnpc_specific("Awusah the Mayor", elid_mayor, $text);
+
+// ---------------------------------------------------------------- Awusah the Mayor
+[opnpc1,elid_mayor]
+def_int $s = %elidquest;
+if ($s >= ^elid_complete) {
+    // the OSRS wiki's Transcript:Awusah the Mayor
+    ~chatnpc("<p,happy>Thank you kind <text_gender("sir", "madam")>. The town is saved and the water is flowing freely.");
+    ~chatplayer("<p,happy>You're welcome.");
+    ~chatnpc("<p,happy>What's more when we now pray at the shrine we now feel rejuvenated and healthier than ever!");
+    ~chatplayer("<p,neutral>That's interesting to know.");
+    return;
+}
+if ($s = ^elid_not_started) @elid_awusah_start;
+if ($s = ^elid_deal) @elid_awusah_deal;
+if ($s = ^elid_crevice) @elid_awusah_crevice;
+if ($s = ^elid_statuette) @elid_awusah_statuette;
+~chatnpc("<p,neutral>Many salutations to you <text_gender("sir", "madam")>, have you made any progress in uncovering the reasons for our curse yet?");
+switch_int (~p_choice3("I am working on it.", 1, "What was I meant to do again?", 2, "I haven't really had the time to investigate.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I am working on it.");
+        ~chatnpc("<p,sad>Please try your best, that water salesman is not doing much good for the economy of our town.");
+    case 2 :
+        ~chatplayer("<p,confused>What was I meant to do again?");
+        ~chatnpc("<p,neutral>Look around this town, see if you can uncover any information to why we were cursed and how the curse might be lifted. I suspect that it might be because a priest of Saradomin died while staying at our town, but");
+        ~chatnpc("<p,neutral>that isn't much help in getting the curse lifted and it is possible I'm wrong anyway.");
+    case 3 :
+        ~chatplayer("<p,neutral>I haven't really had the time to investigate.");
+        ~chatnpc("<p,sad>Well I hope somebody can find the time soon, the despair of the people of this town increases daily.");
+}
+
+[label,elid_awusah_start]
+~chatnpc("<p,happy>Many salutations to you. What brings you to our little town?");
+switch_int (~p_choice3("I am an adventurer in search of quests.", 1, "I'm just looking around.", 2, "I'm passing through on my way to Menaphos.", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>I am an adventurer in search of quests.");
+        ~chatnpc("<p,neutral>Hmm, well that could be quite fortuitous. We really could do with some help here. Our town seems to have come under a curse, and we are desperate to get it removed.");
+        ~chatplayer("<p,quiz>A curse? What sort of curse?");
+        ~chatnpc("<p,sad>Well first of all our fountain, which has served us for many years, suddenly dried up. We then started transporting water from the river, but what we carried would always have completely dried up by the time we");
+        ~chatnpc("<p,sad>got it back to the village.");
+        @elid_awusah_curse_menu;
+    case 2 :
+        ~chatplayer("<p,neutral>I'm just looking around.");
+        ~chatnpc("<p,neutral>Well we've not fallen on the best of times here, but there are a few shops to look around and we have someone selling a marvelous new invention called a choc ice..");
+        ~chatnpc("<p,neutral>Oh, and there's the old temple if you're interested in a bit of history.");
+    case 3 :
+        ~chatplayer("<p,neutral>I'm passing through on my way to Menaphos.");
+        ~chatnpc("<p,shock>Oh you don't want to go there. I hear rumours of plagues and the like.");
+        ~chatplayer("<p,neutral>Thanks for the warning, but I might go and investigate anyway.");
+}
+
+[label,elid_awusah_curse_menu]
+switch_int (~p_choice3("So what do you do for water now?", 1, "Any idea how you got this curse?", 2, "I'm sorry to hear of your plight, but I must be going.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>So what do you do for water now?");
+        ~chatnpc("<p,neutral>Well it's tough. There is a guy who calls himself Ali the carter down in the market. He's from Pollnivneach, so the curse doesn't seem to have affected him. He's got a cart full of water which he's selling to the people here.");
+        ~chatnpc("<p,angry>Unfortunately in typical Pollnivneach style he's taking the opportunity to sell the water at outrageous prices because he knows we are desperate. Oh and Rokuh has developed something quite remarkable, called a choc ice");
+        ~chatnpc("<p,happy>which is helping people stay cool.");
+        @elid_awusah_curse_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Any idea how you got this curse?");
+        ~chatnpc("<p,sad>Well we think it was because we were negligent in our duty to protect a priest of Saradomin. He came to us a few weeks ago from the north and we welcomed him into our town. He taught us much of the wisdom of");
+        ~chatnpc("<p,sad>Saradomin. Then about a week ago, we found him dead by the river. It seems unlikely that it is coincidence we were then cursed. If you look around the town you might be able to find out more.");
+        if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Spirits of the Elid quest?") = 1) {
+            ~chatplayer("<p,neutral>Ok I will have a look around and see what I can do.");
+            ~chatnpc("<p,happy>Good luck to you.");
+            ~elid_set(^elid_started);
+            return;
+        }
+        ~chatplayer("<p,neutral>I'm sorry to hear of your plight, but I must be going.");
+    case 3 :
+        ~chatplayer("<p,neutral>I'm sorry to hear of your plight, but I must be going.");
+}
+
+// back from the spirits
+[label,elid_awusah_statuette]
+~chatnpc("<p,neutral>Many salutations to you <text_gender("sir", "madam")>, have you made any progress in uncovering the reasons for our curse yet?");
+~chatplayer("<p,neutral>Yes I have made some progress. It is the doing of the water spirits at the source of the river.");
+~chatnpc("<p,shock>The Spirits of the Elid? I wasn't even sure if they weren't some old wives tale. Why would they do such a thing?");
+~chatplayer("<p,quiz>Did you by any chance throw away a statuette of the goddess Elidinis recently?");
+~chatnpc("<p,neutral>Oh that old thing. Yeah, the priest of Saradomin said we should get rid of that. He said we should become followers of Saradomin, and therefore we wouldn't need it.");
+~chatplayer("<p,neutral>Well the spirits killed him for imparting that piece of advice about the statuette.");
+~chatnpc("<p,shock>Gasps!");
+~chatplayer("<p,neutral>Apparently this town was brought about by Elidinis on the promise that its people would follow her. People here have been waning in their belief of Elidinis for a while now.");
+~chatplayer("<p,neutral>It seems the casting away of the statue was the final straw.");
+~chatnpc("<p,sad>Ohh that's not so good if only we hadn't thrown the statue away, we wouldn't have this water problem then. He was a very convincing priest though. He worked many wonders, for example if he prayed hard enough");
+~chatnpc("<p,neutral>he became impervious to arrows. The way of Saradomin did seem very appealing.");
+if (stat_base(prayer) >= 40) {
+    ~chatplayer("<p,happy>Oh but that's easy, I can pray to protect myself from arrows too.");
+    ~chatnpc("<p,shock>Then truly you are very powerful too!");
+}
+~chatplayer("<p,quiz>Where did you throw the statuette?");
+~chatnpc("<p,neutral>Ohh there's a strange deep crevice in the desert to the west of here. We threw it down there. I don't know if it's lost forever or not.");
+~chatplayer("<p,neutral>Well it's worth a look anyway.");
+~chatnpc("<p,neutral>If you could retrieve it for us we'll be very grateful. Even if it doesn't give us our water back, maybe it'll calm Shiratti down, she was not pleased at it being thrown away and she's been grumpy ever since.");
+~elid_set(^elid_crevice);
+
+[label,elid_awusah_crevice]
+~chatnpc("<p,quiz>Have you had any luck retrieving our statuette yet?");
+switch_int (~p_choice2("Not yet, but don't give up hope yet.", 1, "Where did you say you threw it again?", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Not yet, but don't give up hope yet.");
+        ~chatnpc("<p,neutral>Good luck, may Sarad.. errm I mean Elidinis guide you.");
+    case 2 :
+        ~chatplayer("<p,quiz>Where did you say you threw it again?");
+        ~chatnpc("<p,neutral>In a deep crevice to the west of this village.");
+}
+
+[label,elid_awusah_deal]
+~chatnpc("<p,quiz>Have you had any luck retrieving our statuette yet?");
+if (inv_total(inv, elid_statuette) > 0) {
+    ~chatplayer("<p,happy>Yes I finally got it. I had to destroy a pair of your shoes though. A crazy genie wanted a sole off your shoe in return for the statuette. I think he got souls and soles confused.");
+    ~chatnpc("<p,neutral>I suppose sacrificing a pair of shoes for the greater good of the town is reasonable. I don't begin to understand the ways of genies.");
+    ~chatplayer("<p,neutral>Yes I thought it best not to correct him. He's somewhat less dangerous than he might be if he's a collector of shoe soles.");
+    ~chatnpc("<p,happy>Anyway thanks for getting the statue back. You should take it to our temple and then we can see if our fountain starts working again.");
+    return;
+}
+~chatplayer("<p,neutral>Err, well I have made some progress. I met a genie down the crevice. He told me that he would give me the statuette in exchange for your soul.");
+~chatnpc("<p,shock>What! That's just asking to much. So, he want's to have my soul when my time to die comes?");
+~chatplayer("<p,neutral>Well not exactly, he sort of basically said I should remove it with a knife.");
+~chatnpc("<p,angry>That's barbaric! I simply refuse. The price is too high. We'll just have to find other ways to get the town a good supply of water. Don't go bringing any knives near me.");
+
+// a knife used on him (the OSRS wiki's quest transcript); ours: only while the genie wants a sole
+[opnpcu,elid_mayor]
+if (last_useitem ! knife | %elidquest ! ^elid_deal) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatnpc("<p,angry>What do you think you are doing?");
+~chatplayer("<p,neutral>Errm, I'm trying to remove your soul.");
+~chatnpc("<p,shock>What, have you lost your mind?");
+~chatplayer("<p,neutral>It's for the good of the village. I met a genie down the crevice. He told me that he would give me the statuette in exchange for your sole.");
+~chatnpc("<p,angry>That's barbaric! We'll just have to find other ways to get the town a good supply of water. Keep your knife away from me please.");
+
+// ---------------------------------------------------------------- the mayor's shoes
+// A knife on the shoes: two soles (the OSRS wiki's Shoes and Sole). In his house he stops you (the
+// RS wiki: "you must step outside the house"); the house's walls are ^elid_house_sw/ne (ours).
+[opheldu,elid_shoes]
+if (last_useitem = knife) @elid_cut_shoes;
+~displaymessage(^dm_default);
+
+[label,elid_cut_shoes]
+if (inzone(^elid_house_sw, ^elid_house_ne, coord) = true & npc_find(coord, elid_mayor, 15, 0) = true) {
+    ~chatnpc("<p,angry>Hey, leave my shoes alone!");
+    return;
+}
+inv_del(inv, elid_shoes, 1);
+inv_add(inv, elid_sole, 1);
+~elid_give(elid_sole, 1);
+~objbox(elid_sole, "You remove the soles from the shoes.", 250, 0, ^objbox_height);
+
+// ---------------------------------------------------------------- Ghaslor the Elder
+[opnpc1,elid_ghaslor]
+def_int $s = %elidquest;
+~chatnpc("<p,neutral>Good day to you young <text_gender("man", "lady")>.");
+if ($s >= ^elid_complete) {
+    // the OSRS wiki's Transcript:Ghaslor the Elder
+    ~chatnpc("<p,happy>I'm happy that we have our water back, thanks for your help.");
+    ~chatplayer("<p,happy>Well it's good to see you happy.");
+    ~chatnpc("<p,neutral>Mostly happy, but young people have no respect for their elders, theres too many confusing newfangled magic carpets and snake charmers around these days. I remember when this used to be fields.");
+    ~chatplayer("<p,quiz>It used to be fields?");
+    ~chatnpc("<p,neutral>Well no admittedly it used to be sand, just like it is now, but let an old man have his grumble.");
+    return;
+}
+if ($s >= ^elid_statuette) {
+    ~chatnpc("<p,quiz>Any progress on uncovering the town's curse yet?");
+    ~chatplayer("<p,happy>Yes some actually. I managed to speak to the river spirits you told me about.");
+    ~chatnpc("<p,shock>You actually managed to find them? I'm impressed. As I say - no one has seen them in many many years.");
+    ~chatplayer("<p,neutral>Yes the spirits told me that the town is cursed because you guys have thrown away a statuette to the goddess Elidinis.");
+    ~chatnpc("<p,neutral>Ah yes I heard a group led by that Saradominist priest went into the shrine and removed the Statuette. It all seemed a bit unnecessary to me. Didn't realise it would curse us though.");
+    ~chatnpc("<p,neutral>I have no idea what they did with it afterwards.");
+    return;
+}
+// ours: before the quest he has only his grumble
+if ($s = ^elid_not_started) {
+    @elid_ghaslor_things;
+}
+switch_int (~p_choice2("I am trying to find out the cause of this town's curse.", 1, "How are things?", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I am trying to find out the cause of this town's curse.");
+        ~chatnpc("<p,neutral>Oh that's something which no one but the gods and the river spirits seem to know.");
+        switch_int (~p_choice2("River spirits, what are they?", 1, "Thanks for your help.", 2)) {
+            case 1 :
+                ~chatplayer("<p,quiz>River spirits, what are they?");
+                ~chatnpc("<p,neutral>They're the guardians of the source of the river Elid, they'll know of our curse, seeing as it's related to water we bring from the river. It's said that nothing happens on the river that they don't know about.");
+                ~chatplayer("<p,quiz>So would it be possible for me to find these spirits and ask them what is going on?");
+                ~chatnpc("<p,neutral>Ahh now the spirits are something which no one from here have seen in a good long time, certainly not in my lifetime, I don't think even in my own grandfather's lifetime.");
+                ~chatnpc("<p,neutral>Most the younger people of this town don't even remember that the spirits even exist.");
+                ~chatnpc("<p,neutral>Here I have something around here somewhere which may be of interest to you.");
+                ~chatnpc("<p,happy>Aha yes here it is, the ballad of Jareesh. This tells of a previous quest to try and find the spirits.");
+                // ours: one ballad at a time (the OSRS wiki: none to be had after the quest)
+                if (~elid_has(elid_ballad) = false) ~elid_give(elid_ballad, 1);
+                ~objbox(elid_ballad, "Ghaslor hands you a scroll.", 250, 0, ^objbox_height);
+                if (%elidquest < ^elid_ballad) ~elid_set(^elid_ballad);
+                ~chatplayer("<p,happy>Thank you very much for your help.");
+            case 2 : ~chatplayer("<p,neutral>Thanks for your help.");
+        }
+    case 2 : @elid_ghaslor_things;
+}
+
+[label,elid_ghaslor_things]
+~chatplayer("<p,quiz>How are things?");
+~chatnpc("<p,angry>Lousy, young people have no respect for their elders, there's too many confusing newfangled magic carpets and snake charmers around these days and now we don't even have any water.");
+~chatplayer("<p,neutral>Well I hope things pick up for you.");
+
+// ---------------------------------------------------------------- the ballad
+// the OSRS wiki's Transcript:Ballad; reading it is how you work out where to go (ours)
+[opheld1,elid_ballad]
+if (%elidquest = ^elid_ballad) ~elid_set(^elid_read_ballad);
+%book_page = 0;
+%open_book = elid_ballad;
+@book_flip_page(0, 0, ~elid_ballad_last, elid_ballad_book);
+
+[proc,elid_ballad_split]
+split_init(append("Clad all in the robes for She|we travelled north expediently.||Go beseech the guardians we were sent,|so to the river's source we went.||Through the cave we had to travel.|There was mystery to unravel.||We came upon a great stone door|but our priestess knew the score.||She used the great ancestral key.|We passed through very easily.||Three great men all hewn of rock,|three small chambers they did block.||The first all made of rock quite black,|our fighting men went to attack.||They went with arrow, blade and spell,|but the man they could not fell||Many men did fall that day,|while others turned and ran away||", "I had little hope at all,|as I watched my kinsmen fall.||My warhammer I boldy heft|and struck a blow which while was deft,||should give scant harm to one so strong|or so I thought, nay I was wrong.||The rockman fell down with a crash,|which sent up clouds of dust and ash.||Just myself left and alas,|two more rockmen left to pass.||Still buoyed on by my first success|onwards bravely I did press.||Next man was of rock hued grey|and this one next I planned to slay||Crushing blows I rained on him,|but things were looking very grim||Not a scratch could I make|Anon my limbs began to ache.||The rockman gave a mighty roar|so fierce I made fast for the door.||How to beat that second man|to this day I have no plan.||My hammer never left a dent.|I never reached whence I was sent."), 175, 22, q8_full);
+
+[proc,elid_ballad_last]()(int)
+~elid_ballad_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,elid_ballad_book]
+~elid_ballad_split;
+~book_page("The Ballad of Jareesh", %book_page);
+
+// ---------------------------------------------------------------- Shiratti the Custodian
+[opnpc1,elid_shiratti]
+def_int $s = %elidquest;
+if ($s >= ^elid_complete) {
+    ~chatnpc("<p,happy>Thanks for returning the statuette. You have freed us of our curse. May you forever be considered a friend of Elidinis and her followers.");
+    return;
+}
+if ($s >= ^elid_statuette) {
+    if (inv_total(inv, elid_statuette) > 0) {
+        ~chatplayer("<p,happy>I have got the statuette.");
+        ~chatnpc("<p,happy>That is great news! I could kiss you, but they don't allow shrine custodians to engage in that sort of behaviour. You should put the statuette back on its plinth.");
+        return;
+    }
+    ~chatplayer("<p,neutral>I'm told that a statuette was removed from this temple.");
+    ~chatnpc("<p,angry>Yes, that Saradominist priest brought a group of the villagers in here. Took it by force as far as I'm concerned. I'm not at all happy, standards have been slipping here for a while, but that was going too far.");
+    ~chatnpc("<p,angry>It's an insult to She!");
+    ~chatplayer("<p,confused>Who?");
+    ~chatnpc("<p,angry>She! Elidinis! Goddess of growth and fertility! Lady of the River, Wife of Tumeken, Flower of the Desert. Mother of Icthlarin!");
+    ~chatplayer("<p,neutral>..Ah yes, that She. Well you're right, that would be an insult to Elidinis. In fact it seems that affront is what has brought the curse upon this village.");
+    ~chatnpc("<p,neutral>Well you know I suspected that all along, but does anyone listen to me anymore? No! Well I'm impressed you've come to the same conclusion as me, maybe I underestimated you.");
+    ~chatplayer("<p,quiz>Er, why didn't you tell me about your suspicions when I was asking around about the curse then?");
+    ~chatnpc("<p,sad>I have to apologise. We've already had one outsider around stirring trouble, which caused this whole mess in the first place. I feared that you were coming to force your ways on us.");
+    ~chatplayer("<p,neutral>No I'm here to help.");
+    ~chatnpc("<p,happy>Well I'm grateful, anything you can do to find the statuette would be appreciated.");
+    return;
+}
+// the OSRS wiki: before the quest only the middle two; ours: the key with the curse
+def_int $c;
+if ($s = ^elid_not_started) {
+    $c = ~p_choice2("Good day to you.", 2, "What is this building?", 3);
+} else {
+    $c = ~p_choice4("I am trying to find out the cause of this town's curse.", 1, "Good day to you.", 2, "What is this building?", 3, "What is that key on display?", 4);
+}
+switch_int ($c) {
+    case 1 :
+        ~chatplayer("<p,neutral>I am trying to find out the cause of this town's curse.");
+        ~chatnpc("<p,angry>Well with the moral standards of this town lately, I'm hardly surprised.");
+        ~chatplayer("<p,quiz>Why, what have they been up to?");
+        ~chatnpc("<p,angry>Nothing someone like you would understand.");
+    case 2 :
+        ~chatplayer("<p,neutral>Good day to you.");
+        ~chatnpc("<p,angry>Be Careful in here and don't touch anything! There's some old and valuable artefacts around here. Careless outsiders.. you're always coming in and making a mess of things!");
+        ~chatplayer("<p,neutral>Ok calm down, I'm not going to touch anything.");
+        ~chatnpc("<p,angry>Yes, good don't.");
+    case 3 :
+        ~chatplayer("<p,quiz>What is this building?");
+        ~chatnpc("<p,neutral>This is our local shrine to She.");
+        ~chatplayer("<p,confused>What do you mean by She?");
+        ~chatnpc("<p,angry>Such ignorance! I suppose I should come to expect it. People are forgetting the old ways of the desert around here. But then.. What do those bureaucratic fools in Menaphos expect! If they're going to take so long to");
+        ~chatnpc("<p,angry>send us a new priestess of She. Do you know we haven't had one for five years now!");
+        ~chatplayer("<p,confused>Errm you still haven't told me what you mean by She.");
+        ~chatnpc("<p,angry>She! Otherwise know as Elidinis, Goddess of growth and fertility, Lady of the river, Wife of Tumeken, Flower of the desert, Mother of Icthlarin.");
+        ~chatplayer("<p,neutral>That all sounds very confusing, I might just call her Elidinis for short.");
+    case 4 :
+        ~chatplayer("<p,quiz>What is that key on display?");
+        ~chatnpc("<p,angry>That's a very valuable artefact. Keep your hands off it.");
+        ~chatplayer("<p,neutral>..I just wanted to know what it did.");
+        ~chatnpc("<p,angry>That's the key to the holy chambers of the great and mighty Spirits of the Elid, and it's staying right there. There are other holy items about this building and keep your hands off them too, but most definitely keep your");
+        ~chatnpc("<p,angry>hands off the key. People already meddle too much with the affairs of the shrine.");
+}
+
+// ---------------------------------------------------------------- the shrine's cupboards
+// The north-western cupboard (3420,2930) has the torn robes (the OSRS wiki's Cupboard (Nardah):
+// "only the northern cupboard after partial completion"; "You cannot get another set ... if you
+// already have a set of torn robes or Robes of Elidinis in your possession (including in the
+// bank)"). Ours: from the quest's start; the empty-handed message.
+[oploc1,elid_cupboard_closed] ~elid_cupboard_open(elid_cupboard_open);
+[oploc1,elid_cupboard_closed_withrobes] ~elid_cupboard_open(elid_cupboard_open_withrobes);
+[oploc3,elid_cupboard_open] ~elid_cupboard_shut(elid_cupboard_closed);
+[oploc3,elid_cupboard_open_withrobes] ~elid_cupboard_shut(elid_cupboard_closed_withrobes);
+[oploc2,elid_cupboard_open] mes("You search the cupboard but find nothing.");
+
+[oploc2,elid_cupboard_open_withrobes]
+if (%elidquest < ^elid_started | %elidquest >= ^elid_complete) {
+    mes("You search the cupboard but find nothing.");
+    return;
+}
+if (~elid_has(elid_robetop_torn) = true | ~elid_has(elid_robebottoms_torn) = true | ~elid_has(elid_robetop) = true | ~elid_has(elid_robebottoms) = true) {
+    mes("You search the cupboard but find nothing.");
+    return;
+}
+anim(human_pickuptable, 0);
+~elid_give(elid_robetop_torn, 1);
+~objbox(elid_robetop_torn, "You find a torn robe top.", 250, 0, ^objbox_height);
+~elid_give(elid_robebottoms_torn, 1);
+~objbox(elid_robebottoms_torn, "You find some torn robe bottoms.", 250, 0, ^objbox_height);
+
+[proc,elid_cupboard_open](loc $open)
+p_arrivedelay;
+anim(human_openchest, 0);
+sound_synth(cupboard_open, 1, 0);
+p_delay(0);
+loc_change($open, 300);
+
+[proc,elid_cupboard_shut](loc $shut)
+p_arrivedelay;
+anim(human_closechest, 0);
+sound_synth(cupboard_close, 1, 0);
+p_delay(0);
+loc_change($shut, 300);
+
+// ---------------------------------------------------------------- the robes
+// A needle and thread mend them (the OSRS wiki's Recipe: needle, 1 thread each); the cache's own
+// elid_robetop_crafting and elid_robebottoms_crafting seqs and stiching sound. Ours: the message.
+[opheld2,elid_robetop_torn] mes("This robe is too torn to wear.");
+[opheld2,elid_robebottoms_torn] mes("This robe is too torn to wear.");
+
+[opheldu,elid_robetop_torn]
+if (last_useitem = needle) @elid_mend(elid_robetop_torn);
+~displaymessage(^dm_default);
+
+[opheldu,elid_robebottoms_torn]
+if (last_useitem = needle) @elid_mend(elid_robebottoms_torn);
+~displaymessage(^dm_default);
+
+[label,elid_mend](obj $torn)
+if (inv_total(inv, needle) = 0) {
+    mes("You need a needle to mend the robe.");
+    return;
+}
+if (inv_total(inv, thread) = 0) {
+    mes("You need some thread to mend the robe.");
+    return;
+}
+def_namedobj $robe = elid_robetop;
+def_seq $seq = elid_robetop_crafting;
+if ($torn = elid_robebottoms_torn) {
+    $robe = elid_robebottoms;
+    $seq = elid_robebottoms_crafting;
+}
+anim($seq, 0);
+sound_synth(stiching, 1, 0);
+p_delay(2);
+if (inv_total(inv, $torn) = 0 | inv_total(inv, thread) = 0) return;
+inv_del(inv, thread, 1);
+inv_del(inv, $torn, 1);
+inv_add(inv, $robe, 1);
+mes("You mend the robe with your needle and thread."); // ours
+
+// ---------------------------------------------------------------- the statuette's plinth
+// The statuette on the plinth ends the quest (the OSRS wiki: "Using the statuette on the plinth");
+// after, Pray-at (the OSRS and RS wikis): prayer points and hitpoints full, and a hitpoints boost
+// of 7 (the OSRS wiki's figure; its later poison, run and special restores are left out).
+[oplocu,elid_statuette_multiloc]
+if (last_useitem ! elid_statuette) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%elidquest >= ^elid_complete) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%elidquest < ^elid_deal) {
+    mes("Nothing interesting happens."); // ours: the drop trick before the genie's deal
+    return;
+}
+anim(human_pickuptable, 0);
+p_delay(1);
+mes("You place the statuette on the plinth."); // ours
+~elid_complete;
+
+[oploc1,elid_statuette_multiloc]
+if (%elidquest < ^elid_complete) return;
+anim(human_pray, 0);
+sound_synth(prayer_recharge, 1, 0);
+if (stat(prayer) < stat_base(prayer)) stat_add(prayer, calc(stat_base(prayer) - stat(prayer)), 0);
+stat_heal(hitpoints, stat_base(hitpoints), 0);
+stat_boost(hitpoints, 7, 0);
+mes("You pray at the statuette and feel rejuvenated."); // ours, from Awusah's "we now feel rejuvenated"
+
+// ---------------------------------------------------------------- the fountain
+// After the quest it is a water source (the OSRS wiki: "the fountain next to him functions as a
+// water source", and "can easily refill a depleted waterskin"); ours: waterskins fill to four.
+[oplocu,elid_fountain_multiloc]
+if (%elidquest < ^elid_complete) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_obj (last_useitem) {
+    case bucket_empty, jug_empty, vial_empty, bowl_empty, goldbowl_empty, goldbowlbless_empty, fishbowl_empty : ~fill_container_water_once(last_useitem, "fountain");
+    case watering_can_0, watering_can_1, watering_can_2, watering_can_3, watering_can_4, watering_can_5, watering_can_6, watering_can_7 : @fill_watering_can(last_useitem);
+    case water_skin0, water_skin1, water_skin2, water_skin3 :
+        inv_del(inv, last_useitem, 1);
+        inv_add(inv, water_skin4, 1);
+        anim(human_pickuptable, 0);
+        sound_synth(tap_fill, 1, 0);
+        mes("You fill the waterskin from the fountain.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- the villagers
+// the OSRS wiki's NPC transcripts (before and after) and quest transcript (during)
+[opnpc1,elid_villager1]
+if (%elidquest >= ^elid_complete) {
+    ~chatnpc("<p,happy>The curse has been removed. Word around the town is that you were the one who helped remove it.");
+    ~chatplayer("<p,happy>Yes that is correct. The spirits of the Elid cursed the town for throwing away a statue to Elidinis. I got it back");
+    ~chatnpc("<p,happy>Well we thank you. You're pretty much a local hero now.");
+    return;
+}
+if (%elidquest >= ^elid_started) {
+    ~chatplayer("<p,neutral>Hi, I am trying to find the cause of the curse on your town.");
+    ~chatnpc("<p,neutral>Well I think that's what everyone wants to know.");
+    return;
+}
+~chatplayer("<p,neutral>Good day to you.");
+~chatnpc("<p,sad>It's not that good, it's a bit warm.");
+
+[opnpc1,elid_villager2]
+if (%elidquest >= ^elid_complete) {
+    ~chatnpc("<p,neutral>It still shocks me that the spirits of the river would put such a nasty curse on us for something so small.");
+    ~chatplayer("<p,neutral>Well strange are the ways of ancient beings such as them.");
+    return;
+}
+if (%elidquest >= ^elid_started) {
+    ~chatplayer("<p,neutral>Hi, I am trying to find the cause of the curse on your town.");
+    ~chatnpc("<p,sad>It's terrible isn't it. Surely it is because we let the holy Saradominist priest die.");
+    return;
+}
+~chatplayer("<p,neutral>Good day to you.");
+~chatnpc("<p,neutral>May Saradomin be with you.");
+
+[opnpc1,elid_villager3]
+if (%elidquest >= ^elid_complete) {
+    ~chatplayer("<p,quiz>How's life now the curse has been lifted?");
+    ~chatnpc("<p,shock>It's been lifted? I hadn't realised. I've still been buying water from Ali the Carter!");
+    return;
+}
+if (%elidquest >= ^elid_started) {
+    ~chatplayer("<p,neutral>Hi, I am trying to find the cause of the curse on your town.");
+    ~chatnpc("<p,confused>What curse is that?");
+    ~chatplayer("<p,neutral>Don't you know? The curse that has stopped your fountain working and made all the water dry up when you bring it back from the river?");
+    ~chatnpc("<p,confused>Ohh that's because of a curse? I didn't think of that.");
+    ~chatplayer("<p,quiz>So any ideas about the cause of the curse?");
+    ~chatnpc("<p,neutral>Absolutely none.");
+    return;
+}
+~chatplayer("<p,neutral>Good day to you.");
+~chatnpc("<p,happy>And a good day to you too.");
+
+[opnpc1,elid_villager4] ~elid_villager_woman(true);
+[opnpc1,elid_villager5] ~elid_villager_woman(true);
+[opnpc1,elid_villager6] ~elid_villager_woman(false); // the OSRS wiki: Zahra speaks first
+
+// Habibah, Meskhenet and Zahra
+[proc,elid_villager_woman](boolean $greet)
+if (%elidquest >= ^elid_complete) {
+    ~chatplayer("<p,quiz>How's life now the curse has been lifted?");
+    ~chatnpc("<p,happy>Much better thanks to you. We're all very impressed.");
+    return;
+}
+if (%elidquest >= ^elid_statuette) {
+    ~chatplayer("<p,neutral>I heard the people of Nardah threw their statue of Elidinis away.");
+    ~chatnpc("<p,quiz>Yes that's correct. Why do you ask?");
+    ~chatplayer("<p,neutral>I've found out that action seems to have caused this town's curse.");
+    ~chatnpc("<p,neutral>Well, I guess that would be logical conclusion. I don't really know where the statue was thrown. Awusah might know.");
+    return;
+}
+if (%elidquest >= ^elid_started) {
+    ~chatplayer("<p,neutral>Hi, I am trying to find the cause of the curse on your town.");
+    ~chatnpc("<p,quiz>Ah I see. Awusah has enlisted your help?");
+    ~chatplayer("<p,neutral>Yes he has.");
+    ~chatnpc("<p,neutral>Well, I really don't know why it might have happened. Maybe Ghaslor has some ideas. He's very wise and old and is the town's archivist. He lives in the northeast corner of town.");
+    return;
+}
+if ($greet = true) ~chatplayer("<p,neutral>Good day to you.");
+~chatnpc("<p,sad>Hello.");
+~chatplayer("<p,quiz>You don't look too happy.");
+~chatnpc("<p,sad>True. We've not fallen on the best of times here.");
+~chatplayer("<p,quiz>Any way that I can help?");
+~chatnpc("<p,neutral>Possibly. I'd go talk to Awusah the Mayor of Nardah. He's in the big house on the east side of the town square.");

@@ -22,7 +22,7 @@ if ($head ! null) {
 }
 
 if ($body ! null) {
-    if($body = desert_shirt) {
+    if($body = desert_shirt | $body = elid_robetop) { // EASCape: the robes of Elidinis count as desert clothing (Void, the OSRS wiki)
         $time = calc($time + 10);
     } else if(oc_category($body) = armour_body) {
         $time = calc($time - 40);
@@ -30,7 +30,7 @@ if ($body ! null) {
 }
 
 if ($legs ! null) {
-    if($legs = desert_robe) {
+    if($legs = desert_robe | $legs = elid_robebottoms) { // EASCape: as above
         $time = calc($time + 20);
     } else if(oc_category($legs) = armour_legs) {
         $time = calc($time - 30);
@@ -109,6 +109,25 @@ if($drank = true) {
     ~calculate_desertheat_timer;
     return;
 }
+// EASCape: Nardah's choc-ices (5 December 2005). The RS wiki's update page: they "heal health and
+// also stop you from dehydrating as quickly in the desert, though they will sometimes melt in the
+// heat". Void and the OSRS wiki: with no water left one is eaten instead (healing as it would), and
+// the OSRS wiki's "Your choc ice evaporates in the desert heat." Ours: how often one melts (1 in 10).
+if (inv_total(inv, elid_choc_ice) > 0) {
+    if (random(10) = 0) {
+        inv_del(inv, elid_choc_ice, 1);
+        mes("Your choc ice evaporates in the desert heat.");
+    }
+}
+if (inv_total(inv, elid_choc_ice) > 0) {
+    inv_del(inv, elid_choc_ice, 1);
+    mes("You eat a choc ice.");
+    anim(human_eat, 0);
+    sound_synth(eat, 1, 0);
+    stat_heal(hitpoints, 7, 0);
+    ~calculate_desertheat_timer;
+    return;
+}
 if(inv_total(inv, water_skin0) > 0) {
     mes("Perhaps you should fill up one of your empty waterskins."); // this is always plural
 } else {
@@ -130,5 +149,11 @@ queue(damage_player, 0, ~random_range(1, 10));
 [mapzoneexit,0_51_48] ~clear_desertheat_timer;
 
 [mapzoneexit,0_52_46] ~clear_desertheat_timer;
+// EASCape: the desert round Nardah (5 December 2005): the crevice to the west and the sand to the
+// south (desert_heat_zones.dbrow); Nardah itself is a town and has none
+[mapzoneexit,0_52_44] ~clear_desertheat_timer;
+[mapzoneexit,0_52_45] ~clear_desertheat_timer;
+[mapzoneexit,0_53_44] ~clear_desertheat_timer;
+[mapzone,0_53_44] ~start_desertheat_timer;
 [mapzoneexit,0_52_47] ~clear_desertheat_timer;
 [mapzoneexit,0_52_48] ~clear_desertheat_timer;

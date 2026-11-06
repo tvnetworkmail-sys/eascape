@@ -1,0 +1,103 @@
+// EASCape: test commands for Spirits of the Elid (quest_elid).
+
+// ::elidpack - what the quest needs you to bring (the OSRS and RS wikis): a needle and 2 thread, a
+// law and an air rune for Telekinetic Grab, a rope, a knife, a lit candle, a pickaxe, a shortbow
+// and bronze arrows, a rune spear (stab, slash and crush), 5 lobsters, 2 choc-ices and 3,000 coins
+// for the carpets.
+[debugproc,elidpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(needle, 1));
+$banked = calc($banked + ~questpack_give(thread, 2));
+$banked = calc($banked + ~questpack_give(lawrune, 1));
+$banked = calc($banked + ~questpack_give(airrune, 1));
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(knife, 1));
+$banked = calc($banked + ~questpack_give(lit_candle, 1));
+$banked = calc($banked + ~questpack_give(bronze_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(shortbow, 1));
+$banked = calc($banked + ~questpack_give(bronze_arrow, 50));
+$banked = calc($banked + ~questpack_give(rune_spear, 1));
+$banked = calc($banked + ~questpack_give(lobster, 5));
+$banked = calc($banked + ~questpack_give(elid_choc_ice, 2));
+$banked = calc($banked + ~questpack_give(coins, 3000));
+~questpack_done("Spirits of the Elid", $banked);
+mes("Awusah: ::elidtele 1. You need 33 Magic, 37 Ranged, 37 Mining and 37 Thieving.");
+
+// ::elidstage <n> - sets Spirits of the Elid, with what you would be carrying: 0 not started
+// (clears everything), 1 started, 2 Ghaslor's ballad, 3 the ballad read, 4 through the doors (the
+// key, the robes on), 5 the golems beaten and the channels clear, 6 spoken to the spirits,
+// 7 told of the statuette, 8 Awusah told of the crevice, 9 the genie's deal (two soles),
+// 10 traded (the statuette), 11 done (no rewards). `::questdone elid` finishes it with its rewards.
+[debugproc,elidstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 11) {
+    mes("::elidstage 0-11");
+    return;
+}
+%elid_main = 0;
+%elid_traded = 0;
+if ($n = 0) {
+    ~send_quest_progress(questlist:elid, 0, ^elid_complete);
+    ~update_questpoints;
+    mes("Spirits of the Elid: reset.");
+    return;
+}
+def_int $s = ^elid_started;
+switch_int ($n) {
+    case 2 : $s = ^elid_ballad;
+    case 3 : $s = ^elid_read_ballad;
+    case 4 : $s = ^elid_doors;
+    case 5 : $s = ^elid_channels;
+    case 6 : $s = ^elid_spoke_spirits;
+    case 7 : $s = ^elid_statuette;
+    case 8 : $s = ^elid_crevice;
+    case 9, 10 : $s = ^elid_deal;
+    case 11 : $s = ^elid_complete;
+}
+if ($n >= 5) {
+    %elid_blackgolem = 1;
+    %elid_whitegolem = 1;
+    %elid_greygolem = 1;
+    %elid_miningchannel = 1;
+    %elid_thievingchannel = 1;
+    %elid_rangingchannel = 1;
+}
+if ($n >= 10) %elid_traded = 1;
+%elidquest = $s;
+if ($n >= 2 & $n <= 4 & inv_total(inv, elid_ballad) = 0) ~questdone_give(elid_ballad, 1);
+if ($n = 4) {
+    if (inv_total(inv, elid_key) = 0) ~questdone_give(elid_key, 1);
+    if (inv_total(worn, elid_robetop) = 0 & inv_total(inv, elid_robetop) = 0) ~questdone_give(elid_robetop, 1);
+    if (inv_total(worn, elid_robebottoms) = 0 & inv_total(inv, elid_robebottoms) = 0) ~questdone_give(elid_robebottoms, 1);
+}
+if ($n = 9 & inv_total(inv, elid_sole) = 0) ~questdone_give(elid_sole, 2);
+if ($n = 10 & inv_total(inv, elid_statuette) = 0) ~questdone_give(elid_statuette, 1);
+~send_quest_progress(questlist:elid, %elidquest, ^elid_complete);
+~update_questpoints;
+mes("Spirits of the Elid: stage <tostring($n)> (elidquest <tostring(%elidquest)>, golems <tostring(%elid_blackgolem)><tostring(%elid_whitegolem)><tostring(%elid_greygolem)>, channels <tostring(%elid_miningchannel)><tostring(%elid_thievingchannel)><tostring(%elid_rangingchannel)>).");
+
+// ::elidtele <n> - 1 Awusah (the mayor's house), 2 Ghaslor, 3 the shrine (Shiratti, the key, the
+// cupboards, the plinth), 4 the waterfall's root, 5 inside the cave (the key and robe doors),
+// 6 between the three golem doors, 7 the spirits' lake, 8 the crevice west of Nardah, 9 the genie,
+// 10 Zahur, 11 Rokuh and the market
+[debugproc,elidtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^elid_awusah;
+    case 2 : $to = ^elid_ghaslor;
+    case 3 : $to = ^elid_shiratti_at;
+    case 4 : $to = ^elid_root_top;
+    case 5 : $to = ^elid_cave_in;
+    case 6 : $to = ^elid_corridor;
+    case 7 : $to = ^elid_lake;
+    case 8 : $to = movecoord(^elid_crevice_top, 3, 0, 0);
+    case 9 : $to = movecoord(^elid_genie, 0, 0, -2);
+    case 10 : $to = ^elid_zahur;
+    case 11 : $to = movecoord(^elid_rokuh, 0, 0, -2);
+    case default :
+        mes("::elidtele 1-11: 1 Awusah, 2 Ghaslor, 3 shrine, 4 waterfall root, 5 cave doors, 6 golem doors, 7 spirits, 8 crevice, 9 genie, 10 Zahur, 11 Rokuh");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 3, ^map_findsquare_lineofwalk));

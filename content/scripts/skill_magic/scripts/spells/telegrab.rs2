@@ -16,6 +16,11 @@ if (afk_event = ^true) {
     ~macro_event_general_spawn(~macro_event_set_random);
     return;
 }
+// EASCape: the genie's lamp (Spirits of the Elid; the OSRS wiki's Transcript:Genie)
+if (obj_type = elid_genilamp & npc_find(coord, elid_genie, 10, 0) = true) {
+    ~chatnpc("<p,angry>Hey, no casting spells on my house!");
+    return;
+}
 // display tea
 if (obj_type = display_tea) {
     ~chatnpc_specific(nc_name(tea_seller), tea_seller, "<p,angry>Hey! Put that back! Those are for display only!");
