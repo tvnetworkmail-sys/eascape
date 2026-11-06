@@ -1,0 +1,90 @@
+// EASCape: Ilfeen (roving_update_female_woodelf, 22 February 2005), the wandering elf in Isafdar
+// who chants crystal seeds. Words: the OSRS wiki's transcript, leaving out the Eyes of Glouphrie
+// lines (2007) and the halberd (later); her prices: the OSRS wiki's table (a bow 900,000 less
+// 180,000 a time down to 180,000; a shield 750,000 less 150,000 a time down to 150,000), counted
+// on the cache's roving_update_ilfeen_chant varp, which Islwyn's re-enchanting also counts; the
+// book: 2009scape's (the cache's Crystal of seren).
+[opnpc1,roving_update_female_woodelf]
+if (%roving_elves_quest = ^roving_not_started) {
+    ~chatplayer("<p,neutral>Hello there.");
+    ~chatnpc("<p,neutral>Sorry, I don't have time to talk.");
+    return;
+}
+if (%roving_elves_quest < ^roving_complete) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,happy>Hey, how's it going?");
+    ~chatplayer("<p,neutral>Not bad, I'm trying to help an elf named Islwyn consecrate his grandmother's resting place. Do you know of anything that could help me?");
+    ~chatnpc("<p,neutral>Sorry, I know nothing of the consecration process. Eluned will know though, she travels with Islwyn.");
+    ~chatplayer("<p,neutral>Alright, thanks.");
+    ~chatnpc("<p,happy>No problem.");
+    return;
+}
+// ours: the first-time lines until she has chanted for you (no source keeps a "met" flag)
+if (%roving_update_ilfeen_chant = 0) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,happy>Hey, you're the human that helped my friend Islwyn, aren't you? He told me that he'd given you some crystal equipment.");
+    ~chatplayer("<p,quiz>That's right, why?");
+    ~chatnpc("<p,neutral>When it reverts to seed, bring it to me and I'll chant it for you.");
+} else {
+    ~chatplayer("<p,neutral>Hello again.");
+    ~chatnpc("<p,neutral>Hey.");
+    ~chatplayer("<p,quiz>Are you still offering to chant seeds?");
+    ~chatnpc("<p,neutral>I am, but you'll need to supply the seed.");
+}
+if (inv_total(inv, crystal_seed_old) > 0) {
+    ~chatplayer("<p,quiz>It just happens I have a seed here, what can you do with it?");
+    ~chatnpc("<p,neutral>I can only make shields and bows. I've been trying halberds but so far only Islwyn has succeeded.");
+    def_int $choice = ~p_choice2("How much for a shield?", 1, "How much is the bow?", 2);
+    if ($choice = 1) {
+        ~chatplayer("<p,quiz>How much for a shield?");
+        if (~ilfeen_chant(roving_crystal_shield_1000, max(150000, calc(750000 - 150000 * %roving_update_ilfeen_chant))) = false) return;
+    } else {
+        ~chatplayer("<p,quiz>How much is the bow?");
+        if (~ilfeen_chant(roving_crystal_bow_1000, max(180000, calc(900000 - 180000 * %roving_update_ilfeen_chant))) = false) return;
+    }
+}
+if (inv_total(inv, roving_crystal_book) > 0) return; // ours: only the book in your pack counts
+~chatnpc("<p,neutral>If it helps I have a book here that will tell you about crystal chanting.");
+if (~p_choice2("That sounds great.", 1, "I don't need it, thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>I don't need it, thanks.");
+} else {
+    ~chatplayer("<p,happy>That sounds great.");
+    if (inv_freespace(inv) < 1) {
+        ~mesbox("You don't have enough room in your pack."); // ours
+        return;
+    }
+    inv_add(inv, roving_crystal_book, 1);
+    ~objbox(roving_crystal_book, "You're handed a book.", 250, 0, divide(^objbox_height, 2));
+    ~chatplayer("<p,happy>Thanks, I'll read all about it.");
+}
+~chatnpc("<p,happy>Well, good luck.");
+~chatplayer("<p,neutral>See you later.");
+
+[proc,ilfeen_chant](namedobj $obj, int $price)(boolean)
+if (%roving_update_ilfeen_chant = 0) {
+    ~chatnpc("<p,neutral>As this is the first one I've made for you it will be <tostring(divide($price, 1000))>,000 coins. The cost should get cheaper as I get to know your resonance.");
+} else {
+    ~chatnpc("<p,neutral>That will be <tostring(divide($price, 1000))>,000 coins."); // ours: the wiki has only the first price's words
+}
+if (~p_choice2("I'll take it.", 1, "I can't afford that.", 2) = 2) {
+    ~chatplayer("<p,neutral>I can't afford that.");
+    return(false);
+}
+~chatplayer("<p,happy>I'll take it.");
+if (inv_total(inv, coins) < $price | inv_total(inv, crystal_seed_old) = 0) {
+    ~mesbox("You don't have enough coins."); // ours
+    return(false);
+}
+inv_del(inv, coins, $price);
+inv_del(inv, crystal_seed_old, 1);
+inv_add(inv, $obj, 1);
+%roving_update_ilfeen_chant = add(%roving_update_ilfeen_chant, 1);
+if (~crystal_bow($obj) = true) {
+    %crystal_bow_shots = 0;
+    ~objbox($obj, "Ilfeen hands you a crystal bow.", 250, 0, divide(^objbox_height, 2));
+} else {
+    %crystal_shield_hits = 0;
+    ~objbox($obj, "Ilfeen hands you a crystal shield.", 250, 0, divide(^objbox_height, 2));
+}
+~chatplayer("<p,happy>Thanks.");
+return(true);

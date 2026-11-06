@@ -1,0 +1,120 @@
+// EASCape: Lletya's people (the 377 map's spawns in square 36_49). Oronwen, Arianwyn and Eluned
+// are in quest_mourning1/me1_lletya.rs2; the shops' stock is the cache's own lletya*shop1 (the
+// 2005 RuneHQ city guide, as 2006Scape), and Trade is the shop_keeper category (shop.rs2).
+
+// ---------------------------------------------------------------- the shopkeepers (Void's
+// LletyaShopkeepers.kt and 2009scape's EudavGethinDialogue.kt / DalldavDialogue.kt)
+[opnpc1,mourning_stores_man] @lletya_shopkeeper; // Eudav, the general store
+[opnpc1,mourning_elven_cook] @lletya_shopkeeper; // Gethin, the food store
+
+[label,lletya_shopkeeper]
+~chatnpc("<p,happy>Can I help you at all?");
+if (~p_choice2("Yes please. What are you selling?", 1, "No thanks.", 2) = 1) {
+    ~chatplayer("<p,quiz>Yes please. What are you selling?");
+    ~openshop_activenpc;
+    return;
+}
+~chatplayer("<p,neutral>No thanks.");
+
+[opnpc1,mourning_bow_seller] // Dalldav, the archery shop
+~chatnpc("<p,happy>Can I help you at all?");
+switch_int (~p_choice3("Yes please. What are you selling?", 1, "Why do you sell this stuff?", 2, "No thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Yes please. What are you selling?");
+        ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,quiz>Why do you sell this stuff? The Crystal Bow is so much better.");
+        ~chatnpc("<p,happy>We keep all these old toys to train our children with, but if people will part with coins for them, then they are theirs!");
+    case 3 :
+        ~chatplayer("<p,neutral>No thanks.");
+}
+
+// ---------------------------------------------------------------- the bankers (the usual banker
+// talk; Void gives them an interaction range of 5 across the bank's tables)
+[opnpc1,mourning_elf_bankerm] @talk_to_banker;
+[opnpc1,mourning_elf_bankerf] @talk_to_banker;
+[opnpc3,mourning_elf_bankerm] @openbank;
+[opnpc3,mourning_elf_bankerf] @openbank;
+
+[apnpc1,mourning_elf_bankerm] @lletya_banker_ap(1);
+[apnpc1,mourning_elf_bankerf] @lletya_banker_ap(1);
+[apnpc3,mourning_elf_bankerm] @lletya_banker_ap(3);
+[apnpc3,mourning_elf_bankerf] @lletya_banker_ap(3);
+
+[label,lletya_banker_ap](int $op)
+if (npc_range(coord) > 5) {
+    p_aprange(5);
+    return;
+}
+if ($op = 3) @openbank;
+@talk_to_banker;
+
+// ---------------------------------------------------------------- the townsfolk. Goreu, Arvel,
+// Mawrth, Kelyn, Eoin and Iona: 2009scape's dialogues (Void's are the same words); Ysgawyn: the
+// OSRS and RS wikis' transcript (Void's words for him are on neither wiki). Pickpocket is the
+// cache's op3 (skill_thieving/configs/pickpocking/pickpocket.dbrow).
+[opnpc1,mourning_town_elf_1] // Goreu
+~chatplayer("<p,happy>Hello.");
+~chatnpc("<p,happy>Good day, can I help you?");
+~chatplayer("<p,happy>No thanks I'm just watching the world go by.");
+~chatnpc("<p,happy>Well I can think of no better place to do it, it is beautiful here is it not?");
+~chatplayer("<p,happy>Indeed it is.");
+
+[opnpc1,mourning_town_elf_2] // Ysgawyn
+~chatplayer("<p,neutral>Hey.");
+~chatnpc("<p,neutral>Can I help you?");
+~chatplayer("<p,neutral>Not really I just wanted to chat.");
+~chatnpc("<p,neutral>Sorry, I do not have time for idle gossip. Good day.");
+
+[opnpc1,mourning_town_elf_3] // Arvel
+~chatnpc("<p,happy>Good day traveller. You are far from home, what brings you here?");
+if (gender = ^gender_male) {
+    ~chatplayer("<p,happy>I am a wandering hero. I come here in search of adventure.");
+} else {
+    ~chatplayer("<p,happy>I am a wandering heroine. I come here in search of adventure.");
+}
+~chatnpc("<p,happy>Sounds ghastly, I just want to live in peace.");
+~chatplayer("<p,happy>Unfortunately without people like me, peace doesn't last for long.");
+~chatnpc("<p,happy>True, but then again most adventurers cause as much trouble as they put right.");
+~chatplayer("<p,happy>You've got a point there... Hmm...");
+~chatnpc("<p,happy>Well, good day traveller. And always do the right thing.");
+
+[opnpc1,mourning_town_elf_4] // Mawrth
+~chatnpc("<p,happy>Those children are nothing but trouble - if I did not watch them all the time, Seren knows what trouble they would get in to!");
+~chatplayer("<p,happy>They look old enough to look after themselves.");
+~chatnpc("<p,happy>They are only 34 and 38, far too young to be left unsupervised.");
+~chatplayer("<p,happy>Only!?! How old does that make you?");
+~chatnpc("<p,happy>Has no one told you it is rude to ask a lady her age?");
+~chatplayer("<p,happy>Sorry, I wasn't thinking. Anyway... I'd better stop distracting you.");
+~chatnpc("<p,happy>Okay, See you some other time.");
+
+[opnpc1,mourning_town_elf_5] // Kelyn
+~chatplayer("<p,happy>Hello.");
+~chatnpc("<p,happy>Huh... Oh sorry, you made me jump. I was miles away, day dreaming.");
+~chatplayer("<p,happy>About what may I ask?");
+~chatnpc("<p,happy>I was thinking about the crystal spires of Prifddinas.");
+~chatplayer("<p,happy>It must be beautiful, I've only seen the city walls.");
+~chatnpc("<p,happy>I have never seen it, all I know are the stories. I hope that changes one day.");
+
+[opnpc1,mourning_elf_kid_1] // Eoin
+~chatplayer("<p,happy>Hello.");
+~chatnpc("<p,happy>Sorry, I cannot stop or Iona will catch me, we are playing tag!");
+
+[opnpc1,mourning_elf_kid_2] // Iona
+~chatplayer("<p,happy>Hello.");
+~chatnpc("<p,happy>I can never catch Eoin, he is just too fast, I am always 'It'.");
+
+[opnpc3,mourning_town_elf_1] @attempt_pick_pocket(npc_type);
+[opnpc3,mourning_town_elf_2] @attempt_pick_pocket(npc_type);
+[opnpc3,mourning_town_elf_3] @attempt_pick_pocket(npc_type);
+[opnpc3,mourning_town_elf_4] @attempt_pick_pocket(npc_type);
+[opnpc3,mourning_town_elf_5] @attempt_pick_pocket(npc_type);
+
+// ---------------------------------------------------------------- the elf archers shoot (the
+// Regicide elf archer's way, regicide_darkelf.rs2); the warriors use the default melee
+[ai_queue1,mourning_guard_range] ~npc_default_retaliate_ap;
+[ai_opplayer2,mourning_guard_range] npc_setmode(applayer2);
+[ai_applayer2,mourning_guard_range] ~npc_rangeattack;
+[ai_queue1,mourning_guard_range2] ~npc_default_retaliate_ap;
+[ai_opplayer2,mourning_guard_range2] npc_setmode(applayer2);
+[ai_applayer2,mourning_guard_range2] ~npc_rangeattack;

@@ -235,7 +235,7 @@ if (%me1_arianwyn_told = 0) {
 
 // ---------------------------------------------------------------- Oronwen, the Lletya seamstress
 // (the RS wiki's words; her shop: 2009scape's two options, the cache's lletyaseamstressshop1;
-// ours: the shop's prices)
+// Trade and the prices: the shop_keeper params on mourning_seamstress in all.npc)
 [opnpc1,mourning_seamstress]
 if (%me1_oron = ^me1_oron_mending & ~me1_ready(%me1_oron_clock) = true) {
     ~chatnpc("<p,happy>I have your trousers ready.");
@@ -297,10 +297,8 @@ switch_int (%me1_oron) {
         ~chatnpc("<p,neutral>They will be done soon.");
 }
 
-[opnpc3,mourning_seamstress] ~me1_oronwen_shop;
-
 [proc,me1_oronwen_shop]
-~openshop(lletyaseamstressshop1, 400, 1300, 30, "Lletya Seamstress");
+~openshop_activenpc;
 
 // what she still needs
 [proc,me1_oron_needs]()(string)

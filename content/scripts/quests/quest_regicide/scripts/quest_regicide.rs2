@@ -272,7 +272,7 @@ if(coord ! $start) {
     p_delay(1);
 }
 sound_synth(jump_no_land, 1, 20);
-if(stat_random(agility, 160, 300) = false) {
+if(stat_random(agility, 180, 255) = false) { // EASCape: the OSRS wiki's leaf trap chance, 180/256 to 255/256 (Void the same)
     mes("... you slip and fall.");
     ~agility_exactmove(agilityarena_dive_player, 20, 1, coord, movecoord(loc_coord, multiply(1,$dx), 0, multiply(1,$dz)), 30, 49, $dir, false);
     @regicide_pitfall_falldown;
@@ -313,7 +313,7 @@ anim(human_death, 0);
 p_delay(1);
 anim(null, 0);
 say("Ouch!");
-~damage_self(15); // always 15
+~damage_self(calc(2 + random(17))); // EASCape: Void's 2 to 18 (LeafTraps.kt; the OSRS wiki: "up to 18")
 
 [oploc1,regicide_trap_hand_holds]
 p_delay(0);
