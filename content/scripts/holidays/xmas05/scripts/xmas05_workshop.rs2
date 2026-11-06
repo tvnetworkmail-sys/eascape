@@ -1,0 +1,371 @@
+// EASCape: the 2005 Christmas event (19 December 2005) - Diango's workshop under Draynor Village:
+// the way in and out, Rosie and the six other pixies, making marionettes (torso, head, arms, legs,
+// strings) and painting baubles, and packing them into puppet and bauble boxes.
+// Sources: the update ("Christmas update for all players"), the RS wiki's "2005 Christmas event",
+// "Diango's Workshop (Draynor Village)", "Rosie (pixie)", "Cait", "Sorcha", "Fionn", the marionette
+// part and bauble pages; Void (xmas_2005 objs, npcs and spawns; its destroy lines). No source has the
+// pixies' words in 2005: every line they say is ours.
+
+// ================================================================ in and out
+// The trapdoor in the north-west house of Draynor market (the cache's win05_trapdoor, put back in
+// place of win05_trapdoor_closed in m48_51.jm2) leads down to Rosie's floor (RS wiki)
+[oploc1,win05_trapdoor]
+p_arrivedelay;
+~climb_ladder(^xmas05_workshop_in, false);
+mes("You climb down into Diango's workshop."); // ours
+
+// The trapdoor steps (back up to the house) and the two ladders between Rosie's floor and the
+// marionette floor are Void's (christmas.teles.toml), already in eascape_world/eascape_links.dbrow
+
+// ================================================================ Rosie, the pixie supervisor
+// RS wiki: she gives out the puppet boxes and bauble boxes, strings the finished marionettes and
+// takes the full bauble boxes (the update: "Completed boxes will earn you a special colourful
+// scarf!... different scarves when you complete 1,2,4 or 8 boxes")
+[opnpc1,win05_pixie_rosie]
+if (inv_total(inv, win05_20bauble_box_full) > 0) @xmas05_rosie_baubles;
+if (~xmas05_unstrung = true) @xmas05_rosie_string;
+~chatnpc("<p,happy>Hello there! Have you come to help?"); // ours
+if (%win05_progress < ^xmas05_rosie) @xmas05_rosie_explain;
+@xmas05_rosie_menu;
+
+[label,xmas05_rosie_menu]
+def_int $choice = ~p_choice4("Can I have a puppet box?", 1, "Can I have a bauble box?", 2, "What needs doing again?", 3, "Goodbye.", 4); // ours
+switch_int ($choice) {
+    case 1 : @xmas05_rosie_puppetbox;
+    case 2 : @xmas05_rosie_baublebox;
+    case 3 : @xmas05_rosie_explain;
+}
+
+// ours, from the update and the RS wiki's walkthrough
+[label,xmas05_rosie_explain]
+~chatnpc("<p,sad>Oh, it's all gone wrong! We're so accident prone that we're getting nothing done."); // ours (the update)
+~chatnpc("<p,neutral>We need marionettes putting together and baubles painting, and all of them packing into boxes."); // ours (the update)
+~chatnpc("<p,neutral>For the marionettes, climb down the ladder. Take a torso, then add a head, arms and legs from the boxes of the same colour. Bring it to me and I'll add the strings."); // ours (RS wiki)
+~chatnpc("<p,neutral>A puppet box takes two red, two green and two blue marionettes. Take full boxes to the Taverley members' gate - someone will be waiting for them."); // ours (the update, RS wiki)
+~chatnpc("<p,neutral>For the baubles, take some from the decorations boxes on the east side and paint them at the paint tables on the west side."); // ours (RS wiki)
+~chatnpc("<p,neutral>A bauble box takes one yellow, one red, one blue, one green and one pink bauble. Bring the full boxes back to me."); // ours (RS wiki: five colours)
+if (%win05_progress < ^xmas05_rosie) %win05_progress = ^xmas05_rosie;
+@xmas05_rosie_menu;
+
+[label,xmas05_rosie_puppetbox]
+~chatplayer("<p,quiz>Can I have a puppet box?"); // ours
+if (%win05_toyboxes >= ^xmas05_boxes_max) {
+    ~chatnpc("<p,happy>We've made all the puppets we need this year. Thank you!"); // ours (RS wiki: eight boxes in all)
+    return;
+}
+if (~xmas05_owns(win05_20puppet_box) = true) {
+    ~chatnpc("<p,neutral>You've already got one! Fill that one first."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>You haven't got room for it."); // ours
+    return;
+}
+%win05_pressiebox_count = 0;
+inv_add(inv, win05_20puppet_box, 1);
+~objbox(win05_20puppet_box, "Rosie gives you a puppet box.", 250, 0, divide(^objbox_height, 2)); // ours
+
+[label,xmas05_rosie_baublebox]
+~chatplayer("<p,quiz>Can I have a bauble box?"); // ours
+if (~xmas05_owns(win05_20bauble_box) = true) {
+    ~chatnpc("<p,neutral>You've already got one! Fill that one first."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>You haven't got room for it."); // ours
+    return;
+}
+%win05_deco_count = 0;
+inv_add(inv, win05_20bauble_box, 1);
+~objbox(win05_20bauble_box, "Rosie gives you a bauble box.", 250, 0, divide(^objbox_height, 2)); // ours
+
+// a full bauble box handed in: a scarf at the 1st, 2nd, 4th and 8th (the update). After eight
+// "fill five additional boxes, and use the boxes on the Christmas tree in Varrock Square" (RS wiki)
+[label,xmas05_rosie_baubles]
+if (%win05_decboxes >= ^xmas05_boxes_max) {
+    ~chatnpc("<p,happy>I've got all the baubles I need, thank you! Why not use those to decorate the big tree in Varrock?"); // ours (RS wiki)
+    return;
+}
+inv_del(inv, win05_20bauble_box_full, 1);
+%win05_decboxes = calc(%win05_decboxes + 1);
+~chatnpc("<p,happy>A whole box of baubles! Wonderful!"); // ours
+def_namedobj $scarf = ~xmas05_scarf_for(%win05_decboxes);
+if ($scarf ! null) {
+    inv_add(inv, $scarf, 1);
+    ~objbox($scarf, "Rosie gives you <~xmas05_a(oc_name($scarf))>!", 250, 0, divide(^objbox_height, 2)); // ours
+}
+
+[opnpcu,win05_pixie_rosie]
+if (last_useitem = win05_20bauble_box_full) @xmas05_rosie_baubles;
+if (~xmas05_stage4_colour(last_useitem) ! -1) @xmas05_rosie_string;
+mes("Nothing interesting happens.");
+
+// RS wiki: "Once the marionette is assembled, Rosie will add strings"
+[label,xmas05_rosie_string]
+~chatnpc("<p,happy>That's a lovely marionette. Let me put some strings on it for you."); // ours
+~xmas05_string_all;
+mes("Rosie strings your marionettes."); // ours
+
+[proc,xmas05_unstrung]()(boolean)
+if (inv_total(inv, win05_marionette_stage4_red) > 0 | inv_total(inv, win05_marionette_stage4_green) > 0 | inv_total(inv, win05_marionette_stage4_blue) > 0) return(true);
+return(false);
+
+[proc,xmas05_string_all]
+def_int $n = inv_total(inv, win05_marionette_stage4_red);
+if ($n > 0) {
+    inv_del(inv, win05_marionette_stage4_red, $n);
+    inv_add(inv, win05_marionette_complete_red, $n);
+}
+$n = inv_total(inv, win05_marionette_stage4_green);
+if ($n > 0) {
+    inv_del(inv, win05_marionette_stage4_green, $n);
+    inv_add(inv, win05_marionette_complete_green, $n);
+}
+$n = inv_total(inv, win05_marionette_stage4_blue);
+if ($n > 0) {
+    inv_del(inv, win05_marionette_stage4_blue, $n);
+    inv_add(inv, win05_marionette_complete_blue, $n);
+}
+
+// RS wiki (Marionette handle, Red marionette (strung)): an unstrung marionette used on a marionette
+// handle is strung. The handle is kept (ours); no source says where one came from in 2005, so the
+// only one is ::xmaspack's
+[opheldu,win05_marionette_handle]
+def_int $colour = ~xmas05_stage4_colour(last_useitem);
+if ($colour = -1) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_delslot(inv, last_useslot);
+inv_add(inv, ~xmas05_strung($colour), 1);
+mes("You attach the strings to the marionette."); // ours
+
+// ================================================================ the other pixies (all ours)
+// RS wiki: Fionn, Cormac and Ronan teach marionettes, Sorcha and Donnacha baubles, Cait collecting baubles
+[opnpc1,win05_pixie_fionn] @xmas05_pixie_marionettes;
+[opnpc1,win05_pixie_cormac] @xmas05_pixie_marionettes;
+[opnpc1,win05_pixie_ronan] @xmas05_pixie_marionettes;
+[opnpc1,win05_pixie_sorcha] @xmas05_pixie_baubles;
+[opnpc1,win05_pixie_donnacha] @xmas05_pixie_baubles;
+[opnpc1,win05_pixie_cait]
+~chatnpc("<p,happy>Need baubles? There are boxes full of unpainted ones on the east side. Take as many as you like!"); // ours (RS wiki)
+~chatnpc("<p,neutral>Mind you, it's five colours to a bauble box - yellow, red, blue, green and pink."); // ours
+
+[label,xmas05_pixie_marionettes]
+~chatnpc("<p,happy>Making marionettes? Take a torso from a box, then add a head, then arms, then legs - all the same colour, mind!"); // ours (RS wiki)
+~chatnpc("<p,neutral>Then take it up to Rosie for its strings."); // ours (RS wiki)
+
+[label,xmas05_pixie_baubles]
+~chatnpc("<p,happy>Painting baubles? Take one to the paintcans on the west side and pick a colour."); // ours (RS wiki)
+~chatnpc("<p,neutral>Put one of each colour in a bauble box and Rosie will be ever so pleased."); // ours
+
+// ================================================================ marionettes
+// The torso boxes (Take) give a torso; the head, arm and leg boxes (Add) add their part to a
+// marionette of the same colour that has the part before it (RS wiki: torso, head, arms, legs)
+[oploc1,loc_10687] @xmas05_take_torso(win05_marionette_stage1_blue);
+[oploc1,loc_10691] @xmas05_take_torso(win05_marionette_stage1_red);
+[oploc1,loc_10695] @xmas05_take_torso(win05_marionette_stage1_green);
+[oploc1,loc_10686] @xmas05_add_part(win05_marionette_stage1_blue, win05_marionette_stage2_blue, "blue", "head");
+[oploc1,loc_10690] @xmas05_add_part(win05_marionette_stage1_red, win05_marionette_stage2_red, "red", "head");
+[oploc1,loc_10694] @xmas05_add_part(win05_marionette_stage1_green, win05_marionette_stage2_green, "green", "head");
+[oploc1,loc_10688] @xmas05_add_part(win05_marionette_stage2_blue, win05_marionette_stage3_blue, "blue", "arms");
+[oploc1,loc_10692] @xmas05_add_part(win05_marionette_stage2_red, win05_marionette_stage3_red, "red", "arms");
+[oploc1,loc_10696] @xmas05_add_part(win05_marionette_stage2_green, win05_marionette_stage3_green, "green", "arms");
+[oploc1,loc_10689] @xmas05_add_part(win05_marionette_stage3_blue, win05_marionette_stage4_blue, "blue", "legs");
+[oploc1,loc_10693] @xmas05_add_part(win05_marionette_stage3_red, win05_marionette_stage4_red, "red", "legs");
+[oploc1,loc_10697] @xmas05_add_part(win05_marionette_stage3_green, win05_marionette_stage4_green, "green", "legs");
+// RS wiki: "If used with the crate that holds red marionette heads, it would become..."
+[oplocu,loc_10686] @xmas05_add_part(win05_marionette_stage1_blue, win05_marionette_stage2_blue, "blue", "head");
+[oplocu,loc_10690] @xmas05_add_part(win05_marionette_stage1_red, win05_marionette_stage2_red, "red", "head");
+[oplocu,loc_10694] @xmas05_add_part(win05_marionette_stage1_green, win05_marionette_stage2_green, "green", "head");
+[oplocu,loc_10688] @xmas05_add_part(win05_marionette_stage2_blue, win05_marionette_stage3_blue, "blue", "arms");
+[oplocu,loc_10692] @xmas05_add_part(win05_marionette_stage2_red, win05_marionette_stage3_red, "red", "arms");
+[oplocu,loc_10696] @xmas05_add_part(win05_marionette_stage2_green, win05_marionette_stage3_green, "green", "arms");
+[oplocu,loc_10689] @xmas05_add_part(win05_marionette_stage3_blue, win05_marionette_stage4_blue, "blue", "legs");
+[oplocu,loc_10693] @xmas05_add_part(win05_marionette_stage3_red, win05_marionette_stage4_red, "red", "legs");
+[oplocu,loc_10697] @xmas05_add_part(win05_marionette_stage3_green, win05_marionette_stage4_green, "green", "legs");
+
+[label,xmas05_take_torso](namedobj $torso)
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+anim(human_pickuptable, 0); // ours
+inv_add(inv, $torso, 1);
+mes("You take a puppet torso."); // ours
+
+[label,xmas05_add_part](namedobj $from, namedobj $to, string $colour, string $part)
+if (inv_total(inv, $from) < 1) {
+    if (compare($part, "head") = 0) {
+        mes("You need a <$colour> puppet torso to add a head to."); // ours
+    } else if (compare($part, "arms") = 0) {
+        mes("You need a <$colour> puppet torso with a head to add arms to."); // ours
+    } else {
+        mes("You need a <$colour> puppet with a head and arms to add legs to."); // ours
+    }
+    return;
+}
+anim(human_pickuptable, 0); // ours
+inv_del(inv, $from, 1);
+inv_add(inv, $to, 1);
+mes("You add the <$part> to the marionette."); // ours
+
+// ================================================================ the puppet box
+// RS wiki: two of each colour, strung, fill a box (the cache's win05_pressiebox_count_red/green/blue)
+[opheldu,win05_20puppet_box]
+def_int $colour = ~xmas05_strung_colour(last_useitem);
+if ($colour = -1) {
+    if (~xmas05_stage4_colour(last_useitem) ! -1) {
+        mes("It needs its strings before it can go in the box."); // ours
+        return;
+    }
+    mes("Nothing interesting happens.");
+    return;
+}
+if (~xmas05_puppets_in($colour) >= ^xmas05_puppets_each) {
+    mes("There are already two <~xmas05_mcolour_name($colour)> marionettes in the box."); // ours
+    return;
+}
+def_int $box = last_slot;
+inv_delslot(inv, last_useslot);
+switch_int ($colour) {
+    case ^xmas05_m_red : %win05_pressiebox_count_red = calc(%win05_pressiebox_count_red + 1);
+    case ^xmas05_m_green : %win05_pressiebox_count_green = calc(%win05_pressiebox_count_green + 1);
+    case default : %win05_pressiebox_count_blue = calc(%win05_pressiebox_count_blue + 1);
+}
+mes("You put the marionette in the box."); // ours
+if (%win05_pressiebox_count_red >= ^xmas05_puppets_each & %win05_pressiebox_count_green >= ^xmas05_puppets_each & %win05_pressiebox_count_blue >= ^xmas05_puppets_each) {
+    inv_setslot(inv, $box, win05_20puppet_box_full, 1);
+    %win05_pressiebox_count = 0;
+    mes("The box is full. Take it to the Taverley members' gate."); // ours (the box's examine)
+}
+
+// Examine-closer (ours)
+[opheld1,win05_20puppet_box]
+mes("The box holds <tostring(%win05_pressiebox_count_red)> red, <tostring(%win05_pressiebox_count_green)> green and <tostring(%win05_pressiebox_count_blue)> blue marionettes, of two each."); // ours
+
+[proc,xmas05_puppets_in](int $colour)(int)
+switch_int ($colour) {
+    case ^xmas05_m_red : return(%win05_pressiebox_count_red);
+    case ^xmas05_m_green : return(%win05_pressiebox_count_green);
+    case default : return(%win05_pressiebox_count_blue);
+}
+
+// ================================================================ baubles
+// The decorations boxes (Take-decoration) on the east side: unpainted baubles, any shape (RS wiki:
+// "the type does not matter"); which shape a box gives is ours (random)
+[oploc1,loc_10679] @xmas05_take_bauble;
+[oploc1,loc_10680] @xmas05_take_bauble;
+[oploc1,loc_10681] @xmas05_take_bauble;
+[oploc1,loc_10682] @xmas05_take_bauble;
+[oploc1,loc_10683] @xmas05_take_bauble;
+[oploc1,loc_10684] @xmas05_take_bauble;
+[oploc1,loc_10685] @xmas05_take_bauble;
+
+[label,xmas05_take_bauble]
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+anim(human_pickuptable, 0); // ours
+switch_int (random(5)) {
+    case 0 : inv_add(inv, win05_starbauble_unpainted, 1);
+    case 1 : inv_add(inv, win05_boxbauble_unpainted, 1);
+    case 2 : inv_add(inv, win05_diamondbauble_unpainted, 1);
+    case 3 : inv_add(inv, win05_treebauble_unpainted, 1);
+    case default : inv_add(inv, win05_bellbauble_unpainted, 1);
+}
+mes("You take an unpainted bauble."); // ours
+
+// The paintcans (Paint-bauble) on the west side: the colour is picked (ours: the cache has three
+// paintcan locs for five colours, so no can is tied to a colour)
+[oploc1,loc_10673] @xmas05_paint(null);
+[oploc1,loc_10674] @xmas05_paint(null);
+[oploc1,loc_10675] @xmas05_paint(null);
+[oplocu,loc_10673] @xmas05_paint(last_useitem);
+[oplocu,loc_10674] @xmas05_paint(last_useitem);
+[oplocu,loc_10675] @xmas05_paint(last_useitem);
+
+[label,xmas05_paint](obj $bauble)
+if ($bauble = null) $bauble = ~xmas05_carried_unpainted;
+if ($bauble = null) {
+    mes("You need an unpainted bauble to paint."); // ours
+    return;
+}
+if (~xmas05_bauble_shape($bauble) = -1 | ~xmas05_bauble_colour($bauble) ! -1) {
+    mes("Nothing interesting happens.");
+    return;
+}
+def_int $colour = ~p_choice5("Yellow.", ^xmas05_yellow, "Red.", ^xmas05_red, "Blue.", ^xmas05_blue, "Green.", ^xmas05_green, "Pink.", ^xmas05_pink); // ours
+if (inv_total(inv, $bauble) < 1) return;
+inv_del(inv, $bauble, 1);
+def_namedobj $painted = ~xmas05_painted(~xmas05_bauble_shape($bauble), $colour);
+inv_add(inv, $painted, 1);
+mes("You paint the bauble <~xmas05_colour_name($colour)>."); // ours
+
+[proc,xmas05_carried_unpainted]()(obj)
+if (inv_total(inv, win05_starbauble_unpainted) > 0) return(win05_starbauble_unpainted);
+if (inv_total(inv, win05_boxbauble_unpainted) > 0) return(win05_boxbauble_unpainted);
+if (inv_total(inv, win05_diamondbauble_unpainted) > 0) return(win05_diamondbauble_unpainted);
+if (inv_total(inv, win05_treebauble_unpainted) > 0) return(win05_treebauble_unpainted);
+if (inv_total(inv, win05_bellbauble_unpainted) > 0) return(win05_bellbauble_unpainted);
+return(null);
+
+// ================================================================ the bauble box
+// RS wiki: "paint five baubles with five different colours (blue, green, pink, yellow, red) and use
+// them on the box" (the cache's win05_deco_count_* bits)
+[opheldu,win05_20bauble_box]
+def_int $colour = ~xmas05_bauble_colour(last_useitem);
+if ($colour = -1) {
+    if (~xmas05_bauble_shape(last_useitem) ! -1) {
+        mes("You need to paint the bauble first."); // ours
+        return;
+    }
+    mes("Nothing interesting happens.");
+    return;
+}
+if (~xmas05_deco_in($colour) = 1) {
+    mes("There's already a <~xmas05_colour_name($colour)> bauble in the box."); // ours
+    return;
+}
+def_int $box = last_slot;
+inv_delslot(inv, last_useslot);
+switch_int ($colour) {
+    case ^xmas05_yellow : %win05_deco_count_yellow = 1;
+    case ^xmas05_red : %win05_deco_count_red = 1;
+    case ^xmas05_blue : %win05_deco_count_blue = 1;
+    case ^xmas05_green : %win05_deco_count_green = 1;
+    case default : %win05_deco_count_pink = 1;
+}
+mes("You put the bauble in the box."); // ours
+if (%win05_deco_count_yellow = 1 & %win05_deco_count_red = 1 & %win05_deco_count_blue = 1 & %win05_deco_count_green = 1 & %win05_deco_count_pink = 1) {
+    inv_setslot(inv, $box, win05_20bauble_box_full, 1);
+    %win05_deco_count = 0;
+    mes("The box is full. Give it to a pixie, or use it to decorate a tree."); // ours (the box's examine)
+}
+
+// Examine-closer (ours)
+[opheld1,win05_20bauble_box]
+def_string $in = "";
+def_int $c = 0;
+while ($c < 5) {
+    if (~xmas05_deco_in($c) = 1) {
+        if (string_length($in) > 0) $in = append($in, ", ");
+        $in = append($in, ~xmas05_colour_name($c));
+    }
+    $c = calc($c + 1);
+}
+if (string_length($in) = 0) {
+    mes("The box is empty. It needs a yellow, red, blue, green and pink bauble."); // ours
+    return;
+}
+mes("The box holds a <$in> bauble. It needs one of each of yellow, red, blue, green and pink."); // ours
+
+[proc,xmas05_deco_in](int $colour)(int)
+switch_int ($colour) {
+    case ^xmas05_yellow : return(%win05_deco_count_yellow);
+    case ^xmas05_red : return(%win05_deco_count_red);
+    case ^xmas05_blue : return(%win05_deco_count_blue);
+    case ^xmas05_green : return(%win05_deco_count_green);
+    case default : return(%win05_deco_count_pink);
+}

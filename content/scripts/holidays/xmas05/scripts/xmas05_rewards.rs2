@@ -1,0 +1,336 @@
+// EASCape: the 2005 Christmas event (19 December 2005) - Diango, the Hooded Stranger at the Taverley
+// members' gate, the Varrock tree and its gifts, the marionette crate, the marionettes as toys, the
+// hats and scarves, and the lookups the workshop uses.
+// Sources: the update ("Christmas update for all players"), the RS wiki's "2005 Christmas event",
+// "Hooded Stranger", "Marionettes", "Blue marionette", "Bauble box", "Puppet box", the hat pages;
+// 2009scape ToyListeners.kt (the marionettes' seqs and spotanims), DiangoDialogue.java (the holiday
+// item lines); Void christmas.items.toml (the destroy lines).
+
+// ================================================================ Diango (called from area_draynor/diango.rs2)
+// The update: "Find Diango down in the Draynor market and he'll tell you where his workshop is."
+[label,xmas05_diango_workshop]
+~chatplayer("<p,quiz>Can I help at your workshop?"); // ours
+~chatnpc("<p,sad>Am I glad you asked, partner! The pixies I hired for my workshop just aren't working out."); // ours (the update)
+~chatnpc("<p,sad>They're so accident prone that despite all their hard work, they're getting nothing done!"); // the update's words, as his
+~chatnpc("<p,neutral>The workshop's under the little house just north of here. Climb down the trapdoor and have a word with Rosie - she'll tell you what needs doing."); // ours (RS wiki: "the small shack north of him")
+if (%win05_progress < ^xmas05_told) %win05_progress = ^xmas05_told;
+
+// The update: "Lost scarves and hats can be retrieved from Diango himself." The two lines are
+// 2009scape's (DiangoDialogue.java); each hat and scarf earned and not owned comes back
+[label,xmas05_diango_reclaim]
+~chatplayer("<p,quiz>I'd like to check holiday items please!");
+~chatnpc("<p,happy>Sure thing, let me just see what you're missing.");
+def_int $given = 0;
+$given = calc($given + ~xmas05_reclaim(win05_hat1, %win05_toyboxes, 1));
+$given = calc($given + ~xmas05_reclaim(win05_hat2, %win05_toyboxes, 2));
+$given = calc($given + ~xmas05_reclaim(win05_hat3, %win05_toyboxes, 4));
+$given = calc($given + ~xmas05_reclaim(win05_hat4, %win05_toyboxes, 8));
+$given = calc($given + ~xmas05_reclaim(win05_scarf1, %win05_decboxes, 1));
+$given = calc($given + ~xmas05_reclaim(win05_scarf2, %win05_decboxes, 2));
+$given = calc($given + ~xmas05_reclaim(win05_scarf3, %win05_decboxes, 4));
+$given = calc($given + ~xmas05_reclaim(win05_scarf4, %win05_decboxes, 8));
+if ($given = 0) {
+    ~chatnpc("<p,neutral>Looks like you're not missing anything, partner."); // ours
+    return;
+}
+~chatnpc("<p,happy>There you go, partner."); // ours
+
+[proc,xmas05_reclaim](namedobj $obj, int $done, int $need)(int)
+if ($done < $need) return(0);
+if (~xmas05_owns($obj) = true) return(0);
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space for your <oc_name($obj)>."); // ours
+    return(0);
+}
+inv_add(inv, $obj, 1);
+mes("Diango gives you your <oc_name($obj)>."); // ours
+return(1);
+
+// ================================================================ the Hooded Stranger
+// At the Taverley members' gate (the update: "a familiar face will be waiting for you"; the RS
+// wiki: Santa Claus in disguise). Each full puppet box earns a count; a hat at the 1st, 2nd, 4th and
+// 8th (the update: "Different hats can be achieved by completing 1,2,4 and 8 boxes"). Which hat at
+// which count follows the cache's numbering (win05_hat1-4: bobble, jester, tri-jester, woolly) // ours
+// The spawn by the gate is ours (m45_53.jm2). He has no words in any source: all ours.
+[opnpc1,win05_hooded_stranger]
+if (inv_total(inv, win05_20puppet_box_full) < 1) {
+    ~chatnpc("<p,shifty>Ho- er, hello there. Got any puppets for me?"); // ours
+    ~chatplayer("<p,neutral>Not yet."); // ours
+    ~chatnpc("<p,neutral>The pixies in Diango's workshop in Draynor are making them. Bring me a full box when you can."); // ours
+    return;
+}
+if (%win05_toyboxes >= ^xmas05_boxes_max) {
+    ~chatnpc("<p,happy>That's all the puppets I need this year. Thank you!"); // ours
+    return;
+}
+~chatplayer("<p,happy>I've brought a box of puppets."); // ours
+~chatnpc("<p,happy>Splendid! The children will love these."); // ours
+while (inv_total(inv, win05_20puppet_box_full) > 0 & %win05_toyboxes < ^xmas05_boxes_max) {
+    inv_del(inv, win05_20puppet_box_full, 1);
+    %win05_toyboxes = calc(%win05_toyboxes + 1);
+    def_namedobj $hat = ~xmas05_hat_for(%win05_toyboxes);
+    if ($hat ! null) {
+        inv_add(inv, $hat, 1);
+        ~objbox($hat, "The stranger gives you <~xmas05_a(oc_name($hat))>!", 250, 0, divide(^objbox_height, 2)); // ours
+    }
+}
+mes("You have delivered <tostring(%win05_toyboxes)> of <tostring(^xmas05_boxes_max)> puppet boxes."); // ours
+
+// ================================================================ the Varrock tree and its gifts
+// RS wiki: use five boxes of decorations on the tree in Varrock square; it turns into a Christmas
+// tree, and the gifts under it give one marionette. The tree is the cache's loc_10667 (stages on
+// win05_decorating), the gifts loc_10669 (win05_recv_pressie: the bare trunk, "Ug loves Aga", then
+// the gifts with Unwrap presents). The fountain's fence keeps you a few squares off (ours: ap).
+// The map has the gifts (3x3) one square south of the tree's middle (ours), on the edge of the tree,
+// so they can be reached over the fence: in the middle the branches hide them from every side
+[aplocu,loc_10667]
+if (~xmas05_by_tree = false) {
+    p_aprange(^xmas05_tree_reach);
+    return;
+}
+if (last_useitem = win05_20bauble_box) {
+    mes("You need to fill the box with baubles first."); // ours
+    return;
+}
+if (last_useitem ! win05_20bauble_box_full) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%win05_decorating >= ^xmas05_tree_boxes) {
+    mes("The tree is already decorated."); // ours
+    return;
+}
+anim(human_pickuptable, 0); // ours
+inv_delslot(inv, last_useslot);
+%win05_decorating = calc(%win05_decorating + 1);
+if (%win05_decorating < ^xmas05_tree_boxes) {
+    mes("You hang the baubles on the tree."); // ours
+    return;
+}
+// RS wiki: "You have decorated the Varrock tree." (the title of the 2005 tune "Oh Christmas Tree",
+// which the 377 cache's jingles don't name)
+mes("You have decorated the Varrock tree.");
+if (%win05_recv_pressie = ^xmas05_gift_none) %win05_recv_pressie = ^xmas05_gift_waiting;
+
+[aploc1,loc_10669]
+if (~xmas05_by_tree = false) {
+    p_aprange(^xmas05_tree_reach);
+    return;
+}
+if (%win05_recv_pressie ! ^xmas05_gift_waiting) return;
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+anim(human_pickupfloor, 0); // ours
+def_namedobj $m = ~xmas05_alive(random(3)); // RS wiki: "Either the Blue marionette, Green marionette or Red marionette"
+inv_add(inv, $m, 1);
+%win05_recv_pressie = ^xmas05_gift_taken;
+~objbox($m, "You unwrap a present and find <~xmas05_a(oc_name($m))>!", 250, 0, divide(^objbox_height, 2)); // ours
+
+[proc,xmas05_by_tree]()(boolean)
+// ours: within ^xmas05_tree_reach squares of the 5x5 tree (the fountain's fence ring is round it)
+if (inzone(movecoord(^xmas05_tree, -3, 0, -3), movecoord(^xmas05_tree, 7, 0, 7), coord) = true) return(true);
+return(false);
+
+// ================================================================ the marionette crate
+// The update: "If you should be unfortunate enough to misplace or lose your marionette, you can
+// get another one from the large box by the ladder to the pixie workshop." The cache's crate beside
+// the Draynor trapdoor (win05_reclaim_puppets_multi, full with Take-marionette once the tree is
+// decorated). The RS wiki: it "also allows players to get a marionette of a different colour"
+[oploc1,win05_reclaim_puppets_multi]
+if (%win05_decorating < ^xmas05_tree_boxes) return;
+if (~xmas05_owns_alive = true) {
+    mes("You already have a marionette."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+def_int $c = ~p_choice3("Red marionette.", ^xmas05_m_red, "Green marionette.", ^xmas05_m_green, "Blue marionette.", ^xmas05_m_blue); // ours
+def_namedobj $m = ~xmas05_alive($c);
+inv_add(inv, $m, 1);
+mes("You take <~xmas05_a(oc_name($m))> from the crate."); // ours
+
+[proc,xmas05_owns_alive]()(boolean)
+if (~xmas05_owns(win05_marionette_complete_red_alive) = true) return(true);
+if (~xmas05_owns(win05_marionette_complete_green_alive) = true) return(true);
+if (~xmas05_owns(win05_marionette_complete_blue_alive) = true) return(true);
+return(false);
+
+// ================================================================ the marionettes as toys
+// Jump, Walk, Bow and Dance: 2009scape ToyListeners.kt (the cache's human_marionette_* seqs with the
+// colour's win05_marionette_* spotanim)
+[opheld1,win05_marionette_complete_red_alive] ~xmas05_play(human_marionette_jump, win05_marionette_jump_red);
+[opheld2,win05_marionette_complete_red_alive] ~xmas05_play(human_marionette_walk, win05_marionette_walk_red);
+[opheld3,win05_marionette_complete_red_alive] ~xmas05_play(human_marionette_bow, win05_marionette_bow_red);
+[opheld4,win05_marionette_complete_red_alive] ~xmas05_play(human_marionette_dance, win05_marionette_dance_red);
+[opheld1,win05_marionette_complete_green_alive] ~xmas05_play(human_marionette_jump, win05_marionette_jump_green);
+[opheld2,win05_marionette_complete_green_alive] ~xmas05_play(human_marionette_walk, win05_marionette_walk_green);
+[opheld3,win05_marionette_complete_green_alive] ~xmas05_play(human_marionette_bow, win05_marionette_bow_green);
+[opheld4,win05_marionette_complete_green_alive] ~xmas05_play(human_marionette_dance, win05_marionette_dance_green);
+[opheld1,win05_marionette_complete_blue_alive] ~xmas05_play(human_marionette_jump, win05_marionette_jump_blue);
+[opheld2,win05_marionette_complete_blue_alive] ~xmas05_play(human_marionette_walk, win05_marionette_walk_blue);
+[opheld3,win05_marionette_complete_blue_alive] ~xmas05_play(human_marionette_bow, win05_marionette_bow_blue);
+[opheld4,win05_marionette_complete_blue_alive] ~xmas05_play(human_marionette_dance, win05_marionette_dance_blue);
+
+[proc,xmas05_play](seq $seq, spotanim $spot)
+p_stopaction;
+anim($seq, 0);
+spotanim_pl($spot, 0, 0);
+p_delay(1); // 2009scape: lockInteractions(player, 2)
+
+// ================================================================ Destroy (the cache's iop5)
+// The lines are Void's (christmas.items.toml); the bobble hat's and the full bauble box's have none
+// there, so they take the other hats' and the full puppet box's (ours)
+[opheld5,win05_hat1] ~xmas05_destroy(win05_hat1, "You can obtain another hat from Diango in the Draynor Market."); // ours (Void's other hats)
+[opheld5,win05_scarf1] ~xmas05_destroy(win05_scarf1, "You can obtain another scarf from Diango in the Draynor market.");
+[opheld5,win05_hat2] ~xmas05_destroy(win05_hat2, "You can obtain another hat from Diango in the Draynor Market.");
+[opheld5,win05_scarf2] ~xmas05_destroy(win05_scarf2, "You can get another Jester scarf from Diango.");
+[opheld5,win05_hat3] ~xmas05_destroy(win05_hat3, "You can obtain another hat from Diango in the Draynor Market.");
+[opheld5,win05_scarf3] ~xmas05_destroy(win05_scarf3, "You can obtain another jester scarf from Diango in the Draynor Market.");
+[opheld5,win05_hat4] ~xmas05_destroy(win05_hat4, "You can obtain another hat from Diango in the Draynor Market.");
+[opheld5,win05_scarf4] ~xmas05_destroy(win05_scarf4, "You can obtain another scarf from Diango in the Draynor market.");
+[opheld5,win05_marionette_complete_red_alive] ~xmas05_destroy(win05_marionette_complete_red_alive, "You can obtain another marionette in Diango's workshop by the trap door.");
+[opheld5,win05_marionette_complete_green_alive] ~xmas05_destroy(win05_marionette_complete_green_alive, "You can obtain another marionette in Diango's workshop by the trap door.");
+[opheld5,win05_marionette_complete_blue_alive] ~xmas05_destroy(win05_marionette_complete_blue_alive, "You can obtain another marionette in Diango's workshop by the trap door.");
+[opheld5,win05_20puppet_box_full] ~xmas05_destroy(win05_20puppet_box_full, "If you destroy this, the marionettes inside will break. Another empty box can be claimed from Rosie in Diango's workshop.");
+[opheld5,win05_20bauble_box_full] ~xmas05_destroy(win05_20bauble_box_full, "If you destroy this, the baubles inside will break. Another empty box can be claimed from Rosie in Diango's workshop."); // ours (Void's puppet box line)
+
+[proc,xmas05_destroy](namedobj $obj, string $text)
+def_int $slot = last_slot;
+if (~destroy_confirm($obj, $text) = false) return;
+if (inv_getobj(inv, $slot) = $obj) inv_delslot(inv, $slot);
+
+// ================================================================ lookups
+[proc,xmas05_owns](obj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(bank, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+[proc,xmas05_hat_for](int $n)(namedobj)
+switch_int ($n) {
+    case 1 : return(win05_hat1);
+    case 2 : return(win05_hat2);
+    case 4 : return(win05_hat3);
+    case 8 : return(win05_hat4);
+}
+return(null);
+
+[proc,xmas05_scarf_for](int $n)(namedobj)
+switch_int ($n) {
+    case 1 : return(win05_scarf1);
+    case 2 : return(win05_scarf2);
+    case 4 : return(win05_scarf3);
+    case 8 : return(win05_scarf4);
+}
+return(null);
+
+[proc,xmas05_a](string $name)(string)
+return(append("a ", lowercase($name)));
+
+[proc,xmas05_alive](int $c)(namedobj)
+switch_int ($c) {
+    case ^xmas05_m_red : return(win05_marionette_complete_red_alive);
+    case ^xmas05_m_green : return(win05_marionette_complete_green_alive);
+}
+return(win05_marionette_complete_blue_alive);
+
+[proc,xmas05_strung](int $c)(namedobj)
+switch_int ($c) {
+    case ^xmas05_m_red : return(win05_marionette_complete_red);
+    case ^xmas05_m_green : return(win05_marionette_complete_green);
+}
+return(win05_marionette_complete_blue);
+
+[proc,xmas05_strung_colour](obj $obj)(int)
+if ($obj = win05_marionette_complete_red) return(^xmas05_m_red);
+if ($obj = win05_marionette_complete_green) return(^xmas05_m_green);
+if ($obj = win05_marionette_complete_blue) return(^xmas05_m_blue);
+return(-1);
+
+[proc,xmas05_stage4_colour](obj $obj)(int)
+if ($obj = win05_marionette_stage4_red) return(^xmas05_m_red);
+if ($obj = win05_marionette_stage4_green) return(^xmas05_m_green);
+if ($obj = win05_marionette_stage4_blue) return(^xmas05_m_blue);
+return(-1);
+
+[proc,xmas05_mcolour_name](int $c)(string)
+switch_int ($c) {
+    case ^xmas05_m_red : return("red");
+    case ^xmas05_m_green : return("green");
+}
+return("blue");
+
+[proc,xmas05_colour_name](int $c)(string)
+switch_int ($c) {
+    case ^xmas05_yellow : return("yellow");
+    case ^xmas05_red : return("red");
+    case ^xmas05_blue : return("blue");
+    case ^xmas05_green : return("green");
+}
+return("pink");
+
+// the five shapes (star, box, diamond, tree, bell: 0-4) and colours of the cache's baubles
+[proc,xmas05_bauble_shape](obj $obj)(int)
+switch_obj ($obj) {
+    case win05_starbauble_unpainted, win05_starbauble_yellow, win05_starbauble_red, win05_starbauble_blue, win05_starbauble_green, win05_starbauble_pink : return(0);
+    case win05_boxbauble_unpainted, win05_boxbauble_yellow, win05_boxbauble_red, win05_boxbauble_blue, win05_boxbauble_green, win05_boxbauble_pink : return(1);
+    case win05_diamondbauble_unpainted, win05_diamondbauble_yellow, win05_diamondbauble_red, win05_diamondbauble_blue, win05_diamondbauble_green, win05_diamondbauble_pink : return(2);
+    case win05_treebauble_unpainted, win05_treebauble_yellow, win05_treebauble_red, win05_treebauble_blue, win05_treebauble_green, win05_treebauble_pink : return(3);
+    case win05_bellbauble_unpainted, win05_bellbauble_yellow, win05_bellbauble_red, win05_bellbauble_blue, win05_bellbauble_green, win05_bellbauble_pink : return(4);
+}
+return(-1);
+
+[proc,xmas05_bauble_colour](obj $obj)(int)
+switch_obj ($obj) {
+    case win05_starbauble_yellow, win05_boxbauble_yellow, win05_diamondbauble_yellow, win05_treebauble_yellow, win05_bellbauble_yellow : return(^xmas05_yellow);
+    case win05_starbauble_red, win05_boxbauble_red, win05_diamondbauble_red, win05_treebauble_red, win05_bellbauble_red : return(^xmas05_red);
+    case win05_starbauble_blue, win05_boxbauble_blue, win05_diamondbauble_blue, win05_treebauble_blue, win05_bellbauble_blue : return(^xmas05_blue);
+    case win05_starbauble_green, win05_boxbauble_green, win05_diamondbauble_green, win05_treebauble_green, win05_bellbauble_green : return(^xmas05_green);
+    case win05_starbauble_pink, win05_boxbauble_pink, win05_diamondbauble_pink, win05_treebauble_pink, win05_bellbauble_pink : return(^xmas05_pink);
+}
+return(-1);
+
+[proc,xmas05_painted](int $shape, int $colour)(namedobj)
+switch_int ($shape) {
+    case 0 :
+        switch_int ($colour) {
+            case ^xmas05_yellow : return(win05_starbauble_yellow);
+            case ^xmas05_red : return(win05_starbauble_red);
+            case ^xmas05_blue : return(win05_starbauble_blue);
+            case ^xmas05_green : return(win05_starbauble_green);
+        }
+        return(win05_starbauble_pink);
+    case 1 :
+        switch_int ($colour) {
+            case ^xmas05_yellow : return(win05_boxbauble_yellow);
+            case ^xmas05_red : return(win05_boxbauble_red);
+            case ^xmas05_blue : return(win05_boxbauble_blue);
+            case ^xmas05_green : return(win05_boxbauble_green);
+        }
+        return(win05_boxbauble_pink);
+    case 2 :
+        switch_int ($colour) {
+            case ^xmas05_yellow : return(win05_diamondbauble_yellow);
+            case ^xmas05_red : return(win05_diamondbauble_red);
+            case ^xmas05_blue : return(win05_diamondbauble_blue);
+            case ^xmas05_green : return(win05_diamondbauble_green);
+        }
+        return(win05_diamondbauble_pink);
+    case 3 :
+        switch_int ($colour) {
+            case ^xmas05_yellow : return(win05_treebauble_yellow);
+            case ^xmas05_red : return(win05_treebauble_red);
+            case ^xmas05_blue : return(win05_treebauble_blue);
+            case ^xmas05_green : return(win05_treebauble_green);
+        }
+        return(win05_treebauble_pink);
+}
+switch_int ($colour) {
+    case ^xmas05_yellow : return(win05_bellbauble_yellow);
+    case ^xmas05_red : return(win05_bellbauble_red);
+    case ^xmas05_blue : return(win05_bellbauble_blue);
+    case ^xmas05_green : return(win05_bellbauble_green);
+}
+return(win05_bellbauble_pink);

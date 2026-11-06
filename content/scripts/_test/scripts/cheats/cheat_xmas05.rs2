@@ -1,0 +1,151 @@
+// EASCape: test commands for the 2005 Christmas event (holidays/xmas05).
+
+// ::xmaspack - an empty puppet box and bauble box, two strung marionettes of each colour, a
+// painted star bauble of each colour, an unpainted bauble, a red torso, a marionette handle, a full
+// puppet box and five full bauble boxes (to hand in and decorate the Varrock tree)
+[debugproc,xmaspack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(win05_20puppet_box, 1));
+$banked = calc($banked + ~questpack_give(win05_20bauble_box, 1));
+$banked = calc($banked + ~questpack_give(win05_marionette_complete_red, 2));
+$banked = calc($banked + ~questpack_give(win05_marionette_complete_green, 2));
+$banked = calc($banked + ~questpack_give(win05_marionette_complete_blue, 2));
+$banked = calc($banked + ~questpack_give(win05_starbauble_yellow, 1));
+$banked = calc($banked + ~questpack_give(win05_starbauble_red, 1));
+$banked = calc($banked + ~questpack_give(win05_starbauble_blue, 1));
+$banked = calc($banked + ~questpack_give(win05_starbauble_green, 1));
+$banked = calc($banked + ~questpack_give(win05_starbauble_pink, 1));
+$banked = calc($banked + ~questpack_give(win05_bellbauble_unpainted, 1));
+$banked = calc($banked + ~questpack_give(win05_marionette_stage1_red, 1));
+$banked = calc($banked + ~questpack_give(win05_marionette_handle, 1));
+$banked = calc($banked + ~questpack_give(win05_20puppet_box_full, 1));
+$banked = calc($banked + ~questpack_give(win05_20bauble_box_full, 5));
+%win05_pressiebox_count = 0;
+%win05_deco_count = 0;
+~questpack_done("Christmas 2005", $banked);
+mes("Diango: ::xmastele 1. Rosie: ::xmastele 3. The stranger: ::xmastele 7. The tree: ::xmastele 8.");
+
+// ::xmasstage <n> - what the event has done for you (no items are given or taken: Diango gives
+// back the hats and scarves earned, the crate a marionette once the tree is decorated):
+// 0 nothing, 1 Diango has told you of the workshop, 2 Rosie has told you what to do,
+// 3 one puppet box and one bauble box handed in, 4 two of each, 5 four of each, 6 eight of each,
+// 7 and the Varrock tree decorated (the gifts waiting), 8 and the gift unwrapped
+[debugproc,xmasstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 8) {
+    mes("::xmasstage 0-8: 0 nothing, 1 told, 2 Rosie, 3/4/5/6 1/2/4/8 boxes of each, 7 tree decorated, 8 gift taken");
+    return;
+}
+%win05_var = 0;
+if ($n >= 1) %win05_progress = ^xmas05_told;
+if ($n >= 2) %win05_progress = ^xmas05_rosie;
+def_int $boxes = 0;
+switch_int ($n) {
+    case 3 : $boxes = 1;
+    case 4 : $boxes = 2;
+    case 5 : $boxes = 4;
+    case 0, 1, 2 : $boxes = 0;
+    case default : $boxes = 8;
+}
+%win05_toyboxes = $boxes;
+%win05_decboxes = $boxes;
+if ($n >= 7) {
+    %win05_decorating = ^xmas05_tree_boxes;
+    %win05_recv_pressie = ^xmas05_gift_waiting;
+}
+if ($n >= 8) %win05_recv_pressie = ^xmas05_gift_taken;
+mes("Christmas 2005: progress <tostring(%win05_progress)>, puppet boxes <tostring(%win05_toyboxes)>, bauble boxes <tostring(%win05_decboxes)>, tree <tostring(%win05_decorating)>/5, gift <tostring(%win05_recv_pressie)>.");
+
+// ::xmasreset - the event's varp cleared and every event item taken from your pack, bank and worn items
+[debugproc,xmasreset]
+if (p_finduid(uid) = false) return;
+%win05_var = 0;
+~xmas05_wipe(win05_starbauble_unpainted);
+~xmas05_wipe(win05_starbauble_yellow);
+~xmas05_wipe(win05_starbauble_red);
+~xmas05_wipe(win05_starbauble_blue);
+~xmas05_wipe(win05_starbauble_green);
+~xmas05_wipe(win05_starbauble_pink);
+~xmas05_wipe(win05_boxbauble_unpainted);
+~xmas05_wipe(win05_boxbauble_yellow);
+~xmas05_wipe(win05_boxbauble_red);
+~xmas05_wipe(win05_boxbauble_blue);
+~xmas05_wipe(win05_boxbauble_green);
+~xmas05_wipe(win05_boxbauble_pink);
+~xmas05_wipe(win05_diamondbauble_unpainted);
+~xmas05_wipe(win05_diamondbauble_yellow);
+~xmas05_wipe(win05_diamondbauble_red);
+~xmas05_wipe(win05_diamondbauble_blue);
+~xmas05_wipe(win05_diamondbauble_green);
+~xmas05_wipe(win05_diamondbauble_pink);
+~xmas05_wipe(win05_treebauble_unpainted);
+~xmas05_wipe(win05_treebauble_yellow);
+~xmas05_wipe(win05_treebauble_red);
+~xmas05_wipe(win05_treebauble_blue);
+~xmas05_wipe(win05_treebauble_green);
+~xmas05_wipe(win05_treebauble_pink);
+~xmas05_wipe(win05_bellbauble_unpainted);
+~xmas05_wipe(win05_bellbauble_yellow);
+~xmas05_wipe(win05_bellbauble_red);
+~xmas05_wipe(win05_bellbauble_blue);
+~xmas05_wipe(win05_bellbauble_green);
+~xmas05_wipe(win05_bellbauble_pink);
+~xmas05_wipe(win05_20puppet_box);
+~xmas05_wipe(win05_20bauble_box);
+~xmas05_wipe(win05_20puppet_box_full);
+~xmas05_wipe(win05_20bauble_box_full);
+~xmas05_wipe(win05_hat1);
+~xmas05_wipe(win05_scarf1);
+~xmas05_wipe(win05_hat2);
+~xmas05_wipe(win05_scarf2);
+~xmas05_wipe(win05_hat3);
+~xmas05_wipe(win05_scarf3);
+~xmas05_wipe(win05_hat4);
+~xmas05_wipe(win05_scarf4);
+~xmas05_wipe(win05_marionette_handle);
+~xmas05_wipe(win05_marionette_complete_blue_alive);
+~xmas05_wipe(win05_marionette_complete_green_alive);
+~xmas05_wipe(win05_marionette_complete_red_alive);
+~xmas05_wipe(win05_marionette_complete_blue);
+~xmas05_wipe(win05_marionette_complete_green);
+~xmas05_wipe(win05_marionette_complete_red);
+~xmas05_wipe(win05_marionette_stage1_red);
+~xmas05_wipe(win05_marionette_stage2_red);
+~xmas05_wipe(win05_marionette_stage3_red);
+~xmas05_wipe(win05_marionette_stage4_red);
+~xmas05_wipe(win05_marionette_stage1_blue);
+~xmas05_wipe(win05_marionette_stage2_blue);
+~xmas05_wipe(win05_marionette_stage3_blue);
+~xmas05_wipe(win05_marionette_stage4_blue);
+~xmas05_wipe(win05_marionette_stage1_green);
+~xmas05_wipe(win05_marionette_stage2_green);
+~xmas05_wipe(win05_marionette_stage3_green);
+~xmas05_wipe(win05_marionette_stage4_green);
+mes("Christmas 2005 reset: nothing done, no event items.");
+
+[proc,xmas05_wipe](obj $obj)
+if (inv_total(inv, $obj) > 0) inv_del(inv, $obj, inv_total(inv, $obj));
+if (inv_total(bank, $obj) > 0) inv_del(bank, $obj, inv_total(bank, $obj));
+if (inv_total(worn, $obj) > 0) inv_del(worn, $obj, inv_total(worn, $obj));
+
+// ::xmastele <n> - 1 Diango (Draynor market), 2 the trapdoor (north of him), 3 Rosie (the workshop),
+// 4 the marionette floor, 5 the paint tables, 6 the decorations boxes, 7 the Hooded Stranger
+// (Taverley members' gate), 8 the Varrock tree
+[debugproc,xmastele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = ^xmas05_tele_diango;
+    case 2 : $to = ^xmas05_draynor_out;
+    case 3 : $to = ^xmas05_workshop_in;
+    case 4 : $to = ^xmas05_tele_puppets;
+    case 5 : $to = ^xmas05_tele_paint;
+    case 6 : $to = ^xmas05_tele_decorations;
+    case 7 : $to = movecoord(^xmas05_stranger_spot, 0, 0, 1);
+    case 8 : $to = ^xmas05_tele_tree;
+    case default :
+        mes("::xmastele 1-8: 1 Diango, 2 trapdoor, 3 Rosie, 4 marionettes, 5 paint, 6 decorations, 7 stranger, 8 Varrock tree");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 2, ^map_findsquare_lineofwalk));
