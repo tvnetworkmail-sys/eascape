@@ -1,0 +1,87 @@
+// EASCape: test commands for Devious Minds (quest_devious).
+
+// ::dmpack - what the quest needs you to bring (both wikis): a mithril 2h sword, a bow string and a
+// large pouch. It also marks Doric's Quest and Troll Stronghold done (no rewards), which the monk
+// wants before he'll ask. It does not raise your stats: the quest needs 65 Smithing, 50 Fletching
+// and 50 Runecrafting.
+[debugproc,dmpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(mithril_2h_sword, 1));
+$banked = calc($banked + ~questpack_give(bow_string, 1));
+if (inv_total(inv, rcu_pouch_large) = 0 & inv_total(bank, rcu_pouch_large) = 0) {
+    $banked = calc($banked + ~questpack_give(rcu_pouch_large, 1));
+    %large_essence_pouch = 0;
+    %large_essence_pouch_type = 0;
+    %rcu_pouch_degradation_large = 0;
+}
+if (%doricquest ! ^doric_complete) %doricquest = ^doric_complete;
+if (%troll_quest ! ^troll_complete) %troll_quest = ^troll_complete;
+~update_questpoints;
+~update_questlist;
+~questpack_done("Devious Minds", $banked);
+mes("The monk: ::dmtele 1. You need 65 Smithing, 50 Fletching and 50 Runecrafting.");
+
+// ::dmstage <n> - sets Devious Minds, with what you would be carrying: 0 not started (clears
+// everything), 1 started (a mithril 2h sword), 2 the slender blade, 3 the bow-sword, 4 the orb,
+// 5 the orb in its pouch, 6 the relic stolen (the dead monk at Paterdomus), 7 the dead monk
+// searched, 8 sent to Sir Tiffy, 9 done (no rewards). `::questdone devious` finishes it with its
+// rewards.
+[debugproc,dmstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n < 0 | $n > 9) {
+    mes("::dmstage 0-9");
+    return;
+}
+%devious_main = 0;
+%devious_altar = 0;
+%devious_monk = 0;
+if ($n = 0) {
+    ~send_quest_progress(questlist:devious, 0, ^devious_complete);
+    ~update_questpoints;
+    mes("Devious Minds: reset.");
+    return;
+}
+def_int $s = ^devious_started;
+switch_int ($n) {
+    case 4, 5 : $s = ^devious_orb;
+    case 6 : $s = ^devious_stolen;
+    case 7 : $s = ^devious_found_body;
+    case 8 : $s = ^devious_tiffy;
+    case 9 : $s = ^devious_complete;
+}
+%devious_main = $s;
+if ($n >= 6) {
+    %devious_altar = 2;
+    %devious_monk = 1;
+}
+if ($n = 1 & inv_total(inv, mithril_2h_sword) = 0) ~questdone_give(mithril_2h_sword, 1);
+if ($n = 2 & inv_total(inv, devious_slenderblade) = 0) ~questdone_give(devious_slenderblade, 1);
+if ($n = 2 & inv_total(inv, bow_string) = 0) ~questdone_give(bow_string, 1);
+if ($n = 3 & inv_total(inv, devious_bowsword) = 0) ~questdone_give(devious_bowsword, 1);
+if ($n = 4 & inv_total(inv, devious_glowingorb) = 0) ~questdone_give(devious_glowingorb, 1);
+if ($n = 5 & inv_total(inv, devious_glowingpouch) = 0) ~questdone_give(devious_glowingpouch, 1);
+~send_quest_progress(questlist:devious, %devious_main, ^devious_complete);
+~update_questpoints;
+mes("Devious Minds: stage <tostring($n)> (devious_main <tostring(%devious_main)>, altar <tostring(%devious_altar)>, monk <tostring(%devious_monk)>).");
+
+// ::dmtele <n> - 1 the monk outside Paterdomus, 2 Doric's Whetstone, 3 the Mage of Zamorak (into
+// the Abyss), 4 inside the Law altar, 5 Entrana's church altar, 6 the High Priest, 7 Sir Tiffy,
+// 8 the monks of Entrana at Port Sarim
+[debugproc,dmtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = movecoord(^devious_monk_at, 0, 0, -2);
+    case 2 : $to = movecoord(^devious_whetstone_at, -1, 0, 0); // it is reached from the west
+    case 3 : $to = movecoord(^devious_zammage_at, 0, 0, -2);
+    case 4 : $to = ^devious_lawaltar_in;
+    case 5 : $to = movecoord(^devious_altar_at, -1, 0, 0);
+    case 6 : $to = movecoord(^devious_priest_at, -1, 0, 0);
+    case 7 : $to = movecoord(^devious_tiffy_at, 0, 0, -1);
+    case 8 : $to = movecoord(^devious_shipmonk_at, 0, 0, -2);
+    case default :
+        mes("::dmtele 1-8: 1 the monk, 2 Doric's Whetstone, 3 Mage of Zamorak, 4 Law altar, 5 Entrana church altar, 6 High Priest, 7 Sir Tiffy, 8 Port Sarim monks");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 3, ^map_findsquare_lineofwalk));

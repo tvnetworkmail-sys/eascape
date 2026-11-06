@@ -4,6 +4,7 @@ if ($data = null) {
     ~displaymessage(^dm_default);
     return;
 }
+if (loc_param(rune_type) = ^law & ~devious_law_portal_blocked = true) return; // EASCape: Devious Minds (quest_devious/devious_entrana.rs2)
 sound_synth(teleport_all, 1, 0);
 mes("You step through the portal...");
 p_telejump(map_findsquare(db_getfield($data, runecraft_table:exit_coord, random(db_getfieldcount($data, runecraft_table:exit_coord)))));

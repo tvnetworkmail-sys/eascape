@@ -1,0 +1,110 @@
+// EASCape: Devious Minds - the journal, Sir Tiffy, the reward and the shared pieces.
+// The reward (both wikis): 1 quest point, 5,000 Fletching, 5,000 Runecrafting and 6,500 Smithing
+// experience. (The RS wiki's Adventurer's Log line is RuneScape 3's; there was no log in 2005.)
+
+// ---------------------------------------------------------------- the journal
+// The RS wiki's Transcript:Devious Minds/Journal has the lines as they read once done (it is
+// marked incomplete: "journal during the quest missing"); the lines for what to do next are ours,
+// from the walkthroughs. The start line is the RS wiki's start point.
+[if_button,questlist:devious]
+def_int $s = %devious_main;
+if ($s = ^devious_not_started) {
+    def_string $req = "@dbl@I can start this quest by speaking to the @dre@monk@dbl@ just outside|@dre@Paterdomus@dbl@ (the temple on the Salve).||@dbl@To complete this quest I will need:|";
+    $req = append($req, ~devious_req_line(smithing, ^devious_smithing));
+    $req = append($req, ~devious_req_line(fletching, ^devious_fletching));
+    $req = append($req, ~devious_req_line(runecraft, ^devious_runecraft));
+    $req = append($req, ~devious_quest_line(%doricquest, ^doric_complete, "Doric's Quest"));
+    $req = append($req, ~devious_quest_line(%troll_quest, ^troll_complete, "Troll Stronghold"));
+    ~quest_journal("Devious Minds", $req);
+    return;
+}
+def_string $t = "";
+if ($s = ^devious_started) {
+    $t = "@dbl@I've spoken to a @dre@monk@dbl@, he's asked me to make a special weapon for|@dbl@him. I need to take a @dre@Mithril 2h sword@dbl@ to @dre@Doric's@dbl@ and grind it down|@dbl@until I can string it with a @dre@Bow-String@dbl@.";
+    ~quest_journal("Devious Minds", $t);
+    return;
+}
+$t = "@str@I've spoken to a monk, he's asked me to make a special weapon for|@str@him. I took a Mithrill 2h sword to Doric's and ground it down until I|@str@could string it with a Bow-String.||";
+if ($s = ^devious_orb) {
+    $t = append($t, "@dbl@The monk thanked me for the Bow-Sword. However there's a ceremony|@dbl@on @dre@Entrana@dbl@ which he couldn't attend, he asked me to take an @dre@Orb@dbl@ there|@dbl@and place it on the @dre@altar@dbl@. The Orb is fragile so it has to be kept in a|@dre@Large Pouch@dbl@.");
+    ~quest_journal("Devious Minds", $t);
+    return;
+}
+$t = append($t, "@str@The monk thanked me for the Bow-Sword. However there's a ceremony|@str@on Entrana which he couldn't attend, he asked me to take an Orb there|@str@and place it on the altar. The Orb was fragile so it had to be kept in|@str@a Large Pouch.||");
+$t = append($t, "@str@Something terrible happened! Someone appeared to teleport in, then|@str@he killed the monks and stole their relic... I was in so much trouble!||");
+if ($s = ^devious_stolen) {
+    $t = append($t, "@dbl@I spoke to the @dre@High Priest@dbl@ of Entrana and admitted to being the one|@dbl@who brought a Teleport beacon onto the island. I was told to go back|@dbl@to the @dre@monk@dbl@ and find out more.");
+    ~quest_journal("Devious Minds", $t);
+    return;
+}
+$t = append($t, "@str@I spoke to the High Priest of Entrana and admitted to being the one|@str@who brought a Teleport beacon onto the island. I was told to go back|@str@to the monk and find out more.||");
+if ($s = ^devious_found_body) {
+    $t = append($t, "@dbl@I found the monk, though he appeared to have been killed by magic!|@dbl@I wasn't sure if it was the same person though... I need to talk to|@dbl@the @dre@High Priest@dbl@ again.");
+    ~quest_journal("Devious Minds", $t);
+    return;
+}
+$t = append($t, "@str@I found the monk, though he appeared to have been killed by magic!|@str@I wasn't sure if it was the same person though... I needed to talk to|@str@the High Priest again.||");
+if ($s = ^devious_tiffy) {
+    $t = append($t, "@dbl@The High Priest seemed disturbed that the monk was dead, I need to|@dbl@report the events to @dre@Sir Tiffy@dbl@ in @dre@Falador@dbl@.");
+    ~quest_journal("Devious Minds", $t);
+    return;
+}
+$t = append($t, "@str@The High Priest seemed disturbed that the monk was dead, I needed to|@str@report the events to Sir Tiffy in Falador.||");
+$t = append($t, "@str@Sir Tiffy already knew what had happened, and the Temple Knights|@str@are investigating. I've been told to be on standby for when they|@str@need me...||@red@QUEST COMPLETE!");
+~quest_journal("Devious Minds", $t);
+
+[proc,devious_req_line](stat $stat, int $level)(string)
+def_string $line = "Level <tostring($level)> <~stat_name($stat)>";
+if (stat_base($stat) >= $level) return("@str@<$line>|");
+return("@dbl@<$line>|");
+
+[proc,devious_quest_line](int $progress, int $complete, string $name)(string)
+if ($progress = $complete) return("@str@<$name>|");
+return("@dbl@<$name>|");
+
+[proc,devious_set](int $stage)
+%devious_main = $stage;
+~send_quest_progress(questlist:devious, %devious_main, ^devious_complete);
+
+// into your pack, or on the ground under you when it's full (ours)
+[proc,devious_give](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- Sir Tiffy
+// quest_rd/rd_start.rs2 asks this first: true when he talked about the relic. The RS wiki's 2013
+// transcript ("young master" / "young mistress").
+[proc,devious_tiffy_talk]()(boolean)
+if (%devious_main ! ^devious_tiffy) return(false);
+~chatnpc("<p,happy>Jolly good show on getting into the White Knights, what? Now, how can I help you, young <text_gender("master", "mistress")>?");
+~chatplayer("<p,sad>Thanks, unfortunately I've got some bad news.");
+~chatnpc("<p,quiz>This wouldn't be that old relic being stolen from Entrana would it?");
+~chatplayer("<p,shock>Uh... yeah, how'd you know?");
+~chatnpc("<p,neutral>Part of the business, what do you know about what went on?");
+~chatplayer("<p,neutral>Well there was this monk who needed help...");
+~fade_out;
+p_delay(2);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~chatplayer("<p,neutral>...so I was told to come see you.");
+~chatnpc("<p,neutral>Good that confirms our own intel and with the designs for that weapon we can work on some tactics.");
+~chatplayer("<p,happy>You mean I can learn to use it?");
+~chatnpc("<p,laugh>Ha ha ha, no. At least not yet anyway, we need to know more about what we're dealing with. We still don't know who the monk was and where he got that orb from.");
+~chatplayer("<p,quiz>Is there anything I can do to help?");
+~chatnpc("<p,neutral>Not yet, but we'll be back in touch. Oh and don't worry about that relic, we'll get it back somehow.");
+~devious_complete;
+return(true);
+
+// ---------------------------------------------------------------- the reward
+[proc,devious_complete]
+~devious_set(^devious_complete);
+stat_advance(fletching, 50000);
+stat_advance(runecraft, 50000);
+stat_advance(smithing, 65000);
+session_log(^log_adventure, "Quest complete: Devious Minds");
+// ours: the bow-sword on the scroll
+~send_quest_complete(questlist:devious, devious_bowsword, 250, ^devious_questpoints, "You have completed the Devious Minds Quest!", "5,000 Fletching XP|5,000 Runecrafting XP|6,500 Smithing XP");

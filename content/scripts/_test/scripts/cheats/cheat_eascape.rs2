@@ -941,6 +941,19 @@ if (compare($name, "runemysteries") = 0) {
     if (inv_total(inv, elid_sole) > 0) inv_del(inv, elid_sole, inv_total(inv, elid_sole));
     if (inv_total(inv, elid_shoes) > 0) inv_del(inv, elid_shoes, inv_total(inv, elid_shoes));
     ~elid_complete; // experience and quest complete scroll (quest_elid/elid_journal.rs2)
+} else if (compare($name, "devious") = 0 | compare($name, "deviousminds") = 0) {
+    if (%devious_main >= ^devious_complete) {
+        mes("You've already done that quest.");
+        return;
+    }
+    // the quest items taken, the altar scorched and the dead monk outside Paterdomus
+    if (inv_total(inv, devious_slenderblade) > 0) inv_del(inv, devious_slenderblade, inv_total(inv, devious_slenderblade));
+    if (inv_total(inv, devious_bowsword) > 0) inv_del(inv, devious_bowsword, inv_total(inv, devious_bowsword));
+    if (inv_total(inv, devious_glowingorb) > 0) inv_del(inv, devious_glowingorb, inv_total(inv, devious_glowingorb));
+    if (inv_total(inv, devious_glowingpouch) > 0) inv_del(inv, devious_glowingpouch, inv_total(inv, devious_glowingpouch));
+    %devious_altar = 2;
+    %devious_monk = 1;
+    ~devious_complete; // experience and quest complete scroll (quest_devious/devious_journal.rs2)
 } else {
     mes("No quest called <$name>. Try ::questdone list.");
     return;
@@ -1023,7 +1036,7 @@ mes("deserttreasure, mm (Monkey Madness), misc (Throne of Miscellania), hauntedm
 mes("fairytale1 (A Fairy Tale Pt. 1), fairytale2 (Fairytale II - Cure a Queen), fenkenstrain (Creature of Fenkenstrain), roving (Roving Elves), ghostsahoy (Ghosts Ahoy), onesmallfavour (One Small Favour), mdaughter (Mountain Daughter), dwarfrock (Between a Rock...), feud (The Feud), ics (Icthlarin's Little Helper), tog (Tears of Guthix), zogre (Zogre Flesh Eaters), losttribe (The Lost Tribe), giantdwarf (The Giant Dwarf), recruitmentdrive (Recruitment Drive), mourning (Mourning's Ends Part 1), forgettabletale (Forgettable Tale...)");
 mes("blackarmgang (Shield of Arrav), eadgar, horror, mortton, regicide, tbwt, viking (The Fremennik Trials)");
 mes("gardenoftranquillity (Garden of Tranquillity), twocats (A Tail of Two Cats), mourning2 (Mourning's End Part II), wanted (Wanted!), deal (Rum Deal), agrith (Shadow of the Storm), makinghistory (Making History), ratcatchers (Rat Catchers)");
-mes("elid (Spirits of the Elid)");
+mes("elid (Spirits of the Elid), devious (Devious Minds)");
 
 // every stat back to its normal level (hitpoints and prayer full, boosts and drains gone), full
 // run energy, poison cured

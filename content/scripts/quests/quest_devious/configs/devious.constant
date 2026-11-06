@@ -1,0 +1,49 @@
+// Devious Minds (19 December 2005). Everything lives in the 377 cache's own devious_base varp
+// (varp 622, now perm) and its varbits:
+//   devious_main (bits 0-7)     the quest's stage
+//   devious_altar (22-23)       the Entrana church altar's multiloc: 0 the altar, 1 the pouch on
+//                               it (devious_altar_pouch), 2 scorched (devious_altar_scorched)
+//   devious_monk (27-28)        the multinpcs outside Paterdomus: 0 the hooded monk
+//                               (devious_monk_hooded_visable), 1 the dead monk
+//                               (devious_monk_dead_visable)
+// The stage values are ours (no source gives them), in the order of the RS wiki's journal.
+^devious_not_started = 0
+^devious_started = 10         // the monk wants a bow-sword
+^devious_orb = 20             // the bow-sword handed over: take the orb to Entrana's altar
+^devious_stolen = 30          // the relic stolen: look for the monk at Paterdomus
+^devious_found_body = 40      // the dead monk searched: tell the High Priest
+^devious_tiffy = 50           // the High Priest sent you to Sir Tiffy
+^devious_complete = 60
+^devious_questpoints = 1
+
+// the skill levels (both wikis): 65 Smithing for the whetstone, 50 Fletching for the bowstring,
+// 50 Runecrafting (the large pouch)
+^devious_smithing = 65
+^devious_fletching = 50
+^devious_runecraft = 50
+
+// where things are (the 377 maps' own spawns and locs)
+^devious_monk_at = 0_53_54_14_36      // 3406,3492, the hooded monk outside Paterdomus
+^devious_deadmonk_at = 0_53_54_13_36  // 3405,3492, the dead monk
+^devious_whetstone_at = 0_46_53_9_59  // 2953,3451, Doric's Whetstone (Doric's hut)
+^devious_altar_at = 0_44_52_37_20     // 2853,3348, the church altar on Entrana (devious_altar)
+^devious_priest_at = 0_44_52_35_21    // 2851,3349, the High Priest of Entrana
+^devious_tiffy_at = 0_46_52_53_45     // 2997,3373, Sir Tiffy Cashien's bench in Falador Park
+^devious_shipmonk_at = 0_47_50_37_36  // 3045,3236, the monks of Entrana at Port Sarim
+^devious_zammage_at = 0_48_55_34_38   // 3106,3558, the Mage of Zamorak (into the Abyss)
+^devious_lawaltar_in = 0_38_75_32_19  // inside the Law altar (runecraft_law's enter_coord)
+
+// the cutscene in the church (ours: where everyone stands and walks). The church's west door is
+// at 2841,3348-3349; the aisle runs east between the pews to the altar.
+^devious_cut_monk1 = 0_44_52_27_20    // the first monk (staff)
+^devious_cut_relic = 0_44_52_26_21    // the monk with the relic
+^devious_cut_monk2 = 0_44_52_26_20    // the last monk (staff)
+^devious_cut_monk1_to = 0_44_52_33_20
+^devious_cut_relic_to = 0_44_52_32_21
+^devious_cut_monk2_to = 0_44_52_31_20
+^devious_cut_assassin = 0_44_52_34_21 // where the assassin teleports in
+^devious_cut_flee = 0_44_52_27_21     // the relic monk runs back towards the door
+^devious_cut_priest = 0_44_52_36_22   // the High Priest, by the altar
+^devious_cut_player = 0_44_52_35_19   // you, out of the way
+^devious_cut_cam = 0_44_52_30_15      // the camera, south-west of the aisle
+^devious_cut_look = 0_44_52_33_21

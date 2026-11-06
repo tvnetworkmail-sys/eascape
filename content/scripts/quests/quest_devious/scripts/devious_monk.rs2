@@ -1,0 +1,219 @@
+// EASCape: Devious Minds (19 December 2005) - the hooded monk outside Paterdomus, Doric's
+// Whetstone, the slender blade and the bow-sword, the orb and the large pouch, the dead monk.
+// Words: the RS wiki's Transcript:Devious Minds as first written (July 2013), filled in from its
+// later versions and from the OSRS wiki's transcript as it stood before the 2023 rewrite (Secrets
+// of the North changed the dialogue). Things: the 377 cache's own devious_ varbits, npcs, objs,
+// locs, seqs and the devious_grind sound. Our choices are marked "ours".
+
+// ---------------------------------------------------------------- the hooded monk
+// devious_monk_hooded is the cache's multinpc (devious_monk 0 shows him); the spawned npc has no
+// name or head of its own, so his lines name him.
+[proc,devious_monk](string $text)
+~chatnpc_specific("Monk", devious_monk_hooded_visable, $text);
+
+[opnpc1,devious_monk_hooded]
+def_int $s = %devious_main;
+if ($s = ^devious_not_started) @devious_monk_start;
+if ($s = ^devious_started) @devious_monk_weapon;
+if ($s = ^devious_orb) @devious_monk_hurry;
+// ours: he is gone once the relic is stolen (devious_monk 1 hides him), so this is never reached
+
+[label,devious_monk_start]
+// the RS wiki's 2013 transcript: the three answers; the later RS one for "What's in it for me?"
+~devious_monk("<p,neutral>Good day to you adventurer, could you spare the time to help me?");
+switch_int (~p_choice3("Sure thing, what do you need?", 1, "That depends, what's in it for me?", 2, "Sorry but I'm busy right now.", 3)) {
+    case 1 : @devious_monk_accept;
+    case 2 :
+        ~chatplayer("<p,quiz>That depends, what's in it for me?");
+        ~devious_monk("<p,neutral>Ah well, our lord is always gracious to those who help him. I'm sure you'd be fittingly rewarded.");
+        // ours: the RS wiki's two answers to that ("Accept Quest" / "Not Right Now") as a menu
+        if (~p_choice2("Sure thing, what do you need?", 1, "Sorry, but that's not good enough for me.", 2) = 1) @devious_monk_accept;
+        ~chatplayer("<p,neutral>Sorry, but that's not good enough for me.");
+        ~devious_monk("<p,neutral>Your loss. Our lord can be very generous indeed. Come back and see me if you change your mind.");
+    case 3 :
+        // the 2013 transcript has no reply recorded; the OSRS wiki's
+        ~chatplayer("<p,neutral>Sorry but I'm busy right now.");
+        ~devious_monk("<p,neutral>Ah, well do come and see me if you change your mind.");
+}
+
+[label,devious_monk_accept]
+~chatplayer("<p,happy>Sure thing, what do you need?");
+// ours: the update's news post says the quest needs Doric's Quest; Troll Stronghold opened the
+// Law altar in 2005 (the RS wiki). What he says when you haven't done them is ours.
+if (~devious_requirements = false) {
+    ~devious_monk("<p,neutral>Hmm, I'm not sure you're quite ready for this. Come back when you've seen a bit more of the world.");
+    ~mesbox("You need to have completed Doric's Quest and Troll Stronghold to start this quest.");
+    return;
+}
+~devious_monk("<p,neutral>Our warriors are facing new and dangerous threats, we need a specially designed weapon to be victorious. If you could help by building one of these weapons you will help to ensure victory is ours.");
+~chatplayer("<p,happy>Ooohhh a new weapon!");
+~devious_monk("<p,neutral>Yes yes, now pay attention. I need you to take a two handed sword, mithril should do, to Doric's place and grind it down to a slender blade. Once it's flexible enough you should be able to string it with a normal bow string. Bring it back here when you're done.");
+~devious_set(^devious_started);
+
+[proc,devious_requirements]()(boolean)
+if (%doricquest ! ^doric_complete) return(false);
+if (%troll_quest ! ^troll_complete) return(false);
+return(true);
+
+[label,devious_monk_weapon]
+// the RS wiki: "Yep, got it right here for you." only with the bow-sword
+~devious_monk("<p,quiz>Have you brought the weapon for me?");
+def_int $c = 0;
+if (inv_total(inv, devious_bowsword) > 0) {
+    $c = ~p_choice3("Yep, got it right here for you.", 1, "Can you teach me how to use it?", 2, "Not yet, sorry.", 3);
+} else {
+    $c = ~p_choice2("Can you teach me how to use it?", 2, "Not yet, sorry.", 3);
+}
+if ($c = 1) @devious_monk_handover;
+if ($c = 2) {
+    ~chatplayer("<p,quiz>Can you teach me how to use it?");
+    // the OSRS wiki (before 2023)
+    ~devious_monk("<p,neutral>It's a foreign design, maybe later one of our warriors will show you how it's used. Speaking of which, may I have it please?");
+    if (inv_total(inv, devious_bowsword) > 0) {
+        if (~p_choice2("Yep, got it right here for you.", 1, "Not yet, sorry.", 2) = 1) @devious_monk_handover;
+    }
+}
+~chatplayer("<p,neutral>Not yet, sorry.");
+~devious_monk("<p,neutral>Well hurry along then.");
+
+[label,devious_monk_handover]
+~chatplayer("<p,happy>Yep, got it right here for you.");
+if (inv_total(inv, devious_bowsword) = 0) return;
+inv_del(inv, devious_bowsword, 1);
+~devious_monk("<p,happy>Ah excellent, this won't be forgotten. You've been a great help, though I wonder if you could do me one final favour.");
+~chatplayer("<p,confused>Wait... this sounds familiar...");
+~devious_monk("<p,quiz>What are you talking about? I just need you to make a delivery to Entrana for me. There's a special ceremony, which unfortunately I can't attend, and I wanted to give them a gift to mark the occasion.");
+~chatplayer("<p,happy>Ok, let's do this then, pass me the present.");
+~devious_monk("<p,neutral>Not so fast, it's supposed to be a surprise so you'll need to sneak it onto the island. I hear there's some kind of 'other realm' or some such which you've got access to...");
+~chatplayer("<p,quiz>You mean the abyss?");
+~devious_give(devious_glowingorb, 1);
+~devious_set(^devious_orb);
+~devious_monk("<p,neutral>Yes that's the one. Now take this orb and put it in one of the large pouches from there, don't want it getting damaged.");
+
+[label,devious_monk_hurry]
+~devious_monk("<p,neutral>You need to hurry or you'll miss the ceremony.");
+if (~devious_has_orb = true) return;
+// the RS wiki: the orb lost
+~chatplayer("<p,sad>Er... I lost the orb...");
+if (inv_freespace(inv) = 0) {
+    ~devious_monk("<p,angry>You what? Ah well, good thing I have a spare, though you'll have to make some space for it first.");
+    return;
+}
+inv_add(inv, devious_glowingorb, 1);
+~devious_monk("<p,angry>You what? Ah well, good thing I have a spare, be more careful this time.");
+
+// the orb, loose or in its pouch, anywhere you keep things
+[proc,devious_has_orb]()(boolean)
+if (inv_total(inv, devious_glowingorb) > 0 | inv_total(bank, devious_glowingorb) > 0) return(true);
+if (inv_total(inv, devious_glowingpouch) > 0 | inv_total(bank, devious_glowingpouch) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dead monk
+// devious_monk_dead is the cache's multinpc (devious_monk 1 shows him, from the theft on)
+[opnpc1,devious_monk_dead]
+~mesbox("The poor guy appears to have been killed by powerful magic!");
+if (%devious_main = ^devious_stolen) ~devious_set(^devious_found_body);
+
+// ---------------------------------------------------------------- Doric's Whetstone
+// The OSRS wiki: 65 Smithing (boostable), no experience; the whetstone had no "Use" option until
+// 2023. The cache's devious_human_whetstone (you, holding the mithril 2h), the whetstone's
+// devious_whetstone_spin_sparks and the devious_grind sound. Ours: how long it takes, the
+// low-level line, and that it only works once the monk has asked.
+[oplocu,devious_whetstone]
+if (last_useitem ! mithril_2h_sword | %devious_main < ^devious_started) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(smithing) < ^devious_smithing) {
+    mes("You need a Smithing level of <tostring(^devious_smithing)> to grind the blade."); // ours
+    return;
+}
+p_arrivedelay;
+facesquare(loc_coord);
+anim(devious_human_whetstone, 0);
+loc_anim(devious_whetstone_spin_sparks);
+sound_synth(devious_grind, 1, 0);
+p_delay(3);
+if (inv_total(inv, mithril_2h_sword) = 0) return;
+inv_del(inv, mithril_2h_sword, 1);
+inv_add(inv, devious_slenderblade, 1);
+anim(null, 0);
+mes("You grind the blade until it's slender and flexible.");
+
+// ---------------------------------------------------------------- the bow-sword
+// Both wikis: 50 Fletching (boostable), 50 Fletching experience. A bowstring used on the blade
+// comes here; the blade used on a bowstring comes from skill_fletching/bows.rs2. Ours: the
+// low-level line.
+[opheldu,devious_slenderblade]
+if (last_useitem ! bow_string) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@devious_string_blade;
+
+[label,devious_string_blade]
+if (stat(fletching) < ^devious_fletching) {
+    mes("You need a Fletching level of <tostring(^devious_fletching)> to string the slender blade."); // ours
+    return;
+}
+if (inv_total(inv, devious_slenderblade) = 0 | inv_total(inv, bow_string) = 0) return;
+inv_del(inv, devious_slenderblade, 1);
+inv_del(inv, bow_string, 1);
+inv_add(inv, devious_bowsword, 1);
+stat_advance(fletching, 500);
+mes("You add a string to the slender blade.");
+
+// the RS wiki (2013) and the OSRS wiki's bow-sword page
+[opheld2,devious_bowsword]
+~chatplayer("<p,confused>It's a Bow and a Sword... how am I supposed to use this?!");
+
+// ---------------------------------------------------------------- the orb and the large pouch
+// The RS wiki: the orb goes in a large pouch that still holds 9 essence (a degraded pouch holds
+// fewer, so it won't do). Ours: the line for a degraded or a part-filled pouch (its essence would
+// be lost), and that the other pouches do nothing.
+[opheldu,devious_glowingorb]
+if (last_useitem = rcu_pouch_large_degrade) {
+    mes("The pouch is too worn to keep the orb safe."); // ours
+    return;
+}
+if (last_useitem ! rcu_pouch_large) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%large_essence_pouch > 0) {
+    mes("You should empty the pouch first."); // ours
+    return;
+}
+def_int $orbslot = last_slot;
+def_int $pouchslot = last_useslot;
+if (inv_getobj(inv, $orbslot) ! devious_glowingorb | inv_getobj(inv, $pouchslot) ! rcu_pouch_large) return;
+inv_delslot(inv, $orbslot);
+inv_setslot(inv, $pouchslot, devious_glowingpouch, 1);
+mes("You hide the orb in the pouch.");
+
+// the RS wiki's lines
+[opheld1,devious_glowingpouch] mes("Your pouch is full.");
+[opheld3,devious_glowingpouch] mes("There is a glowing orb in this pouch.");
+[opheld2,devious_glowingpouch]
+// the RS wiki: the orb and the large pouch back. Ours: the line when there is no room.
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+def_int $slot = last_slot;
+if (inv_getobj(inv, $slot) ! devious_glowingpouch) return;
+inv_setslot(inv, $slot, rcu_pouch_large, 1);
+inv_add(inv, devious_glowingorb, 1);
+
+// ---------------------------------------------------------------- destroying them
+// the OSRS wiki's destroy lines
+[opheld5,devious_slenderblade] ~devious_destroy(devious_slenderblade, "You'll have to make a replacement.");
+[opheld5,devious_bowsword] ~devious_destroy(devious_bowsword, "You can make a replacement.");
+[opheld5,devious_glowingorb] ~devious_destroy(devious_glowingorb, "You can get another from the monk.");
+[opheld5,devious_glowingpouch] ~devious_destroy(devious_glowingpouch, "You'll have to get another from the monk at Paterdomus.");
+[opheld5,devious_relic_fragment_saradomin] ~devious_destroy(devious_relic_fragment_saradomin, "");
+
+[proc,devious_destroy](namedobj $obj, string $text)
+def_int $slot = last_slot;
+if (~destroy_confirm($obj, $text) = false) return;
+if (inv_getobj(inv, $slot) = $obj) inv_delslot(inv, $slot);

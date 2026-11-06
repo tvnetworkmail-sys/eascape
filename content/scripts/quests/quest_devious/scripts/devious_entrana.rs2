@@ -1,0 +1,218 @@
+// EASCape: Devious Minds - Entrana: the monks' search at Port Sarim, the Law altar's portal, the
+// church altar, the theft of the relic and the High Priest. Words: the RS wiki's transcript (its
+// 2013 version for the cutscene and the High Priest), the OSRS wiki's from before 2023 where the RS
+// one has none. Things: the 377 cache's devious_altar multiloc (devious_altar varbit),
+// devious_cutscene_highpriest, _monk, _monk_relic and _assassin npcs, devious_relic_walk/ready,
+// devious_assassin_teleport spotanims and devious_explosion.
+// Not in our cache: the "Assassin Attack!" jingle, so the theft has no music of its own.
+
+// ---------------------------------------------------------------- the church altar
+// The 377 map's church altar is the cache's devious_altar, whose Pray-at is the shown altar's; the
+// game's prayer altars go by category, which the multiloc base doesn't have.
+[oploc1,devious_altar] @pray_at_altar(stat_base(prayer));
+
+[oplocu,devious_altar]
+if (last_useitem = devious_glowingorb) {
+    ~chatplayer("<p,neutral>I should probably put that in a pouch or it might get damaged!"); // the RS wiki
+    return;
+}
+if (last_useitem ! devious_glowingpouch | %devious_main ! ^devious_orb) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@devious_theft;
+
+// ---------------------------------------------------------------- the theft of the relic
+// The RS and OSRS wikis: three monks carrying a relic walk into the church; the assassin teleports
+// in wielding the bow-sword and kills one; the High Priest cries "Protect the relic!"; the monk with
+// the relic tries to flee and is shot with an arrow; the last monk says "You won't have it!" and
+// hits him with a staff, and is cut down; the assassin picks up the relic and teleports away; the
+// pouch on the altar explodes and the High Priest shields himself; "Noooooo!".
+// Ours: the camera, where everyone stands and walks, the timing, which of the cache's seqs and
+// spotanims each blow uses, and that the cutscene people are seen by anyone else in the church.
+[label,devious_theft]
+def_int $slot = last_useslot;
+p_arrivedelay;
+if (inv_getobj(inv, $slot) ! devious_glowingpouch) return;
+if_close;
+inv_delslot(inv, $slot);
+%devious_altar = 1; // the pouch on the altar
+anim(human_pickuptable, 0);
+p_delay(1);
+~fade_out;
+p_delay(2);
+p_telejump(^devious_cut_player);
+// the people of the ceremony
+npc_add(^devious_cut_priest, devious_cutscene_highpriest, 60);
+npc_setmode(none);
+npc_facesquare(^devious_cut_monk1_to);
+def_npc_uid $priest = npc_uid;
+npc_add(^devious_cut_monk1, devious_cutscene_monk, 60);
+npc_setmode(none);
+def_npc_uid $monk1 = npc_uid;
+npc_add(^devious_cut_relic, devious_cutscene_monk_relic, 60);
+npc_setmode(none);
+def_npc_uid $relic = npc_uid;
+npc_add(^devious_cut_monk2, devious_cutscene_monk, 60);
+npc_setmode(none);
+def_npc_uid $monk2 = npc_uid;
+facesquare(^devious_cut_look);
+cam_moveto(^devious_cut_cam, 900, 0, 100);
+cam_lookat(^devious_cut_look, 200, 0, 100);
+~fade_in;
+// the monks walk up the aisle
+if (npc_finduid($monk1) = true) npc_walk(^devious_cut_monk1_to);
+if (npc_finduid($relic) = true) npc_walk(^devious_cut_relic_to);
+if (npc_finduid($monk2) = true) npc_walk(^devious_cut_monk2_to);
+p_delay(5);
+// the assassin
+spotanim_map(devious_assassin_teleport_spotanim, ^devious_cut_assassin, 0, 0);
+sound_synth(teleport_all, 1, 0);
+p_delay(1);
+npc_add(^devious_cut_assassin, devious_cutscene_assassin, 50);
+npc_setmode(none);
+def_npc_uid $assassin = npc_uid;
+npc_facesquare(^devious_cut_monk1_to);
+p_delay(1);
+if (npc_finduid($priest) = true) npc_say("Protect the relic!");
+// the first monk cut down
+if (npc_finduid($assassin) = true) npc_anim(human_dhsword_slash, 0);
+p_delay(1);
+if (npc_finduid($monk1) = true) npc_anim(human_death, 0);
+p_delay(2);
+if (npc_finduid($monk1) = true) npc_del;
+// the monk with the relic runs, and is shot
+if (npc_finduid($relic) = true) npc_walk(^devious_cut_flee);
+p_delay(1);
+if (npc_finduid($assassin) = true) {
+    npc_facesquare(^devious_cut_flee);
+    npc_anim(human_bow, 0);
+    projanim_npc(npc_coord, $relic, bronze_arrow_travel, 40, 36, 10, 30, 15, 11);
+}
+p_delay(2);
+def_coord $dropped = ^devious_cut_flee;
+if (npc_finduid($relic) = true) {
+    $dropped = npc_coord;
+    npc_anim(human_death, 0);
+}
+p_delay(2);
+if (npc_finduid($relic) = true) npc_del;
+obj_add($dropped, devious_relic_fragment_saradomin, 1, 20); // the OSRS wiki: briefly on the floor
+// the last monk
+if (npc_finduid($monk2) = true) {
+    npc_say("You won't have it!");
+    npc_walk(movecoord(^devious_cut_assassin, -1, 0, 0));
+}
+p_delay(2);
+if (npc_finduid($monk2) = true) {
+    npc_facesquare(^devious_cut_assassin);
+    npc_anim(human_staff_pound, 0);
+}
+p_delay(1);
+if (npc_finduid($assassin) = true) {
+    npc_facesquare(movecoord(^devious_cut_assassin, -1, 0, 0));
+    npc_anim(human_dhsword_slash, 0);
+}
+p_delay(1);
+if (npc_finduid($monk2) = true) npc_anim(human_death, 0);
+p_delay(2);
+if (npc_finduid($monk2) = true) npc_del;
+// the relic taken
+if (npc_finduid($assassin) = true) npc_walk($dropped);
+p_delay(3);
+if (npc_finduid($assassin) = true) npc_anim(human_pickupfloor, 0);
+p_delay(1);
+if (obj_find($dropped, devious_relic_fragment_saradomin) = true) obj_del;
+if (npc_finduid($assassin) = true) {
+    spotanim_map(devious_assassin_teleportreverse_spotanim, npc_coord, 0, 0);
+    sound_synth(teleport_all, 1, 0);
+}
+p_delay(1);
+if (npc_finduid($assassin) = true) npc_del;
+p_delay(1);
+// the orb goes off
+spotanim_map(devious_explosion, ^devious_altar_at, 0, 0);
+sound_synth(explosion, 1, 0);
+%devious_altar = 2; // scorched
+if (npc_finduid($priest) = true) {
+    npc_facesquare(^devious_altar_at);
+    npc_anim(human_unarmedblock, 0);
+}
+p_delay(2);
+if (npc_finduid($priest) = true) npc_say("Noooooo!");
+p_delay(2);
+~fade_out;
+p_delay(2);
+if (npc_finduid($priest) = true) npc_del;
+cam_reset;
+~devious_set(^devious_stolen);
+%devious_monk = 1; // the hooded monk gone; the dead monk outside Paterdomus
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+@devious_priest_theft;
+
+// the 2013 transcript: the High Priest straight after
+[label,devious_priest_theft]
+~devious_priest("<p,angry>Someone just stole our relic, this is a disaster! Adventurer, you must find the fool who put that teleport beacon on the altar!");
+~chatplayer("<p,shifty>Uh... yeah, about that...");
+~devious_priest("<p,quiz>What are you trying to say?");
+~chatplayer("<p,sad>I put it there...");
+~devious_priest("<p,neutral>Well at least you're honest about it, but where did you get it from?");
+~chatplayer("<p,neutral>It was supposed to be a gift from a monk near the river Salve.");
+~devious_priest("<p,neutral>Those orbs are volatile, they use some very old magic, no worshipper of Saradomin would dare touch one. You must return to this monk and find out more, but be wary.");
+
+[proc,devious_priest](string $text)
+~chatnpc_specific("High Priest", high_priest_of_entrana, $text);
+
+// ---------------------------------------------------------------- the High Priest
+// area_entrana/high_priest_of_entrana.rs2 asks this after his greeting: true when he talked about
+// the relic (the 2013 transcript and the RS wiki's later one for the in-between lines).
+[proc,devious_priest_talk]()(boolean)
+def_int $s = %devious_main;
+if ($s = ^devious_stolen) {
+    ~chatnpc("<p,quiz>Have you found our relic yet?");
+    ~chatplayer("<p,sad>Not yet...");
+    ~chatnpc("<p,neutral>Please hurry, it can't be allowed into the wrong hands.");
+    return(true);
+}
+if ($s = ^devious_found_body) {
+    ~chatnpc("<p,quiz>Have you found our relic yet?");
+    ~chatplayer("<p,sad>Not yet. I went back to where that monk was but all I found was a dead body.");
+    ~chatnpc("<p,shock>What?");
+    ~chatplayer("<p,neutral>Yeah it looked like he'd been killed by magic. I'm not sure if it was the same person either...");
+    ~chatnpc("<p,neutral>This is not good, that relic was part of an ancient artefact which was said to have awesome power. You must report to Sir Tiffy in Falador, he must be informed.");
+    ~devious_set(^devious_tiffy);
+    return(true);
+}
+if ($s = ^devious_tiffy) {
+    ~chatnpc("<p,neutral>Hurry and report to Sir Tiffy.");
+    return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- the monks at Port Sarim
+// area_port_sarim/monk_of_entrana.rs2 asks this after "The monk quickly searches you.": true when
+// they found the orb (the RS wiki's lines, the loose orb and the orb in its pouch).
+[proc,devious_shipmonk_search]()(boolean)
+if (inv_total(inv, devious_glowingorb) > 0) {
+    ~chatnpc("<p,quiz>What's this large orb?");
+    ~chatplayer("<p,shifty>Err...nothing. I'll be going now.");
+    return(true);
+}
+if (inv_total(inv, devious_glowingpouch) > 0) {
+    ~chatnpc("<p,quiz>What's this large pouch?");
+    ~chatplayer("<p,shifty>Err...nothing. I'll be going now.");
+    return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- the Law altar's portal
+// skill_runecraft/runecraft.rs2 asks this at the Law altar's exit portal (the RS wiki's line): the
+// orb only goes through to Entrana hidden in its pouch.
+[proc,devious_law_portal_blocked]()(boolean)
+if (inv_total(inv, devious_glowingorb) > 0) {
+    mes("The power of Saradomin recognises the orb you're carrying. You cannot take it through the rift like that.");
+    return(true);
+}
+return(false);
