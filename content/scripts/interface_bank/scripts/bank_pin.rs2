@@ -191,10 +191,12 @@ while ($i > 0) {
 ~bankpin_drawslot(bankpin_main:i_text, %bankpin_i, 127, 247);
 ~bankpin_drawslot(bankpin_main:j_text, %bankpin_j, 221, 247);
 
-// $x, $y: the button's corner (bankpin_main.if); the 9x14 digit stays inside it
+// $x, $y: the button's corner (bankpin_main.if); the 9x14 digit stays inside it.
+// if_setposition is an offset from where the .if puts the text (button corner +4, +46),
+// not an absolute position, so the target is turned back into that offset
 [proc,bankpin_drawslot](component $com, int $digit, int $x, int $y)
 if_settext($com, tostring($digit));
-if_setposition($com, calc($x + 4 + random(47)), calc($y + 4 + random(43)));
+if_setposition($com, random(47), calc(random(43) - 42));
 
 [proc,bankpin_getslot](int $slot)(int)
 switch_int ($slot) {
