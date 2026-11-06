@@ -15,6 +15,10 @@ if (db_getfield($data, prayers:members, 0) = ^true & map_members = ^false) {
 if (~duel_arena_prayer_check = false) {
     return(false);
 }
+// EASCape: no Prayer against the Earth Warrior Champion (minigames/game_champion_challenge)
+if (~champ_prayer_allowed = false) {
+    return(false);
+}
 return(true);
 
 [proc,prayer_activate](dbrow $data)

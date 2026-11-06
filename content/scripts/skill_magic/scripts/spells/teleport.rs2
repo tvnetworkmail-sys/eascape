@@ -154,4 +154,8 @@ if (~in_castlewars_game(coord) = true | ~in_castlewars_waitingroom(coord) = true
     ~mesbox("You can't leave just like that!"); // osrs
     return(false);
 }
+// EASCape: not out of the Champions' Guild basement (minigames/game_champion_challenge)
+if (~champ_tele_allowed(coord) = false) {
+    return(false);
+}
 return(true);

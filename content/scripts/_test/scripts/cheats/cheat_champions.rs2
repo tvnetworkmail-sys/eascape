@@ -1,0 +1,79 @@
+// EASCape: test commands for the Champions' Challenge (minigames/game_champion_challenge).
+
+// ::champpack - the ten champion's scrolls, and something for each rule: a rune scimitar (melee),
+// a shortbow and 100 bronze arrows (ranged), a staff of air and 100 mind runes (magic) and
+// 5 lobsters. The guild's door still needs 32 quest points (::champtele goes past it).
+[debugproc,champpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+def_int $i = 1;
+while ($i <= ^champ_zombie) {
+    $banked = calc($banked + ~questpack_give(~champ_scroll($i), 1));
+    $i = add($i, 1);
+}
+$banked = calc($banked + ~questpack_give(rune_scimitar, 1));
+$banked = calc($banked + ~questpack_give(shortbow, 1));
+$banked = calc($banked + ~questpack_give(bronze_arrow, 100));
+$banked = calc($banked + ~questpack_give(staff_of_air, 1));
+$banked = calc($banked + ~questpack_give(mindrune, 100));
+$banked = calc($banked + ~questpack_give(lobster, 5));
+~questpack_done("Champions' Challenge", $banked);
+mes("Larxus: ::champtele 1. Use a scroll on him; ::champfight and a champion's name skip straight to a fight.");
+
+// ::champtele <n> - 1 Larxus, 2 behind the portcullis (below the statue), 3 in the arena,
+// 4 the guild's trapdoor (upstairs), 5 inside the skeletal wyverns' cave
+[debugproc,champtele](int $n)
+if (p_finduid(uid) = false) return;
+def_coord $to = null;
+switch_int ($n) {
+    case 1 : $to = movecoord(^champ_larxus, 1, 0, 0);
+    case 2 : $to = ^champ_below_statue;
+    case 3 : $to = movecoord(^champ_spawn, 6, 0, 0);
+    case 4 : $to = ^champ_guild_top;
+    case 5 : $to = 0_47_149_48_19;
+    case default :
+        mes("::champtele 1-5: 1 Larxus, 2 behind the portcullis, 3 the arena, 4 the guild's trapdoor, 5 the wyvern cave");
+        return;
+}
+p_telejump(map_findsquare($to, 0, 3, ^map_findsquare_lineofwalk));
+
+// ::champfight <name> - Larxus calls that champion up for you (as if you had handed him its scroll,
+// whether or not it was beaten before), and you're put in the arena with it: earthwarrior, ghoul,
+// giant, goblin, hobgoblin, imp, jogre, lesserdemon, skeleton, zombie, leon
+[debugproc,champfight](string $name)
+if (p_finduid(uid) = false) return;
+def_int $i = 0;
+if (compare($name, "earthwarrior") = 0) $i = ^champ_earthwarrior;
+if (compare($name, "ghoul") = 0) $i = ^champ_ghoul;
+if (compare($name, "giant") = 0) $i = ^champ_giant;
+if (compare($name, "goblin") = 0) $i = ^champ_goblin;
+if (compare($name, "hobgoblin") = 0) $i = ^champ_hobgoblin;
+if (compare($name, "imp") = 0) $i = ^champ_imp;
+if (compare($name, "jogre") = 0) $i = ^champ_jogre;
+if (compare($name, "lesserdemon") = 0) $i = ^champ_lesserdemon;
+if (compare($name, "skeleton") = 0) $i = ^champ_skeleton;
+if (compare($name, "zombie") = 0) $i = ^champ_zombie;
+if (compare($name, "leon") = 0) $i = ^champ_leon;
+if ($i = 0) {
+    mes("::champfight earthwarrior, ghoul, giant, goblin, hobgoblin, imp, jogre, lesserdemon, skeleton, zombie or leon");
+    return;
+}
+~champ_clear;
+// a fresh win for it
+if ($i ! ^champ_leon & ~champ_defeated($i) = true) %champions_defeated = clearbit(%champions_defeated, sub($i, 1));
+if ($i = ^champ_leon) %champions_defeated = clearbit(or(%champions_defeated, ^champ_lower_all), 10); // the ten beaten, Leon not
+%champ_arranged = $i;
+if ($i ! ^champ_leon & inv_total(inv, ~champ_scroll($i)) = 0 & inv_total(bank, ~champ_scroll($i)) = 0) {
+    if (inv_freespace(inv) > 0) inv_add(inv, ~champ_scroll($i), 1);
+}
+p_telejump(map_findsquare(movecoord(^champ_spawn, 6, 0, 0), 0, 2, ^map_findsquare_lineofwalk));
+~champ_spawn;
+mes("<~champ_name($i)> (champ_arranged <tostring($i)>, champions_defeated <tostring(%champions_defeated)>). Kill it for the reward.");
+
+// ::champreset - no champions beaten, none called up
+[debugproc,champreset]
+if (p_finduid(uid) = false) return;
+~champ_clear;
+%champions_defeated = 0;
+%champ_arranged = 0;
+mes("Champions' Challenge: reset (no champions beaten).");

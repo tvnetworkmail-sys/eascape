@@ -1,0 +1,671 @@
+// EASCape: the Champions' Challenge (12 December 2005, "Champions, wyverns and granite").
+// Words: the OSRS wiki's Transcript:Larxus and Transcript:Leon d'Cour; the scrolls' words:
+// 2009scape (ChampionChallengeListener.kt). The rules, the order of things (hand Larxus a scroll,
+// open the statue and climb down, through the portcullis the champion appears and attacks, the
+// ladder back up ends the fight, the scroll goes once its champion is beaten, Hitpoints and Slayer
+// experience and a banner): the OSRS wiki's Champions' Challenge and the champions' pages, and
+// 2009scape. The champions' stats are in their npc configs (the OSRS wiki).
+// Left out as later than 2005: the champion's lamp and the chest (2018), Leon's cape (2017),
+// "Have you any rewards for me?" (for the lamp), the coloured drop message (2015).
+// Ours: anything marked "ours" below.
+
+// ---------------------------------------------------------------- the champions
+[proc,champ_index](npc $type)(int)
+switch_npc ($type) {
+    case champions_earthwarrior : return(^champ_earthwarrior);
+    case champions_ghoul : return(^champ_ghoul);
+    case champions_giant : return(^champ_giant);
+    case champions_goblin : return(^champ_goblin);
+    case champions_hobgoblin : return(^champ_hobgoblin);
+    case champions_imp : return(^champ_imp);
+    case champions_jogre : return(^champ_jogre);
+    case champions_lesserdemon : return(^champ_lesserdemon);
+    case champions_skeleton : return(^champ_skeleton);
+    case champions_zombie : return(^champ_zombie);
+    case champions_human : return(^champ_leon);
+}
+return(0);
+
+[proc,champ_npc](int $i)(npc)
+switch_int ($i) {
+    case ^champ_earthwarrior : return(champions_earthwarrior);
+    case ^champ_ghoul : return(champions_ghoul);
+    case ^champ_giant : return(champions_giant);
+    case ^champ_goblin : return(champions_goblin);
+    case ^champ_hobgoblin : return(champions_hobgoblin);
+    case ^champ_imp : return(champions_imp);
+    case ^champ_jogre : return(champions_jogre);
+    case ^champ_lesserdemon : return(champions_lesserdemon);
+    case ^champ_skeleton : return(champions_skeleton);
+    case ^champ_zombie : return(champions_zombie);
+    case ^champ_leon : return(champions_human);
+}
+return(null);
+
+[proc,champ_scroll](int $i)(namedobj)
+switch_int ($i) {
+    case ^champ_earthwarrior : return(champions_challenge_earthwarrior);
+    case ^champ_ghoul : return(champions_challenge_ghoul);
+    case ^champ_giant : return(champions_challenge_giant);
+    case ^champ_goblin : return(champions_challenge_goblin);
+    case ^champ_hobgoblin : return(champions_challenge_hobgoblin);
+    case ^champ_imp : return(champions_challenge_imp);
+    case ^champ_jogre : return(champions_challenge_jogre);
+    case ^champ_lesserdemon : return(champions_challenge_lesserdemon);
+    case ^champ_skeleton : return(champions_challenge_skeleton);
+    case ^champ_zombie : return(champions_challenge_zombie);
+    case ^champ_leon : return(champions_challenge_human);
+}
+return(null);
+
+[proc,champ_scroll_index](obj $obj)(int)
+switch_obj ($obj) {
+    case champions_challenge_earthwarrior : return(^champ_earthwarrior);
+    case champions_challenge_ghoul : return(^champ_ghoul);
+    case champions_challenge_giant : return(^champ_giant);
+    case champions_challenge_goblin : return(^champ_goblin);
+    case champions_challenge_hobgoblin : return(^champ_hobgoblin);
+    case champions_challenge_imp : return(^champ_imp);
+    case champions_challenge_jogre : return(^champ_jogre);
+    case champions_challenge_lesserdemon : return(^champ_lesserdemon);
+    case champions_challenge_skeleton : return(^champ_skeleton);
+    case champions_challenge_zombie : return(^champ_zombie);
+}
+return(0);
+
+// the names on the reward interface (2009scape's "Well done, you defeated the ... Champion!")
+[proc,champ_name](int $i)(string)
+switch_int ($i) {
+    case ^champ_earthwarrior : return("Earth Warrior Champion");
+    case ^champ_ghoul : return("Ghoul Champion");
+    case ^champ_giant : return("Giant Champion");
+    case ^champ_goblin : return("Goblin Champion");
+    case ^champ_hobgoblin : return("Hobgoblin Champion");
+    case ^champ_imp : return("Imp Champion");
+    case ^champ_jogre : return("Jogre Champion");
+    case ^champ_lesserdemon : return("Lesser Demon Champion");
+    case ^champ_skeleton : return("Skeleton Champion");
+    case ^champ_zombie : return("Zombie Champion");
+}
+return("Champion");
+
+// Hitpoints and Slayer experience each (the OSRS wiki's Champions' Challenge and Leon d'Cour)
+[proc,champ_xp](int $i)(int)
+switch_int ($i) {
+    case ^champ_earthwarrior : return(432);
+    case ^champ_ghoul : return(400);
+    case ^champ_giant : return(280);
+    case ^champ_goblin : return(128);
+    case ^champ_hobgoblin : return(232);
+    case ^champ_imp : return(160);
+    case ^champ_jogre : return(480);
+    case ^champ_lesserdemon : return(592);
+    case ^champ_skeleton : return(232);
+    case ^champ_zombie : return(240);
+    case ^champ_leon : return(492);
+}
+return(0);
+
+// Larxus's rule for each scroll (the OSRS wiki's Transcript:Larxus)
+[proc,champ_rule](int $i)(string)
+switch_int ($i) {
+    case ^champ_earthwarrior : return("For this fight you're not allowed to use any Prayers.");
+    case ^champ_ghoul : return("For this fight you're only allowed to take Weapons, no other items are allowed.");
+    case ^champ_giant : return("For this fight you're only allowed to use Melee attacks, no Ranged or Magic.");
+    case ^champ_goblin : return("For this fight you're only allowed to use Magic attacks, no Melee or Ranged.");
+    case ^champ_hobgoblin : return("For this fight you're not allowed to use any Melee attacks.");
+    case ^champ_imp : return("For this fight you're not allowed to use any Special Attacks.");
+    case ^champ_jogre : return("For this fight you're not allowed to use any Ranged attacks.");
+    case ^champ_lesserdemon : return("For this fight you're not allowed any Weapons or Armour.");
+    case ^champ_skeleton : return("For this fight you're only allowed to use Ranged attacks, no Melee or Magic.");
+    case ^champ_zombie : return("For this fight you're not allowed to use any Magic attacks.");
+}
+return("");
+
+[proc,champ_defeated](int $i)(boolean)
+if ($i < 1) return(false);
+if (testbit(%champions_defeated, sub($i, 1)) = ^true) return(true);
+return(false);
+
+// Leon D'Cour challenges you once the ten lower champions are beaten (the OSRS wiki)
+[proc,champ_leon_waiting]()(boolean)
+if (and(%champions_defeated, ^champ_lower_all) = ^champ_lower_all & ~champ_defeated(^champ_leon) = false) return(true);
+return(false);
+
+[proc,champ_larxus](string $text) ~chatnpc_specific("Larxus", champions_doorman, $text);
+
+[proc,champ_rule_line](boolean $fight, string $text)
+if ($fight = true) {
+    ~champ_remind($text);
+    return;
+}
+~champ_larxus($text);
+
+// in a fight: at most one reminder in 10 ticks (ours; see champions.varp)
+[proc,champ_remind](string $text)
+if (map_clock < add(%champ_warned, 10)) return;
+%champ_warned = map_clock;
+~champ_larxus($text);
+[proc,champ_leon](string $text) ~chatnpc_specific("Leon D'Cour", champions_human, $text); // the cache's name
+
+[proc,champ_in_basement](coord $coord)(boolean)
+return(inzone(^champ_basement_sw, ^champ_basement_ne, $coord));
+
+// the arena, west of the portcullis
+[proc,champ_in_arena](coord $coord)(boolean)
+return(inzone(^champ_arena_sw, ^champ_arena_ne, $coord));
+
+// the arena and the room behind the portcullis (the OSRS wiki: the fight ends only once the ladder
+// behind it is climbed)
+[proc,champ_in_fight](coord $coord)(boolean)
+if (~champ_in_basement($coord) = true & coordx($coord) <= add(coordx(^champ_arena_ne), 2)) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the scrolls
+// the words: 2009scape (ChampionChallengeListener.kt's scroll texts)
+[opheld1,champions_challenge_imp] ~champ_read("How about picking on someone your own size? I'll", "see you at the Champions' Guild.", "", "Champion of Imps");
+[opheld1,champions_challenge_goblin] ~champ_read("Fight me if you think you can human, I'll wait", "for you in the Champions' Guild.", "", "Champion of Goblins");
+[opheld1,champions_challenge_skeleton] ~champ_read("I'll be waiting at the Champions' Guild to collect", "your bones.", "", "Champion of Skeletons");
+[opheld1,champions_challenge_zombie] ~champ_read("You come to Champions' Guild, you fight me, I", "squish you, I get brains!", "", "Champion of Zombies");
+[opheld1,champions_challenge_giant] ~champ_read("Get yourself to the Champions' Guild, if you dare", "to face me puny human.", "", "Champion of Giants");
+[opheld1,champions_challenge_hobgoblin] ~champ_read("You won't defeat me, though you're welcome to", "try at the Champions' Guild.", "", "Champion of Hobgoblins");
+[opheld1,champions_challenge_ghoul] ~champ_read("Come and duel me at the Champions' Guild, I'll", "make sure nothing goes to waste.", "", "Champion of Ghouls");
+[opheld1,champions_challenge_jogre] ~champ_read("You think you can defeat me? Come to the", "Champions' Guild and prove it!", "", "Champion of Jogres");
+[opheld1,champions_challenge_lesserdemon] ~champ_read("Come to the Champions' Guild so I can banish", "you mortal!", "", "Champion of Lesser Demons");
+[opheld1,champions_challenge_earthwarrior] ~champ_read5("I challenge you to a duel, come to the arena", "beneath the Champions' Guild and fight me if you", "dare.", "", "Champion of Earth Warriors");
+
+[proc,champ_read](string $a, string $b, string $c, string $d)
+~champ_read5($a, $b, $c, $d, "");
+
+[proc,champ_read5](string $a, string $b, string $c, string $d, string $e)
+if_settext(scroll:com_2, ^string_empty);
+if_settext(scroll:com_3, ^string_empty);
+if_settext(scroll:com_4, ^string_empty);
+if_settext(scroll:com_5, $a);
+if_settext(scroll:com_6, $b);
+if_settext(scroll:com_7, $c);
+if_settext(scroll:com_8, $d);
+if_settext(scroll:com_9, $e);
+if_settext(scroll:com_10, ^string_empty);
+if_settext(scroll:com_11, ^string_empty);
+if_settext(scroll:com_12, ^string_empty);
+if_settext(scroll:com_13, ^string_empty);
+if_openmain(scroll);
+
+// The drops (1 in ^champion_scroll_chance, 5,000: the OSRS wiki and 2009scape), to members with 32
+// quest points or more (the OSRS wiki; 2009scape). Called by the drop tables with the killer found.
+[proc,champ_scroll_drop](namedobj $scroll)
+if (map_members = ^false | %qp < 32) return;
+if (random(^champion_scroll_chance) ! 0) return;
+obj_add(npc_coord, $scroll, 1, ^lootdrop_duration);
+
+// the monsters whose drops come from Void's tables (eascape_void): by name, from the OSRS wiki's
+// lists of each scroll's droppers that our world has
+[proc,champ_scroll_by_name]
+def_string $name = npc_name;
+if (compare($name, "Goblin") = 0 | compare($name, "Cave goblin") = 0 | compare($name, "Cave goblin guard") = 0) {
+    ~champ_scroll_drop(champions_challenge_goblin);
+} else if (compare($name, "Hobgoblin") = 0) {
+    ~champ_scroll_drop(champions_challenge_hobgoblin);
+} else if (compare($name, "Skeleton") = 0 | compare($name, "Skeleton Mage") = 0 | compare($name, "Giant skeleton") = 0) {
+    ~champ_scroll_drop(champions_challenge_skeleton);
+} else if (compare($name, "Zombie") = 0 | compare($name, "Monkey Zombie") = 0 | compare($name, "Zombie Pirate") = 0 | compare($name, "Zombie Swab") = 0) {
+    ~champ_scroll_drop(champions_challenge_zombie);
+} else if (compare($name, "Ghoul") = 0) {
+    ~champ_scroll_drop(champions_challenge_ghoul);
+}
+// (the giants on Void's tables, fire and ice, have the giant scroll in Void's own tables)
+
+// ---------------------------------------------------------------- Larxus
+[opnpc1,champions_doorman]
+if (~champ_leon_waiting = true) {
+    ~chatnpc("<p,neutral>Leon d'Cour has issued you a challenge. He has stated there will be no items allowed except those you're wearing. Do you want to accept the challenge?");
+    def_int $leon = ~p_choice2("Yes, let me at him!", 1, "No thanks, I'll pass.", 2);
+    if ($leon = 2) {
+        ~chatplayer("<p,neutral>No thanks, I'll pass.");
+        return;
+    }
+    %champ_arranged = ^champ_leon;
+    ~chatnpc("<p,neutral>Your challenger is ready! Please go down through the trapdoor when you're ready.");
+    return;
+}
+~chatnpc("<p,neutral>Is there something I can help you with?");
+def_int $choice;
+if (~champ_holding_scroll = true) {
+    $choice = ~p_choice3("I was given a challenge, what now?", 1, "What is this place?", 2, "Nothing thanks.", 3);
+} else {
+    $choice = ~p_choice2("What is this place?", 2, "Nothing thanks.", 3);
+}
+if ($choice = 1) {
+    ~chatplayer("<p,neutral>I was given a challenge, what now?");
+    ~chatnpc("<p,neutral>Hand it to me, and we'll get you started.");
+} else if ($choice = 2) {
+    ~chatplayer("<p,neutral>What is this place?");
+    ~chatnpc("<p,neutral>This is the champions' arena. The champions of various races use it to duel those they deem worthy of the honour. If you find a challenge scroll in your travels, bring it here to face your challenger.");
+} else {
+    ~chatplayer("<p,neutral>Nothing thanks.");
+}
+
+[proc,champ_holding_scroll]()(boolean)
+def_int $i = 1;
+while ($i <= ^champ_zombie) {
+    if (inv_total(inv, ~champ_scroll($i)) > 0) return(true);
+    $i = add($i, 1);
+}
+return(false);
+
+// a scroll handed to Larxus
+[opnpcu,champions_doorman] @champ_give_scroll(last_useitem);
+
+[label,champ_give_scroll](obj $obj)
+def_int $i = ~champ_scroll_index($obj);
+if ($i = 0) {
+    ~chatnpc("<p,neutral>That's great, now go show who's interested.");
+    return;
+}
+if (%champ_arranged ! 0) {
+    ~chatnpc("<p,neutral>You've already got a champion waiting for you.");
+    return;
+}
+if (~champ_defeated($i) = true) {
+    ~chatnpc("<p,neutral>You've already defeated this Champion. The challenge is void.");
+    inv_del(inv, ~champ_scroll($i), 1);
+    return;
+}
+~chatnpc("<p,neutral>So you want to accept the challenge huh? Well there are some specific rules for these Champion fights. <~champ_rule($i)> Do you still want to proceed?");
+def_int $choice = ~p_choice2("Yes, let me at him!", 1, "No thanks, I'll pass.", 2);
+if ($choice = 2) {
+    ~chatplayer("<p,neutral>No thanks, I'll pass.");
+    return;
+}
+%champ_arranged = $i;
+~chatnpc("<p,neutral>Your challenger is ready! Please go down through the trapdoor when you're ready.");
+
+// ---------------------------------------------------------------- the statue and the arena
+// The statue's trapdoor opens for 100 ticks (2009scape)
+[oploc1,champions_statue_trap]
+p_arrivedelay;
+loc_change(champions_statue_trap_open, 100);
+
+[oploc1,champions_statue_trap_open]
+p_arrivedelay;
+if (%champ_arranged = 0) {
+    ~champ_larxus("<p,neutral>You need to arrange a challenge with me before you enter the arena.");
+    return;
+}
+if (~champ_items_allowed(false) = false) return;
+~climb_ladder(^champ_below_statue, false);
+
+// what each challenge lets you take in (the OSRS wiki's Transcript:Larxus and Champions'
+// Challenge: the Ghoul Champion, a weapon and nothing else; the Lesser Demon Champion, nothing
+// worn; Leon D'Cour, nothing but what you wear). Not checked: the materials to make weapons or
+// armour, which the OSRS wiki adds for the Lesser Demon Champion.
+[proc,champ_items_allowed](boolean $fight)(boolean)
+def_int $worn = sub(inv_size(worn), inv_freespace(worn));
+if (%champ_arranged = ^champ_ghoul) {
+    if (inv_getobj(worn, ^wearpos_rhand) ! null) $worn = sub($worn, 1);
+    if ($worn > 0 | inv_freespace(inv) < inv_size(inv)) {
+        ~champ_rule_line($fight, "<p,neutral>I believe I mentioned you're only allowed to take Weapons into this duel.");
+        return(false);
+    }
+} else if (%champ_arranged = ^champ_lesserdemon) {
+    if ($worn > 0) {
+        ~champ_rule_line($fight, "<p,neutral>I believe I mentioned you're not allowed to take any Weapons or Armour into this duel.");
+        return(false);
+    }
+} else if (%champ_arranged = ^champ_leon) {
+    if (inv_freespace(inv) < inv_size(inv)) {
+        ~champ_rule_line($fight, "<p,neutral>I believe I mentioned you're not allowed to take any items except those you're wearing into this duel.");
+        return(false);
+    }
+}
+return(true);
+
+// The portcullis: in, the champion appears and attacks (2009scape); out, the fight goes on until
+// the ladder is climbed (the OSRS wiki).
+[oploc1,champions_portcullis]
+p_arrivedelay;
+if (~champ_in_arena(coord) = true) {
+    ~eascape_door_walk;
+    return;
+}
+if (%champ_arranged = 0) {
+    ~champ_larxus("<p,neutral>You need to arrange a challenge with me before you enter the arena.");
+    return;
+}
+if (~champ_items_allowed(false) = false) return;
+~eascape_door_walk;
+if (~champ_in_arena(coord) = false) return;
+// 2009scape: prayers are reset for the Earth Warrior Champion
+if (%champ_arranged = ^champ_earthwarrior) ~prayer_deactivate_all;
+~champ_play("Victory is Mine", "victory is mine", 12, 16); // the cache's unlock 12,16
+~champ_spawn;
+
+// the ladder back up: the fight is over, your scroll kept (the OSRS wiki); Larxus will call the
+// champion up again
+[oploc1,champions_arenaladder]
+p_arrivedelay;
+~champ_clear;
+%champ_arranged = 0;
+~climb_ladder(^champ_above_ladder, true);
+
+// ---------------------------------------------------------------- the guild's trapdoor and ladder
+// (2009scape: the basement ladder to 3190,3356; Void: the trapdoor opens, then Climb-down)
+[oploc1,champions_trap_door_closed]
+p_arrivedelay;
+loc_change(champions_trap_door_open, 100);
+
+[oploc1,champions_trap_door_open]
+p_arrivedelay;
+~climb_ladder(^champ_basement_arrive, false);
+
+[oploc2,champions_trap_door_open]
+p_arrivedelay;
+loc_change(champions_trap_door_closed, 100);
+
+[oploc1,champions_ladderup]
+p_arrivedelay;
+~climb_ladder(^champ_guild_top, true);
+
+// No teleporting out of the basement (the OSRS wiki; skill_magic teleport.rs2's pre_tele_checks)
+[proc,champ_tele_allowed](coord $coord)(boolean)
+if (~champ_in_basement($coord) = false) return(true);
+~champ_larxus("<p,neutral>There's a ladder for a reason.");
+return(false);
+
+// No prayers against the Earth Warrior Champion (the OSRS wiki's Transcript:Larxus;
+// skill_prayer prayer.rs2's prayer_checks)
+[proc,champ_prayer_allowed]()(boolean)
+if (%champ_arranged = ^champ_earthwarrior & ~champ_in_fight(coord) = true) {
+    ~champ_larxus("<p,neutral>I believe I mentioned you're not allowed to use Prayer in this duel.");
+    return(false);
+}
+return(true);
+
+// ---------------------------------------------------------------- the music
+// Title Fight in the basement is its music region (music/musicregion.dbrow); Victory is Mine plays
+// in a fight (the OSRS wiki). Ours: it starts as you go through the portcullis.
+[proc,champ_play](string $name, midi $track, int $var, int $bit)
+if (testbit(~music_getvar($var), $bit) = ^false) ~music_setvar($var, $bit);
+if (%musicplay ! 0) {
+    if_settext(music:com_177, $name);
+    midi_song($track);
+}
+
+// ---------------------------------------------------------------- the fight
+[proc,champ_spawn]
+if (~champ_present = true) return;
+def_npc $type = ~champ_npc(%champ_arranged);
+if ($type = null) return;
+// ours: it stays for 3,000 ticks at most (its timer removes it sooner once you've gone)
+npc_add(^champ_spawn, $type, 3000);
+%npc_aggressive_player = uid;
+%npc_attacking_uid = uid;
+npc_facesquare(coord);
+if (~champ_keeps_away(npc_type) = true) {
+    npc_setmode(applayer2);
+} else {
+    npc_setmode(opplayer2);
+}
+hint_npc;
+
+// yours in the basement
+[proc,champ_present]()(boolean)
+def_npc $type = ~champ_npc(%champ_arranged);
+if ($type = null) return(false);
+npc_findall(^champ_spawn, $type, 30, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) return(true);
+}
+return(false);
+
+[proc,champ_clear]
+def_npc $type = ~champ_npc(%champ_arranged);
+if ($type = null) return;
+npc_findall(^champ_spawn, $type, 30, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = uid) npc_del;
+}
+hint_stop;
+
+// those that fight from afar (the OSRS wiki: ranged or magic, and the Ghoul and Lesser Demon
+// Champions "will not close in to use [their] melee attack")
+[proc,champ_keeps_away](npc $type)(boolean)
+switch_npc ($type) {
+    case champions_imp, champions_goblin, champions_skeleton, champions_hobgoblin, champions_ghoul, champions_lesserdemon : return(true);
+}
+return(false);
+
+// Attacking: only yours, and only as Larxus allows. The OSRS wiki's Transcript:Larxus has the
+// Skeleton Champion's line; ours: the others' lines, made the same way, and the item rules
+// checked again on each attack.
+[opnpc2,champions_earthwarrior] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_earthwarrior] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_ghoul] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_ghoul] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_giant] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_giant] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_goblin] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_goblin] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_hobgoblin] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_hobgoblin] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_imp] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_imp] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_jogre] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_jogre] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_lesserdemon] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_lesserdemon] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_skeleton] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_skeleton] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_zombie] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_zombie] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+[opnpc2,champions_human] if (~champ_may_attack(false) = true) @player_combat_start;
+[apnpc2,champions_human] if (~champ_may_attack(false) = true) @player_combat_start_ap;
+
+[proc,champ_is_champion](npc $type)(boolean)
+if (~champ_index($type) > 0) return(true);
+return(false);
+
+// $spell: a spell cast on it (skill_combat npc_combat.rs2's npc_is_attackable_opt)
+[proc,champ_may_attack](boolean $spell)(boolean)
+if (%npc_aggressive_player ! uid) {
+    mes("That is not your enemy!"); // ours (as Agrith-Naar's)
+    return(false);
+}
+def_int $i = ~champ_index(npc_type);
+def_int $style = ^melee_style;
+if ($spell = true | ~player_autocast_enabled = true) {
+    $style = ^magic_style;
+} else if (%damagetype = ^ranged_style) {
+    $style = ^ranged_style;
+}
+def_boolean $special = false;
+if ($spell = false & ~sa_enabled = true) $special = true;
+if ($i = ^champ_skeleton & $style ! ^ranged_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're only allowed to use Ranged in this duel.");
+    return(false);
+}
+if ($i = ^champ_giant & $style ! ^melee_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're only allowed to use Melee in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_goblin & $style ! ^magic_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're only allowed to use Magic in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_hobgoblin & $style = ^melee_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're not allowed to use Melee in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_jogre & $style = ^ranged_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're not allowed to use Ranged in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_zombie & $style = ^magic_style) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're not allowed to use Magic in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_imp & $special = true) {
+    ~champ_remind("<p,neutral>I believe I mentioned you're not allowed to use Special Attacks in this duel."); // ours
+    return(false);
+}
+if ($i = ^champ_ghoul | $i = ^champ_lesserdemon | $i = ^champ_leon) {
+    def_int $arranged = %champ_arranged;
+    %champ_arranged = $i;
+    def_boolean $ok = ~champ_items_allowed(true);
+    %champ_arranged = $arranged;
+    if ($ok = false) return(false);
+}
+return(true);
+
+// the champions' AI: those that keep away attack from where they stand, closing in only to be
+// next to you (ai_applayer2), the rest walk up and hit (the default ai_opplayer2)
+[ai_queue1,champions_imp] ~npc_default_retaliate_ap;
+[ai_queue1,champions_goblin] ~npc_default_retaliate_ap;
+[ai_queue1,champions_skeleton] ~npc_default_retaliate_ap;
+[ai_queue1,champions_hobgoblin] ~npc_default_retaliate_ap;
+[ai_queue1,champions_ghoul] ~npc_default_retaliate_ap;
+[ai_queue1,champions_lesserdemon] ~npc_default_retaliate_ap;
+[ai_opplayer2,champions_imp] npc_setmode(applayer2);
+[ai_opplayer2,champions_goblin] npc_setmode(applayer2);
+[ai_opplayer2,champions_skeleton] npc_setmode(applayer2);
+[ai_opplayer2,champions_hobgoblin] npc_setmode(applayer2);
+[ai_opplayer2,champions_ghoul] npc_setmode(applayer2);
+[ai_opplayer2,champions_lesserdemon] npc_setmode(applayer2);
+[ai_applayer2,champions_imp] ~champ_attack;
+[ai_applayer2,champions_goblin] ~champ_attack;
+[ai_applayer2,champions_skeleton] ~champ_attack;
+[ai_applayer2,champions_hobgoblin] ~champ_attack;
+[ai_applayer2,champions_ghoul] ~champ_attack;
+[ai_applayer2,champions_lesserdemon] ~champ_attack;
+
+[proc,champ_attack]
+if (~eascape_npc_attack_ready = false) return;
+def_int $range = npc_range(coord);
+switch_npc (npc_type) {
+    case champions_imp :
+        // the OSRS wiki: melee and ranged; the cache's thrown daggers
+        if ($range <= 1) {
+            ~npc_default_attack;
+            return;
+        }
+        ~champ_missile(^ranged_style, champions_imp_throw, champions_imp_dagger_launch, champions_imp_dagger_travel, 1);
+    case champions_goblin : ~champ_goblin_spell;
+    case champions_skeleton : ~champ_missile(^ranged_style, human_bow, bronze_arrow_launch, bronze_arrow_travel, 5); // ours: bronze arrows
+    case champions_hobgoblin : ~champ_missile(^ranged_style, champions_hobgoblin_range, champions_hobgoblin_spear_launch, champions_hobgoblin_spear_travel, 6);
+    case champions_ghoul :
+        if ($range <= 1) {
+            ~npc_default_attack;
+            return;
+        }
+        ~champ_missile(^ranged_style, champions_ghoul_throw, champions_ghoul_skull_launch, champions_ghoul_skull_travel, 9);
+    case champions_lesserdemon :
+        if ($range <= 1) {
+            ~npc_default_attack;
+            return;
+        }
+        ~champ_missile(^magic_style, champions_lesserdemon_fire_cast, champions_lesserdemon_fire_launch, champions_lesserdemon_fire_travel, 14);
+}
+
+[proc,champ_missile](int $style, seq $anim, spotanim $launch, spotanim $travel, int $maxhit)
+npc_anim($anim, 0);
+if (npc_param(attack_sound) ! null) sound_synth(npc_param(attack_sound), 1, 0);
+spotanim_npc($launch, 92, 0);
+def_int $duration = ~player_projectile(npc_coord, coord, uid, $travel, 40, 36, 32, 15, 0, 11, 5);
+def_int $damage = 0;
+if (~eascape_npc_roll($style, $style) = true) $damage = randominc($maxhit);
+~eascape_npc_proj_hit($damage, $duration, $style);
+
+// The Goblin Champion's spells (the OSRS wiki: magic, max hit 4, one drains Prayer; the cache's
+// spellcast and drain seqs, casting glow and drain impact). Ours: 1 cast in 4 is the drain, which
+// takes as much Prayer as it hits; the spell lands 2 ticks after it's cast.
+[proc,champ_goblin_spell]
+def_boolean $drain = false;
+if (random(4) = 0) $drain = true;
+if ($drain = true) {
+    npc_anim(champions_goblin_drain, 0);
+} else {
+    npc_anim(champions_goblin_spellcast, 0);
+    spotanim_npc(champions_goblin_casting_glow, 92, 0);
+}
+sound_synth(goblin_attack, 1, 0);
+def_int $damage = 0;
+if (~eascape_npc_roll(^magic_style, ^magic_style) = true) $damage = randominc(4);
+if (~check_protect_prayer(^magic_style) = true) $damage = 0;
+spotanim_pl(champions_goblin_drain_impact, 92, 60);
+if ($drain = true & $damage > 0) stat_sub(prayer, $damage, 0);
+~eascape_npc_proj_hit($damage, 60, ^magic_style);
+
+// ours: gone once you've left (climbed the ladder, logged out or died) - checked every 5 ticks
+[ai_timer,champions_earthwarrior] ~champ_timer;
+[ai_timer,champions_ghoul] ~champ_timer;
+[ai_timer,champions_giant] ~champ_timer;
+[ai_timer,champions_goblin] ~champ_timer;
+[ai_timer,champions_hobgoblin] ~champ_timer;
+[ai_timer,champions_imp] ~champ_timer;
+[ai_timer,champions_jogre] ~champ_timer;
+[ai_timer,champions_lesserdemon] ~champ_timer;
+[ai_timer,champions_skeleton] ~champ_timer;
+[ai_timer,champions_zombie] ~champ_timer;
+[ai_timer,champions_human] ~champ_timer;
+
+[proc,champ_timer]
+if (finduid(%npc_aggressive_player) = false) {
+    npc_del;
+    return;
+}
+if (~champ_in_fight(coord) = false | %champ_arranged ! ~champ_index(npc_type)) npc_del;
+
+// ---------------------------------------------------------------- the champion beaten
+[ai_queue3,champions_earthwarrior] ~champ_death;
+[ai_queue3,champions_ghoul] ~champ_death;
+[ai_queue3,champions_giant] ~champ_death;
+[ai_queue3,champions_goblin] ~champ_death;
+[ai_queue3,champions_hobgoblin] ~champ_death;
+[ai_queue3,champions_imp] ~champ_death;
+[ai_queue3,champions_jogre] ~champ_death;
+[ai_queue3,champions_lesserdemon] ~champ_death;
+[ai_queue3,champions_skeleton] ~champ_death;
+[ai_queue3,champions_zombie] ~champ_death;
+[ai_queue3,champions_human] ~champ_death;
+
+[proc,champ_death]
+def_int $i = ~champ_index(npc_type);
+gosub(npc_death);
+if (finduid(%npc_aggressive_player) = true) queue(champ_won, 0, $i);
+
+[queue,champ_won](int $i)
+if ($i < 1 | ~champ_defeated($i) = true) return;
+hint_stop;
+def_boolean $leon_now = false;
+if ($i ! ^champ_leon & and(%champions_defeated, ^champ_lower_all) ! ^champ_lower_all) $leon_now = true;
+%champions_defeated = setbit(%champions_defeated, sub($i, 1));
+%champ_arranged = 0;
+// the scroll goes once its champion is beaten (the OSRS wiki); it may be in the bank for the
+// fights that let you take nothing in
+def_namedobj $scroll = ~champ_scroll($i);
+if (inv_total(inv, $scroll) > 0) {
+    inv_del(inv, $scroll, 1);
+} else if (inv_total(bank, $scroll) > 0) {
+    inv_del(bank, $scroll, 1);
+}
+def_int $xp = ~champ_xp($i);
+stat_advance(hitpoints, multiply($xp, 10));
+stat_advance(slayer, multiply($xp, 10));
+if ($i = ^champ_leon) {
+    // the OSRS wiki; his cape (2017) left out
+    ~champ_leon("<p,neutral>Adventurer, you have defeated me in battle! For this, I congratulate you.");
+} else if ($leon_now = true & ~champ_leon_waiting = true) {
+    ~champ_leon("<p,neutral>You have done well brave adventurer, but I would test your mettle now. You may arrange the fight with Larxus at your leisure.");
+}
+// the cache's reward interface (inter_334: its Slayer and Hitpoint lines read varp_621 and
+// varp_620); 2009scape's words and the scroll's picture
+%varp_620 = $xp;
+%varp_621 = $xp;
+if ($i = ^champ_leon) {
+    if_settext(inter_334:com_3, "Well done, you defeated Leon D'Cour!"); // ours (his name)
+} else {
+    if_settext(inter_334:com_3, "Well done, you defeated the <~champ_name($i)>!");
+}
+if_setobject(inter_334:com_4, $scroll, 260);
+if_openmain(inter_334);

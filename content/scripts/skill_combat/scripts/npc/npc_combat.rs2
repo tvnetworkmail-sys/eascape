@@ -101,6 +101,7 @@ if (npc_type = scorpion & npc_findhero = ^true) queue(bar_scorpion_page, 0, 0); 
 if (npc_param(eascape_drops) ! null) {
     if (npc_findhero = ^true) {
         ~eascape_npc_drops(npc_param(eascape_drops), npc_coord);
+        ~champ_scroll_by_name; // EASCape: champion's scrolls (minigames/game_champion_challenge)
     }
     return;
 }
@@ -237,6 +238,10 @@ if (~wb_door_support = true) {
 // EASCape: Spirits of the Elid's target (quest_elid/elid_cave.rs2)
 if (npc_type = elid_ranging_target_multinpc) {
     return(~elid_target_attackable(true));
+}
+// EASCape: the Champions' Challenge's rules for spells (minigames/game_champion_challenge)
+if (~champ_is_champion(npc_type) = true) {
+    return(~champ_may_attack(true));
 }
 if (npc_type = wormbrain & (~quest_dragon_getting_map_parts = false | inv_total(inv, mappart2) > 0 | %dragon_goblin ! ^quest_dragon_knows_about_goblin)) {
     mes("The goblin is already in prison. You have no reason to attack him.");

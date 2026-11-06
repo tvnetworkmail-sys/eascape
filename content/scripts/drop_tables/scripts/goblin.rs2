@@ -80,9 +80,7 @@ if ($dropint < 1) {
     obj_add(npc_coord, coins, 5, ^lootdrop_duration);
 }
 
-if (random(^champion_scroll_chance) = 0) {
-obj_add(npc_coord, champions_challenge_goblin, 1, ^lootdrop_duration);
-}
+~champ_scroll_drop(champions_challenge_goblin); // EASCape: 1 in 5,000, 32 quest points (minigames/game_champion_challenge)
 
 [ai_queue3,goblin_greenarmour] @goblin_village_drop_table; // Green
 [ai_queue3,goblin_redarmour] @goblin_village_drop_table; // Red
@@ -151,6 +149,4 @@ if ($dropint < 3) {
     obj_add(npc_coord, tin_ore, 1, ^lootdrop_duration);
 }
 
-if (random(^champion_scroll_chance) = 0) {
-obj_add(npc_coord, champions_challenge_goblin, 1, ^lootdrop_duration);
-}
+~champ_scroll_drop(champions_challenge_goblin); // EASCape: 1 in 5,000, 32 quest points (minigames/game_champion_challenge)
