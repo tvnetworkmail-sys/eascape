@@ -117,3 +117,23 @@ if ($r < 25) {
 } else {
     inv_add(inv, uncut_diamond, 1);
 }
+
+// ---------------------------------------------------------------- the rogue kit
+// OSRS wiki, Rogue kit: Build makes one kit into a chisel, rope, tinderbox or spade, "Once used, it
+// cannot be changed back"; Transcript:Rogue kit: "What do you want to make?" Spade, Chisel, Rope,
+// Tinderbox. The kit stacks, so with more than one a free slot is needed (ours).
+[opheld1,roguesden_kit]
+def_namedobj $tool = null;
+switch_int (~p_choice4_header("Spade", 1, "Chisel", 2, "Rope", 3, "Tinderbox", 4, "What do you want to make?")) {
+    case 1 : $tool = spade;
+    case 2 : $tool = chisel;
+    case 3 : $tool = rope;
+    case 4 : $tool = tinderbox;
+}
+if ($tool = null) return;
+if (inv_total(inv, roguesden_kit) > 1 & inv_freespace(inv) = 0) {
+    mes("You don't have enough inventory space."); // ours
+    return;
+}
+inv_del(inv, roguesden_kit, 1);
+inv_add(inv, $tool, 1);

@@ -60,7 +60,6 @@ stat_sub(prayer, stat(prayer), 0);
 %roguesden_stop = null;
 %roguesden_disarm = null;
 %roguesden_disarm_end = 0;
-%roguesden_crush_end = 0;
 settimer(roguesden_maze, 1);
 
 [proc,roguesden_inmaze](coord $c)(boolean)
@@ -80,13 +79,14 @@ if (~roguesden_inmaze($cur) = false) {
     return;
 }
 def_coord $prev = %roguesden_last;
+// every tick, so squares an obstacle puts you on (past the first pendulum, say) count too
+~roguesden_progress($cur);
 if ($cur ! $prev) {
     %roguesden_last = $cur;
     if ($prev = null | coordy($prev) ! coordy($cur) | distance($prev, $cur) > 2) {
         %roguesden_stop = null;
         return;
     }
-    ~roguesden_progress($cur);
     def_int $dx = ~rd_sign(sub(coordx($cur), coordx($prev)));
     def_int $dz = ~rd_sign(sub(coordz($cur), coordz($prev)));
     if (~roguesden_cross($cur, $dx, $dz, false) = true) return;
@@ -107,7 +107,7 @@ return(0);
 // ours: how far into the maze you got, as a percentage: the way from the doorway against the way
 // still to go to the safes (best reached), for the part-experience when you leave early
 [proc,roguesden_progress](coord $cur)
-if (coordx($cur) < 3040) %roguesden_flags = setbit(%roguesden_flags, 0); // past the first pendulum
+if (coordx($cur) <= 3040) %roguesden_flags = setbit(%roguesden_flags, 0); // past the first pendulum (it lands you on 3040)
 if (inzone(^roguesden_saferoom_sw, ^roguesden_saferoom_ne, $cur) = true) {
     %roguesden_flags = setbit(%roguesden_flags, 1);
     %roguesden_progress = 100;
@@ -266,21 +266,15 @@ if (loc_find($c, roguesden_trap_wall_poison_gas) = true) {
     }
 }
 if (loc_find($c, roguesden_trap_wall_crusher) = true) {
-    if (loc_angle = $a & %roguesden_crush_end <= map_clock) {
-        // OSRS wiki, Temporary skill drain: a crusher takes 5 Agility "on failure" (and 1 Thieving
-        // searched); ours: it squashes you only when you have no Agility left for it, and both
-        // walls of a crusher go off together (no second drain for 3 ticks)
+    if (loc_angle = $a) {
+        // OSRS wiki, Wall (Rogues' Den): standing in front of a crusher sets it off and sends you
+        // back to the lobby, like the spike and gas walls; Temporary skill drain: a crusher takes
+        // 5 Agility "on failure" (so it counts towards the part-experience)
         loc_anim(rogue_wall_crush);
         sound_synth(mace_crush, 1, 0);
-        %roguesden_crush_end = add(map_clock, 3);
-        if (stat(agility) < 5) {
-            anim(human_stunned, 0); // ours
-            ~roguesden_trapped;
-            return(true);
-        }
-        stat_sub(agility, 5, 0);
-        anim(human_sidestep_fall, 0); // ours
-        mes("You dodge the crushing walls!"); // ours
+        anim(human_stunned, 0); // ours
+        stat_sub(agility, min(5, stat(agility)), 0);
+        ~roguesden_trapped;
         return(true);
     }
 }
@@ -518,13 +512,14 @@ if (~p_choice2("Yes I'd like to leave!", 1, "No I'm fine thanks.", 2) = 2) {
 ~chatnpc_specific("Brian O'Richard", roguesden_mazemaster, "<p,neutral>Right you are then, out you come.");
 ~roguesden_leave(^rd_quit);
 
-// OSRS wiki, Mystic jewel: "Inside the maze: Drop - You don't want to lose that in here!"
+// OSRS wiki, Mystic jewel: "Inside the maze: Drop - You don't want to lose that in here!"; RS wiki,
+// Mystic jewel: "If dropped outside the maze, it disappeared and did not land on the floor."
 [opheld5,roguesden_gem]
 if (%roguesden_state = 1) {
     mes("You don't want to lose that in here!");
     return;
 }
-~dropslot(last_slot);
+inv_delslot(inv, last_slot);
 
 // ---------------------------------------------------------------- leaving
 // OSRS wiki: a cracked safe gives 12 experience in Agility and Thieving for each level drained from
