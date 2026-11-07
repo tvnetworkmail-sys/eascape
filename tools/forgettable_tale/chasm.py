@@ -20,7 +20,7 @@
 # box a ride puts there stands north of the end, the cart back west of it).
 #
 # The islands (ours where they are; the user's OSRS pictures show the boxes on rock islands, while
-# the 2005 cache has no island loc and neither its map nor the 2008 one has islands): a 5x5 rock
+# the 2005 cache has no island loc and neither its map nor the 2008 one has islands): a rounded 6x6 rock
 # patch round each box's end (box 1, box 2, the top), built the way this map square builds its own
 # raised rock (level 2, 1904-1908,4984-4988: dwarf_cavewall_top on the inner squares, cave walls
 # that fade down on the border, straight on the sides and diagonal at the corners, one level below
@@ -74,26 +74,31 @@ CART = (8, 29); J1X = 10; ROW = {3: 21, 2: 14, 1: 7, 0: 0, -1: -6, -2: -13, -3: 
 def add(p, d, n=1): return (p[0] + d[0] * n, p[1] + d[1] * n)
 BOXES = ('^ft_box1', '^ft_box2', '^ft_top')
 def island(e):
-    # the 5x5 rock patch round a box's end square
-    return {(e[0] + dx, e[1] + dz) for dx in range(-2, 3) for dz in range(-2, 3)}
+    # the 6x6 rock patch round a box's end square (the track comes in on its west side)
+    return {(e[0] + dx, e[1] + dz) for dx in range(-2, 4) for dz in range(-2, 4)}
 def island_locs(e):
-    # as the map's own raised rock (1904-1908,4984-4988): (square, loc, shape, angle)
-    x0, z0 = e[0] - 2, e[1] - 2; out = []
-    for x in range(x0, x0 + 5):
-        for z in range(z0, z0 + 5):
-            w, s_, n_, e_ = x == x0, z == z0, z == z0 + 4, x == x0 + 4
-            if s_ and w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 3))
-            elif s_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 2))
-            elif n_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 1))
-            elif n_ and w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 0))
-            else:
-                # the map's patch has a floor on the level above for its top; the tracks' level has
-                # none here, so the border squares get a top as the inner ones do (ours)
-                out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
-                if w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
-                elif e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
-                elif s_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
-                elif n_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
+    # a rounded rock island (ours): an octagon on the 6x6 squares, every square a rock top
+    # (dwarf_cavewall_top) with the fade-down cave walls on its sides, as the map's own raised rock
+    # (1904-1908,4984-4988); each corner is cut across its two squares by dwarf_cavewall_top5, the
+    # cache's half-square top with its own sloping face, and the corner square itself is left out.
+    # (square, loc, shape, angle)
+    x0, z0 = e[0] - 2, e[1] - 2; x1, z1 = x0 + 5, z0 + 5; out = []
+    # the corners: the two squares that cut it, and the half (rot) of them that is rock
+    cut = {(x0, z0 + 1): 2, (x0 + 1, z0): 2,          # south-west: the north-east halves
+           (x1 - 1, z0): 1, (x1, z0 + 1): 1,          # south-east: the north-west halves
+           (x1, z1 - 1): 0, (x1 - 1, z1): 0,          # north-east: the south-west halves
+           (x0 + 1, z1): 3, (x0, z1 - 1): 3}          # north-west: the south-east halves
+    for x in range(x0, x1 + 1):
+        for z in range(z0, z1 + 1):
+            if (x in (x0, x1)) and (z in (z0, z1)): continue
+            if (x, z) in cut:
+                out.append(((x, z), 'dwarf_cavewall_top5', 'centrepiece_straight', cut[(x, z)]))
+                continue
+            out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
+            if x == x0: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
+            elif x == x1: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
+            elif z == z0: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
+            elif z == z1: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
     return out
 SUPPORT = {STRAIGHT: 'keldagrim_track_supports', CURVE['a']: 'keldagrim_track_supports2',
            CURVE['b']: 'keldagrim_track_supports3', CURVE['c']: 'keldagrim_track_supports5',
