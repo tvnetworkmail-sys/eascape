@@ -197,13 +197,15 @@ if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Forgettable Tale... quest?
 // are in front of it). The jingle is the cache's "A Tale..." (midi_445: the 2007 cache's jingle 106,
 // the OSRS wiki's cache id for it; same notes). Ours: the camera's places, heights and speeds and
 // how long each title stays up (the statue at 2878-2881,10177-10180, the house at 2911-2916,
-// 10220-10225 with its door at 2913,10219). You wait out of sight west of the palace, as in The
-// Giant Dwarf's crash.
+// 10220-10225 with its door at 2913,10219). You wait at 2890,10196, behind the camera for both
+// shots. The client only has the 104x104 squares around you loaded, and a camera outside them
+// crashes it: waiting west of the palace (2840,10180) left the house (x 2900-2913) outside.
+// From 2890,10196 the loaded area is 2840-2943, 10144-10247, which holds every camera place here.
 [proc,ft_opening_film]
 if_close;
 ~fade_out;
 p_delay(2);
-p_telejump(0_44_159_24_4);
+p_telejump(0_45_159_10_20);
 cam_moveto(0_44_159_55_14, 900, 0, 100);
 cam_lookat(0_44_159_63_2, 500, 0, 100);
 p_delay(1);
