@@ -86,11 +86,14 @@ def island_locs(e):
             elif s_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 2))
             elif n_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 1))
             elif n_ and w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 0))
-            elif w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
-            elif e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
-            elif s_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
-            elif n_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
-            else: out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
+            else:
+                # the map's patch has a floor on the level above for its top; the tracks' level has
+                # none here, so the border squares get a top as the inner ones do (ours)
+                out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
+                if w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
+                elif e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
+                elif s_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
+                elif n_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
     return out
 SUPPORT = {STRAIGHT: 'keldagrim_track_supports', CURVE['a']: 'keldagrim_track_supports2',
            CURVE['b']: 'keldagrim_track_supports3', CURVE['c']: 'keldagrim_track_supports5',
