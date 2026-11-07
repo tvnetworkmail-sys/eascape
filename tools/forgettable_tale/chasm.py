@@ -16,16 +16,29 @@
 # columns in the first/second/third chasm); the ways between them are found square by square
 # (A*) with the cache's pieces, and where two ways meet one split is laid the other way round.
 # An end of the track (the boxes, the top, the exit, the dead ends) may sit up to 3 squares above or
-# below its place on the screen's map, and has a buffer; a box's end keeps the square north of it
-# free for the box a ride puts there.
+# below its place on the screen's map, and has a buffer; a box's end has its island to itself (the
+# box a ride puts there stands north of the end, the cart back west of it).
 #
-# Not laid: the cache's track supports (keldagrim_track_supports..6). Their models reach from 240
-# above their square to 432 below, i.e. from level 0 up to the track on level 1; but a loc can be
-# shown to one player only on the level they stand on (a zone update has no level), and the chasm's
-# level 1 is the cache's invisible_occ floor, under which the client draws nothing. The OSRS wiki's
-# tracks float.
+# The islands (ours where they are; the user's OSRS pictures show the boxes on rock islands, while
+# the 2005 cache has no island loc and neither its map nor the 2008 one has islands): a 5x5 rock
+# patch round each box's end (box 1, box 2, the top), built the way this map square builds its own
+# raised rock (level 2, 1904-1908,4984-4988: dwarf_cavewall_top on the inner squares, cave walls
+# that fade down on the border, straight on the sides and diagonal at the corners, one level below
+# the top). Here they stand on level 0, so their top is level 1's floor, where the track runs.
 #
-# Writes content/scripts/quests/quest_forgettable_tale/scripts/ft_chasm.rs2.
+# The supports (keldagrim_track_supports..6; ours where they go): one under each track square off
+# the islands, the piece matching the track piece's rails (straight: supports; the quarter turn's
+# a/b/c/d: supports2/3/5/4; the split's c/d/d2: supports5/4/6). Their models reach from 240 above
+# their square to 432 below, i.e. from level 0 up to the track on level 1, so they too stand on
+# level 0.
+#
+# Both are shown to you alone (each chasm's differ), on level 0: ft_tunnel.rs2 has you stand there a
+# moment as you arrive (a loc can be shown only on the level the player is on). The chasm's level-1
+# floor is the cache's invisible_occ, under which the client draws nothing; this also makes it
+# ft_chasm_invisible (ours: the same, not occluding) in content/maps/m29_77.jm2.
+#
+# Writes content/scripts/quests/quest_forgettable_tale/scripts/ft_chasm.rs2 and the chasm's floor
+# in content/maps/m29_77.jm2 (rerunning gives the same).
 # Usage: chasm.py [--png DIR]   (python3 -I; --png draws each chasm's layout for checking)
 import os, re, sys, heapq
 E = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../..')
@@ -41,11 +54,15 @@ for k, t, x, z in re.findall(r'case (\d+) : return\(([\^\w]+), (-?\d+), (-?\d+)\
     k = int(k); EDGES.setdefault(k // 1000, {})[((k // 10) % 100, k % 10)] = (t, int(x), int(z))
 
 # ---------------------------------------------------------------- the chasm's squares (level 1)
+# the chasm: the cache's invisible floor (o42), or ours (o175) once this has run
+CHASM_FLO = 175
 free = set()
 for line in open(MAP):
     if line.startswith('==== LOC'): break
     m = re.match(r'1 (\d+) (\d+): (.*)', line)
-    if m and 'o42' in m.group(3) and 'f5' in m.group(3): free.add((int(m.group(1)), int(m.group(2))))
+    if m and int(m.group(1)) >= 9 and 'f5' in m.group(3).split() and ('o42' in m.group(3).split() or f'o{CHASM_FLO}' in m.group(3).split()):
+        free.add((int(m.group(1)), int(m.group(2))))
+CHASM = set(free)
 # keep a square clear of the chasm's edge and of the platform (x <= 9)
 free = {(x, z) for (x, z) in free if x >= 10 and all((x + dx, z + dz) in free for dx in (-1, 0, 1) for dz in (-1, 0, 1))}
 
@@ -58,6 +75,33 @@ CURVE = {'a': 'keldagrim_track_curve_a', 'b': 'keldagrim_track_curve_b', 'c': 'k
 BUFFER = 'keldagrim_trackbuffer'
 CART = (8, 29); J1X = 10; ROW = {3: 21, 2: 14, 1: 7, 0: 0, -1: -6, -2: -13, -3: -19}; COL = {1: 9, 2: 8, 3: 6}
 def add(p, d, n=1): return (p[0] + d[0] * n, p[1] + d[1] * n)
+BOXES = ('^ft_box1', '^ft_box2', '^ft_top')
+def island(e):
+    # the 5x5 rock patch round a box's end square
+    return {(e[0] + dx, e[1] + dz) for dx in range(-2, 3) for dz in range(-2, 3)}
+def island_locs(e):
+    # as the map's own raised rock (1904-1908,4984-4988): (square, loc, shape, angle)
+    x0, z0 = e[0] - 2, e[1] - 2; out = []
+    for x in range(x0, x0 + 5):
+        for z in range(z0, z0 + 5):
+            w, s_, n_, e_ = x == x0, z == z0, z == z0 + 4, x == x0 + 4
+            if s_ and w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 3))
+            elif s_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 2))
+            elif n_ and e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 1))
+            elif n_ and w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_diagonal', 0))
+            elif w: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
+            elif e_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
+            elif s_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
+            elif n_: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
+            else: out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
+    return out
+SUPPORT = {STRAIGHT: 'keldagrim_track_supports', CURVE['a']: 'keldagrim_track_supports2',
+           CURVE['b']: 'keldagrim_track_supports3', CURVE['c']: 'keldagrim_track_supports5',
+           CURVE['d']: 'keldagrim_track_supports4', 'J': 'keldagrim_track_supports',
+           'keldagrim_track_tjunction_a': 'keldagrim_track_supports',
+           'keldagrim_track_tjunction_c': 'keldagrim_track_supports5',
+           'keldagrim_track_tjunction_d': 'keldagrim_track_supports4',
+           'keldagrim_track_tjunction_d2': 'keldagrim_track_supports6', BUFFER: 'keldagrim_track_supports'}
 
 def bend_pieces(p, h, turn):
     # the quarter turn entered at p heading h: (square, piece, angle) and the exit square, heading
@@ -108,9 +152,12 @@ def route(start, goals, used, near, extra=None):
         for t in ('L', 'R'):
             ps, ex, nh = bend_pieces(p, h, t)
             moves.append(((t, ps), (add(ex, DIRS[nh]), nh), 5.0))
+        mine = set(); cur = st  # the squares this way has laid so far (it may not cross itself)
+        while seen[cur] is not None:
+            pst, move = seen[cur]; mine.update(q for q, _, _ in move[1]); cur = pst
         for (kind, ps), nst, c in moves:
             sq = [q for q, _, _ in ps]
-            if any(q not in free or q in used for q in sq): continue
+            if any(q not in free or q in used or q in mine for q in sq): continue
             if nst[0] in used and nst not in goals: continue
             c += sum(1.5 for q in sq if q in near)
             heapq.heappush(openl, (g + c + hcost(nst), g + c, next(tick), nst, (st, (kind, ps))))
@@ -159,10 +206,9 @@ def layout(room, okey):
     reserved = set(); ends_own = {}
     for key, (x, z) in node.items():
         if key[0] == 'J':
-            reserved |= {q for q, _, _ in split_pieces((x, z))}
+            reserved |= {q for q, _, _ in split_pieces((x, z))} | {(x + 1, z + 2), (x + 1, z - 2)}
         else:
-            ends_own[key] = {(x, z), (x + 1, z)}
-            if key[0] in ('^ft_box1', '^ft_box2', '^ft_top'): ends_own[key] |= {(x, z + 1), (x + 1, z + 1)}
+            ends_own[key] = island((x, z)) if key[0] in BOXES else {(x, z), (x + 1, z)}
             reserved |= ends_own[key]
         if key in merge_at:
             mo = merge_at[key]
@@ -200,21 +246,21 @@ def layout(room, okey):
             goals = []; extra = {}
             for dz in (0, 1, -1, 2, -2, 3, -3):
                 ez = tz + dz; sqs = [(tx, ez), (tx + 1, ez)]
-                if key[0] in ('^ft_box1', '^ft_box2', '^ft_top'): sqs += [(tx, ez + 1), (tx + 1, ez + 1)]
+                if key[0] in BOXES: sqs = list(island((tx, ez)))
                 if all(q in free and q not in used and (q not in reserved or q in ends_own[key]) for q in sqs):
                     goals.append(((tx, ez), 'E')); extra[((tx, ez), 'E')] = 4 * abs(dz)
         near = set()
         for q in used | (reserved - {g[0] for g in goals}):
             for dx in (-1, 0, 1):
                 for dz in (-1, 0, 1): near.add((q[0] + dx, q[1] + dz))
-        blocked = (used | reserved) - {g[0] for g in goals} - {start[0]} - ends_own.get(key, set())
+        blocked = used | (reserved - {g[0] for g in goals} - {start[0]} - ends_own.get(key, set()))
         path, got = route(start, goals, blocked, near, extra if key[0] != 'J' and len(ins) == 1 else None) if goals else (None, None)
         if path is None: raise RuntimeError(f'room {room}: no way for junction {j} {"green" if d == 1 else "yellow"} to {key}')
         for kind, ps in path: lay(ps)
         if key[0] != 'J' and len(ins) == 1:
             node[key] = got[0]
             reserved -= ends_own[key]
-            ends_own[key] = {got[0], add(got[0], (1, 0))} | ({add(got[0], (0, 1)), add(got[0], (1, 1))} if key[0] in ('^ft_box1', '^ft_box2', '^ft_top') else set())
+            ends_own[key] = island(got[0]) if key[0] in BOXES else {got[0], add(got[0], (1, 0))}
             reserved |= ends_own[key]
         routes[(j, d)] = (path, key, got)
     # now the junctions, merges and ends themselves
@@ -252,6 +298,13 @@ def layout(room, okey):
             step = s
         way.append(sq[-1])
         rides[(j, d)] = way[1:]
+    # nothing but the box's own track on its island
+    for key in node:
+        if key[0] in BOXES:
+            own = {q for (path, k2, g) in routes.values() if k2 == key for kind, ps in path for q, _, _ in ps}
+            for q in island(node[key]):
+                if q in pieces and q[1] != node[key][1] and q not in own:
+                    raise RuntimeError(f'room {room}: track on the island of {key}')
     return pieces, node, rides, exit_key
 
 def coord(q): return f'1_29_77_{q[0]}_{q[1]}'
@@ -273,6 +326,23 @@ for room in (1, 2, 3):
     else:
         raise SystemExit(f'room {room}: no layout ({"; ".join(errs)})')
     allp[room] = p; alln[room] = n; allr[room] = r
+SUPPORTS = {}
+for room in (1, 2, 3):
+    isles = {e: island(e) for key, e in alln[room].items() if key[0] in BOXES}
+    on_isle = set().union(*isles.values()) if isles else set()
+    sup = [(q, SUPPORT[nm], 'centrepiece_straight', r if nm not in ('J', BUFFER) else 0)
+           for q, (nm, r) in allp[room].items() if q not in on_isle and nm in SUPPORT]
+    for e in isles: sup += island_locs(e)
+    SUPPORTS[room] = sorted(sup)
+
+# the chasm's floor: the cache's invisible_occ (o42) becomes ft_chasm_invisible (o175)
+lines = open(MAP).read().split('\n'); changed = False
+for i, line in enumerate(lines):
+    if line.startswith('==== LOC'): break
+    m = re.match(r'1 (\d+) (\d+): (.*)', line)
+    if m and (int(m.group(1)), int(m.group(2))) in CHASM and 'o42' in m.group(3).split():
+        lines[i] = line.replace(' o42 ', f' o{CHASM_FLO} ').replace(': o42 ', f': o{CHASM_FLO} '); changed = True
+if changed: open(MAP, 'w').write('\n'.join(lines))
 # the pieces, a room's in one list (the junctions' own squares are drawn by ft_junction_loc)
 L += ['// how many track pieces a chasm has', '[proc,ft_track_count](int $room)(int)', 'switch_int ($room) {']
 for room in (1, 2, 3): L.append(f'    case {room} : return({len(allp[room])});')
@@ -285,6 +355,15 @@ for room in (1, 2, 3):
         shape = 'centrepiece_straight' if nm == BUFFER else 'grounddecor'
         L.append(f'    case {room * 1000 + i} : return({coord(q)}, {nm}, {r}, {shape});')
 L += ['}', 'return(null, null, 0, grounddecor);', '',
+      '// how many supports and island pieces a chasm has (on level 0, under the track)',
+      '[proc,ft_support_count](int $room)(int)', 'switch_int ($room) {']
+for room in (1, 2, 3): L.append(f'    case {room} : return({len(SUPPORTS[room])});')
+L += ['}', 'return(0);', '', "// a chasm's track support $i (0 up): its square (level 0), loc, angle and shape",
+      '[proc,ft_support_piece](int $room, int $i)(coord, loc, int, locshape)', 'switch_int (calc($room * 1000 + $i)) {']
+for room in (1, 2, 3):
+    for i, (q, nm, shp, r) in enumerate(SUPPORTS[room]):
+        L.append(f'    case {room * 1000 + i} : return(0_29_77_{q[0]}_{q[1]}, {nm}, {r}, {shp});')
+L += ['}', 'return(null, null, 0, centrepiece_straight);', '',
       "// a junction's square (its tjunction_a piece)", '[proc,ft_junction_square](int $room, int $j)(coord)',
       'switch_int (calc($room * 100 + $j)) {']
 for room in (1, 2, 3):

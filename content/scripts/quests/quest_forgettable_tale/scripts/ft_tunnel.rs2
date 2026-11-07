@@ -7,10 +7,10 @@
 // the puzzle screens the cache's (ft_puzzle_ui.rs2) and the track maps read off them
 // (ft_tracks.rs2). The cache's map has no track over the chasm (the 2005 and 2008 caches alike),
 // while the OSRS wiki's cutscene shows "tracks floating out in all directions": each chasm's
-// railway is laid for you alone when you get there (p_showloc), with the cache's track pieces
-// (not its supports, which would hang below the chasm's floor: chasm.py says why).
-// Ours: the railways' layout (ft_chasm.rs2, tools/forgettable_tale/chasm.py); the box and the cart
-// back put for you where a ride ends; the cutscenes' places and camera; the rides' and rooms' order
+// railway is laid for you alone when you get there (p_showloc), with the cache's track pieces and
+// supports, and the boxes stand on rock islands (the user's OSRS pictures), built as this map
+// square builds its own raised rock. Ours: the railways' and islands' layout (ft_chasm.rs2,
+// tools/forgettable_tale/chasm.py); the box and the cart back put for you where a ride ends; the cutscenes' places and camera; the rides' and rooms' order
 // of stops; that the cave exits back and the cart's Return take you to Keldagrim. Ours is marked.
 
 // ---------------------------------------------------------------- the cart conductor (2922,10166)
@@ -134,9 +134,14 @@ if_openoverlay(null);
 // ---------------------------------------------------------------- the chasms
 [label,ft_chasm_arrive]
 def_int $room = ~ft_room;
+~ft_chasm_draw($room);
+// ours: the supports and islands stand on level 0, and a loc can be shown to you only on the level
+// you are on, so you stand a moment on level 0 in the middle of the chasm (which also loads the
+// whole chasm, so it stays loaded while you ride)
+p_telejump(0_29_77_34_28);
+p_delay(0);
 p_telejump(1_29_77_6_28);
 facesquare(1_29_77_8_29);
-~ft_chasm_draw($room);
 def_boolean $first = false;
 if ($room = 1 & %forget_tunnel_cutscene1 = 0) $first = true;
 if ($room = 2 & %forget_tunnel_cutscene2 = 0) $first = true;
@@ -339,7 +344,8 @@ if ($new = ^ft_yellow) inv_del(inv, turnright_trackjunction_control_card, 1);
 ~ft_puzzle_stones($room);
 
 // the chasm's railway, for you alone (another player there may be at another chasm's puzzle):
-// every piece of ft_chasm.rs2's, then the junctions as their stones set them
+// every piece of ft_chasm.rs2's, the supports and islands under it, then the junctions as their
+// stones set them
 [proc,ft_chasm_draw](int $room)
 p_hidelocs;
 if ($room = 0) return;
@@ -351,6 +357,13 @@ def_int $a;
 def_locshape $s;
 while ($i < $n) {
     $c, $l, $a, $s = ~ft_track_piece($room, $i);
+    p_showloc($c, $l, $a, $s);
+    $i = calc($i + 1);
+}
+$n = ~ft_support_count($room);
+$i = 0;
+while ($i < $n) {
+    $c, $l, $a, $s = ~ft_support_piece($room, $i);
     p_showloc($c, $l, $a, $s);
     $i = calc($i + 1);
 }
