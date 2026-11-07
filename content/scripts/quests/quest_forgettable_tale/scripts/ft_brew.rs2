@@ -149,9 +149,21 @@ if (inv_total(inv, forget_gardener_letter) > 0) inv_del(inv, forget_gardener_let
 
 // ---------------------------------------------------------------- the letter and Elstan
 [opheld1,forget_gardener_letter]
-def_string $text = "Dear Elstan,||I have followed with enthusiasm your recent series of papers on the subject of cross-pollinating flowers in the B-branch of the alpha sub-family of the specialist flowers. Especially your last presentation at the Annual Asgarnia Gardening Conference was impressive and inspirational, even if other attendants didn't show much interest. They must not share our vision.||After returning to my home, I started with some experiments of my own and have found that certain combinations of cross-pollination leads to triple herbicide resistance in cabbages. Practical applications of this discovery seem unlikely, but the theoretical implications are astounding! I'm looking foreward to publishing my results at the next conference. ";
-$text = append($text, "Perhaps it can be hosted in Keldagrim next time? Although I'm not sure how the underground setting would go down with the other farmers.||Kind Regards,||Rind, Gardener of the Palace of Keldagrim.");
-~book("Letter", $text);
+// EASCape: turned page by page like the other quest books (general/book.rs2); ~book would show only its last page
+%book_page = 0;
+%open_book = forget_gardener_letter;
+@book_flip_page(0, 0, ~ft_letter_last, ft_letter_book);
+
+[proc,ft_letter_split]
+split_init(append("Dear Elstan,||I have followed with enthusiasm your recent series of papers on the subject of cross-pollinating flowers in the B-branch of the alpha sub-family of the specialist flowers. Especially your last presentation at the Annual Asgarnia Gardening Conference was impressive and inspirational, even if other attendants didn't show much interest. They must not share our vision.||After returning to my home, I started with some experiments of my own and have found that certain combinations of cross-pollination leads to triple herbicide resistance in cabbages. Practical applications of this discovery seem unlikely, but the theoretical implications are astounding! I'm looking foreward to publishing my results at the next conference. ", "Perhaps it can be hosted in Keldagrim next time? Although I'm not sure how the underground setting would go down with the other farmers.||Kind Regards,||Rind, Gardener of the Palace of Keldagrim."), 175, 22, q8_full);
+
+[proc,ft_letter_last]()(int)
+~ft_letter_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,ft_letter_book]
+~ft_letter_split;
+~book_page("Letter", %book_page);
 
 [opheld5,forget_gardener_letter]
 def_int $slot = last_slot;
