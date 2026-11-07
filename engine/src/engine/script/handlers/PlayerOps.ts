@@ -33,7 +33,10 @@ import {
     GenderValid,
     PlayerOpIndexValid,
     PlayerOpStateValid,
-    HuntVisValid
+    HuntVisValid,
+    LocAngleValid,
+    LocShapeValid,
+    LocTypeValid
 } from '#/engine/script/ScriptValidators.js';
 import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
 import World from '#/engine/World.js';
@@ -512,6 +515,23 @@ const PlayerOps: CommandHandlers = {
         const stat: PlayerStat = check(state.popInt(), PlayerStatValid);
 
         state.pushInt(state.activePlayer.baseLevels[stat]);
+    },
+
+    // EASCape: a loc only this player sees (no collision, no ops): Forgettable Tale's chasm railways,
+    // which differ for each of the three puzzles on one shared chasm
+    [ScriptOpcode.P_SHOWLOC]: state => {
+        const [coord, type, angle, shape] = state.popInts(4);
+
+        const position: CoordGrid = check(coord, CoordValid);
+        const locType: LocType = check(type, LocTypeValid);
+        const locAngle: number = check(angle, LocAngleValid);
+        const locShape: number = check(shape, LocShapeValid);
+
+        state.activePlayer.showLoc(position.level, position.x, position.z, locType.id, locShape, locAngle);
+    },
+
+    [ScriptOpcode.P_HIDELOCS]: state => {
+        state.activePlayer.hideLocs();
     },
 
     // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)

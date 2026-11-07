@@ -1,5 +1,5 @@
 import { PlayerInfoProt, Visibility } from '#/network/rsbuf/index.js';
-import { CollisionFlag, CollisionType } from '#/engine/routefinder/index.js';
+import { CollisionFlag, CollisionType, locShapeLayer } from '#/engine/routefinder/index.js';
 
 import Component from '#/cache/config/Component.js';
 import FontType from '#/cache/config/FontType.js';
@@ -96,6 +96,9 @@ export function getLevelByExp(exp: number) {
 export function getExpByLevel(level: number) {
     return levelExperience[level - 2];
 }
+
+// EASCape: a loc shown to one player (Player.showLoc)
+export type PrivateLoc = { level: number; x: number; z: number; layer: number; type: number; shape: number; angle: number };
 
 export default class Player extends PathingEntity {
     static readonly DESIGN_BODY_COLORS: number[][] = [
@@ -322,6 +325,13 @@ export default class Player extends PathingEntity {
     originX: number = -1;
     originZ: number = -1;
     buildArea: BuildArea = new BuildArea(this);
+    // EASCape: locs only this player sees (p_showloc): Forgettable Tale's chasm railways. They are
+    // not in the world (no collision, no ops). NetworkPlayer.updateZones sends them: only at the
+    // player's own level (a zone update has no level of its own), and again whenever the client's
+    // zone or scene is reset. privateLocsGone are ones taken away that the client may still show.
+    privateLocs: Map<number, PrivateLoc> = new Map();
+    privateLocsGone: Map<number, PrivateLoc> = new Map();
+    privateLocsQueue: Set<number> = new Set();
     animProtect: number = 0;
     invListeners: InventoryListener[] = [];
     allowDesign: boolean = false;
@@ -2352,6 +2362,24 @@ export default class Player extends PathingEntity {
         if (rest.length > 0) {
             this.write(new MessageGame(rest));
         }
+    }
+
+    // EASCape: show a loc to this player only (one per square and layer; a new one replaces it)
+    showLoc(level: number, x: number, z: number, type: number, shape: number, angle: number): void {
+        const layer: number = locShapeLayer(shape);
+        const key: number = CoordGrid.packCoord(level, x, z) * 4 + layer;
+        this.privateLocs.set(key, { level, x, z, layer, type, shape, angle });
+        this.privateLocsGone.delete(key);
+        this.privateLocsQueue.add(key);
+    }
+
+    // EASCape: take away every loc showLoc showed
+    hideLocs(): void {
+        for (const [key, loc] of this.privateLocs) {
+            this.privateLocsGone.set(key, loc);
+        }
+        this.privateLocs.clear();
+        this.privateLocsQueue.clear();
     }
 
     isValid(_hash64?: bigint): boolean {

@@ -3,10 +3,11 @@ import * as rsbuf from '#/network/rsbuf/index.js';
 import InvType from '#/cache/config/InvType.js';
 import { CoordGrid } from '#/engine/CoordGrid.js';
 import { ModalState } from '#/engine/entity/ModalState.js';
-import Player from '#/engine/entity/Player.js';
+import Player, { PrivateLoc } from '#/engine/entity/Player.js';
 import World from '#/engine/World.js';
 import { WorldStat } from '#/engine/WorldStat.js';
 import Zone from '#/engine/zone/Zone.js';
+import ZoneMap from '#/engine/zone/ZoneMap.js';
 import Packet from '#/io/Packet.js';
 import ClientGameProtCategory from '#/network/game/client/ClientGameProtCategory.js';
 import ServerGameMessageEncoder from '#/network/game/server/ServerGameMessageEncoder.js';
@@ -18,6 +19,8 @@ import IfOpenMain from '#/network/game/server/model/IfOpenMain.js';
 import IfOpenMainSide from '#/network/game/server/model/IfOpenMainSide.js';
 import IfOpenOverlay from '#/network/game/server/model/IfOpenOverlay.js';
 import IfOpenSide from '#/network/game/server/model/IfOpenSide.js';
+import LocAddChange from '#/network/game/server/model/LocAddChange.js';
+import LocDel from '#/network/game/server/model/LocDel.js';
 import Logout from '#/network/game/server/model/Logout.js';
 import NpcInfo from '#/network/game/server/model/NpcInfo.js';
 import PlayerInfo from '#/network/game/server/model/PlayerInfo.js';
@@ -27,6 +30,7 @@ import UpdateInvPartial from '#/network/game/server/model/UpdateInvPartial.js';
 import UpdateRunEnergy from '#/network/game/server/model/UpdateRunEnergy.js';
 import UpdateRunWeight from '#/network/game/server/model/UpdateRunWeight.js';
 import UpdateStat from '#/network/game/server/model/UpdateStat.js';
+import UpdateZonePartialFollows from '#/network/game/server/model/UpdateZonePartialFollows.js';
 import ServerGameMessage from '#/network/game/server/ServerGameMessage.js';
 import ClientSocket from '#/server/ClientSocket.js';
 import NullClientSocket from '#/server/NullClientSocket.js';
@@ -303,14 +307,79 @@ export class NetworkPlayer extends Player {
         }
 
         // update active zones
+        let fresh: Set<number> | null = null;
         for (const zoneIndex of activeZones) {
             const zone: Zone = World.gameMap.getZoneIndex(zoneIndex);
             if (!loadedZones.has(zone.index)) {
                 zone.writeFullFollows(this);
+                (fresh ??= new Set()).add(zone.index);
             }
             zone.writePartialEncloses(this);
             zone.writePartialFollows(this);
             loadedZones.add(zone.index);
+        }
+
+        if (this.privateLocs.size > 0 || this.privateLocsGone.size > 0) {
+            this.updatePrivateLocs(fresh);
+        }
+    }
+
+    // EASCape: the locs shown to this player only (Player.showLoc), after the zones' own updates. A
+    // zone update applies to the player's level, so a loc on another level waits until the player
+    // is there. The client keeps them through a rebuild while they stay in its scene; a zone's full
+    // update (fresh) clears that zone's at the player's level, so they go again.
+    private updatePrivateLocs(fresh: Set<number> | null): void {
+        const rebuilt: boolean = this.buildArea.lastBuild === World.currentTick;
+        if (!rebuilt && fresh === null && this.privateLocsQueue.size === 0 && this.privateLocsGone.size === 0) {
+            return;
+        }
+        const originX: number = CoordGrid.zoneOrigin(this.originX);
+        const originZ: number = CoordGrid.zoneOrigin(this.originZ);
+        const inScene = (loc: PrivateLoc): boolean => loc.x >= originX && loc.x < originX + 104 && loc.z >= originZ && loc.z < originZ + 104;
+        let lastZone: number = -1;
+        const zoneFor = (loc: PrivateLoc): void => {
+            const zone: number = ((loc.x >> 3) << 16) | (loc.z >> 3);
+            if (zone !== lastZone) {
+                this.write(new UpdateZonePartialFollows(loc.x >> 3, loc.z >> 3, this.originX, this.originZ));
+                lastZone = zone;
+            }
+        };
+
+        for (const [key, loc] of this.privateLocsGone) {
+            if (!inScene(loc)) {
+                if (rebuilt) this.privateLocsGone.delete(key); // the client let it go with its old scene
+                continue;
+            }
+            if (loc.level !== this.level) {
+                continue;
+            }
+            // put back what the world has there, or nothing
+            zoneFor(loc);
+            const coord: number = CoordGrid.packZoneCoord(loc.x, loc.z);
+            let restored: boolean = false;
+            for (const world of World.gameMap.getZone(loc.x, loc.z, loc.level).getLocsUnsafe(coord)) {
+                if (world.layer === loc.layer && world.isActive) {
+                    this.write(new LocAddChange(coord, world.type, world.shape, world.angle));
+                    restored = true;
+                    break;
+                }
+            }
+            if (!restored) {
+                this.write(new LocDel(coord, loc.shape, loc.angle));
+            }
+            this.privateLocsGone.delete(key);
+        }
+
+        for (const [key, loc] of this.privateLocs) {
+            if (rebuilt || (fresh !== null && fresh.has(ZoneMap.zoneIndex(loc.x, loc.z, loc.level)))) {
+                this.privateLocsQueue.add(key);
+            }
+            if (!this.privateLocsQueue.has(key) || loc.level !== this.level || !inScene(loc)) {
+                continue;
+            }
+            zoneFor(loc);
+            this.write(new LocAddChange(CoordGrid.packZoneCoord(loc.x, loc.z), loc.type, loc.shape, loc.angle));
+            this.privateLocsQueue.delete(key);
         }
     }
 

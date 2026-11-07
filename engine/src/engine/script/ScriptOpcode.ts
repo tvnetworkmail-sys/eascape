@@ -434,6 +434,8 @@ export const enum ScriptOpcode {
     DATE_MINUTES, // derived
     DATE_RUNEDAY, // derived
     STAT_XP, // EASCape: a stat's experience (tenths), for Tears of Guthix
+    P_SHOWLOC, // EASCape: a loc only this player sees (Forgettable Tale's chasm railways)
+    P_HIDELOCS, // EASCape: takes away the locs p_showloc showed
 
     // Struct ops (4700-4799)
     STRUCT_PARAM = 4700,
@@ -867,6 +869,8 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['DATE_MINUTES', ScriptOpcode.DATE_MINUTES],
     ['DATE_RUNEDAY', ScriptOpcode.DATE_RUNEDAY],
     ['STAT_XP', ScriptOpcode.STAT_XP],
+    ['P_SHOWLOC', ScriptOpcode.P_SHOWLOC],
+    ['P_HIDELOCS', ScriptOpcode.P_HIDELOCS],
 
     ['STRUCT_PARAM', ScriptOpcode.STRUCT_PARAM],
 

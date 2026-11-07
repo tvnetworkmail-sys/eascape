@@ -5,11 +5,13 @@
 // map (m29_77: the chasm at level 1 with its platform at 1859-1864,4952-4961, the cart, the
 // machinery and the box; the three rooms at level 2 with their cave exits, crates and bookcases),
 // the puzzle screens the cache's (ft_puzzle_ui.rs2) and the track maps read off them
-// (ft_tracks.rs2). Ours: the chasm has only its starting platform, so a ride takes you out over the
-// abyss to the end of the track, where a box and a cart back are put for you; where on the chasm
-// each track point is (the screen's map stretched over it); the cutscenes' places and camera; the
-// rides' and rooms' order of stops; that the cave exits back and the cart's Return take you to
-// Keldagrim. Ours is marked.
+// (ft_tracks.rs2). The cache's map has no track over the chasm (the 2005 and 2008 caches alike),
+// while the OSRS wiki's cutscene shows "tracks floating out in all directions": each chasm's
+// railway is laid for you alone when you get there (p_showloc), with the cache's track pieces
+// (not its supports, which would hang below the chasm's floor: chasm.py says why).
+// Ours: the railways' layout (ft_chasm.rs2, tools/forgettable_tale/chasm.py); the box and the cart
+// back put for you where a ride ends; the cutscenes' places and camera; the rides' and rooms' order
+// of stops; that the cave exits back and the cart's Return take you to Keldagrim. Ours is marked.
 
 // ---------------------------------------------------------------- the cart conductor (2922,10166)
 // the one nearest the boarded-up tunnel asks about it (the OSRS wiki); his [opnpc1]
@@ -120,6 +122,7 @@ if_close;
 ~fade_out;
 p_delay(2);
 ~ft_ride_clear;
+p_hidelocs;
 cam_reset;
 p_telejump(0_45_158_46_47);
 facesquare(0_45_158_46_48);
@@ -133,6 +136,7 @@ if_openoverlay(null);
 def_int $room = ~ft_room;
 p_telejump(1_29_77_6_28);
 facesquare(1_29_77_8_29);
+~ft_chasm_draw($room);
 def_boolean $first = false;
 if ($room = 1 & %forget_tunnel_cutscene1 = 0) $first = true;
 if ($room = 2 & %forget_tunnel_cutscene2 = 0) $first = true;
@@ -330,22 +334,53 @@ if ($v = 0) {
 if ($new = ^ft_green) inv_del(inv, turnleft_trackjunction_control_card, 1);
 if ($new = ^ft_yellow) inv_del(inv, turnright_trackjunction_control_card, 1);
 ~ft_junction_set($j, $new);
+~ft_junction_draw($room, $j);
 ~ft_puzzle_counts;
 ~ft_puzzle_stones($room);
 
-// a track point on the chasm (ours: the screen's map stretched over the chasm, its left end at the
-// cart, 1864,4957)
-[proc,ft_world](int $room, int $mx, int $mz)(coord)
-def_int $x0 = -240;
-def_int $span = 480;
-if ($room = 2) {
-    $x0 = -288;
-    $span = 576;
-} else if ($room = 3) {
-    $x0 = -384;
-    $span = 768;
+// the chasm's railway, for you alone (another player there may be at another chasm's puzzle):
+// every piece of ft_chasm.rs2's, then the junctions as their stones set them
+[proc,ft_chasm_draw](int $room)
+p_hidelocs;
+if ($room = 0) return;
+def_int $n = ~ft_track_count($room);
+def_int $i = 0;
+def_coord $c;
+def_loc $l;
+def_int $a;
+def_locshape $s;
+while ($i < $n) {
+    $c, $l, $a, $s = ~ft_track_piece($room, $i);
+    p_showloc($c, $l, $a, $s);
+    $i = calc($i + 1);
 }
-return(movecoord(1_29_77_8_29, calc(($mx - $x0) * 52 / $span), 0, calc($mz * 7 / 96)));
+$n = ~ft_puzzle_count($room);
+$i = 1;
+while ($i <= $n) {
+    ~ft_junction_draw($room, $i);
+    $i = calc($i + 1);
+}
+
+// a junction's split: the cache has a left and a right one besides the plain one (all three the
+// same model); a green stone turns the cart left (the upper way), a yellow one right
+[proc,ft_junction_draw](int $room, int $j)
+def_coord $c = ~ft_junction_square($room, $j);
+if ($c = null) return;
+switch_int (~ft_junction($j)) {
+    case ^ft_green : p_showloc($c, keldagrim_track_tjunction_a_left, 0, grounddecor);
+    case ^ft_yellow : p_showloc($c, keldagrim_track_tjunction_a_right, 0, grounddecor);
+    case default : p_showloc($c, keldagrim_track_tjunction_a, 0, grounddecor);
+}
+
+// the cart along the railway from junction $j the way its stone sets, a square a tick
+[proc,ft_ride_along](int $room, int $j, int $dir)
+def_int $k = 0;
+def_coord $c = ~ft_ride_way($room, $j, $dir, $k);
+while ($c ! null) {
+    ~forcemove($c);
+    $k = calc($k + 1);
+    $c = ~ft_ride_way($room, $j, $dir, $k);
+}
 
 // the ride: junction to junction until a junction has no stone or the track ends
 [oploc1,forget_train_cart]
@@ -364,6 +399,7 @@ if_close;
 ~keldagrim_cart_ride(true);
 p_telejump(1_29_77_8_29);
 p_delay(0);
+~forcemove(~ft_junction_square($room, 1));
 def_int $j = 1;
 def_int $end = 0;
 def_int $v;
@@ -376,7 +412,7 @@ while ($end = 0) {
         $end = ^ft_blocked;
     } else {
         $next, $nx, $nz = ~ft_edge($room, $j, $v);
-        ~forcemove(~ft_world($room, $nx, $nz));
+        ~ft_ride_along($room, $j, $v);
         if ($next >= ^ft_exit) {
             $end = $next;
         } else {
@@ -434,6 +470,7 @@ midi_jingle("midi_437");
 p_delay(3);
 ~keldagrim_cart_ride(false);
 ~ft_chasm_reset;
+p_hidelocs;
 if ($room = 1) {
     ~ft_set(^ft_listen);
     @ft_room_listen;
