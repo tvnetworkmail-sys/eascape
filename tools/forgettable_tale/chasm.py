@@ -34,11 +34,10 @@
 #
 # Both are shown to you alone (each chasm's differ), on level 0: ft_tunnel.rs2 has you stand there a
 # moment as you arrive (a loc can be shown only on the level the player is on). The chasm's level-1
-# floor is the cache's invisible_occ, under which the client draws nothing; this also makes it
-# ft_chasm_invisible (ours: the same, not occluding) in content/maps/m29_77.jm2.
+# floor is the cache's own "invisible" (a jm2 overlay oN is floor type N - 1, so o42 is floor 41),
+# which draws nothing and hides nothing below it, so the supports show against the black void.
 #
-# Writes content/scripts/quests/quest_forgettable_tale/scripts/ft_chasm.rs2 and the chasm's floor
-# in content/maps/m29_77.jm2 (rerunning gives the same).
+# Writes content/scripts/quests/quest_forgettable_tale/scripts/ft_chasm.rs2.
 # Usage: chasm.py [--png DIR]   (python3 -I; --png draws each chasm's layout for checking)
 import os, re, sys, heapq
 E = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../..')
@@ -54,15 +53,13 @@ for k, t, x, z in re.findall(r'case (\d+) : return\(([\^\w]+), (-?\d+), (-?\d+)\
     k = int(k); EDGES.setdefault(k // 1000, {})[((k // 10) % 100, k % 10)] = (t, int(x), int(z))
 
 # ---------------------------------------------------------------- the chasm's squares (level 1)
-# the chasm: the cache's invisible floor (o42), or ours (o175) once this has run
-CHASM_FLO = 175
+# the chasm: the cache's invisible floor (o42, floor type 41 "invisible"), blocked
 free = set()
 for line in open(MAP):
     if line.startswith('==== LOC'): break
     m = re.match(r'1 (\d+) (\d+): (.*)', line)
-    if m and int(m.group(1)) >= 9 and 'f5' in m.group(3).split() and ('o42' in m.group(3).split() or f'o{CHASM_FLO}' in m.group(3).split()):
+    if m and int(m.group(1)) >= 9 and m.group(3).split() == ['o42', 'f5']:
         free.add((int(m.group(1)), int(m.group(2))))
-CHASM = set(free)
 # keep a square clear of the chasm's edge and of the platform (x <= 9)
 free = {(x, z) for (x, z) in free if x >= 10 and all((x + dx, z + dz) in free for dx in (-1, 0, 1) for dz in (-1, 0, 1))}
 
@@ -335,14 +332,7 @@ for room in (1, 2, 3):
     for e in isles: sup += island_locs(e)
     SUPPORTS[room] = sorted(sup)
 
-# the chasm's floor: the cache's invisible_occ (o42) becomes ft_chasm_invisible (o175)
-lines = open(MAP).read().split('\n'); changed = False
-for i, line in enumerate(lines):
-    if line.startswith('==== LOC'): break
-    m = re.match(r'1 (\d+) (\d+): (.*)', line)
-    if m and (int(m.group(1)), int(m.group(2))) in CHASM and 'o42' in m.group(3).split():
-        lines[i] = line.replace(' o42 ', f' o{CHASM_FLO} ').replace(': o42 ', f': o{CHASM_FLO} '); changed = True
-if changed: open(MAP, 'w').write('\n'.join(lines))
+
 # the pieces, a room's in one list (the junctions' own squares are drawn by ft_junction_loc)
 L += ['// how many track pieces a chasm has', '[proc,ft_track_count](int $room)(int)', 'switch_int ($room) {']
 for room in (1, 2, 3): L.append(f'    case {room} : return({len(allp[room])});')

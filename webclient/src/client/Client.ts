@@ -4794,7 +4794,17 @@ export class Client extends GameShell {
         }
 
         const y: number = this.getAvH(this.camX, this.camZ, this.minusedlevel);
-        return y - this.camY >= 800 || (this.mapl[this.minusedlevel][this.camX >> 7][this.camZ >> 7] & MapFlag.RemoveRoof) === 0 ? 3 : this.minusedlevel;
+        // EASCape: a camera outside the loaded area (zoomed far out, or a cutscene's) is not under a roof
+        return y - this.camY >= 800 || (this.maplAt(this.camX >> 7, this.camZ >> 7) & MapFlag.RemoveRoof) === 0 ? 3 : this.minusedlevel;
+    }
+
+    // EASCape: the map flags at a square on your level, 0 outside the loaded 104x104 area (where a
+    // zoomed-out or cutscene camera can be)
+    private maplAt(x: number, z: number): number {
+        if (!this.mapl || x < 0 || z < 0 || x > 103 || z > 103) {
+            return 0;
+        }
+        return this.mapl[this.minusedlevel][x][z];
     }
 
     // LostLite: Hide roofs - 1 where no square within one tile of (x, z) on your level is under a
@@ -4838,7 +4848,7 @@ export class Client extends GameShell {
             const playerLocalTileX: number = this.localPlayer.x >> 7;
             const playerLocalTileZ: number = this.localPlayer.z >> 7;
 
-            if (this.mapl && (this.mapl[this.minusedlevel][cameraLocalTileX][cameraLocalTileZ] & MapFlag.RemoveRoof) !== 0) {
+            if ((this.maplAt(cameraLocalTileX, cameraLocalTileZ) & MapFlag.RemoveRoof) !== 0) {
                 top = this.minusedlevel;
             }
 
@@ -4867,7 +4877,7 @@ export class Client extends GameShell {
                         cameraLocalTileX--;
                     }
 
-                    if (this.mapl && (this.mapl[this.minusedlevel][cameraLocalTileX][cameraLocalTileZ] & MapFlag.RemoveRoof) !== 0) {
+                    if ((this.maplAt(cameraLocalTileX, cameraLocalTileZ) & MapFlag.RemoveRoof) !== 0) {
                         top = this.minusedlevel;
                     }
 
@@ -4881,7 +4891,7 @@ export class Client extends GameShell {
                             cameraLocalTileZ--;
                         }
 
-                        if (this.mapl && (this.mapl[this.minusedlevel][cameraLocalTileX][cameraLocalTileZ] & MapFlag.RemoveRoof) !== 0) {
+                        if ((this.maplAt(cameraLocalTileX, cameraLocalTileZ) & MapFlag.RemoveRoof) !== 0) {
                             top = this.minusedlevel;
                         }
                     }
@@ -4897,7 +4907,7 @@ export class Client extends GameShell {
                         cameraLocalTileZ--;
                     }
 
-                    if (this.mapl && (this.mapl[this.minusedlevel][cameraLocalTileX][cameraLocalTileZ] & MapFlag.RemoveRoof) !== 0) {
+                    if ((this.maplAt(cameraLocalTileX, cameraLocalTileZ) & MapFlag.RemoveRoof) !== 0) {
                         top = this.minusedlevel;
                     }
 
@@ -4911,7 +4921,7 @@ export class Client extends GameShell {
                             cameraLocalTileX--;
                         }
 
-                        if (this.mapl && (this.mapl[this.minusedlevel][cameraLocalTileX][cameraLocalTileZ] & MapFlag.RemoveRoof) !== 0) {
+                        if ((this.maplAt(cameraLocalTileX, cameraLocalTileZ) & MapFlag.RemoveRoof) !== 0) {
                             top = this.minusedlevel;
                         }
                     }

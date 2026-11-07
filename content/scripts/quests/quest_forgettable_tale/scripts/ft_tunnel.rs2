@@ -136,9 +136,10 @@ if_openoverlay(null);
 def_int $room = ~ft_room;
 ~ft_chasm_draw($room);
 // ours: the supports and islands stand on level 0, and a loc can be shown to you only on the level
-// you are on, so you stand a moment on level 0 in the middle of the chasm (which also loads the
-// whole chasm, so it stays loaded while you ride)
-p_telejump(0_29_77_34_28);
+// you are on, so you stand a moment on level 0, a little east of the platform: far enough east that
+// the whole chasm is loaded (1816-1919), near enough that the platform stays well inside it (a
+// camera zoomed out from the platform must not leave the loaded area)
+p_telejump(0_29_77_12_28);
 p_delay(0);
 p_telejump(1_29_77_6_28);
 facesquare(1_29_77_8_29);
