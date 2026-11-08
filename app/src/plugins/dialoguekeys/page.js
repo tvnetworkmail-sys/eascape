@@ -61,6 +61,9 @@
     // "Select an Option" has 2 to 5 options; a make-menu (skillmulti5: four buttons under each of
     // five items, their names among them) isn't one, so it gets no numbers or keys
     if (out.options.length > 5) out.options = [];
+    // ...and every option of one has its words; a make menu's buttons (Make 1/5/X/All under one
+    // picture) have none, so pressing 1 mustn't pick one of them
+    if (out.options.some((com) => { const k = findText(com); return !k || !String(com[k]).trim(); })) out.options = [];
     return out;
   }
 
