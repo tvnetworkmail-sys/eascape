@@ -59,3 +59,13 @@ Diango's lines, the music regions and the docs. The event's items and its save s
 were left in the game so anything players own still loads. To put it back, copy
 `held_back/xmas05/content` and `held_back/xmas05/docs` over the repo (or `git revert` the commit
 that removed it) and rebuild.
+
+## Halloween 2005 event (removed 8 Nov 2026)
+
+`held_back/hw05/` holds every file the event (commit 9967dcda) added or changed, as they were
+before it was taken out: the Lumbridge Swamp zombies and Lumbridge's trick-or-treating children
+(map squares 50_49 and 50_50), the scripts in `content/scripts/holidays/hw05/`, its cheats, and its
+hooks in spade.rs2 (digging up a lost zombie head) and death.rs2 (the Grim Reaper). Its varp
+(hw05.varp) and the zombie head item stay in the game so saves load; the Scared emote stays
+locked unless a player already had it. To put it back, copy `held_back/hw05/content` and
+`held_back/hw05/docs` over the repo (or `git revert` the commit that removed it) and rebuild.
