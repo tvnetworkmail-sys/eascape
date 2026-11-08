@@ -36,8 +36,12 @@
 ~chatnpc_specific("Blackjack seller", feud_bjseller, $text);
 
 [label,rt_bjseller]
-~rt_seller_says("<p,neutral>Hello. Could I interest you in a Blackjack?");
 def_int $s = %roguetrader_blackjacks;
+if ($s = 0) {
+    ~rt_seller_says("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway."); // the old line, before Rogue Trader (ours)
+    return;
+}
+~rt_seller_says("<p,neutral>Hello. Could I interest you in a Blackjack?");
 if ($s = ^rt_bj_told) {
     ~chatplayer("<p,neutral>Can I interest you in a proposal?");
     ~rt_seller_says("<p,neutral>What are we talking about here? Nothing dodgy I hope. I don't like anything dodgy, I had enough of that sort of thing when the bandits and those rogue Menaphites were running things here, so I packed up my things and left.");
@@ -89,7 +93,7 @@ if ($s = ^rt_bj_agreed) {
     ~chatplayer("<p,neutral>Hmmm... I'll get back to you on this.");
     return;
 }
-~rt_seller_says("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway."); // the old line, before Rogue Trader
+~rt_seller_says("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway."); // ours: a state no branch above takes
 
 [label,rt_bj_convince]
 ~chatplayer("<p,angry>Look will you create a larger variety of blackjacks or not?");
@@ -231,6 +235,10 @@ if (~p_choice2("Woah! That's far too much.", 1, "Fair enough, here you go.", 2) 
 }
 ~chatplayer("<p,neutral>Fair enough, here you go.");
 inv_del(inv, coins, $price);
+// ours: the robbery counts from the moment he's paid, so walking off during the scene that
+// follows doesn't leave you paying him again
+%roguetrader_blackjacks = ^rt_bj_robbed;
+%roguetrader_bj_urchingloat = 1;
 ~chatnpc("<p,happy>Now walk up to the merchant, engage him in conversation and leave the rest up to me.");
 // the robbery (ours: the walks and the swing; the words are the transcript's)
 def_coord $home = npc_coord;
@@ -253,8 +261,6 @@ if (.npc_find(0_52_46_23_27, feud_black_jack_seller_multi, 10, 0) = true) {
 }
 ~chatnpc_specific("Blackjack seller", feud_bjseller, "<p,angry>Hey come back you thief!");
 ~mesbox("The blackjack seller takes a swing at the urchin, but the blow only glances off the urchin's head.");
-%roguetrader_blackjacks = ^rt_bj_robbed;
-%roguetrader_bj_urchingloat = 1;
 npc_walk($home);
 
 // ---------------------------------------------------------------- Siamun

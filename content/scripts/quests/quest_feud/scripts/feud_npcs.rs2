@@ -1443,10 +1443,13 @@ inv_del(inv, coins, 25);
 inv_add(inv, $dye, 1);
 ~objbox($dye, $box, 250, 0, 0);
 
-// the blackjack seller stands in town once the feud is over (ours: no transcript)
-[opnpc1,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
-[opnpc3,feud_black_jack_seller_multi] ~chatnpc("<p,neutral>Blackjacks? Not for sale to the likes of you. Not yet, anyway.");
-[opnpc1,feud_bjseller] @rt_bjseller; // Rogue Trader (miniquest_rogue_trader/rt_npcs.rs2)
+// the blackjack seller stands in town once the feud is over. Pollnivneach's map places the
+// multinpc (1876, as Void's pollnivneach.npc-spawns.toml), and a click runs its own triggers, not
+// those of feud_bjseller that it shows as, so Rogue Trader hangs off the multinpc
+// (miniquest_rogue_trader/rt_npcs.rs2)
+[opnpc1,feud_black_jack_seller_multi] @rt_bjseller;
+[opnpc3,feud_black_jack_seller_multi] @rt_bjseller_trade;
+[opnpc1,feud_bjseller] @rt_bjseller;
 [opnpc3,feud_bjseller] @rt_bjseller_trade;
 
 // Transcript:Aristarchus ("Before Enakhra's Lament", which we don't have)
