@@ -777,12 +777,11 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                     copy[1] = 7957 & 0xff;
                     console.log('obj prefix', prefix, 'crc', Packet.getcrc(copy, 0, copy.length));
                 }
-                // EASCape: 377's obj checksum was 122666554; ours differs because the grimy herbs are named
-                // like the later game's ("Grimy guam leaf", your call 19 Oct 2026) and the jewellery has
+                // EASCape: 377's obj checksum was 122666554; ours differs because the jewellery has
                 // options for when it's worn (wornop, 20 Oct 2026), plus the Slayer plugin's rat picture. Any other change to the item data
                 // still fails this check.
                 if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
-                return checkcrcAllowAdded(client, 7957, idx ? prefix : 460686, -85911488); // EASCape: grimy herb names (19 Oct 2026), worn jewellery options (20 Oct 2026), crystal bow/shield Check (31 Oct 2026)
+                return checkcrcAllowAdded(client, 7957, idx ? prefix : 460471, 518713153); // EASCape: worn jewellery options (20 Oct 2026), crystal bow/shield Check (31 Oct 2026); grimy herbs back to 2005's "Herb" (8 Nov 2026)
             }
         );
     }
