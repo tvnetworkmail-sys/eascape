@@ -34,6 +34,14 @@
 @attempt_smithing(last_item, 5);
 [inv_button3,smithing:column_claws]
 @attempt_smithing(last_item, 10);
+// EASCape: the cache's lantern box (com_147, under column 3): iron's oil lantern frame and steel's
+// bullseye lantern (Lumbridge Swamp Caves, 14 Mar 2005)
+[inv_button1,smithing:com_147]
+@attempt_smithing(last_item, 1);
+[inv_button2,smithing:com_147]
+@attempt_smithing(last_item, 5);
+[inv_button3,smithing:com_147]
+@attempt_smithing(last_item, 10);
 
 
 [oplocu,_anvil]
@@ -87,6 +95,7 @@ inv_stoptransmit(smithing:column3);
 inv_stoptransmit(smithing:column4);
 inv_stoptransmit(smithing:column5);
 inv_stoptransmit(smithing:column_claws);
+inv_stoptransmit(smithing:com_147);
 
 [label,smithing_anvil_interface](obj $last_item)
 def_struct $struct = oc_param($last_item, smithing_anvil_struct);
@@ -116,8 +125,11 @@ if (%desertrescue >= ^desertrescue_learned_darts) {
 } else {
     %if1 = 0;
 }
-// hide wire button if its not bronze
-// hide studs button if its not steel
+// EASCape: the cache's fifth column has two labelled extras: "other" in the fourth box (bronze wire)
+// and "Studs" in the fifth (steel studs; a 2004 screenshot: https://imgur.com/CdcGdXD). The iron
+// spit (Feb 2006) that the later cache put in iron's fourth box is left out.
+if_sethide(smithing:other_layer, true);
+if_sethide(smithing:stud_layer, true);
 if ($last_item = bronze_bar) {
     // bronze plate bodies are unlocked at lvl 18, but the interface data uses gt,18. so i have to +1 here
     if (%modified_smith = 18) {
@@ -128,18 +140,22 @@ if ($last_item = bronze_bar) {
     if_settext (smithing:com_101, "Bronze wire");
 } else if ($last_item = steel_bar) {
     if_sethide (smithing:stud_layer, false);
-    if_sethide (smithing:other_layer, false);
-    // https://imgur.com/CdcGdXD
-    if_settext (smithing:com_101, "Steel studs");
-}  else {
-    if_sethide (smithing:other_layer, true);
-    if_sethide (smithing:stud_layer, true);
 }
-// hide studs button if its not steel
-if ($last_item ! steel_bar) {
-    if_sethide (smithing:stud_layer, true);
-} else {
-    if_sethide (smithing:stud_layer, false);
+// EASCape: the lantern box under column 3 (its label is white from the level up, %if2): iron's oil
+// lantern frame (26) and steel's bullseye lantern (49) (OSRS wiki; Lumbridge Swamp Caves, 14 Mar
+// 2005); hidden for the other metals
+%if2 = 0;
+if_sethide(smithing:com_145, true);
+if ($last_item = iron_bar) {
+    if_sethide(smithing:com_145, false);
+    if_settext(smithing:com_148, "Oil lantern frame");
+    if ($player_level >= 26) %if2 = 1;
+    inv_transmit(smithing_lamp_iron, smithing:com_147);
+} else if ($last_item = steel_bar) {
+    if_sethide(smithing:com_145, false);
+    if_settext(smithing:com_148, "Bullseye lantern");
+    if ($player_level >= 49) %if2 = 1;
+    inv_transmit(smithing_lamp_steel, smithing:com_147);
 }
 // hide claws button if death plateau is not complete
 if(%death_equiproom < ^death_complete) {

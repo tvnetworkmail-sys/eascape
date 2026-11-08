@@ -33,6 +33,10 @@ export class Inventory {
 
         if (type.stockobj && type.stockcount && type.stockobj.length) {
             for (let i = 0; i < type.stockobj.length; i++) {
+                // EASCape: a stock slot left out of the config (the packer writes -1) stays empty
+                if (type.stockobj[i] === 0xffff) {
+                    continue;
+                }
                 container.set(i, {
                     id: type.stockobj[i],
                     count: type.stockcount[i]
