@@ -54,16 +54,6 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             return false;
         }
 
-        // EASCape: ::questhelper <quest|off|list> works for every player, on live too (the Quest
-        // Helper; the app's panel sends it as well)
-        if (cmd === 'questhelper') {
-            const script = ScriptProvider.getByName('[proc,questhelper_command]');
-            if (script) {
-                player.executeScript(ScriptRunner.init(script, player, null, [args.join(' ')]), true);
-            }
-            return true;
-        }
-
         // EASCape: the app's extras, on or off (only from the EASCape app: eascape_app.rs2)
         if (cmd === 'appextras') {
             if (!isClientConnected(player) || !player.client.isApp) {
