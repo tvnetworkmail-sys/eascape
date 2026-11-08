@@ -26,6 +26,7 @@ if (~bf_in_room(coord) = true) ~bf_enter;
 
 [proc,bf_leave]
 clearsofttimer(bf_room);
+~bf_plan_close;
 %bf_gauge = 0;
 if (%bf_belt_npc ! null) {
     if (npc_finduid(%bf_belt_npc) = true) npc_del;
@@ -37,6 +38,7 @@ if (~bf_in_room(coord) = false) {
     ~bf_leave;
     return;
 }
+if (%bf_plan ! null & coord ! %bf_plan) ~bf_plan_close;
 ~bf_world_tick;
 ~bf_belt_tick;
 ~bf_bars_tick;

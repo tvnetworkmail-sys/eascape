@@ -28,10 +28,18 @@ switch_int (~p_choice4("What's the blast furnace?", 1, "How can I help work the 
     case 4 : @bf_foreman_bye;
 }
 
+// the Plan goes when the explanation ends, or (ours) once you walk off in the middle of it or leave
+// the room, since an overlay stays up when the chat is closed
+[proc,bf_plan_close]
+if (%bf_plan = null) return;
+if_openoverlay(null);
+%bf_plan = null;
+
 [label,bf_foreman_explain]
 ~chatplayer("<p,quiz>How can I help work the blast furnace?");
 ~chatnpc("<p,neutral>The blast furnace will only work if there is a group of people keeping it going. Let me explain...");
 if_openoverlay(inter_300);
+%bf_plan = coord;
 if_setanim(inter_300:com_1, flashing_x);
 ~chatnpc("<p,neutral>Firstly, the stove needs to be kept filled with coal. If this runs out the furnace will not work.");
 if_setanim(inter_300:com_1, flashing_x_off);
@@ -46,7 +54,7 @@ if_setanim(inter_300:com_12, flashing_x);
 if_setanim(inter_300:com_12, flashing_x_off);
 ~chatnpc("<p,neutral>Someone will also need to be on standby with a hammer in case the machine breaks!");
 ~chatnpc("<p,neutral>While that's going, anyone else can put their ore on the conveyor belt to have it smelted.");
-if_openoverlay(null);
+~bf_plan_close;
 switch_int (~p_choice3("So what do I get out of it?", 1, "Okay, I'll get to work.", 2, "Maybe some other time.", 3)) {
     case 1 :
         ~chatplayer("<p,quiz>So what do I get out of it?");

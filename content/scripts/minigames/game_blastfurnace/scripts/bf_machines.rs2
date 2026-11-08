@@ -39,7 +39,10 @@ if (map_clock >= %bf_anim_end) {
     anim(blast_furnace_human_air_pump, 0);
     %bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_air_pump));
 }
-if (modulo(map_clock, 2) = 0 & ~bf_pipes_ok = true & %bf_stove_temp > 0) {
+// this queue comes back every other tick (a queue that queues itself at 1 runs every 2 ticks), so
+// each run is 2009scape's "every 2 ticks" (updatePumper); a map_clock parity check here never or
+// always passed, depending on the tick you started
+if (~bf_pipes_ok = true & %bf_stove_temp > 0) {
     if (%bf_furnace_temp >= 100 & random(5) = 0) {
         %bf_pump_clock = calc(map_clock - 2);
         anim(null, 0);
@@ -91,7 +94,8 @@ if (map_clock >= %bf_anim_end) {
     anim(blast_furnace_human_conveyer_cycle, 0);
     %bf_anim_end = calc(map_clock + ~bf_seq_ticks(blast_furnace_human_conveyer_cycle));
 }
-if (modulo(map_clock, 2) = 0 & ~bf_belt_ok = true & %bf_belt_moved >= calc(map_clock - 2)) {
+// every run is 2 ticks, as for the pump (updatePedaler)
+if (~bf_belt_ok = true & %bf_belt_moved >= calc(map_clock - 2)) {
     stat_advance(agility, 20);
     healenergy(-200);
 }

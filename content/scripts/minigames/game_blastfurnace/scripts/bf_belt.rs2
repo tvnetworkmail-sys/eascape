@@ -125,7 +125,9 @@ if ($ore = coal) {
 def_int $all = ^bf_ore_limit;
 if ($ore = copper_ore | $ore = tin_ore) $all = calc(^bf_ore_limit * 2);
 def_int $space = min(calc(^bf_ore_limit - ~bf_pot($ore) - inv_total(blast_furnace_inv, $ore)), calc($all - ~bf_primary_total));
-def_struct $s = ~bf_ore_struct($ore, %blast_furnace_coal);
+// the bar it will make counts the coal already on the belt, as ~bf_place does (coal goes on first),
+// so iron put on with coal is stopped by 28 steel bars waiting, not 28 iron ones
+def_struct $s = ~bf_ore_struct($ore, calc(%blast_furnace_coal + inv_total(blast_furnace_inv, coal)));
 $space = calc($space - ~bf_bars(struct_param($s, product)));
 return(max(0, $space));
 
