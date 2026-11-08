@@ -1,12 +1,13 @@
-// EASCape: the 2007 combat tabs, shown instead of 2006's while the app's "2007 interface" plugin
-// is on (::appcombat07 on|off, only from the app: ClientCheatHandler). The interfaces are the
+// EASCape: the 2007 combat tabs, shown instead of 2006's: the game's own look, on at every login
+// for everyone (login.rs2); ::combat07 switches them for this login (and ::appcombat07 on|off,
+// from the app: ClientCheatHandler). The interfaces are the
 // August 2007 cache's (tools/frame2007/combat_tabs.py); their buttons do what 2006's do. 2007 has
 // Auto Retaliate on this tab (2006 has it on the Controls tab); both set option_nodef.
 [proc,eascape_combat07_set](int $on)
 %eascape_combat07 = $on;
 ~update_weapon_category(inv_getobj(worn, ^wearpos_rhand));
 
-// the 2007 tab for this weapon (update_weapon_category, while the plugin is on)
+// the 2007 tab for this weapon (update_weapon_category, while %eascape_combat07 is on)
 [proc,combat07_tab](obj $obj)
 if ($obj = null | (map_members = ^false & oc_members($obj) = true)) {
     if_settext(combat07_unarmed:name, "unarmed"); // as 2006's tab (player_attackstyles.rs2)

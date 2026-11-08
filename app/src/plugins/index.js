@@ -39,7 +39,6 @@ module.exports = [
   require('./farming/descriptor'),
   require('./kingdom/descriptor'),
   require('./tears/descriptor'),
-  require('./frame2007/descriptor'),
   require('./crystalbow/descriptor'),
   require('./chatnotifications/descriptor'),
   require('./devtools/descriptor'),

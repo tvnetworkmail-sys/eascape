@@ -357,7 +357,7 @@ export class Client extends GameShell {
     // August 2007 game frame (tools/frame2007/build.py, sprites f2007_*) and its places for the
     // side panel, chat box and minimap; 2006's by default
     private frame2007: boolean = false;
-    private icons2006: boolean = false;
+    private icons2006: boolean = false; // set from syncFrame2007 once the sprites are loaded: on by default
     private sideX: number = 553;
     private frameChatX: number = 17;
     private frameChatY: number = 357;
@@ -3022,7 +3022,9 @@ export class Client extends GameShell {
     // (interface 548) puts the side panel at 547,205, the minimap at 545,4 and the chat at 20,362;
     // its tab bars and chat buttons are drawn here from its sprites (tools/frame2007/build.py).
     private syncFrame2007(): void {
-        const icons: boolean = !!lostlite()?.icons2006 && this.f07Icons[0] !== null;
+        // the later tab icons are the game's own look (built in, 8 Nov 2026); a page can still ask for
+        // 2006's own icons with lostlite().icons2006 = false
+        const icons: boolean = lostlite()?.icons2006 !== false && this.f07Icons[0] !== null;
         if (icons !== this.icons2006) {
             this.icons2006 = icons;
             this.redrawIcons = true;
@@ -3042,9 +3044,11 @@ export class Client extends GameShell {
         this.isMenuOpen = false;
     }
 
-    // EASCape: the "2006 interface" plugin (lostlite().icons2006): the 2006 frame with the later tab
-    // icons (the 2007 cache's, tools/frame2007/build.py: the logout door, the red ignore face...),
-    // each centred where 2006's icon sat. sideicons index -> f2007_icons index (7 is clan chat).
+    // EASCape: the "2006 interface", built into the client (was the app's frame2007 plugin until
+    // 8 Nov 2026): the 2006 frame with the later tab icons (the 2007 cache's, packed into the media
+    // archive as f2007_icons by tools/frame2007/build.py: the logout door, the red ignore face...),
+    // each centred where 2006's icon sat. On by default for every player, in the app and in a plain
+    // browser. sideicons index -> f2007_icons index (7 is clan chat).
     private static readonly ICONS2006_MAP: number[] = [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13];
     private static readonly ICONS2006_AT: number[][] = [[29, 10], [51, 8], [82, 10], [114, 6], [152, 12], [178, 8], [206, 10], [74, -1], [102, 0], [137, 4], [174, 0], [202, 2], [226, 2]];
 

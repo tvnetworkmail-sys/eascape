@@ -24,7 +24,7 @@ Type these in the chat box starting with `::`. They work while the server runs i
 | `::ft2song 1` / `2` / `3` | Fairytale II (being built): plays its new music: 1 We are the Fairies, 2 Dimension X, 3 All's Fairy in Love & War |
 | `::ft2place 1`-`5` | Fairytale II (being built): takes you next to the fairy ring in each place the 2007 map adds: 1 the Fairy Resistance hideout, 2 the cosmic entity's plane, 3 Gorak's plane, 4 the Enchanted Valley, 5 the Abyssal area |
 | `::fairyrings` / `::fairyrings 2` | Fairytale II (being built): the fairy rings work without the quest's permission, and gives you a dramen staff to wield; `2` also fills the travel log with every code. Run `::fairyrings` again to lock them |
-| `::combat07` | The 2007 combat tabs on or off (what the app's "2007 interface" plugin does), so you can try them in the web game |
+| `::combat07` | The 2007 combat tabs on or off for this login (they are on by default for everyone; each login turns them back on) |
 | `::crystalbow <n>` / `::crystalshield <n>` | Use up n charges of the crystal bow / shield you are wearing (as n shots / hits), then say what is left |
 | `::spellbookswap` | Swaps between the normal spells and the Ancient Magicks. `::spellbookswap ancient` or `::spellbookswap normal` picks one. Works whether or not Desert Treasure is done |
 | `::allrunes` | 100,000 of each of the 13 runes in the 2006 game (air, water, earth, fire, mind, body, cosmic, chaos, nature, law, death, blood, soul) |
