@@ -412,6 +412,7 @@ if_close;
 ~ft_ride_clear;
 ~keldagrim_cart_ride(true);
 p_telejump(1_29_77_8_29);
+p_hideloc(1_29_77_8_29, centrepiece_straight); // ours: you ride out in it, so you don't see it stay
 p_delay(0);
 ~forcemove(~ft_junction_square($room, 1));
 def_int $j = 1;
@@ -435,15 +436,22 @@ while ($end = 0) {
     }
 }
 if ($end = ^ft_exit) @ft_chasm_exit($room);
-~keldagrim_cart_ride(false);
 %ft_cart_at = $end;
-%ft_ride_cart = movecoord(coord, -1, 0, 0);
-loc_add(%ft_ride_cart, forget_train_return_cart, 0, centrepiece_straight, 1000);
 if ($end = ^ft_box1 | $end = ^ft_box2 | $end = ^ft_top) {
+    // at a box's island (the user's picture of the real one): the cart stays on the track by
+    // the buffer, you step off beside it, and the box stands behind you (ours: the squares)
+    %ft_ride_cart = coord;
+    ~keldagrim_cart_ride(false);
+    loc_add(%ft_ride_cart, forget_train_return_cart, 0, centrepiece_straight, 1000);
+    ~forcemove(movecoord(coord, 0, 0, 1));
     %ft_ride_box = movecoord(coord, 0, 0, 1);
     loc_add(%ft_ride_box, keldagrim_track_junction_card_box, 0, centrepiece_straight, 1000);
+    facesquare(%ft_ride_cart);
     return;
 }
+~keldagrim_cart_ride(false);
+%ft_ride_cart = movecoord(coord, -1, 0, 0);
+loc_add(%ft_ride_cart, forget_train_return_cart, 0, centrepiece_straight, 1000);
 if ($end = ^ft_blocked) {
     ~chatplayer("<p,neutral>This junction is blocked. I'd better go back to the start and find some way to make it go left or right.");
     return;
@@ -456,6 +464,7 @@ if_close;
 ~fade_out;
 p_delay(2);
 ~ft_ride_clear;
+p_resetloc(1_29_77_8_29, centrepiece_straight); // the platform's cart is there again
 p_telejump(1_29_77_6_28);
 facesquare(1_29_77_8_29);
 p_delay(1);

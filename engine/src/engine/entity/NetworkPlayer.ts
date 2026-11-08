@@ -378,7 +378,11 @@ export class NetworkPlayer extends Player {
                 continue;
             }
             zoneFor(loc);
-            this.write(new LocAddChange(CoordGrid.packZoneCoord(loc.x, loc.z), loc.type, loc.shape, loc.angle));
+            if (loc.type === -1) {
+                this.write(new LocDel(CoordGrid.packZoneCoord(loc.x, loc.z), loc.shape, loc.angle));
+            } else {
+                this.write(new LocAddChange(CoordGrid.packZoneCoord(loc.x, loc.z), loc.type, loc.shape, loc.angle));
+            }
             this.privateLocsQueue.delete(key);
         }
     }

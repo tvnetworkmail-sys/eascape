@@ -436,6 +436,8 @@ export const enum ScriptOpcode {
     STAT_XP, // EASCape: a stat's experience (tenths), for Tears of Guthix
     P_SHOWLOC, // EASCape: a loc only this player sees (Forgettable Tale's chasm railways)
     P_HIDELOCS, // EASCape: takes away the locs p_showloc showed
+    P_HIDELOC, // EASCape: hides the world's loc on a square from this player only
+    P_RESETLOC, // EASCape: undoes p_showloc/p_hideloc on one square and layer
 
     // Struct ops (4700-4799)
     STRUCT_PARAM = 4700,
@@ -871,6 +873,8 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['STAT_XP', ScriptOpcode.STAT_XP],
     ['P_SHOWLOC', ScriptOpcode.P_SHOWLOC],
     ['P_HIDELOCS', ScriptOpcode.P_HIDELOCS],
+    ['P_HIDELOC', ScriptOpcode.P_HIDELOC],
+    ['P_RESETLOC', ScriptOpcode.P_RESETLOC],
 
     ['STRUCT_PARAM', ScriptOpcode.STRUCT_PARAM],
 

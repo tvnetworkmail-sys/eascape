@@ -481,6 +481,12 @@ const ScriptOpcodePointers: {
     [ScriptOpcode.P_HIDELOCS]: {
         require: ['active_player']
     },
+    [ScriptOpcode.P_HIDELOC]: {
+        require: ['active_player']
+    },
+    [ScriptOpcode.P_RESETLOC]: {
+        require: ['active_player']
+    },
     [ScriptOpcode.STAT_HEAL]: {
         require: ['active_player'],
         require2: ['active_player2']

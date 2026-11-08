@@ -16,8 +16,9 @@
 # columns in the first/second/third chasm); the ways between them are found square by square
 # (A*) with the cache's pieces, and where two ways meet one split is laid the other way round.
 # An end of the track (the boxes, the top, the exit, the dead ends) may sit up to 3 squares above or
-# below its place on the screen's map, and has a buffer; a box's end has its island to itself (the
-# box a ride puts there stands north of the end, the cart back west of it).
+# below its place on the screen's map, and has a buffer; a box's end has its island to itself (a
+# ride leaves the cart on the end square by the buffer, you beside it to the north, and the box
+# behind you).
 #
 # The islands (ours where they are; the user's OSRS pictures show the boxes on rock islands, while
 # the 2005 cache has no island loc and neither its map nor the 2008 one has islands): a rounded 6x6 rock
@@ -74,15 +75,16 @@ CART = (8, 29); J1X = 10; ROW = {3: 21, 2: 14, 1: 7, 0: 0, -1: -6, -2: -13, -3: 
 def add(p, d, n=1): return (p[0] + d[0] * n, p[1] + d[1] * n)
 BOXES = ('^ft_box1', '^ft_box2', '^ft_top')
 def island(e):
-    # the 6x6 rock patch round a box's end square (the track comes in on its west side)
-    return {(e[0] + dx, e[1] + dz) for dx in range(-2, 4) for dz in range(-2, 4)}
+    # the 6x6 rock patch round a box's end square: the track comes in on its west side and ends
+    # with the buffer at its east edge, as on the real islands
+    return {(e[0] + dx, e[1] + dz) for dx in range(-3, 3) for dz in range(-2, 4)}
 def island_locs(e):
     # a rounded rock island (ours): an octagon on the 6x6 squares, every square a rock top
     # (dwarf_cavewall_top) with the fade-down cave walls on its sides, as the map's own raised rock
     # (1904-1908,4984-4988); each corner is cut across its two squares by dwarf_cavewall_top5, the
     # cache's half-square top with its own sloping face, and the corner square itself is left out.
     # (square, loc, shape, angle)
-    x0, z0 = e[0] - 2, e[1] - 2; x1, z1 = x0 + 5, z0 + 5; out = []
+    x0, z0 = e[0] - 3, e[1] - 2; x1, z1 = x0 + 5, z0 + 5; out = []
     # the corners: the two squares that cut it, and the half (rot) of them that is rock
     cut = {(x0, z0 + 1): 2, (x0 + 1, z0): 2,          # south-west: the north-east halves
            (x1 - 1, z0): 1, (x1, z0 + 1): 1,          # south-east: the north-west halves
@@ -95,10 +97,12 @@ def island_locs(e):
                 out.append(((x, z), 'dwarf_cavewall_top5', 'centrepiece_straight', cut[(x, z)]))
                 continue
             out.append(((x, z), 'dwarf_cavewall_top', 'centrepiece_straight', 2))
-            if x == x0: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 0))
-            elif x == x1: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 2))
-            elif z == z0: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 3))
-            elif z == z1: out.append(((x, z), 'dwarf_cavewall_fade_down', 'wall_straight', 1))
+            # the cliff: the cache's double-height fade-down wall, 480 deep (the real islands' sides
+            # drop far into the dark)
+            if x == x0: out.append(((x, z), 'dwarf_cavewall_double_height_fade_down', 'wall_straight', 0))
+            elif x == x1: out.append(((x, z), 'dwarf_cavewall_double_height_fade_down', 'wall_straight', 2))
+            elif z == z0: out.append(((x, z), 'dwarf_cavewall_double_height_fade_down', 'wall_straight', 3))
+            elif z == z1: out.append(((x, z), 'dwarf_cavewall_double_height_fade_down', 'wall_straight', 1))
     return out
 SUPPORT = {STRAIGHT: 'keldagrim_track_supports', CURVE['a']: 'keldagrim_track_supports2',
            CURVE['b']: 'keldagrim_track_supports3', CURVE['c']: 'keldagrim_track_supports5',

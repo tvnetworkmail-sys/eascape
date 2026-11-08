@@ -2364,13 +2364,25 @@ export default class Player extends PathingEntity {
         }
     }
 
-    // EASCape: show a loc to this player only (one per square and layer; a new one replaces it)
+    // EASCape: show a loc to this player only (one per square and layer; a new one replaces it).
+    // type -1 hides whatever the world has there instead (p_hideloc).
     showLoc(level: number, x: number, z: number, type: number, shape: number, angle: number): void {
         const layer: number = locShapeLayer(shape);
         const key: number = CoordGrid.packCoord(level, x, z) * 4 + layer;
         this.privateLocs.set(key, { level, x, z, layer, type, shape, angle });
         this.privateLocsGone.delete(key);
         this.privateLocsQueue.add(key);
+    }
+
+    // EASCape: what this player sees on one square and layer goes back to the world's
+    resetLoc(level: number, x: number, z: number, shape: number): void {
+        const key: number = CoordGrid.packCoord(level, x, z) * 4 + locShapeLayer(shape);
+        const loc: PrivateLoc | undefined = this.privateLocs.get(key);
+        if (loc) {
+            this.privateLocs.delete(key);
+            this.privateLocsQueue.delete(key);
+            this.privateLocsGone.set(key, loc);
+        }
     }
 
     // EASCape: take away every loc showLoc showed

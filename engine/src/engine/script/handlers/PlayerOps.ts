@@ -534,6 +534,23 @@ const PlayerOps: CommandHandlers = {
         state.activePlayer.hideLocs();
     },
 
+    // EASCape: the world's loc on a square and layer, hidden from this player only (Forgettable
+    // Tale: the cart on the platform while you ride out in it)
+    [ScriptOpcode.P_HIDELOC]: state => {
+        const [coord, shape] = state.popInts(2);
+        const position: CoordGrid = check(coord, CoordValid);
+        const locShape: number = check(shape, LocShapeValid);
+        state.activePlayer.showLoc(position.level, position.x, position.z, -1, locShape, 0);
+    },
+
+    // EASCape: what this player sees on a square and layer goes back to what the world has there
+    [ScriptOpcode.P_RESETLOC]: state => {
+        const [coord, shape] = state.popInts(2);
+        const position: CoordGrid = check(coord, CoordValid);
+        const locShape: number = check(shape, LocShapeValid);
+        state.activePlayer.resetLoc(position.level, position.x, position.z, locShape);
+    },
+
     // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)
     [ScriptOpcode.STAT_XP]: state => {
         const stat: PlayerStat = check(state.popInt(), PlayerStatValid);
