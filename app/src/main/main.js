@@ -451,40 +451,6 @@ ipcMain.handle('notify', (e, title, body) => {
   return notify(title, body);
 });
 
-// Quest Helper routes, worked out in a worker thread (so the game never waits on them).
-let routeWorker = null;
-let routeSeq = 0;
-const routeWaiting = new Map();
-function findRoute(args) {
-  if (!routeWorker) {
-    const { Worker } = require('worker_threads');
-    // (unpacked from the app archive, so the worker can load it and the route data)
-    routeWorker = new Worker(path.join(__dirname, 'routeWorker.js').replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`));
-    routeWorker.on('message', (m) => {
-      const done = routeWaiting.get(m.id);
-      routeWaiting.delete(m.id);
-      if (m.error) log.warn(`Route: ${m.error}`);
-      if (done) done(m);
-    });
-    routeWorker.on('error', (e) => {
-      log.error(`Route worker: ${e.message}`);
-      for (const done of routeWaiting.values()) done({ tiles: [], pts: [] });
-      routeWaiting.clear();
-      routeWorker = null;
-    });
-  }
-  const id = ++routeSeq;
-  return new Promise((resolve) => {
-    routeWaiting.set(id, resolve);
-    routeWorker.postMessage({ id, ...args });
-  });
-}
-
-ipcMain.handle('route-find', (e, args) => {
-  if (!gameView || e.sender !== gameView.webContents || !args || !args.from || !args.to) return { tiles: [], pts: [] };
-  return findRoute({ from: args.from, to: args.to, near: args.near | 0, allow: Array.isArray(args.allow) ? args.allow.slice(0, 8) : [] });
-});
-
 // Plugins running in the game page may only store values in their own config group.
 ipcMain.on('game-set-config', (e, group, key, value) => {
   if (!gameView || e.sender !== gameView.webContents) return;

@@ -19,7 +19,6 @@ module.exports = [
   require('./worldmap/descriptor'),
   require('./cluescroll/descriptor'),
   require('./dialoguekeys/descriptor'),
-  require('./questhelper/descriptor'),
   require('./extras/descriptor'),
   require('./idlenotifier/descriptor'),
   require('./xpdrops/descriptor'),

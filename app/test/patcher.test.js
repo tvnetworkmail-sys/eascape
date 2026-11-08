@@ -102,7 +102,6 @@ assert.strictEqual(vm.runInContext('globalThis.__game.cam', ctx), 1476, 'zoom sc
     for (const k of ['sceneWorld', 'sceneWall', 'sceneDecor', 'sceneLoc', 'sceneGroundDecor', 'sceneInfo', 'locName']) assert.ok(r.info.fields[k], `field ${k} found`);
     assert.ok(/loc:\(id\)=>/.test(r.code), 'loc type lookup added');
     assert.ok(r.code.includes("registerPlugin('dialoguekeys'"), 'dialogue keys page part included');
-    assert.ok(r.code.includes("registerPlugin('questhelper'"), 'quest helper page part included');
     assert.ok(r.code.includes("registerPlugin('xpdrops'"), 'xp drops page part included');
     assert.ok(r.code.includes("registerPlugin('infoboxes'"), 'info boxes page part included');
     for (const k of ['doAction', 'comHide', 'sideIcon', 'activeTab', 'redrawSide', 'redrawIcons', 'comScripts', 'comOperand', 'hintType', 'hintNpc', 'hintTileX', 'hintTileZ']) assert.ok(r.info.fields[k], `field ${k} found`);
