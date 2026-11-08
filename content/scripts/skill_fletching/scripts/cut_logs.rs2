@@ -44,7 +44,8 @@ if ($product = null | $amt < 1) {
 def_int $level = 1;
 // default to shafts
 def_int $count = 1;
-def_int $fletching_experience = multiply($shaft_count, 5);
+// 5 xp a log for 15 shafts (2006Scape, 2009scape, the OSRS wiki); was 7.5
+def_int $fletching_experience = 50;
 def_string $message;
 // 2005-osrs, rsc
 if ($product = $obj2) {
@@ -56,7 +57,7 @@ if ($product = $obj2) {
 } else {
     $message = "You carefully cut the wood into <tostring($shaft_count)> arrow shafts.";
     $count = $shaft_count;
-    $fletching_experience = multiply($shaft_count, 5);
+    $fletching_experience = 50;
 }
 if (stat(fletching) < $level) {
     // osrs has a level 1 fail message for arrow shafts but i doubt 2004 used it
