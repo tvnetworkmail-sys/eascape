@@ -58,6 +58,9 @@
       for (const ch of com[childrenKey] || []) walk(list[ch], depth + 1);
     };
     walk(root, 0);
+    // "Select an Option" has 2 to 5 options; a make-menu (skillmulti5: four buttons under each of
+    // five items, their names among them) isn't one, so it gets no numbers or keys
+    if (out.options.length > 5) out.options = [];
     return out;
   }
 
