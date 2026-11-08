@@ -23,22 +23,22 @@ def_namedobj $obj2;
 def_namedobj $obj3;
 $obj2, $obj3 = db_getfield($data, fletch_bow_table:objchoices, 0);
 def_namedobj $product;
-// guess based off 2004
+def_int $amt;
+// EASCape: the 2005 make menu (Make 1, 5, 10 and X), the cache's skillmulti2/3 (was the 2004
+// multiobj screen, one at a time: your call, 8 Nov 2026)
 if ($shaft_count < 1) {
-    $product = ~multiobj2("What would you like to make?", 
-        $obj2, 0, -15, 175, "<~string_removeright(oc_name($log), 5)> Short Bow.", 0, 0,
-        $obj3, 0, -15, 175, "<~string_removeright(oc_name($log), 5)> Long Bow.", 0, 0
+    $product, $amt = ~skill_multi2_header("What would you like to make?",
+        $obj2, 0, -2, 175, "\\n\\n\\n\\n<~string_removeright(oc_name($log), 5)> Short Bow",
+        $obj3, 0, -2, 175, "\\n\\n\\n\\n<~string_removeright(oc_name($log), 5)> Long Bow"
     );
 } else {
-    // 2004
-    $product = ~multiobj3_close("What would you like to make?", 
-        $obj1, 175, "Arrow Shafts.",
-        $obj2, 175, "Short Bow.",
-        $obj3, 175, "Long Bow."
+    $product, $amt = ~skill_multi3_header("What would you like to make?",
+        $obj1, 175, "\\n\\n\\n\\nArrow Shafts",
+        $obj2, 175, "\\n\\n\\n\\nShort Bow",
+        $obj3, 175, "\\n\\n\\n\\nLong Bow"
     );
 }
-if ($product = null) {
-    ~displaymessage(^dm_default);
+if ($product = null | $amt < 1) {
     return;
 }
 def_int $level = 1;
@@ -63,8 +63,27 @@ if (stat(fletching) < $level) {
     ~doubleobjbox($log, $product, "You need a Fletching level of at least <tostring($level)> to make <~add_article(lowercase(oc_name($product)))>.", 200);
     return;
 }
-// make one bow at a time
+@fletch_log_cut($log, $product, $count, $fletching_experience, $message, $amt);
+
+// EASCape: one cut every 3 ticks while you have logs, like the 2005 make menu's other skills
+// (spinning); the knife animation is the cache's human_fletching
+[label,fletch_log_cut](obj $log, namedobj $product, int $count, int $xp, string $message, int $amt)
+if (inv_total(inv, $log) = 0 | inv_total(inv, knife) = 0) {
+    return;
+}
+anim(human_fletching, 0);
+weakqueue*(fletch_log_cut, 3)($log, $product, $count, $xp, $message, $amt);
+
+[queue,fletch_log_cut](obj $log, namedobj $product, int $count, int $xp, string $message, int $amt)
+if (inv_total(inv, $log) = 0) {
+    return;
+}
 inv_del(inv, $log, 1);
 mes($message);
-stat_advance(fletching, $fletching_experience);
+stat_advance(fletching, $xp);
 inv_add(inv, $product, $count);
+$amt = sub($amt, 1);
+if ($amt < 1) {
+    return;
+}
+@fletch_log_cut($log, $product, $count, $xp, $message, $amt);
