@@ -15,10 +15,11 @@
 # first junction two squares east of the cart, the rows 6 or 7 squares apart, 9/8/6 squares between
 # columns in the first/second/third chasm); the ways between them are found square by square
 # (A*) with the cache's pieces, and where two ways meet one split is laid the other way round.
-# An end of the track (the boxes, the top, the exit, the dead ends) may sit up to 3 squares above or
+# An end of the track (the boxes, the top, the dead ends) may sit up to 3 squares above or
 # below its place on the screen's map, and has a buffer; a box's end has its island to itself (a
 # ride leaves the cart on the end square by the buffer, you beside it to the north, and the box
-# behind you).
+# behind you). The exit's track runs on into a cave mouth in the chasm's east wall (the map's
+# forget_puzzle_exit; ours: which one) and the cart rides into it.
 #
 # The islands (ours where they are; the user's OSRS pictures show the boxes on rock islands, while
 # the 2005 cache has no island loc and neither its map nor the 2008 one has islands): a rounded 6x6 rock
@@ -64,6 +65,13 @@ for line in open(MAP):
 # keep a square clear of the chasm's edge and of the platform (x <= 9)
 free = {(x, z) for (x, z) in free if x >= 10 and all((x + dx, z + dz) in free for dx in (-1, 0, 1) for dz in (-1, 0, 1))}
 
+# the cave mouths in the chasm's east wall (the map's forget_puzzle_exit, a wall on the west side
+# of its square): the exit's track runs into one
+MOUTHS = []
+for line in open(MAP).read().split('==== LOC ====')[1].splitlines():
+    m = re.match(r'1 (\d+) (\d+): 8882 0(?: 0)?$', line)
+    if m: MOUTHS.append((int(m.group(1)), int(m.group(2))))
+for (x, z) in MOUTHS: free |= {(x, z), (x - 1, z), (x - 2, z)}
 DIRS = {'E': (1, 0), 'N': (0, 1), 'W': (-1, 0), 'S': (0, -1)}
 LEFT = {'E': 'N', 'N': 'W', 'W': 'S', 'S': 'E'}
 RIGHT = {v: k for k, v in LEFT.items()}
@@ -251,9 +259,15 @@ def layout(room, okey):
         elif key[0] == 'J':
             goals = [((tx, tz), 'E')]
         else:
-            # an end may move up or down a little from where the screen's map puts it
+            # an end may move up or down a little from where the screen's map puts it; the exit runs
+            # on to a cave mouth (ours: which one, the nearest it can reach)
             goals = []; extra = {}
-            for dz in (0, 1, -1, 2, -2, 3, -3):
+            if key == exit_key:
+                for (mx_, mz_) in MOUTHS:
+                    g = ((mx_ - 1, mz_), 'E')
+                    if all(q not in used for q in (g[0], (mx_, mz_))):
+                        goals.append(g); extra[g] = abs(mz_ - tz)
+            for dz in ((0, 1, -1, 2, -2, 3, -3) if key != exit_key else ()):
                 ez = tz + dz; sqs = [(tx, ez), (tx + 1, ez)]
                 if key[0] in BOXES: sqs = list(island((tx, ez)))
                 if all(q in free and q not in used and (q not in reserved or q in ends_own[key]) for q in sqs):
@@ -270,12 +284,15 @@ def layout(room, okey):
             node[key] = got[0]
             reserved -= ends_own[key]
             ends_own[key] = island(got[0]) if key[0] in BOXES else {got[0], add(got[0], (1, 0))}
+            if key == exit_key: mouth = add(got[0], (1, 0))
             reserved |= ends_own[key]
         routes[(j, d)] = (path, key, got)
     # now the junctions, merges and ends themselves
     for key, (x, z) in node.items():
         if key[0] == 'J':
             lay(split_pieces((x, z)))
+        elif key == exit_key:
+            lay([((x, z), STRAIGHT, 0), ((x + 1, z), STRAIGHT, 0)])  # into the cave mouth
         else:
             lay([((x, z), STRAIGHT, 0), ((x + 1, z), BUFFER, 1)])
         if key in merge_at:
@@ -296,6 +313,7 @@ def layout(room, okey):
             if goal[0] != sq[-1]: sq.append(goal[0])
             sq += [(xx, tz) for xx in range(mo[0], tx)]
         sq.append((tx, tz))
+        if key == exit_key: sq.append((tx + 1, tz))  # into the cave mouth
         # check: one square at a time, on the track
         for a, b in zip(sq, sq[1:]):
             assert max(abs(a[0] - b[0]), abs(a[1] - b[1])) == 1, (room, j, d, a, b)

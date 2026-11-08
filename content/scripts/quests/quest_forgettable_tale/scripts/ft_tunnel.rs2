@@ -546,14 +546,29 @@ if (loc_coord = 2_29_77_58_37) {
 ~displaymessage(^dm_default);
 
 // ---------------------------------------------------------------- the Red Axe talking (1874-1885,4984-4988, across the pit)
+// the RS wiki's transcript: "Screen fades out and in, showing the player crouching at the top of a
+// slope, eavesdropping on the Red Axe director, Red Axe Henchman, and the ogre shaman", and their
+// talk follows
 [label,ft_room_listen]
 p_telejump(2_29_77_13_55);
 facesquare(2_29_77_23_58);
 ~ft_room_actors;
+~ft_crouch(true);
 p_delay(1);
 ~fade_in;
 p_delay(2);
 if_openoverlay(null);
+if (%forget_room1_once = 0) @ft_listen;
+~ft_crouch(false);
+
+// crouching (the cache's human_crawl_ready_for_forget, the quest's own crouch), held while you
+// eavesdrop
+[proc,ft_crouch](boolean $on)
+if ($on = true) {
+    ~bas_set(human_crawl_ready_for_forget, human_crawl_ready_for_forget, human_crawl_ready_for_forget, human_crawl_ready_for_forget, human_crawl_ready_for_forget, human_crawl_ready_for_forget, human_crawl_ready_for_forget);
+    return;
+}
+~update_bas;
 
 // ours: where they stand; they chatter until you listen (the OSRS wiki's overhead lines)
 [proc,ft_room_actors]
@@ -585,6 +600,7 @@ if (npc_find(2_29_77_20_58, forget_redaxe_shaman_cutscene_alt, 6, 0) = true) npc
 [apnpc1,forget_redaxe_shaman_cutscene_alt] @ft_listen;
 
 [label,ft_listen]
+~ft_crouch(true);
 %forget_room1_listening = 1;
 ~chatnpc_specific("Red Axe Henchman", forget_redaxe_henchman_cutscene_alt, "<p,quiz>What's the new plan?");
 ~chatnpc_specific("Ogre shaman", forget_redaxe_shaman_cutscene_alt, "<p,angry>Me dead human!");
@@ -601,6 +617,7 @@ if (npc_find(2_29_77_20_58, forget_redaxe_shaman_cutscene_alt, 6, 0) = true) npc
 %forget_room1_listening = 0;
 %forget_room1_once = 1;
 ~chatplayer("<p,neutral>Pesky human, huh? Well, I think I have enough info now. I'd better explore the rest of these mines.");
+~ft_crouch(false); // ours: you get up to go on
 
 // ---------------------------------------------------------------- the Red Axe's records (1898-1913,4960-4970)
 [label,ft_room_archive]
@@ -659,6 +676,7 @@ $text = append($text, "This is primarily due to the fact that since dwarves cann
 [label,ft_final_room]
 p_telejump(2_29_77_10_17);
 facesquare(2_29_77_20_19);
+~ft_crouch(true); // the RS wiki: "the player crouching at the top of a slope in an even larger chamber"
 npc_add(2_29_77_22_19, forget_redaxe_director_cutscene, 200);
 npc_facesquare(2_29_77_24_17);
 npc_add(2_29_77_24_20, forget_redaxe_henchman3_cutscene, 200);
@@ -719,6 +737,7 @@ if_close;
 p_delay(3);
 ~ft_final_clear;
 cam_reset;
+~ft_crouch(false);
 ~ft_set(^ft_wiped);
 p_telejump(0_45_158_46_47);
 facesquare(0_45_158_46_48);
