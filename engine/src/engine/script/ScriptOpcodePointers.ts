@@ -487,6 +487,12 @@ const ScriptOpcodePointers: {
     [ScriptOpcode.P_RESETLOC]: {
         require: ['active_player']
     },
+    [ScriptOpcode.BOOK_SETTEXT]: {
+        require: ['active_player']
+    },
+    [ScriptOpcode.BOOK_GETTEXT]: {
+        require: ['active_player']
+    },
     [ScriptOpcode.STAT_HEAL]: {
         require: ['active_player'],
         require2: ['active_player2']

@@ -40,6 +40,7 @@ switch_obj (%open_book) {
     case makinghistory_chest : @book_flip_page(^book_direction_backward, 0, ~mh_adventurer_last, mh_book_adventurer);
     case elid_ballad : @book_flip_page(^book_direction_backward, 0, ~elid_ballad_last, elid_ballad_book); // EASCape: Spirits of the Elid (quest_elid)
     case forget_gardener_letter : @book_flip_page(^book_direction_backward, 0, ~ft_letter_last, ft_letter_book); // EASCape: Forgettable Tale (quest_forgettable_tale)
+    case null : if (string_length(book_gettext) > 0) @book_flip_page(^book_direction_backward, 0, ~book_stored_last, book_stored_page); // EASCape: any ~book (its text kept by book_settext)
 }
 p_delay(0);
 
@@ -82,17 +83,46 @@ switch_obj (%open_book) {
     case makinghistory_chest : @book_flip_page(^book_direction_forward, 0, ~mh_adventurer_last, mh_book_adventurer);
     case elid_ballad : @book_flip_page(^book_direction_forward, 0, ~elid_ballad_last, elid_ballad_book); // EASCape: Spirits of the Elid (quest_elid)
     case forget_gardener_letter : @book_flip_page(^book_direction_forward, 0, ~ft_letter_last, ft_letter_book); // EASCape: Forgettable Tale (quest_forgettable_tale)
+    case null : if (string_length(book_gettext) > 0) @book_flip_page(^book_direction_forward, 0, ~book_stored_last, book_stored_page); // EASCape: any ~book (its text kept by book_settext)
 }
 p_delay(0);
 
+// EASCape: ~book used to draw every page one after another, so only its last page was left on
+// screen. It now keeps the text on the player (book_settext) and opens on the first page; the
+// arrows turn it through the default case of the switches above.
 [proc,book](string $title, string $string)
-split_init($string, 175, 22, q8_full);
-def_int $page = 0;
-def_int $pagetotal = split_pagecount;
-while ($page < $pagetotal) {
-    ~book_page($title, $page);
-    $page = calc($page + 1);
+book_settext(append(append($title, "~~~"), $string));
+%open_book = null;
+%book_page = 0;
+~book_stored_show;
+
+[proc,book_stored_split]()(string)
+def_string $all = book_gettext;
+def_int $br = string_indexof_string("~~~", $all);
+split_init(substring($all, calc($br + 3), string_length($all)), 175, 22, q8_full);
+return(substring($all, 0, $br));
+
+[proc,book_stored_last]()(int)
+def_string $title = ~book_stored_split;
+return(max(0, calc(split_pagecount - 1)));
+
+[proc,book_stored_page]
+def_string $title = ~book_stored_split;
+~book_page($title, %book_page);
+
+// what book_flip_page does, for a proc: the arrows, the page and its numbers
+[proc,book_stored_show]
+def_int $last = ~book_stored_last;
+if (%book_page > $last) %book_page = $last;
+if_sethide(book:com_85, true);
+if (%book_page = $last) {
+    if_sethide(book:com_87, true);
+} else {
+    if_sethide(book:com_87, false);
 }
+~book_stored_page;
+if_settext(book:com_110, "<tostring(add(multiply(%book_page, 2), 1))>");
+if_settext(book:com_111, "<tostring(add(multiply(%book_page, 2), 2))>");
 
 [proc,book_obj](string $title, component $obj_com, namedobj $obj, int $zoom, string $string)
 split_init($string, 175, 22, q8_full);

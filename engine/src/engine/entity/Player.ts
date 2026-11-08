@@ -2375,6 +2375,9 @@ export default class Player extends PathingEntity {
     }
 
     // EASCape: what this player sees on one square and layer goes back to the world's
+    // EASCape: the text of the book ~book last opened (not saved; general/book.rs2)
+    bookText: string = '';
+
     resetLoc(level: number, x: number, z: number, shape: number): void {
         const key: number = CoordGrid.packCoord(level, x, z) * 4 + locShapeLayer(shape);
         const loc: PrivateLoc | undefined = this.privateLocs.get(key);

@@ -551,6 +551,15 @@ const PlayerOps: CommandHandlers = {
         state.activePlayer.resetLoc(position.level, position.x, position.z, locShape);
     },
 
+    // EASCape: an open book's text, kept so the page arrows can turn it (general/book.rs2 ~book)
+    [ScriptOpcode.BOOK_SETTEXT]: state => {
+        state.activePlayer.bookText = state.popString();
+    },
+
+    [ScriptOpcode.BOOK_GETTEXT]: state => {
+        state.pushString(state.activePlayer.bookText);
+    },
+
     // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)
     [ScriptOpcode.STAT_XP]: state => {
         const stat: PlayerStat = check(state.popInt(), PlayerStatValid);
