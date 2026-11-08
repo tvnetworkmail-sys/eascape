@@ -10,6 +10,10 @@
 
 [oploc1,wg_door_15653]
 def_boolean $entering = ~check_axis(coord, loc_coord, loc_angle);
+if ($entering = true & ~eascape_on(^eascape_warriors_guild_on) = false) { // EASCape: switched off for now (eascape_switches.constant); you can still leave
+    mes("The door is locked."); // ours
+    return;
+}
 if ($entering = true & ~wg_can_enter = false) {
     // Ghommal isn't at the door yet (the guild's people come next); his line on its own
     mes("Ghommal: You not pass. You too weedy.");

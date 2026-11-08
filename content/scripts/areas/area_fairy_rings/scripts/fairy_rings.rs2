@@ -26,6 +26,10 @@ if (~fairy_rings_can_use = false) {
 [oploc3,_fairy_ring_zanaris] ~fairy_rings_last(loc_coord);
 
 [proc,fairy_rings_can_use]()(boolean)
+if (~eascape_on(^eascape_fairy2_on) = false) { // EASCape: the fairy rings come with Fairytale II, switched off for now
+    mes("Nothing interesting happens.");
+    return(false);
+}
 if (%fairy2_queencure_quest < ^fairy2_rings_allowed & %fairyring_test_unlock = 0) {
     mes("You don't have permission to use that fairy ring.");
     return(false);

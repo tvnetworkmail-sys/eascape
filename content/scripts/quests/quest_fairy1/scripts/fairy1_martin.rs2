@@ -23,6 +23,10 @@ if ($s = ^fairy1_gardeners) {
     @fairy1_martin_report;
 }
 if ($s >= ^fairy1_complete) {
+    if (~eascape_on(^eascape_fairy2_on) = false) { // EASCape: Fairytale II switched off for now (eascape_switches.constant)
+        ~chatnpc("<p,happy>Hello again, <displayname>. Thanks again for your help with the Gardening Group's problems."); // ours
+        return;
+    }
     @fairy2_martin; // Fairytale II (quest_fairy2/scripts/fairy2_martin.rs2)
 }
 ~chatnpc("<p,quiz>Hello again, <displayname>. How are you getting on with solving the Gardening Group's problems?");

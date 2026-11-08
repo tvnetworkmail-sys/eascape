@@ -6,4 +6,8 @@
 [oploc1,ft2_fairy_ring_12003] ~zanaris_exit_ring(0_50_49_60_35);
 
 [proc,zanaris_exit_ring](coord $dest)
+if (~eascape_on(^eascape_fairy2_on) = false) { // EASCape: switched off with Fairytale II (Zanaris's ladder and market door still lead out)
+    mes("Nothing interesting happens.");
+    return;
+}
 ~fairy_rings_travel(loc_coord, $dest);
