@@ -1,12 +1,9 @@
 [opnpc1,aprilfoolshorsesalesman]
 ~chatnpc("<p,happy>Howdy there partner!|Want to see my toy horseys?");
-// EASCape: the 2005 Christmas event's workshop and its hats and scarves back (holidays/xmas05/xmas05_rewards.rs2)
-def_int $choice = ~p_choice4("Toy horseys?", 1, "Can I help at your workshop?", 2, "I'd like to check holiday items please!", 3, "I'm fine, thanks.", 4);
-switch_int ($choice) {
-    case 1 : @aprilfoolshorsesalesman_option1;
-    case 2 : @xmas05_diango_workshop;
-    case 3 : @xmas05_diango_reclaim;
-}
+@multi2(
+    "Toy horseys?", aprilfoolshorsesalesman_option1,
+    "I'm fine, thanks.", exit
+);
 
 // may move these to another script later
 [opheld1,horsey_brown] @toy_horsey_say(human_playhorsey_brown); // the anim delay lets the client finish running visually

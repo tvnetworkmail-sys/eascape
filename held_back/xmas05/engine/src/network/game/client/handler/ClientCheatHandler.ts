@@ -1,0 +1,788 @@
+import v8 from 'node:v8';
+
+import { Visibility } from '#/network/rsbuf/index.js';
+import { LocAngle, LocShape } from '#/engine/routefinder/index.js';
+
+import Component from '#/cache/config/Component.js';
+import IdkType from '#/cache/config/IdkType.js';
+import InvType from '#/cache/config/InvType.js';
+import LocType from '#/cache/config/LocType.js';
+import NpcType from '#/cache/config/NpcType.js';
+import ObjType from '#/cache/config/ObjType.js';
+import ScriptVarType from '#/cache/config/ScriptVarType.js';
+import SeqType from '#/cache/config/SeqType.js';
+import SpotanimType from '#/cache/config/SpotanimType.js';
+import VarBitType from '#/cache/config/VarBitType.js';
+import VarPlayerType from '#/cache/config/VarPlayerType.js';
+
+import { CoordGrid } from '#/engine/CoordGrid.js';
+import World from '#/engine/World.js';
+import { EntityLifeCycle } from '#/engine/entity/EntityLifeCycle.js';
+import Loc from '#/engine/entity/Loc.js';
+import { MoveStrategy } from '#/engine/entity/MoveStrategy.js';
+import { isClientConnected } from '#/engine/entity/NetworkPlayer.js';
+import Npc from '#/engine/entity/Npc.js';
+import Player, { getExpByLevel } from '#/engine/entity/Player.js';
+import { PlayerStat, PlayerStatEnabled, PlayerStatMap } from '#/engine/entity/PlayerStat.js';
+import ScriptProvider from '#/engine/script/ScriptProvider.js';
+import ScriptRunner from '#/engine/script/ScriptRunner.js';
+import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
+
+import ClientGameMessageHandler from '#/network/game/client/ClientGameMessageHandler.js';
+import ClientCheat from '#/network/game/client/model/ClientCheat.js';
+
+import { LoggerEventType } from '#/server/logger/LoggerEventType.js';
+
+import Environment from '#/util/Environment.js';
+import { printDebug } from '#/util/Logger.js';
+import { tryParseInt } from '#/util/TryParse.js';
+
+// EASCape: debugprocs that can be typed without the ~ prefix (test mode only)
+const EASCAPE_TEST_COMMANDS = ['maxstats', 'barrowset', 'barrowsgear', 'fightwave', 'onehit', 'onehitoff', 'questdone', 'clearinv', 'restore', 'herbset', 'slayertask', 'jewels', 'dtpack', 'spellbookswap', 'allrunes', 'warriorsguildpack', 'wgtokens', 'farmingpack', 'farmtreepack', 'farmspecialpack', 'farmgrow', 'farmtick', 'miscstatus', 'miscday', 'miscapproval', 'ft2look', 'ft2song', 'ft2place', 'fairyrings', 'combat07', 'crystalbow', 'crystalshield', 'osfstage', 'mdstage', 'barstage', 'feudstage', 'icsstage', 'icssupplies', 'ltstage', 'gdstage', 'gdcrash', 'togfly', 'togstage', 'zogrestage', 'womtask', 'womjunk', 'rdstage', 'rdrivepack', 'rdrivestage', 'mepack', 'mestage', 'ftpack', 'ftstage', 'fttele', 'wbpack', 'wbtele', 'dkset', 'rellekka', 'pinactive', 'pinclear', 'pinsession', 'sctele', 'tbwpack', 'tbwtele', 'tbwstage', 'tbwfavour', 'tbwsticks', 'tbwspawn', 'gotpack', 'gotstage', 'gottele', 'rtstage', 'rttele', 'rtpack', 'pittele', 'pitround', 'pitchamp', 'ttcpack', 'ttcstage', 'ttctele', 'enchant6pack', 'me2pack', 'me2stage', 'me2tele', 'wantedpack', 'wantedstage', 'wantedtele', 'wantedkills', 'sotspack', 'sotsstage', 'sotstele', 'dairypack', 'fishpack', 'skippypack', 'skippystage', 'skippytele', 'coachtele', 'rumpack', 'rumstage', 'rumtele', 'mhpack', 'mhstage', 'mhtele', 'rcpack', 'rcstage', 'rctele', 'elidpack', 'elidstage', 'elidtele', 'dmpack', 'dmstage', 'dmtele', 'champpack', 'champtele', 'champfight', 'champreset', 'hw05pack', 'hw05stage', 'hw05tele', 'xmaspack', 'xmasstage', 'xmastele', 'xmasreset', 'bfpack', 'bftele', 'bfstate', 'bfbreak'];
+
+export default class ClientCheatHandler extends ClientGameMessageHandler<ClientCheat> {
+    handle(message: ClientCheat, player: Player): boolean {
+        if (message.input.length > 80) {
+            return false;
+        }
+
+        const { input: cheat } = message;
+
+        const args: string[] = cheat.toLowerCase().split(' ');
+        let cmd: string | undefined = args.shift();
+        if (cmd === undefined || cmd.length <= 0) {
+            return false;
+        }
+
+        // EASCape: the app's extras, on or off (only from the EASCape app: eascape_app.rs2)
+        if (cmd === 'appextras') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,eascape_app_extras_set]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
+            }
+            return true;
+        }
+
+        // EASCape: the app's hitpoints orb, clicked while poisoned: drink the first antipoison in
+        // the pack (antipoison, superantipoison, antidote+ or antidote++), the same as clicking
+        // its Drink option (only from the app)
+        // EASCape: the bank's Deposit inventory button (app Bank plugin): only with the bank open
+        if (cmd === 'appbankall') {
+            if (!isClientConnected(player) || !player.client.isApp || player.delayed || player.modalMain !== Component.getId('bank_main')) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,bank_deposit_inventory]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player), true);
+            }
+            return true;
+        }
+        if (cmd === 'appantipoison') {
+            if (!isClientConnected(player) || !player.client.isApp || player.delayed) {
+                return true;
+            }
+            const inv = player.getInventory(InvType.getId('inv'));
+            if (!inv) {
+                return true;
+            }
+            const cures = new Set(['antipoison', '2antipoison', 'antidote+', 'antidote++'].flatMap(k => [1, 2, 3, 4].map(n => (k.startsWith('antidote') ? `${k}${n}` : `${n}dose${k}`))).map(n => ObjType.getId(n)).filter(id => id !== -1));
+            for (let slot = 0; slot < inv.capacity; slot++) {
+                const item = inv.get(slot);
+                if (!item || !cures.has(item.id)) {
+                    continue;
+                }
+                const obj = ObjType.get(item.id);
+                player.lastItem = item.id;
+                player.lastSlot = slot;
+                const script = ScriptProvider.getByTrigger(ServerTriggerType.OPHELD1, obj.id, obj.category);
+                if (script) {
+                    player.executeScript(ScriptRunner.init(script, player), true);
+                }
+                return true;
+            }
+            player.messageGame("You don't have an antipoison to drink."); // ours
+            return true;
+        }
+
+        // EASCape: the app's "2007 interface" plugin: the 2007 combat tabs on or off (only from the
+        // app: combat07.rs2)
+        if (cmd === 'appcombat07') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,eascape_combat07_set]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
+            }
+            return true;
+        }
+
+        // EASCape: the app's Time Tracking asks for the farming growth clock (only from the app:
+        // eascape_app.rs2)
+        if (cmd === 'appfarming') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            const script = ScriptProvider.getByName('[proc,eascape_app_farming_set]');
+            if (script) {
+                player.executeScript(ScriptRunner.init(script, player, null, [args[0] === 'off' ? 0 : 1]), true);
+            }
+            return true;
+        }
+
+        // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
+        // and every quest's ::<quest>pack (cheat_questpacks.rs2) and ::questpacks, the list of them
+        if (!Environment.NODE_PRODUCTION && (EASCAPE_TEST_COMMANDS.includes(cmd) || (/^[a-z0-9_]+packs?$/.test(cmd) && ScriptProvider.getByName(`[debugproc,${cmd}]`)))) {
+            cmd = Environment.NODE_DEBUGPROC_CHAR + cmd;
+        }
+
+        if (player.staffModLevel >= 2) {
+            player.addSessionLog(LoggerEventType.MODERATOR, 'Ran cheat', cheat);
+        }
+
+        if (!Environment.NODE_PRODUCTION && player.staffModLevel >= 4) {
+            // developer commands
+
+            if (cmd[0] === Environment.NODE_DEBUGPROC_CHAR) {
+                // debugprocs are NOT allowed on live ;)
+                const script = ScriptProvider.getByName(`[debugproc,${cmd.slice(1)}]`);
+                if (!script) {
+                    return false;
+                }
+
+                const params = new Array(script.info.parameterTypes.length).fill(-1);
+                for (let i = 0; i < script.info.parameterTypes.length; i++) {
+                    const type = script.info.parameterTypes[i];
+
+                    try {
+                        switch (type) {
+                            case ScriptVarType.STRING: {
+                                const value = args.shift();
+                                params[i] = value ?? '';
+                                break;
+                            }
+                            case ScriptVarType.INT: {
+                                const value = args.shift();
+                                params[i] = parseInt(value ?? '0', 10) | 0;
+                                break;
+                            }
+                            case ScriptVarType.OBJ:
+                            case ScriptVarType.NAMEDOBJ: {
+                                const name = args.shift();
+                                params[i] = ObjType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.NPC: {
+                                const name = args.shift();
+                                params[i] = NpcType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.LOC: {
+                                const name = args.shift();
+                                params[i] = LocType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.SEQ: {
+                                const name = args.shift();
+                                params[i] = SeqType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.STAT: {
+                                const name = args.shift() ?? '';
+                                params[i] = PlayerStatMap.get(name.toUpperCase());
+                                break;
+                            }
+                            case ScriptVarType.INV: {
+                                const name = args.shift();
+                                params[i] = InvType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.COORD: {
+                                const args2 = cheat.split('_');
+
+                                const level = parseInt(args2[0].slice(6));
+                                const mx = parseInt(args2[1]);
+                                const mz = parseInt(args2[2]);
+                                const lx = parseInt(args2[3]);
+                                const lz = parseInt(args2[4]);
+
+                                params[i] = CoordGrid.packCoord(level, (mx << 6) + lx, (mz << 6) + lz);
+                                break;
+                            }
+                            case ScriptVarType.INTERFACE: {
+                                const name = args.shift();
+                                params[i] = Component.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.SPOTANIM: {
+                                const name = args.shift();
+                                params[i] = SpotanimType.getId(name ?? '');
+                                break;
+                            }
+                            case ScriptVarType.IDKIT: {
+                                const name = args.shift();
+                                params[i] = IdkType.getId(name ?? '');
+                                break;
+                            }
+                        }
+                    } catch (_) {
+                        // invalid arguments
+                        return false;
+                    }
+                }
+
+                player.executeScript(ScriptRunner.init(script, player, null, params), false);
+            } else if (cmd === 'reload') {
+                World.reload();
+            } else if (cmd === 'rebuild') {
+                player.messageGame('Rebuilding scripts...');
+                World.rebuild();
+            } else if (cmd === 'speed') {
+                if (args.length < 1) {
+                    player.messageGame('Usage: ::speed <ms>');
+                    return false;
+                }
+
+                const speed: number = tryParseInt(args.shift(), 20);
+                if (speed < 20) {
+                    player.messageGame('::speed input was too low.');
+                    return false;
+                }
+
+                player.messageGame(`World speed was changed to ${speed}ms`);
+                World.tickRate = speed;
+            } else if (cmd === 'fly') {
+                if (player.moveStrategy === MoveStrategy.FLY) {
+                    player.moveStrategy = MoveStrategy.SMART;
+                } else {
+                    player.moveStrategy = MoveStrategy.FLY;
+                }
+
+                player.messageGame(`Changed move strategy: ${player.moveStrategy === MoveStrategy.FLY ? 'fly' : 'smart'}`);
+            } else if (cmd === 'naive') {
+                if (player.moveStrategy === MoveStrategy.NAIVE) {
+                    player.moveStrategy = MoveStrategy.SMART;
+                } else {
+                    player.moveStrategy = MoveStrategy.NAIVE;
+                }
+
+                player.messageGame(`Naive move strategy: ${player.moveStrategy === MoveStrategy.NAIVE ? 'naive' : 'smart'}`);
+            } else if (cmd === 'random') {
+                player.afkEventReady = true;
+            }
+        }
+
+        if (player.staffModLevel >= 3) {
+            // admin commands (potentially destructive for a live economy)
+
+            if (cmd === 'setvar') {
+                // authentic
+                if (args.length < 2) {
+                    // ::setvar <variable> <value>
+                    // Sets variable to specified value
+                    return false;
+                }
+
+                const debugname = args[0];
+                const value = Math.max(-0x80000000, Math.min(tryParseInt(args[1], 0), 0x7fffffff));
+
+                let varp: VarPlayerType | null = null;
+                const varbit = VarBitType.getByName(debugname);
+                if (varbit) {
+                    varp = VarPlayerType.get(varbit.basevar);
+
+                    if (varp.protect) {
+                        player.closeModal();
+
+                        if (!player.canAccess()) {
+                            player.messageGame('Please finish what you are doing first.');
+                            return false;
+                        }
+
+                        player.clearInteraction();
+                        player.unsetMapFlag();
+                    }
+                } else {
+                    varp = VarPlayerType.getByName(debugname);
+                }
+
+                if (!varp) {
+                    return false;
+                }
+
+                if (varp.protect) {
+                    player.closeModal();
+
+                    if (!player.canAccess()) {
+                        player.messageGame('Please finish what you are doing first.');
+                        return false;
+                    }
+
+                    player.clearInteraction();
+                    player.unsetMapFlag();
+                }
+
+                if (varbit) {
+                    player.setVarBit(varbit.id, value);
+                    player.messageGame('set ' + varbit.debugname + ': to ' + value);
+                } else {
+                    player.setVar(varp.id, value);
+                    player.messageGame('set ' + varp.debugname + ': to ' + value);
+                }
+            } else if (cmd === 'setvarother' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 3) {
+                    // ::setvarother <username> <name> <value>
+                    return false;
+                }
+
+                const other = World.getPlayerByUsername(args[0]);
+                if (!other) {
+                    player.messageGame(`${args[0]} is not logged in.`);
+                    return false;
+                }
+
+                const varp = VarPlayerType.getByName(args[1]);
+                if (!varp) {
+                    return false;
+                }
+
+                if (varp.protect) {
+                    other.closeModal();
+
+                    if (!other.canAccess()) {
+                        player.messageGame(`${args[0]} is busy right now.`);
+                        return false;
+                    }
+
+                    other.clearInteraction();
+                    other.unsetMapFlag();
+                }
+
+                const value = Math.max(-0x80000000, Math.min(tryParseInt(args[2], 0), 0x7fffffff));
+                other.setVar(varp.id, value);
+                player.messageGame('set ' + args[1] + ': to ' + value + ' on ' + other.username);
+            } else if (cmd === 'getvar') {
+                // authentic
+                if (args.length < 1) {
+                    // ::getvar <variable>
+                    // Displays value of specified variable
+                    return false;
+                }
+
+                const debugname = args[0];
+
+                let varp: VarPlayerType | null = null;
+                const varbit = VarBitType.getByName(debugname);
+                if (varbit) {
+                    varp = VarPlayerType.get(varbit.basevar);
+
+                    if (varp.protect) {
+                        player.closeModal();
+
+                        if (!player.canAccess()) {
+                            player.messageGame('Please finish what you are doing first.');
+                            return false;
+                        }
+
+                        player.clearInteraction();
+                        player.unsetMapFlag();
+                    }
+                } else {
+                    varp = VarPlayerType.getByName(debugname);
+                }
+
+                if (!varp) {
+                    return false;
+                }
+
+                if (varbit) {
+                    const value = player.getVarBit(varbit.id);
+                    player.messageGame('get ' + varbit.debugname + ': ' + value);
+                } else {
+                    const value = player.getVar(varp.id);
+                    player.messageGame('get ' + varp.debugname + ': ' + value);
+                }
+            } else if (cmd === 'getvarother' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 2) {
+                    // ::getvarother <username> <variable>
+                    return false;
+                }
+
+                const other = World.getPlayerByUsername(args[0]);
+                if (!other) {
+                    player.messageGame(`${args[0]} is not logged in.`);
+                    return false;
+                }
+
+                const varp = VarPlayerType.getByName(args[1]);
+                if (!varp) {
+                    return false;
+                }
+
+                const value = other.getVar(varp.id);
+                player.messageGame('get ' + varp.debugname + ': ' + value + ' on ' + other.username);
+            } else if (cmd === 'give') {
+                // authentic
+                if (args.length < 1) {
+                    // ::give <item> (amount)
+                    // Adds the items(s) to your inventory
+                    return false;
+                }
+
+                const obj = ObjType.getId(args[0]);
+                if (obj === -1) {
+                    return false;
+                }
+
+                const count = Math.max(1, Math.min(tryParseInt(args[1], 1), 0x7fffffff));
+                player.invAdd(InvType.INV, obj, count);
+            } else if (cmd === 'giveother' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 2) {
+                    // ::giveother <username> <item> (amount)
+                    return false;
+                }
+
+                const other = World.getPlayerByUsername(args[0]);
+                if (!other) {
+                    player.messageGame(`${args[0]} is not logged in.`);
+                    return false;
+                }
+
+                const obj = ObjType.getId(args[1]);
+                if (obj === -1) {
+                    return false;
+                }
+
+                const count = Math.max(1, Math.min(tryParseInt(args[2], 1), 0x7fffffff));
+                other.invAdd(InvType.INV, obj, count);
+            } else if (cmd === 'givecrap') {
+                // authentic (we don't know the exact specifics of this...)
+
+                // Fills your inventory with random items
+                for (let i = 0; i < 28; i++) {
+                    let random = -1;
+                    while (random === -1) {
+                        random = Math.trunc(Math.random() * ObjType.count);
+                        const obj = ObjType.get(random);
+                        if ((!Environment.NODE_MEMBERS && obj.members) || obj.dummyitem !== 0 || obj.certtemplate !== -1) {
+                            random = -1;
+                        }
+                    }
+
+                    player.invAdd(InvType.INV, random, 1);
+                }
+            } else if (cmd === 'givemany') {
+                // authentic
+                if (args.length < 1) {
+                    // ::givemany <item>
+                    // Adds up to 1000 of the item to your inventory
+                    return false;
+                }
+
+                const obj = ObjType.getId(args[0]);
+                if (obj === -1) {
+                    return false;
+                }
+
+                player.invAdd(InvType.INV, obj, 1000);
+            } else if (cmd === 'broadcast' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 0) {
+                    return false;
+                }
+
+                World.broadcastMes(cheat.substring(cmd.length + 1));
+            } else if (cmd === 'reboot' && Environment.NODE_PRODUCTION) {
+                // semi-authentic - we actually just shut down for maintenance
+
+                // Reboots the game world, applying packed changes
+                World.rebootTimer(0);
+            } else if (cmd === 'slowreboot' && Environment.NODE_PRODUCTION) {
+                // semi-authentic - we actually just shut down for maintenance
+                if (args.length < 1) {
+                    // ::slowreboot <seconds>
+                    // Reboots the game world, with a timer
+                    return false;
+                }
+
+                World.rebootTimer(Math.ceil((tryParseInt(args[0], 30) * 1000) / 600));
+            } else if (cmd === 'serverdrop') {
+                // testing reconnection behavior
+                player.terminate();
+            } else if (cmd === 'teleother' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 1) {
+                    // ::teleother <username>
+                    return false;
+                }
+
+                const other = World.getPlayerByUsername(args[0]);
+                if (!other) {
+                    player.messageGame(`${args[0]} is not logged in.`);
+                    return false;
+                }
+
+                other.closeModal();
+
+                if (!other.canAccess()) {
+                    player.messageGame(`${args[0]} is busy right now.`);
+                    return false;
+                }
+
+                other.clearInteraction();
+                other.unsetMapFlag();
+
+                other.teleJump(player.x, player.z, player.level);
+            } else if (cmd === 'setstat') {
+                // authentic
+                if (args.length < 2) {
+                    // ::setstat <skill> <level>
+                    // Sets the skill to specified level
+                    return false;
+                }
+
+                const stat = PlayerStatMap.get(args[0].toUpperCase());
+                if (typeof stat === 'undefined') {
+                    return false;
+                }
+
+                player.setLevel(stat, parseInt(args[1]));
+            } else if (cmd === 'advancestat') {
+                // authentic
+                if (args.length < 1) {
+                    // ::advancestat <skill> <level>
+                    // Advances skill to specified level, generates level up message etc.
+                    return false;
+                }
+
+                const stat = PlayerStatMap.get(args[0].toUpperCase());
+                if (typeof stat === 'undefined') {
+                    return false;
+                }
+
+                player.stats[stat] = 0;
+                player.baseLevels[stat] = 1;
+                player.levels[stat] = 1;
+                player.addXp(stat, getExpByLevel(parseInt(args[1])), false);
+            } else if (cmd === 'minme') {
+                // like maxme debugproc, but in engine because xp goes down
+                for (let i = 0; i < PlayerStatEnabled.length; i++) {
+                    if (i === PlayerStat.HITPOINTS) {
+                        player.setLevel(i, 10);
+                    } else {
+                        player.setLevel(i, 1);
+                    }
+                }
+            } else if (cmd === 'locadd') {
+                // authentic - https://youtu.be/E6tQ3b3vzro?t=3194
+                if (args.length < 1) {
+                    return false;
+                }
+                const name: string = args[0];
+                const type: LocType | null = LocType.getByName(name);
+                if (!type) {
+                    return false;
+                }
+                World.addLoc(new Loc(player.level, player.x, player.z, type.width, type.length, EntityLifeCycle.DESPAWN, type.id, LocShape.CENTREPIECE_STRAIGHT, LocAngle.WEST), 500);
+                player.messageGame(`Loc Added: ${name} (ID: ${type.id})`);
+            } else if (cmd === 'npcadd') {
+                // authentic - https://youtu.be/E6tQ3b3vzro?t=3412
+                if (args.length < 1) {
+                    return false;
+                }
+                const name: string = args[0];
+                const type: NpcType | null = NpcType.getByName(name);
+                if (!type) {
+                    return false;
+                }
+                World.addNpc(new Npc(player.level, player.x, player.z, type.size, type.size, EntityLifeCycle.DESPAWN, World.getNextNid(), type.id, type.blockwalk), 500);
+            } else if (cmd === 'openmain') {
+                if (args.length < 1) {
+                    return false;
+                }
+
+                const name: string = args[0];
+                const type: Component | null = Component.getByName(name);
+
+                if (!type || type.rootLayer !== type.id) {
+                    return false;
+                }
+
+                player.openMainModal(type.id);
+            } else if (cmd === 'openoverlay') {
+                if (args.length < 1) {
+                    return false;
+                }
+
+                const name: string = args[0];
+                const type: Component | null = Component.getByName(name);
+
+                if (!type || type.rootLayer !== type.id) {
+                    return false;
+                }
+
+                player.openMainOverlay(type.id);
+            } else if (cmd === 'closeoverlay') {
+                player.openMainOverlay(-1);
+            } else if (cmd === 'snapshot') {
+                const heap = v8.writeHeapSnapshot();
+                printDebug(`Heap snapshot written to: ${heap}`);
+            }
+        }
+
+        if (player.staffModLevel >= 2) {
+            // "super-moderator" commands (similar to a jmod but we don't know their command capabilities on live)
+
+            if (cmd === 'getcoord') {
+                // authentic
+
+                // Displays current coordinate
+                player.messageGame(CoordGrid.formatString(player.level, player.x, player.z, ','));
+            } else if (cmd === 'tele') {
+                // authentic - https://youtu.be/60Y3y375VYA?t=980
+                if (args.length < 1) {
+                    // ::tele x,xx,xx[,xx,xx]
+                    // Teleports you to the coordinate. In order, the parts are level, horizontal map square, vertical map square, horizontal tile, vertical tile.
+                    return false;
+                }
+
+                // EASCape: named places for testing (coordinates from our own content scripts)
+                const places: Record<string, string> = {
+                    barrows: '0,55,51,45,25', // by Ahrim's mound (barrows.rs2, barrows_mound_coord)
+                    bob: '0,50,50,32,3', // Bob in Lumbridge, for Barrows repairs (his spawn in maps/m50_50.jm2)
+                    tzhaar: '0,38,80,6,48', // Mor Ul Rek, by the Fight Cave entrance (2006Scape's way out of the cave)
+                    fightpit: '0,37,80,31,57', // outside the Fight Pit's waiting room door (maps/m37_80.jm2)
+                    warriorsguild: '0,44,55,59,26', // just inside the Warriors' Guild's front door (maps/m44_55.jm2)
+                    wyverns: '0,47,149,48,27', // by the Icy Cavern to the skeletal wyverns (wyvern_cave.rs2)
+                    lavamaze: '0,47,60,51,47', // by the Lava Maze's rune rocks (maps/m47_60.jm2)
+                    wildmine: '0,48,58,8,50' // the Wilderness mine with mithril, adamantite and iron (maps/m48_58.jm2)
+                };
+                const coord = (places[args[0].toLowerCase()] ?? args[0]).split(',');
+                if (coord.length < 3) {
+                    return false;
+                }
+
+                player.closeModal();
+
+                if (!player.canAccess()) {
+                    player.messageGame('Please finish what you are doing first.');
+                    return false;
+                }
+
+                player.clearInteraction();
+                player.unsetMapFlag();
+
+                const level = tryParseInt(coord[0], 0);
+                const mx = tryParseInt(coord[1], 50);
+                const mz = tryParseInt(coord[2], 50);
+                const lx = tryParseInt(coord[3], 32);
+                const lz = tryParseInt(coord[4], 32);
+
+                if (level < 0 || level > 3 || mx < 0 || mx > 255 || mz < 0 || mz > 255 || lx < 0 || lx > 63 || lz < 0 || lz > 63) {
+                    return false;
+                }
+
+                player.teleJump((mx << 6) + lx, (mz << 6) + lz, level);
+            } else if (cmd === 'teleto' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 1) {
+                    return false;
+                }
+
+                // ::teleto <username>
+                const other = World.getPlayerByUsername(args[0]);
+                if (!other) {
+                    player.messageGame(`${args[0]} is not logged in.`);
+                    return false;
+                }
+
+                player.closeModal();
+
+                if (!player.canAccess()) {
+                    player.messageGame('Please finish what you are doing first.');
+                    return false;
+                }
+
+                player.clearInteraction();
+                player.unsetMapFlag();
+
+                player.teleJump(other.x, other.z, other.level);
+            } else if (cmd === 'setvis' && Environment.NODE_PRODUCTION) {
+                // authentic
+                if (args.length < 1) {
+                    // ::setvis <level>
+                    return false;
+                }
+
+                switch (args[0]) {
+                    case '0':
+                        player.setVisibility(Visibility.DEFAULT);
+                        break;
+                    case '1':
+                        player.setVisibility(Visibility.SOFT);
+                        break;
+                    case '2':
+                        player.setVisibility(Visibility.HARD);
+                        break;
+                    default:
+                        return false;
+                }
+            } else if (cmd === 'ban' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 2) {
+                    // ::ban <username> <minutes>
+                    player.messageGame('Usage: ::ban <username> <minutes>');
+                    return false;
+                }
+
+                const username = args[0];
+                const minutes = Math.max(0, tryParseInt(args[1], 60));
+
+                World.notifyPlayerBan(player.username, username, Date.now() + minutes * 60 * 1000);
+                player.messageGame(`Player '${args[0]}' has been banned for ${minutes} minutes.`);
+            } else if (cmd === 'mute' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 2) {
+                    // ::mute <username> <minutes>
+                    player.messageGame('Usage: ::mute <username> <minutes>');
+                    return false;
+                }
+
+                const username = args[0];
+                const minutes = Math.max(0, tryParseInt(args[1], 60));
+
+                World.notifyPlayerMute(player.username, username, Date.now() + minutes * 60 * 1000);
+                player.messageGame(`Player '${args[0]}' has been muted for ${minutes} minutes.`);
+            } else if (cmd === 'kick' && Environment.NODE_PRODUCTION) {
+                // custom
+                if (args.length < 1) {
+                    // ::kick <username>
+                    player.messageGame('Usage: ::kick <username>');
+                    return false;
+                }
+
+                const username = args[0];
+
+                const other = World.getPlayerByUsername(username);
+                if (other) {
+                    other.loggingOut = true;
+                    if (isClientConnected(other)) {
+                        other.logout();
+                        other.client.close();
+                    }
+                    player.messageGame(`Player '${args[0]}' has been kicked from the game.`);
+                } else {
+                    player.messageGame(`Player '${args[0]}' does not exist or is not logged in.`);
+                }
+            }
+        }
+
+        return true;
+    }
+}

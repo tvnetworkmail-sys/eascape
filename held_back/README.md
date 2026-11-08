@@ -49,3 +49,13 @@ squares and app map images with the versions here. Then:
 If maps were changed after 8 Nov 2026 on any of these squares, copying over would undo those
 changes: check `git log -- content/maps/<square>` first and merge by hand where needed (or use
 `git diff` against the tag).
+
+## Christmas 2005 event (removed 8 Nov 2026)
+
+`held_back/xmas05/` holds every file the event (commit eb9ea6c3) added or changed, as they were
+before it was taken out: the three map squares (Varrock square's tree, Draynor's open trapdoor,
+the Hooded Stranger at Taverley), the scripts in `content/scripts/holidays/xmas05/`, its cheats,
+Diango's lines, the music regions and the docs. The event's items and its save slot (win05_var)
+were left in the game so anything players own still loads. To put it back, copy
+`held_back/xmas05/content` and `held_back/xmas05/docs` over the repo (or `git revert` the commit
+that removed it) and rebuild.
