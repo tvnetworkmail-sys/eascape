@@ -25,6 +25,9 @@ inv_del(inv, beer, 1);
 ~ft_pub_film;
 
 [proc,ft_pub_film]
+// EASCape: you go back to where you had your beer afterwards; you were left sat at the table's
+// end (2917,10187), boxed in by the table and chairs, with no way to walk off
+def_coord $start = coord;
 if_close;
 ~fade_out;
 p_delay(2);
@@ -104,6 +107,7 @@ inv_delslot(worn, ^wearpos_rhand);
 buildappearance(worn);
 ~update_bas;
 anim(null, 0);
+p_telejump($start);
 cam_reset;
 p_delay(1);
 ~fade_in;
