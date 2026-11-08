@@ -1,0 +1,86 @@
+// EASCape: weaving at the loom (the Falador farm's, loc loom). The loom had no script, so Weave
+// did nothing. From 2009scape (WeaveOptionPlugin): the three-item make menu (Make 1, 5, 10, X: the
+// cache's skillmulti3) for an empty sack (4 jute fibres, Crafting 21, 38 xp), a basket (6 willow
+// branches, 36, 56 xp) and cloth (4 balls of wool, 10, 12 xp); one every 5 ticks with the cache's
+// farming_useloom animation and loom sound. Sacks and baskets came with Farming (11 July 2005).
+
+[oploc2,loom] @weave_menu;
+
+[oplocu,loom]
+switch_obj (last_useitem) {
+    case jute_fibre, willow_branch, ball_of_wool : @weave_menu;
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,weave_menu]
+if (map_members = ^false) {
+    mes(^mes_members_feature);
+    return;
+}
+def_namedobj $product;
+def_int $amt;
+$product, $amt = ~skill_multi3_header("What would you like to make?",
+    sack_empty, 175, "\\n\\n\\n\\nSack",
+    basket_empty, 175, "\\n\\n\\n\\nBasket",
+    regicide_cloth, 175, "\\n\\n\\n\\nCloth"
+);
+if ($product = null | $amt < 1) {
+    return;
+}
+if (~weave_check($product, true) = false) return;
+anim(farming_useloom, 0);
+sound_synth(loom, 1, 0);
+weakqueue*(weave_next, 5)($product, $amt);
+
+// the level and materials for one; $say: give the message when you can't (2009scape's)
+[proc,weave_check](namedobj $product, boolean $say)(boolean)
+def_namedobj $need;
+def_int $count;
+def_int $level;
+$need, $count, $level = ~weave_recipe($product);
+if (stat(crafting) < $level) {
+    if ($say = true) mes("You need a Crafting level of at least <tostring($level)> in order to do this.");
+    return(false);
+}
+if (inv_total(inv, $need) < $count) {
+    if ($say = true) {
+        if ($product = sack_empty) {
+            mes("You need 4 jute fibres to weave an empty sack.");
+        } else if ($product = basket_empty) {
+            mes("You need 6 willow branches to weave a basket.");
+        } else {
+            mes("You need 4 balls of wool to weave a cloth.");
+        }
+    }
+    return(false);
+}
+return(true);
+
+[proc,weave_recipe](namedobj $product)(namedobj, int, int)
+if ($product = sack_empty) return(jute_fibre, 4, 21);
+if ($product = basket_empty) return(willow_branch, 6, 36);
+return(ball_of_wool, 4, 10);
+
+[queue,weave_next](namedobj $product, int $amt)
+if (~weave_check($product, false) = false) return;
+def_namedobj $need;
+def_int $count;
+def_int $level;
+$need, $count, $level = ~weave_recipe($product);
+inv_del(inv, $need, $count);
+inv_add(inv, $product, 1);
+if ($product = sack_empty) {
+    stat_advance(crafting, 380);
+    mes("You weave the jute fibres into an empty sack.");
+} else if ($product = basket_empty) {
+    stat_advance(crafting, 560);
+    mes("You weave the willow branches into a basket.");
+} else {
+    stat_advance(crafting, 120);
+    mes("You weave the balls of wool into a cloth.");
+}
+$amt = sub($amt, 1);
+if ($amt < 1 | ~weave_check($product, false) = false) return;
+anim(farming_useloom, 0);
+sound_synth(loom, 1, 0);
+weakqueue*(weave_next, 5)($product, $amt);
