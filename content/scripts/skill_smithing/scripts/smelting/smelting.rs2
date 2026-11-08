@@ -21,54 +21,191 @@ switch_obj (last_useitem)
     case tbwt_burnt_jogre_bones : mes("These Jogre bones are already burnt!");
     case limestone : @regicide_heat_quicklime;
     case default :
-        if (oc_category(last_useitem) = category_91) {
-            @smelt_ore(last_useitem);
-        }
+        if (oc_category(last_useitem) = category_91) @smelt_ore(last_useitem);
         ~displaymessage(^dm_default);
 };
 
-// EASCape: the Keldagrim furnace's own Smelt option (the 2007 cache gives it one): smelt the first
-// ore you're carrying, as if you'd used it on the furnace (ours)
-[oploc2,dwarf_keldagrim_furnace]
-def_int $slot = 0;
-while ($slot < inv_size(inv)) {
-    def_obj $ore = inv_getobj(inv, $slot);
-    if ($ore ! null & oc_category($ore) = category_91) @smelt_ore($ore);
-    $slot = add($slot, 1);
-}
-mes("You don't have any ore to smelt."); // ours
-
-//--- this is the code that uses p_delays instead of weakqueues
-[label,smelt_ore](obj $last)
-p_arrivedelay();
-// find the bar that the ore smelts to
-def_namedobj $bar = oc_param($last, smeltsto);
-// using coal on furnace assumes steel bar. If using iron on furnace and player has 2 or more coal, then assume steel bar
-if (($last = iron_ore & inv_total(inv, coal) >= 2 & stat(smithing) >= 30) | $last = coal) {
-    $bar = steel_bar;
+// EASCape: ore on a furnace opens the same bar menu (2009scape's SmeltUseWithHandler; Void's
+// Furnace); Family Crest's perfect gold ore is smelted on its own, one at a time
+[label,smelt_ore](obj $ore)
+if ($ore = perfect_gold_ore) {
+    p_arrivedelay;
+    @smelt_bar(perfect_gold_bar, 1);
 }
 // for some reason jagex has blankrune and clay in the ores category
-if ($bar = null) {
+if (oc_param($ore, smeltsto) = null & $ore ! coal) {
     ~displaymessage(^dm_default);
     return;
 }
-def_struct $struct = oc_param($bar, smelting_struct); 
-// If smithing level isnt high enough, dislpay level fail message
+p_arrivedelay;
+@smelting_menu;
+
+// EASCape: clicking a furnace (Smelt) opens the furnace's bar menu, the cache's inter_53 ("What would
+// you like to smelt?", Smelt 1/5/10/X under each bar): "Furnaces now have an option to left-click on
+// them, which brings up an interface for you to select the quantity and type of ore you wish to
+// smelt" (Skills, Duels and the Kalphite, 27 Sep 2004); 2006Scape's Smelting.startSmelting (the same
+// interface 2400) and 2009scape's FurnaceOptionPlugin. The Keldagrim furnace now uses it too.
+[oploc2,_smithing_furnace]
+if(loc_type = viking_furnace | loc_type = viking_furnace2) {
+    if(%viking < ^viking_complete) {
+        mes("Only Fremenniks may use this furnace.");
+        return;
+    }
+}
+@smelting_menu;
+
+[label,smelting_menu]
+def_namedobj $bar;
+def_int $amt;
+$bar, $amt = ~smelting_choose;
+if ($bar = null | $amt < 1) return;
+@smelt_bar($bar, $amt);
+
+// the furnace's bar menu: the bar and how many (Smelt X asks for the number)
+[proc,smelting_choose]()(namedobj, int)
+if_openchat(inter_53);
+// the cache draws a bronze bar in all eight boxes; each gets its own bar (2006Scape sends the bars
+// at zoom 150)
+if_setobject(inter_53:com_4, bronze_bar, 150);
+if_setobject(inter_53:com_5, iron_bar, 150);
+if_setobject(inter_53:com_6, silver_bar, 150);
+if_setobject(inter_53:com_7, steel_bar, 150);
+if_setobject(inter_53:com_8, gold_bar, 150);
+if_setobject(inter_53:com_9, mithril_bar, 150);
+if_setobject(inter_53:com_10, adamantite_bar, 150);
+if_setobject(inter_53:com_11, runite_bar, 150);
+if_addresumebutton(inter_53:com_12);
+if_addresumebutton(inter_53:com_13);
+if_addresumebutton(inter_53:com_14);
+if_addresumebutton(inter_53:com_15);
+if_addresumebutton(inter_53:com_16);
+if_addresumebutton(inter_53:com_17);
+if_addresumebutton(inter_53:com_18);
+if_addresumebutton(inter_53:com_19);
+if_addresumebutton(inter_53:com_20);
+if_addresumebutton(inter_53:com_21);
+if_addresumebutton(inter_53:com_22);
+if_addresumebutton(inter_53:com_23);
+if_addresumebutton(inter_53:com_24);
+if_addresumebutton(inter_53:com_25);
+if_addresumebutton(inter_53:com_26);
+if_addresumebutton(inter_53:com_27);
+if_addresumebutton(inter_53:com_28);
+if_addresumebutton(inter_53:com_29);
+if_addresumebutton(inter_53:com_30);
+if_addresumebutton(inter_53:com_31);
+if_addresumebutton(inter_53:com_32);
+if_addresumebutton(inter_53:com_33);
+if_addresumebutton(inter_53:com_34);
+if_addresumebutton(inter_53:com_35);
+if_addresumebutton(inter_53:com_36);
+if_addresumebutton(inter_53:com_37);
+if_addresumebutton(inter_53:com_38);
+if_addresumebutton(inter_53:com_39);
+if_addresumebutton(inter_53:com_40);
+if_addresumebutton(inter_53:com_41);
+if_addresumebutton(inter_53:com_42);
+if_addresumebutton(inter_53:com_43);
+p_pausebutton;
+
+def_component $last_com = last_com;
+if(%weakqueue_map_clock = map_clock) {
+    if_close;
+    p_delay(0);
+}
+// each bar has four buttons in the cache's order: Smelt X, 10, 5, 1
+switch_component ($last_com) {
+    case inter_53:com_12 :
+        p_countdialog;
+        return(bronze_bar, last_int);
+    case inter_53:com_13 : return(bronze_bar, 10);
+    case inter_53:com_14 : return(bronze_bar, 5);
+    case inter_53:com_15 : return(bronze_bar, 1);
+    case inter_53:com_16 :
+        p_countdialog;
+        return(iron_bar, last_int);
+    case inter_53:com_17 : return(iron_bar, 10);
+    case inter_53:com_18 : return(iron_bar, 5);
+    case inter_53:com_19 : return(iron_bar, 1);
+    case inter_53:com_20 :
+        p_countdialog;
+        return(silver_bar, last_int);
+    case inter_53:com_21 : return(silver_bar, 10);
+    case inter_53:com_22 : return(silver_bar, 5);
+    case inter_53:com_23 : return(silver_bar, 1);
+    case inter_53:com_24 :
+        p_countdialog;
+        return(steel_bar, last_int);
+    case inter_53:com_25 : return(steel_bar, 10);
+    case inter_53:com_26 : return(steel_bar, 5);
+    case inter_53:com_27 : return(steel_bar, 1);
+    case inter_53:com_28 :
+        p_countdialog;
+        return(gold_bar, last_int);
+    case inter_53:com_29 : return(gold_bar, 10);
+    case inter_53:com_30 : return(gold_bar, 5);
+    case inter_53:com_31 : return(gold_bar, 1);
+    case inter_53:com_32 :
+        p_countdialog;
+        return(mithril_bar, last_int);
+    case inter_53:com_33 : return(mithril_bar, 10);
+    case inter_53:com_34 : return(mithril_bar, 5);
+    case inter_53:com_35 : return(mithril_bar, 1);
+    case inter_53:com_36 :
+        p_countdialog;
+        return(adamantite_bar, last_int);
+    case inter_53:com_37 : return(adamantite_bar, 10);
+    case inter_53:com_38 : return(adamantite_bar, 5);
+    case inter_53:com_39 : return(adamantite_bar, 1);
+    case inter_53:com_40 :
+        p_countdialog;
+        return(runite_bar, last_int);
+    case inter_53:com_41 : return(runite_bar, 10);
+    case inter_53:com_42 : return(runite_bar, 5);
+    case inter_53:com_43 : return(runite_bar, 1);
+    case default : return(null, 0);
+}
+
+[if_close,inter_53]
+if(p_finduid(uid) = true) {
+    %weakqueue_map_clock = map_clock;
+}
+
+// EASCape: one bar, then the next after a tick's pause (one every 5 ticks, as 2009scape's
+// SmeltingPulse and Void's Furnace); stops when the count is done, the ore runs out, or you move or
+// open something (weak queue)
+[label,smelt_bar](namedobj $bar, int $amt)
+def_struct $struct = oc_param($bar, smelting_struct);
+if ($struct = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
 if (stat(smithing) < struct_param($struct, levelrequired)) {
     ~mesbox(struct_param($struct, levelfailure));
     return;
 }
-def_int $primary_total = inv_total(inv, struct_param($struct, ingredient));
-def_int $secondary_total = inv_total(inv, struct_param($struct, ingredient_secondary));
-// If not enough ores
-if ($primary_total < struct_param($struct, bar_count)) {
+if (inv_total(inv, struct_param($struct, ingredient)) < struct_param($struct, bar_count)
+  | inv_total(inv, struct_param($struct, ingredient_secondary)) < struct_param($struct, ingredient_secondary_count)) {
     ~mesbox(struct_param($struct, processfailure));
     return;
 }
-if ($secondary_total < struct_param($struct, ingredient_secondary_count)) {
-    ~mesbox(struct_param($struct, processfailure));
+@smelt_bar_once($bar, $amt);
+
+[queue,smelt_bar_next](namedobj $bar, int $amt)
+def_struct $struct = oc_param($bar, smelting_struct);
+if (stat(smithing) < struct_param($struct, levelrequired)) return;
+if (inv_total(inv, struct_param($struct, ingredient)) < struct_param($struct, bar_count)) {
+    mes(struct_param($struct, queueore_primary));
     return;
 }
+if (inv_total(inv, struct_param($struct, ingredient_secondary)) < struct_param($struct, ingredient_secondary_count)) {
+    mes(struct_param($struct, queueore_secondary));
+    return;
+}
+@smelt_bar_once($bar, $amt);
+
+[label,smelt_bar_once](namedobj $bar, int $amt)
+def_struct $struct = oc_param($bar, smelting_struct);
 // macro event
 if (afk_event = ^true) {
     ~macro_event_general_spawn(~macro_event_set_random);
@@ -76,45 +213,45 @@ if (afk_event = ^true) {
 }
 anim(human_furnace, 0);
 sound_synth(furnace, 1, 0);
-
 // display process message
 mes(struct_param($struct, processmessage));
-
 p_delay(3);
-
+if (inv_total(inv, struct_param($struct, ingredient)) < struct_param($struct, bar_count)
+  | inv_total(inv, struct_param($struct, ingredient_secondary)) < struct_param($struct, ingredient_secondary_count)) {
+    return;
+}
 // delete main ore
 inv_del(inv, struct_param($struct, ingredient), struct_param($struct, bar_count));
 // delete secondary ore
 if (struct_param($struct, ingredient_secondary) ! null) {
     inv_del(inv, struct_param($struct, ingredient_secondary), struct_param($struct, ingredient_secondary_count));
 }
-
+def_boolean $made = true;
 if ($bar = iron_bar) {
     // if player is wearing ring of forging
     if (inv_total(worn, ring_of_forging) > 0 & map_members = ^true) {
         ~lose_charge_ring_of_forging;
     } else if (randominc(1) = 1) { // else assume 50% chance of success
         mes("The ore is too impure and you fail to refine it.");
-        return;
+        $made = false;
     }
 }
-
-// If player is wearing gold smith gauntlets, 2.5x xp. The multiplier was 1.5x in RSC,
-// earliest mention of 2.5x (56.2) xp is in aug 2004: https://web.archive.org/web/20040820223401/http://runevillage.net/ThePub/viewtopic.php?p=1257194&amp
-// No mentioned updates to Family Crest or the gauntlets in that period. 
-// Was likely changed when ported to rs2.
-def_int $xp = struct_param($struct, productexp);
-if ($bar = gold_bar & inv_total(worn, gauntlets_of_goldsmithing) > 0) {
-    $xp = scale(5, 2, $xp); // 2.5x
+if ($made = true) {
+    // If player is wearing gold smith gauntlets, 2.5x xp. The multiplier was 1.5x in RSC,
+    // earliest mention of 2.5x (56.2) xp is in aug 2004: https://web.archive.org/web/20040820223401/http://runevillage.net/ThePub/viewtopic.php?p=1257194&amp
+    // No mentioned updates to Family Crest or the gauntlets in that period.
+    // Was likely changed when ported to rs2.
+    def_int $xp = struct_param($struct, productexp);
+    if ($bar = gold_bar & inv_total(worn, gauntlets_of_goldsmithing) > 0) {
+        $xp = scale(5, 2, $xp); // 2.5x
+    }
+    stat_advance(smithing, $xp);
+    inv_add(inv, $bar, 1);
+    mes(struct_param($struct, productmessage));
 }
-
-stat_advance(smithing, $xp);
-
-// add bar
-inv_add(inv, $bar, 1);
-// display product message
-mes(struct_param($struct, productmessage));
-//----------------------------
+$amt = sub($amt, 1);
+if ($amt < 1) return;
+weakqueue*(smelt_bar_next, 1)($bar, $amt);
 
 //************* WEAKQUEUES DIDNT EXIST UNTIL SEPT 2004 *************
 // //--- This label is jumped to when ore -> furnace
