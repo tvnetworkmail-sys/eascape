@@ -5,6 +5,22 @@
 [if_button,leather_crafting:com_125] @craft_leather(leather_chaps);
 [if_button,leather_crafting:com_128] @craft_leather(coif);
 [if_button,leather_crafting:com_131] @craft_leather(leather_cowl);
+// EASCape: the window's Make 5 and Make 10 options (the cache's; "make five" and "make ten" on
+// leather crafting since 27 Sep 2004, Update:Skills, Duels and the Kalphite) did nothing before
+[if_button,leather_crafting:com_112] @craft_leather_n(leather_armour, 5);
+[if_button,leather_crafting:com_111] @craft_leather_n(leather_armour, 10);
+[if_button,leather_crafting:com_115] @craft_leather_n(leather_gloves, 5);
+[if_button,leather_crafting:com_114] @craft_leather_n(leather_gloves, 10);
+[if_button,leather_crafting:com_118] @craft_leather_n(leather_boots, 5);
+[if_button,leather_crafting:com_117] @craft_leather_n(leather_boots, 10);
+[if_button,leather_crafting:com_121] @craft_leather_n(leather_vambraces, 5);
+[if_button,leather_crafting:com_120] @craft_leather_n(leather_vambraces, 10);
+[if_button,leather_crafting:com_124] @craft_leather_n(leather_chaps, 5);
+[if_button,leather_crafting:com_123] @craft_leather_n(leather_chaps, 10);
+[if_button,leather_crafting:com_127] @craft_leather_n(coif, 5);
+[if_button,leather_crafting:com_126] @craft_leather_n(coif, 10);
+[if_button,leather_crafting:com_130] @craft_leather_n(leather_cowl, 5);
+[if_button,leather_crafting:com_129] @craft_leather_n(leather_cowl, 10);
 [if_button,leather_crafting:com_89] if_close;
 
 [opheldu,needle]
@@ -14,7 +30,7 @@ switch_obj (last_useitem)
     case thread : ~chatplayer("<p,happy>Perhaps I should use a needle with a piece of leather instead.");
     case leather : @craft_leather_interface;
     case elid_robetop_torn, elid_robebottoms_torn : @elid_mend(last_useitem); // EASCape: Spirits of the Elid (quest_elid/elid_nardah.rs2)
-    case hard_leather : @craft_leather(hardleather_body);
+    case hard_leather : @craft_hard_leather;
     case dragon_leather, dragon_leather_blue, dragon_leather_red, dragon_leather_black : @craft_dhide_interface(last_useslot);
     case village_snake_skin : @tbw_snakeskin_menu; // EASCape: Tai Bwo Wannai Clean-Up (minigames/game_tbw_cleanup/tbw_items.rs2)
     case default : ~displaymessage(^dm_default);
@@ -27,7 +43,7 @@ if (last_useitem = needle) {
 ~displaymessage(^dm_default);
 
 [opheldu,hard_leather]
-if (last_useitem = needle) @craft_leather(hardleather_body);
+if (last_useitem = needle) @craft_hard_leather;
 ~displaymessage(^dm_default);
 
 [opheldu,dragon_leather]
@@ -61,6 +77,25 @@ if (last_useitem = needle) {
 //p_stopaction;
 if_close;
 def_boolean $made = ~craft_leather_once($product);
+
+// EASCape: Make 5 / Make 10 from the leather window, one every 3 ticks like the dragonhide menu
+[label,craft_leather_n](namedobj $product, int $amt)
+if_close;
+if (~craft_leather_once($product) = false) return;
+if ($amt > 1) weakqueue*(craft_leather_x, 3)($product, sub($amt, 1));
+
+// EASCape: hard leather gets the one-item make menu (Make 1, 5, X, All: the cache's skillmulti1,
+// as 2006Scape has it) when you have more than one; with one it's made straight away, as Cook-X
+// did (Update:Cook-X, 12 Sep 2005). Was one body a click.
+[label,craft_hard_leather]
+def_int $amt = 1;
+if (inv_total(inv, hard_leather) > 1) {
+    def_namedobj $choice;
+    $choice, $amt = ~skill_multi1_header("How many would you like to make?", hardleather_body, 200);
+    if ($choice = null | $amt < 1) return;
+}
+if (~craft_leather_once(hardleather_body) = false) return;
+if ($amt > 1) weakqueue*(craft_leather_x, 3)(hardleather_body, sub($amt, 1));
 
 // EASCape: one item from the leather (false if it can't be made); shared by the leather window and
 // the dragonhide make menu
@@ -102,6 +137,7 @@ if (%thread_used > 4) {
     %thread_used = 0;
 }
 inv_del(inv, $leather, $leather_count);
+anim(human_leather_crafting, 0); // ours: the cache's needle animation (the 274 scripts had none)
 
 inv_add(inv, $product, 1);
 stat_advance(crafting, db_getfield($product_data, craft_leather_table:productexp, 0));
@@ -110,6 +146,15 @@ return(true);
 
 // EASCape: the 2005 dragonhide make menu (Make 1, 5, 10, X): one every 3 ticks while you can
 [queue,craft_leather_x](namedobj $product, int $amt)
+if (inv_total(inv, needle) < 1) return; // ours
+// out of leather: stop without the "not enough leather" message (ours)
+db_find(craft_leather_table:product, $product);
+def_dbrow $data = db_findnext;
+if ($data = null) return;
+def_namedobj $leather;
+def_int $leather_count;
+$leather, $leather_count = db_getfield($data, craft_leather_table:leather, 0);
+if (inv_total(inv, $leather) < $leather_count) return;
 if (~craft_leather_once($product) = false) return;
 $amt = sub($amt, 1);
 if ($amt < 1) return;

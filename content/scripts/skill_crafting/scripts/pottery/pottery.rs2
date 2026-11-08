@@ -43,29 +43,38 @@ p_delay(1); // 2 ticks
 mes("You now have some soft workable clay.");
 
 [label,craft_pottery_interface]
-// EASCape: the wheel's picture menu (multiobj3) isn't in our cache, so it's a list; the plant pot
-// (Crafting 19, for Farming's saplings: pottery.struct plantpot_unfired) is on it too (ours)
-def_namedobj $choice = null;
-// EASCape: pot lids once Tassie has shown you how (One Small Favour, quest_favour/osf_step3.rs2)
-def_string $last = "Nothing";
-if (%onesmallfavour >= 200) $last = "Pot lid";
-switch_int (~p_choice5("Pot", 1, "Pie Dish", 2, "Bowl", 3, "Plant pot", 4, $last, 5)) {
-    case 5 :
-        if (%onesmallfavour >= 200) $choice = potlid_unfired;
-    case 1 : $choice = pot_unfired;
-    case 2 : $choice = piedish_unfired;
-    case 3 : $choice = bowl_unfired;
-    case 4 : $choice = plantpot_unfired;
+// EASCape: the make menu (Make 1, 5, 10 and X), the cache's skillmulti4 (pot, pie dish, bowl, plant
+// pot) or skillmulti5 once you can make pot lids. Pottery wheels have had make five, ten and X
+// since 27 Sep 2004 (Update:Skills, Duels and the Kalphite); 2006Scape's wheel uses this five-item
+// screen. Was a text list (the 2004 three-picture menu isn't in our cache). The plant pot (Crafting
+// 19, for Farming's saplings) is on it too; pot lids once Tassie has shown you how (One Small
+// Favour, quest_favour/osf_step3.rs2)
+def_namedobj $choice;
+def_int $amt;
+if (%onesmallfavour >= 200) {
+    $choice, $amt = ~skill_multi5_header("What would you like to make?",
+        pot_unfired, 0, 0, 120, "\\n\\n\\n\\nPot",
+        piedish_unfired, 0, 0, 150, "\\n\\n\\n\\nPie Dish",
+        bowl_unfired, 0, 0, 150, "\\n\\n\\n\\nBowl",
+        plantpot_unfired, 0, 0, 120, "\\n\\n\\n\\nPlant pot",
+        potlid_unfired, 0, 0, 150, "\\n\\n\\n\\nPot lid"
+    );
+} else {
+    $choice, $amt = ~skill_multi4_header("What would you like to make?",
+        pot_unfired, 120, "\\n\\n\\n\\nPot",
+        piedish_unfired, 150, "\\n\\n\\n\\nPie Dish",
+        bowl_unfired, 150, "\\n\\n\\n\\nBowl",
+        plantpot_unfired, 120, "\\n\\n\\n\\nPlant pot"
+    );
 }
-if ($choice = null) {
+if ($choice = null | $amt < 1) {
     return;
 }
-@craft_pottery($choice);
+@craft_pottery($choice, $amt);
 
-// osrs is a weak queue that sets and checks %action_delay.
-// if %action_delay is under a certain point then it gives a roll
-// Before sep 2004, it was likely just a p_delay()
-[label,craft_pottery](namedobj $item)
+// one every 3 ticks while you have soft clay (Void's Pottery: weakQueue 3, its "You make the clay
+// into a ..." message); was one a click with a 2-tick delay
+[label,craft_pottery](namedobj $item, int $amt)
 if_close;
 def_struct $struct = oc_param($item, crafting_pottery_struct);
 def_string $name = lowercase(oc_name($item));
@@ -73,16 +82,30 @@ def_string $name = lowercase(oc_name($item));
 def_int $level = struct_param($struct, levelrequire);
 if (stat(crafting) < $level)
 {
-    ~objbox($item, "You need a Crafting level of <tostring($level)> to make a <$name>.", 250, 0, divide(^objbox_height, 2));
+    ~objbox($item, "You need a Crafting level of <tostring($level)> to make a <substring($name, 8, string_length($name))>.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+if (inv_total(inv, softclay) < 1) {
+    mes("You need some soft clay to make that."); // ours
     return;
 }
 sound_synth(pottery, 1, 0);
 anim(human_potterywheel, 0);
-p_delay(2);
+weakqueue*(craft_pottery_next, 3)($item, $amt);
+
+[queue,craft_pottery_next](namedobj $item, int $amt)
+if (inv_total(inv, softclay) < 1) return;
+def_struct $struct = oc_param($item, crafting_pottery_struct);
+def_string $name = lowercase(oc_name($item));
 inv_del(inv, softclay, 1);
 inv_add(inv, $item, 1);
 stat_advance(crafting, struct_param($struct, processexp));
 mes("You make the clay into a <substring($name, 8, string_length($name))>.");
+$amt = sub($amt, 1);
+if ($amt < 1 | inv_total(inv, softclay) < 1) return;
+sound_synth(pottery, 1, 0);
+anim(human_potterywheel, 0);
+weakqueue*(craft_pottery_next, 3)($item, $amt);
 
 // No level req for some reason (does have a success chance though)
 [label,fire_pottery](int $last)

@@ -94,7 +94,7 @@ stat_heal(hitpoints, 12, 0);
 
 // ------------------------------------------------------------------------------- snakeskin
 // a needle on snakeskin: boots, vambraces, bandana, chaps or body (tbw_cleanup.dbrow); thread as
-// for leather. Ours: the five-item make menu, one piece a click like the other leather.
+// for leather. Ours: the five-item make menu (Make 1, 5, 10, X), like dragonhide.
 
 [opheldu,village_snake_skin]
 if (last_useitem = needle) @tbw_snakeskin_menu;
@@ -121,7 +121,9 @@ $product, $count = ~skill_multi5_header("What would you like to make?",
 if ($product = null | $count < 1) {
     return;
 }
-@craft_leather($product);
+// Make 1, 5, 10 and X make that many, one every 3 ticks, like the dragonhide menu (was one a click)
+if (~craft_leather_once($product) = false) return;
+if ($count > 1) weakqueue*(craft_leather_x, 3)($product, sub($count, 1));
 
 // tanning: Ellis (Al Kharid) tans snake hide for 15 coins (2006Scape's tanner; the 2006 tanning
 // screen has no snakeskin, so ours: use the hide on him)
