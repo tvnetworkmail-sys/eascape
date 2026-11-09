@@ -17,6 +17,8 @@ if (last_useitem = mourning_toxic_naphtha) { // EASCape: Mourning's End Part I (
 }
 if(oc_param(last_useitem, unlit_arrow) = ^true) { // might not work on every fire?
     @light_firearrow(last_useitem);
+} else if (~in_tutorial_island(coord) = true) { // Lost City 274 (lost in the merge): the tutorial's own cooking
+    @tut_attempt_cook_item(last_useitem);
 } else {
     @attempt_cook_item(last_useitem);
 }

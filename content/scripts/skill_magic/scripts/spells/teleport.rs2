@@ -115,6 +115,10 @@ if(inv_total(inv, mm_monkey_in_backpack) > 0) {
 ~hauntedmine_fungus_crumble;
 
 [proc,pre_tele_checks](coord $coord)(boolean)
+if (~in_tutorial_island(coord) = true) { // Lost City 274
+    ~mesbox("You cannot teleport from Tutorial Island!"); // https://youtu.be/tt38tH6X30E?t=64
+    return(false);
+}
 // EASCape: Ghosts Ahoy's ghost disguise (Void GhostsAhoy.kt blockTeleports)
 if (inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheet | inv_getobj(worn, ^wearpos_hat) = ahoy_bedsheetgreen) {
     mes("Please remove your ghost disguise before teleporting.");

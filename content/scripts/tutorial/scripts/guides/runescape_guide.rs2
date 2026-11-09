@@ -8,13 +8,8 @@ switch_int(%tutorial) {
 }
 
 [label,newbie_basics_instructor_welcome]
-if (map_live = false) {
-    ~chatnpc("<p,neutral>Do you want to skip the tutorial?");
-    def_int $choice = ~p_choice2("Yes please.", 1, "No, thank you.", 2);
-    if ($choice = 1) {
-        %tutorial = ^tutorial_complete;
-        @tutorial_complete;
-    }
+if (~newbie_basics_instructor_offer_skip = true) {
+    @tutorial_complete;
 }
 
 ~chatnpc("<p,neutral>Greetings! I see you are a new arrival to this land.|My job is to welcome all new visitors. So welcome!");
@@ -35,6 +30,9 @@ if (map_live = false) {
 //~chatnpc("<p,neutral>You will notice a flashing icon of a spanner.|Please click on this to continue the tutorial.");
 
 [label,newbie_basics_instructor_return]
+if (~newbie_basics_instructor_offer_skip = true) {
+    @tutorial_complete;
+}
 ~chatnpc("<p,neutral>Welcome back. You have already learnt the first thing needed to succeed in this world: talking to other people!");
 ~chatnpc("<p,neutral>You will find many inhabitants of this world have useful things to say to you. By clicking on them, you can talk to them.");
 ~chatnpc("<p,neutral>To continue the tutorial go through that door over there, and speak to your first instructor!");
@@ -45,3 +43,18 @@ if (%tutorial < ^newbie_basics_instructor_interact_with_scenery) {
       hint_npc;
     }
 }
+
+// EASCape (ours): the RuneScape Guide always offers to skip the tutorial (Lost City only offered it on
+// test worlds, map_live = false); skipping ends it as the Magic Instructor does, in Lumbridge with the
+// tutorial's starting items
+[proc,newbie_basics_instructor_offer_skip]()(boolean)
+~chatnpc("<p,neutral>Do you want to skip the tutorial?");
+def_int $choice = ~p_choice2("Yes please.", 1, "No, thank you.", 2);
+if ($choice = 1) {
+    ~mesbox("If you skip the tutorial you will be taken straight to Lumbridge. You cannot come back to Tutorial Island.");
+    $choice = ~p_choice2("Skip the tutorial.", 1, "Stay on Tutorial Island.", 2);
+    if ($choice = 1) {
+        return(true);
+    }
+}
+return(false);
