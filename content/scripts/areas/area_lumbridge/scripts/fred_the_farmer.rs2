@@ -5,6 +5,8 @@ if(%sheep = ^sheep_not_started) {
     @fred_start;
 } else if(%sheep >= ^sheep_started & %sheep <= ^sheep_last_wool) {
     @fred_progressed;
+} else if(%sheep = calc(^sheep_last_wool + 1)) { // EASCape: players left at 21 by the old hand-in already gave all 20 balls
+    queue(sheep_complete, 0, 0);
 } else {
     @fred_post_quest;
 }
@@ -197,7 +199,9 @@ if(inv_total(inv, ball_of_wool) > 0) {
 
 [label,fred_give_wool]
 if_close;
-def_int $balls_left = calc(21 - %sheep);
+// EASCape fix: hand over up to the 19th ball here and keep the last one for "That's the last of them"
+// (Lost City 377 took all 20, leaving %sheep at 21: past the quest's range, so it never finished)
+def_int $balls_left = calc(^sheep_last_wool - %sheep);
 def_int $balls = min(inv_total(inv, ball_of_wool), $balls_left);
 inv_del(inv, ball_of_wool, $balls);
 
