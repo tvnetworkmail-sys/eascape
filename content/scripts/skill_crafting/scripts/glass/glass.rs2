@@ -94,7 +94,7 @@ if_openmain(glass_crafting);
 [if_button,glass_crafting:com_37] @crafting_glass_count(fishbowl_empty, 1);
 
 [label,crafting_glass_x](namedobj $glass_item)
-if_close;
+// the amount box goes over the glassblowing window (closing it first cancelled the box); crafting_glass_count closes it
 p_countdialog;
 if (last_int < 1) return;
 @crafting_glass_count($glass_item, last_int);
