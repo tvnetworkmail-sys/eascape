@@ -4,6 +4,11 @@
 [opnpc1,edmond_bottom]
 @edmond_dialogue;
 
+// EASCape: the Edmond in the sewer is the plain edmond (Lost City 274/289's spawn); edmond_bottom only
+// shows when a flag nothing sets is on, so he gets the same dialogue
+[opnpc1,edmond]
+@edmond_dialogue;
+
 [label,edmond_dialogue]
 switch_int(%elenaquest) {
     case ^quest_elena_not_started :
@@ -36,6 +41,7 @@ switch_int(%elenaquest) {
         ~chatnpc("<p,neutral>That's done the job.");
         ~chatnpc("<p,neutral>Remember to always wear the gasmask,|otherwise you'll die over there for certain...|Please bring my Elena back safe and sound.");
         ~quest_elena_set_progress(^quest_elena_opened_pipe);
+        %plaguecity_pipe = 2; // EASCape: the grill and rope are gone from the pipe
     case ^quest_elena_opened_pipe, ^quest_elena_shown_picture, ^quest_elena_returned_book, ^quest_elena_spoken_martha_ted, ^quest_elena_spoke_to_milli, ^quest_elena_spoke_to_plague_house, ^quest_elena_spoke_to_clerk, ^quest_elena_spoke_to_bravek, ^quest_elena_spoke_cured_bravek :
         ~chatplayer("<p,neutral>Hello.");
         ~chatnpc("<p,quiz>Have you found <nc_name(elena2)> yet?");

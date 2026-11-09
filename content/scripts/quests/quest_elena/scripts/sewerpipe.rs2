@@ -1,4 +1,10 @@
-[oploc1,plaguesewerpipe]
+// EASCape: in this map the pipe is plaguesewerpipe_open with the plague_grill in front of it (Lost City
+// 274's plaguesewerpipe isn't placed), so the grill's Open and the pipe's Climb-up both lead here
+[oploc1,plague_grill] @elena_sewerpipe;
+[oploc1,plaguesewerpipe_open] @elena_sewerpipe;
+[oploc1,plaguesewerpipe] @elena_sewerpipe;
+
+[label,elena_sewerpipe]
 switch_int(%elenaquest) {
     case ^quest_elena_opened_tunnel, ^quest_elena_tied_rope : ~mesbox("The grill is too secure.|You can't pull it off alone.");
     case ^quest_elena_opened_pipe, ^quest_elena_shown_picture, ^quest_elena_returned_book, ^quest_elena_spoken_martha_ted, ^quest_elena_spoke_to_milli, ^quest_elena_spoke_to_plague_house, ^quest_elena_spoke_to_clerk, ^quest_elena_spoke_to_bravek, ^quest_elena_spoke_cured_bravek, ^quest_elena_freed_elena :
@@ -23,6 +29,7 @@ switch_int(%elenaquest) {
             case rope :
                 ~quest_elena_set_progress(^quest_elena_tied_rope);
                 inv_del(inv, rope, 1);
+                %plaguecity_pipe = 1; // EASCape: show the rope tied to the grill
                 ~mesbox("You tie the end of the rope to the sewer pipe's grill and hold the other end in your hand.");
             case default : ~displaymessage(^dm_default);
         }
@@ -31,7 +38,7 @@ switch_int(%elenaquest) {
 
 [label,elena_climb_through_sewerpipe]
 // Enter tube
-~forcewalk2(movecoord(loc_coord, 0, 0, 1));
+~forcewalk2(movecoord(^quest_elena_sewer_sewerpipe_coord, 0, 0, 1)); // EASCape: in front of the grill, whichever part was clicked
 if(%elena_pipe_used >= map_clock) {
     mes("The pipe is being used"); 
     return;
