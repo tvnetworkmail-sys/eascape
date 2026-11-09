@@ -277,7 +277,12 @@
       }
       if (dying.has(key) || !target || target.index !== n.index || target.kind !== kind) continue;
       dying.add(key);
-      const k = { index: n.index, name: strip(n.name), level: n.level, x: g.baseX + (n.x >> 7), y: g.baseZ + (n.z >> 7), size: n.size || 1, time: now, items: new Map(), lastNew: 0 };
+      // loot lands on the monster's south-west tile (the server's npc_coord); n.x/n.z is its
+      // centre, which for a big monster (a size 4 dragon) is two tiles further in
+      const size = n.size || 1;
+      const swX = typeof n.trueX === 'number' ? n.trueX : (n.x - size * 64) >> 7;
+      const swZ = typeof n.trueZ === 'number' ? n.trueZ : (n.z - size * 64) >> 7;
+      const k = { index: n.index, name: strip(n.name), level: n.level, x: g.baseX + swX, y: g.baseZ + swZ, size, time: now, items: new Map(), lastNew: 0 };
       k.before = groundAround(g, k);
       kills.push(k);
       target = null;
