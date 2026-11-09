@@ -33,13 +33,13 @@ module.exports = function chatNotifications(ctx) {
     const from = m.name || '';
     if (me && from && from.toLowerCase() === me.toLowerCase()) return; // your own lines
     const said = from ? `${from}: ${m.text}` : m.text;
-    if (m.kind === 'trade' && ctx.config('notifyOnTrade')) return ctx.notify('EASCape', `${from} wishes to trade with you.`);
-    if (m.kind === 'duel' && ctx.config('notifyOnDuel')) return ctx.notify('EASCape', `${from} wishes to duel with you.`);
-    if (m.kind === 'private' && ctx.config('notifyOnPM')) return ctx.notify('EASCape', `From ${from}: ${m.text}`);
+    if (m.kind === 'trade' && ctx.config('notifyOnTrade')) return ctx.notify('2006RS', `${from} wishes to trade with you.`);
+    if (m.kind === 'duel' && ctx.config('notifyOnDuel')) return ctx.notify('2006RS', `${from} wishes to duel with you.`);
+    if (m.kind === 'private' && ctx.config('notifyOnPM')) return ctx.notify('2006RS', `From ${from}: ${m.text}`);
     if (m.kind === 'private-sent') return;
-    if (me && ctx.config('notifyOnOwnName') && m.kind !== 'game' && hasWord(m.text, me)) return ctx.notify('EASCape', said);
+    if (me && ctx.config('notifyOnOwnName') && m.kind !== 'game' && hasWord(m.text, me)) return ctx.notify('2006RS', said);
     if (ctx.config('notifyOnHighlight')) {
-      if (words().some((w) => hasWord(m.text, w)) || regexes().some((r) => r.test(m.text))) ctx.notify('EASCape', said);
+      if (words().some((w) => hasWord(m.text, w)) || regexes().some((r) => r.test(m.text))) ctx.notify('2006RS', said);
     }
   }
 

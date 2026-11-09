@@ -428,7 +428,7 @@ function notify(title, body) {
   }
   try {
     if (Notification.isSupported()) {
-      const n = new Notification({ title: String(title || 'EASCape').slice(0, 80), body: String(body || '').slice(0, 300), silent: !core('notificationSound') });
+      const n = new Notification({ title: String(title || '2006RS').slice(0, 80), body: String(body || '').slice(0, 300), silent: !core('notificationSound') });
       n.on('click', () => {
         if (win) {
           if (win.isMinimized()) win.restore();

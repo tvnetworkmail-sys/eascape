@@ -31,7 +31,7 @@ module.exports = function idleNotifier(ctx) {
 
   const opt = (k) => ctx.config(k);
   const who = () => name || 'You';
-  const send = (text) => ctx.notify('EASCape', text);
+  const send = (text) => ctx.notify('2006RS', text);
 
   function onInput() {
     lastInput = Date.now();
