@@ -116,7 +116,12 @@ if(%grandtree = ^grandtree_complete) {
 }
 
 // EASCape: One Small Favour comes first when it has something to say (quest_favour/osf_hooks.rs2)
-[opnpc1,pilot_white_wolf] @osf_hook_pilot_white_wolf;
+[opnpc1,pilot_white_wolf]
+// EASCape: Treasure Trail (hard)
+if(map_members = ^true & inv_total(inv, trail_clue_hard_riddle021) > 0) {
+    @trail_hard_puzzle_npc(trail_clue_hard_riddle021, trail_clue_hard_riddle021_puzzlebox, "Captain Bleemadge");
+}
+@osf_hook_pilot_white_wolf;
 [label,osf_orig_pilot_white_wolf]
 if(%grandtree = ^grandtree_complete) {
     @multi2("Can you take me on the glider?", return_grand_tree, "I'll leave you to it.", gnome_pilot_leave);

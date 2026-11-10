@@ -43,3 +43,20 @@ if(~trail_clue_hard_complete = true) {
     inv_add(inv, ~trail_clue_hard_getrandom, 1);
     ~objbox(trail_clue_hard_map001, "You've found another clue scroll!", 250, 0, 0);
 }
+
+// EASCape: hard steps where someone hands over a puzzle box and takes it back solved (Oziach's
+// script, minus his own lines). Hamid, Heckel Funch, the gnome trainers, Captain Bleemadge and
+// the Exam Centre examiners had no clue lines (OSRS wiki: Treasure Trails/Guide/Cryptic clues/Hard)
+[label,trail_hard_puzzle_npc](namedobj $clue, namedobj $box, string $name)
+if(inv_total(inv, $box) > 0) {
+    if(~trail_puzzle_complete($box) = true) {
+        ~chatnpc("<p,neutral>Well done, traveller.");
+        inv_del(inv, $box, 1);
+        ~progress_clue_hard($clue, "<$name> has given you another clue scroll!");
+        return;
+    }
+    ~chatnpc("<p,neutral>That isn't right, keep trying.");
+    return;
+}
+~chatnpc("<p,neutral>The solving of this puzzle could be the key to your treasure.");
+~give_trail_puzzle($box, "<$name> has given you a puzzle box!");

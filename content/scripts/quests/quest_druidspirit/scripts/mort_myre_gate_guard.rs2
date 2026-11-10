@@ -1,4 +1,10 @@
 [opnpc1,mort_myre_gate_guard]
+// EASCape: Treasure Trail (medium), like Brimstail's anagram
+if(map_members = ^true & inv_total(inv, trail_clue_medium_anagram016) > 0) {
+    ~chatnpc("<p,happy>Well done!");
+    ~progress_clue_medium(trail_clue_medium_anagram016, "Ulizius has given you another clue scroll!");
+    return;
+}
 ~chatplayer("<p,neutral>Hello there.");
 ~chatnpc("<p,scared>What... Oh, don't creep up on me like that... I thought you were a Ghast!");
 ~chatplayer("<p,neutral>Can I go through the gate please?");

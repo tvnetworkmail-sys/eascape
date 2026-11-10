@@ -1,6 +1,12 @@
 [oploc1,_empty_crate]
 // Treasure Trail
 if(map_members = ^true) {
+    // EASCape: any search clue (trail_loc) whose spot is this one, the way chests already worked
+    // (21 easy, medium and hard drawer, crate and box steps had nothing that gave the next clue)
+    def_obj $trail_clue = ~trail_getclue_inv;
+    if($trail_clue ! null & oc_param($trail_clue, trail_loc) = ^true & oc_param($trail_clue, trail_coord) = loc_coord) {
+        @trail_clue_loc_interact($trail_clue);
+    }
     if(loc_coord = 1_50_50_28_12 & inv_total(inv, trail_clue_easy_simple002) = 1) {
         ~trail_clue_easy_loc_interact(trail_clue_easy_simple002);
         return;
@@ -63,6 +69,12 @@ mes("You search the crates but find nothing of value.");
 [oploc1,_empty_boxes]
 // Treasure Trail
 if(map_members = ^true) {
+    // EASCape: any search clue (trail_loc) whose spot is this one, the way chests already worked
+    // (21 easy, medium and hard drawer, crate and box steps had nothing that gave the next clue)
+    def_obj $trail_clue = ~trail_getclue_inv;
+    if($trail_clue ! null & oc_param($trail_clue, trail_loc) = ^true & oc_param($trail_clue, trail_coord) = loc_coord) {
+        @trail_clue_loc_interact($trail_clue);
+    }
     if(loc_coord = 0_50_50_45_45 & inv_total(inv, trail_clue_easy_simple003) = 1) {
         ~trail_clue_easy_loc_interact(trail_clue_easy_simple003);
         return;

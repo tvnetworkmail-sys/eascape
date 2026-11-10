@@ -43,6 +43,12 @@ if(loc_coord = 1_40_51_14_62 & last_useitem = trail_clue_medium_riddle002_key) {
 [oploc2,_empty_drawer]
 // Treasure Trail
 if(map_members = ^true) {
+    // EASCape: any search clue (trail_loc) whose spot is this one, the way chests already worked
+    // (21 easy, medium and hard drawer, crate and box steps had nothing that gave the next clue)
+    def_obj $trail_clue = ~trail_getclue_inv;
+    if($trail_clue ! null & oc_param($trail_clue, trail_loc) = ^true & oc_param($trail_clue, trail_coord) = loc_coord) {
+        @trail_clue_loc_interact($trail_clue);
+    }
     if(loc_coord = 1_50_53_50_28 & inv_total(inv, trail_clue_easy_simple011) = 1) {
         ~trail_clue_easy_loc_interact(trail_clue_easy_simple011);
         return;
