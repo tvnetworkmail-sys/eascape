@@ -86,6 +86,19 @@ if(inv_total(inv, feather) < 4) {
     return;
 }
 
+// EASCape: sets of 6 every 2 ticks (Void arrowtip.recipes.toml's ogre arrows; ours for the feathering)
+def_int $amt = ~fletch_amount(ogre_headless_arrow, divide(add(min(divide(inv_total(inv, feather), 4), inv_total(inv, ogre_arrow_shaft)), 5), 6), "How many sets of 6 would you like to make?");
+if ($amt < 1) {
+    return;
+}
+@make_ogre_headless_set($amt);
+
+[queue,make_ogre_headless_next](int $left) @make_ogre_headless_set($left);
+
+[label,make_ogre_headless_set](int $left)
+if (inv_total(inv, feather) < 4 | inv_total(inv, ogre_arrow_shaft) = 0) {
+    return;
+}
 def_int $feather_count = divide(min(inv_total(inv, feather), 24), 4);
 def_int $shaft_count = min(inv_total(inv, ogre_arrow_shaft), 6);
 def_int $arrow_count = min($feather_count, $shaft_count);
@@ -106,6 +119,9 @@ inv_del(inv, ogre_arrow_shaft, $arrow_count);
 inv_add(inv, ogre_headless_arrow, $arrow_count);
 
 stat_advance(fletching, multiply($arrow_count, 15));
+if ($left > 1) {
+    weakqueue*(make_ogre_headless_next, 2)(sub($left, 1));
+}
 
 
 [label,make_ogre_arrows]
@@ -119,6 +135,19 @@ if (%chompybird = ^chompybird_not_started) {
 }
 if (stat(fletching) < 5) {
     ~mesbox("You need a Fletching level of 5 to do that.");
+    return;
+}
+// EASCape: sets of 6 every 2 ticks (Void arrowtip.recipes.toml [ogre_arrow])
+def_int $amt = ~fletch_amount(ogre_arrow, divide(add(min(inv_total(inv, ogre_headless_arrow), inv_total(inv, wolfbone_arrowheads)), 5), 6), "How many sets of 6 would you like to make?");
+if ($amt < 1) {
+    return;
+}
+@make_ogre_arrows_set($amt);
+
+[queue,make_ogre_arrows_next](int $left) @make_ogre_arrows_set($left);
+
+[label,make_ogre_arrows_set](int $left)
+if (inv_total(inv, ogre_headless_arrow) = 0 | inv_total(inv, wolfbone_arrowheads) = 0) {
     return;
 }
 def_int $headless_count = min(inv_total(inv, ogre_headless_arrow), 6);
@@ -143,3 +172,6 @@ if (%chompybird ! ^chompybird_complete) {
 }
 
 stat_advance(fletching, multiply($arrow_count, 10));
+if ($left > 1) {
+    weakqueue*(make_ogre_arrows_next, 2)(sub($left, 1));
+}

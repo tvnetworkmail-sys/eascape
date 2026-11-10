@@ -33,7 +33,23 @@ if (stat(fletching) < $level) {
     return;
 }
 
-// make one bow at a time
+// EASCape: Make 1/5/X/All, one bow every 2 ticks (Void bow.recipes.toml: ticks = 2); was one bow at a time
+def_namedobj $bow;
+def_int $bow_count;
+$bow, $bow_count = db_getfield($data, fletching_table:product, 0);
+def_int $amt = ~fletch_amount($bow, min(inv_total(inv, $unstrung_bow), inv_total(inv, bow_string)), "How many bows would you like to string?");
+if ($amt < 1) {
+    return;
+}
+@string_bow_set($unstrung_bow, $amt);
+
+[queue,string_bow_next](obj $unstrung_bow, int $left) @string_bow_set($unstrung_bow, $left);
+
+[label,string_bow_set](obj $unstrung_bow, int $left)
+if (inv_total(inv, $unstrung_bow) = 0 | inv_total(inv, bow_string) = 0) {
+    return;
+}
+def_dbrow $data = ~get_fletching_data($unstrung_bow);
 inv_del(inv, $unstrung_bow, 1);
 inv_del(inv, bow_string, 1);
 // 2005-osrs, rsc
@@ -41,3 +57,6 @@ mes("You add a string to the bow.");
 
 stat_advance(fletching, db_getfield($data, fletching_table:experience, 0));
 inv_add(inv, db_getfield($data, fletching_table:product, 0));
+if ($left > 1) {
+    weakqueue*(string_bow_next, 2)($unstrung_bow, sub($left, 1));
+}
