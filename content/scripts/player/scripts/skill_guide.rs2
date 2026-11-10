@@ -42,12 +42,17 @@ $op, $guide = db_getfield($guides, skill_guide_ops:op, $page);
 
 // in case the interface was already open stop transmitting the last inv
 inv_stoptransmit(skill_guide:levelinv);
+inv_stoptransmit(skill_guide:levelinv2);
 
 // transmit the new inv
 def_inv $inv = db_getfield($guide, skill_guides:inv, 0);
 if ($inv ! null) {
     inv_transmit($inv, skill_guide:levelinv);
 }
+// EASCape: rows 31-40 (the interface's second inv), used by Crafting - Jewellery for onyx
+def_inv $inv2 = db_getfield($guide, skill_guides:inv2, 0);
+if ($inv2 = null) $inv2 = skill_guide_empty2;
+inv_transmit($inv2, skill_guide:levelinv2);
 
 def_int $members = ~stat_members($lookup);
 
