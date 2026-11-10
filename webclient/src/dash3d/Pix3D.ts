@@ -22,6 +22,8 @@ export default class Pix3D extends Pix2D {
     static texPal: (Int32Array | null)[] = new TypedArray1d(50, null);
     static numTextures: number = 0;
     static originX: number = 0;
+    // EASCape (from 2007scape): the projection's scale (512 = 1 << 9); larger while the SD view is drawn at a higher resolution (client/SdView.ts)
+    static zoom: number = 512;
     static originY: number = 0;
     static texelPool: (Int32Array | null)[] | null = null;
     static poolSize: number = 0;
@@ -1637,15 +1639,15 @@ export default class Pix3D extends Pix2D {
         const horizontalY: number = tyC - originY;
         const horizontalZ: number = tzC - originZ;
 
-        let u: number = (horizontalX * originY - horizontalY * originX) << 14;
+        let u: number = Math.imul(horizontalX * originY - horizontalY * originX, Pix3D.zoom << 5); // EASCape: (<< 14) the projection's zoom << 5
         const uStride: number = (horizontalY * originZ - horizontalZ * originY) << 8;
         const uStepVertical: number = (horizontalZ * originX - horizontalX * originZ) << 5;
 
-        let v: number = (verticalX * originY - verticalY * originX) << 14;
+        let v: number = Math.imul(verticalX * originY - verticalY * originX, Pix3D.zoom << 5); // EASCape: (<< 14) the projection's zoom << 5
         const vStride: number = (verticalY * originZ - verticalZ * originY) << 8;
         const vStepVertical: number = (verticalZ * originX - verticalX * originZ) << 5;
 
-        let w: number = (verticalY * horizontalX - verticalX * horizontalY) << 14;
+        let w: number = Math.imul(verticalY * horizontalX - verticalX * horizontalY, Pix3D.zoom << 5); // EASCape: (<< 14) the projection's zoom << 5
         const wStride: number = (verticalZ * horizontalY - verticalY * horizontalZ) << 8;
         const wStepVertical: number = (verticalX * horizontalZ - verticalZ * horizontalX) << 5;
 

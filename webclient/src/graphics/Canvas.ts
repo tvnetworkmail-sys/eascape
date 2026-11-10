@@ -1,7 +1,9 @@
 export const canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
 export const canvas2d: CanvasRenderingContext2D = canvas?.getContext('2d', {
     desynchronized: false,
-    alpha: false
+    // EASCape: alpha, so the SD increased-resolution view (client/SdView.ts) can show through the
+    // viewport; every pixel the client draws is opaque, so this changes nothing else
+    alpha: true
 })!;
 
 export function saveDataURL(dataURL: string, filename: string) {

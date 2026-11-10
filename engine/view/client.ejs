@@ -60,6 +60,24 @@
             image-rendering: pixelated;
         }
 
+        /* EASCape: full screen shows the game's box (#game), so the sharp 3D view under the canvas
+           (webclient SdView) comes with it; the canvas is fitted to the screen, keeping its shape */
+        #game:fullscreen, #game:-webkit-full-screen {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+        }
+
+        #game:fullscreen #canvas, #game:-webkit-full-screen #canvas {
+            width: min(100vw, calc(100vh * 765 / 503)) !important;
+            height: min(100vh, calc(100vw * 503 / 765)) !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+
         html:-webkit-full-screen {
             background-color: black !important;
         }
@@ -142,7 +160,7 @@
                     document.msExitFullscreen();
                 }
             } else {
-                let element = document.getElementById('canvas');
+                let element = document.getElementById('game'); // EASCape: was the canvas (see #game:fullscreen)
 
                 if (element.requestFullscreen) {
                     element.requestFullscreen();

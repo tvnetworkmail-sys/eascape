@@ -2,6 +2,11 @@ import { canvas2d } from '#/graphics/Canvas.js';
 import Pix2D from '#/graphics/Pix2D.js';
 
 export default class PixMap {
+    // EASCape (from 2007scape): in the PixMap whose pixels are `owner`, a rectangle where pixels equal to
+    // `copy` are made transparent, so the SD increased-resolution view under the canvas shows through
+    // (client/SdView.ts); it lapses if no new frame comes within a second
+    static hole: { owner: Int32Array; x: number; y: number; width: number; height: number; copy: Int32Array; age: number } | null = null;
+
     readonly data: Int32Array;
     private readonly width: number;
     private readonly height: number;
@@ -54,6 +59,20 @@ export default class PixMap {
         for (; i < len; i++) {
             const pixel = data[i];
             paint[i] = ((pixel & 0xff0000) >> 16) | (pixel & 0xff00) | ((pixel & 0xff) << 16) | 0xff000000;
+        }
+
+        const hole = PixMap.hole;
+        if (hole !== null && hole.owner === data && performance.now() - hole.age < 1000 && hole.x + hole.width <= this.width && hole.y + hole.height <= this.height) {
+            const copy = hole.copy;
+            let c = 0;
+            for (let y = 0; y < hole.height; y++) {
+                let p = (hole.y + y) * this.width + hole.x;
+                for (let x = 0; x < hole.width; x++, p++, c++) {
+                    if (data[p] === copy[c]) {
+                        paint[p] = 0;
+                    }
+                }
+            }
         }
     }
 }

@@ -124,7 +124,7 @@ export default class World {
     private static cy: number = 0;
     private static cz: number = 0;
 
-    private static click: boolean = false;
+    static click: boolean = false; // EASCape: read by client/SdView.ts
     static clickX: number = 0;
     static clickY: number = 0;
     static groundX: number = -1;
@@ -2000,14 +2000,14 @@ export default class World {
             return;
         }
 
-        const px0: number = Pix3D.originX + (((x0 << 9) / z0) | 0);
-        const py0: number = Pix3D.originY + (((y0 << 9) / z0) | 0);
-        const pz0: number = Pix3D.originX + (((x1 << 9) / z1) | 0);
-        const px1: number = Pix3D.originY + (((y1 << 9) / z1) | 0);
-        const py1: number = Pix3D.originX + (((x2 << 9) / z2) | 0);
-        const pz1: number = Pix3D.originY + (((y2 << 9) / z2) | 0);
-        const px3: number = Pix3D.originX + (((x3 << 9) / z3) | 0);
-        const py3: number = Pix3D.originY + (((y3 << 9) / z3) | 0);
+        const px0: number = Pix3D.originX + (((x0 * Pix3D.zoom) / z0) | 0);
+        const py0: number = Pix3D.originY + (((y0 * Pix3D.zoom) / z0) | 0);
+        const pz0: number = Pix3D.originX + (((x1 * Pix3D.zoom) / z1) | 0);
+        const px1: number = Pix3D.originY + (((y1 * Pix3D.zoom) / z1) | 0);
+        const py1: number = Pix3D.originX + (((x2 * Pix3D.zoom) / z2) | 0);
+        const pz1: number = Pix3D.originY + (((y2 * Pix3D.zoom) / z2) | 0);
+        const px3: number = Pix3D.originX + (((x3 * Pix3D.zoom) / z3) | 0);
+        const py3: number = Pix3D.originY + (((y3 * Pix3D.zoom) / z3) | 0);
 
         Pix3D.trans = 0;
 
@@ -2129,8 +2129,8 @@ export default class World {
                 Ground.drawTextureVertexZ[i] = z;
             }
 
-            Ground.drawVertexX[i] = Pix3D.originX + (((x << 9) / z) | 0);
-            Ground.drawVertexY[i] = Pix3D.originY + (((y << 9) / z) | 0);
+            Ground.drawVertexX[i] = Pix3D.originX + (((x * Pix3D.zoom) / z) | 0);
+            Ground.drawVertexY[i] = Pix3D.originY + (((y * Pix3D.zoom) / z) | 0);
         }
 
         Pix3D.trans = 0;

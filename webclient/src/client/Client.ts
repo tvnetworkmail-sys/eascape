@@ -51,6 +51,7 @@ import { canvas2d } from '#/graphics/Canvas.js';
 import { Colour } from '#/graphics/Colour.js';
 import Pix2D from '#/graphics/Pix2D.js';
 import Pix3D from '#/dash3d/Pix3D.js';
+import SdView from '#/client/SdView.js';
 import Model from '#/dash3d/Model.js';
 import Pix8 from '#/graphics/Pix8.js';
 import Pix32 from '#/graphics/Pix32.js';
@@ -4585,11 +4586,13 @@ export class Client extends GameShell {
         const cycle = Pix3D.cycle;
         Model.mouseCheck = true;
         Model.pickedCount = 0;
-        Model.mouseX = this.mouseX - 4;
-        Model.mouseY = this.mouseY - 4;
-
         Pix2D.cls();
+        // EASCape: SD increased resolution (from 2007scape): drawn at the size the viewport has on screen
+        SdView.begin(0, 0, 512, 334, 4, 4);
+        Model.mouseX = SdView.mouse(this.mouseX - 4);
+        Model.mouseY = SdView.mouse(this.mouseY - 4);
         this.world?.renderAll(this.camX, this.camY, this.camZ, level, this.camYaw, this.camPitch);
+        SdView.end();
         this.world?.removeSprites();
         this.entityOverlays();
         this.coordArrow();
