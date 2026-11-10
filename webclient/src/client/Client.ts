@@ -4594,11 +4594,14 @@ export class Client extends GameShell {
         this.world?.renderAll(this.camX, this.camY, this.camZ, level, this.camYaw, this.camPitch);
         SdView.end();
         this.world?.removeSprites();
+        // LostLite: world overlays (ground items, fishing spots, tile markers...) straight over the
+        // scene, under overhead chat, hitsplats and health bars, as RuneLite's ABOVE_SCENE layer;
+        // they had been drawn over players' chat
+        this.llHook()?.frame(this, 0);
         this.entityOverlays();
         this.coordArrow();
         this.textureRunAnims(cycle);
-        // LostLite: overlays under the open interface and the menu, then over them
-        this.llHook()?.frame(this, 0);
+        // LostLite: the overlays over the open interface and the menu come after it
         this.otherOverlays();
         this.llHook()?.frame(this, 1);
         this.areaGame?.draw(4, 4);
