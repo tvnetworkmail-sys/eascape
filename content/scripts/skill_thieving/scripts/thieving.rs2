@@ -177,6 +177,25 @@ if ($data = pickpocket_ham_member) { // EASCape: H.A.M. members (area_ham_hideou
 }
 def_int $count = calc(db_getfieldcount($data, pickpocket:loot) - 1);
 def_int $reward_rarity_denominator = 128;
+// EASCape: a table with loot_total (Master Farmers) gives one item, like Void's drop table roll
+if (db_getfieldcount($data, pickpocket:loot_total) > 0) {
+    def_int $pick = random(db_getfield($data, pickpocket:loot_total, 0));
+    def_int $i = 0;
+    while ($i <= $count) {
+        def_namedobj $item;
+        def_int $min;
+        def_int $max;
+        def_int $weight;
+        $item, $min, $max, $weight = db_getfield($data, pickpocket:loot, $i);
+        if ($pick < $weight) {
+            inv_add(inv, $item, ~random_range($min, $max));
+            return;
+        }
+        $pick = sub($pick, $weight);
+        $i = add($i, 1);
+    }
+    return;
+}
 while ($count >= 0) {
     def_namedobj $reward;
     def_int $reward_quantity_min;
@@ -227,6 +246,25 @@ while ($count >= 0) {
 [proc,trapped_chest_check_for_reward](dbrow $data)
 def_int $count = calc(db_getfieldcount($data, trapped_chest:loot) - 1);
 def_int $reward_rarity_denominator = 128;
+// EASCape: a table with loot_total (Master Farmers) gives one item, like Void's drop table roll
+if (db_getfieldcount($data, pickpocket:loot_total) > 0) {
+    def_int $pick = random(db_getfield($data, pickpocket:loot_total, 0));
+    def_int $i = 0;
+    while ($i <= $count) {
+        def_namedobj $item;
+        def_int $min;
+        def_int $max;
+        def_int $weight;
+        $item, $min, $max, $weight = db_getfield($data, pickpocket:loot, $i);
+        if ($pick < $weight) {
+            inv_add(inv, $item, ~random_range($min, $max));
+            return;
+        }
+        $pick = sub($pick, $weight);
+        $i = add($i, 1);
+    }
+    return;
+}
 while ($count >= 0) {
     def_namedobj $reward;
     def_int $reward_quantity_min;
