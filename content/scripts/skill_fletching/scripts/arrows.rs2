@@ -28,19 +28,6 @@ if (map_members = ^false) {
     mes(^mes_members_fletching); // guess
     return;
 }
-// EASCape: sets of 15 every 2 ticks (Void HeadlessArrows.kt)
-def_int $amt = ~fletch_amount(headless_arrow, divide(add(min(inv_total(inv, feather), inv_total(inv, arrow_shaft)), 14), 15), "How many sets of 15 do you wish to feather?");
-if ($amt < 1) {
-    return;
-}
-@make_headless_arrows_set($amt);
-
-[queue,make_headless_arrows_next](int $left) @make_headless_arrows_set($left);
-
-[label,make_headless_arrows_set](int $left)
-if (inv_total(inv, feather) = 0 | inv_total(inv, arrow_shaft) = 0) {
-    return;
-}
 def_int $feather_count = min(inv_total(inv, feather), 15);
 def_int $shaft_count = min(inv_total(inv, arrow_shaft), 15);
 def_int $arrow_count = min($feather_count, $shaft_count);
@@ -59,9 +46,6 @@ if ($arrow_count > 1) {
 }
 stat_advance(fletching, multiply($arrow_count, 10));
 inv_add(inv, headless_arrow, $arrow_count);
-if ($left > 1) {
-    weakqueue*(make_headless_arrows_next, 2)(sub($left, 1));
-}
 
 
 [label,make_arrows](obj $arrow_tips)
@@ -84,23 +68,6 @@ if (stat(fletching) < $level) {
     ~mesbox("You need a Fletching level of <tostring($level)> to make <lowercase(oc_name($product))>s.");
     return;
 }
-// EASCape: sets of 15 every 2 ticks (Void arrowtip.recipes.toml: "How many set of 15 would you like to make?")
-def_int $amt = ~fletch_amount($product, divide(add(min(inv_total(inv, $arrow_tips), inv_total(inv, headless_arrow)), sub($max_count, 1)), $max_count), "How many sets of 15 would you like to make?");
-if ($amt < 1) {
-    return;
-}
-@make_arrows_set($arrow_tips, $amt);
-
-[queue,make_arrows_next](obj $arrow_tips, int $left) @make_arrows_set($arrow_tips, $left);
-
-[label,make_arrows_set](obj $arrow_tips, int $left)
-if (inv_total(inv, $arrow_tips) = 0 | inv_total(inv, headless_arrow) = 0) {
-    return;
-}
-def_dbrow $data = ~get_fletching_data($arrow_tips);
-def_namedobj $product;
-def_int $max_count;
-$product, $max_count = db_getfield($data, fletching_table:product, 0);
 def_int $tip_count = min(inv_total(inv, $arrow_tips), $max_count);
 def_int $headless_count = min(inv_total(inv, headless_arrow), $max_count);
 def_int $arrows_count = min($tip_count, $headless_count);
@@ -118,6 +85,3 @@ if ($arrows_count > 1) {
 }
 stat_advance(fletching, multiply($arrows_count, db_getfield($data, fletching_table:experience, 0)));
 inv_add(inv, $product, $arrows_count);
-if ($left > 1) {
-    weakqueue*(make_arrows_next, 2)($arrow_tips, sub($left, 1));
-}

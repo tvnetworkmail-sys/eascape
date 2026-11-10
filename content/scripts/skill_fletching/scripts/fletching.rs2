@@ -2,18 +2,3 @@
 db_find(fletching_table:item, $item);
 def_dbrow $data = db_findnext;
 return ($data);
-
-// EASCape: Void's make-amount for fletching (ItemOnItems.kt / item-on-item recipes: bows, arrows,
-// gem bolt tips and HeadlessArrows.kt), here on the cache's skillmulti1 (Make 1, 5, X, All).
-// No menu when there's only one bow or set to make (Void makes it straight away).
-[proc,fletch_amount](namedobj $product, int $sets, string $question)(int)
-if ($sets <= 1) {
-    return(1);
-}
-def_namedobj $choice;
-def_int $amt;
-$choice, $amt = ~skill_multi1_header($question, $product, 200);
-if ($choice = null | $amt < 1) {
-    return(0);
-}
-return(min($amt, $sets));
