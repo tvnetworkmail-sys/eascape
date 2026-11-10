@@ -1,4 +1,3 @@
-import WordEnc from '#/cache/wordenc/WordEnc.js';
 import Packet from '#/io/Packet.js';
 import ServerGameMessageEncoder from '#/network/game/server/ServerGameMessageEncoder.js';
 import ServerGameProt from '#/network/game/server/ServerGameProt.js';
@@ -17,7 +16,8 @@ export default class MessagePrivateEncoder extends ServerGameMessageEncoder<Mess
         buf.p8(message.from);
         buf.p4(message.messageId);
         buf.p1(staffLvl);
-        WordPack.pack(buf, WordEnc.filter(message.msg));
+        // EASCape: not filtered here; each player's client filters it when their Chat Filter is on
+        WordPack.pack(buf, message.msg);
     }
 
     test(message: MessagePrivate): number {

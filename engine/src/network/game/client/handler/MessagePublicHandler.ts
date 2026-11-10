@@ -1,6 +1,5 @@
 import { PlayerInfoProt } from '#/network/rsbuf/index.js';
 
-import WordEnc from '#/cache/wordenc/WordEnc.js';
 import Player from '#/engine/entity/Player.js';
 import Packet from '#/io/Packet.js';
 import ClientGameMessageHandler from '#/network/game/client/ClientGameMessageHandler.js';
@@ -32,7 +31,8 @@ export default class MessagePublicHandler extends ClientGameMessageHandler<Messa
         player.logMessage = unpack;
 
         const out: Packet = Packet.alloc(0);
-        WordPack.pack(out, WordEnc.filter(unpack));
+        // EASCape: not filtered here; each player's client filters it when their Chat Filter is on
+        WordPack.pack(out, unpack);
         player.chatMessage = new Uint8Array(out.pos);
         out.pos = 0;
         out.gdata(player.chatMessage, 0, player.chatMessage.length);
