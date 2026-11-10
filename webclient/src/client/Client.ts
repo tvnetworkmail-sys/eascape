@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -1577,6 +1577,13 @@ export class Client extends GameShell {
 
             if (this.onDemand) {
                 this.p11?.centreStringTag(this.onDemand.message, w / 2, extraY, 0x75a9a9, true);
+            }
+
+            // EASCape: an app older than the server's newest (window.EASCAPE_APP_VERSION) says so here
+            if (appNeedsUpdate()) {
+                this.b12?.centreStringTag('Your app needs updating', w / 2, 24, Colour.RED, true);
+                this.p11?.centreStringTag("Click the 'i' button on the right of the app,", w / 2, 40, Colour.WHITE, true);
+                this.p11?.centreStringTag("then 'Restart to update' (or download the new app).", w / 2, 54, Colour.WHITE, true);
             }
 
             this.b12?.centreStringTag('Welcome to 2006RS', w / 2, y, Colour.YELLOW, true);

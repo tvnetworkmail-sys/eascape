@@ -19,6 +19,24 @@ import { MiniMenuAction } from '#/client/MiniMenuAction.js';
 import { DRAW_RADIUS } from '#/dash3d/DrawDistance.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// EASCape: is this the app, and older than the newest one the server knows (app/package.json)?
+// Apps from before the app told the page its version count as 0.1.0, the version they all had.
+export function appNeedsUpdate(): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = globalThis as any;
+    if (!g.__lostlite || typeof g.EASCAPE_APP_VERSION !== 'string' || !g.EASCAPE_APP_VERSION) {
+        return false;
+    }
+    const have = String(g.__lostliteAppVersion || '0.1.0').split('.').map((n: string) => parseInt(n, 10) || 0);
+    const want = g.EASCAPE_APP_VERSION.split('.').map((n: string) => parseInt(n, 10) || 0);
+    for (let i = 0; i < 3; i++) {
+        if ((have[i] ?? 0) !== (want[i] ?? 0)) {
+            return (have[i] ?? 0) < (want[i] ?? 0);
+        }
+    }
+    return false;
+}
+
 export function lostlite(): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (globalThis as any).__lostlite ?? null;

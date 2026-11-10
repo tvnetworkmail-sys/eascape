@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isWorldHost } = require('./worlds');
+const APP_VERSION = require('../../package.json').version;
 
 // The runtime, then the page-side part(s) of each plugin that has one (they register
 // themselves with the runtime; their sidebar half switches them on).
@@ -33,7 +34,8 @@ function install(ses, onStatus, _getOptions = () => ({})) {
       headers.set('content-type', 'text/javascript; charset=utf-8');
       headers.set('cache-control', 'no-store');
       onStatus({ type: 'client-patched', host: url.host, readMethod: 'built in', fields: {}, features: {}, warnings: [], length: src.length });
-      return new Response(`${RUNTIME}\n;\n${src}`, { status: 200, headers });
+      // EASCape: the app's version, for the game's "Your app needs updating" notice (webclient AppUpdate)
+      return new Response(`window.__lostliteAppVersion = ${JSON.stringify(APP_VERSION)};\n${RUNTIME}\n;\n${src}`, { status: 200, headers });
     } catch (e) {
       onStatus({ type: 'client-patch-failed', host: url.host, error: 'download failed: ' + (e.message || e) });
       return passthrough();

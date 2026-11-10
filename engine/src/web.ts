@@ -124,7 +124,17 @@ fastify.get<{ Querystring: { lowmem?: string } }>('/rs2.cgi', async (req, reply)
         version = Date.now();
     }
 
+    // EASCape: the newest app's version (this repo's app/package.json), for the game's "Your app
+    // needs updating" notice
+    let appVersion = '';
+    try {
+        appVersion = String(JSON.parse(fs.readFileSync('../app/package.json', 'utf8')).version || '');
+    } catch {
+        appVersion = '';
+    }
+
     return reply.viewAsync('client.ejs', {
+        appVersion,
         nodeid: Environment.NODE_ID,
         members: Environment.NODE_MEMBERS,
         lowmem,
