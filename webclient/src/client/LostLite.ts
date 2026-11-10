@@ -186,7 +186,11 @@ const FIELDS = {
         npcExamine: MiniMenuAction.OP_NPC6,
         objTake: [MiniMenuAction.TGT_OBJ, MiniMenuAction.OP_OBJ1, MiniMenuAction.OP_OBJ2, MiniMenuAction.OP_OBJ3, MiniMenuAction.OP_OBJ4, MiniMenuAction.OP_OBJ5, MiniMenuAction.USEHELD_ONOBJ],
         objExamine: MiniMenuAction.OP_OBJ6,
-        obj: [MiniMenuAction.TGT_OBJ, MiniMenuAction.OP_OBJ1, MiniMenuAction.OP_OBJ2, MiniMenuAction.OP_OBJ3, MiniMenuAction.OP_OBJ4, MiniMenuAction.OP_OBJ5, MiniMenuAction.USEHELD_ONOBJ, MiniMenuAction.OP_OBJ6]
+        obj: [MiniMenuAction.TGT_OBJ, MiniMenuAction.OP_OBJ1, MiniMenuAction.OP_OBJ2, MiniMenuAction.OP_OBJ3, MiniMenuAction.OP_OBJ4, MiniMenuAction.OP_OBJ5, MiniMenuAction.USEHELD_ONOBJ, MiniMenuAction.OP_OBJ6],
+        // EASCape: for the HiScore plugin's Lookup (players' options, chat names' Add ignore, friends' Message)
+        player: [MiniMenuAction.OP_PLAYER1, MiniMenuAction.OP_PLAYER2, MiniMenuAction.OP_PLAYER3, MiniMenuAction.OP_PLAYER4, MiniMenuAction.OP_PLAYER5],
+        chatIgnore: MiniMenuAction.IGNORELIST_ADD,
+        friendMessage: MiniMenuAction.MESSAGE_PRIVATE
     },
     buttons: {
         ok: MiniMenuAction.IF_BUTTON,

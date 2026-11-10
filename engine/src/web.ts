@@ -12,6 +12,7 @@ import { CrcBuffer, CrcTable } from '#/cache/CrcTable.js';
 
 import OnDemand from '#/engine/OnDemand.js';
 import World from '#/engine/World.js';
+import { lookup as hiscoreLookup } from '#/engine/Hiscores.js';
 
 import NullClientSocket from '#/server/NullClientSocket.js';
 
@@ -129,6 +130,17 @@ fastify.get<{ Querystring: { lowmem?: string } }>('/rs2.cgi', async (req, reply)
         lowmem,
         version
     });
+});
+
+// EASCape: one player's hiscores, for the app's Hiscore panel (engine/Hiscores.ts)
+fastify.get<{ Params: { name: string } }>('/hiscores/player/:name', async (req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    const result = await hiscoreLookup(decodeURIComponent(req.params.name || '').slice(0, 12));
+    if (!result) {
+        reply.code(404);
+        return { error: 'not found' };
+    }
+    return result;
 });
 
 // cache routes

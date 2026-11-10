@@ -41,5 +41,6 @@ module.exports = [
   require('./tears/descriptor'),
   require('./crystalbow/descriptor'),
   require('./chatnotifications/descriptor'),
+  require('./hiscore/descriptor'),
   require('./devtools/descriptor'),
 ];

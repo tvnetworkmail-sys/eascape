@@ -390,6 +390,10 @@ ipcMain.on('game-event', (e, ev) => {
         emit('patch', { pluginState: state.pluginState });
       }
       break;
+    case 'open-panel':
+      // a plugin opening its own panel (the HiScore plugin's Lookup)
+      if (typeof ev.data === 'string' && plugins.get(ev.data) && plugins.isEnabled(ev.data) && state.activePanel !== ev.data) setActivePanel(ev.data);
+      break;
     case 'log':
       log.info(String(ev.data));
       break;

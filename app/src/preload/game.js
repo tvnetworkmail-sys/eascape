@@ -335,6 +335,8 @@ function contextFor(p) {
       }
       return ipcRenderer.invoke('notify', title, body).catch(() => false);
     },
+    /** Open the plugin's own sidebar panel (as RuneLite's ClientToolbar.openPanel). */
+    openPanel: () => ipcRenderer.send('game-event', { type: 'open-panel', data: p.id }),
     /** Live state for the plugin's sidebar panel (replaces what was reported before). */
     report: (data) => ipcRenderer.send('game-event', { type: 'plugin-state', data: { id: p.id, state: data } }),
   };
