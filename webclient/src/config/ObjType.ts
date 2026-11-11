@@ -93,7 +93,7 @@ export default class ObjType {
         for (let i: number = 0; i < 10; i++) {
             const type: ObjType | null = this.recent[i];
             if (type && type.id === id) {
-                return type;
+                return ObjType.grimy(type);
             }
         }
 
@@ -117,10 +117,46 @@ export default class ObjType {
             obj.wornop = null;
         }
 
+        return ObjType.grimy(obj);
+    }
+
+    // EASCape: the app's Grimy Herbs plugin (data-eascape-grimy on the page) shows unidentified
+    // herbs by the February 2006 cache's names, description and Clean option instead of 2005's
+    // "Herb" / Identify (2007scape's 377 unpack); undone when it's switched off
+    private static readonly GRIMY: Record<number, string> = {
+        199: 'Grimy guam', 201: 'Grimy marrentill', 203: 'Grimy tarromin', 205: 'Grimy harralander', 207: 'Grimy ranarr',
+        209: 'Grimy irit', 211: 'Grimy avantoe', 213: 'Grimy kwuarm', 215: 'Grimy cadantine', 217: 'Grimy dwarf weed',
+        219: 'Grimy torstol', 1525: 'Grimy snake weed', 1527: 'Grimy ardrigal', 1529: 'Grimy sito foil', 1531: 'Grimy volencia moss',
+        1533: "Grimy rogue's purse", 2485: 'Grimy lantadyme', 3049: 'Grimy toadflax', 3051: 'Grimy snapdragon'
+    };
+    private grimyOrig: { name: string | null; desc: string | null; iop0: string | null } | null = null;
+
+    private static grimy(obj: ObjType): ObjType {
+        const herb = ObjType.GRIMY[obj.certtemplate !== -1 ? obj.certlink : obj.id];
+        if (!herb || (!obj.grimyOrig && obj.name === 'Members Object')) {
+            return obj;
+        }
+        const on = typeof document !== 'undefined' && document.documentElement?.getAttribute('data-eascape-grimy') === 'on';
+        if (on && !obj.grimyOrig) {
+            obj.grimyOrig = { name: obj.name, desc: obj.desc, iop0: obj.iop ? obj.iop[0] : null };
+            obj.name = herb;
+            if (obj.certtemplate === -1) {
+                obj.desc = 'It needs cleaning.';
+                if (obj.iop && obj.iop[0]) obj.iop[0] = 'Clean';
+            } else {
+                obj.desc = `Swap this note at any bank for a ${herb}.`;
+            }
+        } else if (!on && obj.grimyOrig) {
+            obj.name = obj.grimyOrig.name;
+            obj.desc = obj.grimyOrig.desc;
+            if (obj.iop) obj.iop[0] = obj.grimyOrig.iop0;
+            obj.grimyOrig = null;
+        }
         return obj;
     }
 
     private reset(): void {
+        this.grimyOrig = null;
         this.model = 0;
         this.name = null;
         this.desc = null;
