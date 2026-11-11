@@ -56,7 +56,9 @@ switch_component ($component) {
         if_settext(inter_238:com_12, split_get(0, 2));
         if_settext(inter_238:com_13, split_get(0, 3));
         if_settext(inter_238:com_14, split_get(0, 4));
-        if_setobject(inter_238:com_4, $obj, $objscale);
+        // EASCape: no picture for a quest that passes none (Observatory); null here was a script
+        // error, which logged you out at the end of Gertrude's Cat
+        if ($obj ! null) if_setobject(inter_238:com_4, $obj, $objscale);
         if_openmain(inter_238);
 }
 // Update Quest Tab color
