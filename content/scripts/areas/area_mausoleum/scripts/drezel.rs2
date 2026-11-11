@@ -20,9 +20,9 @@ if (%priestperil = ^priestperil_meet_in_mausoleum) {
 }
 
 [opnpcu,priestperiltrappedmonk2]
-if(last_useitem = blankrune) {
+if(last_useitem = blankrune | last_useitem = blankrune_high) { // EASCape: pure essence too (the wikis: rune or pure essence)
     @drezel_give_blankrunes;
-} else if(last_useitem = cert_blankrune) {
+} else if(last_useitem = cert_blankrune | last_useitem = cert_blankrune_high) {
     @drezel_blankrune_cert;
 }
 ~displaymessage(^dm_default);
@@ -48,11 +48,11 @@ if(last_useitem = blankrune) {
     ~chatnpc("<p,neutral>Well I have no knowledge of these ores other than speculation and gossip, but if the things I hear are true around fifty should be sufficient for the task.");
 
 [label,priestperil_drezel_begin_bring_essence]
-if (inv_total(inv, blankrune) > 0) {
+if (~drezel_essence_carried > 0) {
     ~chatplayer("<p,happy>I brought you some Rune Essence.");
     ~chatnpc("<p,neutral>Quickly, give it to me!");
     @drezel_give_blankrunes;
-} else if (inv_total(inv, cert_blankrune) > 0) { 
+} else if (inv_total(inv, cert_blankrune) > 0 | inv_total(inv, cert_blankrune_high) > 0) {
     @drezel_blankrune_cert;
 } else { 
     ~chatplayer("<p,quiz>What am I supposed to do again?");
@@ -60,11 +60,11 @@ if (inv_total(inv, blankrune) > 0) {
 }
 
 [label,priestperil_drezel_bring_more_essence]
-if (inv_total(inv, blankrune) > 0) {
+if (~drezel_essence_carried > 0) {
     ~chatplayer("<p,happy>I brought you some more essences.");
     ~chatnpc("<p,neutral>Quickly, give them to me!");
     @drezel_give_blankrunes;
-} else if (inv_total(inv, cert_blankrune) > 0) { 
+} else if (inv_total(inv, cert_blankrune) > 0 | inv_total(inv, cert_blankrune_high) > 0) {
     @drezel_blankrune_cert;
 } else { 
     ~chatplayer("<p,quiz>How many more essences do I need to bring you?");
@@ -81,21 +81,23 @@ if(%priestperil < ^priestperil_begin_bring_essence | %priestperil >= ^priestperi
 ~chatnpc("<p,confused>You have brought me notes saying 'I promise to pay the bearer on demand the listed number of Rune Essence.' How is that supposed to help me?");
 
 [label,drezel_give_blankrunes]
-if(inv_total(inv, blankrune) <= 0 | %priestperil < ^priestperil_begin_bring_essence | %priestperil >= ^priestperil_end_bring_essence) {
+if(~drezel_essence_carried <= 0 | %priestperil < ^priestperil_begin_bring_essence | %priestperil >= ^priestperil_end_bring_essence) {
     ~displaymessage(^dm_default);
     return; 
 }
 
 if_close;
 def_int $essence_needed = calc(60 - %priestperil);
-def_int $essence_have = inv_total(inv, blankrune);
+def_int $essence_have = ~drezel_essence_carried;
 def_int $essence_to_give = min($essence_needed, $essence_have);
+def_int $given = $essence_to_give;
 while($essence_to_give > 0) {
-    inv_del(inv, blankrune, 1);
+    if (inv_total(inv, blankrune) > 0) inv_del(inv, blankrune, 1);
+    else inv_del(inv, blankrune_high, 1);
     %priestperil = add(%priestperil, 1);
     $essence_to_give = sub($essence_to_give, 1);
 }
-if($essence_to_give = 1) {
+if($given = 1) {
     mes("You give the priest your blank rune.");
 } else {
     mes("You give the priest your blank runes.");
@@ -105,6 +107,10 @@ if(%priestperil = ^priestperil_end_bring_essence) {
 } else {
     if_close;
 }
+
+// EASCape: rune essence and pure essence both count
+[proc,drezel_essence_carried]()(int)
+return(calc(inv_total(inv, blankrune) + inv_total(inv, blankrune_high)));
 
 [proc,drezel_essence_remaining]()(string)
 def_int $essence_needed = calc(60 - %priestperil);

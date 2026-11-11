@@ -25,10 +25,9 @@ if ($random < 32) {       // The least common music that plays when completing a
 ~update_questpoints;
 // Send Quest Scroll
 switch_component ($component) {
-    case questlist:itgronigen ://Obveratory: Updates QP before quest scroll is queued & uses custom quest scroll
-        if_openmain(questscroll_itgronigen);
-    case questlist:fluffs ://Gertrude's Cat: Updates QP before quest scroll is queued & uses custom quest scroll
-        if_openmain(questscroll_fluffs);
+    // EASCape: Observatory and Gertrude's Cat use the usual scroll: in the 377 cache the
+    // interfaces named questscroll_itgronigen and questscroll_fluffs are the autocast spell list
+    // and the Rogues' Den dial puzzle, not quest scrolls
     case questlist:tbwt : // Tai Bwo Wannai Trio
         if_settext(questscroll_tbwt:com_3, $questmessage);
         if_settext(questscroll_tbwt:com_8, tostring($questpoints));
