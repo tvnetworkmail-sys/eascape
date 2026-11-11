@@ -9360,7 +9360,12 @@ export class Client extends GameShell {
 
         if (action === MiniMenuAction.OP_LOC6) {
             const locId: number = (a >> 14) & 0x7fff;
-            const loc: LocType = LocType.list(locId);
+            let loc: LocType = LocType.list(locId);
+            // EASCape: a multiloc is examined as what it shows (377 getMultiLoc), not its base type,
+            // which has no name or description ("It's a null.")
+            if (loc.multiloc !== null) {
+                loc = loc.getMultiLoc(this.var) ?? loc;
+            }
 
             let examine: string;
             if (!loc.desc) {
