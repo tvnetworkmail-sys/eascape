@@ -41,6 +41,14 @@ switch_component ($component) {
         if_openmain(questscroll);
     case default ://All other quests
         ~update_questpoints;
+        // EASCape: the first line (com_9) is the quest points already, so a reward list that
+        // starts with them too ("2 Quest Points|...") doesn't show them twice
+        def_int $bar = string_indexof_string("|", $rewardtext);
+        if ($bar > 0) {
+            if (string_indexof_string("Quest Point", substring($rewardtext, 0, $bar)) >= 0) {
+                $rewardtext = substring($rewardtext, calc($bar + 1), string_length($rewardtext));
+            }
+        }
         split_init($rewardtext, 200, 5, q8_full);
         if_settext(inter_238:com_3, $questmessage);
         if_settext(inter_238:com_9, "<~pluralise($questpoints, "Quest Point")>");

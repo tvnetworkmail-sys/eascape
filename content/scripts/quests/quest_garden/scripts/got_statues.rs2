@@ -139,6 +139,15 @@ while ($i < $steps) {
     p_walk($me_to);
     p_delay(1);
     if (npc_finduid(%got_trolley_npc) = false) return;
+    // ours: a Big-push's next square is worked out from where both of you are, so it waits
+    // until the trolley and you have both made this square (else you step onto the trolley)
+    def_int $wait = 0;
+    while ($wait < 3 & (npc_coord ! $to | coord ! $me_to)) {
+        p_delay(0);
+        if (npc_finduid(%got_trolley_npc) = false) return;
+        $wait = calc($wait + 1);
+    }
+    if (npc_coord ! $to | coord ! $me_to) return;
     if (~got_trolley_away = true) return;
     $i = calc($i + 1);
 }
