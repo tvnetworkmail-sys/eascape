@@ -92,7 +92,7 @@ import {
 import Environment from '#/util/Environment.js';
 import { fromBase37, toBase37, toSafeName } from '#/util/JString.js';
 import LinkList from '#/datastruct/LinkList.js';
-import { printDebug, printError, printInfo } from '#/util/Logger.js';
+import { printDebug, printError, printInfo, printWarning } from '#/util/Logger.js';
 import OnDemand from './OnDemand.js';
 import { ObjDelayedRequest } from './entity/ObjDelayedRequest.js';
 import DbTableIndex from '#/cache/config/DbTableIndex.js';
@@ -158,6 +158,10 @@ class World {
 
     // debug data
     readonly lastCycleStats: Uint16Array = new Uint16Array(12);
+    // EASCape: the last 100 ticks' times (ms) and when a slow tick was last logged, so a server that
+    // can't keep up (players see jumpy movement) shows in its log and in ::serverstats
+    readonly cycleHistory: number[] = [];
+    private lastSlowLog: number = 0;
     readonly cycleStats: Uint16Array = new Uint16Array(12);
 
     tickRate: number = World.TICKRATE; // speeds up when we're processing server shutdown
@@ -455,6 +459,15 @@ class World {
             }
 
             this.cycleStats[WorldStat.CYCLE] = Date.now() - start; // set the main logic stat here, before telemetry.
+            this.cycleHistory.push(this.cycleStats[WorldStat.CYCLE]);
+            if (this.cycleHistory.length > 100) {
+                this.cycleHistory.shift();
+            }
+            if (this.cycleStats[WorldStat.CYCLE] > 300 && Date.now() - this.lastSlowLog > 10_000) {
+                this.lastSlowLog = Date.now();
+                const c = this.cycleStats;
+                printWarning(`Slow tick: ${c[WorldStat.CYCLE]}ms (world ${c[WorldStat.WORLD]}, in ${c[WorldStat.CLIENT_IN]}, npcs ${c[WorldStat.NPC]}, players ${c[WorldStat.PLAYER]}, logout ${c[WorldStat.LOGOUT]}, login ${c[WorldStat.LOGIN]}, zones ${c[WorldStat.ZONE]}, out ${c[WorldStat.CLIENT_OUT]}, cleanup ${c[WorldStat.CLEANUP]}) with ${this.getTotalPlayers()} players, ${this.getTotalNpcs()} npcs`);
+            }
 
             this.lastCycleStats[WorldStat.CYCLE] = this.cycleStats[WorldStat.CYCLE];
             this.lastCycleStats[WorldStat.WORLD] = this.cycleStats[WorldStat.WORLD];

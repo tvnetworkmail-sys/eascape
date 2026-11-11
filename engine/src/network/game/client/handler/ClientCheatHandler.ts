@@ -143,6 +143,21 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             player.addSessionLog(LoggerEventType.MODERATOR, 'Ran cheat', cheat);
         }
 
+        // EASCape: ::serverstats - how long the server's ticks take (600 ms each; over that and
+        // everyone's movement turns jumpy). Staff only, on live too.
+        if (player.staffModLevel >= 2 && cmd === 'serverstats') {
+            const h = World.cycleHistory;
+            const avg = h.length ? Math.round(h.reduce((a, b) => a + b, 0) / h.length) : 0;
+            const max = h.length ? Math.max(...h) : 0;
+            const slow = h.filter(t => t > 300).length;
+            const c = World.lastCycleStats;
+            player.messageGame(`Ticks: avg ${avg}ms, max ${max}ms, ${slow}/${h.length} over 300ms`);
+            player.messageGame(`Last ${c[0]}ms: npcs ${c[3]}, players ${c[4]}, world ${c[1]}, zones ${c[7]}`);
+            player.messageGame(`in ${c[2]}, out ${c[8]}, login ${c[6]}, logout ${c[5]}, cleanup ${c[9]}`);
+            player.messageGame(`Online: ${World.getTotalPlayers()} players, ${World.getTotalNpcs()} npcs`);
+            return true;
+        }
+
         if (!Environment.NODE_PRODUCTION && player.staffModLevel >= 4) {
             // developer commands
 
