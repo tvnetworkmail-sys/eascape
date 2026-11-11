@@ -148,10 +148,15 @@ if (inv_freespace(inv) = 0) {
     mes("You don't have enough inventory space to pick up your cat."); //todo: verify the message for this
     return;
 }
+// EASCape: the cat is remembered before the tick's pause and found again after it (a pause loses
+// the npc the script is on, and npc_param/npc_del on it then failed and logged you out)
+def_namedobj $item = npc_param(pet_item_id);
+def_npc_uid $cat = npc_uid;
 p_delay(0);
+if (npc_finduid($cat) = false) return;
 %follower_obj = null;
 %follower_uid = null;
-inv_add(inv, npc_param(pet_item_id), 1);
+inv_add(inv, $item, 1);
 sound_synth(pick, 1, 0);
 npc_del;
 
