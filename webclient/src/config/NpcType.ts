@@ -113,9 +113,9 @@ export default class NpcType {
             const varbit = VarBitType.list[this.multivarbit];
             const bits = varbit.endbit - varbit.startbit;
             const mask = bits >= 31 ? -1 : (1 << (bits + 1)) - 1;
-            index = (vars[varbit.basevar] >> varbit.startbit) & mask;
+            index = ((vars[varbit.basevar] | 0) >> varbit.startbit) & mask;
         } else if (this.multivarp !== -1) {
-            index = vars[this.multivarp];
+            index = vars[this.multivarp] | 0; // EASCape: a varp the client hasn't been sent is 0 (undefined hung the client: Draynor Manor's Ernest)
         }
         if (index < 0 || index >= this.multinpc.length || this.multinpc[index] === -1) {
             return null;

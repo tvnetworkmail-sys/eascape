@@ -307,9 +307,9 @@ export default class LocType {
             const varbit = VarBitType.list[this.multivarbit];
             const bits = varbit.endbit - varbit.startbit;
             const mask = bits >= 31 ? -1 : (1 << (bits + 1)) - 1;
-            index = (vars[varbit.basevar] >> varbit.startbit) & mask;
+            index = ((vars[varbit.basevar] | 0) >> varbit.startbit) & mask;
         } else if (this.multivarp !== -1) {
-            index = vars[this.multivarp];
+            index = vars[this.multivarp] | 0;
         }
         if (index < 0 || index >= this.multiloc.length || this.multiloc[index] === -1) {
             return null;

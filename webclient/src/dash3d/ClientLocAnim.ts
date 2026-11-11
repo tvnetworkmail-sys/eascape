@@ -94,9 +94,9 @@ export default class ClientLocAnim extends ModelSource {
             const varbit = this.multivarbit !== -1 ? VarBitType.list[this.multivarbit] : undefined;
             if (varbit) {
                 const mask = Client.readbit[varbit.endbit - varbit.startbit];
-                index = (ClientLocAnim.app.var[varbit.basevar] >> varbit.startbit) & mask;
+                index = ((ClientLocAnim.app.var[varbit.basevar] | 0) >> varbit.startbit) & mask;
             } else if (this.multivarp !== -1) {
-                index = ClientLocAnim.app.var[this.multivarp];
+                index = ClientLocAnim.app.var[this.multivarp] | 0;
             }
 
             if (index < 0 || index >= this.multiloc.length || this.multiloc[index] === -1) {
