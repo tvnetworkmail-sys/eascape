@@ -34,6 +34,7 @@ if (stat(fletching) < 5) {
 }
 def_int $shaft_count = ~random_range(2, 6); // osrs
 inv_del(inv, achey_tree_logs, 1);
+sound_synth(flint1, 1, 0); // ours, as cutting logs (2006Scape LogCutting)
 inv_add(inv, ogre_arrow_shaft, $shaft_count);
 
 mes("You carefully cut the wood into <tostring($shaft_count)> arrow shafts.");
@@ -60,6 +61,7 @@ if (stat(crafting) < 5) {
 }
 def_int $tip_count = ~random_range(2, 6);
 inv_del(inv, wolf_bones, 1);
+sound_synth(chisel, 1, 0); // ours, as tips (2006Scape TipMaking: CUT_GEM 464)
 inv_add(inv, wolfbone_arrowheads, $tip_count);
 
 mes("You chisel <tostring($tip_count)> wolf bone arrow tips.");
@@ -103,6 +105,7 @@ if ($arrow_count > 1) {
 inv_del(inv, feather, multiply($arrow_count, 4));
 inv_del(inv, ogre_arrow_shaft, $arrow_count);
 
+sound_synth(flint1, 1, 0); // ours, as arrows (2006Scape ArrowMaking)
 inv_add(inv, ogre_headless_arrow, $arrow_count);
 
 stat_advance(fletching, multiply($arrow_count, 15));
@@ -135,6 +138,7 @@ if ($arrow_count > 1) {
 inv_del(inv, ogre_headless_arrow, $arrow_count);
 inv_del(inv, wolfbone_arrowheads, $arrow_count);
 
+sound_synth(flint1, 1, 0); // ours, as arrows (2006Scape ArrowMaking)
 inv_add(inv, ogre_arrow, $arrow_count);
 
 // todo tbc exact mechanism
