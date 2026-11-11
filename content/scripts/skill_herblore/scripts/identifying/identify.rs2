@@ -62,6 +62,13 @@ if (map_members = ^false) {
     return;
 }
 
+// EASCape: Herblore opens with Druidic Ritual (the OSRS wiki's quest page: its reward is "the
+// ability to use the Herblore skill"; Lost City 274 had no check); the message is ours, as the
+// xp lamp's
+if (%druidquest ! ^druid_complete) {
+    mes("You need to complete the Druidic Ritual quest to use the Herblore skill.");
+    return;
+}
 // early osrs had no druidic ritual check. This is how level 2 herblore accounts were possible
 def_int $current_level = stat(herblore);
 def_int $herb_level = oc_param($identified_herb, identified_herb_level);

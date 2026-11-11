@@ -112,6 +112,14 @@ if (map_members = ^false) {
     return(false);
 }
 
+// EASCape: Herblore opens with Druidic Ritual (the OSRS wiki's quest page: its reward is "the
+// ability to use the Herblore skill"; Lost City 274 had no check); the message is ours, as the
+// xp lamp's
+if (%druidquest ! ^druid_complete) {
+    mes("You need to complete the Druidic Ritual quest to use the Herblore skill.");
+    return(false);
+}
+
 if(($struct = ashesvial | $struct = mort_serum3_tarrominvial | $struct = mort_serum3_ashesvial) & %morttonquest < ^mortton_read_diary) {
     mes("You're not sure what effect this might have.");
     return(false);
