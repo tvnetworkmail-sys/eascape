@@ -6,7 +6,8 @@
 // drawn over the world (overhead text, hitsplats, health bars, menus) stays at game pixels on top,
 // and PixMap leaves the pixels still equal to that copy transparent. Clicks: model picking maps the
 // mouse into the frame's size, and ground picking (World.clickX/Y) is scaled by k for the frame.
-// ?sdres=off|on (remembered).
+// Off by default: the app turns it on (its 'High-resolution 3D view' setting, the page's
+// data-eascape-sd attribute); on the web page, ?sdres=on (remembered).
 import { canvas } from '#/graphics/Canvas.js';
 import Pix2D from '#/graphics/Pix2D.js';
 import Pix3D from '#/dash3d/Pix3D.js';
@@ -17,7 +18,7 @@ const STORAGE_KEY = 'eascape.sdres';
 const MAX_PIXELS = 2560 * 1600;
 
 export default class SdView {
-    static enabled: boolean = true;
+    static enabled: boolean = false;
     static active: boolean = false;
     private static buf: Int32Array = new Int32Array(0);
     private static copy: Int32Array = new Int32Array(0);
@@ -47,7 +48,7 @@ export default class SdView {
                 localStorage.setItem(STORAGE_KEY, param);
             } catch {}
         }
-        SdView.enabled = v !== 'off';
+        SdView.enabled = v === 'on';
     }
 
     static set(on: boolean): void {
@@ -62,7 +63,10 @@ export default class SdView {
         if (!SdView.settingRead) {
             SdView.readSetting();
         }
-        if (!SdView.enabled || !canvas) {
+        // the app's setting, when it's there, decides
+        const app = document.documentElement.getAttribute('data-eascape-sd');
+        const on = app !== null ? app === 'on' : SdView.enabled;
+        if (!on || !canvas) {
             return 1;
         }
         // the canvas alone in full screen (an older page): nothing under it would show

@@ -618,8 +618,11 @@ export default abstract class GameShell {
         return this.isTouchDevice;
     }
 
+    // EASCape: only the canvas itself in full screen is letterboxed inside its own box; the page
+    // now puts the whole #game in full screen with the canvas sized to fit, so its bounding box is
+    // the picture and the usual scaling is right (the letterbox maths moved clicks ~10 tiles)
     private isFullScreen() {
-        return document.fullscreenElement !== null;
+        return document.fullscreenElement === canvas;
     }
 
     private getMousePos(e: MouseEvent): void {
