@@ -781,7 +781,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 // options for when it's worn (wornop, 20 Oct 2026), plus the Slayer plugin's rat picture. Any other change to the item data
                 // still fails this check.
                 if (process.env.EASCAPE_PRINT_CRC) console.log('obj crc', Packet.getcrc(client.data, 0, client.pos));
-                return checkcrcAllowAdded(client, 7957, idx ? prefix : 460471, 518713153); // EASCape: worn jewellery options (20 Oct 2026), crystal bow/shield Check (31 Oct 2026); grimy herbs back to 2005's "Herb" (8 Nov 2026)
+                return checkcrcAllowAdded(client, 7957, idx ? prefix : 460471, 1150417612); // EASCape: worn jewellery options (20 Oct 2026), crystal bow/shield Check (31 Oct 2026); grimy herbs back to 2005's "Herb" (8 Nov 2026); Lost City 274 rune prices (11 Nov 2026)
             }
         );
     }
