@@ -316,7 +316,6 @@ export class Client extends GameShell {
     private areaMenu: PixMap | null = null;
     private areaMap: PixMap | null = null;
     private areaGame: PixMap | null = null;
-    private chatFilter: number = 0; // EASCape: Game Options > Chat Filter (option_chatfilter)
     private areaChat: PixMap | null = null;
     private areaBackbase1: PixMap | null = null;
     private areaBackbase2: PixMap | null = null;
@@ -3284,8 +3283,7 @@ export class Client extends GameShell {
                                 this.out.psize1(this.out.pos - start);
 
                                 this.socialInput = JString.toSentenceCase(this.socialInput);
-                                this.socialInput = this.chatFilter === 1 ? WordFilter.filter(this.socialInput) : this.socialInput;
-                                this.addChat(6, this.socialInput, JString.toScreenName(JString.toRawUsername(this.socialUserhash)));
+                                                                this.addChat(6, this.socialInput, JString.toScreenName(JString.toRawUsername(this.socialUserhash)));
 
                                 if (this.chatPrivateMode === 2) {
                                     this.chatPrivateMode = 1;
@@ -3473,8 +3471,7 @@ export class Client extends GameShell {
                                 this.out.psize1(this.out.pos - start);
 
                                 this.chatInput = JString.toSentenceCase(this.chatInput);
-                                this.chatInput = this.chatFilter === 1 ? WordFilter.filter(this.chatInput) : this.chatInput;
-
+                                
                                 if (this.localPlayer && this.localPlayer.name) {
                                     this.localPlayer.chatMessage = this.chatInput;
                                     this.localPlayer.chatColour = colour;
@@ -7010,7 +7007,7 @@ export class Client extends GameShell {
                         this.privateMessageCount = (this.privateMessageCount + 1) % 100;
 
                         const uncompressed: string = WordPack.unpack(this.in, this.psize - 13);
-                        const filtered: string = this.chatFilter === 1 ? WordFilter.filter(uncompressed) : uncompressed;
+                        const filtered: string = uncompressed; // EASCape: no chat filter
 
                         if (staffModLevel === 2 || staffModLevel === 3) {
                             this.addChat(7, filtered, '@cr2@' + JString.toScreenName(JString.toRawUsername(from)));
@@ -8489,7 +8486,7 @@ export class Client extends GameShell {
                 if (!ignored && this.chatDisabled === 0) {
                     try {
                         const uncompressed: string = WordPack.unpack(chatBuf, length);
-                        const filtered: string = this.chatFilter === 1 ? WordFilter.filter(uncompressed) : uncompressed;
+                        const filtered: string = uncompressed; // EASCape: no chat filter
                         player.chatMessage = filtered;
                         player.chatColour = colourEffect >> 8;
                         player.chatEffect = colourEffect & 0xff;
@@ -10214,6 +10211,12 @@ export class Client extends GameShell {
             let childY: number = com.childY[i] + y - scrollPosition;
             const child: IfType = IfType.list[com.children[i]];
 
+            // EASCape: a hidden button can't be clicked (or hovered); it sat under the one on top
+            // and took the click (Bank PIN settings: Delete your PIN under the hidden Cancel)
+            if (child.hide && child.type !== 0) {
+                continue;
+            }
+
             childX += child.x;
             childY += child.y;
 
@@ -11251,12 +11254,6 @@ export class Client extends GameShell {
     }
 
     private clientVar(id: number): void {
-        // EASCape: Game Options > Chat Filter (content varp option_chatfilter, id 912 in varp.pack;
-        // it has no clientcode, as varps added after 377's 725 carry nothing for the client)
-        if (id === 912) {
-            this.chatFilter = this.var[id];
-            return;
-        }
         const clientcode: number = VarpType.list[id].clientcode;
         if (clientcode === 0) {
             return;

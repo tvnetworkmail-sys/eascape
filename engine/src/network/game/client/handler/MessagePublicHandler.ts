@@ -31,7 +31,7 @@ export default class MessagePublicHandler extends ClientGameMessageHandler<Messa
         player.logMessage = unpack;
 
         const out: Packet = Packet.alloc(0);
-        // EASCape: not filtered here; each player's client filters it when their Chat Filter is on
+        // EASCape: no chat filter
         WordPack.pack(out, unpack);
         player.chatMessage = new Uint8Array(out.pos);
         out.pos = 0;

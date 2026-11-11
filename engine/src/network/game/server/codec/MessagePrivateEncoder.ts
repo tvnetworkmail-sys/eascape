@@ -16,7 +16,7 @@ export default class MessagePrivateEncoder extends ServerGameMessageEncoder<Mess
         buf.p8(message.from);
         buf.p4(message.messageId);
         buf.p1(staffLvl);
-        // EASCape: not filtered here; each player's client filters it when their Chat Filter is on
+        // EASCape: no chat filter
         WordPack.pack(buf, message.msg);
     }
 
