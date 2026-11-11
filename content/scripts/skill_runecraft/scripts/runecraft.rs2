@@ -5,6 +5,12 @@ if ($data = null) {
     return;
 }
 if (loc_param(rune_type) = ^law & ~devious_law_portal_blocked = true) return; // EASCape: Devious Minds (quest_devious/devious_entrana.rs2)
+// EASCape: the law temple's portal comes out on Entrana, so no weapons or armour through it (you
+// can bring them in by the Abyss; the RuneScape wiki's Abyss page); the message is ours
+if (loc_param(rune_type) = ^law & ~has_entrana_restricted_items = true) {
+    mes("You can't take weapons or armour through the portal to Entrana.");
+    return;
+}
 sound_synth(teleport_all, 1, 0);
 mes("You step through the portal...");
 p_telejump(map_findsquare(db_getfield($data, runecraft_table:exit_coord, random(db_getfieldcount($data, runecraft_table:exit_coord)))));

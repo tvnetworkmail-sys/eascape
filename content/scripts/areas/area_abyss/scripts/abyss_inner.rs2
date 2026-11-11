@@ -16,7 +16,13 @@ p_telejump(0_40_75_27_36);
 [oploc1,abyss_exit_to_body]
 p_telejump(0_39_75_24_46);
 
+// EASCape: only once Lost City is done (both wikis' Abyss pages: "cannot be accessed until the
+// quest Lost City has been completed"); the message is ours
 [oploc1,abyss_exit_to_cosmic]
+if (%zanaris ! ^zanaris_complete) {
+    mes("You need to have completed the Lost City quest to use this rift.");
+    return;
+}
 p_telejump(0_33_75_30_36);
 
 [oploc1,abyss_exit_to_chaos]
@@ -26,13 +32,10 @@ p_telejump(0_35_75_29_40);
 p_telejump(0_37_75_32_44);
 
 // EASCape: the law and death rifts went to the nature altar and to Lumbridge; their places are
-// Void's (abyss.teles.toml: law_rift, death_rift). As on Entrana, no weapons or armour into the
-// law altar (the monks' own check); the message is ours.
+// Void's (abyss.teles.toml: law_rift, death_rift). Weapons and armour may go through the law rift;
+// it's the temple's portal out to Entrana that won't take them (the RuneScape wiki's Abyss page;
+// runecraft.rs2 [oploc1,_rc_exit_portal]).
 [oploc1,abyss_exit_to_law]
-if (~has_entrana_restricted_items = true) {
-    mes("You can't take weapons or armour through to the Law altar.");
-    return;
-}
 p_telejump(0_38_75_32_26);
 
 [oploc1,abyss_exit_to_death]
