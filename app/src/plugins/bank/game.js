@@ -22,6 +22,9 @@ module.exports = function bankSearch(ctx) {
   let button = null;
   let deposit = null;
   let off = null;
+  let menu = null; // EASCape: the game's right-click menu (canvas pixels), which goes over these buttons
+  const AREA_AT = [[4, 4], [553, 205], [17, 357]];
+  const under = (box) => !!menu && box.x < menu.x + menu.w && box.x + box.w > menu.x && box.y < menu.y + menu.h && box.y + box.h > menu.y;
 
   function send() {
     ctx.sendToGame({ type: 'bank-search', query });
@@ -122,7 +125,7 @@ module.exports = function bankSearch(ctx) {
       blockGame(button);
       document.body.appendChild(button);
     }
-    button.style.display = 'block';
+    button.style.display = under(BUTTON) ? 'none' : 'block';
     place(button, BUTTON, g);
     drawButton(typing || !!query);
     if (!deposit) {
@@ -134,7 +137,7 @@ module.exports = function bankSearch(ctx) {
       blockGame(deposit, () => ctx.sendToGame({ type: 'bank-deposit-all' }));
       document.body.appendChild(deposit);
     }
-    deposit.style.display = 'block';
+    deposit.style.display = under(DEPOSIT) ? 'none' : 'block';
     place(deposit, DEPOSIT, g);
     drawDeposit();
 
@@ -228,6 +231,10 @@ module.exports = function bankSearch(ctx) {
             found = -1;
             typing = false;
           }
+          render();
+        } else if (type === 'bank-menu') {
+          const at = data ? AREA_AT[data.area] || AREA_AT[0] : null;
+          menu = data ? { x: data.x + at[0], y: data.y + at[1], w: data.w, h: data.h } : null;
           render();
         } else if (type === 'bank-count') {
           found = data;

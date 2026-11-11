@@ -716,7 +716,10 @@
     setApi(api) {
       const first = !this.api || !this.api.ifList;
       this.api = Object.assign(this.api || {}, api);
-      if (api.ifList && first && this.fields.mainModal) setInterval(() => this.bankCheck(), 100);
+      if (api.ifList && first && this.fields.mainModal) {
+        setInterval(() => this.bankCheck(), 100);
+        setInterval(() => this.bankMenuCheck(), 30); // EASCape: the right-click menu goes over the bank buttons
+      }
     },
 
     /** The deepest scrollable layer under (mx, my) (whole-game pixels) in an open interface,
@@ -792,6 +795,22 @@
       const cache = this.bank.names;
       if (!cache.has(id)) cache.set(id, this.itemLabel(id).toLowerCase());
       return cache.get(id);
+    },
+
+    // EASCape: where the game's right-click menu is while the bank is open (game pixels), so the
+    // bank plugin's Search and Deposit buttons (page elements over the canvas) step aside
+    bankMenuCheck() {
+      const c = this.client;
+      const f = this.fields;
+      let menu = null;
+      if (this.bank.open && c && f.menuOpen && c[f.menuOpen] && f.menuX) {
+        menu = { x: c[f.menuX] | 0, y: c[f.menuY] | 0, w: c[f.menuWidth] | 0, h: (c[f.menuCount] | 0) * 15 + 22, area: c[f.menuArea] | 0 };
+      }
+      const key = JSON.stringify(menu);
+      if (key !== this.bank.menuKey) {
+        this.bank.menuKey = key;
+        post('bank-menu', menu);
+      }
     },
 
     bankCheck() {
