@@ -451,18 +451,20 @@ function notify(title, body, opts) {
 }
 
 // Windows only shows a desktop notification from an app it knows: one with a Start menu
-// shortcut carrying the app's id (an installed app gets this from its installer; EASCape runs
-// straight from the folder, so it makes its own: "EASCape" in the Start menu, which runs
-// start.bat). Without it Windows drops the notifications without a word.
-const APP_ID = 'eascape.client';
+// shortcut carrying the app's id (an installed app gets this from its installer; run straight
+// from the folder, the app makes its own: its name in the Start menu, which runs start.bat). Without it Windows drops the notifications without a word.
+const PKG = require('../../package.json');
+const APP_ID = (PKG.build && PKG.build.appId) || 'eascape.client';
+const APP_NAME = PKG.productName || 'EASCape';
 function windowsNotifications() {
   if (process.platform !== 'win32') return;
   try {
     app.setAppUserModelId(APP_ID);
+    if (app.isPackaged) return; // the installer made the shortcut
     const root = path.resolve(app.getAppPath(), '..');
     const start = path.join(root, 'start.bat');
-    const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'EASCape.lnk');
-    const want = { target: fs.existsSync(start) ? start : process.execPath, cwd: root, appUserModelId: APP_ID, description: 'EASCape', icon: process.execPath, iconIndex: 0 };
+    const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', `${APP_NAME}.lnk`);
+    const want = { target: fs.existsSync(start) ? start : process.execPath, cwd: root, appUserModelId: APP_ID, description: APP_NAME, icon: process.execPath, iconIndex: 0 };
     let have = null;
     try {
       have = shell.readShortcutLink(link);
