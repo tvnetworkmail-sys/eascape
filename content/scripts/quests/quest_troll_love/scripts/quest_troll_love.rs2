@@ -20,9 +20,13 @@ if (p_finduid(uid) = true) p_teleport(0_43_59_20_60);
 [debugproc,trarrg] // Teleport to Arrg in Stronghold
 if (p_finduid(uid) = true) p_teleport(1_44_157_12_46);
 
-[oploc1,trollromance_piste_walk_barrier_down] // TODO: Trigger for both the top ride (0_43_59), and the bottom ride (0_43_58)
+[oploc1,trollromance_piste_walk_barrier_down] // the top ride (0_43_59) and the bottom ride (0_43_58)
 if (inv_total(worn, trollromance_toboggon_waxed) < 1) {
     mes("You need to have a waxed sled equipped!");
+    return;
+}
+if (coordz(loc_coord) < 3776) {
+    ~trollromance_second_sled_ride;
     return;
 }
 ~trollromance_first_sled_ride;
@@ -186,7 +190,62 @@ p_teleport(0_43_59_38_18);
 facesquare(loc_coord);
 stat_advance(agility, 250);
 
-// TODO: Immplement second slope cutscene
+// ours: the bottom slope, from its barrier (2785-2786, 3771) down to the foot of the slope past
+// the barriers at 2792-2794, 3727-3734 (2797, 3732: the tunnel out to Trollheim is a few squares
+// south). No source has this ride's path, so it follows the top ride's style.
+[proc,trollromance_second_sled_ride]
+if_close;
+p_teleport(0_43_58_33_58);
+~bas_set(trollromance_toboggan_ready, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving);
+say("Here we go!");
+sound_synth(sled_start, 1, 0);
+p_delay(0);
+p_teleport(0_43_58_33_56);
+p_delay(0);
+p_teleport(0_43_58_33_54);
+p_delay(0);
+p_teleport(0_43_58_34_52);
+p_delay(0);
+sound_synth(sled_loop, 5, 0);
+p_teleport(0_43_58_34_50);
+p_delay(0);
+p_teleport(0_43_58_35_48);
+p_delay(0);
+p_teleport(0_43_58_35_46);
+p_delay(0);
+p_teleport(0_43_58_36_44);
+p_delay(0);
+p_teleport(0_43_58_37_42);
+p_delay(0);
+p_teleport(0_43_58_38_40);
+p_delay(0);
+p_teleport(0_43_58_39_38);
+p_delay(0);
+p_teleport(0_43_58_40_36);
+p_delay(0);
+p_teleport(0_43_58_41_34);
+p_delay(0);
+p_teleport(0_43_58_42_32);
+p_delay(0);
+p_teleport(0_43_58_43_30);
+sound_synth(sled_jump, 1, 0);
+p_delay(0);
+p_teleport(0_43_58_44_28);
+~bas_set_all(trollromance_toboggan_flying);
+p_delay(0);
+p_teleport(0_43_58_44_26);
+p_delay(0);
+p_teleport(0_43_58_45_24);
+p_delay(0);
+p_teleport(0_43_58_45_22);
+~bas_set(trollromance_toboggan_ready, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving, trollromance_toboggan_moving);
+sound_synth(sled_stop, 1, 0);
+p_delay(1);
+say("That was quite a ride!");
+p_delay(1);
+~update_bas;
+p_teleport(0_43_58_45_20);
+stat_advance(agility, 250); // ours: as the top ride
 
 
 [queue,trollromance_quest_complete]

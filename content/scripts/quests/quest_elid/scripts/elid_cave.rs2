@@ -9,7 +9,18 @@
 // A rope on the root takes you in (the OSRS and RS wikis: "use your rope on the root"); the OSRS
 // wiki's Rope: 1 for the whole quest, so this one is not used up (ours, from that). The OSRS
 // wiki's River Elid cave: "Players must have started the quest".
-[oplocu,desert_water_cave_root]
+// ours: from up to 3 squares away as well; the squares at the root's foot can't be walked to (the
+// 377 map's blocked tiles shut them in), so you throw it from the bank (3372, 3130)
+[aplocu,desert_water_cave_root]
+if (distance(loc_coord, coord) > 3) {
+    p_aprange(3);
+    return;
+}
+@elid_root_rope;
+
+[oplocu,desert_water_cave_root] @elid_root_rope;
+
+[label,elid_root_rope]
 if (last_useitem ! rope) {
     ~displaymessage(^dm_default);
     return;
@@ -35,7 +46,7 @@ p_arrivedelay;
 %elid_blackgolem = 0;
 %elid_whitegolem = 0;
 %elid_greygolem = 0;
-p_telejump(map_findsquare(^elid_root_top, 0, 3, ^map_findsquare_lineofwalk));
+p_telejump(map_findsquare(^elid_root_top, 0, 1, ^map_findsquare_lineofwalk));
 
 // ---------------------------------------------------------------- the ancestral doors
 // The key in your pack and both robes on (the OSRS wiki); during the quest the ballad too (the
