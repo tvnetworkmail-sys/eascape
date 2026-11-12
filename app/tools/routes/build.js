@@ -320,6 +320,45 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   }
 }
 
+// EASCape: the links our own world adds (eascape_world/configs/eascape_links.dbrow: gangplanks,
+// stairs, ladders and cave exits, ~eascape_link): from a loc's square to a square, or by a move.
+{
+  const at = new Map();
+  for (const [name, list] of instances) for (const inst of list) {
+    const k = `${inst.x},${inst.z},${inst.level}`;
+    const cur = at.get(k);
+    if (!cur || inst.w * inst.l > cur.inst.w * cur.inst.l) at.set(k, { name, inst });
+  }
+  const file = path.join(root, 'scripts', 'eascape_world', 'configs', 'eascape_links.dbrow');
+  if (fs.existsSync(file)) {
+    let row = null;
+    const rows = [];
+    for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
+      const t = raw.trim();
+      if (t.startsWith('[')) rows.push((row = {}));
+      const m = /^data=(\w+),(.*)$/.exec(t);
+      if (row && m) row[m[1]] = m[2];
+    }
+    for (const r of rows) {
+      const from = r.from && coord(r.from);
+      if (!from) continue;
+      const hit = at.get(`${from.x},${from.z},${from.level}`);
+      const inst = hit ? hit.inst : { x: from.x, z: from.z, level: from.level, w: 1, l: 1 };
+      let to;
+      if (r.kind === '1') to = { rel: [+r.dx || 0, +r.dl || 0, +r.dz || 0] };
+      else {
+        const d = r.to && coord(r.to);
+        if (!d || d.level < 0 || d.level > 3) continue;
+        to = { to: [d.x, d.z, d.level] };
+      }
+      const key = `${inst.x},${inst.z},${inst.level}>${JSON.stringify(to)}`;
+      if (seenLink.has(key)) continue;
+      seenLink.add(key);
+      transports.push({ x: inst.x, z: inst.z, level: inst.level, w: inst.w, l: inst.l, ...to, name: hit ? hit.name : 'eascape_link', op: +r.op || 1 });
+    }
+  }
+}
+
 // Ways across that the scripts work out at run time (tools/routes/extra.json).
 for (const t of JSON.parse(fs.readFileSync(path.join(__dirname, 'extra.json'), 'utf8'))) transports.push(t);
 
