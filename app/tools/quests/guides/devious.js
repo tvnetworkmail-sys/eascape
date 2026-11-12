@@ -1,4 +1,5 @@
 // Devious Minds. Based on Quest Helper's DeviousMinds (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// Quest not in game yet (released after this era); the guide is ready for it.
 // EASCape: steps, options and positions from our scripts (quest_devious: devious_monk,
 // devious_entrana, devious_journal and devious.constant; quest_rd rd_start for Sir Tiffy) and
 // maps. The stages are the values of devious_main (bits 0-7 of varp devious_base).
