@@ -1,0 +1,52 @@
+// The Giant Dwarf. Based on Quest Helper's TheGiantDwarf (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (quest_giant_dwarf: gd_start, gd_items,
+// gd_consortium; keldagrim_npcs.rs2) and maps; the step texts follow our journal.
+module.exports = {
+  quest: 'giantdwarf',
+  members: true,
+  difficulty: 'Intermediate',
+  start: 'Talk to the Dwarven Boatman by the underground river in the Keldagrim entrance cave east of Rellekka.',
+  items: {
+    boots: { name: 'Exquisite boots', obj: 'dwarf_perfect_pair_of_boots', tip: 'Dromund has them (Saro sold them to him)' },
+    clothes: { name: 'Exquisite clothes', obj: 'dwarf_clothes', tip: 'Vermundi makes them for 200 coins once her spinning machine runs' },
+    oldAxe: { name: "King Alvis' axe", obj: ['dwarf_battleaxe_old', 'dwarf_battleaxe_sapphires', 'dwarf_battleaxe_sharpened'], tip: 'Santiri has it' },
+    newAxe: { name: 'Restored battleaxe', obj: 'dwarf_battleaxe_new' },
+    sapphires: { name: 'Sapphires', obj: 'sapphire', qty: 3, tip: 'For the axe hilt' },
+    coal: { name: 'Coal', obj: 'coal', tip: "For Vermundi's spinning machine" },
+    logs: { name: 'Logs', obj: 'logs', tip: "For Vermundi's spinning machine" },
+    tinderbox: { name: 'Tinderbox', obj: 'tinderbox' },
+    coins: { name: 'Coins', obj: 'coins', qty: 200, tip: 'For the clothes' },
+  },
+  required: ['sapphires', 'coal', 'logs', 'tinderbox', 'coins'],
+  skills: ['12 Crafting', '16 Firemaking', '33 Magic', '14 Thieving'],
+  steps: {
+    start: { text: 'Talk to the Dwarven Boatman by the underground river and take a ride to Keldagrim.', npc: 'dwarf_city_boatman_mines_prequest', at: [2842, 10129, 0], options: ["That's a deal!"] },
+    veldaban: { text: 'Talk to Commander Veldaban of the Black Guard in Keldagrim-West.', npc: 'dwarf_city_black_guard_leader', at: [2826, 10215, 0] },
+    blasidar: { text: 'Talk to Blasidar the sculptor in Keldagrim-East.', npc: 'dwarf_city_shop_sculpture', at: [2906, 10205, 0], options: ['Yes, I will do this.'] },
+    items: { text: "Find boots, clothes and a battleaxe fit for a king. Boots: ask Saro (armour shop) about special boots, then take them from Dromund's house north of the bank while he isn't looking. Clothes: ask Vermundi, get the costume book from the library's high shelf for her, then put coal and logs in her spinning machine, light it and pay her 200 coins. Axe: ask Santiri (weapons shop) about King Alvis' battleaxe, put three sapphires on its hilt and ask an Imcando dwarf to restore the blade.", npc: ['dwarf_city_shop_armour', 'dwarf_city_shop_cloth_poor', 'dwarf_city_shop_weapons'], at: [2827, 10199, 0], range: 40, keepAt: true, items: ['sapphires', 'coal', 'logs', 'tinderbox', 'coins'], options: ["Yes, I'm looking for a pair of special boots.", "Yes, I'm looking for a particular battleaxe."] },
+    thurgo: { text: 'Ask Thurgo, the Imcando dwarf south of Port Sarim, to restore the axe.', npc: 'thurgo', at: [3001, 3144, 0], items: ['oldAxe'], options: ['Can you help me with this ancient axe?'] },
+    riki: { text: 'Use the boots, clothes and battleaxe on Riki, the sculptor\'s model.', npc: 'dwarf_city_shop_sculpture_model_multi', at: [2904, 10207, 0] },
+    blasidar2: { text: 'Tell Blasidar that Riki is ready.', npc: 'dwarf_city_shop_sculpture', at: [2906, 10205, 0] },
+    consortium: { text: "Win the trust of one of the companies in the Consortium's palace: do its secretary's tasks, then ask its director to force a decision.", npc: 'dwarf_city_secretary_purple_pewter', at: [2868, 10194, 1], options: ['I would support you.'] },
+    finish: { text: 'Tell Commander Veldaban, and speak for your company at the Consortium meeting.', npc: 'dwarf_city_black_guard_leader', at: [2826, 10215, 0] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    10: [[null, 'veldaban']],
+    20: [[null, 'blasidar']],
+    30: [
+      ['have:boots | have:clothes | have:newAxe', 'riki'],
+      ['have:oldAxe', 'thurgo'],
+      [null, 'items'],
+    ],
+    40: [[null, 'blasidar2']],
+    50: [[null, 'consortium']],
+    60: [[null, 'finish']],
+  },
+  sections: [
+    { title: 'Starting off', steps: ['start', 'veldaban', 'blasidar'] },
+    { title: "The king's statue", steps: ['items', 'thurgo', 'riki', 'blasidar2'], items: ['sapphires', 'coal', 'logs', 'tinderbox', 'coins'] },
+    { title: 'The Consortium', steps: ['consortium', 'finish'] },
+  ],
+  rewards: ['2 Quest Points', '2,500 Crafting, Mining and Smithing experience', '1,500 Firemaking, Magic and Thieving experience'],
+};
