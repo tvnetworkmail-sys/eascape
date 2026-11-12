@@ -91,8 +91,9 @@ class QuestEngine {
     return changed;
   }
 
-  /** The quest journal's text (all lines). Returns { quest, stage } or null. */
-  journal(lines) {
+  /** The quest journal's text (all lines), and what you carry (id -> qty, optional).
+   * Returns { quest, stage } or null. */
+  journal(lines, inv) {
     const shown = ` ${norm([].concat(lines).join(' '))} `;
     if (shown.trim().length < 10) return null;
     let best = null;
@@ -127,6 +128,10 @@ class QuestEngine {
     if (g && g.journalCount) {
       const m = new RegExp(g.journalCount.re).exec(shown);
       if (m) stage = g.journalCount.a * Number(m[1]) + g.journalCount.b;
+      // EASCape: our journal counts what you carry as well ("N more balls" = still to hand in
+      // minus the balls you hold), so take those off to get what you've handed in
+      const extra = m && g.journalCount.minusHave && g.items[g.journalCount.minusHave];
+      if (extra && inv) for (const id of extra.ids) stage -= inv[id] || 0;
     }
     if (stage === undefined) {
       const lo = Math.max(b.lo, b.lo <= 0 && b.hi > 0 ? this.firstStage(key) : b.lo);

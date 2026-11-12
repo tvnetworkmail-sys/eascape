@@ -71,7 +71,7 @@ module.exports = function questHelper(ctx) {
     let moved = [];
     if (d.list) moved = moved.concat(engine.questList(d.list));
     if (d.journal && d.journal.lines && d.journal.lines.length) {
-      const r = engine.journal(d.journal.lines);
+      const r = engine.journal(d.journal.lines, have.inv);
       if (r) moved.push(r.quest);
     }
     if (d.dialogue) moved = moved.concat(engine.dialogue(d.dialogue));
