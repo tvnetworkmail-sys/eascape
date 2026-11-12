@@ -33,7 +33,7 @@ module.exports = function idleNotifier(ctx) {
 
   const opt = (k) => ctx.config(k);
   const who = () => name || 'You';
-  const send = (text) => ctx.notify('2006RS', text);
+  const send = (text, opts) => ctx.notify('2006RS', text, opts);
 
   function onInput() {
     lastInput = Date.now();
@@ -120,7 +120,7 @@ module.exports = function idleNotifier(ctx) {
     if (opt('logoutFinal') && !finalWarned && idleFor >= LOGOUT_AFTER - FINAL_WARNING && idleFor < LOGOUT_AFTER + 60000) {
       finalWarned = true;
       logoutWarned = true; // (one warning is enough when the first one is set to 10 s or less)
-      send(`${who()} will be logged out in 10 seconds!`);
+      send(`${who()} will be logged out in 10 seconds!`, { sound: true }); // with the Windows ding
     }
     if (opt('logoutIdle') && !logoutWarned && idleFor >= LOGOUT_AFTER - warn && idleFor < LOGOUT_AFTER + 60000) {
       logoutWarned = true;

@@ -330,7 +330,7 @@ function contextFor(p) {
     },
     log: (msg) => ipcRenderer.send('game-event', { type: 'log', data: `[${p.id}] ${msg}` }),
     /** A desktop notification (if the user allows them; see LostLite > Notifications). */
-    notify: (title, body) => {
+    notify: (title, body, opts) => {
       // like RuneLite's "game message notification": shown in the chat box even when the
       // window is in front (where the desktop one isn't by default)
       if (cfg('lostlite', 'notifications') && cfg('lostlite', 'gameMessageNotification')) sendToGame({ type: 'game-message', text: String(body || title || '') });
@@ -340,7 +340,7 @@ function contextFor(p) {
         const rgb = /([0-9a-f]{6})$/i.exec(String(cfg('lostlite', 'flashColour') || '')) || [null, 'FF0000'];
         sendToGame({ type: 'flash', mode: flash, colour: `#${alpha.toString(16).padStart(2, '0')}${rgb[1]}` });
       }
-      return ipcRenderer.invoke('notify', title, body).catch(() => false);
+      return ipcRenderer.invoke('notify', title, body, { sound: !!(opts && opts.sound) }).catch(() => false);
     },
     /** Open the plugin's own sidebar panel (as RuneLite's ClientToolbar.openPanel). */
     openPanel: () => ipcRenderer.send('game-event', { type: 'open-panel', data: p.id }),

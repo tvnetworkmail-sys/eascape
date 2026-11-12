@@ -423,7 +423,7 @@ ipcMain.handle('login-pass-set', (e, pass) => {
 
 // Desktop notifications (3.4), like RuneLite's Notifier: only while the window isn't in
 // front unless you ask, with the system sound and a flashing taskbar button.
-function notify(title, body) {
+function notify(title, body, opts) {
   if (!core('notifications')) return false;
   const focused = win && win.isFocused() && !win.isMinimized();
   if (focused && !core('notifyWhenFocused')) {
@@ -432,7 +432,7 @@ function notify(title, body) {
   }
   try {
     if (Notification.isSupported()) {
-      const n = new Notification({ title: String(title || '2006RS').slice(0, 80), body: String(body || '').slice(0, 300), silent: !core('notificationSound') });
+      const n = new Notification({ title: String(title || '2006RS').slice(0, 80), body: String(body || '').slice(0, 300), silent: !(core('notificationSound') || (opts && opts.sound)) }); // (a few, like the last idle logout warning, always ding)
       n.on('click', () => {
         if (win) {
           if (win.isMinimized()) win.restore();
@@ -450,9 +450,9 @@ function notify(title, body) {
   }
 }
 
-ipcMain.handle('notify', (e, title, body) => {
+ipcMain.handle('notify', (e, title, body, opts) => {
   if (!gameView || e.sender !== gameView.webContents) return false;
-  return notify(title, body);
+  return notify(title, body, { sound: !!(opts && opts.sound) });
 });
 
 // Quest Helper routes, worked out in a worker thread (so the game never waits on them).
