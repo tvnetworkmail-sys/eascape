@@ -7,7 +7,7 @@ module.exports = {
   items: {
     balls: { name: 'Balls of wool', obj: 'ball_of_wool', qty: 20, qtyFromStage: [-1, 21] },
     wool: { name: 'Wool', obj: 'wool' },
-    shears: { name: 'Shears', obj: 'shears', tip: 'There is a pair in the house north of the sheep field' },
+    shears: { name: 'Shears', obj: 'shears', tip: "There is a pair in Fred's house" },
   },
   required: ['balls'],
   recommended: ['shears'],
@@ -16,7 +16,8 @@ module.exports = {
   journalCount: { re: 'collect (\\d+) more balls?', a: -1, b: 21, minusHave: 'balls' },
   steps: {
     start: { text: 'Talk to Fred the Farmer north-west of Lumbridge to start the quest.', npc: 'fred_the_farmer', at: [3189, 3273, 0], options: ["I'm looking for a quest.", 'Yes okay. I can do that.', 'Yes, okay. I can do that.'] },
-    getShears: { text: 'Pick up the shears in the house north of the sheep field.', obj: 'shears', at: [3152, 3306, 0] },
+    // EASCape: the shears on the table in Fred's own house (3192,3272), where you start
+    getShears: { text: "Pick up the shears in Fred's house.", obj: 'shears', at: [3192, 3272, 0] },
     shear: { text: 'Shear the sheep in the field next to Fred until you have enough wool.', npc: 'sheepunsheered', at: [3196, 3259, 0], items: ['shears'] },
     goUp: { text: 'Climb the staircase in Lumbridge Castle to the spinning wheel.', loc: 'spiralstairs', at: [3204, 3207, 0], items: ['wool'] },
     spin: { text: 'Spin your wool into balls of wool on the spinning wheel.', loc: 'spinningwheel', at: [3209, 3212, 1], items: ['wool'] },
