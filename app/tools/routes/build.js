@@ -92,7 +92,7 @@ function locType(id) {
     blockwalk: yes(c.blockwalk, true),
     active: c.active !== undefined ? yes(c.active, false) : c.ops.length > 0,
     // Doors and gates: the route walks through them (you open them on the way).
-    door: c.ops.some((o) => o === 'open' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through')
+    door: c.ops.some((o) => o === 'open' || o === 'unlock' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through')
       // EASCape: secret walls and panels you push through
       || (c.ops.includes('push') && /door|oddwall|panel/.test(c.name || '')),
   };
@@ -287,7 +287,7 @@ function destinations(text, inst) {
 const TRIG = /^\[oploc(\d),(\w+)\]/;
 const LINKS = /eascape_link|@unhandled_(ladder|stairs)/;
 // scripts that only move you a step or two (a fence, a stile): their squares lead nowhere else
-const LOCAL = /~climb_fence|~climb_stile/;
+const LOCAL = /~climb_fence|~climb_stile|@rockslide_obstacle/;
 // EASCape: loc options whose own script moves you (so a stray eascape_links row for the same
 // square and option, which that script never reads, isn't a way too)
 const scripted = new Set();

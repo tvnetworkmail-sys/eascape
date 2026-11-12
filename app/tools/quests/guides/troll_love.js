@@ -1,0 +1,53 @@
+// Troll Romance. Based on Quest Helper's TrollRomance (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (quest_troll_love: ug, aga, arrg,
+// quest_troll_love; quest_death death_sherpa, death_smithy; area_seers bees) and maps; the step
+// texts follow our journal.
+module.exports = {
+  quest: 'troll_love',
+  members: true,
+  difficulty: 'Experienced',
+  start: 'Talk to Ug in the Troll Stronghold.',
+  items: {
+    logs: { name: 'Maple or yew logs', obj: ['maple_logs', 'yew_logs'], tip: 'For the sled' },
+    ironBar: { name: 'Iron bar', obj: 'iron_bar' },
+    rope: { name: 'Rope', obj: 'rope' },
+    sled: { name: 'Sled', obj: 'trollromance_toboggon', tip: 'Dunstan makes it' },
+    waxedSled: { name: 'Sled (waxed)', obj: 'trollromance_toboggon_waxed', worn: true },
+    bucketWax: { name: 'Bucket of wax', obj: 'bucket_wax', tip: 'From a beehive in Catherby: pour insect repellent on it, then use an empty bucket' },
+    tar: { name: 'Swamp tar', obj: 'swamp_tar' },
+    cakeTin: { name: 'Cake tin', obj: 'cake_tin', tip: 'General stores sell them' },
+    wax: { name: 'Wax', obj: 'trollromance_wax' },
+    flower: { name: 'Trollweiss', obj: 'trollromance_rare_flower' },
+    boots: { name: 'Climbing boots', obj: 'death_climbingboots', worn: true, tip: 'From Tenzing' },
+  },
+  required: ['logs', 'ironBar', 'rope', 'bucketWax', 'tar', 'cakeTin', 'boots'],
+  skills: ['28 Agility', 'Troll Stronghold completed', 'Able to defeat Arrg (level 113)'],
+  steps: {
+    start: { text: 'Talk to Ug in the Troll Stronghold.', npc: 'trollromance_ug', at: [2827, 10064, 1], options: ['Awww, you poor troll. What seems to be the problem?', "Don't worry now, I'll see what I can do."] },
+    aga: { text: 'Ask Aga, in the north of the stronghold, about her love life.', npc: 'trollromance_aga', at: [2828, 10104, 1], options: ["So... how's your... um... love life?"] },
+    tenzing: { text: 'Ask Tenzing west of Burthorpe where to find Trollweiss and what you need for a sled.', npc: 'death_sherpa', at: [2820, 3556, 0], options: ['Do you know where I can find Trollweiss?', 'What would I need to make such a sled?'] },
+    dunstan: { text: 'Ask Dunstan in Burthorpe for a sled, and bring him maple or yew logs, an iron bar and a rope.', npc: 'death_smithy', at: [2919, 3574, 0], items: ['logs', 'ironBar', 'rope'], options: ['I need a sled!!'] },
+    wax: { text: 'Mix a bucket of wax with swamp tar in a cake tin, and use the wax on the sled.', at: [2919, 3574, 0], items: ['bucketWax', 'tar', 'cakeTin', 'sled'] },
+    flower: { text: 'Go through the cave north-west of Trollheim and out of the crevasse onto Trollweiss Mountain. Wear the waxed sled, ride down the slope and pick some Trollweiss.', loc: 'trollromance_rareflowers', at: [2775, 3782, 0], items: ['waxedSled', 'boots'] },
+    ug: { text: 'Teleport off the plateau (the lower sled ride only takes you round the upper slope again) and give the Trollweiss to Ug.', npc: 'trollromance_ug', at: [2827, 10064, 1], items: ['flower'] },
+    arrg: { text: 'Challenge Arrg, beside Aga, and defeat him outside.', npc: 'trollromance_arrg', at: [2828, 10095, 1], options: ['I am here to kill you!'] },
+    finish: { text: 'Tell Ug that Arrg is defeated.', npc: 'trollromance_ug', at: [2827, 10064, 1] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    5: [[null, 'aga']],
+    10: [[null, 'tenzing']],
+    '15-20': [[null, 'dunstan']],
+    22: [[null, 'wax']],
+    25: [[null, 'flower']],
+    30: [[null, 'ug']],
+    35: [[null, 'arrg']],
+    40: [[null, 'finish']],
+  },
+  sections: [
+    { title: 'Starting off', steps: ['start', 'aga', 'tenzing'] },
+    { title: 'The sled', steps: ['dunstan', 'wax', 'flower'], items: ['logs', 'ironBar', 'rope', 'bucketWax', 'tar', 'cakeTin', 'boots'] },
+    { title: 'Arrg', steps: ['ug', 'arrg', 'finish'] },
+  ],
+  rewards: ['2 Quest Points', '8,000 Agility experience', '4,000 Strength experience', 'An uncut diamond, 2 uncut rubies and 4 uncut emeralds'],
+};
