@@ -6,6 +6,7 @@
 // in the game; in combat the server waits until the fight is over).
 
 const LOGOUT_AFTER = 90 * 1000;
+const FINAL_WARNING = 10 * 1000; // EASCape: the last call, 10 seconds before the logout
 const MIN_ACTIVE = 1500; // a skilling animation must run this long to count (not eating once)
 
 module.exports = function idleNotifier(ctx) {
@@ -15,6 +16,7 @@ module.exports = function idleNotifier(ctx) {
   let name = null;
   let lastInput = Date.now();
   let logoutWarned = false;
+  let finalWarned = false;
   let gameIdle = null; // { ms, at } from the game's timer, when it reports one
   // animation
   let anim = -1;
@@ -36,6 +38,7 @@ module.exports = function idleNotifier(ctx) {
   function onInput() {
     lastInput = Date.now();
     logoutWarned = false;
+    finalWarned = false;
   }
 
   function onPlayer(p) {
@@ -114,6 +117,11 @@ module.exports = function idleNotifier(ctx) {
     }
     const warn = Math.max(1, Math.min(85, opt('logoutWarning') | 0 || 20)) * 1000;
     const idleFor = gameIdle ? gameIdle.ms + (now - gameIdle.at) : now - lastInput;
+    if (opt('logoutFinal') && !finalWarned && idleFor >= LOGOUT_AFTER - FINAL_WARNING && idleFor < LOGOUT_AFTER + 60000) {
+      finalWarned = true;
+      logoutWarned = true; // (one warning is enough when the first one is set to 10 s or less)
+      send(`${who()} will be logged out in 10 seconds!`);
+    }
     if (opt('logoutIdle') && !logoutWarned && idleFor >= LOGOUT_AFTER - warn && idleFor < LOGOUT_AFTER + 60000) {
       logoutWarned = true;
       send(`${who()} is about to log out from idling too long!`);
@@ -129,7 +137,11 @@ module.exports = function idleNotifier(ctx) {
       off = ctx.onRuntime((type, data) => {
         if (type === 'player') onPlayer(data);
         else if (type === 'idle' && data && typeof data.ms === 'number') {
-          if (data.ms < 2000) logoutWarned = false; // you touched the game again
+          if (data.ms < 2000) {
+            // you touched the game again
+            logoutWarned = false;
+            finalWarned = false;
+          }
           gameIdle = { ms: data.ms, at: Date.now() };
         }
         else if (type === 'login-state') {
@@ -137,6 +149,7 @@ module.exports = function idleNotifier(ctx) {
           lastInput = Date.now();
           gameIdle = null;
           logoutWarned = false;
+          finalWarned = false;
         }
       });
       timer = setInterval(tick, 300);
