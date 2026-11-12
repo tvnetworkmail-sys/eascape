@@ -1,0 +1,78 @@
+// Big Chompy Bird Hunting. Based on Quest Helper's BigChompyBirdHunting (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (quest_chompybird: rantz, bugs, fycie,
+// ogre_chest, swamp_toad, bloated_toad, raw_chompy, quest_chompybird; skill_fletching
+// ogre_arrows) and maps; the step texts follow our journal. Bugs and Fycie each pick their
+// seasoning at random when you ask, and Rantz picks potato or onion.
+module.exports = {
+  quest: 'chompybird',
+  members: true,
+  difficulty: 'Intermediate',
+  start: 'Talk to Rantz the ogre, east of the ogre city by the cave north of the swamp pool in Feldip Hills.',
+  items: {
+    logs: { name: 'Achey tree logs', obj: 'achey_tree_logs', tip: 'Cut from the achey trees near Gu\'Tanoth (about 2340,3060)' },
+    feathers: { name: 'Feathers', obj: 'feather', qty: 6, tip: 'Fycie, in the cave, sells 25 for 50 coins' },
+    wolfBones: { name: 'Wolf bones', obj: 'wolf_bones', qty: 3, tip: 'Dropped by wolves; chisel each into arrowtips' },
+    knife: { name: 'Knife', obj: 'knife', tip: 'Bugs, in the cave, sells a chisel and a knife for 10 coins' },
+    chisel: { name: 'Chisel', obj: 'chisel', tip: 'Bugs, in the cave, sells a chisel and a knife for 10 coins' },
+    arrows: { name: 'Ogre arrows', obj: 'ogre_arrow', qty: 6, tip: 'Achey logs into ogre arrow shafts (knife), then feathers, then wolfbone arrowtips' },
+    bellows: { name: 'Ogre bellows', obj: ['empty_ogre_bellows', 'filled_ogre_bellow3', 'filled_ogre_bellow2', 'filled_ogre_bellow1'], tip: 'In the ogre chest in the cave' },
+    fullBellows: { name: 'Ogre bellows (filled)', obj: ['filled_ogre_bellow3', 'filled_ogre_bellow2', 'filled_ogre_bellow1'] },
+    toad: { name: 'Bloated toad', obj: 'bloated_toad' },
+    bow: { name: 'Ogre bow', obj: 'ogre_bow', tip: 'Rantz lends you his' },
+    moreArrows: { name: 'Ogre arrows', obj: 'ogre_arrow', qty: 5, tip: 'To shoot the chompy with' },
+    chompy: { name: 'Raw chompy', obj: 'raw_chompy' },
+    seasoning: { name: 'Potato or onion, equa leaves or cabbage, tomato or doogle leaves', obj: ['potato', 'onion', 'equa_leaves', 'cabbage', 'tomato', 'doogleleaves'], qty: 3, tip: 'One each for Rantz, Bugs and Fycie; ask them which' },
+    cooked: { name: 'Seasoned chompy', obj: 'cooked_s_chompy' },
+  },
+  required: ['logs', 'feathers', 'wolfBones', 'knife', 'chisel', 'seasoning'],
+  skills: ['5 Fletching', '30 Cooking', '30 Ranged'],
+  zones: {
+    cave: [2624, 9370, 2670, 9410, 0],
+  },
+  steps: {
+    start: { text: 'Talk to Rantz, east of the ogre city, and agree to make him some "stabbers".', npc: 'rantz', at: [2630, 2981, 0], options: ["Ok, I'll make you some 'stabbers'."] },
+    arrows: { text: 'Make at least six ogre arrows: cut achey tree logs into ogre arrow shafts with a knife, add feathers, then chisel wolf bones into arrowtips and add them. Bugs (a chisel and knife, 10 coins) and Fycie (25 feathers, 50 coins) are in Rantz\'s cave.', at: [2340, 3062, 0], items: ['logs', 'feathers', 'wolfBones', 'knife', 'chisel'] },
+    giveArrows: { text: 'Give Rantz the six ogre arrows.', npc: 'rantz', at: [2630, 2981, 0], items: ['arrows'] },
+    askToads: { text: 'Ask Rantz how to make the chompys come.', npc: 'rantz', at: [2630, 2981, 0], options: ['How do we make the chompys come?'] },
+    chest: { text: 'In Rantz\'s cave, lift the rock off the ogre chest (it takes strength) and take the ogre bellows.', loc: 'chompybird_chest', at: [2637, 9398, 0] },
+    toad: { text: 'Fill the bellows at the swamp bubbles near Gu\'Tanoth, then use them on a swamp toad to catch a bloated toad, and show it to Rantz.', loc: 'swampbubbles', at: [2334, 3061, 0], items: ['bellows'] },
+    showToad: { text: 'Show the bloated toad to Rantz.', npc: 'rantz', at: [2630, 2981, 0], items: ['toad'] },
+    drop: { text: 'Drop the bloated toad in the clearing south of Rantz that he showed you.', at: [2636, 2966, 0], items: ['toad'] },
+    watch: { text: 'Watch Rantz try to shoot the chompy bird.', npc: 'rantz', at: [2630, 2981, 0] },
+    haveGo: { text: 'Talk to Rantz and ask to have a go.', npc: 'rantz', at: [2630, 2981, 0], options: ['Come on, let me have a go...', "I'm actually quite strong... please let me try."] },
+    kill: { text: 'With the ogre bow and ogre arrows, drop a bloated toad in the clearing and shoot the chompy bird that comes for it; pluck it.', at: [2636, 2966, 0], items: ['bow', 'moreArrows', 'toad'] },
+    showChompy: { text: 'Show the raw chompy to Rantz.', npc: 'rantz', at: [2630, 2981, 0], items: ['chompy'] },
+    flavours: { text: 'Ask Bugs and Fycie in the cave what they want on their chompy (Rantz told you his).', npc: ['bugs', 'fycie'], at: [2645, 9392, 0] },
+    cook: { text: 'Cook the chompy on the spit roast by Rantz with the three seasonings.', loc: 'multi_chompybird_spitroast_entity', at: [2630, 2990, 0], items: ['chompy', 'seasoning'] },
+    finish: { text: 'Give the seasoned chompy to Rantz.', npc: 'rantz', at: [2630, 2981, 0], items: ['cooked'] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    5: [
+      ['have:arrows', 'giveArrows'],
+      [null, 'arrows'],
+    ],
+    10: [[null, 'askToads']],
+    15: [[null, 'chest']],
+    20: [
+      ['have:toad', 'showToad'],
+      [null, 'toad'],
+    ],
+    25: [[null, 'drop']],
+    '30-35': [[null, 'watch']],
+    40: [[null, 'haveGo']],
+    45: [[null, 'kill']],
+    50: [[null, 'showChompy']],
+    55: [
+      ['in:cave', 'flavours'],
+      [null, 'cook'],
+    ],
+    60: [[null, 'finish']],
+  },
+  sections: [
+    { title: 'Stabbers', steps: ['start', 'arrows', 'giveArrows'], items: ['logs', 'feathers', 'wolfBones', 'knife', 'chisel'] },
+    { title: 'Fatsy toadies', steps: ['askToads', 'chest', 'toad', 'showToad', 'drop', 'watch'] },
+    { title: 'The chompy', steps: ['haveGo', 'kill', 'showChompy', 'flavours', 'cook', 'finish'], items: ['seasoning'] },
+  ],
+  rewards: ['2 Quest Points', '262 Fletching experience', '1,470 Cooking experience', '735 Ranged experience', 'An ogre bow', 'The ability to make ogre arrows'],
+};

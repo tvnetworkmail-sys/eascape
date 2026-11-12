@@ -243,7 +243,7 @@ function coord(s) {
 }
 
 const MOVE = /movecoord\(\s*(loc_coord|coord)(?:\(\))?\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/;
-const DEST = /(p_telejump|p_teleport|~climb_ladder|~climb_stairs|@ladder_options|@jump_basalt)\(\s*([^;]*)/;
+const DEST = /(p_telejump|p_teleport|~climb_ladder|~climb_stairs|@ladder_options|@jump_basalt|@zogre_stairs|@stair_options)\(\s*([^;]*)/;
 const transports = []; // {from: {x, z, level, w, l}, to: {x, z, level} | rel: {dx, dy, dz}, name, op}
 const seenLink = new Set();
 let unresolved = 0;
@@ -289,6 +289,7 @@ const LINKS = /eascape_link|@unhandled_(ladder|stairs)/;
 // EASCape: loc options whose own script moves you (so a stray eascape_links row for the same
 // square and option, which that script never reads, isn't a way too)
 const scripted = new Set();
+const guardedAt = new Set(); // squares:op whose own case/if branch moves you (the link rows there are never read)
 const linkUsers = new Set(); // trigger:op blocks that can reach ~eascape_link (or @unhandled_*)
 for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
@@ -325,6 +326,7 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       for (const inst of instances.get(nm) || []) {
         if (guard && guard !== 'default') {
           if (inst.x !== guard.x || inst.z !== guard.z || inst.level !== guard.level) continue;
+          guardedAt.add(`${inst.x},${inst.z},${inst.level}:${trig.op}`);
         }
         for (const d of destinations(s, inst)) {
           if (d.level < 0 || d.level > 3) continue;
@@ -366,6 +368,7 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       const inst = hit ? hit.inst : { x: from.x, z: from.z, level: from.level, w: 1, l: 1 };
       // a row only works for a loc whose script falls through to ~eascape_link
       const kos = (allAt.get(`${from.x},${from.z},${from.level}`) || []).map((nm) => `${nm}:${+r.op || 1}`);
+      if (guardedAt.has(`${from.x},${from.z},${from.level}:${+r.op || 1}`)) continue;
       if (kos.length && kos.every((ko) => scripted.has(ko) && !linkUsers.has(ko))) continue;
       let to;
       if (r.kind === '1') to = { rel: [+r.dx || 0, +r.dl || 0, +r.dz || 0] };
