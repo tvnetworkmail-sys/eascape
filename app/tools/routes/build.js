@@ -294,6 +294,7 @@ const scripted = new Set();
 const guardedAt = new Set(); // squares:op whose own case/if branch moves you (the link rows there are never read)
 const linkUsers = new Set();
 const destLines = new Map(); // name:op -> [{ s, guard }]: the destination lines of its script
+const rockslides = new Set(); // locs whose option is @rockslide_obstacle: over to the far side
 const changesTo = new Map(); // name:op -> the loc its script changes into (a trapdoor opening) // trigger:op blocks that can reach ~eascape_link (or @unhandled_*)
 for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
@@ -310,6 +311,7 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       for (const nm of trig.name.startsWith('_') ? byCategory.get(trig.name.slice(1)) || [] : [trig.name]) {
         if (LINKS.test(s)) linkUsers.add(`${nm}:${trig.op}`);
         if (LOCAL.test(s)) scripted.add(`${nm}:${trig.op}`);
+        if (/@rockslide_obstacle/.test(s)) rockslides.add(nm);
       }
       if (!DEST.test(s)) continue; // the call can be on the trigger line itself
     }
@@ -321,6 +323,7 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     const names = trig.name.startsWith('_') ? byCategory.get(trig.name.slice(1)) || [] : [trig.name];
     if (LINKS.test(s)) for (const nm of names) linkUsers.add(`${nm}:${trig.op}`);
     if (LOCAL.test(s)) for (const nm of names) scripted.add(`${nm}:${trig.op}`);
+    if (/@rockslide_obstacle/.test(s)) for (const nm of names) rockslides.add(nm);
     const lc = /^loc_change\(\s*(\w+)\s*,/.exec(s);
     if (lc && !caseCoord && !ifCoord) for (const nm of names) changesTo.set(`${nm}:${trig.op}`, lc[1]);
     const cm = /^case\s+(\d_\d+_\d+_\d+_\d+)\s*:/.exec(s);
@@ -350,6 +353,18 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       }
     }
     if (!(instances.get(names[0]) || []).length) unresolved++;
+  }
+}
+// EASCape: a rockslide (upass_obstacles.rs2 rockslide_obstacle) puts you on the square past it
+for (const nm of rockslides) {
+  for (const inst of instances.get(nm) || []) {
+    for (const [dx, dz] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      const to = [inst.x + dx * inst.w, inst.z + dz * inst.l, inst.level];
+      const key = `${inst.x},${inst.z},${inst.level}>${JSON.stringify({ to })}`;
+      if (seenLink.has(key)) continue;
+      seenLink.add(key);
+      transports.push({ x: inst.x, z: inst.z, level: inst.level, w: inst.w, l: inst.l, to, name: nm, op: 1 });
+    }
   }
 }
 // EASCape: a loc that only changes into another (a closed trapdoor opening) leads where the
