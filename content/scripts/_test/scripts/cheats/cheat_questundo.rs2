@@ -1,0 +1,495 @@
+// EASCape: ::~questundo <quest> resets every variable the quest uses (generated from the quest's own scripts),
+// so it can be played again. Items and xp it gave stay. ::~questundo list names them.
+[debugproc,questundo](string $name)
+if (p_finduid(uid) = false) return;
+if (compare($name, "list") = 0) {
+    mes("agrith ahoy arena arthur ball biohazard blackarmgang chompybird");
+    mes("cog cook creatureoffenkenstrain crest deal death demon desertrescue");
+    mes("deserttreasure devious doric dragon druid druidspirit drunkmonk dwarfrock");
+    mes("eadgar elemental_workshop elena elid fairy2 fairy_farmers feud fishingcompo");
+    mes("fluffs forget fortress garden giantdwarf gobdip golem grail");
+    mes("grandtree haunted hauntedmine hazeelcult hero hetty horror hunt");
+    mes("ics_little ikov imp itexam itgronigen itwatchtower junglepotion legends");
+    mes("lost_tribe makinghistory mcannon mdaughter misc mm mortton mourning");
+    mes("mourning2 murder onesmallfavour priest priestperil prince ratcatch rd");
+    mes("regicide romeojuliet routequest roving_elves runemysteries scorpcatcher seaslug sheep");
+    mes("sheepherder squire tbwt tog totem tree troll troll_love");
+    mes("twocats upass vampire viking wanted waterfall zanaris zogre");
+    mes("zombiequeen");
+    return;
+}
+if (compare($name, "agrith") = 0) {
+    %agrith_quest = 0;
+    mes("Shadow of the Storm reset.");
+} else if (compare($name, "ahoy") = 0) {
+    %ahoy_last_villager = null;
+    %ahoy_mast_bottom = 0;
+    %ahoy_mast_skull = 0;
+    %ahoy_mast_top = 0;
+    %ahoy_questvar = 0;
+    %ahoy_rd_held = 0;
+    %ahoy_rd_outcome = 0;
+    %ahoy_rd_psum = 0;
+    %ahoy_rd_pturn = 0;
+    %ahoy_rd_rsum = 0;
+    %ahoy_rd_rturn = 0;
+    %ahoy_toy_bottom = 0;
+    %ahoy_toy_skull = 0;
+    %ahoy_toy_top = 0;
+    mes("Ghosts Ahoy reset.");
+} else if (compare($name, "arena") = 0) {
+    %arenaquest = 0;
+    mes("Fight Arena reset.");
+} else if (compare($name, "arthur") = 0) {
+    %arhein_crate_coord = null;
+    %arthur = 0;
+    %excalibur_components_progress = 0;
+    mes("Merlin's Crystal reset.");
+} else if (compare($name, "ball") = 0) {
+    %ballquest = 0;
+    mes("Witch's House reset.");
+} else if (compare($name, "biohazard") = 0) {
+    %bioerrand = 0;
+    %biohazard = 0;
+    mes("Biohazard reset.");
+} else if (compare($name, "blackarmgang") = 0) {
+    %blackarmgang = 0;
+    mes("Shield of Arrav reset.");
+} else if (compare($name, "chompybird") = 0) {
+    %chompybird = 0;
+    %chompybird_kills = 0;
+    mes("Big Chompy Bird Hunting reset.");
+} else if (compare($name, "cog") = 0) {
+    %cog_bits = 0;
+    %cogquest = 0;
+    mes("Clock Tower reset.");
+} else if (compare($name, "cook") = 0) {
+    %cookquest = 0;
+    mes("Cook's Assistant reset.");
+} else if (compare($name, "creatureoffenkenstrain") = 0) {
+    %fenk_gardener_ticks = 0;
+    %fenk_gardener_uid = null;
+    %fenk_quest = 0;
+    mes("Creature of Fenkenstrain reset.");
+} else if (compare($name, "crest") = 0) {
+    %crest_spells_levers_gauntlets = 0;
+    %crestquest = 0;
+    mes("Family Crest reset.");
+} else if (compare($name, "deal") = 0) {
+    %deal_cutscene = 0;
+    %deal_quest = 0;
+    mes("Rum Deal reset.");
+} else if (compare($name, "death") = 0) {
+    %death_bits = 0;
+    %death_equiproom = 0;
+    %death_map = 0;
+    mes("Death Plateau reset.");
+} else if (compare($name, "demon") = 0) {
+    %demon_key_washed = 0;
+    %demonstart = 0;
+    mes("Demon Slayer reset.");
+} else if (compare($name, "desertrescue") = 0) {
+    %desertrescue = 0;
+    %desertrescue_map_mechanisms = 0;
+    mes("The Tourist Trap reset.");
+} else if (compare($name, "deserttreasure") = 0) {
+    %alternate_spells = 0;
+    %deserttreasure = 0;
+    %dt_iceblock_damage1 = 0;
+    %dt_iceblock_damage2 = 0;
+    %dt_pyramid_last = null;
+    mes("Desert Treasure reset.");
+} else if (compare($name, "devious") = 0) {
+    %devious_main = 0;
+    mes("Devious Minds reset.");
+} else if (compare($name, "doric") = 0) {
+    %doricquest = 0;
+    mes("Doric's Quest reset.");
+} else if (compare($name, "dragon") = 0) {
+    %dragon_goblin = 0;
+    %dragon_ned_hired = 0;
+    %dragon_oracle = 0;
+    %dragon_shield = 0;
+    %dragon_wall = 0;
+    %dragonquest = 0;
+    %dragonquestvar = 0;
+    %dragonresist = 0;
+    %journey_number = 0;
+    mes("Dragon Slayer reset.");
+} else if (compare($name, "druid") = 0) {
+    %druidquest = 0;
+    mes("Druidic Ritual reset.");
+} else if (compare($name, "druidspirit") = 0) {
+    %druidspirit = 0;
+    %druidspirit_bits = 0;
+    %ghast_delay = 0;
+    %mortmyre = 0;
+    mes("Nature Spirit reset.");
+} else if (compare($name, "drunkmonk") = 0) {
+    %drunkmonkquest = 0;
+    mes("Monk's Friend reset.");
+} else if (compare($name, "dwarfrock") = 0) {
+    %bar_pages = 0;
+    %bar_schem_flags = 0;
+    %bar_schem_pos = 0;
+    %bar_schem_rot = 0;
+    %dwarfrock_quest = 0;
+    mes("Between a Rock... reset.");
+} else if (compare($name, "eadgar") = 0) {
+    %eadgar_bits = 0;
+    %eadgar_chickens = 0;
+    %eadgar_grain = 0;
+    %eadgar_quest = 0;
+    mes("Eadgar's Ruse reset.");
+} else if (compare($name, "elemental_workshop") = 0) {
+    %elemental_workshop_bits = 0;
+    mes("Elemental Workshop reset.");
+} else if (compare($name, "elena") = 0) {
+    %elenaquest = 0;
+    mes("Plague City reset.");
+} else if (compare($name, "elid") = 0) {
+    %elid_traded = 0;
+    %elidquest = 0;
+    mes("Spirits of the Elid reset.");
+} else if (compare($name, "fairy2") = 0) {
+    %fairy2_queencure_quest = 0;
+    %fairytale_multi = 0;
+    %ft2_starflower_spot = null;
+    mes("Fairytale II - Cure a Queen reset.");
+} else if (compare($name, "fairy_farmers") = 0) {
+    %fairy_farmers_quest = 0;
+    %fairy_gardeners = 0;
+    mes("A Fairy Tale Pt. 1 reset.");
+} else if (compare($name, "feud") = 0) {
+    %feud_var = 0;
+    mes("The Feud reset.");
+} else if (compare($name, "fishingcompo") = 0) {
+    %fishingcompo = 0;
+    %hemenster_comp_stage = 0;
+    %hemenster_pipe_stashed = false;
+    mes("Fishing Contest reset.");
+} else if (compare($name, "fluffs") = 0) {
+    %fluffs = 0;
+    %fluffs_crate = null;
+    mes("Gertrude's Cat reset.");
+} else if (compare($name, "forget") = 0) {
+    %forget_puzzle_var = 0;
+    %ft_bookcase = null;
+    %ft_cart_at = 0;
+    %ft_flags = 0;
+    %ft_ride_box = null;
+    %ft_ride_cart = null;
+    %ft_rowdy_item = 0;
+    %ft_rowdy_when = 0;
+    mes("Forgettable Tale... reset.");
+} else if (compare($name, "fortress") = 0) {
+    %spy = 0;
+    mes("Black Knights' Fortress reset.");
+} else if (compare($name, "garden") = 0) {
+    %got_flags = 0;
+    %got_trolley_npc = null;
+    mes("Garden of Tranquillity reset.");
+} else if (compare($name, "giantdwarf") = 0) {
+    %gd_flags = 0;
+    %gd_task = 0;
+    %gd_task_end = 0;
+    %giantdwarf_quest = 0;
+    mes("The Giant Dwarf reset.");
+} else if (compare($name, "gobdip") = 0) {
+    %goblinquest = 0;
+    mes("Goblin Diplomacy reset.");
+} else if (compare($name, "golem") = 0) {
+    %golem_a = 0;
+    mes("The Golem reset.");
+} else if (compare($name, "grail") = 0) {
+    %grail = 0;
+    mes("Holy Grail reset.");
+} else if (compare($name, "grandtree") = 0) {
+    %daconia_rock_root = 0;
+    %femi_help = 0;
+    %grandtree = 0;
+    mes("The Grand Tree reset.");
+} else if (compare($name, "haunted") = 0) {
+    %ernestdoors = 0;
+    %ernestlever = 0;
+    %haunted = 0;
+    %haunted_manor_fountain_poisoned = 0;
+    mes("Ernest the Chicken reset.");
+} else if (compare($name, "hauntedmine") = 0) {
+    %hauntedmine = 0;
+    %hauntedmine_bits = 0;
+    mes("Haunted Mine reset.");
+} else if (compare($name, "hazeelcult") = 0) {
+    %hazeelcult_side = 0;
+    %hazeelcult_valves = 0;
+    %hazeelcultquest = 0;
+    mes("Hazeel Cult reset.");
+} else if (compare($name, "hero") = 0) {
+    %heroquest = 0;
+    mes("Heroes Quest reset.");
+} else if (compare($name, "hetty") = 0) {
+    %hetty = 0;
+    mes("Witch's Potion reset.");
+} else if (compare($name, "horror") = 0) {
+    %horrorquest = 0;
+    %sa_energy = 0;
+    mes("Horror from the Deep reset.");
+} else if (compare($name, "hunt") = 0) {
+    %crate_bananas = 0;
+    %crate_rum = 0;
+    %hunt = 0;
+    %hunt_store_employed = 0;
+    mes("Pirate's Treasure reset.");
+} else if (compare($name, "ics_little") = 0) {
+    %ics_little_var = 0;
+    mes("Icthlarin's Little Helper reset.");
+} else if (compare($name, "ikov") = 0) {
+    %ikov = 0;
+    %ikov_dungeon = 0;
+    %ikov_icearrowchest_coord = null;
+    mes("Temple of Ikov reset.");
+} else if (compare($name, "imp") = 0) {
+    %imp = 0;
+    mes("Imp Catcher reset.");
+} else if (compare($name, "itexam") = 0) {
+    %itexam_bits = 0;
+    %itexam_errands = 0;
+    %itexamlevel = 0;
+    mes("Digsite Quest reset.");
+} else if (compare($name, "itgronigen") = 0) {
+    %itgronigen = 0;
+    %itkeepgatelock = 0;
+    %scorpius_given_symbol = 0;
+    mes("Observatory Quest reset.");
+} else if (compare($name, "itwatchtower") = 0) {
+    %gutanoth_gold = 0;
+    %itwatchtower = 0;
+    %itwatchtower_bits = 0;
+    mes("Watch Tower reset.");
+} else if (compare($name, "junglepotion") = 0) {
+    %junglepotion = 0;
+    mes("Jungle Potion reset.");
+} else if (compare($name, "legends") = 0) {
+    %legends_bits = 0;
+    %legendsquest = 0;
+    %skill_anim = 0;
+    mes("Legends Quest reset.");
+} else if (compare($name, "lost_tribe") = 0) {
+    %lt_stage = 0;
+    %lt_trap = null;
+    mes("The Lost Tribe reset.");
+} else if (compare($name, "makinghistory") = 0) {
+    %mh_key_last = 0;
+    mes("Making History reset.");
+} else if (compare($name, "mcannon") = 0) {
+    %dropcannon = 0;
+    %mcannon = 0;
+    %mcannonmulti = 0;
+    %ownedmcannon = null;
+    %rockthrower = 0;
+    mes("Dwarf Cannon reset.");
+} else if (compare($name, "mdaughter") = 0) {
+    %mdaughter_quest_var = 0;
+    mes("Mountain Daughter reset.");
+} else if (compare($name, "misc") = 0) {
+    %misc_last_update = 0;
+    %misc_quest = 0;
+    mes("Throne of Miscellania reset.");
+} else if (compare($name, "mm") = 0) {
+    %currentsong = null;
+    %mm_cutscene_coord = null;
+    %mm_cutscene_part = 0;
+    %mm_flags = 0;
+    %mm_gnomes = 0;
+    %mm_guards_cooldown = 0;
+    %mm_main = 0;
+    %mm_misc = 0;
+    %mm_monkeys = 0;
+    %pilot_journey = 0;
+    %poison = 0;
+    %varp_369 = 0;
+    %varp_370 = 0;
+    mes("Monkey Madness reset.");
+} else if (compare($name, "mortton") = 0) {
+    %morttonmulti = 0;
+    %morttonquest = 0;
+    mes("Shades of Mort'ton reset.");
+} else if (compare($name, "mourning") = 0) {
+    %me1_aim = null;
+    %me1_elena_clock = 0;
+    %me1_gnome_clock = 0;
+    %me1_oron_clock = 0;
+    %mourning_quest = 0;
+    mes("Mourning's Ends Part 1 reset.");
+} else if (compare($name, "mourning2") = 0) {
+    %me2_lastx = 0;
+    %me2_list = 0;
+    %me2_picks = 0;
+    %me2_pillars1 = 0;
+    %me2_pillars2 = 0;
+    %me2_pillars3 = 0;
+    %me2_pillars4 = 0;
+    %mourning_part2_basevar2 = 0;
+    %mourning_quest_beam_cross1 = 0;
+    %mourning_quest_beam_cross2 = 0;
+    %mourning_quest_beams1 = 0;
+    %mourning_quest_beams2 = 0;
+    %mourning_quest_beams3 = 0;
+    %mourning_quest_beams4 = 0;
+    %mourning_quest_beams5 = 0;
+    %mourning_quest_beams6 = 0;
+    %mourning_quest_main = 0;
+    %mourning_quest_vert_beams1 = 0;
+    %mourning_quest_vert_beams2 = 0;
+    %mourning_quest_vert_beams3 = 0;
+    %mourning_quest_vert_beams4 = 0;
+    %mourning_quest_vert_beams5 = 0;
+    mes("Mourning's Ends Part 2 reset.");
+} else if (compare($name, "murder") = 0) {
+    %murder_evidence = 0;
+    %murder_poisonproof_progress = 0;
+    %murderquest = 0;
+    %murdersus = 0;
+    mes("Murder Mystery reset.");
+} else if (compare($name, "onesmallfavour") = 0) {
+    %onesmallfavour = 0;
+    %onesmallfavourmulti = 0;
+    %osf_gang_kills = 0;
+    %osf_vane = 0;
+    mes("One Small Favour reset.");
+} else if (compare($name, "priest") = 0) {
+    %prieststart = 0;
+    mes("The Restless Ghost reset.");
+} else if (compare($name, "priestperil") = 0) {
+    %priestperil = 0;
+    mes("Priest in Peril reset.");
+} else if (compare($name, "prince") = 0) {
+    %princequest = 0;
+    mes("Prince Ali Rescue reset.");
+} else if (compare($name, "ratcatch") = 0) {
+    %ratcatch_var = 0;
+    %rc_cat_hp = 0;
+    %rc_checkpoint = 0;
+    %rc_fight_clock = 0;
+    %rc_foe_uid = null;
+    %rc_pit_bet = 0;
+    %rc_pit_kills = 0;
+    %rc_pit_opp = null;
+    %rc_pit_state = 0;
+    %rc_pit_tactic = 0;
+    mes("Rat Catchers reset.");
+} else if (compare($name, "rd") = 0) {
+    %rcd_coord = null;
+    %rcd_leye = null;
+    %rcd_run = 0;
+    %rcd_run2 = 0;
+    %rd_rooms_tempvar = 0;
+    %rd_rooms_tempvar2 = 0;
+    mes("Recruitment Drive reset.");
+} else if (compare($name, "regicide") = 0) {
+    %regicide_quest = 0;
+    %regicide_still_settings = 0;
+    %regicide_still_total = 0;
+    mes("Regicide reset.");
+} else if (compare($name, "romeojuliet") = 0) {
+    %rjquest = 0;
+    mes("Romeo & Juliet reset.");
+} else if (compare($name, "routequest") = 0) {
+    %routequest = 0;
+    %routequest_myreque_bits = 0;
+    mes("In Search of the Myreque reset.");
+} else if (compare($name, "roving_elves") = 0) {
+    %crystal_bow_shots = 0;
+    %crystal_shield_hits = 0;
+    %roving_elves_quest = 0;
+    %roving_update_ilfeen_chant = 0;
+    mes("Roving Elves reset.");
+} else if (compare($name, "runemysteries") = 0) {
+    %runemysteries = 0;
+    mes("Rune Mysteries Quest reset.");
+} else if (compare($name, "scorpcatcher") = 0) {
+    %scorpcatcher = 0;
+    mes("Scorpion Catcher reset.");
+} else if (compare($name, "seaslug") = 0) {
+    %seaslugquest = 0;
+    mes("Sea Slug Quest reset.");
+} else if (compare($name, "sheep") = 0) {
+    %sheep = 0;
+    mes("Sheep Shearer reset.");
+} else if (compare($name, "sheepherder") = 0) {
+    %sheepherderquest = 0;
+    %sheepherdervar = 0;
+    mes("Sheep Herder reset.");
+} else if (compare($name, "squire") = 0) {
+    %squire = 0;
+    mes("The Knight's Sword reset.");
+} else if (compare($name, "tbwt") = 0) {
+    %tbwt_flags = 0;
+    %tbwt_lubufu = 0;
+    %tbwt_main = 0;
+    %tbwt_tamayu = 0;
+    %tbwt_tiadeche = 0;
+    %tbwt_tinsay = 0;
+    mes("Tai Bwo Wannai Trio reset.");
+} else if (compare($name, "tog") = 0) {
+    %tog_juna_bowl = 0;
+    %tog_last_day = 0;
+    %tog_xp_before_return = 0;
+    mes("Tears of Guthix reset.");
+} else if (compare($name, "totem") = 0) {
+    %handelmort_traps_disabled = 0;
+    %totemquest = 0;
+    mes("Tribal Totem reset.");
+} else if (compare($name, "tree") = 0) {
+    %treequest = 0;
+    mes("Tree Gnome Village reset.");
+} else if (compare($name, "troll") = 0) {
+    %troll_quest = 0;
+    mes("Troll Stronghold reset.");
+} else if (compare($name, "troll_love") = 0) {
+    %troll_love = 0;
+    mes("Troll Romance reset.");
+} else if (compare($name, "twocats") = 0) {
+    %ttc_bob_uid = null;
+    %ttc_cutscene = 0;
+    %twocats_quest = 0;
+    mes("A Tail of Two Cats reset.");
+} else if (compare($name, "upass") = 0) {
+    %iban_staff_charges = 0;
+    %ibanmulti = 0;
+    %upass = 0;
+    mes("Underground Pass reset.");
+} else if (compare($name, "vampire") = 0) {
+    %vampire = 0;
+    mes("Vampire Slayer reset.");
+} else if (compare($name, "viking") = 0) {
+    %draugen_butterfly_uid = null;
+    %viking = 0;
+    %viking_bits = 0;
+    mes("The Fremennik Trials reset.");
+} else if (compare($name, "wanted") = 0) {
+    %wanted_cutscene = 0;
+    %wanted_kills = 0;
+    %wanted_main = 0;
+    mes("Wanted! reset.");
+} else if (compare($name, "waterfall") = 0) {
+    %waterfall_golrie_and_puzzle = 0;
+    %waterfall_quest = 0;
+    mes("Waterfall Quest reset.");
+} else if (compare($name, "zanaris") = 0) {
+    %zanaris = 0;
+    mes("Lost City reset.");
+} else if (compare($name, "zogre") = 0) {
+    %disease = 0;
+    %zogre = 0;
+    mes("Zogre Flesh Eaters reset.");
+} else if (compare($name, "zombiequeen") = 0) {
+    %zombiequeen = 0;
+    %zq_map_mechanisms = 0;
+    %zq_rash_timer = 0;
+    mes("Shilo Village reset.");
+} else {
+    mes("No quest called <$name>. ::~questundo list shows them.");
+    return;
+}
+~update_questpoints;
