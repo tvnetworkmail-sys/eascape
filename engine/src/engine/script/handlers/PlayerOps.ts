@@ -395,7 +395,13 @@ const PlayerOps: CommandHandlers = {
         if (type < 0 || type >= 5) {
             throw new Error(`Invalid oploc: ${type + 1}`);
         }
-        const locType: LocType = LocType.get(state.activeLoc.type);
+        let locType: LocType = LocType.get(state.activeLoc.type);
+        // EASCape: a multiloc's ops are the ones the player sees (as OpLocHandler checks them);
+        // the base type often has none, and then the op did nothing (e.g. a pot on the flour bin)
+        if (locType.multivarp !== -1 || locType.multivarbit !== -1) {
+            const v = locType.multivarp !== -1 ? (state.activePlayer.getVar(locType.multivarp) as number) : state.activePlayer.getVarBit(locType.multivarbit);
+            if (v >= 0 && v < locType.multiloc.length && locType.multiloc[v] !== -1) locType = LocType.get(locType.multiloc[v]);
+        }
         if (!locType.op || !locType.op[type]) {
             return;
         }
@@ -412,7 +418,12 @@ const PlayerOps: CommandHandlers = {
         if (type < 0 || type >= 5) {
             throw new Error(`Invalid opnpc: ${type + 1}`);
         }
-        const npcType: NpcType = NpcType.get(state.activeNpc.type);
+        let npcType: NpcType = NpcType.get(state.activeNpc.type);
+        // EASCape: a multinpc's ops are the ones the player sees (as OpNpcHandler checks them)
+        if (npcType.multivarp !== -1 || npcType.multivarbit !== -1) {
+            const v = npcType.multivarp !== -1 ? (state.activePlayer.getVar(npcType.multivarp) as number) : state.activePlayer.getVarBit(npcType.multivarbit);
+            if (v >= 0 && v < npcType.multinpc.length && npcType.multinpc[v] !== -1) npcType = NpcType.get(npcType.multinpc[v]);
+        }
         if (!npcType.op || !npcType.op[type]) {
             return;
         }

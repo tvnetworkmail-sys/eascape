@@ -36,7 +36,8 @@ module.exports = {
     climbDown: { text: 'Climb down the ladder to the ground floor.', loc: 'qip_cook_ladder_top', at: [3164, 3307, 2], items: ['pot'] },
     climbDownMiddle: { text: 'Climb down the ladder to the ground floor.', loc: 'qip_cook_ladder_middle', at: [3164, 3307, 1], items: ['pot'], options: ['Climb Down.'] },
     collectFlour: { text: 'Use your pot on the flour bin to collect the flour.', loc: ['millbase_flour', 'millbase'], at: [3166, 3307, 0], items: ['pot'] },
-    milkCow: { text: 'Use your bucket on a cow in the field north of the mill.', npc: 'cow', at: [3173, 3323, 0], items: ['bucket'] },
+    // EASCape: our cows can't be milked ("Only dairy cows are suitable for milking."); the dairy cow by the gate can
+    milkCow: { text: 'Use your bucket on the dairy cow in the field north of the mill.', loc: 'fat_cow', at: [3172, 3317, 0], items: ['bucket'] },
     finish: { text: "Bring the Cook the egg, the milk and the flour.", npc: 'cook', at: [3209, 3215, 0], items: ['egg', 'milk', 'flour'] },
   },
   stages: {
