@@ -450,6 +450,33 @@ function notify(title, body, opts) {
   }
 }
 
+// Windows only shows a desktop notification from an app it knows: one with a Start menu
+// shortcut carrying the app's id (an installed app gets this from its installer; EASCape runs
+// straight from the folder, so it makes its own: "EASCape" in the Start menu, which runs
+// start.bat). Without it Windows drops the notifications without a word.
+const APP_ID = 'eascape.client';
+function windowsNotifications() {
+  if (process.platform !== 'win32') return;
+  try {
+    app.setAppUserModelId(APP_ID);
+    const root = path.resolve(app.getAppPath(), '..');
+    const start = path.join(root, 'start.bat');
+    const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'EASCape.lnk');
+    const want = { target: fs.existsSync(start) ? start : process.execPath, cwd: root, appUserModelId: APP_ID, description: 'EASCape', icon: process.execPath, iconIndex: 0 };
+    let have = null;
+    try {
+      have = shell.readShortcutLink(link);
+    } catch {}
+    if (!have || have.appUserModelId !== APP_ID || path.resolve(have.target || '') !== path.resolve(want.target)) {
+      const ok = shell.writeShortcutLink(link, have ? 'replace' : 'create', want);
+      log.info(ok ? `Start menu shortcut made for notifications: ${link}` : `Couldn't make the Start menu shortcut (${link}): notifications may not show`);
+    }
+    log.info(`Notifications ${Notification.isSupported() ? 'supported' : 'not supported'} (app id ${APP_ID})`);
+  } catch (e) {
+    log.warn(`Notifications setup failed: ${e.message}`);
+  }
+}
+
 ipcMain.handle('notify', (e, title, body, opts) => {
   if (!gameView || e.sender !== gameView.webContents) return false;
   return notify(title, body, { sound: !!(opts && opts.sound) });
@@ -643,6 +670,7 @@ app.whenReady().then(() => {
   log = new Logger(dataDir);
   log.info(`EASCape ${app.getVersion()} on ${process.platform} ${process.arch}, Electron ${process.versions.electron}`);
   if (gpuOff) log.info('Hardware acceleration is off');
+  windowsNotifications();
   try {
     const st = app.getGPUFeatureStatus();
     log.info(`Graphics: canvas ${st['2d_canvas']}, compositing ${st.gpu_compositing}, webgl ${st.webgl}`);
