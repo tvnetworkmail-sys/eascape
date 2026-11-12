@@ -240,7 +240,7 @@ module.exports = function questHelper(ctx) {
         options: current && current.step ? current.step.options : [],
         sections: g.sections.map((sec) => ({
           title: sec.title,
-          steps: sec.steps.map((id) => ({ id, text: g.steps[id].text, current: id === (current && current.id), done: at >= 0 && order.indexOf(id) < at })),
+          steps: sec.steps.map((id) => ({ id, text: g.steps[id].text, current: id === (current && current.id), done: !!(current && current.done) || (at >= 0 && order.indexOf(id) < at) })), // EASCape: a finished quest has every step crossed off
         })),
         required: engine.itemList(key, g.required, have),
         recommended: engine.itemList(key, g.recommended, have),
