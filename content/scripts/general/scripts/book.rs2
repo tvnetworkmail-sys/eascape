@@ -90,11 +90,18 @@ p_delay(0);
 // EASCape: ~book used to draw every page one after another, so only its last page was left on
 // screen. It now keeps the text on the player (book_settext) and opens on the first page; the
 // arrows turn it through the default case of the switches above.
+// A book that turns its own pages (each case of its proc is one page, drawn by book_flip_page) just has that page drawn: resetting %open_book and the page here took the
+// arrows away from every such book (the Grand Tree translation book and the rest).
 [proc,book](string $title, string $string)
+if (%book_flipping = true) {
+    split_init($string, 175, 22, q8_full);
+    ~book_page($title, 0);
+    return;
+}
 book_settext(append(append($title, "~~~"), $string));
-%open_book = null;
 %book_page = 0;
 ~book_stored_show;
+
 
 [proc,book_stored_split]()(string)
 def_string $all = book_gettext;
@@ -596,7 +603,9 @@ if (%book_page = $max_page) {
     if_sethide(book:com_87, false);
 }
 
+%book_flipping = true;
 gosub($proc);
+%book_flipping = false;
 // EASCape: the page numbers (the interface's "Page%1" text has no client script to fill it here)
 if_settext(book:com_110, "<tostring(add(multiply(%book_page, 2), 1))>");
 if_settext(book:com_111, "<tostring(add(multiply(%book_page, 2), 2))>");

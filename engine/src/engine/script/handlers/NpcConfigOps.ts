@@ -4,12 +4,13 @@ import ParamType from '#/cache/config/ParamType.js';
 import { ScriptOpcode } from '#/engine/script/ScriptOpcode.js';
 import { CommandHandlers } from '#/engine/script/ScriptRunner.js';
 import { check, NpcTypeValid, NumberNotNull, ParamTypeValid } from '#/engine/script/ScriptValidators.js';
+import { npcDisplayName } from '#/engine/script/NpcDisplayName.js';
 
 const NpcConfigOps: CommandHandlers = {
     [ScriptOpcode.NC_NAME]: state => {
         const npcType: NpcType = check(state.popInt(), NpcTypeValid);
 
-        state.pushString(npcType.name ?? npcType.debugname ?? 'null');
+        state.pushString(npcDisplayName(state, npcType) ?? npcType.debugname ?? 'null');
     },
 
     [ScriptOpcode.NC_PARAM]: state => {

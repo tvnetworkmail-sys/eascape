@@ -18,6 +18,7 @@ import { ScriptOpcode } from '#/engine/script/ScriptOpcode.js';
 import { ActiveNpc, ActivePlayer } from '#/engine/script/ScriptPointer.js';
 import { CommandHandlers } from '#/engine/script/ScriptRunner.js';
 import ScriptState from '#/engine/script/ScriptState.js';
+import { npcDisplayName } from '#/engine/script/NpcDisplayName.js';
 import {
     CategoryTypeValid,
     check,
@@ -283,7 +284,7 @@ const NpcOps: CommandHandlers = {
     },
 
     [ScriptOpcode.NPC_NAME]: state => {
-        state.pushString(check(state.activeNpc.type, NpcTypeValid).name ?? 'null');
+        state.pushString(npcDisplayName(state, check(state.activeNpc.type, NpcTypeValid)) ?? 'null');
     },
 
     [ScriptOpcode.NPC_UID]: state => {
