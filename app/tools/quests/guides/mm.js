@@ -33,6 +33,7 @@ module.exports = {
     hangarPost: [2624, 4480, 2687, 4543, 0],
     crash: [2880, 2688, 2943, 2751, 0],
     cage: [2600, 3276, 2606, 3282, 0],
+    atoll: [2688, 2688, 2815, 2815, 0],
   },
   flags: {
     caranock: { on: ['I shall see personally to the decommission. You should report to the King immediately.'] },
@@ -81,6 +82,7 @@ module.exports = {
     minder: { text: 'Go to the monkey cage at Ardougne Zoo and, as a Karamjan monkey, talk to a Monkey Minder; he puts you in the cage.', npc: 'mm_monkey_minder', at: [2602, 3274, 0], items: ['amulet', 'greegree'] },
     zooMonkey: { text: 'In the cage, take off the greegree (keep the amulet on) and talk a monkey into jumping into your backpack.', npc: 'mm_zoo_monkey', at: [2601, 3277, 0], keepAt: true, items: ['amulet'] },
     minderOut: { text: 'As a human, talk to a Monkey Minder to be let out of the cage.', npc: 'mm_monkey_minder', at: [2602, 3274, 0], items: ['captive'] },
+    back: { text: 'Head back to Ape Atoll with the monkey: Daero in the Grand Tree takes you to the hangar, Waydar flies you to Crash Island and Lumdo ferries you over.', npc: 'mm_daero', at: [2484, 3486, 1], items: ['captive'] },
     captive: { text: 'Take the monkey back to Awowogei (as a monkey) and give it to him.', loc: 'mm_throne', at: [2802, 2765, 0], items: ['captive', 'amulet', 'greegree'] },
     garkorPlan: { text: 'Talk to Garkor, who overheard a disturbing conversation.', npc: 'mm_garkor', at: [2805, 2762, 0], items: ['amulet', 'greegree'] },
     garkorSigil: { text: 'Talk to Garkor again about his plan; he gives you a 10th squad sigil.', npc: 'mm_garkor', at: [2805, 2762, 0] },
@@ -123,7 +125,8 @@ module.exports = {
     4: [
       ['seen:trust', 'garkorPlan'],
       ['have:captive & in:cage', 'minderOut'],
-      ['have:captive', 'captive'],
+      ['have:captive & in:atoll', 'captive'],
+      ['have:captive', 'back'],
       ['in:cage', 'zooMonkey'],
       ['seen:sent', 'minder'],
       ['seen:alliance', 'awowogei'],
@@ -139,7 +142,7 @@ module.exports = {
   sections: [
     { title: 'Chapter 1: the 10th squad', steps: ['start', 'gate', 'caranock', 'report', 'daero', 'daeroLeave', 'reinit', 'daeroReinit', 'waydar', 'lumdo', 'waydarLumdo'] },
     { title: 'Chapter 2: a monkey disguise', steps: ['garkor', 'zooknock', 'dentures', 'mould', 'zooknockAmulet', 'smith', 'string', 'child', 'childBananas', 'giveBananas', 'toy', 'bones', 'zooknockTalisman'], items: ['goldBar', 'wool', 'bananas'] },
-    { title: "Chapter 3: Awowogei's trust", steps: ['garkorDisguise', 'awowogei', 'minder', 'zooMonkey', 'minderOut', 'captive', 'garkorPlan'] },
+    { title: "Chapter 3: Awowogei's trust", steps: ['garkorDisguise', 'awowogei', 'minder', 'zooMonkey', 'minderOut', 'back', 'captive', 'garkorPlan'] },
     { title: 'Chapter 4: the Jungle Demon', steps: ['garkorSigil', 'sigil', 'demon', 'narnode', 'finish'] },
   ],
   rewards: ['3 Quest Points', '10,000 coins and 3 diamonds', 'The right to wield dragon scimitars', 'Combat training from Daero'],
