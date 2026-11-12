@@ -1,5 +1,4 @@
 // A Tail of Two Cats. Based on Quest Helper's ATailOfTwoCats (BSD 2-Clause, (c) 2020 Zoinkwiz).
-// Quest not in game yet (released after this era); the guide is ready for it.
 // EASCape: steps, options and positions from our scripts (quest_twocats: ttc_unferth, ttc_npcs,
 // ttc_house, ttc_items, ttc_world, ttc_journal; area_varrock gertrude, reldo; quest_ics ics_npcs
 // for the Sphinx) and maps; the step texts follow our journal. Keep your cat following you and the

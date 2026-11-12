@@ -1,7 +1,7 @@
 // Rum Deal. Based on Quest Helper's RumDeal (BSD 2-Clause, (c) 2020 Zoinkwiz).
 // EASCape: steps, options and positions from our scripts (quest_deal: deal_pete, deal_braindeath,
 // deal_brewery, deal_crew, deal_journal and deal.constant) and maps; the step texts follow our
-// journal (Void's). Quest not in game yet (released after this era); the guide is ready for it.
+// journal (Void's).
 module.exports = {
   quest: 'deal',
   members: true,
