@@ -15,6 +15,7 @@ Usage: extract.py <content> <out.json>
 EASCape: copied from LostLite (tools/quests); reads EASCape's content (interfaces/questlist.if,
 the questjournal interface) so the journal texts are our own.
 """
+import bisect
 import json
 import os
 import re
@@ -63,6 +64,8 @@ def value(tok, consts):
     return None
 
 
+SWITCH = re.compile(r'switch_int\s*\(\s*%(\w+)\s*\)')
+CASE = re.compile(r'case\s+([\^\w ,]+?)\s*:(?!:)')
 COND = re.compile(r'(?:}\s*else\s+)?if\s*\(\s*%(\w+)\s*(=|<|>|<=|>=|!)\s*([\^\w]+)\s*\)\s*\{')
 STR = re.compile(r'"((?:[^"\\]|\\.)*)"')
 
@@ -77,12 +80,46 @@ def journal(path, consts):
     current = None
     common = []  # text shown outside any branch: part of every stage after it
     depth = 0
+    alias = {}  # def_int $s = %varp; (journals that read the variable into a local first)
+    sw = None  # (varp, depth of its cases) inside switch_int(%varp) { case ...: }
     for line in lines:
         s = line.strip()
         if s.startswith('//'):
             continue
-        m = COND.search(s)
-        if depth == 0 and current is not None and not m and not s.startswith('}'):
+        a = re.match(r'def_int\s+\$(\w+)\s*=\s*%(\w+)\s*;', s)
+        if a:
+            alias[a.group(1)] = a.group(2)
+        for k, v in alias.items():
+            s = re.sub(r'\$' + k + r'\b', '%' + v, s)
+        sm = SWITCH.search(s)
+        if sm and depth == 0 and sw is None:
+            sw = (sm.group(1), depth + 1)
+            varp = varp or sm.group(1)
+            chain = []
+        cm = CASE.match(s) if sw else None
+        if cm and depth == sw[1] and sw[0] == varp:
+            toks = [t.strip() for t in cm.group(1).split(',')]
+            if toks == ['default']:
+                top = max([h for _, h in chain if h is not None] or [-1])
+                runs = [(top + 1, 10**9)]
+            else:
+                ns = sorted(n for n in (value(t, consts) for t in toks) if n is not None)
+                runs = []
+                for n in ns:
+                    if runs and runs[-1][1] == n - 1:
+                        runs[-1] = (runs[-1][0], n)
+                    else:
+                        runs.append((n, n))
+            texts = list(common)
+            for lo, hi in runs:
+                chain.append((lo, hi))
+                current = {'varp': varp, 'lo': lo, 'hi': hi, 'text': None, 'texts': texts, 'case': toks}
+                out.append(current)
+        if sw and depth == sw[1] and s.startswith('}'):
+            sw = None
+            current = None
+        m = None if sw else COND.search(s)
+        if sw is None and depth == 0 and current is not None and not m and not s.startswith('}'):
             current = None  # back at the top level, after a branch
         at = depth - (1 if s.startswith('}') else 0)
         if m and at == 0:
@@ -111,7 +148,9 @@ def journal(path, consts):
                         continue
                     if current is not None:
                         current['texts'].append(t)
-                        current['text'] = current['text'] or lit
+                        for b in out:
+                            if b['texts'] is current['texts']:
+                                b['text'] = b['text'] or lit
                     elif depth == 0:
                         common.append(t)
         depth += s.count('{') - s.count('}')
@@ -183,6 +222,31 @@ def text_of(path):
     return _texts[path]
 
 
+_said = None
+
+
+def said_in(t, files):
+    """The scripts that can show this (normalized) line: a line said elsewhere too doesn't
+    tell where you are in the quest."""
+    global _said
+    if _said is None:
+        parts, starts, names, at = [], [], [], 0
+        for p in files:
+            txt = ' ' + ' | '.join(norm(lit) for lit in STR.findall(text_of(p))) + ' '
+            parts.append(txt)
+            starts.append(at)
+            names.append(p)
+            at += len(txt)
+        _said = (''.join(parts), starts, names)
+    big, starts, names = _said
+    out = set()
+    i = big.find(' ' + t + ' ')
+    while i >= 0:
+        out.add(names[bisect.bisect_right(starts, i) - 1])
+        i = big.find(' ' + t + ' ', i + 1)
+    return out
+
+
 def main(root, out):
     consts = constants(root)
     if_ids = read_pack(os.path.join(root, 'pack', 'interface.pack'))
@@ -230,13 +294,18 @@ def main(root, out):
                     complete = consts.get(mm.group(1), complete)
         if complete is None:
             complete = consts.get(next((k for k in consts if re.fullmatch(key + r'_(?:quest_)?complete(?:d)?', k)), ''), None)
+        if complete is None:
+            # a switch_int journal's "case ^<quest>_complete :" branch
+            for b in branches:
+                if any(re.fullmatch(r'\^\w+_complete(?:d)?', t) for t in b.get('case', [])):
+                    complete = b['lo']
         quests[key] = {
             'name': names.get(key, key),
             'com': if_ids.get('questlist:' + key),
             'varp': varp,
             'complete': complete,
             'journal': [{'lo': b['lo'], 'hi': min(b['hi'], 10**6), 'texts': b['texts']} for b in branches],
-            'dialogue': transitions(qfiles, varp, consts),
+            'dialogue': {t: n for t, n in transitions(qfiles, varp, consts).items() if said_in(t, all_rs2) <= set(qfiles)},
         }
     # Quests whose journal we couldn't read still show in the list (status from its colour).
     for key in sorted(buttons):
