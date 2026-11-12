@@ -319,7 +319,7 @@ function contextFor(p) {
       return () => runtimeListeners.delete(fn);
     },
     /** Ask the app for something (only the channels listed here). */
-    invoke: (channel, ...args) => (['login-pass-get', 'login-pass-set', 'notify'].includes(channel) ? ipcRenderer.invoke(channel, ...args) : Promise.reject(new Error('not allowed'))),
+    invoke: (channel, ...args) => (['login-pass-get', 'login-pass-set', 'route-find', 'notify'].includes(channel) ? ipcRenderer.invoke(channel, ...args) : Promise.reject(new Error('not allowed'))),
     /** The game canvas element (for placing overlays), or null. */
     canvas: () => canvas,
     /** A bundled font as a data: URL, for use inside the game page. */

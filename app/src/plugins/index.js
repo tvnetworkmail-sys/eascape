@@ -43,5 +43,6 @@ module.exports = [
   require('./chatnotifications/descriptor'),
   require('./hiscore/descriptor'),
   require('./grimyherbs/descriptor'),
+  require('./questhelper/descriptor'),
   require('./devtools/descriptor'),
 ];
