@@ -29,7 +29,7 @@ module.exports = {
     dunstan: { text: 'Ask Dunstan in Burthorpe for a sled, and bring him maple or yew logs, an iron bar and a rope.', npc: 'death_smithy', at: [2919, 3574, 0], items: ['logs', 'ironBar', 'rope'], options: ['I need a sled!!'] },
     wax: { text: 'Mix a bucket of wax with swamp tar in a cake tin, and use the wax on the sled.', at: [2919, 3574, 0], items: ['bucketWax', 'tar', 'cakeTin', 'sled'] },
     flower: { text: 'Go through the cave north-west of Trollheim and out of the crevasse onto Trollweiss Mountain. Wear the waxed sled, ride down the slope and pick some Trollweiss.', loc: 'trollromance_rareflowers', at: [2775, 3782, 0], items: ['waxedSled', 'boots'] },
-    ug: { text: 'Teleport off the plateau (the lower sled ride only takes you round the upper slope again) and give the Trollweiss to Ug.', npc: 'trollromance_ug', at: [2827, 10064, 1], items: ['flower'] },
+    ug: { text: 'With the waxed sled still worn, ride the lower slope down from its barrier to the foot of the mountain, go back through the tunnel to Trollheim and give the Trollweiss to Ug.', npc: 'trollromance_ug', at: [2827, 10064, 1], items: ['flower', 'waxedSled'] },
     arrg: { text: 'Challenge Arrg, beside Aga, and defeat him outside.', npc: 'trollromance_arrg', at: [2828, 10095, 1], options: ['I am here to kill you!'] },
     finish: { text: 'Tell Ug that Arrg is defeated.', npc: 'trollromance_ug', at: [2827, 10064, 1] },
   },
