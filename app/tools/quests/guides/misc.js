@@ -1,0 +1,78 @@
+// Throne of Miscellania. Based on Quest Helper's ThroneOfMiscellania (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (quest_misc: king_vargas, queen_sigrid,
+// prince_brand, princess_astrid, advisor_ghrim, derrik, misc_quest, misc_journal; quest_viking
+// viking_sailor; area_miscellania misc_sailor) and maps; the step texts follow our journal. Men
+// court Princess Astrid and women Prince Brand: each courting round asks three questions (the
+// right answers are offered below), a gift and, in the first and last rounds, an emote.
+module.exports = {
+  quest: 'misc',
+  members: true,
+  difficulty: 'Experienced',
+  start: 'Talk to King Vargas in Miscellania castle (take the longship from the Rellekka docks).',
+  items: {
+    awful: { name: 'Awful anthem', obj: 'misc_awful_anthem' },
+    good: { name: 'Good anthem', obj: 'misc_good_anthem' },
+    treaty: { name: 'Treaty', obj: 'misc_treaty' },
+    ironBar: { name: 'Iron bar', obj: 'iron_bar' },
+    nib: { name: 'Giant nib', obj: 'misc_giant_nib' },
+    logs: { name: 'Logs', obj: ['logs', 'oak_logs', 'willow_logs', 'maple_logs', 'yew_logs', 'magic_logs'] },
+    pen: { name: 'Giant pen', obj: 'misc_giant_pen' },
+    flowers: { name: 'Flowers', category: 'flowers', tip: 'The flower girl in Miscellania sells them' },
+    bow: { name: 'Any bow (for Astrid)', obj: ['shortbow', 'longbow', 'oak_shortbow', 'oak_longbow', 'willow_shortbow', 'willow_longbow', 'maple_shortbow', 'maple_longbow', 'yew_shortbow', 'yew_longbow', 'magic_shortbow', 'magic_longbow'] },
+    cake: { name: 'A cake (for Brand)', obj: ['cake', 'chocolate_cake', 'partial_cake', 'partial_chocolate_cake', 'cake_slice', 'chocolate_slice'] },
+    ring: { name: 'A gold or gem ring', obj: ['gold_ring', 'sapphire_ring', 'emerald_ring', 'ruby_ring', 'diamond_ring', 'ring_of_life'] },
+  },
+  required: ['ironBar', 'logs', 'flowers', 'ring'],
+  skills: ["Heroes' Quest and The Fremennik Trials completed", 'Recommended: 35 Herblore or 45 Woodcutting (to win the people over)'],
+  flags: {
+    courting: { on: ['That is true. However, I am willing to give you a chance; if you impress me enough, I will consider accepting to marry you.', 'This may be the case. I am willing to give you a chance; if you impress me enough, I will consider accepting to marry you.'] },
+    round1: { on: ['Oh, but I realise you have not yet told me your name!'] },
+    round2: { on: ['Not yet, my dear; let us just say you have made it onto the shortlist.', 'Not yet, my darling; let us just say my heart is a maze of inescapable tunnels, and you are the light at the end of one of them.'] },
+    married: { on: ['You give Princess Astrid the ring.', 'You give Prince Brand the ring.', 'The Princess agreed to marry me.', 'The Prince agreed to marry me.'] },
+  },
+  steps: {
+    start: { text: 'Take the longship from the Rellekka docks to Miscellania and talk to King Vargas upstairs in the castle; offer to rule in his stead.', npc: 'misc_king_vargas', at: [2501, 3859, 1] },
+    sigrid: { text: 'Talk to Queen Sigrid upstairs in Etceteria castle, east across the bridge.', npc: 'misc_queen_sigrid', at: [2612, 3877, 1] },
+    vargas2: { text: 'Tell King Vargas what Queen Sigrid wants.', npc: 'misc_king_vargas', at: [2501, 3859, 1] },
+    sigrid2: { text: 'Tell Queen Sigrid about the anthem.', npc: 'misc_queen_sigrid', at: [2612, 3877, 1] },
+    brand: { text: 'Ask Prince Brand to compose an anthem.', npc: 'misc_prince_brand', at: [2502, 3852, 1] },
+    ghrim: { text: 'Have Advisor Ghrim correct the awful anthem.', npc: 'misc_advisor_ghrim', at: [2499, 3857, 1], items: ['awful'] },
+    sigrid3: { text: 'Show the good anthem to Queen Sigrid; she gives you the treaty.', npc: 'misc_queen_sigrid', at: [2612, 3877, 1], items: ['good'] },
+    vargas3: { text: 'Give the treaty to King Vargas.', npc: 'misc_king_vargas', at: [2501, 3859, 1], items: ['treaty'] },
+    derrik: { text: 'Ask Derrik the smith in Miscellania for a giant nib, with an iron bar.', npc: 'misc_smithy', at: [2551, 3897, 0], items: ['ironBar'], options: ['I have a slightly strange request...'] },
+    pen: { text: 'Put the nib on some logs to make a giant pen, and give it to King Vargas.', npc: 'misc_king_vargas', at: [2501, 3859, 1], items: ['nib', 'logs'] },
+    court: { text: 'Talk to Princess Astrid (Prince Brand if you are a woman) and ask for her hand.', npc: 'misc_princess_astrid', at: [2502, 3868, 1] },
+    round1: { text: 'First round: talk three times and give the right answers, give flowers, and dance for Astrid (cheer or clap for Brand). Then talk again.', npc: 'misc_princess_astrid', at: [2502, 3868, 1], items: ['flowers'], options: ['Archery is a noble art!', 'Hahahaha!', "He's been very helpful.", 'Be still, my heart.', 'They don\'t understand your poetry as I do.', 'You will be the greatest bard!'] },
+    round2: { text: 'Second round: talk three times with the right answers and give Astrid a bow (Brand a cake). Then talk again.', npc: 'misc_princess_astrid', at: [2502, 3868, 1], items: ['bow'], options: ['That sounds like a good idea.', 'What happened next?', "I'm quite fond of it myself.", 'A much nobler pursuit, to be sure.', 'How inspiring!', 'How poetic.'] },
+    round3: { text: 'Last round: talk three times with the right answers, blow a kiss, and give a ring.', npc: 'misc_princess_astrid', at: [2502, 3868, 1], items: ['ring'], options: ["It's a lovely little country.", 'And what a great bard he makes!', "I suppose you don't have much opportunity to.", "That was lovely. I'm touched!", "I wouldn't presume to have the skill...", "I'm glad to hear it."] },
+    support: { text: "Win over 75% of the people: help them chop the maples, mine, fish, and rake the herb patch. Advisor Ghrim tells you how far you've got.", npc: 'misc_advisor_ghrim', at: [2499, 3857, 1], options: ['How do I gain the support of the population?'] },
+    finish: { text: 'Tell King Vargas you have the people\'s support and the royal betrothal.', npc: 'misc_king_vargas', at: [2501, 3859, 1] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    10: [[null, 'sigrid']],
+    20: [[null, 'vargas2']],
+    30: [[null, 'sigrid2']],
+    40: [[null, 'brand']],
+    50: [[null, 'ghrim']],
+    60: [[null, 'sigrid3']],
+    70: [[null, 'vargas3']],
+    80: [
+      ['have:nib | have:pen', 'pen'],
+      [null, 'derrik'],
+    ],
+    90: [
+      ['seen:married', 'support'],
+      ['seen:round2', 'round3'],
+      ['seen:round1', 'round2'],
+      ['seen:courting', 'round1'],
+      [null, 'court'],
+    ],
+  },
+  sections: [
+    { title: 'Peace with Etceteria', steps: ['start', 'sigrid', 'vargas2', 'sigrid2', 'brand', 'ghrim', 'sigrid3', 'vargas3', 'derrik', 'pen'], items: ['ironBar', 'logs'] },
+    { title: 'The royal wedding', steps: ['court', 'round1', 'round2', 'round3'], items: ['flowers', 'bow', 'ring'] },
+    { title: 'The people', steps: ['support', 'finish'] },
+  ],
+  rewards: ['1 Quest Point', 'Management of Miscellania'],
+};
