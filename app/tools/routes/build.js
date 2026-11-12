@@ -286,11 +286,15 @@ function destinations(text, inst) {
 
 const TRIG = /^\[oploc(\d),(\w+)\]/;
 const LINKS = /eascape_link|@unhandled_(ladder|stairs)/;
+// scripts that only move you a step or two (a fence, a stile): their squares lead nowhere else
+const LOCAL = /~climb_fence|~climb_stile/;
 // EASCape: loc options whose own script moves you (so a stray eascape_links row for the same
 // square and option, which that script never reads, isn't a way too)
 const scripted = new Set();
 const guardedAt = new Set(); // squares:op whose own case/if branch moves you (the link rows there are never read)
-const linkUsers = new Set(); // trigger:op blocks that can reach ~eascape_link (or @unhandled_*)
+const linkUsers = new Set();
+const destLines = new Map(); // name:op -> [{ s, guard }]: the destination lines of its script
+const changesTo = new Map(); // name:op -> the loc its script changes into (a trapdoor opening) // trigger:op blocks that can reach ~eascape_link (or @unhandled_*)
 for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let trig = null;
@@ -303,7 +307,10 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       trig = { op: +t[1], name: t[2] };
       caseCoord = null;
       ifCoord = null;
-      if (LINKS.test(s)) linkUsers.add(`${trig.name}:${trig.op}`);
+      for (const nm of trig.name.startsWith('_') ? byCategory.get(trig.name.slice(1)) || [] : [trig.name]) {
+        if (LINKS.test(s)) linkUsers.add(`${nm}:${trig.op}`);
+        if (LOCAL.test(s)) scripted.add(`${nm}:${trig.op}`);
+      }
       if (!DEST.test(s)) continue; // the call can be on the trigger line itself
     }
     if (s.startsWith('[') && !t) {
@@ -313,6 +320,9 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     if (!trig) continue;
     const names = trig.name.startsWith('_') ? byCategory.get(trig.name.slice(1)) || [] : [trig.name];
     if (LINKS.test(s)) for (const nm of names) linkUsers.add(`${nm}:${trig.op}`);
+    if (LOCAL.test(s)) for (const nm of names) scripted.add(`${nm}:${trig.op}`);
+    const lc = /^loc_change\(\s*(\w+)\s*,/.exec(s);
+    if (lc && !caseCoord && !ifCoord) for (const nm of names) changesTo.set(`${nm}:${trig.op}`, lc[1]);
     const cm = /^case\s+(\d_\d+_\d+_\d+_\d+)\s*:/.exec(s);
     if (cm) caseCoord = coord(cm[1]);
     else if (/^case\s+default/.test(s)) caseCoord = 'default';
@@ -321,6 +331,11 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     if (!DEST.test(s)) continue;
     const guard = ifCoord || caseCoord;
     ifCoord = null;
+    for (const nm of names) {
+      const dk = `${nm}:${trig.op}`;
+      if (!destLines.has(dk)) destLines.set(dk, []);
+      destLines.get(dk).push({ s, guard });
+    }
     for (const nm of names) scripted.add(`${nm}:${trig.op}`);
     for (const nm of names) {
       for (const inst of instances.get(nm) || []) {
@@ -335,6 +350,21 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       }
     }
     if (!(instances.get(names[0]) || []).length) unresolved++;
+  }
+}
+// EASCape: a loc that only changes into another (a closed trapdoor opening) leads where the
+// changed loc's first option does, from the closed loc's own squares
+for (const [k, into] of changesTo) {
+  const [nm, op] = k.split(':');
+  if (destLines.has(k)) continue; // it moves you itself
+  for (const inst of instances.get(nm) || []) {
+    for (const { s, guard } of destLines.get(`${into}:1`) || []) {
+      if (guard && guard !== 'default' && (inst.x !== guard.x || inst.z !== guard.z || inst.level !== guard.level)) continue;
+      for (const d of destinations(s, inst)) {
+        if (d.level < 0 || d.level > 3) continue;
+        link(inst, d, into, +op);
+      }
+    }
   }
 }
 
