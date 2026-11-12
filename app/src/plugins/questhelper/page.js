@@ -15,6 +15,9 @@
   let lastPoll = 0;
   let loginAt = 0;
   let chatTop = null; // the newest chat line we have seen
+  let liveAsked = ''; // EASCape: the ::appquests request sent this login (the varp ids)
+  let liveSince = 0;
+  const command = (text) => !!(ll.api && ll.api.command && ll.api.command(text));
   const RED = 0xff0000;
   const YELLOW = 0xffff00;
   const GREEN = 0x00ff00;
@@ -112,6 +115,37 @@
     if (f.chatModal && c[f.chatModal] >= 0) {
       // what's said, not the options on offer (picking one is what moves a quest on)
       data.dialogue = texts(c[f.chatModal]).filter((t) => t.button !== 1).map((t) => t.text).join(' ');
+    }
+    // EASCape: ask the server to send each quest's variable as it changes (::appquests, app
+    // only), then read them from the client: the quest's real stage, live.
+    const live = cfg.live || {};
+    const want = [...new Set(Object.values(live).map((v) => v.id))].sort((a, b) => a - b).join(',');
+    if (!ll.loggedIn) {
+      liveAsked = '';
+      liveSince = 0;
+    } else if (want && liveAsked !== want) {
+      if (!liveSince) liveSince = now;
+      // a command is a chat line (80 characters at most), so the ids go a few at a time: the
+      // first line replaces the list, the rest (+...) add to it
+      const chunks = [];
+      for (const id of want.split(',')) {
+        const last = chunks[chunks.length - 1];
+        if (last && last.length + id.length < 60) chunks[chunks.length - 1] = `${last},${id}`;
+        else chunks.push(id);
+      }
+      if (now - liveSince >= 1500 && chunks.every((s, i) => command(`appquests ${i ? '+' : ''}${s}`))) {
+        liveAsked = want;
+        liveSince = now; // the server answers within a tick or two: read them after that
+      }
+    }
+    const v = liveAsked && now - liveSince >= 2000 && f.varps ? c[f.varps] : null;
+    if (v) {
+      data.live = {};
+      for (const [key, s] of Object.entries(live)) {
+        const bits = s.hi - s.lo + 1;
+        const raw = v[s.id] | 0;
+        data.live[key] = bits >= 32 ? raw : (raw >>> s.lo) & ((1 << bits) - 1);
+      }
     }
     const ids = new Set();
     for (const n of g.npcs()) ids.add(n.id);
@@ -308,5 +342,5 @@
     },
   });
 
-  ll.__questHelper = { texts, newMessages, poll: (g) => { lastPoll = 0; poll(g); } };
+  ll.__questHelper = { texts, newMessages, poll: (g) => { lastPoll = 0; poll(g); }, live: () => ({ asked: liveAsked, ids: Object.keys(cfg.live || {}).length }) };
 })();

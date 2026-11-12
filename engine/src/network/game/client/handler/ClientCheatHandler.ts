@@ -133,6 +133,32 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             return true;
         }
 
+        // EASCape: the app's Quest Helper asks for the quest variables it follows, sent to it
+        // live as they change (only from the app; only number variables, at most 300):
+        // ::appquests 160,553,... (a new list), ::appquests +29,... (more; a chat line is 80
+        // characters at most) or ::appquests off
+        if (cmd === 'appquests') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            if (!args[0] || args[0] === 'off') {
+                player.appQuestVarps = null;
+                return true;
+            }
+            const adding = args[0].startsWith('+');
+            const ids = adding && player.appQuestVarps ? player.appQuestVarps : new Set<number>();
+            for (const s of args[0].replace(/^\+/, '').split(',')) {
+                const id = Number(s);
+                const type = Number.isInteger(id) ? VarPlayerType.get(id) : undefined;
+                if (type && type.type !== ScriptVarType.STRING && ids.size < 300) {
+                    ids.add(id);
+                }
+            }
+            player.appQuestVarps = ids.size ? ids : null;
+            player.sendAppQuestVarps();
+            return true;
+        }
+
         // EASCape: test-mode shortcuts that run a debugproc without the ~ (::maxstats, ::barrowset)
         // and every quest's ::<quest>pack (cheat_questpacks.rs2) and ::questpacks, the list of them
         if (!Environment.NODE_PRODUCTION && (EASCAPE_TEST_COMMANDS.includes(cmd) || (/^[a-z0-9_]+packs?$/.test(cmd) && ScriptProvider.getByName(`[debugproc,${cmd}]`)))) {

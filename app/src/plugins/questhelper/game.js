@@ -76,6 +76,8 @@ module.exports = function questHelper(ctx) {
     }
     if (d.dialogue) moved = moved.concat(engine.dialogue(d.dialogue));
     for (const m of d.messages || []) moved = moved.concat(engine.message(m));
+    // EASCape: the quest variables the server sends live (last, so they win)
+    if (d.live) moved = moved.concat(engine.live(d.live));
     have.npcs = new Set(d.npcs || []);
     if (moved.length) {
       markDirty();
@@ -194,6 +196,7 @@ module.exports = function questHelper(ctx) {
     const config = {
       listComs: Object.fromEntries(Object.entries(progress.quests).filter(([, q]) => q.com).map(([k, q]) => [k, q.com])),
       journal: progress.journal,
+      live: Object.fromEntries(Object.entries(progress.quests).filter(([, q]) => q.live).map(([k, q]) => [k, q.live])),
       step: step ? { npc: step.npc, locAt: step.locAt, locSize: step.locSize, obj: step.obj, at: step.at, options: step.options, dig: step.dig } : null,
       route: ctx.config('showRoute') ? pts : null,
       showRoute: !!ctx.config('showRoute'),

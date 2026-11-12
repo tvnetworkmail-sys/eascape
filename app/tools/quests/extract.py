@@ -311,6 +311,48 @@ def main(root, out):
     for key in sorted(buttons):
         if key not in quests and key in names and if_ids.get('questlist:' + key):
             quests[key] = {'name': names[key], 'com': if_ids.get('questlist:' + key), 'varp': None, 'complete': None, 'journal': [], 'dialogue': {}}
+    # EASCape: where each quest's variable lives, so the app can ask the server to send it live
+    # (::appquests): {id: varp id, lo, hi: its bits}. Quests with no journal we can read take the
+    # variable the quest list colours from (general/scripts/quests.rs2).
+    listvar = {}
+    with open(os.path.join(scripts, 'general', 'scripts', 'quests.rs2'), encoding='utf-8') as f:
+        for mm in re.finditer(r'send_quest_progress_colour\(questlist:(\w+),\s*%(\w+),\s*\^(\w+)\)', f.read()):
+            listvar[mm.group(1)] = (mm.group(2), consts.get(mm.group(3)))
+    varp_ids = {}
+    with open(os.path.join(root, 'pack', 'varp.pack')) as f:
+        for ln in f:
+            a, _, b = ln.strip().partition('=')
+            if b:
+                varp_ids[b] = int(a)
+    varbits = {}
+    for dirpath, _, fns in os.walk(scripts):
+        for fn in fns:
+            if not fn.endswith('.varbit'):
+                continue
+            cur = None
+            with open(os.path.join(dirpath, fn), encoding='utf-8', errors='replace') as f:
+                for ln in f:
+                    ln = ln.strip()
+                    mm = re.match(r'^\[(\w+)\]$', ln)
+                    if mm:
+                        cur = mm.group(1)
+                        varbits[cur] = {}
+                    elif cur and '=' in ln:
+                        k, v = ln.split('=', 1)
+                        varbits[cur][k] = v
+    for key, q in quests.items():
+        if not q.get('varp') and key in listvar:
+            q['varp'] = listvar[key][0]
+            if q.get('complete') is None:
+                q['complete'] = listvar[key][1]
+        n = q.get('varp')
+        b = varbits.get(n) or {}
+        if n in varp_ids:
+            q['live'] = {'id': varp_ids[n], 'lo': 0, 'hi': 31}
+        elif b.get('basevar') in varp_ids:
+            q['live'] = {'id': varp_ids[b['basevar']], 'lo': int(b['startbit']), 'hi': int(b['endbit'])}
+        else:
+            q['live'] = None
     data = {
         'list': if_ids.get('questlist'),
         'journal': {'root': if_ids.get('questjournal_scroll'), 'title': if_ids.get('questjournal_scroll:ifquestname'),

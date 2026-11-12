@@ -177,6 +177,26 @@ class QuestEngine {
     return changed;
   }
 
+  /** EASCape: each quest's variable straight from the server ({ key: value }, ::appquests).
+   * It is the quest's real stage, so it wins over the quest list, journal and conversations.
+   * Returns the quests whose stage moved. */
+  live(values) {
+    const changed = [];
+    for (const [key, value] of Object.entries(values)) {
+      if (!this.progress.quests[key] || !Number.isFinite(value)) continue;
+      const q = this.quest(key);
+      if (q.stage !== value) {
+        if (value < q.stage || value === 0) q.flags = {};
+        q.stage = value;
+        changed.push(key);
+      }
+      q.sure = true;
+      q.listed = true;
+      q.live = true;
+    }
+    return changed;
+  }
+
   flagsFrom(shown, changed) {
     for (const [key, g] of Object.entries(this.guides)) {
       for (const [name, f] of Object.entries(g.flags || {})) {

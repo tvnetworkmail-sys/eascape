@@ -560,6 +560,7 @@ export default class Player extends PathingEntity {
                 this.writeVarp(varp, value);
             }
         }
+        this.sendAppQuestVarps();
         // reload entity info (overkill? does the client have some logic around this?)
         this.buildArea.clear(true);
         // rebuild scene later this tick (note: rebuild won't run on the client if you're in the same zone!)
@@ -1817,6 +1818,16 @@ export default class Player extends PathingEntity {
         return varp.type === ScriptVarType.STRING ? this.varsString[varp.id] : this.vars[varp.id];
     }
 
+    // EASCape: quest variables the app's Quest Helper asked for (::appquests), sent to this
+    // client as they change, like a transmitted varp
+    appQuestVarps: Set<number> | null = null;
+
+    sendAppQuestVarps(): void {
+        for (const id of this.appQuestVarps ?? []) {
+            this.writeVarp(id, this.vars[id] ?? 0);
+        }
+    }
+
     setVar(id: number, value: number | string) {
         const varp = VarPlayerType.get(id);
         if (!varp) {
@@ -1828,7 +1839,7 @@ export default class Player extends PathingEntity {
         } else if (typeof value === 'number') {
             this.vars[varp.id] = value;
 
-            if (varp.transmit) {
+            if (varp.transmit || this.appQuestVarps?.has(varp.id)) {
                 this.writeVarp(id, value);
             }
         }
