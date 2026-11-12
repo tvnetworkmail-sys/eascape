@@ -92,7 +92,9 @@ function locType(id) {
     blockwalk: yes(c.blockwalk, true),
     active: c.active !== undefined ? yes(c.active, false) : c.ops.length > 0,
     // Doors and gates: the route walks through them (you open them on the way).
-    door: c.ops.some((o) => o === 'open' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through'),
+    door: c.ops.some((o) => o === 'open' || o === 'walk-through' || o === 'pass-through' || o === 'squeeze-through')
+      // EASCape: secret walls and panels you push through
+      || (c.ops.includes('push') && /door|oddwall|panel/.test(c.name || '')),
   };
 }
 
@@ -283,16 +285,24 @@ function destinations(text, inst) {
 }
 
 const TRIG = /^\[oploc(\d),(\w+)\]/;
+const LINKS = /eascape_link|@unhandled_(ladder|stairs)/;
+// EASCape: loc options whose own script moves you (so a stray eascape_links row for the same
+// square and option, which that script never reads, isn't a way too)
+const scripted = new Set();
+const linkUsers = new Set(); // trigger:op blocks that can reach ~eascape_link (or @unhandled_*)
 for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let trig = null;
   let caseCoord = null;
+  let ifCoord = null; // EASCape: if (loc_coord = X) { ... } guards only the next destination
   for (const raw of lines) {
     const s = raw.trim();
     const t = TRIG.exec(s);
     if (t) {
       trig = { op: +t[1], name: t[2] };
       caseCoord = null;
+      ifCoord = null;
+      if (LINKS.test(s)) linkUsers.add(`${trig.name}:${trig.op}`);
       if (!DEST.test(s)) continue; // the call can be on the trigger line itself
     }
     if (s.startsWith('[') && !t) {
@@ -301,14 +311,20 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
     }
     if (!trig) continue;
     const names = trig.name.startsWith('_') ? byCategory.get(trig.name.slice(1)) || [] : [trig.name];
+    if (LINKS.test(s)) for (const nm of names) linkUsers.add(`${nm}:${trig.op}`);
     const cm = /^case\s+(\d_\d+_\d+_\d+_\d+)\s*:/.exec(s);
     if (cm) caseCoord = coord(cm[1]);
     else if (/^case\s+default/.test(s)) caseCoord = 'default';
+    const im = /^if\s*\(\s*loc_coord\s*=\s*(\d_\d+_\d+_\d+_\d+)\s*\)/.exec(s);
+    if (im) ifCoord = coord(im[1]);
     if (!DEST.test(s)) continue;
+    const guard = ifCoord || caseCoord;
+    ifCoord = null;
+    for (const nm of names) scripted.add(`${nm}:${trig.op}`);
     for (const nm of names) {
       for (const inst of instances.get(nm) || []) {
-        if (caseCoord && caseCoord !== 'default') {
-          if (inst.x !== caseCoord.x || inst.z !== caseCoord.z || inst.level !== caseCoord.level) continue;
+        if (guard && guard !== 'default') {
+          if (inst.x !== guard.x || inst.z !== guard.z || inst.level !== guard.level) continue;
         }
         for (const d of destinations(s, inst)) {
           if (d.level < 0 || d.level > 3) continue;
@@ -324,8 +340,12 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
 // stairs, ladders and cave exits, ~eascape_link): from a loc's square to a square, or by a move.
 {
   const at = new Map();
+  const allAt = new Map(); // every loc on a square
+
   for (const [name, list] of instances) for (const inst of list) {
     const k = `${inst.x},${inst.z},${inst.level}`;
+    if (!allAt.has(k)) allAt.set(k, []);
+    allAt.get(k).push(name);
     const cur = at.get(k);
     if (!cur || inst.w * inst.l > cur.inst.w * cur.inst.l) at.set(k, { name, inst });
   }
@@ -344,6 +364,9 @@ for (const file of walk(path.join(root, 'scripts'), '.rs2')) {
       if (!from) continue;
       const hit = at.get(`${from.x},${from.z},${from.level}`);
       const inst = hit ? hit.inst : { x: from.x, z: from.z, level: from.level, w: 1, l: 1 };
+      // a row only works for a loc whose script falls through to ~eascape_link
+      const kos = (allAt.get(`${from.x},${from.z},${from.level}`) || []).map((nm) => `${nm}:${+r.op || 1}`);
+      if (kos.length && kos.every((ko) => scripted.has(ko) && !linkUsers.has(ko))) continue;
       let to;
       if (r.kind === '1') to = { rel: [+r.dx || 0, +r.dl || 0, +r.dz || 0] };
       else {
