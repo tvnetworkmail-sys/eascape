@@ -1,0 +1,75 @@
+// Demon Slayer. Based on Quest Helper's DemonSlayer (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (gypsy, sir_prysin, captain_rovin,
+// traiborn, demon_slayer, delrith) and maps. Our incantation is always the same one
+// (delrith.rs2), and Traiborn counts the bones in the quest stage (3 to 28).
+module.exports = {
+  quest: 'demon',
+  difficulty: 'Novice',
+  start: 'Talk to the Gypsy in her tent in Varrock square.',
+  items: {
+    coin: { name: 'Coins', obj: 'coins', qty: 1, tip: 'To cross the Gypsy\'s palm' },
+    water: { name: 'Bucket of water', obj: 'bucket_water', tip: 'Fill a bucket at the sink in the palace kitchen, or any fountain' },
+    bones: { name: 'Bones', obj: 'bones', qty: 25, qtyFromStage: [-1, 28], tip: 'Dropped by most creatures, such as chickens and goblins' },
+    key1: { name: 'Key (Traiborn)', obj: 'silverlight_key_1' },
+    key2: { name: 'Key (Captain Rovin)', obj: 'silverlight_key_2' },
+    key3: { name: 'Key (the drain)', obj: 'silverlight_key_3' },
+    silverlight: { name: 'Silverlight', obj: 'silverlight', worn: true },
+  },
+  required: ['coin', 'water', 'bones'],
+  skills: ['Able to defeat Delrith (level 27)'],
+  flags: {
+    washed: { on: ["Ok, I think I've washed the key down to the sewer."] },
+  },
+  journal: [
+    { lo: 0, texts: ['I can start this quest by speaking to the Gypsy in the tent', "in Varrock's main square", 'I must be able to defeat an apocalyptic demon!'] },
+    { lo: 1, texts: ['I spoke to the Gypsy in Varrock Square who saw my future.', 'Unfortunately it involved killing a demon who nearly', 'destroyed Varrock over 150 years ago.', 'To defeat the demon I need the magical sword of Silverlight.', 'I should ask Sir Prysin in Varrock Palace where it is.'] },
+    {
+      lo: 2,
+      hi: 28,
+      texts: ['I spoke to the Gypsy in Varrock Square who saw my future.', 'Unfortunately it involved killing a demon who nearly', 'destroyed Varrock over 150 years ago.', 'To defeat the demon I need the magical sword of Silverlight.',
+        'Sir Prysin needs 3 keys before he can give me Silverlight.', 'Now I have all 3 keys I should go and speak to Sir', 'collect the magical sword Silverlight from him.',
+        'I have the 1st Key with me.', 'The 1st Key was dropped down the palace kitchen drains.', 'Maybe some water can dislodge it.', 'I have the 2nd Key with me.', 'The 2nd Key is with Captain Rovin in Varrock Palace.',
+        'I have the 3rd Key with me.', "The 3rd Key is with Wizard Traiborn at the Wizards' Tower,", 'south of Draynor Village.'],
+    },
+    { lo: 29, texts: ['I spoke to the Gypsy in Varrock Square who saw my future.', 'Unfortunately it involved killing a demon who nearly', 'destroyed Varrock over 150 years ago.', 'I reclaimed the magical sword Silverlight from Sir Prysin.', 'Now I should go to the stone circle south of the city and', 'destroy Delrith using Silverlight!'] },
+    { lo: 30, hi: 1000000, texts: ['I reclaimed the magical sword Silverlight from Sir Prysin.', 'Using its power I managed to destroy the demon Delrith', 'like the great hero Wally did many years before.', 'QUEST COMPLETE!'] },
+  ],
+  zones: {
+    sewer: [3200, 9860, 3260, 9920, 0],
+  },
+  steps: {
+    start: { text: 'Talk to the Gypsy in her tent in Varrock square and give her a coin.', npc: 'aris', at: [3203, 3424, 0], items: ['coin'], options: ['Ok, here you go.', 'Who\'s Delrith?', 'Okay, where is he? I\'ll kill him for you!'] },
+    prysin: { text: 'Talk to Sir Prysin in the south-west of Varrock Palace.', npc: 'sir_prysin', at: [3204, 3473, 0], options: ['Gypsy Aris said I should come and talk to you.', 'I need to find Silverlight.', "He's back and unfortunately I've got to deal with him.", 'So give me the keys!'] },
+    rovin: { text: 'Climb to the top of Varrock Palace and talk to Captain Rovin.', npc: 'captain_rovin', at: [3204, 3496, 2], options: ['Yes I know, but this is important.', "There's a demon who wants to invade this city."] },
+    drain: { text: 'Use a bucket of water on the drain outside the palace kitchen to wash the key into the sewer.', loc: 'questdrain', at: [3225, 3495, 0], items: ['water'] },
+    sewerKey: { text: 'Go down into the Varrock sewers and pick up the key under the drain.', at: [3225, 9897, 0] },
+    traiborn: { text: 'Talk to Wizard Traiborn on the first floor of the Wizards\' Tower.', npc: 'traiborn', at: [3112, 3162, 1], options: ['I need to get a key given to you by Sir Prysin.', 'Well, have you got any keys knocking around?', "I'll get the bones for you."] },
+    bones: { text: 'Bring Wizard Traiborn the bones he needs (25 in all).', npc: 'traiborn', at: [3112, 3162, 1], items: ['bones'] },
+    traibornKey: { text: 'Talk to Wizard Traiborn for his key.', npc: 'traiborn', at: [3112, 3162, 1] },
+    silverlight: { text: 'Bring the three keys to Sir Prysin.', npc: 'sir_prysin', at: [3204, 3473, 0], items: ['key1', 'key2', 'key3'] },
+    delrith: { text: 'Wield Silverlight and fight Delrith in the stone circle south of Varrock. When he is weakened, choose the incantation.', npc: 'delrith', at: [3229, 3370, 0], items: ['silverlight'], options: ['Carlem Aber Camerinthum Purchai Gabindo'] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    1: [[null, 'prysin']],
+    '2-28': [
+      ['have:key1 & have:key2 & have:key3', 'silverlight'],
+      ['!have:key2', 'rovin'],
+      ['!have:key3 & seen:washed', 'sewerKey'],
+      ['!have:key3', 'drain'],
+      ['!have:key1 & stage=2', 'traiborn'],
+      ['!have:key1 & stage=28', 'traibornKey'],
+      ['!have:key1', 'bones'],
+      [null, 'silverlight'],
+    ],
+    29: [[null, 'delrith']],
+  },
+  sections: [
+    { title: 'Starting off', steps: ['start', 'prysin'], items: ['coin'] },
+    { title: 'Captain Rovin\'s key', steps: ['rovin'] },
+    { title: 'The key in the drain', steps: ['drain', 'sewerKey'], items: ['water'] },
+    { title: 'Traiborn\'s key', steps: ['traiborn', 'bones', 'traibornKey'], items: ['bones'] },
+    { title: 'Silverlight', steps: ['silverlight', 'delrith'] },
+  ],
+  rewards: ['3 Quest Points', 'Silverlight'],
+};
