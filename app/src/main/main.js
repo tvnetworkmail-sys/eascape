@@ -88,7 +88,7 @@ function updateMinSize() {
 }
 
 function setTitle() {
-  const t = `EASCape${state.world ? ` - World ${state.world}` : ''}`;
+  const t = `2006RS${state.world ? ` - World ${state.world}` : ''}`;
   win.setTitle(t);
   emit('patch', { title: t });
 }
@@ -174,7 +174,7 @@ async function confirmLeaveGame(message) {
     buttons: ['Yes', 'Cancel'],
     defaultId: 1,
     cancelId: 1,
-    title: 'EASCape',
+    title: '2006RS',
     message,
     detail: 'You are logged in. Log out in game first to avoid leaving your character standing in the world.',
   });
@@ -201,7 +201,8 @@ function createWindow() {
     drawDistance: plugins.isEnabled('camera') ? plugins.value('camera', 'drawDistance') : 25,
   }));
 
-  state.activePanel = config.get('lostlite', 'activePanel', 'info') || null;
+  // always opens on Info, so players see when an update is ready
+  state.activePanel = 'info';
   let saved = core('rememberWindow') ? config.get('lostlite', 'windowBounds', null) : null;
   // Ignore a saved position that is no longer on any screen (monitor unplugged etc.).
   if (saved) {
@@ -223,7 +224,7 @@ function createWindow() {
     frame: false,
     show: false,
     backgroundColor: '#1e1e1e',
-    title: 'EASCape',
+    title: '2006RS',
     icon: path.join(__dirname, '..', 'ui', 'assets', 'icons', 'logo_256.png'),
   });
   if (saved && saved.maximized) win.maximize();
@@ -273,7 +274,7 @@ function createWindow() {
   win.on('close', async (e) => {
     if (closing || !core('confirmClose') || !state.loggedIn) return;
     e.preventDefault();
-    if (await confirmLeaveGame('Are you sure you want to close EASCape?')) {
+    if (await confirmLeaveGame('Are you sure you want to close 2006RS?')) {
       closing = true;
       win.close();
     }
@@ -309,7 +310,7 @@ function createWindow() {
     // show a waiting page and try again every few seconds
     if (!isMain || code === -3) return;
     const html = '<body style="margin:0;background:#000;color:#ff981f;font:16px Arial;display:flex;align-items:center;justify-content:center;height:100vh">'
-      + 'Waiting for the EASCape server at ' + worlds.SITE + ' ...</body>';
+      + 'Connecting to 2006RS ...</body>';
     gwc.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html)).catch(() => {});
     setTimeout(() => { if (gameView) loadWorld(state.world || 1); }, 3000);
   });
@@ -376,6 +377,12 @@ ipcMain.on('game-event', (e, ev) => {
       break;
     case 'runtime-ready':
       for (const w of (ev.data && ev.data.warnings) || []) log.warn(w);
+      // ours: the client reports what it has here (it's built in, so the loader's own status has no
+      // features); the Info panel reads them from state.client
+      if (ev.data && ev.data.features && state.client) {
+        state.client = { ...state.client, features: ev.data.features, fields: ev.data.fields || state.client.fields };
+        emit('patch', { client: state.client });
+      }
       break;
     case 'runtime-error':
       log.warn(`Runtime error: ${ev.data}`);
@@ -605,6 +612,31 @@ ipcMain.handle('hop', async (e, id) => {
   return true;
 });
 
+// ours: the Test Server panel's commands (only on the test server, only its own commands), run by
+// the test page's client (window.EASCAPE_TEST.send, webclient Client.ts)
+const TEST_COMMAND = /^(setstat [a-z]+ \d{1,2}|testspawn \d{1,5} \d{1,10}|testkit|testclearbank|testquests|spellbookswap (ancient|normal))$/;
+ipcMain.handle('test-command', async (e, cmd) => {
+  if (!fromChrome(e) || state.world !== worlds.TEST_WORLD || typeof cmd !== 'string' || !TEST_COMMAND.test(cmd)) return false;
+  try {
+    return await gameView.webContents.executeJavaScript(`!!(window.EASCAPE_TEST && window.EASCAPE_TEST.send && window.EASCAPE_TEST.send(${JSON.stringify(cmd)}))`);
+  } catch {
+    return false;
+  }
+});
+
+let testItems = null;
+ipcMain.handle('test-items', async (e) => {
+  if (!fromChrome(e)) return [];
+  if (testItems) return testItems;
+  try {
+    const res = await gameView.webContents.session.fetch(`${worlds.SITE}/test/items.json`);
+    if (res.ok) testItems = await res.json();
+  } catch {
+    testItems = null;
+  }
+  return testItems || [];
+});
+
 ipcMain.on('reload-game', (e) => {
   if (fromChrome(e)) loadWorld(state.world);
 });
@@ -650,8 +682,11 @@ ipcMain.handle('profile', (e, action, a, b) => {
   return config.profiles();
 });
 
-ipcMain.on('install-update', (e) => {
-  if (fromChrome(e)) updater.install();
+ipcMain.on('install-update', async (e) => {
+  if (!fromChrome(e)) return;
+  if (!(await confirmLeaveGame('Close the game and update now?'))) return;
+  closing = true; // already asked: don't ask again as the window closes
+  updater.install();
 });
 
 // ------------------------------------------------------------------ startup
@@ -714,7 +749,14 @@ app.whenReady().then(() => {
   });
 
   createWindow();
-  // EASCape: no self-updating installer (the repo is private); start.bat pulls updates instead
+  // the installed app updates itself from https://2006rs.com/download/ (latest.yml and the installer)
+  updater.init({
+    log,
+    onStatus: (status) => {
+      state.update = status;
+      emit('patch', { update: status });
+    },
+  });
 });
 
 app.on('window-all-closed', () => app.quit());

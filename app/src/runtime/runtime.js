@@ -71,6 +71,7 @@
         post('hooked', { fields: Object.keys(this.fields) });
         this.hookChat(client);
       }
+      this.checkGameShown();
       if (this.iconQueue.size) this.drawIcons();
     },
 
@@ -287,8 +288,53 @@
       return f && this.client ? this.client[f] : undefined;
     },
 
+    // ---- is the game world on screen? (the one check everything drawn over the game uses)
+    //
+    // Not on the title screen, and not while a full-screen interface is up: the welcome
+    // screen with your last login is one (login.rs2's if_openfull), and the client then
+    // draws only that and none of the game frame. The client's own fields are read, so
+    // this is exact rather than timed, and it's asked on every packet-read call, so it
+    // changes within a frame. Plugins in the page get screenShown(shown) and can read
+    // ll.gameShown; those in the preload get ctx.gameShown() and a 'game-shown' message.
+    gameShown: false,
+    worldBuilt: false,
+
+    readGameShown(c = this.client) {
+      if (!c) return false;
+      const flag = this.fields.inGame ? c[this.fields.inGame] : undefined;
+      if (flag === false) {
+        this.worldBuilt = false;
+        return false;
+      }
+      // Logging in, the welcome screen arrives just after the client says it's in the game
+      // and before the map is built: nothing shows until the world has been built once. A
+      // later map load (walking on) doesn't count, so nothing blinks at region edges.
+      const scene = c[this.fields.sceneState || 'sceneState'];
+      if (typeof scene !== 'number' || scene === 2) this.worldBuilt = true;
+      if (!this.worldBuilt) return false;
+      const full = c[this.fields.fullscreen || 'fullscreenId'];
+      return !(typeof full === 'number' && full !== -1);
+    },
+
+    checkGameShown(c) {
+      const shown = this.readGameShown(c);
+      if (shown === this.gameShown) return shown;
+      this.gameShown = shown;
+      for (const p of this.activePlugins) {
+        if (!p.impl.screenShown) continue;
+        try {
+          p.impl.screenShown(shown);
+        } catch (e) {
+          post('runtime-error', `${p.id} screenShown: ${e && e.message}`);
+        }
+      }
+      post('game-shown', shown);
+      return shown;
+    },
+
     poll() {
       try {
+        this.checkGameShown();
         const now = performance.now();
         // the client's own logged-in flag when it has one; otherwise no game tick for 3 seconds
         const flag = this.fields.inGame && this.client ? this.client[this.fields.inGame] : undefined;
@@ -672,6 +718,7 @@
     title(c) {
       const f = this.fields;
       this.titleClient = c;
+      this.checkGameShown(); // gone as soon as the title screen is up, not at the next poll
       if (!f.loginScreen) return;
       const screen = c[f.loginScreen];
       if (screen === this.lastScreen) return;
@@ -1497,6 +1544,7 @@
 
     /** layer 0: world overlays, under the open interface and menu; 1: over them. */
     frame(c, layer) {
+      if (!this.checkGameShown(c)) return;
       if (layer === 1 && this.flashState) {
         try {
           this.drawFlash(c);
@@ -2209,7 +2257,8 @@
   }, true);
   window.addEventListener('mousedown', (e) => {
     const p = viewPoint(e);
-    if (!p || !ll.activePlugins.length) return;
+    // what isn't on screen can't be clicked (an info box's last position, say)
+    if (!p || !ll.gameShown || !ll.activePlugins.length) return;
     for (const pl of ll.activePlugins) {
       if (!pl.impl.mouseDown) continue;
       let eaten = false;

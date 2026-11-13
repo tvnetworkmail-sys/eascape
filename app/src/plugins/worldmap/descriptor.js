@@ -4,7 +4,7 @@
 module.exports = {
   id: 'worldmap',
   name: 'World Map',
-  description: 'A map of the 2004 world, opened from the globe by the minimap',
+  description: 'A map of the 2006 world, opened from the globe by the minimap',
   tags: ['world', 'map', 'location', 'minimap', 'icons', 'labels'],
   enabledByDefault: true,
   game: './worldmap/game.js',

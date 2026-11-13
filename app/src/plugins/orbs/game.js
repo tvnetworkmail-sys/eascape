@@ -225,7 +225,7 @@ module.exports = function statusOrbs(ctx) {
   }
 
   function render() {
-    if (!loggedIn || !player || !ctx.canvas()) {
+    if (!loggedIn || !player || !ctx.canvas() || !ctx.gameShown()) {
       hideAll();
       return;
     }
@@ -263,6 +263,8 @@ module.exports = function statusOrbs(ctx) {
         } else if (type === 'login-state') {
           loggedIn = !!data;
           if (!loggedIn) player = null;
+          render();
+        } else if (type === 'game-shown') {
           render();
         }
       });

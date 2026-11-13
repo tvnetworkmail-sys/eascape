@@ -19,7 +19,7 @@ module.exports = {
     ],
     items: [
       { section: 'zoomSection', key: 'inner', name: 'Expand inner zoom limit', description: 'Lets you zoom in closer than normal', type: 'boolean', default: false, position: 1 },
-      { section: 'zoomSection', key: 'outerLimit', name: 'Expand outer zoom limit', description: 'How much further out you can zoom, in percent. EASCape draws 50 tiles around you (the most the game loads), so zooming right out still fills the view.', type: 'int', default: 100, min: 0, max: 100, unit: '%', position: 2 },
+      { section: 'zoomSection', key: 'outerLimit', name: 'Expand outer zoom limit', description: 'How much further out you can zoom, in percent. 2006RS draws 50 tiles around you (the most the game loads), so zooming right out still fills the view.', type: 'int', default: 100, min: 0, max: 100, unit: '%', position: 2 },
       { section: 'zoomSection', key: 'controlFunction', name: 'Control function', description: 'What holding Ctrl does', type: 'enum', default: 'none', options: [{ value: 'none', label: 'None' }, { value: 'reset', label: 'Control to reset' }], position: 4 },
       { section: 'zoomSection', key: 'ctrlZoomValue', name: 'Reset zoom position', description: 'Zoom level to reset to, in percent (100 is the original 2004 view)', type: 'int', default: 100, min: 50, max: 200, unit: '%', position: 5 },
       { section: 'zoomSection', key: 'zoomIncrement', name: 'Zoom speed', description: 'How far each step of the mouse wheel zooms', type: 'int', default: 25, min: 1, max: 100, position: 6 },

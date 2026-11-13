@@ -109,7 +109,7 @@ module.exports = function bankSearch(ctx) {
 
   function render() {
     const g = scale();
-    if (!open || !g) {
+    if (!open || !g || !ctx.gameShown()) {
       if (button) button.style.display = 'none';
       if (deposit) deposit.style.display = 'none';
       showPrompt(false);
@@ -238,6 +238,8 @@ module.exports = function bankSearch(ctx) {
           render();
         } else if (type === 'bank-count') {
           found = data;
+          render();
+        } else if (type === 'game-shown') {
           render();
         }
       });

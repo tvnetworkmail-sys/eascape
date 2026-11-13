@@ -5,8 +5,8 @@ window.Panels = window.Panels || [];
 
 (() => {
   const { h, icon } = UI;
-  const ISSUES = 'https://github.com/tvnetworkmail-sys/lostlite/issues';
-  const SITE = 'https://2004.lostcity.rs/';
+  const ISSUES = 'https://discord.gg/Dvp79Rpph';
+  const SITE = 'https://2006rs.com/';
 
   function line(label, value, cls) {
     return h('div.small', {}, h('span.muted', { text: label }), h('span', { class: cls || 'white', text: value }));
@@ -24,7 +24,7 @@ window.Panels = window.Panels || [];
     switch (u.state) {
       case 'checking': return line('Updates: ', 'checking...', 'muted');
       case 'current': return line('Updates: ', 'up to date', 'green');
-      case 'downloading': return line('Updates: ', `downloading ${u.version || ''} ${u.percent ? u.percent + '%' : ''}`, 'amber');
+      case 'downloading': return line('Updates: ', 'downloading the new version...', 'amber');
       case 'ready': return null;
       case 'portable': return line('Updates: ', 'manual (portable version)', 'muted');
       case 'error': return line('Updates: ', 'check failed', 'muted');
@@ -52,9 +52,14 @@ window.Panels = window.Panels || [];
       const esc = f ? (f.chat ? ['available', 'green'] : ['unavailable', 'red']) : null;
       const u = s.update;
       root.replaceChildren(h('div.pad', {},
+        u && u.state === 'ready'
+          ? h('button.btn.block', { style: 'margin-bottom:10px;background:#166534;border-color:#22c55e;font-weight:bold', onclick: () => window.lostlite.installUpdate() }, `Update app to ${u.version}`)
+          : null,
+        u && u.state === 'downloading'
+          ? h('button.btn.block', { style: 'margin-bottom:10px', disabled: true }, `Downloading update${u.percent ? ' ' + u.percent + '%' : ''}...`)
+          : null,
         h('div.info-version', {},
-          line('EASCape version: ', s.version),
-          line('Lost City revision: ', '274'),
+          line('2006RS version: ', s.version),
           line('World: ', s.world != null ? String(s.world) : '-'),
           line('Client hook: ', hook[0], hook[1]),
           zoom ? line('Camera zoom: ', zoom[0], zoom[1]) : null,
@@ -67,12 +72,9 @@ window.Panels = window.Panels || [];
           line('Logged in: ', s.loggedIn ? 'yes' : 'no', s.loggedIn ? 'green' : 'muted'),
           updateLine(u),
           c && c.type === 'client-patch-failed' ? h('div.small.red', { text: c.error, style: 'margin-top:6px' }) : null),
-        u && u.state === 'ready'
-          ? h('button.btn.block', { style: 'margin-top:10px', onclick: () => window.lostlite.installUpdate() }, `Restart to update to ${u.version}`)
-          : null,
         linkPanel('github_icon.png', 'Report an issue or', 'make a suggestion', () => window.lostlite.openExternal(ISSUES)),
-        linkPanel('worldhopper_icon.png', 'Visit the Lost City', 'website and forums', () => window.lostlite.openExternal(SITE)),
-        linkPanel('config_edit_icon.png', 'Open the folder with', 'EASCape\'s log files', () => window.lostlite.openLogs()),
+        linkPanel('worldhopper_icon.png', 'Visit the 2006RS', 'website', () => window.lostlite.openExternal(SITE)),
+        linkPanel('config_edit_icon.png', 'Open the folder with', '2006RS\'s log files', () => window.lostlite.openLogs()),
         linkPanel('reset.png', 'Reload the game', 'if something looks stuck', () => window.lostlite.reloadGame())));
     },
   });

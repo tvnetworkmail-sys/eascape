@@ -21,7 +21,7 @@ function install(ses, onStatus, _getOptions = () => ({})) {
   const handler = async (request) => {
     const url = new URL(request.url);
     const passthrough = () => ses.fetch(request, { bypassCustomProtocolHandlers: true });
-    if (!isWorldHost(url.hostname) || url.pathname !== '/client/client.js') {
+    if (!isWorldHost(url.hostname) || (url.pathname !== '/client/client.js' && url.pathname !== '/test/client/client.js')) { // ours: and the test server's
       return passthrough();
     }
     try {

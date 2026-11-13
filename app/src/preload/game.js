@@ -250,6 +250,7 @@ window.addEventListener('resize', resize);
 // ------------------------------------------------------------------ runtime messages
 
 let runtimeReady = false;
+let gameShown = false; // the game world is on screen (see the runtime's checkGameShown)
 const runtimeListeners = new Set();
 
 window.addEventListener('message', (e) => {
@@ -257,6 +258,7 @@ window.addEventListener('message', (e) => {
   if (e.source !== window || !m || m.__lostlite !== true || typeof m.type !== 'string') return;
   ipcRenderer.send('game-event', { type: m.type, data: m.data });
   if (m.type === 'runtime-ready') runtimeReady = true;
+  if (m.type === 'game-shown') gameShown = !!m.data;
   for (const fn of runtimeListeners) safe(() => fn(m.type, m.data));
   if (m.type === 'runtime-ready' || m.type === 'hooked' || m.type === 'login-state') {
     for (const p of running.values()) if (p.gameReady) safe(() => p.gameReady());
@@ -313,6 +315,9 @@ function contextFor(p) {
       return r && r.width ? r.width / GAME_W : 1;
     },
     runtimeReady: () => runtimeReady,
+    /** The game world is on screen: not the title screen or the full-screen welcome screen.
+     * Anything put over the game checks this and listens for 'game-shown' with onRuntime. */
+    gameShown: () => gameShown,
     /** Listen to messages from the in-page runtime: fn(type, data). Returns an unsubscribe. */
     onRuntime: (fn) => {
       runtimeListeners.add(fn);

@@ -46,7 +46,7 @@ function isInstalled() {
 }
 
 function install() {
-  if (autoUpdater) autoUpdater.quitAndInstall(false, true);
+  if (autoUpdater) autoUpdater.quitAndInstall(true, true);
 }
 
 module.exports = { init, install };

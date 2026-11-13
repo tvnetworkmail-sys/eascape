@@ -30,7 +30,7 @@ module.exports = function hiscore(ctx) {
     state = { name, loading: true, result: null, error: null };
     report();
     try {
-      const res = await fetch(`${location.origin}/hiscores/player/${encodeURIComponent(name.toLowerCase())}`, { cache: 'no-store' });
+      const res = await fetch(`${location.origin}/hiscores/player/${encodeURIComponent(name.toLowerCase())}`, { cache: 'no-store', headers: { Accept: 'application/json' } }); // ours: on 2006rs.com this path is the website's, which relays JSON requests to the game
       if (mine !== seq) return;
       if (res.status === 404) {
         state = { name, loading: false, result: null, error: 'not found' };

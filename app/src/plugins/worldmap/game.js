@@ -236,7 +236,7 @@ module.exports = function worldMap(ctx) {
   }
 
   function draw() {
-    if (!open || !canvas) return;
+    if (!open || !canvas || !ctx.gameShown()) return;
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(paint);
   }
@@ -386,7 +386,7 @@ module.exports = function worldMap(ctx) {
 
   // Esc closes the open map; the map hotkey (Ctrl+M) goes through the hotkey system
   function onKey(e) {
-    if (open && e.key === 'Escape') {
+    if (open && ctx.gameShown() && e.key === 'Escape') {
       e.preventDefault();
       e.stopImmediatePropagation();
       hide();
@@ -397,10 +397,12 @@ module.exports = function worldMap(ctx) {
   // A click anywhere else in the game (minimap, tabs, chat) closes the map and still
   // does what it normally does.
   function onOutside(e) {
-    if (open && root && !root.contains(e.target)) hide();
+    if (open && root && ctx.gameShown() && !root.contains(e.target)) hide();
   }
 
-  const onToggle = () => (open ? hide() : show());
+  const onToggle = () => {
+    if (ctx.gameShown()) (open ? hide() : show());
+  };
   const onMarkers = (e) => {
     const d = e.detail || {};
     if (!d.source) return;
@@ -426,10 +428,17 @@ module.exports = function worldMap(ctx) {
           }
         } else if (type === 'login-state' && !data) {
           player = null;
+        } else if (type === 'game-shown' && open && root) {
+          // an open map steps aside for the title and welcome screens and comes back as it was
+          root.style.display = data ? 'flex' : 'none';
+          if (data) {
+            placeWindow();
+            draw();
+          }
         }
       });
       window.addEventListener('keydown', onKey, true);
-      offHotkey = ctx.hotkey('hotkey', { pressed: onToggle });
+      offHotkey = ctx.hotkey('hotkey', { when: () => ctx.gameShown(), pressed: onToggle });
       window.addEventListener('lostlite-worldmap', onToggle);
       window.addEventListener('resize', onResize);
       window.addEventListener('pointerdown', onOutside, true);

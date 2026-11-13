@@ -43,8 +43,9 @@ const App = {
       this.renderPanel(true);
       return;
     }
-    // A plugin with its own sidebar panel was switched on or off: add or remove its icon.
-    if (changed.includes('config')) {
+    // A plugin with its own sidebar panel was switched on or off: add or remove its icon (ours: and
+    // a world change, for the test server's own panel)
+    if (changed.includes('config') || changed.includes('world')) {
       const ids = this.panels().map((p) => p.id).join(',');
       if (ids !== this.tabIds) {
         if (this.activeId && !this.panels().some((p) => p.id === this.activeId)) {
@@ -61,7 +62,7 @@ const App = {
   // ---- title bar
 
   buildTitlebar() {
-    document.getElementById('title').textContent = this.state.title || 'EASCape';
+    document.getElementById('title').textContent = this.state.title || '2006RS';
     document.querySelectorAll('[data-win]').forEach((b) => b.addEventListener('click', () => window.lostlite.window(b.dataset.win)));
     document.getElementById('titlebar').addEventListener('dblclick', (e) => {
       if (!e.target.closest('button')) window.lostlite.window('maximize');

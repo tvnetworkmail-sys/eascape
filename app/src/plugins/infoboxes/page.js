@@ -651,6 +651,19 @@
     }
   }
 
+  // This overlay is its own canvas, so what it last drew stays up until it's wiped. Gone at
+  // once for the title and welcome screens; the next frame after them paints it again.
+  function clearOverlay() {
+    ops = [];
+    drawn = [];
+    hover = null;
+    if (ui && ui.ctx) {
+      ui.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ui.ctx.clearRect(0, 0, ui.canvas.width, ui.canvas.height);
+    }
+    lastPaint = Infinity;
+  }
+
   // Nothing drawn for a moment (logged out, loading): clear the overlay.
   if (typeof setInterval === 'function') {
     setInterval(() => {
@@ -744,6 +757,9 @@
     mouseDown,
     mouseMove,
     mouseUp,
+    screenShown(shown) {
+      if (!shown) clearOverlay();
+    },
     blur() {
       drag = null;
     },

@@ -6,7 +6,7 @@
 module.exports = {
   id: 'devtools',
   name: 'Developer Tools',
-  description: 'Sidebar panel showing the live game data EASCape reads: your player, inventory, equipment, and the NPCs and players around you',
+  description: 'Sidebar panel showing the live game data 2006RS reads: your player, inventory, equipment, and the NPCs and players around you',
   tags: ['developer', 'dev', 'debug', 'tools', 'inspector', 'location', 'inventory', 'equipment'],
   enabledByDefault: false,
   game: './devtools/game.js',
