@@ -10666,6 +10666,11 @@ export class Client extends GameShell {
                                     // LostLite: text a plugin draws on the item (the Slayer plugin's count on the
                                     // gem), like RuneLite's item overlays: top left, white with a shadow
                                     const tag = lostlite()?.itemText?.(id, child.id);
+                                    if (tag && typeof tag.outline === 'number') {
+                                        // EASCape: a box round the item (the Puzzle Solver's next piece)
+                                        Pix2D.drawRect(slotX + dx, slotY + dy, 32, 32, tag.outline);
+                                        Pix2D.drawRect(slotX + dx + 1, slotY + dy + 1, 30, 30, tag.outline);
+                                    }
                                     if (tag && tag.text) {
                                         this.p11?.drawString(String(tag.text), slotX + dx, slotY + 11 + dy, Colour.BLACK);
                                         this.p11?.drawString(String(tag.text), slotX + dx - 1, slotY + 10 + dy, typeof tag.colour === 'number' ? tag.colour : Colour.WHITE);

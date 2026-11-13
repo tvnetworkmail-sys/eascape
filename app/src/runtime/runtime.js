@@ -207,7 +207,7 @@
         if (pl && !pl.enabled) continue;
         try {
           const r = fn(obj, com);
-          if (r && r.text) return r;
+          if (r && (r.text || r.outline)) return r; // (outline: a box round the item, the Puzzle Solver's)
         } catch {
           /* never stop the game drawing its items */
         }

@@ -44,5 +44,6 @@ module.exports = [
   require('./hiscore/descriptor'),
   require('./grimyherbs/descriptor'),
   require('./questhelper/descriptor'),
+  require('./puzzlesolver/descriptor'),
   require('./devtools/descriptor'),
 ];
