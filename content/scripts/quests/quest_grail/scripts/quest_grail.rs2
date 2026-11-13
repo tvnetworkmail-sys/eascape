@@ -3,10 +3,11 @@
 if(%grail > ^grail_not_started) {
     def_boolean $entering = ~check_axis(coord, loc_coord, loc_angle);
     if($entering = true) {
-        if(npc_find(coord, merlin2, 6, 0) = true) {
-            npc_del;
+        // EASCape: Merlin stands in his workshop (on the map now, so he's seen before the door
+        // opens); this only brings him back if he's missing
+        if(npc_find(coord, merlin2, 6, 0) = false) {
+            npc_add(1_43_54_15_44, merlin2, 500);
         }
-        npc_add(1_43_54_15_44, merlin2, 500);
     }
     ~open_and_close_door(loc_1535, $entering, false);
     return;
