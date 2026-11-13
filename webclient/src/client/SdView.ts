@@ -19,8 +19,9 @@ const MAX_PIXELS = 2560 * 1600;
 // EASCape: the frame is drawn only as large as this computer can draw it smoothly. The 3D world's
 // draw time is measured every frame; the scale steps down (0.25 at a time) while it's over the
 // budget and back up when the next step would still fit, down to 1x (no extra cost at all). The
-// game loop has 20 ms a frame at 50 fps; the world gets at most BUDGET_MS of it.
-const BUDGET_MS = 8;
+// game loop has 20 ms a frame at 50 fps; the world gets at most BUDGET_MS of it (the rest is the
+// 2D, the copy and the browser).
+const BUDGET_MS = 14;
 const STEP = 0.25;
 
 export default class SdView {
@@ -37,6 +38,7 @@ export default class SdView {
     private static offY = 0;
     private static bw = 0;
     private static bh = 0;
+    static full = false; // the app's 'Always full resolution': no limit
     static k = 1; // the scale of the frame being drawn (while active)
     private static limit = Infinity; // the most this computer can keep up with (adaptive)
     private static ema = -1; // the world's draw time (ms), smoothed
@@ -76,7 +78,8 @@ export default class SdView {
         }
         // the app's setting, when it's there, decides
         const app = document.documentElement.getAttribute('data-eascape-sd');
-        const on = app !== null ? app === 'on' : SdView.enabled;
+        const on = app !== null ? app === 'on' || app === 'full' : SdView.enabled;
+        SdView.full = app === 'full';
         if (!on || !canvas) {
             return 1;
         }
@@ -104,7 +107,7 @@ export default class SdView {
     static begin(x: number, y: number, width: number, height: number, offX: number, offY: number): void {
         SdView.t0 = performance.now();
         const want = SdView.scale(width, height);
-        const k = Math.min(want, SdView.limit);
+        const k = SdView.full ? want : Math.min(want, SdView.limit);
         SdView.drawnK = want > 1 && k > 1.05 ? k : 1;
         SdView.wanted = want;
         if (k <= 1.05) {
@@ -148,8 +151,17 @@ export default class SdView {
     private static wanted = 1;
 
     // the world's draw time this frame: adjust the limit
+    // EASCape: steps back up by trying the next scale and seeing (estimating it from the 1x draw time
+    // was too pessimistic: much of the world's time doesn't grow with the pixels, so once down at 1x
+    // it never came back and the setting looked like it did nothing). A step that doesn't fit is
+    // tried again later, waiting longer each time it fails.
+    private static retryAt = 0;
+    private static backoff = 2000;
+    private static steadySince = 0;
+
     private static adapt(): void {
-        const ms = performance.now() - SdView.t0;
+        const now = performance.now();
+        const ms = now - SdView.t0;
         if (SdView.wanted <= 1.05) {
             SdView.ema = -1; // not scaled: nothing to judge
             return;
@@ -163,14 +175,18 @@ export default class SdView {
         if (SdView.ema > BUDGET_MS && k > 1) {
             const next = k - STEP > 1.05 ? Math.floor((k - STEP) / STEP) * STEP : 1;
             SdView.limit = Math.max(1, next);
-            SdView.ema *= (SdView.limit * SdView.limit) / (k * k);
+            SdView.ema = -1;
             SdView.hold = 15;
-        } else if (k < SdView.wanted) {
-            const next = Math.min(SdView.wanted, Math.floor(k / STEP) * STEP + STEP);
-            // pessimistic: the whole draw time grows with the pixels
-            if (SdView.ema * ((next * next) / (k * k)) < BUDGET_MS * 0.85) {
-                SdView.limit = next;
-                SdView.ema *= (next * next) / (k * k);
+            SdView.retryAt = now + SdView.backoff;
+            SdView.backoff = Math.min(SdView.backoff * 2, 60000);
+            SdView.steadySince = now;
+        } else {
+            if (now - SdView.steadySince > 20000) {
+                SdView.backoff = 2000; // it has kept up for a while: retry sooner next time
+            }
+            if (k < SdView.wanted && SdView.ema < BUDGET_MS * 0.75 && now >= SdView.retryAt) {
+                SdView.limit = Math.min(SdView.wanted, Math.floor(k / STEP) * STEP + STEP);
+                SdView.ema = -1;
                 SdView.hold = 30;
             }
         }
@@ -178,6 +194,7 @@ export default class SdView {
 
     static end(): void {
         SdView.adapt();
+        (globalThis as any).__eascapeSd = { want: SdView.wanted, k: SdView.drawnK, ms: SdView.ema }; // (for checking from the console)
         if (!SdView.active) {
             SdView.hide();
             return;

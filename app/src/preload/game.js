@@ -163,7 +163,7 @@ let canvas = null;
 // EASCape: the high-resolution 3D view (webclient SdView) is the app's choice: the page reads
 // this attribute (the web page without the app has it off unless ?sdres=on)
 function applySdView() {
-  document.documentElement.setAttribute('data-eascape-sd', cfg('lostlite', 'sdView') ? 'on' : 'off');
+  document.documentElement.setAttribute('data-eascape-sd', cfg('lostlite', 'sdView') ? (cfg('lostlite', 'sdFull') ? 'full' : 'on') : 'off');
 }
 
 function applyGameFrame() {
@@ -408,7 +408,7 @@ ipcRenderer.on('config-changed', (_e, c) => {
   else values[k] = c.value;
   if (c.group === 'lostlite') {
     if (/Plugin$/.test(c.key)) sync();
-    if (c.key === 'sdView') applySdView();
+    if (c.key === 'sdView' || c.key === 'sdFull') applySdView();
     if (['hideWebsite', 'gameSize', 'pixelated'].includes(c.key)) {
       applyWebsiteFrame();
       applyGameFrame();
