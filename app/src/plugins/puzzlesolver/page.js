@@ -14,6 +14,7 @@
   let cfg = {};
   let enabled = false;
   let lastKey = '';
+  let nextKey = '';
   let solution = null;
   let mark = null; // { com, obj, left }
 
@@ -41,8 +42,18 @@
     const board = ids.map((id) => (id >= 0 ? order.indexOf(id) : GAP));
     const key = board.join(',');
     if (key !== lastKey) {
+      // the click the plan asked for: just drop it (solving again only after a different click)
+      if (solution && solution.length && nextKey === key) solution = solution.slice(1);
+      else solution = typeof ll.__puzzleSolve === 'function' ? ll.__puzzleSolve(board) : null;
       lastKey = key;
-      solution = typeof ll.__puzzleSolve === 'function' ? ll.__puzzleSolve(board) : null;
+      nextKey = '';
+      if (solution && solution.length) {
+        const b = board.slice();
+        const gap = b.indexOf(GAP);
+        b[gap] = b[solution[0]];
+        b[solution[0]] = GAP;
+        nextKey = b.join(',');
+      }
     }
     if (!solution || !solution.length) return;
     mark = { com: p.grid, obj: ids[solution[0]], left: solution.length };

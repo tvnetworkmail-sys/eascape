@@ -176,9 +176,110 @@
     return path;
   }
 
+  // EASCape: a shorter solution first - weighted A* (cost so far + 2 x the estimate left: each
+  // piece's distance from home plus 2 for each pair in its right row or column but the wrong way
+  // round), which finds about 80 clicks for a well shuffled puzzle instead of about 175. It gives
+  // up after SEARCH_LIMIT positions (well under a second) and the piece-by-piece solver below
+  // takes over, which always finds one.
+  const SEARCH_LIMIT = 150000;
+
+  function estimate(b) {
+    let s = 0;
+    for (let i = 0; i < CELLS; i++) {
+      const t = b[i];
+      if (t !== GAP) s += Math.abs(((t / N) | 0) - ((i / N) | 0)) + Math.abs((t % N) - (i % N));
+    }
+    for (let r = 0; r < N; r++) {
+      for (let a = 0; a < N; a++) {
+        const ta = b[r * N + a];
+        if (ta === GAP || ((ta / N) | 0) !== r) continue;
+        for (let c2 = a + 1; c2 < N; c2++) {
+          const tb = b[r * N + c2];
+          if (tb !== GAP && ((tb / N) | 0) === r && tb < ta) s += 2;
+        }
+      }
+    }
+    for (let c = 0; c < N; c++) {
+      for (let a = 0; a < N; a++) {
+        const ta = b[a * N + c];
+        if (ta === GAP || ta % N !== c) continue;
+        for (let r2 = a + 1; r2 < N; r2++) {
+          const tb = b[r2 * N + c];
+          if (tb !== GAP && tb % N === c && tb < ta) s += 2;
+        }
+      }
+    }
+    return s;
+  }
+
+  function searchPuzzle(start) {
+    const key = (b) => String.fromCharCode(...b);
+    const heap = [];
+    const push = (x) => {
+      heap.push(x);
+      let i = heap.length - 1;
+      while (i > 0) {
+        const p = (i - 1) >> 1;
+        if (heap[p][0] <= heap[i][0]) break;
+        [heap[p], heap[i]] = [heap[i], heap[p]];
+        i = p;
+      }
+    };
+    const pop = () => {
+      const top = heap[0];
+      const last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        let i = 0;
+        for (;;) {
+          let m = i;
+          const l = 2 * i + 1;
+          const r = l + 1;
+          if (l < heap.length && heap[l][0] < heap[m][0]) m = l;
+          if (r < heap.length && heap[r][0] < heap[m][0]) m = r;
+          if (m === i) break;
+          [heap[m], heap[i]] = [heap[i], heap[m]];
+          i = m;
+        }
+      }
+      return top;
+    };
+    const sk = key(start);
+    const parent = new Map([[sk, null]]);
+    const cost = new Map([[sk, 0]]);
+    push([2 * estimate(start), 0, start, start.indexOf(GAP)]);
+    let seen = 0;
+    while (heap.length) {
+      const [, g, b, gap] = pop();
+      const k = key(b);
+      if (cost.get(k) < g) continue;
+      if (estimate(b) === 0) {
+        const path = [];
+        for (let cur = k; parent.get(cur); cur = parent.get(cur)[0]) path.push(parent.get(cur)[1]);
+        return path.reverse();
+      }
+      if (++seen > SEARCH_LIMIT) return null;
+      for (const m of NB[gap]) {
+        const nb = b.slice();
+        nb[gap] = nb[m];
+        nb[m] = GAP;
+        const nk = key(nb);
+        if (cost.has(nk) && cost.get(nk) <= g + 1) continue;
+        cost.set(nk, g + 1);
+        parent.set(nk, [k, m]);
+        push([g + 1 + 2 * estimate(nb), g + 1, nb, m]);
+      }
+    }
+    return null;
+  }
+
   /** board: 25 cells, piece numbers 0-23 (where they belong) and 24 for the gap.
    *  Returns the cells to click, in order (each slides that piece into the gap). */
   function solvePuzzle(start) {
+    return searchPuzzle(start) || solveInStages(start);
+  }
+
+  function solveInStages(start) {
     const board = start.slice();
     const locked = new Array(CELLS).fill(false);
     const moves = [];
