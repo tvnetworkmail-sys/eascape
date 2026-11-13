@@ -1948,9 +1948,15 @@
     // and the special attack bar of each weapon's combat tab).
     RUN: { walk: 151, run: 152, varp: 173 },
     SPEC: { energyVarp: 300, onVarp: 301 },
+    // EASCape: every combat tab with a special attack bar in our interfaces (content/pack/interface.pack:
+    // X:specbar and X:specbar_layer), the whip, polearm and 2007-style combat07_* tabs included; the
+    // 274 list missed those, so the orb did nothing with e.g. the magic shortbow (combat07_bow)
     SPECBARS: [[425, 7462, 7474], [1698, 7487, 7499], [1749, 7512, 7524], [1764, 7537, 7549], [2276, 7562, 7574], [2423, 7587, 7599],
       [3796, 7612, 7624], [4446, 7637, 7649], [4679, 7662, 7674], [4705, 7687, 7699], [5570, 7712, 7724], [5855, 7737, 7749],
-      [7762, 7788, 7800], [8460, 8481, 8493]], // [combat tab, bar, bar layer]
+      [7762, 7788, 7800], [12290, 12311, 12323], [18968, 18989, 19001], [21231, 21242, 21244], [21264, 21275, 21277],
+      [21297, 21306, 21308], [21327, 21338, 21340], [21378, 21389, 21391], [21411, 21422, 21424], [21444, 21455, 21457],
+      [21477, 21488, 21490], [21510, 21521, 21523], [21543, 21552, 21554], [21573, 21582, 21584], [21603, 21612, 21614],
+      [21633, 21642, 21644], [21663, 21672, 21674], [21693, 21708, 21710], [21728, 21737, 21739]], // [combat tab, bar, bar layer]
 
     /** Runs a button press through the client's own doAction, like clicking it. */
     pressButton(comId, kind) {
