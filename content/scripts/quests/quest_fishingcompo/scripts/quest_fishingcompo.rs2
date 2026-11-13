@@ -96,7 +96,10 @@ if(%hemenster_comp_stage = ^hemenster_comp_paidfee) {
 }
 
 [proc,move_hemenster_pipe]
-if(npc_find(coord, sinister_stranger, 8, 0) = true) {
+// EASCape: looks 16 squares round, not 8 (ours): the stranger is one NPC for everyone, and once
+// someone's garlic has moved him (or he has wandered off) he stood too far from the pipe for the
+// next player's garlic to find him, so he never complained (the spot was still yours)
+if(npc_find(coord, sinister_stranger, 16, 0) = true) {
     ~chatnpc("<p,angry>Arrgh! WHAT is that GHASTLY smell???|I think I will move over here instead...");
     npc_tele(0_41_53_7_43); // telejumps in classic
     npc_facesquare(movecoord(npc_coord, 1, 0, 0));
