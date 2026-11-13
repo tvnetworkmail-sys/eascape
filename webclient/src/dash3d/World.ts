@@ -108,7 +108,10 @@ export default class World {
         if (tile.quickGround !== null || tile.ground !== null || tile.wall !== null || tile.decor !== null) {
             return false;
         }
-        return below !== null && (below.quickGround !== null || below.ground !== null) && below.wall === null;
+        // EASCape: and only where something stands on the square below for it to be the top of (a
+        // tree's trunk): scenery over a bare floor is part of the building - a pub's hanging sign,
+        // a roof's overhang - and drawn without the walls it hangs from it floats in mid air.
+        return below !== null && (below.quickGround !== null || below.ground !== null) && below.wall === null && below.spriteCount > 0;
     }
 
     private static cycleNo: number = 0;
