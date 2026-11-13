@@ -129,7 +129,9 @@ switch_obj(last_useitem) {
         p_delay(0);
         mes("The kitten laps up the milk.");
         npc_say("Purpurr");
-    case raw_shrimp, raw_anchovies, raw_sardine, raw_trout, trout, raw_salmon, salmon, raw_tuna, tuna :
+    // EASCape: any raw or cooked fish (OSRS wiki, Kitten: "Any raw or cooked fish ..."; Void's pet
+    // food list has lobster, swordfish, shark and the rest); Lost City 274 only had shrimp to tuna
+    case raw_shrimp, shrimp, raw_anchovies, anchovies, raw_sardine, sardine, raw_herring, herring, raw_mackerel, mackerel, raw_trout, trout, raw_cod, cod, raw_pike, pike, raw_salmon, salmon, raw_tuna, tuna, raw_lobster, lobster, raw_bass, bass, raw_swordfish, swordfish, raw_monkfish, monkfish, raw_shark, shark, raw_seaturtle, seaturtle, raw_mantaray, mantaray, cave_eel :
         %cat_growth = setbit_range_toint(%cat_growth, 0, 0, 4);
         def_string $fishname = lowercase(oc_name(last_useitem));
         inv_del(inv, last_useitem, 1);
