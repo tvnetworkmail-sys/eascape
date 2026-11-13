@@ -19,6 +19,7 @@ module.exports = function questHelper(ctx) {
   let saveTimer = null;
   let lastCommand = null;
   let current = null;
+  let liveSynced = false; // the server's quest values have arrived since logging in
 
   // ---- saving: per account, in this profile's settings
 
@@ -32,6 +33,7 @@ module.exports = function questHelper(ctx) {
     if (!key || key === account) return;
     flush();
     account = key;
+    liveSynced = false;
     engine.load(allSaved()[account]);
     route = null;
     routeKey = '';
@@ -77,14 +79,26 @@ module.exports = function questHelper(ctx) {
     if (d.dialogue) moved = moved.concat(engine.dialogue(d.dialogue));
     for (const m of d.messages || []) moved = moved.concat(engine.message(m));
     // EASCape: the quest variables the server sends live (last, so they win)
-    if (d.live) moved = moved.concat(engine.live(d.live));
+    // (the first values after logging in aren't moves you made: they don't auto start anything)
+    let liveMoved = [];
+    if (d.live) {
+      liveMoved = engine.live(d.live);
+      moved = moved.concat(liveMoved);
+      if (!liveSynced) {
+        liveSynced = true;
+        liveMoved = [];
+      }
+    }
     have.npcs = new Set(d.npcs || []);
     if (moved.length) {
       markDirty();
       // Auto start: a guided quest that just moved on becomes the one we show.
       if (ctx.config('autoStart')) {
         const k = moved.find((q) => guides[q] && engine.status(q) === 'started');
-        if (k && k !== selected() && (d.dialogue || d.journal)) select(k);
+        // (a quest the server says just started or moved on counts too: the conversation that
+        // started it has often closed before the server's new value arrives)
+        const k2 = k && (d.dialogue || d.journal || liveMoved.includes(k)) ? k : liveMoved.find((q) => guides[q] && engine.status(q) === 'started');
+        if (k2 && k2 !== selected()) select(k2);
       }
     }
     update();
@@ -288,6 +302,7 @@ module.exports = function questHelper(ctx) {
         } else if (type === 'login-state' && !data) {
           flush();
           account = null;
+          liveSynced = false;
           update();
         }
       });
