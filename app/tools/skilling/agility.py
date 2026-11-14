@@ -81,14 +81,27 @@ for content in sys.argv[1:]:
             continue
         for name, body in blocks(text):
             m = re.search(r'stat\(agility\) < (\d+)', body)
-            if not m:
+            # EASCape: crossings with no level too (stiles, fences, under-wall tunnels, anything
+            # that gives Agility XP), at level 1, as RuneLite highlights them
+            free = re.search(r'~(climb_stile|climb_fence|underwall_tunnel|agility_climb_up|agility_force_move)\b|stat_advance\(agility,', body)
+            if not m and not free:
                 continue
             for i in ids(name):
                 if i not in course_locs:
-                    shortcuts.setdefault(str(i), int(m.group(1)))
+                    shortcuts.setdefault(str(i), int(m.group(1)) if m else 1)
 
 out = os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'plugins', 'agility', 'agility.json')
-json.dump({'courses': list(courses.values()), 'shortcuts': shortcuts}, open(out, 'w'), separators=(',', ':'), sort_keys=True)
+# EASCape: keep what's already there (hand-added entries, shortcutAt)
+try:
+    have = json.load(open(out))
+except Exception:
+    have = {}
+for k, v in have.get('shortcuts', {}).items():
+    shortcuts[k] = v  # (what's there wins: hand-set levels, the course tables below)
+data = {'courses': have.get('courses') or list(courses.values()), 'shortcuts': shortcuts}
+if have.get('shortcutAt'):
+    data['shortcutAt'] = have['shortcutAt']
+json.dump(data, open(out, 'w'), separators=(',', ':'), sort_keys=True)
 for c in courses.values():
     print(c['name'], 'varp', c['varp'], c['obstacles'], 'obstacles,', c['lapXp'] / 10, 'xp a lap,', c['finishXp'] / 10, 'xp to finish,', len(c['locs']), 'locs')
 print(len(shortcuts), 'shortcuts')
