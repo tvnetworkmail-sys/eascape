@@ -130,6 +130,10 @@ if (%desertrescue >= ^desertrescue_learned_darts) {
 // spit (Feb 2006) that the later cache put in iron's fourth box is left out.
 if_sethide(smithing:other_layer, true);
 if_sethide(smithing:stud_layer, true);
+// EASCape: the later cache's nails box under column 4 (other metals' nails came with
+// Construction, 2006) stays hidden; steel nails go in column 5 as in Lost City 274
+if_sethide(smithing:com_149, true);
+if_sethide(smithing:com_150, true);
 if ($last_item = bronze_bar) {
     // bronze plate bodies are unlocked at lvl 18, but the interface data uses gt,18. so i have to +1 here
     if (%modified_smith = 18) {
@@ -139,6 +143,9 @@ if ($last_item = bronze_bar) {
     // https://web.archive.org/web/20050410152119/http://www.tip.it/runescape/smithing_tables.php?metal=bronze
     if_settext (smithing:com_101, "Bronze wire");
 } else if ($last_item = steel_bar) {
+    if_sethide (smithing:other_layer, false);
+    // https://imgur.com/CdcGdXD
+    if_settext (smithing:com_101, "Steel nails");
     if_sethide (smithing:stud_layer, false);
 }
 // EASCape: the lantern box under column 3 (its label is white from the level up, %if2): iron's oil
