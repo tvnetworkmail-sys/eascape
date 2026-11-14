@@ -115,9 +115,29 @@ inv_setslot(worn, ^wearpos_rhand, tog_bowl, 1);
 ~bas_set(tog_ready_bowl, tog_ready_bowl, tog_walk_bowl, tog_walk_bowl, tog_walk_bowl, tog_walk_bowl, tog_run_bowl);
 %tog_minigame_collecting = 1;
 %tog_tears_collected = 0;
-p_telejump(2_50_148_54_45);
+// EASCape: the Tears' sidebar (inter_72: Time Left, a 10-step hourglass on varbit_454, and Water
+// Collected) where the worn equipment tab goes, as Void opens it; and you walk past Juna into the
+// cave instead of being teleported (Void's steps; ~tog_walkover walks over her, as walkOverDelay does)
+%varbit_454 = 10;
+if_settab(inter_72, ^tab_wornitems);
+if_settabactive(^tab_wornitems);
+~forcewalk2(2_50_148_51_44);
+~tog_walkover(2_50_148_53_44);
+~tog_walkover(2_50_148_53_45);
+~tog_walkover(2_50_148_54_45);
 // one tick in the cave for each quest point (Void and the OSRS wiki)
 softtimer(tog_time_up, max(1, %qp));
+// the hourglass empties a step every tenth of your time (Void: quest points / 10 ticks)
+settimer(tog_hourglass, max(1, divide(%qp, 10)));
+
+[timer,tog_hourglass]
+if (%varbit_454 > 0) %varbit_454 = sub(%varbit_454, 1);
+if (%varbit_454 = 0 | %tog_minigame_collecting = 0) cleartimer(tog_hourglass);
+
+// one walking step, over anything in the way (Juna)
+[proc,tog_walkover](coord $to)
+p_teleport($to);
+p_delay(0);
 
 [softtimer,tog_time_up]
 clearsofttimer(tog_time_up);
@@ -132,9 +152,24 @@ strongqueue(tog_exit, 0, 0);
 if (%tog_minigame_collecting = 0) return;
 if_close;
 clearsofttimer(tog_time_up);
+cleartimer(tog_hourglass);
 cleartimer(tog_collect);
+// EASCape: walk back out past Juna (Void's steps), the sidebar back to your worn equipment
+// first to the cave mouth (Void: walkToDelay 3254,9517): walked, or put there if it takes too long
+if (coord ! 2_50_148_54_45) {
+    p_walk(2_50_148_54_45);
+    def_int $wait = 0;
+    while (coord ! 2_50_148_54_45 & $wait < 20) {
+        p_delay(0);
+        $wait = calc($wait + 1);
+    }
+    if (coord ! 2_50_148_54_45) p_telejump(2_50_148_54_45);
+}
+~tog_walkover(2_50_148_53_45);
+~tog_walkover(2_50_148_53_44);
 if (loc_find(2_50_148_52_44, hidey_unbuilt_bush_easy) = true) loc_anim(tog_snake_openclose);
-p_telejump(2_50_148_51_44);
+~tog_walkover(2_50_148_51_44);
+if_settab(wornitems, ^tab_wornitems);
 ~tog_take_bowl;
 ~update_bas;
 buildappearance(worn);
