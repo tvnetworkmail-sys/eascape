@@ -184,21 +184,21 @@ if ($style = 0) {
     ~playerhit_n_melee(true, $damage, npc_param(attackrate));
     return;
 }
-// sounds from Void (GregHib/void: TzTokJad.kt, tzhaar_fight_cave.combat/gfx.toml): Fire Wave's cast
-// sound for magic, its impact sound when either lands (timing: see below)
+// timing and sounds from Void (GregHib/void: TzTokJad.kt, tzhaar_fight_cave.combat/gfx.toml):
+// the hit lands 5 ticks after he attacks (3 ticks, then 64 client cycles); the magic ball leaves
+// after 86 client cycles and flies 8 per square beyond the first; Fire Wave's cast sound for
+// magic, its impact sound when either lands
+def_int $distance = max(0, sub(distance(npc_coord, coord), 1));
 if ($style = 1) {
     npc_anim(lordmagmus_fire, 0);
     sound_synth(firewave_cast_and_fire, 1, 0);
-    // EASCape: the ball leaves a tick into the attack and reaches you as the hit lands, 3 ticks (90 client
-// cycles) after the attack (ours, with the faster hit below; Void had it leave at 86 for a hit at 5)
-projanim_pl(npc_coord, uid, tzhaar_fire_spit_travel, 50, 36, 30, 90, 16, 11);
+    projanim_pl(npc_coord, uid, tzhaar_fire_spit_travel, 50, 36, 86, add(86, max(8, multiply($distance, 8))), 16, 11);
 } else {
     npc_anim(lordmagmus_smash, 0);
 }
-// EASCape: the hit - and your protection prayer - is worked out 2 ticks after he starts the attack:
-// the prayer has to be on by the start of the 3rd tick of his animation (OSRS players' guides, as
-// given by the owner; Void rolls it at 3). It lands the tick after, 3 ticks after the attack (ours,
-// the owner's call: Void lands it at 5, which left a switch that felt last-second still in time). Worked out before it lands, capped to your hitpoints, so it can be tick eaten (OSRS wiki,
+// EASCape: the owner's timing: tick 1 he starts the attack, ticks 2-3 your protection prayer has to be
+// on - the hit is worked out on tick 3 (2 ticks after the attack starts; Void rolls it at 3) - and
+// it lands later, on tick 6 (5 ticks after the attack, Void's), unprotected if the prayer wasn't on. Worked out before it lands, capped to your hitpoints, so it can be tick eaten (OSRS wiki,
 // Tick eating). It used to be worked out as it landed, so a last-moment prayer still protected you.
 npc_queue(4, $style, 2);
 
@@ -220,8 +220,8 @@ if ($style = 1) {
     if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
 }
 $damage = min($damage, stat(hitpoints)); // capped to your hitpoints now: eat before it lands
-queue(fightcave_jad_hit, 1, add($damage, multiply($style, 1000))); // style in the thousands
-queue*(playerhit_n_retaliate, 1)(npc_uid);
+queue(fightcave_jad_hit, 3, add($damage, multiply($style, 1000))); // style in the thousands
+queue*(playerhit_n_retaliate, 3)(npc_uid);
 
 [queue,fightcave_jad_hit](int $packed)
 def_int $damage = modulo($packed, 1000);
