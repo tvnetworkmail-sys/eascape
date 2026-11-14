@@ -285,7 +285,9 @@ export default class ClientBuild {
                                         overlay = Pix3D.getTextureAverage(texture);
                                         t2Colour = -1;
                                     } else if (flo.colour === Colour.MAGENTA) {
-                                        overlay = 0;
+                                        // EASCape: an invisible floor still shows its minimap colour when it has
+                                        // one (mapcolour): the wilderness lava (flo_151, 0xfab737) was missing
+                                        overlay = flo.mapColour ? Pix3D.colourTable[ClientBuild.getOCol(flo.overlayHsl, 96)] : 0;
                                         t2Colour = -2;
                                         texture = -1;
                                     } else {

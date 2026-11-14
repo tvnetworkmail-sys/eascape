@@ -18,6 +18,7 @@ export default class FloType {
     chroma: number = 0;
     underlayHue: number = 0;
     overlayHsl: number = 0;
+    mapColour: boolean = false; // EASCape: the floor has its own minimap colour (code 7)
 
     static init(config: JagFile): void {
         const dat: Packet = new Packet(config.read('flo.dat'));
@@ -66,6 +67,7 @@ export default class FloType {
                 this.lightness = lightness;
                 this.underlayHue = underlayHue;
                 this.chroma = underlayHue;
+                this.mapColour = true;
             } else {
                 console.log('Error unrecognised config code: ', code);
             }
