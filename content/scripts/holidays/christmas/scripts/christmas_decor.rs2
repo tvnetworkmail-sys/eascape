@@ -8,6 +8,8 @@
 [proc,xmasdecor_apply]
 // take down: both places back as the map has them (the fountain back, the trees gone)
 loc_revertarea(^xmasdecor_fountain_sw, ^xmasdecor_fountain_ne);
+loc_revertarea(^xmasdecor_statue, ^xmasdecor_statue); // the king's statue back on the fountain
+loc_revertarea(movecoord(^xmasdecor_statue, 0, -1, 0), movecoord(^xmasdecor_statue, 0, -1, 0));
 loc_revertarea(^xmasdecor_falador_tree, movecoord(^xmasdecor_falador_tree, 4, 0, 4));
 if (~christmas_active = false) return;
 
@@ -17,6 +19,10 @@ if (~christmas_active = false) return;
 ~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 0, 0, 8));
 ~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 8, 0, 0));
 ~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 8, 0, 8));
+// and the king's statue on top of the fountain (level 1, over the bridge), which stood up through the tree
+if (loc_find(^xmasdecor_statue, statue_king) = true) loc_del(2147483647);
+// (the server keeps a bridge's upper locs on the level below)
+if (loc_find(movecoord(^xmasdecor_statue, 0, -1, 0), statue_king) = true) loc_del(2147483647);
 loc_add(^xmasdecor_varrock_tree, loc_10660, 0, centrepiece_straight, 2147483647);
 
 // Falador Park

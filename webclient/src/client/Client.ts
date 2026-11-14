@@ -5577,7 +5577,7 @@ export class Client extends GameShell {
                 this.collision[level]?.reset();
             }
 
-            Christmas.beginBuild(this.var, this.mapBuildBaseZ); // EASCape: whether this scene is built snowy
+            Christmas.beginBuild(this.var, this.mapBuildBaseX, this.mapBuildBaseZ); // EASCape: whether this scene is built snowy
             const build: ClientBuild = new ClientBuild(BuildArea.SIZE, BuildArea.SIZE, this.groundh!, this.mapl!);
             const maps: number = this.mapBuildGroundData?.length ?? 0;
 

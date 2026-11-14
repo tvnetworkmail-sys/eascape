@@ -201,7 +201,7 @@ export default class ClientBuild {
 
                         if (z0 >= 1 && z0 < this.maxTileZ - 1 && (!ClientBuild.lowMem || ((this.mapl[level][x0][z0] & MapFlag.ForceHighDetail) === 0 && this.getVisBelowLevel(level, x0, z0) === ClientBuild.minusedlevel))) {
                             const t1: number = this.floort1[level][x0][z0] & 0xff;
-                            const t2: number = this.floort2[level][x0][z0] & 0xff;
+                            const t2: number = Christmas.hideTile(level, x0, z0) ? 0 : this.floort2[level][x0][z0] & 0xff; // EASCape: the statue's plinth top
 
                             if (t1 > 0 || t2 > 0) {
                                 const heightSW: number = this.groundh[level][x0][z0];
@@ -774,7 +774,9 @@ export default class ClientBuild {
                         cmap = collisions[currentLevel];
                     }
 
-                    this.addLoc(level, stx, stz, locId, shape, rotation, world, cmap);
+                    if (!Christmas.hideLoc(locId, level, stx, stz)) { // EASCape: Christmas mode's Varrock tree
+                        this.addLoc(level, stx, stz, locId, shape, rotation, world, cmap);
+                    }
                 }
             }
         }

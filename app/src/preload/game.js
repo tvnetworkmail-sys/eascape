@@ -169,7 +169,7 @@ function applySdView() {
 // EASCape: "Show Christmas snow" off hides Christmas mode's snow for this player (webclient Christmas.ts
 // reads this attribute; the web page without the app always shows it while the server has it on)
 function applySnow() {
-  document.documentElement.setAttribute('data-eascape-snow', cfg('lostlite', 'showChristmasSnow') === false ? 'off' : 'on');
+  document.documentElement.setAttribute('data-eascape-snow', cfg('lostlite', 'showChristmasSnowfall') === true ? 'on' : 'off'); // falling snow: off unless turned on
 }
 
 function applyGameFrame() {
@@ -418,7 +418,7 @@ ipcRenderer.on('config-changed', (_e, c) => {
   if (c.group === 'lostlite') {
     if (/Plugin$/.test(c.key)) sync();
     if (c.key === 'sdView' || c.key === 'sdFull') applySdView();
-    if (c.key === 'showChristmasSnow') applySnow();
+    if (c.key === 'showChristmasSnowfall') applySnow();
     if (['hideWebsite', 'gameSize', 'pixelated'].includes(c.key)) {
       applyWebsiteFrame();
       applyGameFrame();

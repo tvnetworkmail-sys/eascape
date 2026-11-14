@@ -11,8 +11,9 @@
 //     underground, stay as they are), and roofs and trees get snow on their upward faces. This is done
 //     to the colours while the scene is built (ClientBuild.finishBuild, LocType.buildModel), so switching
 //     it builds the scene again from the map data, which is never changed.
-// The app's LostLite plugin can hide it for one player ("Show Christmas snow": the page's
-// data-eascape-snow attribute, off); the browser client follows the server alone.
+// The snowy ground shows for everyone while the server has it on. The falling snow is off unless a
+// player turns it on in the app (LostLite > "Show falling snow": the page's data-eascape-snow
+// attribute, on), so the browser client has the snowy ground only (the owner's call, 14 Nov 2026).
 import { LocShape } from '#/dash3d/LocShape.js';
 import { MapFlag } from '#/dash3d/MapFlag.js';
 import Model from '#/dash3d/Model.js';
@@ -39,9 +40,9 @@ const UNDERGROUND_Z = 4160;
 export default class Christmas {
     static readonly VARP = 913;
 
-    // the app's "Show Christmas snow" off (app preload/game.js sets the attribute)
-    static get hidden(): boolean {
-        return typeof document !== 'undefined' && document.documentElement?.getAttribute('data-eascape-snow') === 'off';
+    // the app's "Show falling snow" on (app preload/game.js sets the attribute); off by default
+    static get falling(): boolean {
+        return typeof document !== 'undefined' && document.documentElement?.getAttribute('data-eascape-snow') === 'on';
     }
     // what the scene now shown was built for: Christmas mode wanted, and whether it is snowy (wanted and
     // above ground)
@@ -49,20 +50,34 @@ export default class Christmas {
     static builtSnow: boolean = false;
     // the scene's south-west corner (world z) while it is built
     private static baseZ: number = 0;
+    private static baseX: number = 0;
+
+    // Varrock fountain's king statue (loc 563, statue_king), on level 1 at 3213, 3429 over the fountain's
+    // bridge: the server takes it out for the tree (christmas_decor.rs2), but its loc changes only reach
+    // players on that level, so the scene leaves it out itself while Christmas mode is on (as 2007scape)
+    // and the plinth top it stands on (level 1's floor there), a grey square in the tree
+    static hideTile(level: number, x: number, z: number): boolean {
+        return Christmas.builtWanted && level === 1 && Christmas.baseX + x === 3213 && Christmas.baseZ + z === 3429;
+    }
+
+    static hideLoc(locId: number, level: number, x: number, z: number): boolean {
+        return Christmas.builtWanted && locId === 563 && level === 1 && Christmas.baseX + x === 3213 && Christmas.baseZ + z === 3429;
+    }
 
     private static anims = FLAKES.map(() => ({ frame: 0, cycle: 0 }));
     private static lastAnim: number = 0;
 
-    // the server has Christmas mode on and this player hasn't hidden it
+    // the server has Christmas mode on (the snowy ground; for everyone)
     static wanted(vars: number[]): boolean {
-        return vars[Christmas.VARP] === 1 && !Christmas.hidden;
+        return vars[Christmas.VARP] === 1;
     }
 
     // ---- the scene
 
     // before a scene is built (Client.mapBuild): whether its ground, roofs and trees are snowy
-    static beginBuild(vars: number[], baseZ: number): void {
+    static beginBuild(vars: number[], baseX: number, baseZ: number): void {
         Christmas.builtWanted = Christmas.wanted(vars);
+        Christmas.baseX = baseX;
         Christmas.baseZ = baseZ;
         Christmas.builtSnow = Christmas.builtWanted && baseZ + 52 < UNDERGROUND_Z;
     }
@@ -213,7 +228,7 @@ export default class Christmas {
     // after the world and before SdView.end: the flakes into the world's frame (the viewport, or SdView's
     // own k-times buffer)
     static draw(vars: number[], mapl: Uint8Array[][] | null, level: number, x: number, z: number): void {
-        if (!Christmas.snowing(vars, mapl, level, x, z)) {
+        if (!Christmas.falling || !Christmas.snowing(vars, mapl, level, x, z)) {
             return;
         }
         Christmas.animate();
