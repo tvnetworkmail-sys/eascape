@@ -196,7 +196,11 @@ if ($style = 1) {
 } else {
     npc_anim(lordmagmus_smash, 0);
 }
-npc_queue(4, $style, 5);
+// EASCape: the hit is worked out a tick before it lands (OSRS wiki, Tick eating: ranged and magic
+// attacks are calculated, capped to your hitpoints, one tick before they're applied - the window
+// to tick eat Jad). It used to be worked out and applied on the same tick, so food eaten as the
+// hit came in was eaten at full health and healed nothing. Still lands 5 ticks after he attacks.
+npc_queue(4, $style, 4);
 
 // the magic or ranged hit lands
 [ai_queue4,tzhaar_fightcave_swarm_boss]
@@ -210,15 +214,20 @@ if ($style = 1) {
     }
     if (~check_protect_prayer(^magic_style) = true) $damage = 0;
 } else {
-    spotanim_pl(tzhaar_rock_smash, 0, 0);
     if (randominc(~npc_ranged_attack_roll) > randominc(~player_defence_roll_specific(^ranged_style))) {
         $damage = randominc(97);
     }
     if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
 }
+$damage = min($damage, stat(hitpoints)); // capped to your hitpoints now: eat before it lands
+queue(fightcave_jad_hit, 1, add($damage, multiply($style, 1000))); // style in the thousands
+queue*(playerhit_n_retaliate, 1)(npc_uid);
+
+[queue,fightcave_jad_hit](int $packed)
+def_int $damage = modulo($packed, 1000);
+if (divide($packed, 1000) = 2) spotanim_pl(tzhaar_rock_smash, 0, 0); // the rocks fall as it lands
 sound_synth(firewave_hit, 1, 0);
 queue(combat_damage_player, 0, $damage);
-queue*(playerhit_n_retaliate, 0)(npc_uid);
 
 // ---- deaths
 
