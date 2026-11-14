@@ -210,6 +210,8 @@ while ($i < $size) {
 
 $size = inv_size(worn);
 $i = 0;
+def_obj $peer_weapon = inv_getobj(worn, ^wearpos_rhand); // EASCape: for ~update_all below
+def_int $peer_worn_count = $dep_count;
 while ($i < $size) {
     $obj = inv_getobj(worn, $i);
     if ($obj ! null) {
@@ -224,6 +226,12 @@ while ($i < $size) {
         }
     }
     $i = add($i, 1);
+}
+// EASCape: your look, bonuses and weight were never refreshed after the worn items went to the
+// bank, so you still looked dressed (owner's report, 14 Nov 2026); as [proc,unequip] does
+if ($dep_count > $peer_worn_count) {
+    ~update_all($peer_weapon);
+    ~on_unequip($peer_weapon);
 }
 
 if($fail = ^true) {

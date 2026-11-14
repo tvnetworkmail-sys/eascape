@@ -75,3 +75,30 @@ sound_synth(chest_close, 1, 0);
 p_delay(0);
 // Temp note: dur does not need updated
 loc_change($other_chest, 300);
+
+// EASCape: the 377 map's own chests (Rogues' Castle in the Wilderness, and the three in Goblin
+// Village, which sit behind a railing as in Lost City) had no scripts; Lost City 274 has plain chests here, which open,
+// close and can be searched. Their open chests have Search and Close the other way round.
+[oploc1,wild_chest_closed] ~open_chest(wild_chest_open);
+[oploc1,wild_chest_open] @search_open_chest;
+[oploc2,wild_chest_open] ~close_chest(wild_chest_closed);
+
+[oploc1,goblin_outpost_chest_closed] ~open_chest(goblin_outpost_chest_open);
+[oploc1,goblin_outpost_chest_open] ~close_chest(goblin_outpost_chest_closed);
+[oploc2,goblin_outpost_chest_open] @search_open_chest;
+
+[label,search_open_chest]
+if(map_members = ^true) {
+    def_obj $clue = ~trail_getclue_inv;
+    if($clue ! null & oc_param($clue, trail_loc) = ^true & oc_param($clue, trail_coord) = loc_coord) {
+        @trail_clue_loc_interact($clue);
+    }
+}
+p_arrivedelay;
+if (random(^findsomethingnice_chance) = 0) {
+    mes("You search the chest..."); // guess, as [oploc2,_chest_open]
+    p_delay(2);
+    ~findsomethingnice;
+    return;
+}
+mes("You find nothing."); // guess, as [oploc2,_chest_open]

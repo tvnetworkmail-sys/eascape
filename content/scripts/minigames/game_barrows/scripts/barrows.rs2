@@ -722,8 +722,7 @@ if ($index = ^barrows_ahrim | $index = ^barrows_karil) {
 [ai_timer,barrows_torag] ~barrows_brother_timer;
 [ai_timer,barrows_verac] ~barrows_brother_timer;
 
-// checked every tick, so he's gone as soon as you leave (your call, 26 Oct 2026); poison still
-// works on its usual 30-tick beat
+// checked every tick, so he's gone as soon as you leave (your call, 26 Oct 2026) (poison is on its own queue now)
 [proc,barrows_brother_timer]
 npc_settimer(1);
 if (finduid(%npc_aggressive_player) = false) {
@@ -733,7 +732,4 @@ if (finduid(%npc_aggressive_player) = false) {
 if (coordy(coord) ! coordy(npc_coord) | distance(coord, npc_coord) > 20) {
     npc_del;
     return;
-}
-if (calc(map_clock % 30) = 0) {
-    ~npc_poison_timer;
 }
