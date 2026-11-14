@@ -773,13 +773,7 @@ inv_add(inv, $seed, 4);
 
 // the Edgeville well: throw the ring down, fish it back up
 [oplocu,well]
-if (loc_coord ! ^got_edgeville_well) {
-    switch_obj (last_useitem) {
-        case bucket_empty : @fill_bucket_well;
-        case default : ~displaymessage(^dm_default);
-    }
-    return;
-}
+if (loc_coord ! ^got_edgeville_well) @well_use; // EASCape: the general well (water_sources): containers and watering cans too
 switch_obj (last_useitem) {
     case bucket_empty : @fill_bucket_well;
     case ring_of_charos_unlocked :
@@ -798,7 +792,7 @@ switch_obj (last_useitem) {
             return;
         }
         @got_fish_well;
-    case default : ~displaymessage(^dm_default);
+    case default : @well_use;
 }
 
 [label,got_fish_well]

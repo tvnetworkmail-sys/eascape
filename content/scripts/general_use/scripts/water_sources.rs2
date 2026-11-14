@@ -74,8 +74,16 @@ switch_obj (last_useitem) {
 }
 
 [oplocu,_well]
+@well_use;
+
+// (also used by the Edgeville well's own script, got_farmers)
+[label,well_use]
 switch_obj (last_useitem) {
     case bucket_empty : @fill_bucket_well;
+    // EASCape: wells fill the other containers and watering cans too, as any water source does
+    // (2006Scape, Fillables.java: wells are water sources for jugs, vials, bowls and watering cans)
+    case jug_empty, vial_empty, bowl_empty : @fill_container_water(last_useitem);
+    case watering_can_0, watering_can_1, watering_can_2, watering_can_3, watering_can_4, watering_can_5, watering_can_6, watering_can_7 : @fill_watering_can(last_useitem);
     case default : ~displaymessage(^dm_default);
 }
 
