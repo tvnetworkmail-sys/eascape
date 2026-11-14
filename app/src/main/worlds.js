@@ -62,4 +62,9 @@ function ping(worldId, timeoutMs = 3000) {
   });
 }
 
-module.exports = { SITE, WORLDS, TEST_WORLD, playUrl, worldHost, isWorldHost, fetchPlayerCounts, ping };
+// EASCape: pointed at another server (start.bat's local test copy sets EASCAPE_SERVER), the app lists
+// only that server as one world: not the live worlds and not the online sandbox (world 20, and so
+// no Test Server panel). Unset - the live app - nothing changes.
+const LISTED = OVERRIDE ? [{ id: 1, region: 'EASCape (this computer)', flag: null, members: true }] : WORLDS;
+
+module.exports = { SITE, WORLDS: LISTED, TEST_WORLD, playUrl, worldHost, isWorldHost, fetchPlayerCounts, ping };
