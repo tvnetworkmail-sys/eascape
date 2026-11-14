@@ -30,5 +30,8 @@ rem It waits for the server by itself.
 cd /d "%~dp0app"
 echo Getting the app ready...
 call npm install --no-audit --no-fund
+rem npm install can rewrite package-lock.json for this computer; put it back, or the next update's
+rem git pull refuses to run ("Your local changes ... would be overwritten") and you stop getting updates
+git -C "%~dp0." checkout -- app/package-lock.json 2>nul
 echo Opening EASCape...
 call npm start
