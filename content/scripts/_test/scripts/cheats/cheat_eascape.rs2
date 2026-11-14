@@ -1673,6 +1673,12 @@ while ($patch <= ~farming_patch_count) {
     }
     $patch = calc($patch + 1);
 }
+// and Garden of Tranquillity's garden (its own patches and the White Tree), as its ticks would
+def_int $g = 1;
+while ($g <= 4) {
+    ~got_grow(calc($g * 10));
+    $g = calc($g + 1);
+}
 mes("<tostring($grown)> patches grown.");
 
 [debugproc,farmtick](int $count)
