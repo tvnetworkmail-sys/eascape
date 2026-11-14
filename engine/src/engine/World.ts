@@ -305,6 +305,13 @@ class World {
 
         if (!skipMaps) {
             this.gameMap.init();
+
+            // EASCape: Christmas mode's decorations go up as the saved mode says; ::christmas does the
+            // same through [proc,christmas_changed] when staff change it
+            const christmasInit = ScriptProvider.getByName('[proc,christmas_init]');
+            if (christmasInit) {
+                ScriptRunner.execute(ScriptRunner.init(christmasInit));
+            }
         }
 
         setTimeout(() => {

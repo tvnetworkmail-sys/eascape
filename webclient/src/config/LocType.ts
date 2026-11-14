@@ -5,6 +5,7 @@ import { LocShape } from '#/dash3d/LocShape.js';
 import { LocAngle } from '#/dash3d/LocAngle.js';
 
 import Model from '#/dash3d/Model.js';
+import Christmas from '#/client/Christmas.js';
 
 import JagFile from '#/io/JagFile.js';
 import Packet from '#/io/Packet.js';
@@ -508,7 +509,8 @@ export default class LocType {
         const scaled: boolean = this.resizex !== 128 || this.resizey !== 128 || this.resizez !== 128;
         const translated: boolean = this.offsetx !== 0 || this.offsety !== 0 || this.offsetz !== 0;
 
-        const modified: Model = Model.copyForAnim(model, !this.recol_s, AnimFrame.animateTransparencies(transformId), angle === LocAngle.WEST && transformId === -1 && !scaled && !translated);
+        const frost: boolean = Christmas.frosts(this, shape); // EASCape: Christmas mode's frosted roofs and trees
+        const modified: Model = Model.copyForAnim(model, !this.recol_s && !frost, AnimFrame.animateTransparencies(transformId), angle === LocAngle.WEST && transformId === -1 && !scaled && !translated);
         if (transformId !== -1) {
             modified.prepareAnim();
             modified.animate(transformId);
@@ -532,6 +534,10 @@ export default class LocType {
 
         if (translated) {
             modified.translate(this.offsety, this.offsetx, this.offsetz);
+        }
+
+        if (frost) {
+            Christmas.frost(modified);
         }
 
         modified.calculateNormals((this.ambient & 0xff) + 64, (this.contrast & 0xff) * 5 + 768, -50, -10, -50, !this.sharelight);

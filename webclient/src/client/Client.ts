@@ -52,6 +52,7 @@ import { Colour } from '#/graphics/Colour.js';
 import Pix2D from '#/graphics/Pix2D.js';
 import Pix3D from '#/dash3d/Pix3D.js';
 import SdView from '#/client/SdView.js';
+import Christmas from '#/client/Christmas.js';
 import Model from '#/dash3d/Model.js';
 import Pix8 from '#/graphics/Pix8.js';
 import Pix32 from '#/graphics/Pix32.js';
@@ -4597,6 +4598,9 @@ export class Client extends GameShell {
         Model.mouseX = SdView.mouse(this.mouseX - 4);
         Model.mouseY = SdView.mouse(this.mouseY - 4);
         this.world?.renderAll(this.camX, this.camY, this.camZ, level, this.camYaw, this.camPitch);
+        if (this.localPlayer) {
+            Christmas.draw(this.var, this.mapl, this.minusedlevel, this.localPlayer.x >> 7, this.localPlayer.z >> 7); // EASCape: Christmas mode's falling snow
+        }
         SdView.end();
         this.world?.removeSprites();
         // LostLite: world overlays (ground items, fishing spots, tile markers...) straight over the
@@ -5494,6 +5498,17 @@ export class Client extends GameShell {
             this.sceneLoadStartTime = performance.now();
         }
 
+        // EASCape: Christmas mode switched (the server's varp, or the app's "Show Christmas snow"): the
+        // scene is built again, snowy or not (Christmas.ts)
+        if (this.sceneState === 2 && Christmas.wanted(this.var) !== Christmas.builtWanted) {
+            this.areaGame?.setPixels();
+            this.p12?.centreString('Loading - please wait.', 257, 151, Colour.BLACK);
+            this.p12?.centreString('Loading - please wait.', 256, 150, Colour.WHITE);
+            this.areaGame?.draw(4, 4);
+            this.sceneState = 1;
+            this.sceneLoadStartTime = performance.now();
+        }
+
         if (this.sceneState === 1) {
             const status = this.checkScene();
             if (status != 0 && performance.now() - this.sceneLoadStartTime > 360000) {
@@ -5562,6 +5577,7 @@ export class Client extends GameShell {
                 this.collision[level]?.reset();
             }
 
+            Christmas.beginBuild(this.var, this.mapBuildBaseZ); // EASCape: whether this scene is built snowy
             const build: ClientBuild = new ClientBuild(BuildArea.SIZE, BuildArea.SIZE, this.groundh!, this.mapl!);
             const maps: number = this.mapBuildGroundData?.length ?? 0;
 

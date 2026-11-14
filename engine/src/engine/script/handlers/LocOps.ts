@@ -71,6 +71,46 @@ const LocOps: CommandHandlers = {
         state.pushInt(CoordGrid.packCoord(coord.level, coord.x, coord.z));
     },
 
+    // EASCape (from 2007scape): (coord $from, coord $to): every map loc in the box (levels from $from's to
+    // $to's) back as the map has it: deleted ones put back, changed ones reverted, ones scripts added
+    // removed. It first makes the map's non-interactive locs in the zones it touches (walls, floor
+    // decoration, scenery with no options: normally only collision) zone locs too, so loc_findallzone
+    // then finds them and loc_del can take them out (GameMap.addStaticLocsIn). Christmas mode's
+    // decorations (content/scripts/christmas) are taken down with it
+    [ScriptOpcode.LOC_REVERTAREA]: state => {
+        const [fromCoord, toCoord] = state.popInts(2);
+        const from: CoordGrid = check(fromCoord, CoordValid);
+        const to: CoordGrid = check(toCoord, CoordValid);
+        const x0 = Math.min(from.x, to.x), x1 = Math.max(from.x, to.x);
+        const z0 = Math.min(from.z, to.z), z1 = Math.max(from.z, to.z);
+        const l0 = Math.min(from.level, to.level), l1 = Math.max(from.level, to.level);
+        World.gameMap.addStaticLocsIn(x0, z0, x1, z1, l0, l1);
+        for (let level = l0; level <= l1; level++) {
+            for (let zx = x0 & ~7; zx <= x1; zx += 8) {
+                for (let zz = z0 & ~7; zz <= z1; zz += 8) {
+                    const locs: Loc[] = [...World.gameMap.getZone(zx, zz, level).getAllLocsUnsafe()];
+                    for (const loc of locs) {
+                        if (loc.x < x0 || loc.x > x1 || loc.z < z0 || loc.z > z1) {
+                            continue;
+                        }
+                        if (loc.lifecycle === EntityLifeCycle.RESPAWN) {
+                            if (!loc.isActive) {
+                                if (loc.isChanged()) {
+                                    loc.revert();
+                                }
+                                World.addLoc(loc, -1);
+                            } else if (loc.isChanged()) {
+                                World.revertLoc(loc);
+                            }
+                        } else if (loc.isActive) {
+                            World.removeLoc(loc, -1);
+                        }
+                    }
+                }
+            }
+        }
+    },
+
     [ScriptOpcode.LOC_DEL]: state => {
         const duration: number = check(state.popInt(), DurationValid);
         World.removeLoc(state.activeLoc, duration);

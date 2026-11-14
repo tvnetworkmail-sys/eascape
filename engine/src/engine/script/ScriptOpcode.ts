@@ -457,6 +457,10 @@ export const enum ScriptOpcode {
     DB_FIND_REFINE,
     DB_LISTALL,
 
+    // EASCape: Christmas mode (WorldSettings, staff ::christmas on|off) and its decorations
+    MAP_CHRISTMAS = 8100,
+    LOC_REVERTAREA,
+
     // Debug ops (10000-11000)
     CONSOLE = 10000,
     ERROR,
@@ -893,6 +897,9 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['DB_FIND', ScriptOpcode.DB_FIND],
     ['DB_FIND_REFINE', ScriptOpcode.DB_FIND_REFINE],
     ['DB_LISTALL', ScriptOpcode.DB_LISTALL],
+
+    ['MAP_CHRISTMAS', ScriptOpcode.MAP_CHRISTMAS],
+    ['LOC_REVERTAREA', ScriptOpcode.LOC_REVERTAREA],
 
     ['CONSOLE', ScriptOpcode.CONSOLE],
     ['ERROR', ScriptOpcode.ERROR],

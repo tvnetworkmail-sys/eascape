@@ -1,0 +1,25 @@
+// EASCape: Christmas mode, the world-wide switch staff turn on for December (::christmas on|off,
+// engine ClientCheatHandler; saved across restarts in data/players/<profile>/world_settings.json).
+// Not authentic: a seasonal extra (from 2007scape). The client's snow follows the varp christmas_mode
+// by itself; the decorated trees (christmas_decor.rs2) go up and come down here.
+
+// true while Christmas mode is on (no active player needed)
+[proc,christmas_active]()(boolean)
+if (map_christmas = true) {
+    return(true);
+}
+return(false);
+
+// called once by ::christmas after the mode changed (~christmas_active is already the new state), with
+// the staff member who changed it as the active player
+[proc,christmas_changed]
+~christmas_events;
+
+// called once at world start (engine World.start), with no active player: the decorations go up if
+// the saved mode is on
+[proc,christmas_init]
+~christmas_events;
+
+// the decorations as the mode says (no active player needed; safe to repeat)
+[proc,christmas_events]
+~xmasdecor_apply;

@@ -42,6 +42,7 @@ import ScriptRunner from '#/engine/script/ScriptRunner.js';
 import ScriptState from '#/engine/script/ScriptState.js';
 import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
 import World from '#/engine/World.js';
+import WorldSettings from '#/engine/WorldSettings.js';
 import Packet from '#/io/Packet.js';
 import ChatFilterSettings from '#/network/game/server/model/ChatFilterSettings.js';
 import HintArrow from '#/network/game/server/model/HintArrow.js';
@@ -523,6 +524,7 @@ export default class Player extends PathingEntity {
         this.write(new IfClose());
         this.write(new UpdatePid(this.slot, this.members));
         this.write(new ResetClientVarCache());
+        this.syncChristmas(); // EASCape: Christmas mode
         for (let varp = 0; varp < this.vars.length; varp++) {
             const type = VarPlayerType.get(varp);
             const value = this.vars[varp];
@@ -542,6 +544,15 @@ export default class Player extends PathingEntity {
         this.isActive = true;
     }
 
+    // EASCape: the world's Christmas mode into the varp the client draws its snow from (sent with the
+    // other transmitted varps at login; ::christmas sets it on everyone online, ClientCheatHandler)
+    syncChristmas(): void {
+        const varp = VarPlayerType.getId('christmas_mode');
+        if (varp !== -1) {
+            this.vars[varp] = WorldSettings.christmas ? 1 : 0;
+        }
+    }
+
     onReconnect() {
         // - varp_reset
         // - varps
@@ -553,6 +564,7 @@ export default class Player extends PathingEntity {
         // - reset_anims
         // - socials
         this.write(new ResetClientVarCache());
+        this.syncChristmas(); // EASCape: Christmas mode
         for (let varp = 0; varp < this.vars.length; varp++) {
             const type = VarPlayerType.get(varp);
             const value = this.vars[varp];

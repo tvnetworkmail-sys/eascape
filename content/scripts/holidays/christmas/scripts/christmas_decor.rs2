@@ -1,0 +1,34 @@
+// EASCape: the decorated trees while Christmas mode is on (from 2007scape; not authentic as a
+// year-round switch). The tree is the 2005 Christmas event's own, decorated (loc_10660, "Evergreen.",
+// Examine only): in place of Varrock Square's fountain, where the 2005 event put it, and in Falador
+// Park. ~christmas_events calls ~xmasdecor_apply at world start and on every toggle; it works with no
+// active player and can run any number of times. The engine has no permanent loc_add / loc_del, so
+// they last 2147483647 ticks (for ever), and loc_revertarea takes them down.
+
+[proc,xmasdecor_apply]
+// take down: both places back as the map has them (the fountain back, the trees gone)
+loc_revertarea(^xmasdecor_fountain_sw, ^xmasdecor_fountain_ne);
+loc_revertarea(^xmasdecor_falador_tree, movecoord(^xmasdecor_falador_tree, 4, 0, 4));
+if (~christmas_active = false) return;
+
+// Varrock: the fountain's inner part out (its walls, water and the low wall round the basin; the outer
+// fence and the busts stay), then the tree
+~xmasdecor_fountain_del(^xmasdecor_fountain_sw);
+~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 0, 0, 8));
+~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 8, 0, 0));
+~xmasdecor_fountain_del(movecoord(^xmasdecor_fountain_sw, 8, 0, 8));
+loc_add(^xmasdecor_varrock_tree, loc_10660, 0, centrepiece_straight, 2147483647);
+
+// Falador Park
+loc_add(^xmasdecor_falador_tree, loc_10660, 0, centrepiece_straight, 2147483647);
+
+// every fountain piece in the zone (8x8) at $zone that lies in the fountain's box
+[proc,xmasdecor_fountain_del](coord $zone)
+loc_findallzone($zone);
+while (loc_findnext = true) {
+    if (inzone(^xmasdecor_fountain_sw, ^xmasdecor_fountain_ne, loc_coord) = true) {
+        if (loc_type = poshwallfencing | loc_type = mossyswall | loc_type = inactivefishspot) {
+            loc_del(2147483647);
+        }
+    }
+}

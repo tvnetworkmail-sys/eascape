@@ -17,6 +17,7 @@ import VarPlayerType from '#/cache/config/VarPlayerType.js';
 
 import { CoordGrid } from '#/engine/CoordGrid.js';
 import World from '#/engine/World.js';
+import WorldSettings from '#/engine/WorldSettings.js';
 import { EntityLifeCycle } from '#/engine/entity/EntityLifeCycle.js';
 import Loc from '#/engine/entity/Loc.js';
 import { MoveStrategy } from '#/engine/entity/MoveStrategy.js';
@@ -319,7 +320,36 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
         if (player.staffModLevel >= 3) {
             // admin commands (potentially destructive for a live economy)
 
-            if (cmd === 'setvar') {
+            if (cmd === 'christmas') {
+                // EASCape (not authentic, from 2007scape): Christmas mode, world-wide and saved across
+                // restarts (WorldSettings). ::christmas on|off; on its own it says which it is. Every
+                // online client is told at once (varp christmas_mode: falling snow, snowy ground),
+                // players logging in get it with their varps, and [proc,christmas_changed] puts the
+                // decorated trees up or takes them down
+                const on = WorldSettings.christmas;
+                if (args[0] !== 'on' && args[0] !== 'off') {
+                    player.messageGame(`Christmas mode is ${on ? 'on' : 'off'}. Use ::christmas on or ::christmas off.`);
+                    return true;
+                }
+                const want = args[0] === 'on';
+                if (want === on) {
+                    player.messageGame(`Christmas mode is already ${on ? 'on' : 'off'}.`);
+                    return true;
+                }
+                WorldSettings.christmas = want;
+                const varp = VarPlayerType.getId('christmas_mode');
+                if (varp !== -1) {
+                    for (const other of World.playerLoop.all()) {
+                        other.setVar(varp, want ? 1 : 0);
+                    }
+                }
+                player.messageGame(`Christmas mode is now ${want ? 'on' : 'off'}.`);
+                const changed = ScriptProvider.getByName('[proc,christmas_changed]');
+                if (changed) {
+                    player.executeScript(ScriptRunner.init(changed, player), true);
+                }
+                return true;
+            } else if (cmd === 'setvar') {
                 // authentic
                 if (args.length < 2) {
                     // ::setvar <variable> <value>

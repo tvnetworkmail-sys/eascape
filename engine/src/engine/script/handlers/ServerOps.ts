@@ -9,6 +9,7 @@ import { CommandHandlers } from '#/engine/script/ScriptRunner.js';
 import ScriptState from '#/engine/script/ScriptState.js';
 import { check, CoordValid, LocTypeValid, NumberPositive, SeqTypeValid, SpotAnimTypeValid, FindSquareValid } from '#/engine/script/ScriptValidators.js';
 import World from '#/engine/World.js';
+import WorldSettings from '#/engine/WorldSettings.js';
 import Environment from '#/util/Environment.js';
 import Midi from '#/cache/midi/Midi.js';
 
@@ -19,6 +20,11 @@ const ServerOps: CommandHandlers = {
 
     [ScriptOpcode.MAP_MEMBERS]: state => {
         state.pushInt(Environment.NODE_MEMBERS ? 1 : 0);
+    },
+
+    // EASCape: Christmas mode is on (staff ::christmas on|off, saved across restarts)
+    [ScriptOpcode.MAP_CHRISTMAS]: state => {
+        state.pushInt(WorldSettings.christmas ? 1 : 0);
     },
 
     [ScriptOpcode.MAP_LIVE]: state => {

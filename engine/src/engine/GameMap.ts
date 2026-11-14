@@ -178,7 +178,8 @@ export default class GameMap {
         }
     }
 
-    private loadGround(lands: Int8Array, packet: Packet, mapsquareX: number, mapsquareZ: number): void {
+    /** The tile settings (lands) of a map square's terrain file. */
+    private readLands(lands: Int8Array, packet: Packet): void {
         for (let level: number = 0; level < GameMap.Y; level++) {
             for (let x: number = 0; x < GameMap.X; x++) {
                 for (let z: number = 0; z < GameMap.Z; z++) {
@@ -200,6 +201,10 @@ export default class GameMap {
                 }
             }
         }
+    }
+
+    private loadGround(lands: Int8Array, packet: Packet, mapsquareX: number, mapsquareZ: number): void {
+        this.readLands(lands, packet);
         for (let level: number = 0; level < GameMap.Y; level++) {
             for (let x: number = 0; x < GameMap.X; x++) {
                 const absoluteX: number = x + mapsquareX;
@@ -238,7 +243,75 @@ export default class GameMap {
         }
     }
 
-    private loadLocations(lands: Int8Array, packet: Packet, mapsquareX: number, mapsquareZ: number): void {
+    // EASCape: zones (ZoneMap.zoneIndex) whose non-interactive map locs are zone entities too
+    private readonly staticLocZones: Set<number> = new Set();
+
+    /**
+     * EASCape (from 2007scape): the map keeps only interactive locs (type.active) as zone entities; the
+     * rest (walls, floor decoration, scenery with no options) are just collision and the client's own
+     * map. This adds those in the zones touching the box as static locs too, once per zone, so scripts
+     * can find, remove and put them back like any other (loc_revertarea does it first; Christmas mode
+     * takes Varrock's fountain out for the tree this way). Their collision is already there from the
+     * map load and isn't touched.
+     */
+    addStaticLocsIn(x0: number, z0: number, x1: number, z1: number, level0: number, level1: number): void {
+        const zones: Set<number> = new Set();
+        for (let level = level0; level <= level1; level++) {
+            for (let zx = x0 & ~7; zx <= x1; zx += 8) {
+                for (let zz = z0 & ~7; zz <= z1; zz += 8) {
+                    const index = ZoneMap.zoneIndex(zx, zz, level);
+                    if (!this.staticLocZones.has(index)) {
+                        zones.add(index);
+                    }
+                }
+            }
+        }
+        if (zones.size === 0) {
+            return;
+        }
+        const squares: Set<string> = new Set();
+        for (let x = x0 >> 6; x <= x1 >> 6; x++) {
+            for (let z = z0 >> 6; z <= z1 >> 6; z++) {
+                squares.add(`${x}_${z}`);
+            }
+        }
+        const zipPath = 'data/pack/.cache/maps-server.zip';
+        const dirPath = 'data/pack/server/maps/';
+        let files: Record<string, Uint8Array> = {};
+        try {
+            if (fs.existsSync(zipPath)) {
+                files = unzipSync(fs.readFileSync(zipPath), { filter: f => squares.has(f.name.substring(1)) && (f.name[0] === 'm' || f.name[0] === 'l') });
+            } else {
+                for (const square of squares) {
+                    for (const kind of ['m', 'l']) {
+                        if (fs.existsSync(`${dirPath}${kind}${square}`)) {
+                            files[`${kind}${square}`] = fs.readFileSync(`${dirPath}${kind}${square}`);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            printWarning(`can't read the map's locs (${err instanceof Error ? err.message : err})`);
+            return;
+        }
+        for (const square of squares) {
+            const m = files[`m${square}`];
+            const l = files[`l${square}`];
+            if (!m || !l) {
+                continue;
+            }
+            const [mx, mz] = square.split('_').map(Number);
+            const lands: Int8Array = new Int8Array(GameMap.MAPSQUARE);
+            this.readLands(lands, new Packet(m));
+            this.loadLocations(lands, new Packet(l), mx << 6, mz << 6, zones);
+        }
+        for (const index of zones) {
+            this.staticLocZones.add(index);
+        }
+    }
+
+    // inactiveIn: only add the non-interactive locs in these zones, with no collision (addStaticLocsIn)
+    private loadLocations(lands: Int8Array, packet: Packet, mapsquareX: number, mapsquareZ: number, inactiveIn: Set<number> | null = null): void {
         let locId: number = -1;
         let locIdOffset: number = packet.gsmarts();
         while (locIdOffset !== 0) {
@@ -276,6 +349,13 @@ export default class GameMap {
                 const length: number = type.length;
                 const shape: number = info >> 2;
                 const angle: number = info & 0x3;
+
+                if (inactiveIn) {
+                    if (!type.active && inactiveIn.has(ZoneMap.zoneIndex(absoluteX, absoluteZ, actualLevel))) {
+                        this.getZone(absoluteX, absoluteZ, actualLevel).addStaticLoc(new Loc(actualLevel, absoluteX, absoluteZ, width, length, EntityLifeCycle.RESPAWN, locId, shape, angle));
+                    }
+                    continue;
+                }
 
                 if (type.blockwalk) {
                     changeLocCollision(shape, angle, type.blockrange, length, width, type.active, absoluteX, absoluteZ, actualLevel, true);

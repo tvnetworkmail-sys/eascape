@@ -1,3 +1,4 @@
+import Christmas from '#/client/Christmas.js';
 import FloType from '#/config/FloType.js';
 import LocType from '#/config/LocType.js';
 
@@ -215,6 +216,8 @@ export default class ClientBuild {
 
                                 let t1Colour: number = -1;
                                 let t1RandColour: number = -1;
+                                // EASCape: Christmas mode: outdoor squares above ground are snowy (Christmas.ts)
+                                const snow: boolean = Christmas.snowy(this.mapl, level, x0, z0);
 
                                 if (t1 > 0) {
                                     const hue: number = ((blendHue * 256) / blendCom) | 0;
@@ -230,6 +233,10 @@ export default class ClientBuild {
                                         randomLig = 255;
                                     }
                                     t1RandColour = ClientBuild.getTable(randomHue, sat, randomLig);
+                                    if (snow) {
+                                        t1Colour = Christmas.snowUnderlay(t1Colour);
+                                        t1RandColour = Christmas.snowUnderlay(t1RandColour);
+                                    }
                                 }
 
                                 if (level > 0) {
@@ -244,6 +251,12 @@ export default class ClientBuild {
                                         this.mapo[level][x0][z0] |= 0x924;
                                     }
                                 }
+
+                                // EASCape: Christmas mode: snow takes the light brighter (it reflects more), keeping the relief
+                                const uSW: number = snow ? (lightSW * 3) >> 1 : lightSW;
+                                const uSE: number = snow ? (lightSE * 3) >> 1 : lightSE;
+                                const uNE: number = snow ? (lightNE * 3) >> 1 : lightNE;
+                                const uNW: number = snow ? (lightNW * 3) >> 1 : lightNW;
 
                                 let underlay: number = 0;
                                 if (t1Colour !== -1) {
@@ -262,10 +275,10 @@ export default class ClientBuild {
                                         heightSE,
                                         heightNE,
                                         heightNW,
-                                        ClientBuild.getUCol(t1Colour, lightSW),
-                                        ClientBuild.getUCol(t1Colour, lightSE),
-                                        ClientBuild.getUCol(t1Colour, lightNE),
-                                        ClientBuild.getUCol(t1Colour, lightNW),
+                                        ClientBuild.getUCol(t1Colour, uSW),
+                                        ClientBuild.getUCol(t1Colour, uSE),
+                                        ClientBuild.getUCol(t1Colour, uNE),
+                                        ClientBuild.getUCol(t1Colour, uNW),
                                         Colour.BLACK,
                                         Colour.BLACK,
                                         Colour.BLACK,
@@ -292,7 +305,10 @@ export default class ClientBuild {
                                         texture = -1;
                                     } else {
                                         t2Colour = ClientBuild.getTable(flo.hue, flo.saturation, flo.lightness);
-                                        overlay = Pix3D.colourTable[ClientBuild.getOCol(flo.overlayHsl, 96)];
+                                        overlay = Pix3D.colourTable[ClientBuild.getOCol(snow ? Christmas.frostOverlay(flo.overlayHsl) : flo.overlayHsl, 96)];
+                                        if (snow) {
+                                            t2Colour = Christmas.frostOverlay(t2Colour); // EASCape: Christmas mode
+                                        }
                                     }
 
                                     world?.setGround(
@@ -306,10 +322,10 @@ export default class ClientBuild {
                                         heightSE,
                                         heightNE,
                                         heightNW,
-                                        ClientBuild.getUCol(t1Colour, lightSW),
-                                        ClientBuild.getUCol(t1Colour, lightSE),
-                                        ClientBuild.getUCol(t1Colour, lightNE),
-                                        ClientBuild.getUCol(t1Colour, lightNW),
+                                        ClientBuild.getUCol(t1Colour, uSW),
+                                        ClientBuild.getUCol(t1Colour, uSE),
+                                        ClientBuild.getUCol(t1Colour, uNE),
+                                        ClientBuild.getUCol(t1Colour, uNW),
                                         ClientBuild.getOCol(t2Colour, lightSW),
                                         ClientBuild.getOCol(t2Colour, lightSE),
                                         ClientBuild.getOCol(t2Colour, lightNE),
