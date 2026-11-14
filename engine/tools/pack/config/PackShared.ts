@@ -736,10 +736,22 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
                 dat.release();
                 idx.release();
             },
-            (client: Packet, _server: Packet): boolean => {
+            (client: Packet, _server: Packet, idx?: Packet): boolean => {
                 // EASCape: Fairytale II (27 Oct 2026) gave the Godfather and his henchmen the 2007
-                // cache's third state (fairy_godfather_multi, fairy_henchman1/2_multi)
-                return checkcrcAllowAdded(client, 3852, 356802, 1344216493);
+                // cache's third state (fairy_godfather_multi, fairy_henchman1/2_multi); Melzar's
+                // Maze skeleton back to Lost City 274's look (14 Nov 2026). The first 3852 npcs'
+                // length comes from the index, as for objs.
+                let prefix = 2;
+                if (idx) {
+                    for (let i = 0; i < 3852; i++) prefix += (idx.data[2 + i * 2] << 8) | idx.data[3 + i * 2];
+                }
+                if (process.env.EASCAPE_PRINT_CRC) {
+                    const copy = Uint8Array.from(client.data.subarray(0, prefix));
+                    copy[0] = 3852 >> 8;
+                    copy[1] = 3852 & 0xff;
+                    console.log('npc prefix', prefix, 'crc', Packet.getcrc(copy, 0, copy.length));
+                }
+                return checkcrcAllowAdded(client, 3852, idx ? prefix : 356766, -70474895);
             }
         );
     }
