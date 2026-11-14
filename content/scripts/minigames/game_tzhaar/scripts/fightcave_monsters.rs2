@@ -196,11 +196,12 @@ if ($style = 1) {
 } else {
     npc_anim(lordmagmus_smash, 0);
 }
-// EASCape: the hit is worked out a tick before it lands (OSRS wiki, Tick eating: ranged and magic
-// attacks are calculated, capped to your hitpoints, one tick before they're applied - the window
-// to tick eat Jad). It used to be worked out and applied on the same tick, so food eaten as the
-// hit came in was eaten at full health and healed nothing. Still lands 5 ticks after he attacks.
-npc_queue(4, $style, 4);
+// EASCape: the hit - and your protection prayer - is worked out 3 ticks after he starts the attack
+// (Void, TzTokJad.kt: queue("hit_target", 3) then the hit lands 64 client cycles later), and lands
+// 2 ticks after that, 5 after the attack as before. Worked out before it lands, capped to your
+// hitpoints, so it can be tick eaten (OSRS wiki, Tick eating). It used to be worked out as it
+// landed, so a prayer switched at the last moment still protected you.
+npc_queue(4, $style, 3);
 
 // the magic or ranged hit lands
 [ai_queue4,tzhaar_fightcave_swarm_boss]
@@ -220,8 +221,8 @@ if ($style = 1) {
     if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
 }
 $damage = min($damage, stat(hitpoints)); // capped to your hitpoints now: eat before it lands
-queue(fightcave_jad_hit, 1, add($damage, multiply($style, 1000))); // style in the thousands
-queue*(playerhit_n_retaliate, 1)(npc_uid);
+queue(fightcave_jad_hit, 2, add($damage, multiply($style, 1000))); // style in the thousands
+queue*(playerhit_n_retaliate, 2)(npc_uid);
 
 [queue,fightcave_jad_hit](int $packed)
 def_int $damage = modulo($packed, 1000);
