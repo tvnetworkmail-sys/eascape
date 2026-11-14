@@ -20,6 +20,7 @@ module.exports = function logoutNotifier(ctx) {
   function onInput() {
     lastInput = Date.now();
     warned = false;
+    if (gameIdle) gameIdle = { ms: 0, at: lastInput }; // (don't count on from an old report)
   }
 
   function tick() {

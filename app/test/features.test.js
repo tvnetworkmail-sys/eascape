@@ -99,7 +99,8 @@ const root = path.join(__dirname, '..', 'src');
   const realClear = global.clearInterval;
   global.setInterval = (fn) => { intervals.push(fn); return intervals.length; };
   global.clearInterval = () => {};
-  global.window = { addEventListener() {}, removeEventListener() {} };
+  let winInput = () => {};
+  global.window = { addEventListener(type, fn) { if (type === 'mousemove') winInput = fn; }, removeEventListener() {} };
   const sent = [];
   let listener = null;
   const cfg = { logoutWarning: 10 };
@@ -122,6 +123,11 @@ const root = path.join(__dirname, '..', 'src');
   listener('idle', { ms: 81000 });
   tick();
   assert.strictEqual(sent.length, 2, 'alerts again after the next idle spell');
+  // playing on: the game's last report was a moment after input, then input keeps coming
+  listener('idle', { ms: 300 });
+  const before = sent.length;
+  for (let i = 0; i < 40; i++) { t += 3000; winInput(); tick(); }
+  assert.strictEqual(sent.length, before, 'no alerts while you keep playing');
   cfg.logoutWarning = 30;
   listener('idle', { ms: 500 });
   listener('idle', { ms: 60000 });

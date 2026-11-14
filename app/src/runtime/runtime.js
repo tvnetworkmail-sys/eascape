@@ -372,8 +372,12 @@
       const ms = this.idleMs();
       if (ms === null) return;
       const s = Math.floor(ms / 1000);
-      if (s === this.lastIdle) return;
+      // EASCape: also once a second while you keep playing (the timer stays under a second then,
+      // and with no new report the Logout Notifier counted on from the last one)
+      const now = performance.now();
+      if (s === this.lastIdle && now - (this.lastIdlePost || 0) < 1000) return;
       this.lastIdle = s;
+      this.lastIdlePost = now;
       post('idle', { ms: Math.round(ms) });
     },
 
