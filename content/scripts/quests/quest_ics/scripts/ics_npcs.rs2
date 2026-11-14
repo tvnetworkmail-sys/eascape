@@ -248,7 +248,7 @@ if ($s = ^ics_token) {
         ~chatplayer("<p,sad>I lost that token you gave me; could I have another please?");
         ~chatnpc("<p,neutral>Ahhh, you humans.");
         ~ics_give(ics_little_sphinxstatue);
-        ~objbox(ics_little_sphinxstatue, "The sphinx hands you another little statue.", 250, 0, 0);
+        ~objbox(ics_little_sphinxstatue, "The sphinx hands you another little statue.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     ~chatnpc("<p,angry>Your cat tells me that you have yet to speak to the high priest. I wonder why I tried to help at all!");
@@ -321,7 +321,7 @@ if (~ics_has_jar = true) {
 ~chatnpc("<p,neutral>Here, I have a token that he will know is from me. Take that to him and I'm sure he will talk to you.");
 ~ics_give(ics_little_sphinxstatue);
 %ics_little_var = ^ics_token;
-~objbox(ics_little_sphinxstatue, "The Sphinx gives you a token.", 250, 0, 0);
+~objbox(ics_little_sphinxstatue, "The Sphinx gives you a token.", 250, 0, divide(^objbox_height, 2));
 ~chatplayer("<p,neutral>Well, thanks for your advice...although why did you have to drag me through all that?");
 ~chatnpc("<p,neutral>The trials of humans concern me not, but I do make exceptions for guardians of my kind.");
 
@@ -422,7 +422,7 @@ if ($s = ^ics_return_jar | $s = ^ics_stole_jar) {
     if (~ics_has_jar = false & %ics_little_var = ^ics_return_jar) {
         ~chatnpc("<p,neutral>One of my priests found this lying outside the pyramid. Please try to be more respectful of our dead."); // the OSRS wiki
         ~ics_give(~ics_jar);
-        ~objbox(~ics_jar, "The High Priest gives you a burial jar.", 250, 0, 0);
+        ~objbox(~ics_jar, "The High Priest gives you a burial jar.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     ~chatnpc("<p,quiz>Have you managed to return the jar yet?");
@@ -470,7 +470,7 @@ if (%ics_givensphinxstatue = 0) {
     }
     inv_del(inv, ics_little_sphinxstatue, 1);
     %ics_givensphinxstatue = 1;
-    ~objbox(ics_little_sphinxstatue, "You hand the statue to the high priest.", 250, 0, 0);
+    ~objbox(ics_little_sphinxstatue, "You hand the statue to the high priest.", 250, 0, divide(^objbox_height, 2));
 } else {
     ~chatplayer("<p,neutral>I've already given you proof.");
     ~chatnpc("<p,confused>Ummm... So you have.");
@@ -771,7 +771,7 @@ if (%ics_gotlinen = 0) {
     } else {
         inv_del(inv, ics_little_linen, 1);
         %ics_gotlinen = 1;
-        ~objbox(ics_little_linen, "You hand a sheet of linen to the embalmer.", 250, 0, 0);
+        ~objbox(ics_little_linen, "You hand a sheet of linen to the embalmer.", 250, 0, divide(^objbox_height, 2));
     }
 }
 if (%ics_gotsalt = 0) {
@@ -779,11 +779,11 @@ if (%ics_gotsalt = 0) {
     if (inv_total(inv, ics_little_pileofsalt) > 0) {
         inv_del(inv, ics_little_pileofsalt, 1);
         %ics_gotsalt = 1;
-        ~objbox(ics_little_pileofsalt, "You hand the embalmer the salt which you have carefully purified.", 250, 0, 0);
+        ~objbox(ics_little_pileofsalt, "You hand the embalmer the salt which you have carefully purified.", 250, 0, divide(^objbox_height, 2));
     } else if (inv_total(inv, slayer_bag_of_salt) > 0) {
         inv_del(inv, slayer_bag_of_salt, 1);
         %ics_gotsalt = 1;
-        ~objbox(slayer_bag_of_salt, "You hand the embalmer a bag of salt.", 250, 0, 0);
+        ~objbox(slayer_bag_of_salt, "You hand the embalmer a bag of salt.", 250, 0, divide(^objbox_height, 2));
     } else {
         ~chatplayer("<p,neutral>No, not yet.");
         ~chatnpc("<p,angry>So hurry up! There's a salt lake just north of the city. You can get salty water from it with a bucket.");
@@ -799,7 +799,7 @@ if (%ics_gotsap = 0) {
     inv_del(inv, ics_little_sap_bucket, 1);
     inv_add(inv, bucket_empty, 1); // ours: he gives the bucket back
     %ics_gotsap = 1;
-    ~objbox(ics_little_sap_bucket, "You hand the bucket of sap to the embalmer.", 250, 0, 0);
+    ~objbox(ics_little_sap_bucket, "You hand the bucket of sap to the embalmer.", 250, 0, divide(^objbox_height, 2));
 }
 if (%ics_gotsalt = 1 & %ics_gotsap = 1 & %ics_gotlinen = 1) {
     ~chatnpc("<p,happy>That's everything I need to get the ceremony underway. I'll send word to the high priest to get things started.");
@@ -865,7 +865,7 @@ if (%ics_little_carpenter_multi = 1) {
         return;
     }
     inv_add(inv, ics_little_holy_symbol, 1);
-    ~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, 0);
+    ~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, divide(^objbox_height, 2));
     ~chatplayer("<p,neutral>Thanks, I guess.");
     ~chatnpc("<p,neutral>You should get that to the high priest as soon as possible. We're all really getting sick of these plagues.");
     ~chatplayer("<p,neutral>Yeah, yeah, yeah.");
@@ -929,7 +929,7 @@ if (inv_freespace(inv) = 0) {
     return;
 }
 inv_add(inv, ics_little_holy_symbol, 1);
-~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, 0);
+~objbox(ics_little_holy_symbol, "The carpenter gives you a holy symbol.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Here you go. Now, do hurry up and get this to the ceremony.");
 
 // ---------------------------------------------------------------- the cloth seller (Raetul)
@@ -975,7 +975,7 @@ if ($s = ^ics_ceremony_prep & %ics_metembalmer = 1 & %ics_gotlinen = 0 & inv_tot
     ~chatnpc("<p,happy>That will be 30 coins please and thank you.");
     inv_del(inv, coins, 30);
     inv_add(inv, ics_little_linen, 1);
-    ~objbox(ics_little_linen, "The merchant takes your money and hands you a sheet of linen before you realise that a transaction has been agreed.", 250, 0, 0);
+    ~objbox(ics_little_linen, "The merchant takes your money and hands you a sheet of linen before you realise that a transaction has been agreed.", 250, 0, divide(^objbox_height, 2));
     ~chatplayer("<p,shock>What the..?");
     ~chatnpc("<p,happy>Thank you come again.");
     return;

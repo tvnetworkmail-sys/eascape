@@ -42,7 +42,7 @@ while($op ! null) {
         %agilityarena_varbit = setbit(%agilityarena_varbit, ^agilityarena_paid);
         inv_del(inv, coins, 200);
         mes("You give Cap'n Izzy 200 coins.");
-        ~objbox(coins, "You give Cap'n Izzy 200 coins.", 250, 0, 0);
+        ~objbox(coins, "You give Cap'n Izzy 200 coins.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,happy>May the wind be in ye sails!");
         return;
     } else if($op = 4) {
@@ -65,7 +65,7 @@ if(inv_total(inv, coins) < 200) {
 %agilityarena_varbit = setbit(%agilityarena_varbit, ^agilityarena_paid);
 inv_del(inv, coins, 200);
 mes("You give Cap'n Izzy the 200 coin entrance fee.");
-~objbox(coins, "You give Cap'n Izzy the 200 coin entrance fee.", 250, 0, 0);
+~objbox(coins, "You give Cap'n Izzy the 200 coin entrance fee.", 250, 0, divide(^objbox_height, 2));
 
 [ai_timer,agilityarena_clerk]
 if(map_clock >= %agilityarena_next_pillar_time) {

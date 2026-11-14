@@ -45,11 +45,11 @@ if(%desertrescue >= ^desertrescue_learned_darts) {
     ~chatnpc("<p,neutral>Where did you get this from Effendi! I'll have to confiscate this for your own safety!");
     return;
 }
-~objbox(thprotodart, "You show Al Shabim the prototype dart.", 250, 0, 0);
+~objbox(thprotodart, "You show Al Shabim the prototype dart.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>This is truly fantastic Effendi!");
 if(inv_total(inv, thcaptplans) > 0) {
     ~chatnpc("<p,neutral>We will take the technical plans for the weapon as well.");
-    ~objbox(thcaptplans, "You hand over the technical plans for the weapon.", 250, 0, 0);
+    ~objbox(thcaptplans, "You hand over the technical plans for the weapon.", 250, 0, divide(^objbox_height, 2));
     if_close;
     inv_del(inv, thcaptplans, 1);
     p_delay(2);
@@ -58,7 +58,7 @@ if(inv_total(inv, thcaptplans) > 0) {
 ~mesbox("Al Shabim's advisors show you some advanced techniques for making the new weapon.");
 if(inv_total(inv, bronze_dart) = 0) { // wont get darts if you have some on osrs
     ~chatnpc("<p,neutral>Please accept this selection of six bronze throwing darts as a token of our appreciation.");
-    ~objbox(bronze_dart, "You receive six bronze throwing darts from Al Shabim.", 250, 0, 0);
+    ~objbox(bronze_dart, "You receive six bronze throwing darts from Al Shabim.", 250, 0, divide(^objbox_height, 2));
     inv_add(inv, bronze_dart, 6);
 }
 if(inv_total(inv, thbedobinkey) > 0) {
@@ -68,10 +68,10 @@ if(inv_total(inv, thbedobinkey) > 0) {
 %desertrescue = ^desertrescue_learned_darts;
 inv_del(inv, thprotodart, 1);
 // https://web.archive.org/web/20051025141912im_/http://runeweb.net/rathofdoom/quests/touristtrap/5.png
-~objbox(thprotodart, "@dbl@*** Dart Construction ***|Congratulations! You can now construct darts.", 250, 0, 0);
+~objbox(thprotodart, "@dbl@*** Dart Construction ***|Congratulations! You can now construct darts.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Oh, and here is your pineapple!");
 inv_add(inv, tentipineapple, 1);
-~objbox(tentipineapple, "You receive a tasty looking pineapple from Al Shabim", 250, 0, 0);
+~objbox(tentipineapple, "You receive a tasty looking pineapple from Al Shabim", 250, 0, divide(^objbox_height, 2));
 
 [label,shabim_who]
 ~chatplayer("<p,quiz>Who are you?");
@@ -133,7 +133,7 @@ switch_int(~p_choice2("Yes, I'm interested.", 1, "Not at the moment.", 2)) {
         ~chatnpc("<p,neutral>Here is a copy of the key that should give you access to the chest.");
         %desertrescue = ^desertrescue_given_bedobin_key;
         inv_add(inv, thbedobinkey, 1);
-        ~objbox(thbedobinkey, "Al Shabim gives you a key.", 250, 0, 0);
+        ~objbox(thbedobinkey, "Al Shabim gives you a key.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,happy>Bring us back the plans inside the chest, they should be sealed. All haste to you Effendi!");
     case 2 :
         ~chatplayer("<p,neutral>Not at the moment.");
@@ -148,7 +148,7 @@ switch_int(~p_choice2("Yes, I'm interested.", 1, "Not at the moment.", 2)) {
 ~chatplayer("<p,neutral>I've lost the key!");
 ~chatnpc("<p,angry>How very careless of you! Here is another key, don't lose it this time !");
 inv_add(inv, thbedobinkey, 1);
-~objbox(thbedobinkey, "Al Shabim gives you another key.", 250, 0, 0);
+~objbox(thbedobinkey, "Al Shabim gives you another key.", 250, 0, divide(^objbox_height, 2));
 
 [label,shabim_lostkeyplans]
 if(%desertrescue = ^desertrescue_made_dart_tip) {
@@ -163,7 +163,7 @@ p_delay(5);
 ~chatnpc("<p,confused>The Captain may have some new plans drawn up. Go back and see if you can collect them.");
 ~chatnpc("<p,neutral>Here is the key you'll need for the chest!");
 inv_add(inv, thbedobinkey, 1);
-~objbox(thbedobinkey, "Al Shabim gives you another key.", 250, 0, 0);
+~objbox(thbedobinkey, "Al Shabim gives you another key.", 250, 0, divide(^objbox_height, 2));
 
 [label,shabim_yesplans]
 ~chatplayer("<p,neutral>Yes, I'm very interested.");

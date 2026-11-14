@@ -42,7 +42,7 @@ if (%ahoy_given_robes = 1 | ~obj_gettotal(ahoy_robes_of_necrovarus) > 0) {
     ~displaymessage(^dm_default);
     return;
 }
-~objbox(ahoy_robes_of_necrovarus, "You take the Robes of Necrovarus from the remains of his mortal body.", 250, 0, 0);
+~objbox(ahoy_robes_of_necrovarus, "You take the Robes of Necrovarus from the remains of his mortal body.", 250, 0, divide(^objbox_height, 2));
 ~ahoy_give(ahoy_robes_of_necrovarus);
 
 [oploc2,ahoy_coffin_open]
@@ -141,13 +141,13 @@ if (inv_total(inv, needle) > 0 & inv_total(inv, knife) > 0 & inv_total(inv, silk
     inv_del(inv, thread, 1);
     inv_del(inv, ahoy_toy_boat, 1);
     inv_add(inv, ahoy_toy_boat_repaired, 1);
-    ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, 0);
+    ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 ~mesbox("You need some silk to replace the flag, something to sew it to the boat, and something to cut the flag to the right size.");
 
 [opheld1,ahoy_toy_boat_repaired]
-~objbox(ahoy_toy_boat_repaired, "The top of the flag is <~ahoy_flag_colour(%ahoy_toy_top)>.|The skull emblem is <~ahoy_flag_colour(%ahoy_toy_skull)>.|The bottom of the flag is <~ahoy_flag_colour(%ahoy_toy_bottom)>.", 250, 0, 0);
+~objbox(ahoy_toy_boat_repaired, "The top of the flag is <~ahoy_flag_colour(%ahoy_toy_top)>.|The skull emblem is <~ahoy_flag_colour(%ahoy_toy_skull)>.|The bottom of the flag is <~ahoy_flag_colour(%ahoy_toy_bottom)>.", 250, 0, divide(^objbox_height, 2));
 
 // a dye used on the repaired boat (skill_crafting/scripts/dye_cape/dye_cape.rs2 sends it here)
 [label,ahoy_dye_boat](namedobj $dye, int $colour)
@@ -156,15 +156,15 @@ switch_int (~p_choice3_header("Top half", 1, "Bottom half", 2, "Skull emblem", 3
     case 1 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_top = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the top of the flag <$name>.", 250, 0, 0);
+        ~objbox(ahoy_toy_boat_repaired, "You dye the top of the flag <$name>.", 250, 0, divide(^objbox_height, 2));
     case 2 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_bottom = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the bottom of the flag <$name>.", 250, 0, 0);
+        ~objbox(ahoy_toy_boat_repaired, "You dye the bottom of the flag <$name>.", 250, 0, divide(^objbox_height, 2));
     case 3 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_skull = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the skull emblem <$name>.", 250, 0, 0);
+        ~objbox(ahoy_toy_boat_repaired, "You dye the skull emblem <$name>.", 250, 0, divide(^objbox_height, 2));
 }
 
 // ---------------------------------------------------------------- the wrecked ship
@@ -279,7 +279,7 @@ if (coordx(loc_coord) = 3619 & coordz(loc_coord) = 3545 & %ahoy_subquest_toyboat
     loc_change(ahoy_chest_locked_active, 3);
     if (~ahoy_has_map_piece(ahoy_map_scrap_1) = false) {
         ~ahoy_give(ahoy_map_scrap_1);
-        ~objbox(ahoy_map_scrap_1, "You find a piece of a map inside the chest.", 250, 0, 0);
+        ~objbox(ahoy_map_scrap_1, "You find a piece of a map inside the chest.", 250, 0, divide(^objbox_height, 2));
     } else {
         mes("You search the chest but find nothing.");
     }
@@ -300,7 +300,7 @@ if (%ahoy_subquest_toyboat = 3) {
 inv_del(inv, ahoy_chest_key, 1);
 sound_synth(locked, 1, 0);
 %ahoy_subquest_toyboat = 3;
-~objbox(ahoy_chest_key, "You unlock the chest.", 250, 0, 0);
+~objbox(ahoy_chest_key, "You unlock the chest.", 250, 0, divide(^objbox_height, 2));
 
 // true if you have this piece, or what it became, or have given the book away
 [proc,ahoy_has_map_piece](obj $piece)(boolean)
@@ -328,7 +328,7 @@ if ($x = 3606 & $z = 3564) {
         mes("You search the chest but find nothing.");
     } else {
         ~ahoy_give(ahoy_map_scrap_2);
-        ~objbox(ahoy_map_scrap_2, "You find a piece of a map inside the chest.", 250, 0, 0);
+        ~objbox(ahoy_map_scrap_2, "You find a piece of a map inside the chest.", 250, 0, divide(^objbox_height, 2));
     }
     return;
 }
@@ -339,7 +339,7 @@ if ($x = 3618 & $z = 3542) {
             mes("You search the chest but find nothing.");
         } else {
             ~ahoy_give(ahoy_map_scrap_3);
-            ~objbox(ahoy_map_scrap_3, "You find a piece of a map inside the chest.", 250, 0, 0);
+            ~objbox(ahoy_map_scrap_3, "You find a piece of a map inside the chest.", 250, 0, divide(^objbox_height, 2));
         }
         return;
     }
@@ -374,7 +374,7 @@ if (inv_total(inv, ahoy_map_scrap_1) > 0 & inv_total(inv, ahoy_map_scrap_2) > 0 
     inv_del(inv, ahoy_map_scrap_2, 1);
     inv_del(inv, ahoy_map_scrap_3, 1);
     inv_add(inv, ahoy_map_complete, 1);
-    ~objbox(ahoy_map_complete, "You piece the three map scraps together to form a complete map.", 250, 0, 0);
+    ~objbox(ahoy_map_complete, "You piece the three map scraps together to form a complete map.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 ~mesbox("You don't have all the pieces of the map yet.");
@@ -402,4 +402,4 @@ switch_int ($dir) {
 anim(human_dig, 0);
 p_delay(2);
 ~ahoy_give(ahoy_book_of_haricanto);
-~objbox(ahoy_book_of_haricanto, "You unearth the Book of Haricanto.", 250, 0, 0);
+~objbox(ahoy_book_of_haricanto, "You unearth the Book of Haricanto.", 250, 0, divide(^objbox_height, 2));

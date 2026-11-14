@@ -101,7 +101,7 @@ if (inv_freespace(inv) = 0) {
     return;
 }
 inv_add(inv, twocats_recipe, 1);
-~objbox(twocats_recipe, "You have found a recipe.", 250, 0, 0);
+~objbox(twocats_recipe, "You have found a recipe.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Tidy Human: shears on Unferth (the
 // cache's human_shearing_unferth and twocats_shear; his hair goes long, spiky, medium, short, bald)
@@ -194,7 +194,7 @@ if (~obj_gettotal(twocats_chores) = 0) {
     ~chatplayer("<p,sad>I don't have the list of chores that Bob gave me.");
     ~ttc_catsay("<p,neutral>I can remember them. I'll make a list.");
     ~ttc_give(twocats_chores);
-    ~objbox(twocats_chores, "Your cat has given you a list of chores.", 250, 0, 0);
+    ~objbox(twocats_chores, "Your cat has given you a list of chores.", 250, 0, divide(^objbox_height, 2));
 }
 switch_int (~p_choice5("What do I have to do for 'Tidy House'?", 1, "What do I have to do for 'Warm Human'?", 2, "What do I have to do for 'Feed Human'?", 3, "What do I have to do for 'Tidy Human'?", 4, "What do I have to do for 'Tend Garden'?", 5)) {
     case 1 :

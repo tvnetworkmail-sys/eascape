@@ -57,7 +57,7 @@ switch_obj(last_useitem) {
                 p_delay(3);
                 inv_add(inv, tbwt_crafting_manual, 1); // Can reclaim even if you have one in your inventory already
                 if (%tbwt_tiadeche < ^tbwt_tiadeche_player_received_manual) %tbwt_tiadeche = ^tbwt_tiadeche_player_received_manual;
-                ~objbox(tbwt_crafting_manual, "Tinsay hands you a Karambwan vessel crafting manual.", 250, 0, 0);
+                ~objbox(tbwt_crafting_manual, "Tinsay hands you a Karambwan vessel crafting manual.", 250, 0, divide(^objbox_height, 2));
                 if ($reclaim = true) {
                     ~chatnpc("<p,neutral>Try not to lose it this time...");
                 } else {
@@ -324,7 +324,7 @@ if (%tbwt_tinsay = ^tbwt_tinsay_fetch_bananarum) {
 [label,tbwt_tinsay_give_seaweedsandwich]
 %tbwt_tinsay = ^tbwt_tinsay_given_seaweedsandwich;
 inv_del(inv, tbwt_seaweed_in_monkey_skin_sandwich, 1);
-~objbox(tbwt_seaweed_in_monkey_skin_sandwich, "You hand Tinsay the seaweed in monkey skin sandwich.", 250, 0, 0);
+~objbox(tbwt_seaweed_in_monkey_skin_sandwich, "You hand Tinsay the seaweed in monkey skin sandwich.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);
@@ -391,7 +391,7 @@ switch_int(%tbwt_tinsay) {
 [label,tbwt_tinsay_give_marinatedbones]
 %tbwt_tinsay = ^tbwt_tinsay_complete;
 inv_del(inv, tbwt_burnt_jogre_bones_marinated_in_karambwanji, 1);
-~objbox(tbwt_burnt_jogre_bones_marinated_in_karambwanji, "You hand Tinsay the burnt Jogre bones marinated in Karambwanji.", 250, 0, 0);
+~objbox(tbwt_burnt_jogre_bones_marinated_in_karambwanji, "You hand Tinsay the burnt Jogre bones marinated in Karambwanji.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 ~music_jingle("tinsay satisfied");
@@ -418,14 +418,14 @@ if (%tbwt_main = ^tbwt_started & ~tbwt_get_brother_completion = true) {
 
 [label,tbwt_tinsay_i_have_this_jogre_bones]
 inv_del(inv, tbwt_jogre_bones, 1);
-~objbox(tbwt_jogre_bones, "You hand Tinsay the Jogre Bones", 250, 0, 0); // Intentionally no period at the end
+~objbox(tbwt_jogre_bones, "You hand Tinsay the Jogre Bones", 250, 0, divide(^objbox_height, 2)); // Intentionally no period at the end
 ~chatnpc("<p,neutral>I think this needs a bit of Karambwanji. They also don't seem quite burnt enough.");
 inv_add(inv, tbwt_jogre_bones, 1);
 mes("Tinsay hands you back the Jogre bones.");
 
 [label,tbwt_tinsay_i_have_this_jogre_bones_in_cooked_karambwanji_paste]
 inv_del(inv, tbwt_jogre_bones_in_cooked_karambwanji_paste, 1);
-~objbox(tbwt_jogre_bones_in_cooked_karambwanji_paste, "You hand Tinsay the Jogre Bones in cooked Karambwanji paste.", 250, 0, 0);
+~objbox(tbwt_jogre_bones_in_cooked_karambwanji_paste, "You hand Tinsay the Jogre Bones in cooked Karambwanji paste.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);
@@ -435,7 +435,7 @@ p_delay(3);
 
 [label,tbwt_tinsay_i_have_this_jogre_bones_in_raw_karambwanji_paste]
 inv_del(inv, tbwt_jogre_bones_in_raw_karambwanji_paste, 1);
-~objbox(tbwt_jogre_bones_in_raw_karambwanji_paste, "You hand Tinsay the Jogre Bones in raw Karambwanji paste.", 250, 0, 0);
+~objbox(tbwt_jogre_bones_in_raw_karambwanji_paste, "You hand Tinsay the Jogre Bones in raw Karambwanji paste.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);
@@ -445,14 +445,14 @@ p_delay(3);
 
 [label,tbwt_tinsay_i_have_this_burnt_jogre_bones]
 inv_del(inv, tbwt_burnt_jogre_bones, 1);
-~objbox(tbwt_burnt_jogre_bones, "You hand Tinsay the burnt Jogre Bones", 250, 0, 0); // Intentionally no period at the end
+~objbox(tbwt_burnt_jogre_bones, "You hand Tinsay the burnt Jogre Bones", 250, 0, divide(^objbox_height, 2)); // Intentionally no period at the end
 ~chatnpc("<p,neutral>I think this needs a bit of Karambwanji.");
 inv_add(inv, tbwt_burnt_jogre_bones, 1);
 mes("Tinsay hands you back the burnt Jogre bones.");
 
 [label,tbwt_tinsay_i_have_this_burnt_jogre_bones_in_raw_karambwanji_paste]
 inv_del(inv, tbwt_burnt_jogre_bones_in_raw_karambwanji_paste, 1);
-~objbox(tbwt_burnt_jogre_bones_in_raw_karambwanji_paste, "You hand Tinsay the burnt Jogre Bones in raw Karambwanji paste.", 250, 0, 0);
+~objbox(tbwt_burnt_jogre_bones_in_raw_karambwanji_paste, "You hand Tinsay the burnt Jogre Bones in raw Karambwanji paste.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);
@@ -461,7 +461,7 @@ p_delay(3);
 
 [label,tbwt_tinsay_i_have_this_burnt_jogre_bones_in_cooked_karambwanji_paste]
 inv_del(inv, tbwt_burnt_jogre_bones_in_cooked_karambwanji_paste, 1);
-~objbox(tbwt_burnt_jogre_bones_in_cooked_karambwanji_paste, "You hand Tinsay the Jogre Bones marinated in Karambwanji.", 250, 0, 0);
+~objbox(tbwt_burnt_jogre_bones_in_cooked_karambwanji_paste, "You hand Tinsay the Jogre Bones marinated in Karambwanji.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);
@@ -470,7 +470,7 @@ p_delay(3);
 
 [label,tbwt_tinsay_i_have_this_jogre_bones_marinated_in_karambwanji]
 inv_del(inv, tbwt_jogre_bones_marinated_in_karambwanji, 1);
-~objbox(tbwt_jogre_bones_marinated_in_karambwanji, "You hand Tinsay the Jogre Bones marinated in Karambwanji.", 250, 0, 0);
+~objbox(tbwt_jogre_bones_marinated_in_karambwanji, "You hand Tinsay the Jogre Bones marinated in Karambwanji.", 250, 0, divide(^objbox_height, 2));
 if_close;
 npc_anim(human_eat, 0);
 p_delay(3);

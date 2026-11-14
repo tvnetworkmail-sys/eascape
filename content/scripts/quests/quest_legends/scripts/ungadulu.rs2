@@ -229,7 +229,7 @@ inv_del(inv, deathdaggerdone, 1); // confirm this removal (does it do both, type
 inv_del(worn, deathdaggerdone, 1);
 inv_del(inv, deathdagger, 1); 
 inv_del(worn, deathdagger, 1);
-~objbox(holyforce, "The wizened old Shaman hands over a piece of paper.", 250, 0, 0);
+~objbox(holyforce, "The wizened old Shaman hands over a piece of paper.", 250, 0, divide(^objbox_height, 2));
 
 [label,ungadulu_spirit]
 ~chatplayer("<p,neutral>I met a spirit in the Viyeldi Caves.");
@@ -414,7 +414,7 @@ if (last_useitem = book_of_binding) {
         ~chatnpc("<p,happy>Ha ha ha! There's no need to use that on me anymore... I'm cured now, remember?");
     }
 } else if (last_useitem = deathdagger) {
-    ~objbox(deathdagger, "You hand the dagger over to the shaman and his face turns pale.", 250, 0, 0);
+    ~objbox(deathdagger, "You hand the dagger over to the shaman and his face turns pale.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,shock>This dagger has been made for one purpose only... Praise the gods that you brought it to me.");
     ~chatnpc("<p,neutral>I can make you a spell with this item which will force the spirit to reveal its true self. Once activated, you will be able to attack it like any normal creature.");
     if(~obj_gettotal(holyforce) > 0) {
@@ -422,13 +422,13 @@ if (last_useitem = book_of_binding) {
         ~chatnpc("<p,neutral>Use the Holy Force spell that I gave you earlier to defeat this spirit. Good luck. I'll take that dagger for safe keeping...");
         return;
     }
-    ~objbox(holyforce, "The Shaman takes the dagger and gives you a folded piece of paper.", 250, 0, 0);
+    ~objbox(holyforce, "The Shaman takes the dagger and gives you a folded piece of paper.", 250, 0, divide(^objbox_height, 2));
     inv_add(inv, holyforce, 1); // this order is correct 
     inv_del(inv, deathdagger, 1);
     ~chatnpc("<p,neutral>Use this spell on the Spirit. It will force the spirit to show its true self. And it will also be vulnerable to normal attacks.");
 } else if(last_useitem = deathdaggerdone) {
     // confirm mesanims and stuff here, can only get 1 dagger per account (afaik) so this is from chisel
-    ~objbox(deathdaggerdone, "You hand the dagger over to the shaman and his face turns pale.", 250, 0, 0);
+    ~objbox(deathdaggerdone, "You hand the dagger over to the shaman and his face turns pale.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,shock>Oh dear Bwana, I sense something terrible has happened. This dagger is a portent of some evil action. Please, reveal to me anything that you have done so that I might understand this better.");
     switch_int(~p_choice2("I've killed Viyeldi.", 1, "Er, I can't think of anything.", 2)) {
         case 1 :
@@ -438,7 +438,7 @@ if (last_useitem = book_of_binding) {
             // no holy force check here
             inv_add(inv, holyforce, 1);
             inv_del(inv, deathdaggerdone, 1);
-            ~objbox(holyforce, "The wizened old Shaman hands over a piece of paper.", 250, 0, 0);
+            ~objbox(holyforce, "The wizened old Shaman hands over a piece of paper.", 250, 0, divide(^objbox_height, 2));
         case 2 :
             ~chatplayer("<p,neutral>Er, I can't think of anything.");
             ~chatnpc("<p,neutral>ell, that is strange. I sense a growing evil power since you visited the caves.");

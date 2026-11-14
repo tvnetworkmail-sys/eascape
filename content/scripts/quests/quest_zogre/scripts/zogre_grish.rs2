@@ -121,7 +121,7 @@ switch_int (~p_choice_some5("I found who's responsible for the Zogres being here
         %zogre = ^zogre_given_key;
         %thzfe_sithik_transformed = 2;
         ~zogre_give(zogre_tomb_artefact_key);
-        ~objbox(zogre_tomb_artefact_key, "Grish gives you a crudely crafted key.", 250, 0, 0);
+        ~objbox(zogre_tomb_artefact_key, "Grish gives you a crudely crafted key.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,quiz>Oh, so you want me to go back in there and look for something for you?");
         ~chatnpc("<p,neutral>Yeah creature, yous gotta get da ogrish old fings for da making new jiggig and proper in da special way.");
     case 2 : @grish_arrows;
@@ -146,9 +146,9 @@ if (%thzfe_makecompozogrebow = 1) @grish_easier_way;
 ~chatnpc("<p,happy>Why you's not say so creature...me's shows you how to make da bigger stabber chucker... @blu@~ Grish gets a couple of items out of his back pack.~");
 %thzfe_makecompozogrebow = 1;
 ~doubleobjbox(achey_tree_logs, wolf_bones, "Grish shows you he has Achey tree logs and wolf bones, he starts to whittle away at them both with a knife.", 250);
-~objbox(unstrung_zogre_bow, "Grish shows you his achievement, a rather powerful looking composite bow frame...", 250, 0, 0);
+~objbox(unstrung_zogre_bow, "Grish shows you his achievement, a rather powerful looking composite bow frame...", 250, 0, divide(^objbox_height, 2));
 ~doubleobjbox(unstrung_zogre_bow, bow_string, "He shows you the bow frame and the string and after some time and a great deal of effort, he strings the composite ogre bow.", 250);
-~objbox(zogre_bow, "Grish shows you his proud achievement...", 250, 0, 0);
+~objbox(zogre_bow, "Grish shows you his proud achievement...", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,happy>De're creature...now yous is makin' da bigga stabber chucker...");
 ~chatplayer("<p,neutral>Thanks! I think....");
 @grish_back;
@@ -283,15 +283,15 @@ if (inv_freespace(inv) > 0) {
 [opnpcu,zogre_ogre_shaman]
 switch_obj (last_useitem) {
     case zogre_black_prism :
-        ~objbox(zogre_black_prism, "You show the black prism to Grish.", 250, 0, 0);
+        ~objbox(zogre_black_prism, "You show the black prism to Grish.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,quiz>Hey Grish, I found this in the tomb, do you know what it is?");
         ~chatnpc("<p,neutral>Whas you's shuvvin wizzy stuff in Grish face...is a pretty one but dat's more stuff for da wizzy's dan Grish.");
     case zogre_necromantic_page :
-        ~objbox(zogre_necromantic_page, "You show the necromantic page to Grish.", 250, 0, 0);
+        ~objbox(zogre_necromantic_page, "You show the necromantic page to Grish.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,quiz>This torn page was on a lectern in the tomb, do you know why?");
         ~chatnpc("<p,neutral>Dat's der wizzy stuff, not Ogery stuffsies like what Grish got. Das not even big enough for empty da big blower on! No use for Grish dat creatures...you's keeps it.");
     case zogre_dragon_tankard :
-        ~objbox(zogre_dragon_tankard, "You show the tankard to Grish.", 250, 0, 0);
+        ~objbox(zogre_dragon_tankard, "You show the tankard to Grish.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,quiz>I found this tankard in the tomb, have you got any suggestions?");
         ~chatnpc("<p,neutral>Das a good drinker for da drinkies dat un is...is a small-un for Grish so yous creature keeps it yes. Yous creature keeps da fimble drinkers for da smaller drinkies.");
     case default : ~displaymessage(^dm_default);
@@ -378,7 +378,7 @@ if (%thzfe_sold_balm = 1) {
     return;
 }
 def_obj $balm = last_useitem;
-~objbox($balm, "You show the potion to Uglug Nar.", 250, 0, 0);
+~objbox($balm, "You show the potion to Uglug Nar.", 250, 0, divide(^objbox_height, 2));
 ~chatplayer("<p,happy>Hey, here you go! I brought you some of the potion which should cure the disease. You said that you would buy some from me.");
 ~chatnpc("<p,happy>Yous creatures done da good fing...yous get many bright pretties for dis...!");
 %thzfe_sold_balm = 1;

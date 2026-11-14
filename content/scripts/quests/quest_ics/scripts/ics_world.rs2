@@ -129,7 +129,7 @@ if (last_useitem ! bucket_empty) {
 }
 inv_del(inv, bucket_empty, 1);
 inv_add(inv, ics_little_saltwaterbucket, 1);
-~objbox(ics_little_saltwaterbucket, "You scoop some salty water into the bucket.", 250, 0, 0);
+~objbox(ics_little_saltwaterbucket, "You scoop some salty water into the bucket.", 250, 0, divide(^objbox_height, 2));
 
 [opheld4,ics_little_saltwaterbucket] ~empty_container(bucket_empty);
 [opheld4,ics_little_sap_bucket] ~empty_container(bucket_empty);
@@ -212,7 +212,7 @@ if ($s = ^ics_ceremony_prep & inv_total(inv, ics_little_holy_symbol) = 0) {
 }
 if ($s = ^ics_return_jar & ~ics_has_jar = false) {
     ~ics_give(~ics_jar);
-    ~objbox(~ics_jar, "You notice an oddly familiar decorative jar lying nearby and pick it up.", 250, 0, 0);
+    ~objbox(~ics_jar, "You notice an oddly familiar decorative jar lying nearby and pick it up.", 250, 0, divide(^objbox_height, 2));
 }
 ~chatplayer("<p,happy>Hey puss! What do you reckon about that cat on the door? Do you think you can open it?");
 ~chatnpc_specific("Cat", ics_little_cat, "<p,happy>Meeeow.");
@@ -578,7 +578,7 @@ anim(human_pickupfloor, 0);
 p_delay(1);
 inv_del(inv, bucket_empty, 1);
 inv_add(inv, ics_little_sap_bucket, 1);
-~objbox(ics_little_sap_bucket, "You cut the tree and allow some sap to drip into your bucket.", 250, 0, 0);
+~objbox(ics_little_sap_bucket, "You cut the tree and allow some sap to drip into your bucket.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Sophanem's odds and ends
 [oploc1,icthalarins_bananatreeempty] mes("There are no bananas left on the tree."); // ours

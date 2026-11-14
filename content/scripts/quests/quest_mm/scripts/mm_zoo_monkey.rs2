@@ -1,6 +1,6 @@
 [opnpc1,mm_zoo_monkey]
 if(inv_total(inv, mm_monkey_in_backpack) > 0) {
-    ~objbox(mm_monkey_in_backpack, "You cannot fit another monkey in your backpack.",  250, 0, 0);
+    ~objbox(mm_monkey_in_backpack, "You cannot fit another monkey in your backpack.",  250, 0, divide(^objbox_height, 2));
     return;
 }
 ~chatplayer("<p,neutral>Hello there, little monkey.");
@@ -36,7 +36,7 @@ settimer(monkey_backpack_timer, ~random_range(5, 50));
 
 [opnpc1,mm_freed_zoo_monkey]
 if(inv_total(inv, mm_monkey_in_backpack) > 0) {
-    ~objbox(mm_monkey_in_backpack, "You cannot fit another monkey in your backpack.",  250, 0, 0);
+    ~objbox(mm_monkey_in_backpack, "You cannot fit another monkey in your backpack.",  250, 0, divide(^objbox_height, 2));
     return;
 }
 ~chatplayer("<p,neutral>Hello there, monkey.");

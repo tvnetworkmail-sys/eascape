@@ -66,7 +66,7 @@ inv_del(inv, ~fairy1_nature_item(%fairy_nature_item1), 1);
 inv_del(inv, ~fairy1_nature_item(%fairy_nature_item2), 1);
 inv_del(inv, ~fairy1_nature_item(%fairy_nature_item3), 1);
 inv_add(inv, fairy_enchanted_secateurs, 1);
-~objbox(fairy_enchanted_secateurs, "The Nature Spirit enchants the secateurs.", 250, 0, 0);
+~objbox(fairy_enchanted_secateurs, "The Nature Spirit enchants the secateurs.", 250, 0, divide(^objbox_height, 2));
 if (%fairy_farmers_quest = ^fairy1_grotto) {
     %fairy_farmers_quest = ^fairy1_tanglefoot;
     ~send_quest_progress(questlist:fairy_farmers, %fairy_farmers_quest, ^fairy1_complete);
@@ -102,7 +102,7 @@ if (%fairy_farmers_quest >= ^fairy1_return) {
     ~fairy1_gatekeeper_says("<p,neutral>Be careful in there, there are still some of those baby Tanglefootii around.");
     if (%fairy_farmers_quest = ^fairy1_return & ~obj_gettotal(fairy_queen_secateurs) = 0) {
         inv_add(inv, fairy_queen_secateurs, 1);
-        ~objbox(fairy_queen_secateurs, "You find the Queen's secateurs!", 250, 0, 0);
+        ~objbox(fairy_queen_secateurs, "You find the Queen's secateurs!", 250, 0, divide(^objbox_height, 2));
     }
     ~fairy1_squeeze(0_37_68_28_27);
     return;

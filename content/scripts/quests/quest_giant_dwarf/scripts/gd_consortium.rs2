@@ -484,7 +484,7 @@ if ($joined = false & ~gd_points($c) < ^gd_director_at) {
 // ours: the chosen director hands over new meeting notes if you lost yours (the OSRS wiki)
 if (%giantdwarf_quest >= ^gd_complete & %gd_chosen = $c & inv_total(inv, dwarf_meeting_notes1) = 0 & inv_total(bank, dwarf_meeting_notes1) = 0) {
     ~gd_give(dwarf_meeting_notes1);
-    ~objbox(dwarf_meeting_notes1, "The director gives you a copy of the meeting notes.", 250, 0, 0); // ours
+    ~objbox(dwarf_meeting_notes1, "The director gives you a copy of the meeting notes.", 250, 0, divide(^objbox_height, 2)); // ours
 }
 if ($joined = true) {
     switch_int (random(4)) {

@@ -164,14 +164,14 @@ if (%zogre >= ^zogre_given_key) return;
 switch_obj (last_useitem) {
     case zogre_necrobook :
         ~chatplayer("<p,happy>Aha! A necromantic book! What's this doing here then?");
-        ~objbox(zogre_necrobook, "You show the Necromantic book to Sithik.", 250, 0, 0);
+        ~objbox(zogre_necrobook, "You show the Necromantic book to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,confused>Oh..I'm not quite sure actually...where did you find that then?");
         ~chatplayer("<p,angry>I found it in this cupboard! What do you have to say for yourself?");
         ~sithik("<p,neutral>Oh yes, that's right...I remember now. It's for my research, there's nothing really dangerous about it, unless it falls into the wrong hands. I'm sure it's pretty safe with me.");
         ~chatplayer("<p,neutral>Hmmm, likely story!");
     case zogre_hambook :
         ~chatplayer("<p,quiz>What's this then?");
-        ~objbox(zogre_hambook, "You show the HAM book to Sithik.", 250, 0, 0);
+        ~objbox(zogre_hambook, "You show the HAM book to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,neutral>What do you mean? It's a book by the respected HAM leader Johanhus Ulsbrecht, that man speaks for a lot of people who are unhappy with the current state of affairs.");
         ~sithik("<p,angry>Can you honestly tell me that you've not had to fight for your life against the odd monster or two?");
         ~chatplayer("<p,neutral>Hmm, that may be true, but I don't universally hate all monsters, whereas I have a sneaking suspicion that you do...and ogres in particular!");
@@ -179,30 +179,30 @@ switch_obj (last_useitem) {
     case papyrus : @sithik_sketch;
     case zogre_portrait_book :
         ~chatplayer("<p,neutral>Oh, so explain this then?");
-        ~objbox(zogre_portrait_book, "You show the book on portraiture to Sithik.", 250, 0, 0);
+        ~objbox(zogre_portrait_book, "You show the book on portraiture to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,happy>It's my hobby...I'm interested in portraiture, but all art in general. It's fun, you should try it.");
         ~chatplayer("<p,quiz>How do I do it...");
         ~sithik("<p,neutral>Well...you could start by reading the book!");
     case zogre_sithik_portrait_bad :
         ~chatplayer("<p,quiz>Here you go, what do you think?");
-        ~objbox(zogre_sithik_portrait_bad, "You show the sketch...", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_bad, "You show the sketch...", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,happy>Hmmm, well it's an interesting interpretation, but not really classic realist representation is it? It's not my favourite, but I like the 'truth' of the work...well done.");
     case zogre_sithik_portrait_good :
         ~chatplayer("<p,quiz>Here you go, what do you think?");
-        ~objbox(zogre_sithik_portrait_good, "You show the portrait to Sithik.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_good, "You show the portrait to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,happy>Hmmm, well it's not the most flattering of portraits, but I like the 'honesty' of the work...well done.");
     case zogre_ogre_trans_potion :
         ~chatplayer("<p,happy>Here, try some of this potion, it'll make you feel better!");
         ~sithik("<p,shock>Err, yuck....no way am I taking any potions or medication off you...I don't trust you!");
     case zogre_sithik_portrait_signed :
         ~chatplayer("<p,happy>Hey, what do you think of this? I'm going to show it to Zavistic and you're going to be in trouble!");
-        ~objbox(zogre_sithik_portrait_signed, "You show the portrait to Sithik.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_signed, "You show the portrait to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,neutral>Hmmm, well, I've got quite a common looking face, I'm often mistaken for other wizards, you know, when I'm wearing my wizard's hat, robes and staff. There's a lot of us around here you know.");
         ~chatplayer("<p,angry>I don't think so! This is a signed picture of you, someone recognised you, you're in deep trouble!");
         ~sithik("<p,neutral>Ok, I'll pay you to keep this secret - how much do you want for the picture?");
         ~chatplayer("<p,angry>You can't buy me Sithik!");
         ~sithik("<p,neutral>Ok, let's say two million...two million to keep quiet and give me the picture.");
-        ~objbox(coins, "Sithik shows you a chest brimming over with coins...", 250, 0, 0);
+        ~objbox(coins, "Sithik shows you a chest brimming over with coins...", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,confused>Oh...erm...well, that is a lot of money actually...er....");
         ~sithik("<p,happy>Yes, and you deserve it, you're very clever! Now, take the money...");
         if (~p_choice2("No, I won't take the money, I'm going to bring you to justice!", 1, "Ok, I'll shut up for two million!", 2) = 1) {
@@ -215,19 +215,19 @@ switch_obj (last_useitem) {
         }
     case zogre_dragon_tankard :
         ~chatplayer("<p,quiz>What about this then? Guess where I found this?");
-        ~objbox(zogre_dragon_tankard, "You show the tankard to Sithik.", 250, 0, 0);
+        ~objbox(zogre_dragon_tankard, "You show the tankard to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,angry>You probably found it at the local brewhouse! It doesn't take a genius to figure that one out.");
         ~chatplayer("<p,happy>Aha! But I found this in an old ogre tomb! I suspect it's a clue which will lead me to the suspect.");
         ~sithik("<p,neutral>Hmmm, well that eliminates all the local people who don't actually drink at the 'Dragon Inn'. When do you think you'll start questioning the remaining population of Yanille?");
     case zogre_black_prism :
         ~chatplayer("<p,quiz>Hey, what's this then, can you explain it?!");
-        ~objbox(zogre_black_prism, "You show the black prism to Sithik.", 250, 0, 0);
+        ~objbox(zogre_black_prism, "You show the black prism to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,angry>Err..it looks sort of familiar, did you steal it from me? Come to think of it, you have the appearance of a common thief!");
         ~chatplayer("<p,neutral>I found it in a place called Jiggig where some undead ogres happen to be wandering around.");
         ~sithik("<p,neutral>Oh, nothing to do with me then, never seen it in my life before!");
     case zogre_necromantic_page :
         ~chatplayer("<p,quiz>Have you ever seen anything like this before?");
-        ~objbox(zogre_necromantic_page, "You show the torn page to Sithik.", 250, 0, 0);
+        ~objbox(zogre_necromantic_page, "You show the torn page to Sithik.", 250, 0, divide(^objbox_height, 2));
         ~sithik("<p,angry>It's probably a piece of rubbish someone threw away...what does it say, I can't read it?");
         ~chatplayer("<p,neutral>You should be able to read it, it's been torn from a book on necromancy and you're meant to be a specialist in the subject.");
         ~sithik("<p,neutral>Oh, no..., not really a specialist, just a hobby of mine really. Hardly know anything about it, but it does seem interesting...");
@@ -255,7 +255,7 @@ def_int $odds = 3;
 if (stat(crafting) >= 40) $odds = 2;
 if (random($odds) = 0) $portrait = zogre_sithik_portrait_good;
 inv_add(inv, $portrait, 1);
-~objbox($portrait, "You get a portrait of Sithik.", 250, 0, 0);
+~objbox($portrait, "You get a portrait of Sithik.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Sithik's furniture
 [proc,sithik_may_snoop]()(boolean)
@@ -296,17 +296,17 @@ if ($papyrus = false & $charcoal = false) {
     ~doubleobjbox(charcoal, papyrus, "You find some charcoal and papyrus.", 250);
 } else if ($papyrus = false) {
     inv_add(inv, papyrus, 1);
-    ~objbox(papyrus, "You find some papyrus.", 250, 0, 0);
+    ~objbox(papyrus, "You find some papyrus.", 250, 0, divide(^objbox_height, 2));
 } else if ($charcoal = false) {
     inv_add(inv, charcoal, 1);
-    ~objbox(charcoal, "You find some charcoal.", 250, 0, 0);
+    ~objbox(charcoal, "You find some charcoal.", 250, 0, divide(^objbox_height, 2));
 }
 if ($book = false) {
     inv_add(inv, zogre_portrait_book, 1);
     if ($need = 1) {
-        ~objbox(zogre_portrait_book, "You find a book on portraiture.", 250, 0, 0);
+        ~objbox(zogre_portrait_book, "You find a book on portraiture.", 250, 0, divide(^objbox_height, 2));
     } else {
-        ~objbox(zogre_portrait_book, "You also find a book on portraiture.", 250, 0, 0);
+        ~objbox(zogre_portrait_book, "You also find a book on portraiture.", 250, 0, divide(^objbox_height, 2));
     }
 }
 
@@ -317,7 +317,7 @@ if (inv_total(inv, zogre_necrobook) > 0) {
     return;
 }
 ~zogre_give(zogre_necrobook);
-~objbox(zogre_necrobook, "You find a book on Necromancy.", 250, 0, 0);
+~objbox(zogre_necrobook, "You find a book on Necromancy.", 250, 0, divide(^objbox_height, 2));
 
 [oploc1,sithiks_wardrobe]
 if (~sithik_may_snoop = false) return;
@@ -326,7 +326,7 @@ if (inv_total(inv, zogre_hambook) > 0) {
     return;
 }
 ~zogre_give(zogre_hambook);
-~objbox(zogre_hambook, "You find a book on Philosophy written by the 'Human's Against Monsters' leader, Johanhus Albrect.", 250, 0, 0);
+~objbox(zogre_hambook, "You find a book on Philosophy written by the 'Human's Against Monsters' leader, Johanhus Albrect.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Sithik's tea
 [opobj3,zogre_cup_of_tea_sithix]
@@ -343,7 +343,7 @@ anim(human_pickuptable, 0);
 inv_del(inv, zogre_ogre_trans_potion, 1);
 ~zogre_give(empty_dye_bottle);
 p_delay(2);
-~objbox(zogre_ogre_trans_potion, "You pour some of the potion into the cup. Zavistic said it may take some time to have an effect.", 250, 0, 0);
+~objbox(zogre_ogre_trans_potion, "You pour some of the potion into the cup. Zavistic said it may take some time to have an effect.", 250, 0, divide(^objbox_height, 2));
 
 // Void: the potion takes hold once you climb back up to Sithik's room (ladders.rs2 calls this)
 [proc,zogre_sithik_ladder]
@@ -396,7 +396,7 @@ if ($s = ^zogre_sithik | $s = ^zogre_potion) {
     ~chatplayer("<p,sad>Well, actually, I've lost it, could I have another one please?");
     ~chatnpc("<p,neutral>Sure, but don't lose it this time.");
     ~zogre_give(zogre_ogre_trans_potion);
-    ~objbox(zogre_ogre_trans_potion, "Zavistic hands you a bottle of strange potion.", 250, 0, 0);
+    ~objbox(zogre_ogre_trans_potion, "Zavistic hands you a bottle of strange potion.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if (%thzfe_prismsearch >= 4) @zavistic_investigation;
@@ -456,31 +456,31 @@ switch_int (~p_choice_some5("What did you say I should do?", 1, "Where is Sithik
 
 [label,zavistic_all_evidence]
 if (inv_total(inv, zogre_necrobook) > 0) {
-    ~objbox(zogre_necrobook, "You show the Necromancy book to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_necrobook, "You show the Necromancy book to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~zavistic_necrobook;
 }
 if (inv_total(inv, zogre_hambook) > 0) {
-    ~objbox(zogre_hambook, "You show the HAM book to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_hambook, "You show the HAM book to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~zavistic_hambook;
 }
 if (inv_total(inv, zogre_dragon_tankard) > 0) {
-    ~objbox(zogre_dragon_tankard, "You show the dragon Inn Tankard to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_dragon_tankard, "You show the dragon Inn Tankard to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~zavistic_tankard;
 }
 if (inv_total(inv, zogre_sithik_portrait_signed) > 0) {
-    ~objbox(zogre_sithik_portrait_signed, "You show the signed portrait of Sithik to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_sithik_portrait_signed, "You show the signed portrait of Sithik to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~zavistic_signed;
 }
 
 [label,zavistic_prism]
-~objbox(zogre_black_prism, "You show the black prism to the aged wizard.", 250, 0, 0);
+~objbox(zogre_black_prism, "You show the black prism to the aged wizard.", 250, 0, divide(^objbox_height, 2));
 if (%thzfe_prismsearch >= 4) {
     ~chatnpc("<p,neutral>Yes, you've already showed me that, bring it to me when you've resolved the problems at Jiggig and I'll see what I can do.");
     return;
 }
 ~chatnpc("<p,neutral>Hmmm, well this is an uncommon spell component. On it's own it's useless, but with certain necromantic spells it can be very powerful. Did you find anything else there?");
 if (inv_total(inv, zogre_dragon_tankard) > 0) {
-    ~objbox(zogre_dragon_tankard, "You show the tankard to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_dragon_tankard, "You show the tankard to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~chatplayer("<p,neutral>Well, I found this...");
     ~chatnpc("<p,neutral>Hmmm, no, that's not really associated with this to be honest. Did you find anything else there?");
 }
@@ -490,11 +490,11 @@ if (inv_total(inv, zogre_dragon_tankard) > 0) {
 ~chatplayer("<p,neutral>Sure...I mean, I'll try if I remember.");
 
 [label,zavistic_page]
-~objbox(zogre_necromantic_page, "You show the necromantic half page to the aged wizard.", 250, 0, 0);
+~objbox(zogre_necromantic_page, "You show the necromantic half page to the aged wizard.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Hmm, this is a half torn spell page, it requires another spell component to be effective. Did you find anything else there?");
 if (inv_total(inv, zogre_black_prism) > 0) @zavistic_both_clues;
 if (inv_total(inv, zogre_dragon_tankard) > 0) {
-    ~objbox(zogre_dragon_tankard, "You show the tankard to Zavistic.", 250, 0, 0);
+    ~objbox(zogre_dragon_tankard, "You show the tankard to Zavistic.", 250, 0, divide(^objbox_height, 2));
     ~chatplayer("<p,neutral>Well, I found this...");
     ~chatnpc("<p,neutral>Hmmm, no, that's not really associated with this to be honest. Did you find anything else there?");
 }
@@ -552,7 +552,7 @@ inv_del(inv, zogre_dragon_tankard, inv_total(inv, zogre_dragon_tankard));
 inv_del(inv, zogre_sithik_portrait_signed, inv_total(inv, zogre_sithik_portrait_signed));
 inv_del(inv, zogre_hambook, inv_total(inv, zogre_hambook));
 ~zogre_give(zogre_ogre_trans_potion);
-~objbox(zogre_ogre_trans_potion, "Zavistic hands you a strange looking potion bottle and takes all the evidence you've accumulated so far.", 250, 0, 0);
+~objbox(zogre_ogre_trans_potion, "Zavistic hands you a strange looking potion bottle and takes all the evidence you've accumulated so far.", 250, 0, divide(^objbox_height, 2));
 
 // things shown to Zavistic (Void)
 [opnpcu,zogre_human_zavistic_rarve]
@@ -564,23 +564,23 @@ switch_obj (last_useitem) {
         ~chatplayer("<p,neutral>I think I've found a clue from the Jiggig area where the undead ogre activity is happening.");
         @zavistic_page;
     case zogre_dragon_tankard :
-        ~objbox(zogre_dragon_tankard, "You show the dragon Inn Tankard to Zavistic.", 250, 0, 0);
+        ~objbox(zogre_dragon_tankard, "You show the dragon Inn Tankard to Zavistic.", 250, 0, divide(^objbox_height, 2));
         ~zavistic_tankard;
     case zogre_necrobook :
-        ~objbox(zogre_necrobook, "You show the Necromancy book to Zavistic.", 250, 0, 0);
+        ~objbox(zogre_necrobook, "You show the Necromancy book to Zavistic.", 250, 0, divide(^objbox_height, 2));
         ~zavistic_necrobook;
     case zogre_hambook :
-        ~objbox(zogre_hambook, "You show the HAM book to Zavistic.", 250, 0, 0);
+        ~objbox(zogre_hambook, "You show the HAM book to Zavistic.", 250, 0, divide(^objbox_height, 2));
         ~zavistic_hambook;
     case zogre_sithik_portrait_signed :
-        ~objbox(zogre_sithik_portrait_signed, "You show the signed portrait of Sithik to Zavistic.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_signed, "You show the signed portrait of Sithik to Zavistic.", 250, 0, divide(^objbox_height, 2));
         ~zavistic_signed;
     case zogre_sithik_portrait_good :
-        ~objbox(zogre_sithik_portrait_good, "You show the portrait of Sithik to Zavistic.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_good, "You show the portrait of Sithik to Zavistic.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Hmm, great...but I already know what he looks like!");
     case zogre_sithik_portrait_bad :
         ~chatplayer("<p,happy>Look, I made a portrait of Sithik.");
-        ~objbox(zogre_sithik_portrait_bad, "You show the sketch...", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_bad, "You show the sketch...", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,confused>Who the demonikin is that? Is it meant to be a portrait of Sithik, it doesn't look anything like him!");
     case default : ~displaymessage(^dm_default);
 }
@@ -589,7 +589,7 @@ switch_obj (last_useitem) {
 [proc,zogre_bartender_item]()(boolean)
 switch_obj (last_useitem) {
     case zogre_dragon_tankard :
-        ~objbox(zogre_dragon_tankard, "You show the tankard to the Inn Keeper.", 250, 0, 0);
+        ~objbox(zogre_dragon_tankard, "You show the tankard to the Inn Keeper.", 250, 0, divide(^objbox_height, 2));
         if (%thzfe_showntankard = 1) {
             ~chatplayer("<p,happy>Hello again. Can you tell me what you know about this tankard again please?");
             ~chatnpc("<p,neutral>Oh yes, Brentle's tankard. Yeah, you've shown me this already. It belonged to Brentle Vahn, he was quite a common customer, though I've not seen him in a while.");
@@ -608,14 +608,14 @@ switch_obj (last_useitem) {
         ~chatnpc("<p,sad>If you need help bringing the culprit to justice, you let me know.");
         return(true);
     case zogre_sithik_portrait_bad :
-        ~objbox(zogre_sithik_portrait_bad, "You show the sketch to the Inn keeper.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_bad, "You show the sketch to the Inn keeper.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,happy>Who's that? I mean, I guess it's a picture of a person isn't it? Sorry...you've got me? And before you ask, you're not putting it up on my wall!");
         ~chatplayer("<p,neutral>It's a portrait of Sithik Ints...don't you recognise him?");
         ~chatnpc("<p,neutral>I'm sorry, I really am, but I just don't see it...can you make a better picture?");
         ~chatplayer("<p,sad>I'll try...");
         return(true);
     case zogre_sithik_portrait_good :
-        ~objbox(zogre_sithik_portrait_good, "You show the portrait to the Inn keeper.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_good, "You show the portrait to the Inn keeper.", 250, 0, divide(^objbox_height, 2));
         if (%thzfe_innkeeperportraitshown = 1) {
             ~chatnpc("<p,neutral>Yeah, I recognise that Geezer, he was talking to one of my customers the other day.");
             return(true);
@@ -628,7 +628,7 @@ switch_obj (last_useitem) {
         inv_del(inv, zogre_sithik_portrait_good, 1);
         inv_add(inv, zogre_sithik_portrait_signed, 1);
         %thzfe_innkeeperportraitshown = 1;
-        ~objbox(zogre_sithik_portrait_signed, "The Dragon Inn bartender signs the portrait.", 250, 0, 0);
+        ~objbox(zogre_sithik_portrait_signed, "The Dragon Inn bartender signs the portrait.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,happy>Many thanks for your help, it's really very good of you.");
         ~chatnpc("<p,neutral>Not at all, just doing my part.");
         return(true);

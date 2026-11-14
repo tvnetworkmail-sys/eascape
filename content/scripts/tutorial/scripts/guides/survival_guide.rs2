@@ -35,10 +35,10 @@ if (~tutorial_has_obj_on_person(bronze_axe) = false & inv_total(inv, tinderbox) 
     ~doubleobjbox(tinderbox, bronze_axe, "The Survival Guide gives you a|@blu@Tinderbox@bla@|and a|@blu@Bronze Hatchet!", 200);
 } else if (~tutorial_has_obj_on_person(bronze_axe) = false) {
     inv_add(inv, bronze_axe, 1);
-    ~objbox(bronze_axe, "The Survival Guide gives you a|@blu@Bronze Hatchet!", 250, 0, 0);
+    ~objbox(bronze_axe, "The Survival Guide gives you a|@blu@Bronze Hatchet!", 250, 0, divide(^objbox_height, 2));
 }else if (inv_total(inv, tinderbox) < 1) {
     inv_add(inv, tinderbox, 1);
-    ~objbox(tinderbox, "The Survival Guide gives you a|@blu@Tinderbox!", 250, 0, 0);
+    ~objbox(tinderbox, "The Survival Guide gives you a|@blu@Tinderbox!", 250, 0, divide(^objbox_height, 2));
 }
 
 if (%tutorial > ^newbie_survival_instructor_open_skill_menu & inv_total(inv, net) < 1) {

@@ -289,7 +289,7 @@ def_int $amount  = min(inv_total(inv, tbwt_raw_karambwanji), $needed);
 if ($amount > 0) {
     %tbwt_lubufu = add(%tbwt_lubufu, $amount);
     inv_del(inv, tbwt_raw_karambwanji, $amount);
-    ~objbox(tbwt_raw_karambwanji, "You hand Lubufu <tostring($amount)> raw Karambwanji.", 250, 0, 0);
+    ~objbox(tbwt_raw_karambwanji, "You hand Lubufu <tostring($amount)> raw Karambwanji.", 250, 0, divide(^objbox_height, 2));
 }
 @tbwt_lubufu_received_karambwanji;
 
@@ -351,7 +351,7 @@ if ($initialops = 1) { // Yes!
 }
 
 [label,tbwt_lubufu_learn_karambwan_fishing]
-~objbox(tbwt_raw_karambwanji, "Lubufu teaches you a new fishing technique.", 250, 0, 0);
+~objbox(tbwt_raw_karambwanji, "Lubufu teaches you a new fishing technique.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>In our language, Karambwan literally means 'Friend of Karamja.' As a friend of mine I will now show you how to fish for them.");
 ~chatnpc("<p,neutral>There are two aspects to fishing for Karambwan. Firstly, you must have the correct bait. Secondly, you must have the correct equipment.");
 ~chatnpc("<p,neutral>You already know of the Karambwanji, which shoal in the Holy Lake to the south. As I have explained, the Karambwan feed only on the Karambwanji, which are therefore the perfect bait.");

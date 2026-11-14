@@ -60,7 +60,7 @@ if (inv_total(inv, zogre_necromantic_page) > 0) {
     return;
 }
 ~zogre_give(zogre_necromantic_page);
-~objbox(zogre_necromantic_page, "You find a half torn page...it has spidery writing all over it.", 250, 0, 0);
+~objbox(zogre_necromantic_page, "You find a half torn page...it has spidery writing all over it.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Brentle Vahn's remains
 [oploc1,zogre_brentle_skeleton]
@@ -70,7 +70,7 @@ if (%thzfe_brentle_skele = 2) {
         return;
     }
     ~zogre_give(zogre_brentle_vahn_backpack);
-    ~objbox(zogre_brentle_vahn_backpack, "You find a backpack on the corpse.", 250, 0, 0);
+    ~objbox(zogre_brentle_vahn_backpack, "You find a backpack on the corpse.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if (npc_find(coord, zogre_human_brentle_vahn, 10, 0) = true) {
@@ -136,7 +136,7 @@ if (inv_freespace(inv) = 0) {
     return;
 }
 inv_add(inv, zogre_black_prism, 1);
-~objbox(zogre_black_prism, "You find a creepy looking black prism inside.", 250, 0, 0);
+~objbox(zogre_black_prism, "You find a creepy looking black prism inside.", 250, 0, divide(^objbox_height, 2));
 
 [oplocu,zogre_coffin_special_entity]
 if (last_useitem ! knife | %thzfe_prismsearch ! 1) {
@@ -144,7 +144,7 @@ if (last_useitem ! knife | %thzfe_prismsearch ! 1) {
     return;
 }
 %thzfe_prismsearch = 2;
-~objbox(knife, "With some skill you manage to slide the blade along the lock edge and click into place the teeth of the primitive mechanism.", 250, 0, 0);
+~objbox(knife, "With some skill you manage to slide the blade along the lock edge and click into place the teeth of the primitive mechanism.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- the stand, and Slash Bash
 [oploc1,zogre_stand]
@@ -160,7 +160,7 @@ if (%zogre >= ^zogre_complete | inv_total(inv, zogre_artifacts) > 0 | %zogre < ^
 if (%zogre = ^zogre_killed_slash_bash) {
     spotanim_map(smokepuff_large, loc_coord, 0, 0);
     ~zogre_give(zogre_artifacts);
-    ~objbox(zogre_artifacts, "An ogre artefact appears in front of you. You quickly put it into your backpack.", 250, 0, 0);
+    ~objbox(zogre_artifacts, "An ogre artefact appears in front of you. You quickly put it into your backpack.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 mes("Something stirs behind you!");
@@ -181,25 +181,25 @@ if (inv_freespace(inv) < 2) {
     mes("You don't have enough room in your inventory for the contents of this bag.");
     return;
 }
-~objbox(zogre_brentle_vahn_backpack, "Just before you open the backpack, you notice a small leather patch with the moniker: 'B.Vahn', on it.", 250, 0, 0);
+~objbox(zogre_brentle_vahn_backpack, "Just before you open the backpack, you notice a small leather patch with the moniker: 'B.Vahn', on it.", 250, 0, divide(^objbox_height, 2));
 inv_del(inv, zogre_brentle_vahn_backpack, 1);
 inv_add(inv, zogre_dragon_tankard, 1);
 inv_add(inv, rotten_food, 1);
 ~zogre_give(knife);
 mes("You find a knife and some rotten food.");
 mes("You find an interesting looking tankard.");
-~objbox(zogre_dragon_tankard, "You find an interesting looking tankard.", 250, 0, 0);
+~objbox(zogre_dragon_tankard, "You find an interesting looking tankard.", 250, 0, divide(^objbox_height, 2));
 ~doubleobjbox(knife, rotten_food, "You find a knife and some rotten food, the backpack is ripped to shreds.", 250);
 
 [opheld1,zogre_necromantic_page]
 ~mesbox("You don't manage to understand all of it as there is only a half page here. But it seems the spell was used to place a curse on an area and for all time raise the dead.");
 ~mesbox("If you look very carefully, you see what looks like a guild emblem.");
 
-[opheld1,zogre_black_prism] ~objbox(zogre_black_prism, "It looks like a smokey black gem of some sort...very creepy. Some magical force must have prevented it from being shattered when it hit the coffin.", 250, 0, 0);
-[opheld1,zogre_dragon_tankard] ~objbox(zogre_dragon_tankard, "A stout ceramic tankard with a Dragon Emblem on the side, the words, 'Ye Olde Dragon Inn' are inscribed in the bottom.", 250, 0, 0);
-[opheld1,zogre_sithik_portrait_signed] ~objbox(zogre_sithik_portrait_signed, "You see an image of Sithik with a message underneath '@blu@I, the bartender of the Dragon Inn, do swear that this @blu@is a true likeness of the wizzy who was talking to @blu@Brentle Vahn, my customer the other day.'", 250, 0, 0);
-[opheld1,zogre_necrobook] ~objbox(zogre_necrobook, "This book uses very strange language and some incomprehensible symbols. It has a very dark feeling to it. As you're looking through the book, you notice that one of the pages has been torn and half of it is missing.", 250, 0, 0);
-[opheld1,zogre_portrait_book] ~objbox(zogre_portrait_book, "All interested artisans should really consider taking up the hobby of portraiture. To do so, one uses a piece of papyrus on the intended subject to initiate a likeness drawing activity.", 250, 0, 0);
+[opheld1,zogre_black_prism] ~objbox(zogre_black_prism, "It looks like a smokey black gem of some sort...very creepy. Some magical force must have prevented it from being shattered when it hit the coffin.", 250, 0, divide(^objbox_height, 2));
+[opheld1,zogre_dragon_tankard] ~objbox(zogre_dragon_tankard, "A stout ceramic tankard with a Dragon Emblem on the side, the words, 'Ye Olde Dragon Inn' are inscribed in the bottom.", 250, 0, divide(^objbox_height, 2));
+[opheld1,zogre_sithik_portrait_signed] ~objbox(zogre_sithik_portrait_signed, "You see an image of Sithik with a message underneath '@blu@I, the bartender of the Dragon Inn, do swear that this @blu@is a true likeness of the wizzy who was talking to @blu@Brentle Vahn, my customer the other day.'", 250, 0, divide(^objbox_height, 2));
+[opheld1,zogre_necrobook] ~objbox(zogre_necrobook, "This book uses very strange language and some incomprehensible symbols. It has a very dark feeling to it. As you're looking through the book, you notice that one of the pages has been torn and half of it is missing.", 250, 0, divide(^objbox_height, 2));
+[opheld1,zogre_portrait_book] ~objbox(zogre_portrait_book, "All interested artisans should really consider taking up the hobby of portraiture. To do so, one uses a piece of papyrus on the intended subject to initiate a likeness drawing activity.", 250, 0, divide(^objbox_height, 2));
 
 [opheld1,zogre_hambook]
 ~mesbox("You read this book for a while, it seems to be some sort of political manifesto about how the king doesn't do enough to safeguard the citizens of the realm from the monsters that still thrive within the borders. It sends out a rallying cry to all people who would want to stop monsters, to join the HAM movement.");

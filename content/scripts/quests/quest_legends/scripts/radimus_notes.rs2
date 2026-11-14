@@ -1,11 +1,11 @@
 [opheld1,thkaramjamapcomp]
-~objbox(thkaramjamapcomp, "The map of the Kharazi Jungle is complete, Sir Radimus Erkle will be pleased.", 250, 0, 0);
+~objbox(thkaramjamapcomp, "The map of the Kharazi Jungle is complete, Sir Radimus Erkle will be pleased.", 250, 0, divide(^objbox_height, 2));
 // Capitalisation and full stops at the end of options are authentic
 @multi2("Read Mission Briefing.", radimus_notes_read,
         "Close.", radimus_notes_close);
 
 [opheld1,thkaramjamap]
-~objbox(thkaramjamap, "You open and start to read the scrolls that Radimus|gave you.", 250, 0, 0);
+~objbox(thkaramjamap, "You open and start to read the scrolls that Radimus|gave you.", 250, 0, divide(^objbox_height, 2));
 @multi2("Read Mission Briefing.", radimus_notes_read,
         "Start Mapping Kharazi Jungle.", radimus_notes_begin);
 
@@ -28,7 +28,7 @@ if(getbit_range(%legends_bits, ^legends_jungle_west_mapped, ^legends_jungle_east
 }
 if (~inzone_coord_pair_table(kharazi_jungle_west, coord) = true) {
     if (testbit(%legends_bits, ^legends_jungle_west_mapped) = ^true) {
-        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, 0);
+        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, divide(^objbox_height, 2));
         @kharazi_jungle_mapping;
     }
     else {
@@ -37,7 +37,7 @@ if (~inzone_coord_pair_table(kharazi_jungle_west, coord) = true) {
 }
 else if (~inzone_coord_pair_table(kharazi_jungle_middle, coord) = true) {
     if (testbit(%legends_bits, ^legends_jungle_middle_mapped) = ^true) {
-        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, 0);
+        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, divide(^objbox_height, 2));
         @kharazi_jungle_mapping;
     }
     else {
@@ -46,7 +46,7 @@ else if (~inzone_coord_pair_table(kharazi_jungle_middle, coord) = true) {
 }
 else if (~inzone_coord_pair_table(kharazi_jungle_east, coord) = true) {
     if (testbit(%legends_bits, ^legends_jungle_east_mapped) = ^true) {
-        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, 0);
+        ~objbox(thkaramjamap, "You have already completed this part of the map.", 250, 0, divide(^objbox_height, 2));
         @kharazi_jungle_mapping;
     }
     else {
@@ -63,11 +63,11 @@ if (inv_total(inv, papyrus) = 0 & inv_total(inv, charcoal) = 0) {
     return;
 }
 if (inv_total(inv, papyrus) = 0) {
-    ~objbox(papyrus, "You'll need some additional papyrus to complete this map.", 250, 0, 0);
+    ~objbox(papyrus, "You'll need some additional papyrus to complete this map.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if (inv_total(inv, charcoal) = 0) {
-    ~objbox(charcoal, "You'll need some additional charcoal to complete this map.", 250, 0, 0);
+    ~objbox(charcoal, "You'll need some additional charcoal to complete this map.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if (stat(crafting) < 50) {
@@ -78,13 +78,13 @@ if (stat(crafting) < 50) {
 if (stat_random(crafting, 100, 250) = false) {
     def_int $rand = random(128);
     if($rand < 40) {
-        ~objbox(thkaramjamap, "You make a mess but are able to rescue the paper.", 250, 0, 0);
+        ~objbox(thkaramjamap, "You make a mess but are able to rescue the paper.", 250, 0, divide(^objbox_height, 2));
     } else if ($rand < 65) {
         inv_del(inv, charcoal, 1);
-        ~objbox(charcoal, "You snap your stick of charcoal.", 250, 0, 0);
+        ~objbox(charcoal, "You snap your stick of charcoal.", 250, 0, divide(^objbox_height, 2));
     } else if ($rand < 90) {
         inv_del(inv, papyrus, 1);
-        ~objbox(papyrus, "You make a mess of the map, the paper is totally ruined.", 250, 0, 0);
+        ~objbox(papyrus, "You make a mess of the map, the paper is totally ruined.", 250, 0, divide(^objbox_height, 2));
     } else {
         // From RSC, not sure if this happens in RS2?
         inv_del(inv, papyrus, 1);
@@ -101,7 +101,7 @@ anim(human_mapping, 0);
 p_delay(1);
 %legends_bits = setbit(%legends_bits, $jungle_section);
 // Crafting is capitalised in OSRS now, but lowercase is authentic
-~objbox(thkaramjamap, "You use your crafting skill to neatly add a new section to your map.", 250, 0, 0);
+~objbox(thkaramjamap, "You use your crafting skill to neatly add a new section to your map.", 250, 0, divide(^objbox_height, 2));
 if_close;
 // Plays again
 anim(human_mapping, 0);
@@ -112,7 +112,7 @@ def_int $middle_mapped = testbit(%legends_bits, ^legends_jungle_middle_mapped);
 def_int $east_mapped = testbit(%legends_bits, ^legends_jungle_east_mapped);
     
 if ($west_mapped = ^true & $middle_mapped = ^true & $east_mapped = ^true) {
-    ~objbox(thkaramjamapcomp, "Well done! You have completed mapping the Kharazi Jungle.  Grand Vizier Erkle will be pleased.", 250, 0, 0);
+    ~objbox(thkaramjamapcomp, "Well done! You have completed mapping the Kharazi Jungle.  Grand Vizier Erkle will be pleased.", 250, 0, divide(^objbox_height, 2));
     // OSRS replaces the first instance of notes if you have multiple
     inv_del(inv, thkaramjamap, 1);
     inv_add(inv, thkaramjamapcomp, 1);
@@ -126,7 +126,7 @@ if ($west_mapped = ^true & $middle_mapped = ^true & $east_mapped = ^true) {
     %legends_bits = clearbit(%legends_bits, ^legends_jungle_west_mapped);
     %legends_bits = clearbit(%legends_bits, ^legends_jungle_middle_mapped);
     %legends_bits = clearbit(%legends_bits, ^legends_jungle_east_mapped);
-    ~objbox(thkaramjamap, "*** Mapping the Kharazi Jungle ***|@blu@Eastern Kharazi Jungle - *** Completed ***|@blu@Middle Kharazi Jungle- *** Completed ***|@blu@Western Kharazi Jungle- *** Completed ***", 250, 0, 0);
+    ~objbox(thkaramjamap, "*** Mapping the Kharazi Jungle ***|@blu@Eastern Kharazi Jungle - *** Completed ***|@blu@Middle Kharazi Jungle- *** Completed ***|@blu@Western Kharazi Jungle- *** Completed ***", 250, 0, divide(^objbox_height, 2));
     return;
 }
 mes("You still have some sections of the map to complete.");
@@ -151,4 +151,4 @@ if ($west_mapped = ^true)
 else 
     $map_result = append($map_result, "@red@Western Kharazi Jungle- *** Incomplete ***");
 
-~objbox(thkaramjamap, $map_result, 250, 0, 0);
+~objbox(thkaramjamap, $map_result, 250, 0, divide(^objbox_height, 2));

@@ -1,10 +1,10 @@
 [oploc1,shades_experimentshelf]
 if (inv_freespace(inv) < 1 & ~obj_gettotal(serum_book) = 0) {
-    ~objbox(serum_book, "There's a book on the shelf but you don't have room to|take it.", 200, 0, 0);
+    ~objbox(serum_book, "There's a book on the shelf but you don't have room to|take it.", 200, 0, divide(^objbox_height, 2));
     return;
 } else if(~obj_gettotal(serum_book) = 0) {
     inv_add(inv, serum_book, 1);
-    ~objbox(serum_book, "You find an interesting looking book on the shelf.", 200, 0, 0);
+    ~objbox(serum_book, "You find an interesting looking book on the shelf.", 200, 0, divide(^objbox_height, 2));
     return;
 }
 
@@ -27,7 +27,7 @@ mes("You search the table but find nothing.");
 
 [opnpcu,apothecary]
 if(last_useitem = serum_book) {
-    ~objbox(serum_book, "You show the Serum book to the Apothecary.", 200, 0, 0);
+    ~objbox(serum_book, "You show the Serum book to the Apothecary.", 200, 0, divide(^objbox_height, 2));
     if(%morttonquest < ^mortton_made_serum) {
         ~chatnpc("<p,neutral>Hmm, this is an interesting tome... Herbi Flax, yes, I'm familiar with his work... I wondered where he'd gotten to.");
         ~chatplayer("<p,neutral>Do you know what the book means? It just looks like random thoughts to me.");
@@ -53,7 +53,7 @@ if(last_useitem = serum_book) {
 inv_del(inv, serum_book, 1);
 %morttonmulti = setbit(%morttonmulti, ^mortton_gave_dairy_to_apothecary);
 stat_advance(herblore, 3350);
-~objbox(serum_book, "The apothecary trains you in Herblore.", 250, 0, 0);
+~objbox(serum_book, "The apothecary trains you in Herblore.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Ok, that's all I can teach you. Many thanks for the|diary.");
 
 [label,apothecary_keep_diary]

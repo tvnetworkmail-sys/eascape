@@ -86,7 +86,7 @@ switch_int (%ahoy_questvar) {
         ~chatnpc("<p,neutral>You don't need to tell me <displayname>- I sensed the removal of Necrovarus's psychic barrier!");
         ~chatplayer("<p,neutral>Only happy to help out.");
         ~chatnpc("<p,neutral>Here, take this as a thank you for the service that you have given us.");
-        ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, 0);
+        ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>This is an Ectophial. If you ever want to come back to Port Phasmatys, empty this on the floor beneath your feet, and you will be instantly teleported to the temple - the source of its power.");
         ~chatnpc("<p,neutral>Remember that once the Ectophial has been used you need to refill it from the Ectofuntus.");
         ~ahoy_complete;
@@ -185,7 +185,7 @@ switch_int (~p_choice2("I thought you were going to pass over to the next world.
         } else {
             ~chatnpc("<p,neutral>Of course you can, you have helped us more than we could ever have hoped.");
             ~ahoy_give(ectophial);
-            ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, 0);
+            ~objbox(ectophial, "Velorina gives you a vial of bright green ectoplasm.", 250, 0, divide(^objbox_height, 2));
         }
 }
 
@@ -275,7 +275,7 @@ if (inv_getobj(worn, ^wearpos_front) ! amulet_of_ghostspeak_enchanted) return;
 
 [label,ahoy_necrovarus_command_choice]
 def_int $c = ~p_choice3_header("Let any ghost who so wishes pass on into the next world.", 1, "Tell me a joke.", 2, "Do a chicken impression.", 3, "What do you want to command Necrovarus to do?");
-~objbox(amulet_of_ghostspeak_enchanted, "A beam of intense green light radiates out from the amulet of ghostspeak, enveloping Necrovarus in its power. His eyes become softer, and appear to stare into nothingness.", 250, 0, 0);
+~objbox(amulet_of_ghostspeak_enchanted, "A beam of intense green light radiates out from the amulet of ghostspeak, enveloping Necrovarus in its power. His eyes become softer, and appear to stare into nothingness.", 250, 0, divide(^objbox_height, 2));
 if ($c = 1) {
     %ahoy_questvar = ^ahoy_commanded;
     inv_setslot(worn, ^wearpos_front, amulet_of_ghostspeak, 1);
@@ -299,7 +299,7 @@ if ($c = 2) {
     ~chatnpc("<p,neutral>Cluck cluck squuuaaaakkkk cluck cluck");
     ~chatnpc("<p,neutral>I think I've laid an egg...");
 }
-~objbox(amulet_of_ghostspeak_enchanted, "Luckily the amulet of ghostspeak does not seem to have fully discharged.", 250, 0, 0);
+~objbox(amulet_of_ghostspeak_enchanted, "Luckily the amulet of ghostspeak does not seem to have fully discharged.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- the old crone
 [opnpc1,ahoy_crone]
@@ -374,7 +374,7 @@ if ($tea ! chinacup_of_nettletea_milky) {
     } else {
         %ahoy_subquest_nettletea = 2;
         ~ahoy_give(chinacup_empty);
-        ~objbox(chinacup_empty, "The old crone gives you her special cup.", 250, 0, 0);
+        ~objbox(chinacup_empty, "The old crone gives you her special cup.", 250, 0, divide(^objbox_height, 2));
     }
     return;
 }
@@ -484,7 +484,7 @@ switch_int (~p_choice4($first, 1, "Remind me - what can I do about Necrovarus?",
                 ~chatplayer("<p,sad>I am afraid I have lost the boat you gave to me.");
                 ~chatnpc("<p,neutral>No, I've found it - here you go.");
                 ~ahoy_give(ahoy_toy_boat);
-                ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 0);
+                ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, divide(^objbox_height, 2));
             }
         } else {
             ~chatplayer("<p,quiz>You are doing so much for me - is there anything I can do for you?");
@@ -497,7 +497,7 @@ switch_int (~p_choice4($first, 1, "Remind me - what can I do about Necrovarus?",
             %ahoy_mast_bottom = add(random(6), 1);
             %ahoy_mast_skull = add(random(6), 1);
             ~ahoy_give(ahoy_toy_boat);
-            ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 0);
+            ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, divide(^objbox_height, 2));
             ~chatplayer("<p,neutral>Was this his boat?");
             ~chatnpc("<p,neutral>Yes, he made it himself. It is a model of the very ship in which he sailed away. The paint has peeled off and it has lost its flag, but I could never throw it away.");
             ~chatplayer("<p,neutral>If I find him, I will pass it on.");
@@ -529,7 +529,7 @@ if (inv_getobj(worn, ^wearpos_front) = amulet_of_ghostspeak) {
     return;
 }
 %ahoy_questvar = ^ahoy_enchanted;
-~objbox(amulet_of_ghostspeak_enchanted, "The ghostspeak amulet emits a green glow from its gem.", 250, 0, 0);
+~objbox(amulet_of_ghostspeak_enchanted, "The ghostspeak amulet emits a green glow from its gem.", 250, 0, divide(^objbox_height, 2));
 
 [label,ahoy_crone_again]
 if (~obj_gettotal(amulet_of_ghostspeak_enchanted) > 0) {
@@ -571,7 +571,7 @@ switch_int (%ahoy_subquest_toyboat) {
             ~chatnpc("<p,neutral>What? But the chest is only just over there! How on RuneScape did you lose it in that short distance?");
             ~chatplayer("<p,sad>Sorry, I won't do it again...");
             ~ahoy_give(ahoy_chest_key);
-            ~objbox(ahoy_chest_key, "The old man grudgingly gives you another chest key.", 250, 0, 0);
+            ~objbox(ahoy_chest_key, "The old man grudgingly gives you another chest key.", 250, 0, divide(^objbox_height, 2));
         }
 }
 
@@ -601,7 +601,7 @@ if ($c = 2) {
     return;
 }
 ~chatplayer("<p,neutral>Is this your toy boat?");
-~objbox(ahoy_toy_boat_repaired, "The old man inspects the toy boat.", 250, 0, 0);
+~objbox(ahoy_toy_boat_repaired, "The old man inspects the toy boat.", 250, 0, divide(^objbox_height, 2));
 if (~ahoy_correct_boat = true) {
     ~chatnpc("<p,neutral>My word - so it is!!! I never thought I would see it again!! Where did you get it from?");
     ~chatplayer("<p,neutral>Your mother gave it to me to pass on to you.");
@@ -630,7 +630,7 @@ inv_del(inv, ahoy_toy_boat, 1);
 inv_del(inv, ahoy_toy_boat_repaired, 1);
 ~ahoy_give(ahoy_chest_key);
 ~chatnpc("<p,neutral>The Captain says yes.");
-~objbox(ahoy_chest_key, "The old man gives you the chest key.", 250, 0, 0);
+~objbox(ahoy_chest_key, "The old man gives you the chest key.", 250, 0, divide(^objbox_height, 2));
 
 // ---------------------------------------------------------------- Gravingas and the petition
 // ours: Void's Gravingas shouts slogans every 14 ticks in ghost or plain speech by who is
@@ -789,11 +789,11 @@ switch_int (random(3)) {
 %ahoy_signaturecounter = add(%ahoy_signaturecounter, 1);
 def_int $total = sub(%ahoy_signaturecounter, 1);
 if ($total = 10) {
-    ~objbox(ahoy_petition, "You have succeeded in obtaining 10 signatures on the petition form!", 250, 0, 0);
+    ~objbox(ahoy_petition, "You have succeeded in obtaining 10 signatures on the petition form!", 250, 0, divide(^objbox_height, 2));
 } else if ($total = 1) {
-    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained 1 signature so far.", 250, 0, 0);
+    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained 1 signature so far.", 250, 0, divide(^objbox_height, 2));
 } else {
-    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained <tostring($total)> signatures so far.", 250, 0, 0);
+    ~objbox(ahoy_petition, "The ghost signs your petition.|You have obtained <tostring($total)> signatures so far.", 250, 0, divide(^objbox_height, 2));
 }
 
 // ---------------------------------------------------------------- Ak-Haranu
@@ -807,7 +807,7 @@ if ($bow = 8) {
         ~chatplayer("<p,neutral>I'm sorry, I seem to have lost the translation manual you gave me.");
         ~chatnpc("<p,neutral>Ah, no worry, my friend. For the gift of longbow Ak-Haranu would give a thousand books.");
         ~ahoy_give(ahoy_translation_manual);
-        ~objbox(ahoy_translation_manual, "Ak-Haranu gives you another translation manual.", 250, 0, 0);
+        ~objbox(ahoy_translation_manual, "Ak-Haranu gives you another translation manual.", 250, 0, divide(^objbox_height, 2));
     }
     return;
 }
@@ -819,7 +819,7 @@ if ($bow >= 1) {
         inv_del(inv, oak_longbow_signed, 1);
         inv_add(inv, ahoy_translation_manual, 1);
         %ahoy_subquest_bow = 8;
-        ~objbox(oak_longbow_signed, "Ak-Haranu gives you a translation manual in return for the signed oak longbow.", 250, 0, 0);
+        ~objbox(oak_longbow_signed, "Ak-Haranu gives you a translation manual in return for the signed oak longbow.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>May honour be bestowed upon you and your family!");
     } else if (inv_total(inv, oak_longbow) > 0) {
         ~chatnpc("<p,neutral>How is <text_gender("Master", "Mistress")> <displayname> getting on with longbow?");

@@ -33,7 +33,7 @@ if(oc_category(last_useitem) = mort_serum) {
         //Guess https://oldschool.runescape.wiki/w/Transcript:Ulsquire_Shauncy#Using_Serum_208_on_him
         def_int $count = ~random_range(180,220);
         inv_add(inv, coins, $count);
-        ~objbox(coins,"Ulsquire gives you <tostring($count)> gold coins.", 250, 0, 0);
+        ~objbox(coins,"Ulsquire gives you <tostring($count)> gold coins.", 250, 0, divide(^objbox_height, 2));
     }
     @ulsquire_talk;
 } else {
@@ -82,7 +82,7 @@ if(%morttonquest < ^mortton_kill_shades) {
         ~chatnpc("<p,neutral>Oh yes, that would be interesting!");
         inv_del(inv, shade_bones1, 1);
         %morttonquest = ^mortton_shades_to_ulsquire;
-        ~objbox(shade_bones1, "You show the shade remains to the priest. He wanders|off to study the bones.", 250, 0, 0);
+        ~objbox(shade_bones1, "You show the shade remains to the priest. He wanders|off to study the bones.", 250, 0, divide(^objbox_height, 2));
         return;
     }
 } else if(%morttonquest = ^mortton_shades_to_ulsquire | %morttonquest = ^mortton_ulsquire_temple) {

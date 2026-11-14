@@ -380,7 +380,7 @@ if (inv_freespace(inv) = 0) {
 } else {
     inv_add(inv, mdaughter_necklace, 1);
 }
-~objbox(mdaughter_necklace, "Ragnar gives you Asleif's necklace.", 250, 0, 0); // ours
+~objbox(mdaughter_necklace, "Ragnar gives you Asleif's necklace.", 250, 0, divide(^objbox_height, 2)); // ours
 
 // ---------------------------------------------------------------- the burial and the cairn
 [opheld3,mdaughter_daughter_corpse]
@@ -401,7 +401,7 @@ anim(human_pickupfloor, 0);
 inv_del(inv, mdaughter_daughter_corpse, 1);
 inv_del(inv, mdaughter_necklace, 1);
 %mdaughter_burial_state = 1;
-~objbox(mdaughter_daughter_corpse, "You dig a hole in the ground, then carefully lay down the skeleton of the chieftain's daughter, together with her necklace. You then close the hole, creating a small burial mound. Now all you need to do is build a cairn on top.", 250, 0, 0);
+~objbox(mdaughter_daughter_corpse, "You dig a hole in the ground, then carefully lay down the skeleton of the chieftain's daughter, together with her necklace. You then close the hole, creating a small burial mound. Now all you need to do is build a cairn on top.", 250, 0, divide(^objbox_height, 2));
 
 [oplocu,mdaughter_multimound]
 if (last_useitem ! mdaughter_rock | %mdaughter_burial_state ! 1) {

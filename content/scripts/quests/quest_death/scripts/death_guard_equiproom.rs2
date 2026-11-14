@@ -159,13 +159,13 @@ if(testbit(%death_bits, ^harold_lostall) = ^true) {
                 ~death_set_haroldgold(0);
                 ~chatnpc("<p,sad>Here's what I have.");
                 mes("Harold has given you some of your winnings!");
-                ~objbox(coins_250, "Harold has given you some of your winnings!", 250, 0, 0);
+                ~objbox(coins_250, "Harold has given you some of your winnings!", 250, 0, divide(^objbox_height, 2));
             }
             ~chatnpc("<p,sad>I'll write you out an IOU for the rest.");
             %death_equiproom = ^death_given_iou;
             inv_add(inv, death_iou, 1);
             mes("Harold has given you an IOU scribbled on some paper.");
-            ~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, 0);
+            ~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, divide(^objbox_height, 2));
         } else {
             ~chatnpc("<p,drunk>Um...not enough money.");
             if(~death_get_haroldgold > 0) {
@@ -173,13 +173,13 @@ if(testbit(%death_bits, ^harold_lostall) = ^true) {
                 ~death_set_haroldgold(0);
                 ~chatnpc("<p,drunk>Heresh shome of it.");
                 mes("Harold has given you some of your winnings!");
-                ~objbox(coins_250, "Harold has given you some of your winnings!", 250, 0, 0);
+                ~objbox(coins_250, "Harold has given you some of your winnings!", 250, 0, divide(^objbox_height, 2));
             }
             ~chatnpc("<p,drunk>I owe you the resht!");
             %death_equiproom = ^death_given_iou;
             inv_add(inv, death_iou, 1);
             mes("Harold has given you an IOU scribbled on some paper.");
-            ~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, 0);
+            ~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, divide(^objbox_height, 2));
         }
     }
     return;
@@ -198,9 +198,9 @@ if(~death_get_playerroll > 0 & testbit(%death_bits, ^harold_verydrunk) = ^true) 
     }
 }
 if(~death_get_playerroll > ~death_get_haroldroll) {
-    ~objbox(coins_250, "Harold has given you your winnings!", 250, 0, 0);
+    ~objbox(coins_250, "Harold has given you your winnings!", 250, 0, divide(^objbox_height, 2));
 } else {
-    ~objbox(coins_250, "You give Harold his winnings.", 250, 0, 0);
+    ~objbox(coins_250, "You give Harold his winnings.", 250, 0, divide(^objbox_height, 2));
 }
 
 
@@ -344,9 +344,9 @@ else ~chatnpc("<p,neutral>I'll write you another.");
 if(%death_equiproom >= ^death_found_combo) {
     inv_add(inv, death_combination, 1);
     mes("Harold has given you the IOU, which you know is the combination.");
-    ~objbox(death_combination, "Harold has given you the IOU, which you know is the combination.", 250, 0, 0);
+    ~objbox(death_combination, "Harold has given you the IOU, which you know is the combination.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 inv_add(inv, death_iou, 1);
 mes("Harold has given you an IOU scribbled on some paper.");
-~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, 0);
+~objbox(death_iou, "Harold has given you an IOU scribbled on some paper.", 250, 0, divide(^objbox_height, 2));

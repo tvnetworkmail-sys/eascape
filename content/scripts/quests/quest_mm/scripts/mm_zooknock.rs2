@@ -76,7 +76,7 @@ switch_obj(last_useitem) {
         } else {
             %mm_zooknock_has_gold_bar = ^true;
             inv_del(inv, gold_bar, 1);
-            ~objbox(gold_bar, "You hand Zooknock the gold bar.", 250, 0, 0);
+            ~objbox(gold_bar, "You hand Zooknock the gold bar.", 250, 0, divide(^objbox_height, 2));
             ~zooknock_handed_item_line;
         }
         ~mm_zooknock_amulet_check;
@@ -107,7 +107,7 @@ switch_obj(last_useitem) {
                     %mm_zooknock_has_monkey_relic = ^true;
                     %mm_zooknock_monkey_relic = oc_param($last_useitem, mm_bones_type);
                     inv_del(inv, $last_useitem, 1);
-                    ~objbox($last_useitem, "You hand Zooknock the monkey remains.", 250, 0, 0);
+                    ~objbox($last_useitem, "You hand Zooknock the monkey remains.", 250, 0, divide(^objbox_height, 2));
                 case 2 :
                     ~chatplayer("<p,neutral>Actually, no.");
             }
@@ -116,7 +116,7 @@ switch_obj(last_useitem) {
             %mm_zooknock_has_monkey_relic = ^true;
             %mm_zooknock_monkey_relic = oc_param($last_useitem, mm_bones_type);
             inv_del(inv, $last_useitem, 1);
-            ~objbox(last_useitem, "You hand Zooknock the monkey remains.", 250, 0, 0);
+            ~objbox(last_useitem, "You hand Zooknock the monkey remains.", 250, 0, divide(^objbox_height, 2));
             ~zooknock_handed_item_line;
             ~mm_zooknock_talisman_check;
         }
@@ -130,7 +130,7 @@ switch_obj(last_useitem) {
         } else {
             %mm_zooknock_has_magical_talisman = ^true;
             inv_del(inv, last_useitem, 1);
-            ~objbox(last_useitem, "You hand Zooknock the monkey talisman.", 250, 0, 0);
+            ~objbox(last_useitem, "You hand Zooknock the monkey talisman.", 250, 0, divide(^objbox_height, 2));
             ~zooknock_handed_item_line;
         }
         ~mm_zooknock_talisman_check;
@@ -222,7 +222,7 @@ spotanim_npc(windwave_impact, 80, 0);
 inv_add(inv, $talisman, 1);
 if(%mm_zooknock_player_is_collecting_for_talisman = ^true) %mm_zooknock_player_is_collecting_for_talisman = ^false;
 if(%mm_main < ^mm_completed_ch2) queue(mm_ch3_cutscene, 0, 0);
-~objbox($talisman, "Zooknock hands you back the talisman. It seems to glow slightly.", 250, 0, 0);
+~objbox($talisman, "Zooknock hands you back the talisman. It seems to glow slightly.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>I am afraid I have not been able to fully invest my powers in that talisman. You may use it, but it will continue to draw its energy directly from me.");
 ~chatnpc("<p,neutral>The range at which I will be able to sustain it is limited. I cannot ensure it will be effective off the atoll.");
 ~chatnpc("<p,neutral>Furthermore, you will not be able to attack whilst using this, so be careful. Perhaps when I refine my spells I could look into making this possible.");
@@ -406,7 +406,7 @@ if(npc_type = mm_waymottin) {
             ~chatplayer("<p,quiz>Can I have it then?");
             ~chatnpc("<p,neutral>Of course.");
             inv_add(inv, mm_sigil, 1);
-            ~objbox(mm_sigil, "Garkor hands you some kind of medallion.", 250, 0, 0);
+            ~objbox(mm_sigil, "Garkor hands you some kind of medallion.", 250, 0, divide(^objbox_height, 2));
         }
     }
 }

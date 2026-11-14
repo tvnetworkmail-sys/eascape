@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------- the brooch
 // lies at the first fork of the tunnel (map obj spawn, m50_150); the OSRS wiki
 [opheld1,lost_tribe_brooch]
-~objbox(lost_tribe_brooch, "A stone brooch with a symbol on it.", 250, 0, 0); // ours: the cache's examine
+~objbox(lost_tribe_brooch, "A stone brooch with a symbol on it.", 250, 0, divide(^objbox_height, 2)); // ours: the cache's examine
 
 // ---------------------------------------------------------------- the symbols
 // the OSRS wiki: the Rekeshuun (north), Idithuun (south), Ekeleshuun (east) and Narogoshuun (west);
@@ -119,7 +119,7 @@ if (%lt_stage < ^lt_complete) {
 ~chatnpc("<p,happy>Yes! I dropped it when I fled from your castle. Thank you, friend. Please take this helmet in return; it will light your way in the tunnels.");
 inv_del(inv, lost_tribe_brooch, 1);
 ~lt_give(cave_goblin_mining_helmet_unlit);
-~objbox(cave_goblin_mining_helmet_unlit, "Mistag gives you a mining helmet.", 250, 0, 0);
+~objbox(cave_goblin_mining_helmet_unlit, "Mistag gives you a mining helmet.", 250, 0, divide(^objbox_height, 2));
 
 // the goblin bow in front of Mistag (the OSRS wiki); the salute frightens him
 [proc,lt_emote](boolean $bow)

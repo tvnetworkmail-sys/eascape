@@ -47,12 +47,12 @@ if ((last_useitem = tbwt_monkey_corpse) | (last_useitem = tbwt_seaweed_in_monkey
         if ($corpse = tbwt_monkey_corpse) {
             inv_add(inv, tbwt_monkey_skin, 1);
             inv_add(inv, mm_normal_monkey_bones, 1);
-            ~objbox(tbwt_monkey_skin, "Tamayu hands you some monkey skin and bones.", 250, 0, 0);
+            ~objbox(tbwt_monkey_skin, "Tamayu hands you some monkey skin and bones.", 250, 0, divide(^objbox_height, 2));
         } else {
             inv_add(inv, tbwt_monkey_skin, 1);
             inv_add(inv, seaweed, 1);
             inv_add(inv, bones, 1); // Only gives regular bones from a stuffed monkey corpse, in OSRS
-            ~objbox(tbwt_monkey_skin, "Tamayu hands you some monkey skin, seaweed and bones.", 250, 0, 0);
+            ~objbox(tbwt_monkey_skin, "Tamayu hands you some monkey skin, seaweed and bones.", 250, 0, divide(^objbox_height, 2));
         }
     }
 } else if (last_useitem = 1dose1agility | last_useitem = 2dose1agility | last_useitem = 3dose1agility | last_useitem = 4dose1agility) {
@@ -127,7 +127,7 @@ if ((last_useitem = tbwt_monkey_corpse) | (last_useitem = tbwt_seaweed_in_monkey
 
         inv_del(inv, $spear, 1);
         ~chatplayer("<p,neutral>Tamayu, try using this weapon.");
-        ~objbox($spear, "You hand the spear to Tamayu.", 250, 0, 0);
+        ~objbox($spear, "You hand the spear to Tamayu.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Thank you Bwana. Now I must prepare for my next hunt.");
     }
 } else {

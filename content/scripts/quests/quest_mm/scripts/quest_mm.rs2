@@ -645,10 +645,10 @@ mes("You search the crate.");
 p_delay(2);
 // https://web.archive.org/web/20060910110938im_/http://www.runeweb.net/Roth/monkey-maddness3.PNG
 if(inv_freespace(inv) = 0) {
-    ~objbox(mm_reinitialisation_hint, "This crate is full of...  spare controls!|You don't have space to take any.", 250, 0, 0);
+    ~objbox(mm_reinitialisation_hint, "This crate is full of...  spare controls!|You don't have space to take any.", 250, 0, divide(^objbox_height, 2));
     return;
 }
-~objbox(mm_reinitialisation_hint, "This crate is full of ...| spare controls!", 250, 0, 0);
+~objbox(mm_reinitialisation_hint, "This crate is full of ...| spare controls!", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) return;
 inv_add(inv, mm_reinitialisation_hint, 1);
@@ -834,7 +834,7 @@ mes("You climb down the ladder.");
 [oploc1,mm_banana_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(banana, "This crate is full of ...  bananas.", 250, 0, 0);
+~objbox(banana, "This crate is full of ...  bananas.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -844,7 +844,7 @@ inv_add(inv, banana, 1);
 [oploc1,mm_banana_crates_stacked]
 mes("You search the crate.");
 p_delay(2);
-~objbox(banana, "This crate is full of ...| bananas.", 250, 0, 0);
+~objbox(banana, "This crate is full of ...| bananas.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -854,7 +854,7 @@ inv_add(inv, banana, 1);
 [oploc1,mm_iron_scimitar_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(iron_scimitar, "This crate is full of ...| iron scimitars!", 250, 0, 0);
+~objbox(iron_scimitar, "This crate is full of ...| iron scimitars!", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -864,7 +864,7 @@ inv_add(inv, iron_scimitar, 1);
 [oploc1,mm_bronze_scimitar_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(bronze_scimitar, "This crate is full of ...| bronze scimitars!", 250, 0, 0);
+~objbox(bronze_scimitar, "This crate is full of ...| bronze scimitars!", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -874,7 +874,7 @@ inv_add(inv, bronze_scimitar, 1);
 [oploc1,mm_tinderbox_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(tinderbox, "This crate is full of ...| tinderboxes.", 250, 0, 0);
+~objbox(tinderbox, "This crate is full of ...| tinderboxes.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -894,7 +894,7 @@ inv_add(inv, thread, 1);
 [oploc1,mm_needle_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(needle, "This crate is full of ...| needles.", 250, 0, 0);
+~objbox(needle, "This crate is full of ...| needles.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -904,7 +904,7 @@ inv_add(inv, needle, 1);
 [oploc1,mm_chisel_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(chisel, "This crate is full of ...| chisels.", 250, 0, 0);
+~objbox(chisel, "This crate is full of ...| chisels.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -914,7 +914,7 @@ inv_add(inv, chisel, 1);
 [oploc1,mm_hammer_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(hammer, "This crate is full of ...| hammers.", 250, 0, 0);
+~objbox(hammer, "This crate is full of ...| hammers.", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -944,7 +944,7 @@ inv_add(inv, mm_monkey_amulet_mould, 1);
 [oploc1,mm_eye_of_gnome_crate]
 mes("You search the crate.");
 p_delay(2);
-~objbox(mm_eye_of_gnome, "This crate is full of ...| slimy gnome eyes!", 250, 0, 0);
+~objbox(mm_eye_of_gnome, "This crate is full of ...| slimy gnome eyes!", 250, 0, divide(^objbox_height, 2));
 def_int $op = ~p_choice2_header("Yes", 1, "No", 2, "Do you wish to take one?");
 if($op = 2) {
     return;
@@ -1048,7 +1048,7 @@ if(inv_total(worn, mm_amulet_of_monkey_speak) > 0) {
     if(random(2) = 0) $text = "'I'm stuck in this horrible gold bar!'";
     else $text = "'Argh! Get me out of here!'";
 }
-~objbox(mm_enchanted_gold_bar, "The enchanted gold bar says:|@dbl@<$text>", 250, 0, 0);
+~objbox(mm_enchanted_gold_bar, "The enchanted gold bar says:|@dbl@<$text>", 250, 0, divide(^objbox_height, 2));
 
 [oplocu,mm_pyre]
 if(last_useitem = mm_enchanted_gold_bar) {

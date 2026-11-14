@@ -127,7 +127,7 @@ anim(human_pickpocket, 0);
 p_delay(2);
 if (%lt_stage = ^lt_silverware & inv_total(inv, lost_tribe_chest_key) = 0) {
     ~lt_give(lost_tribe_chest_key);
-    ~objbox(lost_tribe_chest_key, "You steal a little key.", 250, 0, 0);
+    ~objbox(lost_tribe_chest_key, "You steal a little key.", 250, 0, divide(^objbox_height, 2));
     stat_advance(thieving, 100); // ours: a little for the pickpocket
     return;
 }
@@ -152,7 +152,7 @@ anim(human_openchest, 0);
 ~lt_give(ham_robe);
 ~lt_give(ham_hood);
 ~lt_set(^lt_robes);
-~objbox(ham_shirt, "In the chest you find a set of H.A.M. robes!", 250, 0, 0);
+~objbox(ham_shirt, "In the chest you find a set of H.A.M. robes!", 250, 0, divide(^objbox_height, 2));
 ~chatplayer("<p,shock>Sigmund must be a member of the Humans Against Monsters cult!");
 
 // the silverware in the H.A.M. hideout
@@ -160,7 +160,7 @@ anim(human_openchest, 0);
 if (%lt_stage = ^lt_robes & inv_total(inv, lost_tribe_silverware) = 0) {
     ~lt_give(lost_tribe_silverware);
     ~lt_set(^lt_found);
-    ~objbox(lost_tribe_silverware, "You find the Lumbridge Silverware!", 250, 0, 0);
+    ~objbox(lost_tribe_silverware, "You find the Lumbridge Silverware!", 250, 0, divide(^objbox_height, 2));
     return;
 }
 mes("You find nothing."); // 2009scape
@@ -267,7 +267,7 @@ switch_int (%lt_stage) {
         ~lt_sigmund_says("<p,angry>But don't you see it was for the best? For goblins to be living under our feet like this... ugh. It doesn't matter how civilized they are: all sub-human species must be wiped out!");
         ~chatnpc("<p,angry>That's enough! Get out of my castle now!");
         ~chatnpc("<p,neutral>I see I was ill-advised. Unless there is an act of aggression by the cave goblins there is no need for war.");
-        ~objbox(lost_tribe_treaty, "The Duke writes a document and signs it.", 250, 0, 0);
+        ~objbox(lost_tribe_treaty, "The Duke writes a document and signs it.", 250, 0, divide(^objbox_height, 2));
         ~lt_give(lost_tribe_treaty);
         ~lt_set(^lt_treaty);
         ~chatnpc("<p,neutral>This peace treaty specifies the border between Lumbridge and the Cave Goblin realm. Please take it to the cave goblins and tell them I would like to meet with their leader to sign it.");
@@ -332,7 +332,7 @@ if (%lt_stage >= ^lt_dug) {
     return;
 }
 if (%lt_stage < ^lt_permission) {
-    ~objbox(last_useitem, "I should probably figure out what happened before vandalizing the castle more.", 250, 0, 0); // 2009scape
+    ~objbox(last_useitem, "I should probably figure out what happened before vandalizing the castle more.", 250, 0, divide(^objbox_height, 2)); // 2009scape
     return;
 }
 if (stat(mining) < 17) {
@@ -344,7 +344,7 @@ anim(oc_param($pick, mining_animation), 0);
 p_delay(3);
 anim(null, 0);
 ~lt_set(^lt_dug);
-~objbox($pick, "You dig a narrow tunnel through the rocks.", 250, 0, 0);
+~objbox($pick, "You dig a narrow tunnel through the rocks.", 250, 0, divide(^objbox_height, 2));
 
 // 2009scape: through the hole, from the cellar side to 3222,9618 and back to 3219,9618 (the OSRS
 // wiki: 13 Agility and a lit light)

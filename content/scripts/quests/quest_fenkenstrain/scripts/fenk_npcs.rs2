@@ -361,7 +361,7 @@ switch_int ($choice) {
         ~chatplayer("<p,quiz>Do you know where the key to the shed is?");
         ~chatnpc("<p,neutral>Got it right 'ere in my pocket. Here you go.");
         ~fenk_give(fenk_shed_key);
-        ~objbox(fenk_shed_key, "The headless gardener hands you a rusty key.", 250, 0, 0);
+        ~objbox(fenk_shed_key, "The headless gardener hands you a rusty key.", 250, 0, divide(^objbox_height, 2));
     case 3 :
         ~chatplayer("<p,quiz>Do you know where a conductor mould is?");
         ~chatnpc("<p,neutral>A conductive mould, you say? Let me see-");
@@ -403,7 +403,7 @@ switch_int ($choice) {
 if (%fenk_spoken_to_gardener = 1) {
     return;
 }
-~objbox(amulet_of_ghostspeak, "You feel power emanate from the Amulet of Ghostspeak, and the air around you vibrates with the ghostly voice of the Headless Gardener...", 250, 0, 0);
+~objbox(amulet_of_ghostspeak, "You feel power emanate from the Amulet of Ghostspeak, and the air around you vibrates with the ghostly voice of the Headless Gardener...", 250, 0, divide(^objbox_height, 2));
 %fenk_spoken_to_gardener = 1;
 
 // the gardener walking you to where he lost his head

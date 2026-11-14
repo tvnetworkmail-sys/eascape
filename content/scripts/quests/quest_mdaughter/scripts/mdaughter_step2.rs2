@@ -106,7 +106,7 @@ if (inv_total(inv, mdaughter_white_pearl_seed) > 0) {
     ~chatnpc("<p,happy>This is a great gift, <~md_name>, which I humbly accept.");
     inv_del(inv, mdaughter_white_pearl_seed, 1);
     %mdaughter_food_var = 3;
-    ~objbox(mdaughter_white_pearl_seed, "You give the White Pearl seed to Hamal.", 250, 0, 0); // ours
+    ~objbox(mdaughter_white_pearl_seed, "You give the White Pearl seed to Hamal.", 250, 0, divide(^objbox_height, 2)); // ours
     ~md_tasks_check;
     return;
 }
@@ -209,7 +209,7 @@ if (inv_freespace(inv) = 0) {
 }
 anim(human_pickupfloor, 0);
 inv_add(inv, mdaughter_white_pearl_fruit, 1);
-~objbox(mdaughter_white_pearl_fruit, "Your gloves protect you from the thorns as you pick the White Pearl fruit.", 250, 0, 0);
+~objbox(mdaughter_white_pearl_fruit, "Your gloves protect you from the thorns as you pick the White Pearl fruit.", 250, 0, divide(^objbox_height, 2));
 
 // eating it: Void's item data (heals 20, the seed is left over) and its message
 [opheld3,mdaughter_white_pearl_fruit]
@@ -359,7 +359,7 @@ if (inv_freespace(inv) = 0) {
 } else {
     inv_add(inv, mdaughter_safety_guarantee, 1);
 }
-~objbox(mdaughter_safety_guarantee, "Brundt gives you a guarantee of safe passage.", 250, 0, 0); // ours
+~objbox(mdaughter_safety_guarantee, "Brundt gives you a guarantee of safe passage.", 250, 0, divide(^objbox_height, 2)); // ours
 
 // ---------------------------------------------------------------- the Ancient Rock
 // a pickaxe on it (the wiki: use, not click), once Brundt has asked for the rock (ours)
@@ -381,7 +381,7 @@ anim(human_mining_bronze_pickaxe, 0);
 p_delay(2);
 loc_change(mdaughter_ancient_rock_splitting, 10);
 inv_add(inv, mdaughter_half_rock, 1);
-~objbox(mdaughter_half_rock, "With a few swings of your pick, you split off a part of the rock and sneakily put it in your pocket.", 250, 0, 0);
+~objbox(mdaughter_half_rock, "With a few swings of your pick, you split off a part of the rock and sneakily put it in your pocket.", 250, 0, divide(^objbox_height, 2));
 
 [oplocu,mdaughter_ancient_rock_splitting]
 mes("Someone else just had the same idea!");

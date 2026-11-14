@@ -30,7 +30,7 @@ switch_int(%regicide_quest) {
             ~chatnpc("<p,neutral>Here, have another copy, but don't let it fall into the wrong hands.");
             ~chatplayer("<p,neutral>Thank you Lord Iorwerth.");
             inv_add(inv, regicide_iorwerth_message, 1);
-            ~objbox(regicide_iorwerth_message, "Lord Iorwerth hands you a scroll.", 250, 0, 0);
+            ~objbox(regicide_iorwerth_message, "Lord Iorwerth hands you a scroll.", 250, 0, divide(^objbox_height, 2));
             return;
         }
         ~chatplayer("<p,neutral>Good day, Lord Iorwerth.");
@@ -44,7 +44,7 @@ switch_int(%regicide_quest) {
         ~chatnpc("<p,neutral>I'm sure you will want to get back to your king|and tell him. He will undoubtedly want some proof.|He should trust me enough in this matter,|Give him this letter, it verifies that the job is done.");
         inv_add(inv, regicide_iorwerth_message, 1);
         %regicide_quest = ^regicide_reported_iorwerth;
-        ~objbox(regicide_iorwerth_message, "Lord Iorwerth hands you a scroll.", 250, 0, 0);
+        ~objbox(regicide_iorwerth_message, "Lord Iorwerth hands you a scroll.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>I'd use the pass through Arandar, You'll find the start of the trail in the far north-east of the woods. I have informed the guards there, you should now have the right to pass the Arandar palisade.");
         ~chatplayer("<p,neutral>Thank you my lord.");
     case ^regicide_spoken_iorwerth2 :
@@ -56,7 +56,7 @@ switch_int(%regicide_quest) {
             }
             ~chatnpc("<p,neutral>It's lucky I had a scribe make a few copies.");
             inv_add(inv, regicide_alchemy, 1);
-            ~objbox(regicide_alchemy, "Lord Iorwerth hands you a book.", 250, 0, 0);
+            ~objbox(regicide_alchemy, "Lord Iorwerth hands you a book.", 250, 0, divide(^objbox_height, 2));
             return;
         }
         ~chatplayer("<p,happy>Hello.");
@@ -69,7 +69,7 @@ switch_int(%regicide_quest) {
         ~chatnpc("<p,neutral>Good job. I had a plan to destroy his camp, using the knowledge found in this book but before I had perfected any formula they moved camp. Here you may find the book useful.");
         %regicide_quest = ^regicide_spoken_iorwerth2;
         inv_add(inv, regicide_alchemy, 1);
-        ~objbox(regicide_alchemy, "Lord Iorwerth gives you a Book.", 250, 0, 0);
+        ~objbox(regicide_alchemy, "Lord Iorwerth gives you a Book.", 250, 0, divide(^objbox_height, 2));
     case ^regicide_defeated_guard :
         ~chatnpc("<p,neutral><displayname()>, how goes your search? Any luck hunting down that brigand?");
         ~chatplayer("<p,neutral>I have come across heavy resistance trying to follow some tracks from the old camp. I'm guessing I'm on the right path.");

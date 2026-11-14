@@ -115,7 +115,7 @@ if ($s >= ^feud_mayor_thanked & %feud_report_drink = 0) {
                     } else {
                         inv_add(inv, beer, 1);
                     }
-                    ~objbox(beer, "Ali the barman gives you a beer.", 250, 0, 0);
+                    ~objbox(beer, "Ali the barman gives you a beer.", 250, 0, divide(^objbox_height, 2));
                 case 2 :
                     %feud_report_drink = 1;
                     ~chatplayer("<p,neutral>Thanks but no thanks, I don't drink.");
@@ -582,7 +582,7 @@ if ($price = 500) {
 inv_del(inv, coins, $price);
 inv_add(inv, feud_camel_receipt, 2);
 %feud_var = ^feud_camels_bought;
-~objbox(feud_camel_receipt, "Ali the discount camel seller gives you a receipt for the camels in return for <tostring($price)> gold coins.", 250, 0, 0);
+~objbox(feud_camel_receipt, "Ali the discount camel seller gives you a receipt for the camels in return for <tostring($price)> gold coins.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,happy>Here are the receipts for the camels, so that you can pick them up as soon as I get them in.");
 
 [label,feud_camelman_town]
@@ -870,7 +870,7 @@ if ($s >= ^feud_pickpocket2 & $s < ^feud_pickpocket3) {
         return;
     }
     inv_add(inv, blackjack_oak, 1);
-    ~objbox(blackjack_oak, "Ali The Operator hands you a Blackjack made out of oak.", 250, 0, 0);
+    ~objbox(blackjack_oak, "Ali The Operator hands you a Blackjack made out of oak.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if ($s = ^feud_pickpocket3) {
@@ -890,7 +890,7 @@ if ($s = ^feud_pickpocket3) {
         return;
     }
     inv_add(inv, feud_mayors_house_keys, 1);
-    ~objbox(feud_mayors_house_keys, "Ali the Operator hands you a set of keys.", 250, 0, 0);
+    ~objbox(feud_mayors_house_keys, "Ali the Operator hands you a set of keys.", 250, 0, divide(^objbox_height, 2));
     %feud_var = ^feud_got_keys;
     ~chatplayer("<p,quiz>Anything else?");
     ~chatnpc("<p,angry>No! Now get going.");
@@ -910,7 +910,7 @@ if ($s = ^feud_got_keys | $s = ^feud_staked_out) {
         } else {
             inv_add(inv, feud_mayors_house_keys, 1);
         }
-        ~objbox(feud_mayors_house_keys, "Ali the Operator hands you a set of keys.", 250, 0, 0);
+        ~objbox(feud_mayors_house_keys, "Ali the Operator hands you a set of keys.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if ($s = ^feud_staked_out) {
@@ -947,7 +947,7 @@ if ($s = ^feud_got_jewels) {
     }
     inv_del(inv, feud_mayors_jewels, 1);
     %feud_given_jewels = 1;
-    ~objbox(feud_mayors_jewels, "You hand Ali the Operator the jewels.", 250, 0, 0);
+    ~objbox(feud_mayors_jewels, "You hand Ali the Operator the jewels.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,neutral>Now, your final task is one of the upmost importance. It has come to my attention that there is a traitor in our midst.");
     ~chatplayer("<p,quiz>Oh really?");
     ~chatnpc("<p,neutral>Yes, and I want you to root them out.");
@@ -1075,7 +1075,7 @@ if ($s = ^feud_traitor_found) {
     ~chatplayer("<p,shock>Oops! I almost forgot!");
     inv_del(inv, basket_with_snake, 1);
     %feud_var = ^feud_snake_given;
-    ~objbox(basket_with_snake, "You hand the basket with the charmed snake over to the old hag.", 250, 0, 0);
+    ~objbox(basket_with_snake, "You hand the basket with the charmed snake over to the old hag.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if ($s = ^feud_snake_given) {
@@ -1098,7 +1098,7 @@ if ($s = ^feud_snake_given) {
     inv_add(inv, bucket_empty, 1);
     inv_add(inv, poison_from_hag, 1);
     %feud_var = ^feud_got_poison;
-    ~objbox(poison_from_hag, "You hand over your bucket of fresh camel dung and receive a vial of poison in return.", 250, 0, 0);
+    ~objbox(poison_from_hag, "You hand over your bucket of fresh camel dung and receive a vial of poison in return.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if ($s = ^feud_got_poison) {
@@ -1291,7 +1291,7 @@ switch_int (~p_choice5("I want a standard kebab, please.", 1, "Could I have an e
             ~chatplayer("<p,neutral>Actually, I might get back to you on the sauce. I'm a bit overburdened as it is.");
         } else {
             inv_add(inv, superhot_kebab_sauce, 1);
-            ~objbox(superhot_kebab_sauce, "Ali the Kebab seller gives you the red hot sauce.", 250, 0, 0); // ours: the transcript says only that he gives it
+            ~objbox(superhot_kebab_sauce, "Ali the Kebab seller gives you the red hot sauce.", 250, 0, divide(^objbox_height, 2)); // ours: the transcript says only that he gives it
             ~chatnpc("<p,neutral>Just be careful with it, it's potent enough to give a camel the runs.");
             ~chatplayer("<p,happy>Thank you very much.");
         }
@@ -1441,7 +1441,7 @@ if (inv_total(inv, coins) < 25) {
 inv_del(inv, $need, $count);
 inv_del(inv, coins, 25);
 inv_add(inv, $dye, 1);
-~objbox($dye, $box, 250, 0, 0);
+~objbox($dye, $box, 250, 0, divide(^objbox_height, 2));
 
 // the blackjack seller stands in town once the feud is over. Pollnivneach's map places the
 // multinpc (1876, as Void's pollnivneach.npc-spawns.toml), and a click runs its own triggers, not

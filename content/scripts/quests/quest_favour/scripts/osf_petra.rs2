@@ -257,9 +257,9 @@ if (inv_freespace(inv) < 3) {
 inv_add(inv, favour_ornament_broken, 1);
 inv_add(inv, favour_directionals_broken, 1);
 inv_add(inv, favour_pillar_broken, 1);
-~objbox(favour_ornament_broken, "You find a broken ornament...", 250, 0, 0);
-~objbox(favour_directionals_broken, "broken directionals...", 250, 0, 0);
-~objbox(favour_pillar_broken, "and a broken rotating pillar.", 250, 0, 0);
+~objbox(favour_ornament_broken, "You find a broken ornament...", 250, 0, divide(^objbox_height, 2));
+~objbox(favour_directionals_broken, "broken directionals...", 250, 0, divide(^objbox_height, 2));
+~objbox(favour_pillar_broken, "and a broken rotating pillar.", 250, 0, divide(^objbox_height, 2));
 
 [oplocu,osf_weathervane]
 if (%weathervanefixed = 1) {
@@ -338,4 +338,4 @@ inv_del(inv, $bar, 1);
 inv_del(inv, $part, 1);
 inv_add(inv, $fixed, 1);
 stat_advance(smithing, $xp);
-~objbox($fixed, $text, 250, 0, 0);
+~objbox($fixed, $text, 250, 0, divide(^objbox_height, 2));

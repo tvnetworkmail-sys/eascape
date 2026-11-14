@@ -70,7 +70,7 @@ if (inv_total(worn, ics_little_amulet_of_catspeak) > 0) {
 }
 ~chatplayer("<p,happy>I have the death runes with me now.");
 ~chatnpc("<p,neutral>Good. Give me the amulet so that I may perform the enchantment.");
-~objbox(ics_little_amulet_of_catspeak, "You pass Hild the amulet.", 250, 0, 0);
+~objbox(ics_little_amulet_of_catspeak, "You pass Hild the amulet.", 250, 0, divide(^objbox_height, 2));
 if (inv_total(inv, deathrune) < 5 | inv_total($where, ics_little_amulet_of_catspeak) = 0) return;
 inv_del(inv, deathrune, 5);
 inv_changeslot($where, ics_little_amulet_of_catspeak, twocats_amuletofcatspeak, 1);
@@ -78,7 +78,7 @@ if ($where = worn) buildappearance(worn);
 if (%twocats_quest < ^ttc_amulet) {
     %twocats_quest = ^ttc_amulet;
 }
-~objbox(twocats_amuletofcatspeak, "Hild gives you the enchanted amulet.", 250, 0, 0);
+~objbox(twocats_amuletofcatspeak, "Hild gives you the enchanted amulet.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Using the enchanted amulet is easy; open up the amulet and you'll see a cat's face, use the whiskers to rotate the cats nose. You'll see the nose move and the new direction highlighted. When the nose points in the");
 ~chatnpc("<p,neutral>direction that Bob is in, the eyes will light up and the mouth will open. You'll need to head in that direction and then check the direction again. If you are very close to Bob then the eyes and mouth will animate no");
 ~chatnpc("<p,happy>matter which way the nose is pointing. That's all there is to it, good luck!");
@@ -412,11 +412,11 @@ else ~chatplayer("<p,happy>I always wanted to be a Doctor!");
 [proc,ttc_pick_hat]()(int)
 if (~p_choice2("Doctor's hat.", 1, "Nurse's hat.", 2) = 2) {
     ~ttc_give(twocats_nurses_hat);
-    ~objbox(twocats_nurses_hat, "The Apothecary has given you a Nurse's Hat.", 250, 0, 0);
+    ~objbox(twocats_nurses_hat, "The Apothecary has given you a Nurse's Hat.", 250, 0, divide(^objbox_height, 2));
     return(2);
 }
 ~ttc_give(twocats_doctors_hat);
-~objbox(twocats_doctors_hat, "The Apothecary has given you a Doctor's Hat.", 250, 0, 0);
+~objbox(twocats_doctors_hat, "The Apothecary has given you a Doctor's Hat.", 250, 0, divide(^objbox_height, 2));
 return(1);
 
 // ---------------------------------------------------------------- the Sphinx (ics_npcs.rs2 asks first)
@@ -460,7 +460,7 @@ if (~p_choice2("View the cutscene (5 mins 20 secs).", 1, "Skip cutscene and view
     ~mesbox("The Sphinx summons Bob and hypnotises him. Under her influence Bob remembers his earliest memories: he was Robert the Strong, and with his panther Odysseus he fought and slew a dragonkin.");
     ~mesbox("The Sphinx summons Neite and tells her what Bob remembered. Neite is impressed. Bob and Neite are going away for a few days, and Bob asks you to look after Unferth while he is away.");
     ~ttc_give_chores;
-    ~objbox(twocats_chores, "Bob has given you a list of chores to help look after Unferth.", 250, 0, 0);
+    ~objbox(twocats_chores, "Bob has given you a list of chores to help look after Unferth.", 250, 0, divide(^objbox_height, 2));
     return(1);
 }
 return(2);

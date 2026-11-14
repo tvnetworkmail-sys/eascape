@@ -635,7 +635,7 @@ sound_synth(chest_open, 1, 0);
 
 inv_add(inv,$treasure, $treasure_amount);
 if($coin_amount < 1) {
-    ~objbox($treasure, "You find some treasure. The key strangely dissolves into the chest lock.", 200, 0, 0);
+    ~objbox($treasure, "You find some treasure. The key strangely dissolves into the chest lock.", 200, 0, divide(^objbox_height, 2));
 } else {
     inv_add(inv,coins, $coin_amount);
     ~doubleobjbox($treasure,coins,"You find some treasure and <tostring($coin_amount)> gold coins. The key strangely dissolves into the chest lock.", 150);
@@ -643,7 +643,7 @@ if($coin_amount < 1) {
 
 inv_add(inv, swamppaste, $paste_amount);
 // https://youtu.be/-DIv3WwUHW0?si=L4eIKIk1jf6lFhUH&t=129 2 spaces
-~objbox(swamppaste, "You find <tostring($paste_amount)> doses of swamp paste  at the bottom of the chest.", 250, 0, 0);
+~objbox(swamppaste, "You find <tostring($paste_amount)> doses of swamp paste  at the bottom of the chest.", 250, 0, divide(^objbox_height, 2));
 
 [proc,ShadebronzeDrop](int $key_tier)(namedobj, int)
 // https://runescape.salmoneus.net/activities/shades-of-mortton.html

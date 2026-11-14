@@ -162,7 +162,7 @@ switch_int (~p_choice4("Okay, I'll take your axe to get it sharpened.", 1, "Why 
     case 1 :
         ~chatplayer("<p,neutral>Okay, I'll take your axe to get it sharpened.");
         ~osf_give(favour_jungleforesteraxe_blunt);
-        ~objbox(favour_jungleforesteraxe_blunt, "The Jungle Forester hands you the blunt axe.", 250, 0, 0);
+        ~objbox(favour_jungleforesteraxe_blunt, "The Jungle Forester hands you the blunt axe.", 250, 0, divide(^objbox_height, 2));
         %onesmallfavour = 10;
         ~chatnpc("<p,happy>Great, here you go! If you could ask the Captain to pop it into Brian's Axes for resharpening when he's next in Port Sarim, that would be really helpful.");
     case 2 :
@@ -502,7 +502,7 @@ if (%onesmallfavour = 60 | %onesmallfavour = 62) {
     ~chatplayer("<p,neutral>Horvik is ill, I need breathing salts and herbal tincture.");
     ~chatnpc("<p,happy>No problem!");
     ~osf_give(favour_herbal_tincture);
-    ~objbox(favour_herbal_tincture, "The Apothecary shows you the herbal tincture.", 250, 0, 0);
+    ~objbox(favour_herbal_tincture, "The Apothecary shows you the herbal tincture.", 250, 0, divide(^objbox_height, 2));
     %onesmallfavour = 62;
     ~chatnpc("<p,happy>There you do! There's your herbal tincture!");
     ~chatplayer("<p,happy>Wow, that was surprisingly easy! Fantastic, thanks very much.");
@@ -988,7 +988,7 @@ if (%onesmallfavour = 105) {
             ~chatnpc("<p,happy>Great, many thanks indeed! Here's the mattress!");
             %onesmallfavour = 110;
             ~osf_give(favour_matress_stodgy);
-            ~objbox(favour_matress_stodgy, "Tindel gives you a worn out, very poor-looking mattress.", 250, 0, 0);
+            ~objbox(favour_matress_stodgy, "Tindel gives you a worn out, very poor-looking mattress.", 250, 0, divide(^objbox_height, 2));
         case 2 :
             ~chatplayer("<p,neutral>Sorry, I just don't want to do it.");
             ~chatnpc("<p,neutral>Well, that's a shame, but come back and see me if you change your mind.");
@@ -1009,7 +1009,7 @@ if (~osf_stage_between(110, 129) = true & ~obj_gettotal(favour_matress_stodgy) =
             inv_del(inv, coins, 100);
             ~chatnpc("<p,happy>Okay, thanks a lot, here's the mattress!");
             ~osf_give(favour_matress_stodgy);
-            ~objbox(favour_matress_stodgy, "Tindel gives you a new, old mattress!", 250, 0, 0);
+            ~objbox(favour_matress_stodgy, "Tindel gives you a new, old mattress!", 250, 0, divide(^objbox_height, 2));
         case 2 :
             ~chatplayer("<p,angry>I'm not paying you 100 coins for that stinky mattress.");
             ~chatnpc("<p,angry>Well, don't expect your iron oxide any time soon then!");

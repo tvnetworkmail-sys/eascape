@@ -147,7 +147,7 @@ if(npc_find(coord, desertminingmercenary1, 7, 0) = true) {
             ~chatnpc("<p,neutral>Prepare to die effendi!");
             ~mesbox("The guard leans close and whispers");
             ~chatnpc("<p,neutral>Are you mad effendi? This is your last chance! Leave now and never come back or I'll introduce you to my friend.");
-            ~objbox(bronze_scimitar, "The guard half draws his fearsome looking scimitar.", 250, 0, 0);
+            ~objbox(bronze_scimitar, "The guard half draws his fearsome looking scimitar.", 250, 0, divide(^objbox_height, 2));
             ~chatnpc("<p,happy>And we'll be pleased to clean the mess up after you've been dispatched.");
         case 3 :
             if_close;
@@ -213,7 +213,7 @@ if(inv_total(bank, metal_key) > 0) {
 mes("The mercenary captain drops a metal key on the floor. You quickly grab the key");
 mes("and add it to your inventory.");
 inv_add(inv, metal_key, 1);
-~objbox(metal_key, "The mercenary captain drops a metal key on the floor.|You quickly grab the key and add it to your inventory.", 250, 0, 0);
+~objbox(metal_key, "The mercenary captain drops a metal key on the floor.|You quickly grab the key and add it to your inventory.", 250, 0, divide(^objbox_height, 2));
 
 [proc,mercenary_capt_attack](boolean $npct)(boolean)
 if(%npc_attacking_uid = uid | %desertrescue >= ^desertrescue_killed_capt) {

@@ -650,7 +650,7 @@ if(last_useitem = regicide_barrel_empty) {
 p_arrivedelay;
 if(%regicide_quest < ^regicide_spoken_iorwerth2) {
     // typo intentional
-    ~objbox(limestone, "I see no reason put this in the furnace.", 250, 0, 0);
+    ~objbox(limestone, "I see no reason put this in the furnace.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 // https://youtu.be/wwJXlduVaxE?si=jDQIFE4TMqyDFFvO&t=513
@@ -811,7 +811,7 @@ if(npc_find(coord, regicide_good_elf3, 5, 0) = true) {
     if($val = 5) ~chatnpc("<p,neutral>There is much to explain and little time. You carry a message from Lord Iorwerth do you not.");
     if($val = 6) ~chatplayer("<p,neutral>Well you seem to know everything else so I'll not lie. Yes.");
     if($val = 7) ~chatnpc("<p,neutral>Good, we understand each other well. Now hand it here and find the truth of who your real employer is.");
-    if($val = 8) ~objbox(regicide_iorwerth_message, "You show the message to the elf, he moves his lips silently and the seal on the message is parted.", 250, 0, 0);
+    if($val = 8) ~objbox(regicide_iorwerth_message, "You show the message to the elf, he moves his lips silently and the seal on the message is parted.", 250, 0, divide(^objbox_height, 2));
     if($val = 9) {
         ~regicide_iowerth_message_scroll;
         p_pausebutton;

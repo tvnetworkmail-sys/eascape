@@ -83,11 +83,11 @@ if(oc_category(last_useitem) = mort_serum & compare(nc_name(npc_type),"Afflicted
 def_int $random = random(256);
 if ($random < 59) {
     inv_add(inv, coins, ~random_range(10, 20));
-    ~objbox(coins, "The local gives you some coins.", 250, 0, 0);
+    ~objbox(coins, "The local gives you some coins.", 250, 0, divide(^objbox_height, 2));
 } else if ($random < 85) {
     //Todo: Check if this has plurality
     inv_add(inv, swamppaste, ~random_range(1, 20));
-    ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, 0);
+    ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, divide(^objbox_height, 2));
 //Always says some for oil
 } else if ($random < 105) {
     inv_add(inv, oliveoil1, ~random_range(1, 3));
@@ -122,7 +122,7 @@ if ($random < 59) {
     }
 } else if ($random < 246) {
     inv_add(inv, hammer, 1);
-    ~objbox(hammer, "The local gives you a hammer.", 200, 0, 0);
+    ~objbox(hammer, "The local gives you a hammer.", 200, 0, divide(^objbox_height, 2));
 } else {
     def_int $amount = ~random_range(1, 3);
     inv_add(inv, vial_empty, $amount);
@@ -139,73 +139,73 @@ if ($random < 59) {
 
 // if ($random < 30) {
 //     inv_add(inv, coins, ~random_range(30, 40));
-//     ~objbox(coins, "The local gives you some coins.", 250, 0, 0);
+//     ~objbox(coins, "The local gives you some coins.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 46) {
 //     inv_add(inv, unidentified_tarromin, ~random_range(2, 5));
-//     ~objbox(unidentified_tarromin, "The local gives you some herbs.", 250, 0, 0);
+//     ~objbox(unidentified_tarromin, "The local gives you some herbs.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 60) {
 //     inv_add(inv, limestonebrick,  ~random_range(1, 5));
-//     ~objbox(limestonebrick, "The local gives you some limestone.", 250, 0, 0);
+//     ~objbox(limestonebrick, "The local gives you some limestone.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 74) {
 //     inv_add(inv, swamppaste, ~random_range(10, 35));
-//     ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, 0);
+//     ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 84) {
 //     inv_add(inv, oliveoil1, ~random_range(2, 5));
-//     ~objbox(oliveoil1, "The local gives you some olive oil.", 250, 0, 0);
+//     ~objbox(oliveoil1, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 91) {
 //     inv_add(inv, oliveoil2, ~random_range(2, 5));
-//     ~objbox(oliveoil2, "The local gives you some olive oil.", 250, 0, 0);
+//     ~objbox(oliveoil2, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 96) {
 //     inv_add(inv, oliveoil4, ~random_range(1, 3));
-//     ~objbox(oliveoil4, "The local gives you some olive oil.", 250, 0, 0);
+//     ~objbox(oliveoil4, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 101) {
 //     //todo: See if any type of logs have plurality check
 //     inv_add(inv, logs, ~random_range(1, 5));
-//     ~objbox(logs, "The local gives you some logs.", 250, 0, 0);
+//     ~objbox(logs, "The local gives you some logs.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 105) {
 //     inv_add(inv, oliveoil3, ~random_range(1, 3));
-//     ~objbox(oliveoil3, "The local gives you some olive oil.", 250, 0, 0);
+//     ~objbox(oliveoil3, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 109) {
 //     inv_add(inv, shadekey_bronze_bloodred, 1);
-//     ~objbox(shadekey_bronze_bloodred, "The local gives you a strange key.", 250, 0, 0);
+//     ~objbox(shadekey_bronze_bloodred, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 113) {
 //     inv_add(inv, oak_logs, ~random_range(1, 5));
-//     ~objbox(oak_logs, "The local gives you some oak logs.", 250, 0, 0);
+//     ~objbox(oak_logs, "The local gives you some oak logs.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 116) {
 //     inv_add(inv, shadekey_bronze_crimson, 1);
-//     ~objbox(shadekey_bronze_crimson, "The local gives you a strange key.", 250, 0, 0);
+//     ~objbox(shadekey_bronze_crimson, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 119) {
 //     inv_add(inv, shadekey_bronze_brown, 1);
-//     ~objbox(shadekey_bronze_brown, "The local gives you a strange key.", 250, 0, 0);
+//     ~objbox(shadekey_bronze_brown, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 121) {
 //     def_int $amount = ~random_range(1, 3);
 //     inv_add(inv, snail_corpse2, $amount);
 //     if($amount = 1) {
-//         ~objbox(snail_corpse2, "The local gives you a snail.", 250, 0, 0);
+//         ~objbox(snail_corpse2, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
 //     } else {
-//         ~objbox(snail_corpse2, "The local gives you some snails.", 250, 0, 0);
+//         ~objbox(snail_corpse2, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
 //     }
 // } else if ($random < 124) {
 //     def_int $amount = ~random_range(1, 3);
 //     inv_add(inv, snail_corpse1, $amount);
 //     if($amount = 1) {
-//         ~objbox(snail_corpse1, "The local gives you a snail.", 250, 0, 0);
+//         ~objbox(snail_corpse1, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
 //     } else {
-//         ~objbox(snail_corpse1, "The local gives you some snails.", 250, 0, 0);
+//         ~objbox(snail_corpse1, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
 //     }
 // } else if ($random < 126) {
 //     inv_add(inv, willow_logs, ~random_range(1, 5));
-//     ~objbox(willow_logs, "The local gives you some willow logs.", 250, 0, 0);
+//     ~objbox(willow_logs, "The local gives you some willow logs.", 250, 0, divide(^objbox_height, 2));
 // } else if ($random < 127) {
 //     inv_add(inv, maple_logs, ~random_range(1, 5));
-//     ~objbox(maple_logs, "The local gives you some maple logs.", 250, 0, 0);
+//     ~objbox(maple_logs, "The local gives you some maple logs.", 250, 0, divide(^objbox_height, 2));
 // } else {
 //     def_int $amount = ~random_range(1, 3);
 //     inv_add(inv, snail_corpse3, $amount);
 //     if($amount = 1) {
-//         ~objbox(snail_corpse3, "The local gives you a snail.", 250, 0, 0);
+//         ~objbox(snail_corpse3, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
 //     } else {
-//         ~objbox(snail_corpse3, "The local gives you some snails.", 250, 0, 0);
+//         ~objbox(snail_corpse3, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
 //     }
 // }
 

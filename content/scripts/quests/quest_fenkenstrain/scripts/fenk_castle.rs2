@@ -62,7 +62,7 @@ if ($choice = 1) {
 if (inv_total(inv, fenk_letter) = 0 & %fenk_wound_clock = 0) {
     ~fenk_give(fenk_letter);
     %fenk_wound_clock = 1;
-    ~objbox(fenk_letter, "As you wind the old clock a letter falls out. Judging by the thick covering of dust it must have been here for some time.", 250, 0, 0);
+    ~objbox(fenk_letter, "As you wind the old clock a letter falls out. Judging by the thick covering of dust it must have been here for some time.", 250, 0, divide(^objbox_height, 2));
 }
 mes("You wind the old clock.");
 
@@ -80,7 +80,7 @@ if (%fenk_unlocked_cavern = 1 | inv_total(inv, fenk_mausoleum_key) > 0) {
     return;
 }
 ~fenk_give(fenk_mausoleum_key);
-~objbox(fenk_mausoleum_key, "You take a key out of the chest.", 250, 0, 0);
+~objbox(fenk_mausoleum_key, "You take a key out of the chest.", 250, 0, divide(^objbox_height, 2));
 
 [oploc2,fenk_chest_open]
 mes("The hinges are filled with rust and won't budge.");
@@ -101,7 +101,7 @@ if (inv_total(inv, fenk_brush0) > 0) {
     return;
 }
 ~fenk_give(fenk_brush0);
-~objbox(fenk_brush0, "You find a garden brush in the cupboard.", 250, 0, 0);
+~objbox(fenk_brush0, "You find a garden brush in the cupboard.", 250, 0, divide(^objbox_height, 2));
 
 [oploc1,fenk_bookcase]
 if (%fenk_quest < ^fenk_body_parts) {
@@ -119,43 +119,43 @@ mes("It is a bookcase full of books."); // ours
 [label,fenk_east_bookcase]
 def_int $choice = ~p_choice4_header("Men are from Morytania, Women are from Lumbridge", 1, "Chimney Sweeping on a Budget", 2, "Handy Maggot Avoidance Techniques", 3, "My Family and Other Zombies", 4, "Which book would you like to read?");
 if ($choice = 1) {
-    ~objbox(fenk_journal, "You discover some fascinating insights into the mind of the male kind.", 250, 0, 0);
+    ~objbox(fenk_journal, "You discover some fascinating insights into the mind of the male kind.", 250, 0, divide(^objbox_height, 2));
 } else if ($choice = 2) {
     ~book("Chimney Sweeping on a Budget", "...that sometimes a sweep may find themselves brushless and without the funds to purchase the one tool that is most essential to their trade. What is a chimey sweep without his or her brush! In this kind of situation any normal long-handled brush might be a suitable replacement, altough when attaching extensions to the handle make sure to use something sturdy like wire, otherwise a sweep may find themselves losing their brush and livelyhood to the forces of gravity");
 } else if ($choice = 3) {
     sound_synth(bookcasedoor, 1, 0);
-    ~objbox(fenk_journal, "As you pull the book a hidden latch springs into place and the bookcase swings open, revealing a secret compartment.", 250, 0, 0);
+    ~objbox(fenk_journal, "As you pull the book a hidden latch springs into place and the bookcase swings open, revealing a secret compartment.", 250, 0, divide(^objbox_height, 2));
     if (inv_total(inv, fenk_obsidian_amulet) > 0 | inv_total(inv, fenk_star_amulet) > 0 | %fenk_coffin = 1) {
         ~mesbox("The secret compartment is empty.");
     } else {
         ~fenk_give(fenk_obsidian_amulet);
-        ~objbox(fenk_obsidian_amulet, "You find an obsidian amulet in the secret compartment.", 250, 0, 0);
+        ~objbox(fenk_obsidian_amulet, "You find an obsidian amulet in the secret compartment.", 250, 0, divide(^objbox_height, 2));
     }
 } else if ($choice = 4) {
     switch_int (random(4)) {
-        case 0 : ~objbox(fenk_journal, "The book is a mediocre read.", 250, 0, 0);
-        case 1 : ~objbox(fenk_journal, "This book is appallingly dull.", 250, 0, 0);
-        case 2 : ~objbox(fenk_journal, "This book is mildly amusing.", 250, 0, 0);
-        case default : ~objbox(fenk_journal, "This book is a fantastic read.", 250, 0, 0);
+        case 0 : ~objbox(fenk_journal, "The book is a mediocre read.", 250, 0, divide(^objbox_height, 2));
+        case 1 : ~objbox(fenk_journal, "This book is appallingly dull.", 250, 0, divide(^objbox_height, 2));
+        case 2 : ~objbox(fenk_journal, "This book is mildly amusing.", 250, 0, divide(^objbox_height, 2));
+        case default : ~objbox(fenk_journal, "This book is a fantastic read.", 250, 0, divide(^objbox_height, 2));
     }
 }
 
 [label,fenk_west_bookcase]
 def_int $choice = ~p_choice4_header("1001 Ways To Eat Fried Gizzards", 1, "Practical Gardening For The Headless", 2, "Human Taxidermy for Nincompoops", 3, "The Joy of Gravedigging", 4, "Which book would you like to read?");
 if ($choice = 1) {
-    ~objbox(fenk_journal, "This book leaves you contemplating vegetarianism.", 250, 0, 0);
+    ~objbox(fenk_journal, "This book leaves you contemplating vegetarianism.", 250, 0, divide(^objbox_height, 2));
 } else if ($choice = 2) {
-    ~objbox(fenk_journal, "This book has some very enlightening points to make, but you are at a loss to know how anyone without a head could possibly read it.", 250, 0, 0);
+    ~objbox(fenk_journal, "This book has some very enlightening points to make, but you are at a loss to know how anyone without a head could possibly read it.", 250, 0, divide(^objbox_height, 2));
 } else if ($choice = 3) {
-    ~objbox(fenk_journal, "This book seems to have been read hundreds of times, and has scribbles and formulae on every page. One such scribble says 'None good enough - have had to lock them in the caverns...'", 250, 0, 0);
+    ~objbox(fenk_journal, "This book seems to have been read hundreds of times, and has scribbles and formulae on every page. One such scribble says 'None good enough - have had to lock them in the caverns...'", 250, 0, divide(^objbox_height, 2));
 } else if ($choice = 4) {
     sound_synth(bookcasedoor, 1, 0);
-    ~objbox(fenk_journal, "As you pull the book a hidden latch springs into place and the bookcase swings open, revealing a secret compartment.", 250, 0, 0);
+    ~objbox(fenk_journal, "As you pull the book a hidden latch springs into place and the bookcase swings open, revealing a secret compartment.", 250, 0, divide(^objbox_height, 2));
     if (inv_total(inv, fenk_marble_amulet) > 0 | inv_total(inv, fenk_star_amulet) > 0 | %fenk_coffin = 1) {
         ~mesbox("The secret compartment is empty.");
     } else {
         ~fenk_give(fenk_marble_amulet);
-        ~objbox(fenk_marble_amulet, "You find a marble amulet in the secret compartment.", 250, 0, 0);
+        ~objbox(fenk_marble_amulet, "You find a marble amulet in the secret compartment.", 250, 0, divide(^objbox_height, 2));
     }
 }
 
@@ -239,7 +239,7 @@ if (last_useitem ! fenk_star_amulet | loc_coord ! 0_55_55_58_7) {
 }
 inv_del(inv, fenk_star_amulet, 1);
 %fenk_coffin = 1;
-~objbox(fenk_star_amulet, "The star amulet fits exactly into the depression on the coffin lid.", 250, 0, 0);
+~objbox(fenk_star_amulet, "The star amulet fits exactly into the depression on the coffin lid.", 250, 0, divide(^objbox_height, 2));
 
 [oploc1,fenk_grave] if (~fenk_grave_read(loc_coord) = false) mes("Nothing interesting happens.");
 [oploc1,fenk_grave_poor] if (~fenk_grave_read(loc_coord) = false) mes("Nothing interesting happens.");
@@ -269,16 +269,16 @@ if (%fenk_quest < ^fenk_body_parts) {
 }
 if (coord = 0_54_55_47_56 & inv_total(inv, fenk_torso) = 0 & %fenk_torso = 0) {
     ~fenk_give(fenk_torso);
-    ~objbox(fenk_torso, "... and you unearth a torso.", 250, 0, 0);
+    ~objbox(fenk_torso, "... and you unearth a torso.", 250, 0, divide(^objbox_height, 2));
 } else if (coord = 0_54_55_48_56 & inv_total(inv, fenk_arms) = 0 & %fenk_arms = 0) {
     ~fenk_give(fenk_arms);
-    ~objbox(fenk_arms, "... and you unearth a pair of arms.", 250, 0, 0);
+    ~objbox(fenk_arms, "... and you unearth a pair of arms.", 250, 0, divide(^objbox_height, 2));
 } else if (coord = 0_54_55_49_56 & inv_total(inv, fenk_legs) = 0 & %fenk_legs = 0) {
     ~fenk_give(fenk_legs);
-    ~objbox(fenk_legs, "... and you unearth a pair of legs.", 250, 0, 0);
+    ~objbox(fenk_legs, "... and you unearth a pair of legs.", 250, 0, divide(^objbox_height, 2));
 } else if (coord = 0_56_54_24_34 & inv_total(inv, fenk_head_empty) = 0 & inv_total(inv, fenk_head_full) = 0 & %fenk_head = 0) {
     ~fenk_give(fenk_head_empty);
-    ~objbox(fenk_head_empty, "... and you unearth a decapitated head.", 250, 0, 0);
+    ~objbox(fenk_head_empty, "... and you unearth a decapitated head.", 250, 0, divide(^objbox_height, 2));
 } else {
     mes("...but the grave is empty.");
 }
@@ -405,7 +405,7 @@ if (last_useitem ! fenk_brush3) {
 }
 if (loc_coord = 1_55_55_24_35 & inv_total(inv, fenk_lightning_mould) = 0 & %fenk_quest < ^fenk_creature_alive) {
     ~fenk_give(fenk_lightning_mould);
-    ~objbox(fenk_lightning_mould, "A lightning conductor mould falls down out of the chimney.", 250, 0, 0);
+    ~objbox(fenk_lightning_mould, "A lightning conductor mould falls down out of the chimney.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 mes("You give the chimney a jolly good clean out.");
@@ -425,7 +425,7 @@ if (inv_total(inv, fenk_marble_amulet) = 0 | inv_total(inv, fenk_obsidian_amulet
 inv_del(inv, fenk_marble_amulet, 1);
 inv_del(inv, fenk_obsidian_amulet, 1);
 inv_add(inv, fenk_star_amulet, 1);
-~objbox(fenk_star_amulet, "The marble and obsidian amulets snap together tightly to form a six-pointed amulet.", 250, 0, 0);
+~objbox(fenk_star_amulet, "The marble and obsidian amulets snap together tightly to form a six-pointed amulet.", 250, 0, divide(^objbox_height, 2));
 
 [opheldu,fenk_head_empty] @fenk_fill_head;
 [opheldu,fenk_brain] @fenk_fill_head;
@@ -441,7 +441,7 @@ if (last_useitem ! fenk_head_empty & last_useitem ! fenk_brain) {
 inv_del(inv, fenk_head_empty, 1);
 inv_del(inv, fenk_brain, 1);
 inv_add(inv, fenk_head_full, 1);
-~objbox(fenk_head_full, "You squeeze the pickled brain into the decapitated head.", 250, 0, 0);
+~objbox(fenk_head_full, "You squeeze the pickled brain into the decapitated head.", 250, 0, divide(^objbox_height, 2));
 
 [opheldu,fenk_cane]
 switch_obj (last_useitem) {

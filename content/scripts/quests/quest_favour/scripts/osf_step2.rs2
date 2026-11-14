@@ -66,7 +66,7 @@ def_string $name = lowercase(oc_name($cut));
 if (testbit(%onesmallfavourmulti, add($i, 1)) = ^false) {
     %onesmallfavourmulti = setbit(%onesmallfavourmulti, add($i, 1));
     ~osf_give($uncut);
-    ~objbox($uncut, "You find an uncut <$name> in the landing light.", 250, 0, 0);
+    ~objbox($uncut, "You find an uncut <$name> in the landing light.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if (testbit(%onesmallfavourmulti, add($i, 9)) = ^true) {
@@ -79,7 +79,7 @@ if (inv_total(inv, $cut) = 0) {
 }
 inv_del(inv, $cut, 1);
 %onesmallfavourmulti = setbit(%onesmallfavourmulti, add($i, 9));
-~objbox($cut, "You place the <$name> in the landing light. It seems to look right.", 250, 0, 0);
+~objbox($cut, "You place the <$name> in the landing light. It seems to look right.", 250, 0, divide(^objbox_height, 2));
 def_int $fixed = ~osf_lights_fixed;
 if ($fixed = 8) {
     %onesmallfavour = 125;
@@ -110,7 +110,7 @@ switch_int (~p_choice3("I need a chisel to fix these crystals.", 1, $last, 2, "S
             ~chatplayer("<p,neutral>Okay, I'll buy a chisel for 10 coins.");
             inv_del(inv, coins, 10);
             ~osf_give(chisel);
-            ~objbox(chisel, "You pay ten coins for the chisel.", 250, 0, 0);
+            ~objbox(chisel, "You pay ten coins for the chisel.", 250, 0, divide(^objbox_height, 2));
             ~chatnpc("<p,happy>Okay, many thanks for your custom.");
         } else {
             ~chatplayer("<p,neutral>No, I won't buy the chisel.");
@@ -169,7 +169,7 @@ if (%onesmallfavour = 130) {
     inv_del(inv, favour_matress_stodgy, 1);
     ~osf_give(favour_matress_comfy);
     %onesmallfavour = 135;
-    ~objbox(favour_matress_comfy, "Rantz gives you a filled comfy mattress.", 250, 0, 0);
+    ~objbox(favour_matress_comfy, "Rantz gives you a filled comfy mattress.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>De're yous goes creature...da fluffsies sack is full now.");
     ~chatplayer("<p,happy>Great, I think Tindel will get a good night's rest on this.");
     return(true);
@@ -199,7 +199,7 @@ if (~p_choice2("Ok, I'll give you 200 bright pretties.", 1, "No way am I giving 
     inv_del(inv, coins, 200);
     inv_del(inv, favour_matress_stodgy, 1);
     ~osf_give(favour_matress_comfy);
-    ~objbox(favour_matress_comfy, "Rantz gives you a new comfy mattress.", 250, 0, 0);
+    ~objbox(favour_matress_comfy, "Rantz gives you a new comfy mattress.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>De're yous goes creatures...dere's yous comfy fluffsies sack.");
 } else {
     ~chatplayer("<p,angry>No way am I giving you 200 bright pretties.");
@@ -216,7 +216,7 @@ if (%onesmallfavour = 135 & inv_total(inv, favour_matress_comfy) > 0) {
     inv_del(inv, favour_matress_comfy, 1);
     ~osf_give(favour_iron_oxide);
     %onesmallfavour = 140;
-    ~objbox(favour_iron_oxide, "You hand Tindel the comfy mattress. Tindel gives you the iron oxide.", 250, 0, 0);
+    ~objbox(favour_iron_oxide, "You hand Tindel the comfy mattress. Tindel gives you the iron oxide.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>Great! Here's the iron oxide I promised you!");
     return(true);
 }
@@ -239,7 +239,7 @@ if (~p_choice2("Okay, I'll buy it.", 1, "No way am I paying 200 coins for a bott
     ~chatplayer("<p,neutral>Okay, I'll buy it.");
     inv_del(inv, coins, 200);
     ~osf_give(favour_iron_oxide);
-    ~objbox(favour_iron_oxide, "You pay 200 coins for another bottle of rust.", 250, 0, 0);
+    ~objbox(favour_iron_oxide, "You pay 200 coins for another bottle of rust.", 250, 0, divide(^objbox_height, 2));
 } else {
     ~chatplayer("<p,angry>No way am I paying 200 coins for a bottle of rust!");
     ~chatnpc("<p,neutral>Suit yourself... I have plenty of other customers.");
@@ -256,7 +256,7 @@ if (%onesmallfavour = 140) {
     inv_del(inv, favour_iron_oxide, 1);
     ~mesbox("Cromperty takes the iron oxide and starts preparing a spell.");
     ~osf_give(favour_animate_rock);
-    ~objbox(favour_animate_rock, "After some time, he comes back and gives you an animate rock spell.", 250, 0, 0);
+    ~objbox(favour_animate_rock, "After some time, he comes back and gives you an animate rock spell.", 250, 0, divide(^objbox_height, 2));
     %onesmallfavour = 145;
     ~chatnpc("<p,neutral>Just cast this in the room, it should have her out of that rock in a jiffy! Good luck with your exploits...now, where was I with that wranklin severance device...");
     return(true);

@@ -11,7 +11,7 @@ switch_int(%grandtree) {
             ~mesbox("You still can't understand the mage.|King Narnode said to give him the bark sample.");
             return;
         }
-        ~objbox(grandtree_barksample, "You give the bark sample to Hazelmere.", 250, 0, 0);
+        ~objbox(grandtree_barksample, "You give the bark sample to Hazelmere.", 250, 0, divide(^objbox_height, 2));
         ~mesbox("The mage carefully examines the sample.");
         inv_del(inv, grandtree_barksample, 1);
         %grandtree = ^grandtree_spoken_hazelmere;
@@ -32,7 +32,7 @@ if(~obj_gettotal(grandtree_scroll) > 0) {
 ~chatplayer("<p,neutral>Can you write this down and I'll try and translate it?");
 ~chatnpc("<p,quiz>Blah, blah?");
 ~mesbox("You make a writing motion.|The mage scribbles something down on a scroll.");
-~objbox(grandtree_scroll, "Hazelmere has given you the scroll.", 250, 0, 0);
+~objbox(grandtree_scroll, "Hazelmere has given you the scroll.", 250, 0, divide(^objbox_height, 2));
 inv_add(inv, grandtree_scroll, 1);
 
 [label,trail_hazelmere]
@@ -44,4 +44,4 @@ if(inv_total(inv, trail_clue_medium_anagram001_challenge) > 0) {
 ~chatplayer("<p,confused>What?");
 ~chatnpc("<p,neutral>Blah, blah.");
 inv_add(inv, trail_clue_medium_anagram001_challenge, 1);
-~objbox(trail_clue_medium_anagram001_challenge, "Hazelmere has given you a challenge scroll!", 250, 0, 0);
+~objbox(trail_clue_medium_anagram001_challenge, "Hazelmere has given you a challenge scroll!", 250, 0, divide(^objbox_height, 2));

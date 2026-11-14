@@ -52,7 +52,7 @@ if(%mm_monkey_child = ^mm_not_started) {
         %mm_monkey_child = ^monkey_child_received_talisman;
         %mm_monkey_child_waiting_for_talisman = ^true;
         inv_add(inv, mm_monkey_talisman, 1);
-        ~objbox(mm_monkey_talisman, "The monkey child gives you some kind of talisman.", 250, 0, 0);
+        ~objbox(mm_monkey_talisman, "The monkey child gives you some kind of talisman.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     ~chatnpc("<p,sad>No, not yet... she said she's too busy dealing with something called humans.");
@@ -96,7 +96,7 @@ if(%mm_monkey_child = ^mm_not_started) {
     %mm_monkey_child = ^monkey_child_received_talisman;
     %mm_monkey_child_waiting_for_talisman = ^true;
     inv_add(inv, mm_monkey_talisman, 1);
-    ~objbox(mm_monkey_talisman, "The monkey child gives you some kind of talisman.", 250, 0, 0);
+    ~objbox(mm_monkey_talisman, "The monkey child gives you some kind of talisman.", 250, 0, divide(^objbox_height, 2));
 }
 
 [opnpcu,mm_monkey_child]
@@ -116,7 +116,7 @@ if(%mm_monkey_child > ^monkey_child_asked_who) {
         inv_del(inv, mm_monkey_talisman, 1);
         %mm_monkey_child_waiting_for_talisman = ^false;
         ~chatnpc("<p,happy>Thank you uncle - I love you!");
-        ~objbox(mm_monkey_in_backpack, "The monkey child gives you a hug!", 250, 0, 0);
+        ~objbox(mm_monkey_in_backpack, "The monkey child gives you a hug!", 250, 0, divide(^objbox_height, 2));
         return;
     }
     ~chatnpc("<p,neutral>I have no use for that.");
@@ -140,7 +140,7 @@ if(inv_total(inv, banana) > 4) {
     %mm_monkey_child = ^monkey_child_given_bananas;
     %mm_monkey_child_waiting_for_talisman = ^true;
     settimer(mm_give_child_toy, 100);
-    ~objbox(banana, "You give the monkey child your bananas.", 250, 0, 0);
+    ~objbox(banana, "You give the monkey child your bananas.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>Aunty will be so happy!");
     return;
 }

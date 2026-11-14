@@ -195,7 +195,7 @@ switch_int(%druidspirit) {
         inv_add(inv, silver_sickle_blessed, 1);
         p_delay(2);
         // https://web.archive.org/web/20060907161158im_/http://runeweb.net/rathofdoom/quests/naturespirit/6.png
-        ~objbox(silver_sickle_blessed, "Your sickle has been blessed!||@blu@~ If you lose the blessed sickle, you can bless ~|@blu@~ a new sickle by dipping it in the grotto waters. ~", 250, 0, 0);
+        ~objbox(silver_sickle_blessed, "Your sickle has been blessed!||@blu@~ If you lose the blessed sickle, you can bless ~|@blu@~ a new sickle by dipping it in the grotto waters. ~", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Now you can go forth and make the swamp bloom. Collect natures bounty to fill a druids pouch. So armed will the Ghasts be bound to you until, you flee or they are defeated.");
         ~chatnpc("<p,neutral>Before I can make this grotto into an Altar of Nature, I need to be sure that the Ghasts will be kept at bay. Go forth into Mort Myre and slay three Ghasts. You'll be releasing their souls from Mort Myre.");
         inv_add(inv, druid_pouch_empty, 1);
@@ -289,9 +289,9 @@ if(last_useitem = mirror) {
             ~chatnpc("<p,sad>Yes, I know, I'm already dead! Thanks for reminding me.");
             return;
         }
-        ~objbox(mirror, "You use the mirror on the spirit of the dead Filliman Tarlock.", 250, 0, 0);
+        ~objbox(mirror, "You use the mirror on the spirit of the dead Filliman Tarlock.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,neutral>Here take a look at this, perhaps you can see that you're utterly transparent now!");
-        ~objbox(mirror, "The spirit of Filliman reaches forwards and takes the mirror.", 250, 0, 0);
+        ~objbox(mirror, "The spirit of Filliman reaches forwards and takes the mirror.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,quiz>Well, that is the most peculiar thing I've ever experienced. This mirror must somehow be dysfunctional. Strange how well it reflects the stagnant swamp behind me, but there is nothing of my own visage apparent.");
         ~chatplayer("<p,neutral>That's because you're dead! Dead as a door nail.. Deader in fact... You bear a remarkable resemblance to worm bait! Err.. No offence...");
         ~chatnpc("<p,sad>I think you might be right my friend, though I still feel very much alive. It is strange how I still come to be here and yet I've not turned into a Ghast.");
@@ -312,11 +312,11 @@ if(last_useitem = mirror) {
             inv_del(inv, filliman_journal, 1);
             return;
         }
-        ~objbox(filliman_journal, "You give the journal to Filliman Tarlock.", 250, 0, 0);
+        ~objbox(filliman_journal, "You give the journal to Filliman Tarlock.", 250, 0, divide(^objbox_height, 2));
         ~chatplayer("<p,neutral>Here, I found this, maybe you can use it?");
         ~chatnpc("<p,happy>My journal! That should help to collect my thoughts.");
         // space here is correct
-        ~objbox(filliman_journal, "~ The spirit starts leafing through the journal. ~|~ He seems quite distant as he regards the pages. ~ |~ After some time the druid faces you again. ~", 250, 0, 0);
+        ~objbox(filliman_journal, "~ The spirit starts leafing through the journal. ~|~ He seems quite distant as he regards the pages. ~ |~ After some time the druid faces you again. ~", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,sad>It's all coming back to me now. It looks like I came to a violent and bitter end but that's not important now. I just have to figure out what I am going to do now?");
         inv_del(inv, filliman_journal, 1);
         %druidspirit = ^druidspirit_given_journal;
@@ -348,7 +348,7 @@ if(last_useitem = mirror) {
 ~chatnpc("<p,sad>Well, the book says, that I need, and I quote:-|'Something with faith', 'something from nature' and |'something of the 'spirit-to-become' freely given'. Hmm, I|know how to get something from nature.");
 ~chatplayer("<p,neutral>Well, that does seem a bit vague.");
 ~chatnpc("<p,sad>Hmm, it does and I could understand if you didn't want to help. However, if you could perhaps at least get the item from nature, that would be a start. Perhaps we can figure out the rest as we go along.");
-~objbox(bloom_spell, "The druid produces a small sheet of papyrus with some writing on it.", 250, 0, 0);
+~objbox(bloom_spell, "The druid produces a small sheet of papyrus with some writing on it.", 250, 0, divide(^objbox_height, 2));
 %druidspirit = ^druidspirit_received_spell;
 inv_add(inv, bloom_spell, 1);
 ~chatnpc("<p,sad>This spell needs to be cast in the swamp after you have been blessed. I'm afraid you'll need to go to the temple to the North and ask a member of the clergy to bless you.");
@@ -363,7 +363,7 @@ if(inv_total(inv, bloom_spell) > 0) {
 }
 ~chatnpc("<p,neutral>Sure, but please look after this one.");
 inv_add(inv, bloom_spell, 1);
-~objbox(bloom_spell, "The spirit of Filliman Tarlock gives you another bloom spell.", 250, 0, 0);
+~objbox(bloom_spell, "The spirit of Filliman Tarlock gives you another bloom spell.", 250, 0, divide(^objbox_height, 2));
 
 [label,filliman_whatneed]
 ~chatplayer("<p,neutral>What are the things that are needed again?");

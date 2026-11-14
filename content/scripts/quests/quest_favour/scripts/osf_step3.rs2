@@ -110,7 +110,7 @@ if (%onesmallfavour ! 195) return(false);
 ~chatnpc("<p,happy>I'll do better than that! I'll show you how to make an airtight pot! First of all, you'll need some clay...here's some I have spare!");
 ~chatnpc("<p,neutral>Now, while pots are quite easy to make, lids are a bit different. They have to be quite precise to fit the pot exactly, which is why you have to be quite experienced to make them.");
 ~osf_give(clay);
-~objbox(clay, "Tassie gives you some clay!", 250, 0, 0);
+~objbox(clay, "Tassie gives you some clay!", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>Ok then, just use it on the wheel over there!");
 %onesmallfavour = 200;
 ~mesbox("Tassie shows you how to make pot lids.");
@@ -140,7 +140,7 @@ if (%onesmallfavour = 200) {
     ~osf_give(favour_breathing_salts);
     %onesmallfavour = 205;
     ~chatnpc("<p,happy>That's great! Many thanks friend...here's your breathing salts!");
-    ~objbox(favour_breathing_salts, "The Apothecary gives you a pot of breathing salts.", 250, 0, 0);
+    ~objbox(favour_breathing_salts, "The Apothecary gives you a pot of breathing salts.", 250, 0, divide(^objbox_height, 2));
     return(true);
 }
 if (%onesmallfavour ! 205) return(false);
@@ -167,7 +167,7 @@ if (~p_choice2("Ok, I'll buy it!", 1, "No way am I buying that!", 2) = 1) {
     inv_del(inv, favour_airtight_pot, 1);
     inv_del(inv, coins, 200);
     ~osf_give(favour_breathing_salts);
-    ~objbox(favour_breathing_salts, "The Apothecary gives you the breathing salts.", 250, 0, 0);
+    ~objbox(favour_breathing_salts, "The Apothecary gives you the breathing salts.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>Thanks for your custom!");
 } else {
     ~chatplayer("<p,angry>No way am I buying that!");
@@ -275,7 +275,7 @@ if (~p_choice2("Ok, I'll pay, here's the pigeon cages and the gold.", 1, "No way
 inv_del(inv, coins, $cost);
 inv_add(inv, favour_chicken_cage, $lost);
 ~mesbox("You hand over the pigeon cages and <tostring($cost)> gold coins.");
-~objbox(favour_chicken_cage, "Horvik hands back the chicken cages.", 250, 0, 0);
+~objbox(favour_chicken_cage, "Horvik hands back the chicken cages.", 250, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,happy>There you go then!");
 ~chatplayer("<p,happy>Many thanks.");
 return(true);
@@ -358,7 +358,7 @@ if (%onesmallfavour = 230) {
     ~chatnpc("<p,laugh>Well....yes...I was....actually!");
     ~osf_give(favour_jungleforesteraxe_sharp);
     %onesmallfavour = 235;
-    ~objbox(favour_jungleforesteraxe_sharp, "Brian hands you the sharpened axe.", 250, 0, 0);
+    ~objbox(favour_jungleforesteraxe_sharp, "Brian hands you the sharpened axe.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,laugh>Here you go, here's your axe! And very many thanks for your help and a good laugh! You should have seen your face! Oh what a picture!");
     return(true);
 }
@@ -389,7 +389,7 @@ if (%onesmallfavour = 235 & inv_total(inv, favour_jungleforesteraxe_sharp) > 0) 
     inv_del(inv, favour_jungleforesteraxe_sharp, 1);
     ~osf_give(favour_mahogany_log);
     %onesmallfavour = 240;
-    ~objbox(favour_mahogany_log, "The jungle forester shows you the red mahogany log.", 250, 0, 0);
+    ~objbox(favour_mahogany_log, "The jungle forester shows you the red mahogany log.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>Okay, thanks for getting my axe sharpened for me!");
     return(true);
 }
@@ -406,7 +406,7 @@ if (~p_choice2("Okay, here's 200 coins for some red mahogany.", 1, "I won't pay 
     ~chatplayer("<p,neutral>Okay, here's 200 coins for some red mahogany.");
     inv_del(inv, coins, 200);
     ~osf_give(favour_mahogany_log);
-    ~objbox(favour_mahogany_log, "The jungle forester gives you a red mahogany log.", 250, 0, 0);
+    ~objbox(favour_mahogany_log, "The jungle forester gives you a red mahogany log.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,happy>Many thanks my friend!");
 } else {
     ~chatplayer("<p,angry>I won't pay you 200 coins for a piece of wood!");
@@ -436,7 +436,7 @@ if (~p_choice2("Here's the red mahogany you asked for.", 1, "Tell me about this 
 ~chatnpc("<p,neutral>Well, I only asked you to do me one small favour...");
 ~chatplayer("<p,sad>Groan! Yeah, so did everyone else!");
 ~chatnpc("<p,neutral>Oh....ok, I guess I could offer you these lamps...I'm not sure what they're worth, but you can have them.");
-~objbox(thosf_reward_lamp, "Yanni offers you two unusual looking lamps.", 250, 0, 0);
+~objbox(thosf_reward_lamp, "Yanni offers you two unusual looking lamps.", 250, 0, divide(^objbox_height, 2));
 inv_del(inv, favour_mahogany_log, 1);
 ~osf_complete;
 return(true);

@@ -23,7 +23,7 @@ if(%mm_main = ^mm_defeated_demon) {
     ~chatplayer("<p,neutral>They all live - we suffered no casualties.");
     ~chatnpc("<p,quiz>'We', <displayname()>?");
     ~chatplayer("<p,neutral>I, uh, I'm part of the 10th squad now. I even have the sigil.");
-    if(inv_total(inv, mm_sigil) > 0 | inv_total(worn, mm_sigil) > 0) ~objbox(mm_sigil, "You show King Narnode your sigil.", 250, 0, 0);
+    if(inv_total(inv, mm_sigil) > 0 | inv_total(worn, mm_sigil) > 0) ~objbox(mm_sigil, "You show King Narnode your sigil.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,neutral>Well, now. It appears I cannot argue with that. Garkor obviously thinks highly of you, as do I.");
     if_close;
     %mm_main = ^mm_reported_narnode;
@@ -44,7 +44,7 @@ if(%mm_narnode = ^narnode_received_orders) {
         p_delay(3);
         %mm_narnode = ^narnode_received_orders;
         inv_add(inv, mm_narnode_orders, 1);
-        ~objbox(mm_narnode_orders, "Narnode hands you some handwritten orders.", 250, 0, 0);
+        ~objbox(mm_narnode_orders, "Narnode hands you some handwritten orders.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     ~chatnpc("<p,quiz>How goes the mission?");
@@ -129,7 +129,7 @@ switch_int(~p_choice2_header("Yes", 1, "No", 2, "Start Monkey Madness?")) {
         ~chatplayer("<p,neutral>Ok, I'll do it.");
         %mm_narnode = ^narnode_given_seal;
         inv_add(inv, mm_gnome_royal_seal, 1);
-        ~objbox(mm_gnome_royal_seal, "Narnode hands you a copy of the Royal Seal.", 250, 0, 0);
+        ~objbox(mm_gnome_royal_seal, "Narnode hands you a copy of the Royal Seal.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Thank you very much. You may need this Royal Seal to identify yourself as my envoy.");
         ~chatnpc("<p,neutral>Please report to me as soon as you have any information.");
         if_close;
@@ -165,7 +165,7 @@ while($op ! null) {
         ~chatnpc("<p,angry>What?! Do you realise the consequences if it falls into the wrong hands?");
         ~chatnpc("<p,neutral>However, this mission is of paramount importance. I shall give you a spare in the meantime.");
         inv_add(inv, mm_gnome_royal_seal, 1);
-        ~objbox(mm_gnome_royal_seal, "Narnode hands you a copy of the Royal Seal.", 250, 0, 0);
+        ~objbox(mm_gnome_royal_seal, "Narnode hands you a copy of the Royal Seal.", 250, 0, divide(^objbox_height, 2));
     } else if($op = 3) {
         ~chatplayer("<p,neutral>I'll be back later.");
         return;
@@ -197,6 +197,6 @@ mes("Narnode begins to write strange glyphs on a scroll of paper.");
 p_delay(3);
 %mm_narnode = ^narnode_received_orders;
 inv_add(inv, mm_narnode_orders, 1);
-~objbox(mm_narnode_orders, "Narnode hands you some handwritten orders.", 250, 0, 0);
+~objbox(mm_narnode_orders, "Narnode hands you some handwritten orders.", 250, 0, divide(^objbox_height, 2));
 ~chatplayer("<p,quiz>Where will I find Daero?");
 ~chatnpc("<p,neutral>You will find him attending to business somewhere on the Grand Tree.");

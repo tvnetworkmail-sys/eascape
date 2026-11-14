@@ -9,7 +9,7 @@ if(%mm_narnode < ^narnode_received_orders) {
 if(%mm_main = ^mm_complete_training) {
     ~chatplayer("<p,neutral>I need to return to Crash Island.");
     ~chatnpc("<p,neutral>You know the routine...");
-    ~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, 0);
+    ~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, divide(^objbox_height, 2));
     ~daero_move_hangar;
     return;
 }
@@ -107,7 +107,7 @@ if(inv_total(inv, mm_narnode_orders) = 0) {
 }
 %mm_daero = ^daero_given_orders;
 inv_del(inv, mm_narnode_orders, 1);
-~objbox(mm_narnode_orders, "You hand King Narnode's orders to Daero.", 250, 0, 0);
+~objbox(mm_narnode_orders, "You hand King Narnode's orders to Daero.", 250, 0, divide(^objbox_height, 2));
 @mm_daero_p3;
 
 [label,mm_daero_p3]
@@ -211,7 +211,7 @@ switch_int(~p_choice2("Who is it?", 1, "I work better on my own...", 2)) {
         ~chatnpc("<p,neutral>Tough. You will be working with Flight Commander Waydar.");
 }
 ~chatnpc("<p,neutral>We must go now and meet Waydar. For security reasons I must ask you to wear a blindfold.");
-~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, 0);
+~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, divide(^objbox_height, 2));
 %mm_daero = ^daero_left_grandtree;
 ~daero_move_hangar;
 
@@ -220,7 +220,7 @@ switch_int(~p_choice2("Who is it?", 1, "I work better on my own...", 2)) {
 switch_int(~p_choice2("Yes", 1, "No", 2)) {
     case 1 :
         ~chatplayer("<p,neutral>Yes please.");
-        ~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, 0);
+        ~objbox(eye_patch, "You wear the blindfold Daero hands you.", 250, 0, divide(^objbox_height, 2));
         ~daero_move_hangar;
     case 2 :
         ~chatplayer("<p,neutral>Not right now, thanks.");

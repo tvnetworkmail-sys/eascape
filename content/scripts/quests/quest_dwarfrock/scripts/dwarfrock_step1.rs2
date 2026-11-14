@@ -255,7 +255,7 @@ if ($s = ^bar_find_pages) {
     inv_del(inv, dwarf_rock_pagex3, 1);
     ~bar_give(dwarf_rock_book);
     %dwarfrock_quest = ^bar_have_book;
-    ~objbox(dwarf_rock_book, "You hand over the pages to Rolad.", 250, 0, 0);
+    ~objbox(dwarf_rock_book, "You hand over the pages to Rolad.", 250, 0, divide(^objbox_height, 2));
     ~chatnpc("<p,neutral>There you go... You will give it back when you've finished with it, won't you? I'd really like to study it in more detail some time.");
     if (~p_choice2("Of course.", 1, "Of course. (lie)", 2) = 1) {
         ~chatplayer("<p,happy>Of course, I'd be happy to!");
@@ -326,12 +326,12 @@ if ($n = 2) $item = dwarf_rock_pagex2;
 if ($n = 3) $item = dwarf_rock_pagex3;
 if (inv_freespace(inv) = 0) {
     inv_dropitem(inv, coord, $item, 1, 200);
-    ~objbox($page, append($text, " Unfortunately, you can't carry it and are forced to drop it on the ground."), 250, 0, 0);
+    ~objbox($page, append($text, " Unfortunately, you can't carry it and are forced to drop it on the ground."), 250, 0, divide(^objbox_height, 2));
 } else {
     inv_add(inv, $item, 1);
-    ~objbox($page, $text, 250, 0, 0);
+    ~objbox($page, $text, 250, 0, divide(^objbox_height, 2));
 }
-if ($n = 3) ~objbox(dwarf_rock_pagex3, "You've found all three of Rolad's missing pages. Return them to him so he can put them back in his book.", 250, 0, 0);
+if ($n = 3) ~objbox(dwarf_rock_pagex3, "You've found all three of Rolad's missing pages. Return them to him so he can put them back in his book.", 250, 0, divide(^objbox_height, 2));
 
 // a scorpion's death (hooked in npc_combat.rs2's default death)
 [queue,bar_scorpion_page]

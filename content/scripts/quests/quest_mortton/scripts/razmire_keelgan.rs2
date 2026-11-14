@@ -56,7 +56,7 @@ if(oc_category(last_useitem) = mort_serum) {
         inv_setslot(inv, $last_useslot, oc_param($last_useitem, next_obj_stage), 1);
         def_int $count = ~random_range(180,220);
         inv_add(inv, coins, $count);
-        ~objbox(coins,"Razmire gives you <tostring($count)> gold coins.", 250, 0, 0);
+        ~objbox(coins,"Razmire gives you <tostring($count)> gold coins.", 250, 0, divide(^objbox_height, 2));
     } else {
         ~chatnpc("<p,happy>You've already used the permanent serum on me, you|don't need to use that any more.");
     }
@@ -105,7 +105,7 @@ if(%morttonquest < ^mortton_kill_shades) {
     } else {
         inv_del(inv, shade_bones1, 2);
         %morttonquest = ^mortton_shades_to_razmire;
-        ~objbox(shade_bones1, "Razmire takes two Shade remains.", 250, 0, 0);
+        ~objbox(shade_bones1, "Razmire takes two Shade remains.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,happy>Great, I'll experiment on these! I think that Ulsquire|might be keen to see some shade remains, if you take|some over to him, he can possibly give you some extra|information about them.");
         ~chatnpc("<p,happy>Now that you've slayed some of those nasty shades, I|feel motivated to help you out, I can trade with you|now if you like.");
         @razmire_store_selection;

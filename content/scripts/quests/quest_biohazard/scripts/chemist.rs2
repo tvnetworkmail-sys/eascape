@@ -10,7 +10,7 @@ if(%regicide_quest > ^regicide_spoken_iorwerth2 & %regicide_quest < ^regicide_sp
     ~chatplayer("<p,happy>Good day. I was hoping you could help me with a formula I found in a book.");
     if(inv_total(inv, regicide_alchemy) > 0) {
         ~chatnpc("<p,neutral>A formula, you say? Let me see that!");
-        ~objbox(regicide_alchemy, "The chemist takes the book and starts leafing through the pages.", 250, 0, 0);
+        ~objbox(regicide_alchemy, "The chemist takes the book and starts leafing through the pages.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Yes... yessss... Well, I guess you'll be wanting to use the old still.");
         ~chatplayer("<p,happy>Huh?");
         %regicide_bits = setbit(%regicide_bits, ^regicide_chemist_chat);

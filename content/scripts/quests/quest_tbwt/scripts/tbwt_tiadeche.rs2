@@ -36,7 +36,7 @@ if (%tbwt_tiadeche = ^tbwt_tiadeche_return_when_caught_karambwan) { // Only appl
     } else if (last_useitem = tbwt_raw_karambwanji) {
         ~chatplayer("<p,neutral>I've been told that the Karambwan feed only on the Karambwanji. This will make good bait.");
         inv_del(inv, tbwt_raw_karambwanji, 1);
-        ~objbox(tbwt_raw_karambwanji, "You hand over a raw Karambwanji to Tiadeche.", 250, 0, 0);
+        ~objbox(tbwt_raw_karambwanji, "You hand over a raw Karambwanji to Tiadeche.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,quiz>The Holy Friend? Bwana, it is sacrilege to feed these fish to Karambwan!");
         ~chatplayer("<p,neutral>Just try it.");
         if_close;
@@ -84,7 +84,7 @@ if (%tbwt_tiadeche = ^tbwt_tiadeche_return_when_caught_karambwan) { // Only appl
         if ($choice = 1) { // Yes
             inv_add(inv, tbwt_raw_karambwan, 1);
             %tbwt_flags = setbit(%tbwt_flags, ^tbwt_tiadeche_received_karambwan);
-            ~objbox(tbwt_raw_karambwan, "Tiadeche hands you his first catch!", 250, 0, 0);
+            ~objbox(tbwt_raw_karambwan, "Tiadeche hands you his first catch!", 250, 0, divide(^objbox_height, 2));
             ~chatplayer("<p,neutral>Your father would be proud.");
             ~chatnpc("<p,neutral>Hmph ... my father would not care.");
             ~chatplayer("<p,neutral>Speaking of your father, can we make way to the village? He awaits your return.");
@@ -190,7 +190,7 @@ if (%tbwt_tiadeche = ^tbwt_tiadeche_player_received_manual) {
 [label,tbwt_tiadeche_give_crafting_manual]
 inv_del(inv, tbwt_crafting_manual, 1);
 %tbwt_tiadeche = ^tbwt_tiadeche_complete;
-~objbox(tbwt_crafting_manual, "You hand over the crafting manual to Tiadeche.", 250, 0, 0);
+~objbox(tbwt_crafting_manual, "You hand over the crafting manual to Tiadeche.", 250, 0, divide(^objbox_height, 2));
 ~music_jingle("tiadeche thankful");
 ~chatnpc("<p,happy>Thank you so much. You cannot understand what all of this means to me and our people.");
 @tbwt_tiadeche_complete;

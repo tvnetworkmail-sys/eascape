@@ -288,17 +288,17 @@ if(last_useitem = thcelldoorkey) {
 mes("You search the captains desk while he's not looking...");
 def_boolean $found = false;
 if(inv_total(inv, thcelldoorkey) = 0) {
-    ~objbox(thcelldoorkey, "You find a cell door key.", 250, 0, 0);
+    ~objbox(thcelldoorkey, "You find a cell door key.", 250, 0, divide(^objbox_height, 2));
     inv_add(inv, thcelldoorkey, 1);
     $found = true;
 }
 if(inv_total(inv, metal_key) = 0) {
-    ~objbox(metal_key, "You find the key to the main gate.", 250, 0, 0);
+    ~objbox(metal_key, "You find the key to the main gate.", 250, 0, divide(^objbox_height, 2));
     inv_add(inv, metal_key, 1);
     $found = true;
 }
 if(%desertrescue >= ^desertrescue_escaped & inv_total(inv, thgoodminekey) = 0) {
-    ~objbox(thgoodminekey, "You find the key to the main gate.", 250, 0, 0);
+    ~objbox(thgoodminekey, "You find the key to the main gate.", 250, 0, divide(^objbox_height, 2));
     inv_add(inv, thgoodminekey, 1);
     $found = true;
 }
@@ -340,7 +340,7 @@ if(~obj_gettotal(thcaptplans) > 0) {
     mes("The chest is empty.");
     return;
 }
-~objbox(thcaptplans, "While the Captain's distracted, you quickly unlock the chest. You use the Bedobin Copy Key to open the chest. You open the chest and take out the plans.", 250, 0, 0);
+~objbox(thcaptplans, "While the Captain's distracted, you quickly unlock the chest. You use the Bedobin Copy Key to open the chest. You open the chest and take out the plans.", 250, 0, divide(^objbox_height, 2));
 if(%desertrescue = ^desertrescue_given_bedobin_key) %desertrescue = ^desertrescue_retrieved_plans;
 inv_add(inv, thcaptplans, 1);
 
@@ -578,26 +578,26 @@ mes("To forge items use the metal you wish to work with the anvil.");
 if(last_useitem = bronze_bar | last_useitem = thcaptplans) {
     // order of checks matches osrs
     if(~obj_gettotal(thprotodarttip) > 0) {
-        ~objbox(thprotodarttip, "You have already made the prototype dart tip. You don't need to make another one.", 250, 0, 0);
+        ~objbox(thprotodarttip, "You have already made the prototype dart tip. You don't need to make another one.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if(~obj_gettotal(thprotodart) > 0) {
-        ~objbox(thprotodart, "You have already made the prototype dart. You don't need to make another one.", 250, 0, 0);
+        ~objbox(thprotodart, "You have already made the prototype dart. You don't need to make another one.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if(inv_total(inv, bronze_bar) = 0) {
-        ~objbox(bronze_bar, "You need a bronze bar to make this weapon.", 250, 0, 0);
+        ~objbox(bronze_bar, "You need a bronze bar to make this weapon.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if(inv_total(inv, hammer) = 0) {
-        ~objbox(hammer, "You need a hammer to work anything on the anvil.", 250, 0, 0);
+        ~objbox(hammer, "You need a hammer to work anything on the anvil.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if(inv_total(inv, thcaptplans) = 0) {
         ~mesbox("This anvil is experimental... You need detailed plans of the item you want to make in order to use it.");
         return;
     }
-    ~objbox(thcaptplans, "Do you want to follow the technical plans ?", 250, 0, 0); // intentional
+    ~objbox(thcaptplans, "Do you want to follow the technical plans ?", 250, 0, divide(^objbox_height, 2)); // intentional
     switch_int(~p_choice2_header("Yes, I'd like to try.", 1, "No, not just yet.", 2, "Follow the technical plans?")) {
         case 1 :
             if(stat(smithing) < 20) {
@@ -651,7 +651,7 @@ if(inv_total(inv, feather) < 10) {
     mes("You need at least ten feathers to make this item.");
     return;
 }
-~objbox(feather, "You try to attach feathers to the bronze dart tip.", 250, 0, 0);
+~objbox(feather, "You try to attach feathers to the bronze dart tip.", 250, 0, divide(^objbox_height, 2));
 if(stat(fletching) < 10) {
     ~mesbox("You need a fletching level of at least 10 to complete this.");
     return;
@@ -662,7 +662,7 @@ if(stat_random(fletching, 61, 254) = false) {
     return;
 }
 ~mesbox("Following the plans is tricky, but you persevere.");
-~objbox(thprotodart, "You successfully attach the feathers to the dart tip.", 250, 0, 0);
+~objbox(thprotodart, "You successfully attach the feathers to the dart tip.", 250, 0, divide(^objbox_height, 2));
 if_close;
 p_delay(2);
 if(%desertrescue = ^desertrescue_made_dart_tip) %desertrescue = ^desertrescue_finished_dart;

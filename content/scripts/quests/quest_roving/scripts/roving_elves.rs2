@@ -188,12 +188,12 @@ if (%roving_elves_quest = ^roving_seed) {
     ~chatnpc("<p,quiz>Hello, any luck finding the consecration seed?");
     if (inv_total(inv, roving_old_consecration_seed) > 0) {
         ~chatplayer("<p,neutral>Yes, I have it here.");
-        ~objbox(roving_old_consecration_seed, "You hand the crystal seed to Eluned.", 250, 0, 0);
+        ~objbox(roving_old_consecration_seed, "You hand the crystal seed to Eluned.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>...");
         ~chatplayer("<p,confused>How odd. I can see her lips moving... But there's no|sound.");
         inv_del(inv, roving_old_consecration_seed, 1);
         inv_add(inv, roving_new_consecration_seed, 1);
-        ~objbox(roving_new_consecration_seed, "Eluned hands you an enchanted crystal seed.", 250, 0, 0);
+        ~objbox(roving_new_consecration_seed, "Eluned hands you an enchanted crystal seed.", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,neutral>Plant this seed in Glarial's new tomb, close to her|remains and she will rest in peace.");
         ~chatplayer("<p,neutral>OK.");
         return;

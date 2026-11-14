@@ -39,7 +39,7 @@ if (npc_type = jungleforester_f) {
 ~mesbox("The Jungle Forester takes out some parchment and some charcoal. <$gender> studiously renders another copy of your map.");
 // "Many thanks friend" twice is correct, ref. https://youtu.be/Lid8enDEF_U?t=749
 ~chatnpc("<p,neutral>Many thanks friend.");
-~objbox(bullroarer, "<$gender> takes out a strange looking object and hands it to you.", 250, 0, 0);
+~objbox(bullroarer, "<$gender> takes out a strange looking object and hands it to you.", 250, 0, divide(^objbox_height, 2));
 // Can't find any evidence of an inv space check
 inv_add(inv, bullroarer, 1);
 if(%legendsquest < ^legends_got_bullroarer) %legendsquest = ^legends_got_bullroarer;
@@ -49,7 +49,7 @@ if(%legendsquest < ^legends_got_bullroarer) %legendsquest = ^legends_got_bullroa
 [label,jungle_forester_return]
 ~chatplayer("<p,neutral>What will you give me in return?");
 ~chatnpc("<p,neutral>Well, I can offer you this?");
-~objbox(bullroarer, "The Jungle Forester takes out a strange looking object. It looks like a wooden pole, with string attached to one end. And at the other end of the string is a shaped piece of wood.", 180, 0, 0);
+~objbox(bullroarer, "The Jungle Forester takes out a strange looking object. It looks like a wooden pole, with string attached to one end. And at the other end of the string is a shaped piece of wood.", 180, 0, divide(^objbox_height, 2));
 ~chatnpc("<p,neutral>If you swing this above your head, it makes a strange sound. I noticed that it attracts the attention of the natives. Is it a deal? Can I make a copy of your map?");
 @multi2("Yes, go ahead make a copy!", jungle_forester_copy,
         "Sorry, I must complete my quest.", jungle_forester_sorry);
