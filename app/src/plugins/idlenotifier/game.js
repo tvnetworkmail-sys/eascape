@@ -17,10 +17,12 @@ module.exports = function logoutNotifier(ctx) {
 
   const opt = (k) => ctx.config(k);
 
+  // Window input only counts before the game reports its own timer: moving the mouse doesn't
+  // reset the game's idle logout (clicks and keys do), so it mustn't re-arm the alert either.
   function onInput() {
+    if (gameIdle) return;
     lastInput = Date.now();
     warned = false;
-    if (gameIdle) gameIdle = { ms: 0, at: lastInput }; // (don't count on from an old report)
   }
 
   function tick() {

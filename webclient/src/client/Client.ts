@@ -4551,12 +4551,7 @@ export class Client extends GameShell {
         } else {
             // LostLite: Hide roofs draws your own level, like standing indoors, but keeps what's
             // above open ground (tall trees, towers' tops), as RuneLite's roof removal does
-            // EASCape: where the game itself would draw everything (you're not under a roof), only
-            // the columns by a roof are cut; cliff tops and raised ground stay (the Mage Arena's
-            // cliffs, Edgeville Dungeon). Under a roof it's as before: only open-air scenery above.
-            const vanilla: number = this.roofCheck();
-            level = lostlite()?.hideRoofs ? this.minusedlevel : vanilla;
-            World.roofOutside = vanilla > this.minusedlevel;
+            level = lostlite()?.hideRoofs ? this.minusedlevel : this.roofCheck();
         }
         World.roofFree = lostlite()?.hideRoofs && !this.cinemaCam ? this.roofFreeColumns() : null;
 

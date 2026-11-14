@@ -123,16 +123,25 @@ const root = path.join(__dirname, '..', 'src');
   listener('idle', { ms: 81000 });
   tick();
   assert.strictEqual(sent.length, 2, 'alerts again after the next idle spell');
-  // playing on: the game's last report was a moment after input, then input keeps coming
+  // playing on: the game reports every second, always a moment after your last input
   listener('idle', { ms: 300 });
   const before = sent.length;
-  for (let i = 0; i < 40; i++) { t += 3000; winInput(); tick(); }
+  for (let i = 0; i < 40; i++) { t += 3000; listener('idle', { ms: 200 }); tick(); }
   assert.strictEqual(sent.length, before, 'no alerts while you keep playing');
+  // idle in the game but moving the mouse outside it: one alert, not one per mouse move
+  listener('idle', { ms: 81000 });
+  tick();
+  for (let i = 0; i < 20; i++) { t += 300; winInput(); tick(); }
+  assert.strictEqual(sent.length, before + 1, 'window mouse moves do not repeat the alert');
+  listener('idle', { ms: 80500 }); // the game asks for the logout at 90 s and moves its timer back 10 s
+  tick();
+  assert.strictEqual(sent.length, before + 1, 'no repeat after the logout request');
+  listener('idle', { ms: 500 });
   cfg.logoutWarning = 30;
   listener('idle', { ms: 500 });
   listener('idle', { ms: 60000 });
   tick();
-  assert.strictEqual(sent[2][0], 'Zezima will be logged out in 30 seconds!', 'the time you set');
+  assert.strictEqual(sent[sent.length - 1][0], 'Zezima will be logged out in 30 seconds!', 'the time you set');
   p.stop();
   Date.now = realNow;
   global.setInterval = realSet;
