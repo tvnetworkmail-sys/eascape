@@ -3,6 +3,7 @@ import Occlude from '#/dash3d/Occlude.js';
 
 import GroundDecor from '#/dash3d/GroundDecor.js';
 import Sprite from '#/dash3d/Sprite.js';
+import { LocShape } from '#/dash3d/LocShape.js';
 import GroundObject from '#/dash3d/GroundObject.js';
 import Square from '#/dash3d/Square.js';
 import Ground from '#/dash3d/Ground.js';
@@ -97,6 +98,8 @@ export default class World {
     // LostLite: Hide roofs - squares above maxLevel may still be drawn where this is 1 (away from any
     // roofed square) and the square is open air (see openAir); see Client.roofFreeColumns
     static roofFree: Uint8Array | null = null;
+    // EASCape: true when the game's own roof check finds no roof between you and the camera
+    static roofOutside: boolean = false;
 
     // LostLite: Hide roofs - a square above your level only counts as open air when it holds
     // nothing but scenery (a tree's top): no floor, no wall, no wall decoration. Floors and walls
@@ -111,7 +114,20 @@ export default class World {
         // EASCape: and only where something stands on the square below for it to be the top of (a
         // tree's trunk): scenery over a bare floor is part of the building - a pub's hanging sign,
         // a roof's overhang - and drawn without the walls it hangs from it floats in mid air.
-        return below !== null && (below.quickGround !== null || below.ground !== null) && below.wall === null && below.spriteCount > 0;
+        // EASCape: and neither square holds a diagonal wall (shape 9, kept with the scenery): a
+        // diagonal cave wall's upper piece is the cliff's rock (the Mage Arena's cliffs), and drawn
+        // without the straight wall pieces beside it, it left a jagged band of rock and holes
+        return below !== null && (below.quickGround !== null || below.ground !== null) && below.wall === null && below.spriteCount > 0 && !World.diagonalWall(tile) && !World.diagonalWall(below);
+    }
+
+    private static diagonalWall(tile: Square): boolean {
+        for (let i: number = 0; i < tile.spriteCount; i++) {
+            const sprite: Sprite | null = tile.sprites[i];
+            if (sprite && (sprite.typecode2 & 0x3f) === LocShape.WALL_DIAGONAL) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static cycleNo: number = 0;
@@ -1031,7 +1047,7 @@ export default class World {
                         continue;
                     }
 
-                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1 && World.openAir(tile, level > 0 ? this.squares[level - 1][x][z] : null))) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
+                    if ((tile.drawLevel <= maxLevel || (World.roofFree !== null && World.roofFree[x * 104 + z] === 1 && (World.roofOutside || World.openAir(tile, level > 0 ? this.squares[level - 1][x][z] : null)))) && (World.visBackingDirty[x + DRAW_RADIUS - World.gx][z + DRAW_RADIUS - World.gz] || this.groundh[level][x][z] - eyeY >= 2000)) {
                         tile.drawFront = true;
                         tile.drawBack = true;
                         tile.drawSprites = tile.spriteCount > 0;
