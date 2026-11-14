@@ -263,7 +263,11 @@ while ($patch <= $count) {
         case 6, 11 : $mult = 32;
         case 12 : $mult = 64;
     }
-    if (calc($minute % (5 * $mult)) = 0) {
+    // EASCape: weeds on an empty patch grow on every 5-minute tick, whatever the patch (OSRS wiki,
+    // Farming cycle: "The shortest is 5 minutes, which includes flowers, weeds growing and tree
+    // seedlings..."); they grew on the patch's own cycle, so a weeded herb patch stayed clear for
+    // 20 minutes a stage
+    if (calc($minute % (5 * $mult)) = 0 | calc(~farming_state($patch) / 1000) = 0) {
         ~farming_grow_patch($patch);
     }
     $patch = calc($patch + 1);
