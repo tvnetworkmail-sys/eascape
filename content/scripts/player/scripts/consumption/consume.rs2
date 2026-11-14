@@ -127,6 +127,12 @@ switch_obj(last_item) {
 [label,player_consume_item](label $consume_effect, int $eat_delay, int $skill_delay)
 def_obj $obj = inv_getobj(inv, last_slot);
 
+// EASCape: at 0 hitpoints you're already dead: the death is queued by the hit that took you there
+// and runs a tick later (player_die), so food eaten in between was used up and its heal wiped.
+if (stat(hitpoints) = 0) {
+    return;
+}
+
 if (~duel_arena_consume_check($obj) = false) {
     return;
 }

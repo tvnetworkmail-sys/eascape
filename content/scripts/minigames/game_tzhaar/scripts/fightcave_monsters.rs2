@@ -200,13 +200,18 @@ if ($style = 1) {
 // on - the hit is worked out on tick 3 (2 ticks after the attack starts; Void rolls it at 3) - and
 // it lands later, on tick 6 (5 ticks after the attack, Void's), unprotected if the prayer wasn't on. Worked out before it lands, capped to your hitpoints, so it can be tick eaten (OSRS wiki,
 // Tick eating). It used to be worked out as it landed, so a last-moment prayer still protected you.
-npc_queue(4, $style, 2);
+// The hit is capped to your hitpoints as he starts the attack (tick 1): the OSRS wiki (Tick eating):
+// "Almost all monster attacks are capped to the player's current hp when the damage is first
+// calculated" - when the attack begins. Eating after that (ticks 2-6) is tick eating. Passed along
+// in the tens, the style in the units.
+npc_queue(4, add($style, multiply(stat(hitpoints), 10)), 2);
 
 // the magic or ranged hit lands
 [ai_queue4,tzhaar_fightcave_swarm_boss]
 if (finduid(%npc_aggressive_player) = false) return;
 if (~fightcave_owner_here = false) return;
-def_int $style = last_int;
+def_int $style = modulo(last_int, 10);
+def_int $cap = divide(last_int, 10); // your hitpoints when he started the attack
 def_int $damage = 0;
 if ($style = 1) {
     if (randominc(~npc_magic_attack_roll) > randominc(~player_defence_roll_specific(^magic_style))) {
@@ -219,15 +224,17 @@ if ($style = 1) {
     }
     if (~check_protect_prayer(^ranged_style) = true) $damage = 0;
 }
-$damage = min($damage, stat(hitpoints)); // capped to your hitpoints now: eat before it lands
-queue(fightcave_jad_hit, 3, add($damage, multiply($style, 1000))); // style in the thousands
+$damage = min($damage, min($cap, stat(hitpoints))); // capped to your hitpoints at the attack's start (or now, if lower): eat before it lands
+// EASCape: strong queues, so the hit lands on time even with a dialogue open ("Look out, here comes
+// TzTok-Jad!"): normal queues wait for it to close, and then every attack landed in one tick
+strongqueue(fightcave_jad_hit, 3, add($damage, multiply($style, 1000))); // style in the thousands
 queue*(playerhit_n_retaliate, 3)(npc_uid);
 
 [queue,fightcave_jad_hit](int $packed)
 def_int $damage = modulo($packed, 1000);
 if (divide($packed, 1000) = 2) spotanim_pl(tzhaar_rock_smash, 0, 0); // the rocks fall as it lands
 sound_synth(firewave_hit, 1, 0);
-queue(combat_damage_player, 0, $damage);
+strongqueue(combat_damage_player, 0, $damage);
 
 // ---- deaths
 
