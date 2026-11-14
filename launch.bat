@@ -33,5 +33,9 @@ call npm install --no-audit --no-fund
 rem npm install can rewrite package-lock.json for this computer; put it back, or the next update's
 rem git pull refuses to run ("Your local changes ... would be overwritten") and you stop getting updates
 git -C "%~dp0." checkout -- app/package-lock.json 2>nul
+rem This copy plays on the server on this computer, not the live game: the app (the live 2006RS app since
+rem 13 Nov) opens every world on EASCAPE_SERVER when it's set (app/src/main/worlds.js). The server's web
+rem port on Windows is 80 (engine/src/util/Environment.ts).
+if not defined EASCAPE_SERVER set "EASCAPE_SERVER=http://localhost"
 echo Opening EASCape...
 call npm start
