@@ -182,6 +182,7 @@
   // up after SEARCH_LIMIT positions (well under a second) and the piece-by-piece solver below
   // takes over, which always finds one.
   const SEARCH_LIMIT = 150000;
+  const SEARCH_MS = 150; // and never longer than this, however slow the computer
 
   function estimate(b) {
     let s = 0;
@@ -249,6 +250,7 @@
     const cost = new Map([[sk, 0]]);
     push([2 * estimate(start), 0, start, start.indexOf(GAP)]);
     let seen = 0;
+    const until = Date.now() + SEARCH_MS;
     while (heap.length) {
       const [, g, b, gap] = pop();
       const k = key(b);
@@ -258,7 +260,7 @@
         for (let cur = k; parent.get(cur); cur = parent.get(cur)[0]) path.push(parent.get(cur)[1]);
         return path.reverse();
       }
-      if (++seen > SEARCH_LIMIT) return null;
+      if (++seen > SEARCH_LIMIT || ((seen & 1023) === 0 && Date.now() > until)) return null;
       for (const m of NB[gap]) {
         const nb = b.slice();
         nb[gap] = nb[m];
