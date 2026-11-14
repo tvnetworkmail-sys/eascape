@@ -102,69 +102,36 @@ const root = path.join(__dirname, '..', 'src');
   global.window = { addEventListener() {}, removeEventListener() {} };
   const sent = [];
   let listener = null;
-  const cfg = { animationIdle: true, interactionIdle: true, logoutIdle: true, timeout: 5000, hitpoints: 10, prayer: 0, lowEnergy: 100, specEnergy: 0 };
-  const ctx = { config: (k) => cfg[k], notify: (title, text) => sent.push(text), onRuntime: (fn) => { listener = fn; return () => {}; } };
+  const cfg = { logoutWarning: 10 };
+  const ctx = { config: (k) => cfg[k], notify: (title, text, opts) => sent.push([text, opts]), onRuntime: (fn) => { listener = fn; return () => {}; } };
   const p = require('../src/plugins/idlenotifier/game')(ctx);
   p.start();
   const tick = () => intervals[0]();
-  const player = (o) => listener('player', Object.assign({ name: 'Zezima', animation: -1, hitpoints: 40, runEnergy: 100 }, o));
-  player({});
-  player({ animation: 879 }); // woodcutting
-  t += 4000;
-  player({ animation: -1 });
-  t += 4000;
+  listener('player', { name: 'Zezima', animation: -1, hitpoints: 40 });
+  // idle logout: the game's timer says 90 s; alert 10 s before, with the ding and the flash
+  listener('idle', { ms: 70000 });
   tick();
-  assert.deepStrictEqual(sent, [], 'waits for the timeout');
-  t += 1100;
-  tick();
-  assert.deepStrictEqual(sent, ['Zezima is now idle!']);
-  // a quick one-off animation (eating) doesn't count
-  player({ animation: 829 });
-  t += 600;
-  player({ animation: -1 });
-  t += 6000;
-  tick();
-  assert.strictEqual(sent.length, 1, 'short animation ignored');
-  // combat
-  player({ interacting: { type: 'npc', index: 9 } }); // talking to a banker
-  t += 3000;
-  player({ interacting: null });
-  t += 5100;
-  tick();
-  assert.strictEqual(sent.length, 1, 'talking is not fighting');
-  player({ interacting: { type: 'npc', index: 3 } });
-  t += 1200;
-  player({ interacting: { type: 'npc', index: 3 }, inCombat: true });
-  t += 3000;
-  player({ interacting: null });
-  t += 5100;
-  tick();
-  assert.strictEqual(sent[1], 'Zezima is now out of combat!');
-  // low hitpoints once, again only after healing
-  player({ hitpoints: 8 });
-  player({ hitpoints: 7 });
-  player({ hitpoints: 30 });
-  player({ hitpoints: 9 });
-  assert.deepStrictEqual(sent.slice(2), ['Zezima has low hitpoints!', 'Zezima has low hitpoints!']);
-  // idle logout: the game's timer says 90 s; warn 20 s before
-  listener('idle', { ms: 60000 });
-  tick();
-  assert.strictEqual(sent.length, 4, 'not yet at 60 s');
+  assert.strictEqual(sent.length, 0, 'not yet at 70 s');
   t += 10000;
   tick();
-  assert.strictEqual(sent[4], 'Zezima is about to log out from idling too long!', 'warned at 70 s');
+  assert.deepStrictEqual(sent[0], ['Zezima will be logged out in 10 seconds!', { sound: true, flash: true, always: true }], 'alerted at 80 s');
   t += 1000;
   tick();
-  assert.strictEqual(sent.length, 5, 'warned once');
+  assert.strictEqual(sent.length, 1, 'alerted once');
   listener('idle', { ms: 500 }); // moved the mouse
-  listener('idle', { ms: 71000 });
+  listener('idle', { ms: 81000 });
   tick();
-  assert.strictEqual(sent.length, 6, 'warns again after the next idle spell');
+  assert.strictEqual(sent.length, 2, 'alerts again after the next idle spell');
+  cfg.logoutWarning = 30;
+  listener('idle', { ms: 500 });
+  listener('idle', { ms: 60000 });
+  tick();
+  assert.strictEqual(sent[2][0], 'Zezima will be logged out in 30 seconds!', 'the time you set');
   p.stop();
   Date.now = realNow;
   global.setInterval = realSet;
   global.clearInterval = realClear;
-  console.log('idle notifier: ok');
+  console.log('logout notifier: ok');
 }
 
 // ---------------------------------------------------------------- xp drops (page side)

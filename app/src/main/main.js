@@ -431,8 +431,13 @@ ipcMain.handle('login-pass-set', (e, pass) => {
 // Desktop notifications (3.4), like RuneLite's Notifier: only while the window isn't in
 // front unless you ask, with the system sound and a flashing taskbar button.
 function notify(title, body, opts) {
-  if (!core('notifications')) return false;
+  const always = !!(opts && opts.always); // (the Logout Notifier: always ding, whatever the settings)
+  if (!core('notifications') && !always) return false;
   const focused = win && win.isFocused() && !win.isMinimized();
+  if (always && ((focused && !core('notifyWhenFocused')) || !core('notifications'))) {
+    shell.beep(); // the Windows ding, with no desktop notification over the game
+    if (!core('notifications')) return true;
+  }
   if (focused && !core('notifyWhenFocused')) {
     log.info(`Notification not shown (EASCape is in front; see Notify when focused): ${body || title}`);
     return false;
@@ -488,7 +493,7 @@ function windowsNotifications() {
 
 ipcMain.handle('notify', (e, title, body, opts) => {
   if (!gameView || e.sender !== gameView.webContents) return false;
-  return notify(title, body, { sound: !!(opts && opts.sound) });
+  return notify(title, body, { sound: !!(opts && opts.sound), always: !!(opts && opts.always) });
 });
 
 // Quest Helper routes, worked out in a worker thread (so the game never waits on them).

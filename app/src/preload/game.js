@@ -339,13 +339,15 @@ function contextFor(p) {
       // like RuneLite's "game message notification": shown in the chat box even when the
       // window is in front (where the desktop one isn't by default)
       if (cfg('lostlite', 'notifications') && cfg('lostlite', 'gameMessageNotification')) sendToGame({ type: 'game-message', text: String(body || title || '') });
-      const flash = cfg('lostlite', 'flash');
-      if (cfg('lostlite', 'notifications') && flash && flash !== 'off') {
+      // opts.flash: always flash (until you move the mouse or press a key) even with LostLite's Flash off
+      let flash = cfg('lostlite', 'flash');
+      if (opts && opts.flash && (!flash || flash === 'off')) flash = 'until';
+      if ((cfg('lostlite', 'notifications') || (opts && opts.always)) && flash && flash !== 'off') {
         const alpha = Math.round((Math.max(5, Math.min(100, Number(cfg('lostlite', 'flashOpacity')) || 27)) / 100) * 255);
         const rgb = /([0-9a-f]{6})$/i.exec(String(cfg('lostlite', 'flashColour') || '')) || [null, 'FF0000'];
         sendToGame({ type: 'flash', mode: flash, colour: `#${alpha.toString(16).padStart(2, '0')}${rgb[1]}` });
       }
-      return ipcRenderer.invoke('notify', title, body, { sound: !!(opts && opts.sound) }).catch(() => false);
+      return ipcRenderer.invoke('notify', title, body, { sound: !!(opts && opts.sound), always: !!(opts && opts.always) }).catch(() => false);
     },
     /** Open the plugin's own sidebar panel (as RuneLite's ClientToolbar.openPanel). */
     openPanel: () => ipcRenderer.send('game-event', { type: 'open-panel', data: p.id }),

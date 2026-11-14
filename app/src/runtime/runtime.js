@@ -398,7 +398,9 @@
       const now = performance.now();
       const t = this.read('idleTimer');
       // until cancelled: any mouse or key input in the game stops it; once: two seconds
-      if ((fl.once && now - fl.start > 2000) || (!fl.once && typeof t === 'number' && fl.input !== null && t > fl.input)) {
+      // (the game also moves its idle timer on 10 s when it asks for the idle logout at 90 s:
+      // that isn't you, so only a timer set to just now counts as input)
+      if ((fl.once && now - fl.start > 2000) || (!fl.once && typeof t === 'number' && fl.input !== null && t > fl.input && now - t < 5000)) {
         this.flashState = null;
         return;
       }
