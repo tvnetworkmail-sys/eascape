@@ -6,7 +6,11 @@
     %npc_attacking_uid = $baiter_uid;
     npc_anim(chompy_landing, 0);
     npc_say("Sqwirk!");
-    if(finduid(%quest_chompybird_baiter) = true) {
+    if(finduid(%npc_attacking_uid) = true) {
+        if (%chompybird < ^chompybird_rantz_gave_player_bow) {
+            queue(chompy_bird_spawned, 0, 0);
+            npc_queue(11, 0, add(15, random(10)));
+        }
         hint_npc;
     }
 
@@ -57,7 +61,19 @@ if (%chompybird = ^chompybird_dropped_toad) {
     %chompybird = ^chompybird_chompy_bird_spawned;
 }
 
-// the Chompy is eating the toad
+[ai_timer,chompy_bird]
+if(%npc_int = ^true) {
+    if(npc_getmode = playerescape) npc_setmode(null);
+    return;
+}
+huntall(npc_coord, 2, ^vis_lineofsight);
+if (huntnext = true) {
+    %npc_int = ^true;
+    npc_say("Screech!");
+    sound_synth(chompy_bird_screech, 1, 0);
+    npc_setmode(playerescape);
+}
+
 [opnpc4,chompybird_dead]
 mes("You start plucking the chompy bird.");
 anim(human_pickupfloor, 0);
