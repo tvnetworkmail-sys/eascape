@@ -36,6 +36,8 @@ if (map_members = ^false) {
 }
 
 if ($severity > %npc_poison) {
-    npc_settimer(30);
+    // EASCape: the Fight Cave's monsters keep their own timer, which does the poison too
+    // (game_tzhaar/fightcave_monsters.rs2, ~fightcave_poison_step)
+    if (~in_fightcave(npc_coord) = false) npc_settimer(30);
     %npc_poison = $severity;
 }

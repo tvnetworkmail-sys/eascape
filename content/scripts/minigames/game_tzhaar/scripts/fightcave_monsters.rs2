@@ -58,7 +58,20 @@
 npc_settimer(5);
 if (~fightcave_owner_here = false) {
     npc_del;
+    return;
 }
+~fightcave_poison_step(5);
+
+// EASCape: poison on the cave's monsters. Their own [ai_timer] replaces the shared one that hits a
+// poisoned npc every 30 ticks (skill_combat/npc/npc_poison.rs2), so Jad and the rest never took
+// poison damage (OSRS wiki, TzTok-Jad: poison 0% resistance). The same step here, once in every 30
+// ticks: $every is how often this monster's timer runs.
+[proc,fightcave_poison_step](int $every)
+if (%npc_poison <= 0 | modulo(map_clock, 30) >= $every) return;
+%npc_poison = sub(%npc_poison, 1);
+if (%npc_poison <= 0 | npc_stat(hitpoints) = 0) return;
+npc_damage(^hitmark_poison, divide(add(%npc_poison, 4), 5));
+if (npc_stat(hitpoints) = 0) npc_queue(3, 0, 0);
 
 [proc,fightcave_owner_here]()(boolean)
 if (finduid(%npc_aggressive_player) = false) return(false);
@@ -326,6 +339,7 @@ if (~fightcave_owner_here = false) {
     npc_del;
     return;
 }
+~fightcave_poison_step(1);
 if (npc_getmode = opplayer2) {
     return; // fighting you
 }
