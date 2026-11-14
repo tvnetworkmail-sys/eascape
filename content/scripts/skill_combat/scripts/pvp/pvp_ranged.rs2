@@ -50,7 +50,8 @@ if (~pvp_hit_roll(%damagetype) = true) {
 }
 def_int $poison_severity = oc_param($ammo, poison_severity); // ammo will never be null
 if ($damage > 0 & $poison_severity > 0 & random(4) = 0) { // 1/4 chance to poison
-    .queue(poison_player, 0, $poison_severity);
+    // EASCape: ranged poison is lowered by 10, as player_ranged (first hit 2 / 3 / 4 for (p) / (+) / (s), OSRS wiki)
+    .queue(poison_player, 0, max(sub($poison_severity, 10), 0));
 }
 
 def_int $delay = ~pvp_ranged_use_weapon($rhand, $ammo);
