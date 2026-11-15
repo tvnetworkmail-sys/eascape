@@ -466,7 +466,11 @@ function notify(title, body, opts) {
 // shortcut carrying the app's id (an installed app gets this from its installer; run straight
 // from the folder, the app makes its own: its name in the Start menu, which runs start.bat). Without it Windows drops the notifications without a word.
 const PKG = require('../../package.json');
-const APP_ID = (PKG.build && PKG.build.appId) || 'eascape.client';
+// The installer's package.json has no "build" section (electron-builder leaves it out), so the
+// installed app fell back to 'eascape.client', the local copy's id: Windows then showed it as the
+// local copy's EASCape shortcut, with that shortcut's icon (15 Nov 2026). Installed, the id is the
+// one electron-builder gave its shortcuts: com.<name>.client is 2006RS's appId (com.2006rs.client).
+const APP_ID = (PKG.build && PKG.build.appId) || (PKG.name && PKG.name !== 'eascape' ? `com.${PKG.name}.client` : 'eascape.client');
 const APP_NAME = PKG.productName || 'EASCape';
 function windowsNotifications() {
   if (process.platform !== 'win32') return;
