@@ -1,0 +1,50 @@
+// EASCape: Sever on a player (see specs/pvm_dragon_scimitar.rs2): on a hit their protection prayers
+// go off and can't be used for 5 seconds (Void DragonScimitar.kt: 5 seconds, its message).
+[label,pvp_dragon_scimitar_sa]
+~set_sa_vars(oc_param(inv_getobj(worn, ^wearpos_rhand), sa_energy));
+~set_pk_vars;
+def_int $damage = 0;
+def_int $maxhit = %com_maxhit;
+def_int $attack_roll = scale(115, 100, ~player_attack_roll_specific(%damagetype));
+def_int $defence_roll = ~.player_defence_roll_specific(^slash_style);
+def_boolean $hit = false;
+if (randominc($attack_roll) > randominc($defence_roll)) {
+    $hit = true;
+    if (~.check_protect_prayer(^melee_style) = true) {
+        $maxhit = scale(6, 10, $maxhit); // reduction of 40%
+    }
+    $damage = min(randominc($maxhit), .stat(hitpoints));
+    ~give_combat_experience_pvp(%damagestyle, $damage, ~pvp_xp_multiplier(~.player_combat_level));
+    both_heropoints($damage);
+}
+anim(sp_attack_dragon_scimitar, 0);
+sound_synth(sever, 1, 0);
+spotanim_pl(sp_attack_dragon_scimitar_trail_spotanim, 96, 0);
+.anim(.%com_defendanim, 20);
+.sound_synth(sever, 1, 0);
+.queue*(pvp_retaliate, 0)(uid);
+if ($hit = true) {
+    .strongqueue(sever_hit, 0, 0);
+}
+~.pvp_damage(0, $damage);
+
+[queue,sever_hit]
+~prayer_deactivate_specific(^prayer_protectfrommagic);
+~prayer_deactivate_specific(^prayer_protectfrommissiles);
+~prayer_deactivate_specific(^prayer_protectfrommelee);
+~player_combat_stat;
+settimer(sever_prayer, 8);
+
+[timer,sever_prayer]
+cleartimer(sever_prayer);
+
+// protection prayers can't go back on while severed (skill_prayer/prayer.rs2's ~prayer_checks)
+[proc,sever_blocks_prayer](dbrow $data)(boolean)
+if (gettimer(sever_prayer) = -1) return(false);
+def_int $prayer = db_getfield($data, prayers:prayer, 0);
+if ($prayer ! ^prayer_protectfrommagic & $prayer ! ^prayer_protectfrommissiles & $prayer ! ^prayer_protectfrommelee) {
+    return(false);
+}
+mes("You've been injured and can no longer use protection prayers!");
+sound_synth(prayer_off, 1, 0);
+return(true);

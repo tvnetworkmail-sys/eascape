@@ -15,6 +15,10 @@ if (db_getfield($data, prayers:members, 0) = ^true & map_members = ^false) {
 if (~duel_arena_prayer_check = false) {
     return(false);
 }
+// EASCape: a dragon scimitar's Sever stops protection prayers for 5 seconds (pvp_dragon_scimitar.rs2)
+if (~sever_blocks_prayer($data) = true) {
+    return(false);
+}
 // EASCape: no Prayer against the Earth Warrior Champion (minigames/game_champion_challenge)
 if (~champ_prayer_allowed = false) {
     return(false);
