@@ -106,6 +106,10 @@ inv_add(inv, twocats_recipe, 1);
 // ---------------------------------------------------------------- Tidy Human: shears on Unferth (the
 // cache's human_shearing_unferth and twocats_shear; his hair goes long, spiky, medium, short, bald)
 [opnpcu,twocats_unferth]
+// ours: the vial of water used on him works as talking to him does (ttc_unferth.rs2)
+if (last_useitem = vial_water & (%twocats_quest = ^ttc_ill | %twocats_quest = ^ttc_hat)) {
+    @ttc_unferth_doctor;
+}
 if (last_useitem ! shears | %twocats_quest ! ^ttc_chores) {
     ~displaymessage(^dm_default);
     return;

@@ -475,6 +475,9 @@ const PlayerOps: CommandHandlers = {
         }
 
         state.activePlayer.npcId = id;
+        // EASCape: send the new look straight away (it only went out with the next appearance
+        // change, so cutscenes' invisible player stayed visible: A Tail of Two Cats, Deal)
+        state.activePlayer.buildAppearance(state.activePlayer.appearanceInv);
     },
 
     // https://x.com/JagexAsh/status/1605130887292751873
