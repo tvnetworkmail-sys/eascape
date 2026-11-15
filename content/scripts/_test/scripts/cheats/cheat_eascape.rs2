@@ -2969,3 +2969,21 @@ inv_add(inv, cosmicrune, 4);
 ~eascape_give(unstrung_onyx_amulet);
 ~eascape_give(onyx_necklace);
 mes("Lvl-6 Enchant: cast it on the onyx rings and amulets (the unstrung amulet and necklace say no).");
+
+// ::sarawiz - the hard clue whose dig brings the Saradomin wizard (sextant 027, the Bedabin camp
+// oasis): gives the clue, a watch, chart, sextant and spade, lets the wizard come again (he only
+// comes once a trail) and takes you to the dig spot. Dig, and he appears.
+[debugproc,sarawiz]
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(trail_clue_hard_sextant027, 1));
+if (inv_total(inv, trail_watch) = 0) $banked = calc($banked + ~questpack_give(trail_watch, 1));
+if (inv_total(inv, trail_chart) = 0) $banked = calc($banked + ~questpack_give(trail_chart, 1));
+if (inv_total(inv, trail_sextant) = 0) $banked = calc($banked + ~questpack_give(trail_sextant, 1));
+if (inv_total(inv, spade) = 0) $banked = calc($banked + ~questpack_give(spade, 1));
+%trail_status = clearbit(%trail_status, 4);
+p_telejump(0_49_47_32_33);
+if ($banked > 0) mes("Some of it went to your bank (no room in your pack).");
+mes("Saradomin wizard clue: dig here (the spade) and he appears.");

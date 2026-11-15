@@ -47,12 +47,15 @@ if ($rand ! 0) {
 }
 ~npc_default_attack;
 
+// EASCape (owner's choice, 15 Nov 2026): he only goes when his player is 20 or more squares away
+// (Lost City 274: more than 17), or has logged out. His spawn lasts 6000 ticks instead of 500
+// (general_use/spade.rs2), so a long fight doesn't run out either.
 [ai_timer,trail_hard2]
 if(finduid(%npc_aggressive_player) = false) {
     npc_del;
     return;
 }
-if(distance(coord, npc_coord) > 17) { // not 100% sure on this, think it's the same as the black demon in grandtree
+if(distance(coord, npc_coord) >= 20) {
     npc_del;
 }
 
