@@ -18,7 +18,7 @@
 [if_button,questlist:wanted]
 def_int $s = %wanted_main;
 if ($s = ^wanted_not_started) {
-    def_string $req = "@dbl@I can start this quest by speaking to @dre@Sir Tiffy Cashien@dbl@ in|@dre@Falador Park@dbl@.||";
+    def_string $req = "@dbl@I can start this quest by speaking to @dre@Sir Tiffy|@dre@Cashien@dbl@ in @dre@Falador Park@dbl@.||";
     def_boolean $met = false;
     if (%qp >= 32) $met = true;
     $req = append($req, ~wanted_req_line($met, "I need 32 quest points"));
@@ -38,38 +38,38 @@ if ($s = ^wanted_not_started) {
     return;
 }
 if ($s >= ^wanted_complete) {
-    ~quest_journal("Wanted!", append("@str@Sir Tiffy found a loophole to make me a White Knight: Sir Amik|@str@deputised me in a crisis, and I tracked the murder-mage Solus|@str@Dellagar across the land with Savant and my CommOrb, and beat|@str@him in the rune essence mine. Sir Amik made me a White Knight.||@red@QUEST COMPLETE!||", ~wanted_rank_line));
+    ~quest_journal("Wanted!", append("@str@Sir Tiffy found a loophole to make me a White Knight:|@str@Sir Amik deputised me in a crisis, and I tracked the|@str@murder-mage Solus Dellagar across the land with Savant|@str@and my CommOrb, and beat him in the rune essence mine.|@str@Sir Amik made me a White Knight.||@red@QUEST COMPLETE!||", ~wanted_rank_line));
     return;
 }
-def_string $t = "@str@Sir Tiffy Cashien told me only White Knights may join the|@str@Temple Knights.||";
+def_string $t = "@str@Sir Tiffy Cashien told me only White Knights may join|@str@the Temple Knights.||";
 def_string $next;
 switch_int ($s) {
-    case ^wanted_tiffy_plan : $next = "@dbl@I should tell @dre@Sir Amik Varze@dbl@ in the White Knights' Castle that|@dbl@I want to be a White Knight, turn down his offer to be his squire,|@dbl@and ask to be deputised instead.";
+    case ^wanted_tiffy_plan : $next = "@dbl@I should tell @dre@Sir Amik Varze@dbl@ in the White Knights'|@dbl@Castle that I want to be a White Knight, turn down his|@dbl@offer to be his squire, and ask to be deputised|@dbl@instead.";
     case ^wanted_no_crisis :
         if (%wanted_joke_option = 1) {
-            $next = "@dbl@I became Sir Amik's squire. Perhaps I should tell @dre@Sir Tiffy@dbl@.";
+            $next = "@dbl@I became Sir Amik's squire. Perhaps I should tell @dre@Sir|@dre@Tiffy@dbl@.";
         } else {
-            $next = "@dbl@Sir Amik can only deputise me in a time of crisis. @dre@Sir Tiffy@dbl@|@dbl@may be able to arrange one.";
+            $next = "@dbl@Sir Amik can only deputise me in a time of crisis. @dre@Sir|@dre@Tiffy@dbl@ may be able to arrange one.";
         }
-    case ^wanted_crisis : $next = "@dbl@A dangerous criminal is on the loose. I should report to @dre@Sir|@dre@Amik@dbl@ for orders.";
-    case ^wanted_deputised : $next = "@dbl@Sir Amik deputised me to find Solus Dellagar.|@dbl@I should go and speak to Sir Tiffy for advice on finding this Solus|@dbl@character...";
-    case ^wanted_commorb : $next = "@dbl@Sir Tiffy gave me a @dre@CommOrb@dbl@. I should contact @dre@Savant@dbl@ with it.";
+    case ^wanted_crisis : $next = "@dbl@A dangerous criminal is on the loose. I should report|@dbl@to @dre@Sir Amik@dbl@ for orders.";
+    case ^wanted_deputised : $next = "@dbl@Sir Amik deputised me to find Solus Dellagar. I should|@dbl@go and speak to Sir Tiffy for advice on finding this|@dbl@Solus character...";
+    case ^wanted_commorb : $next = "@dbl@Sir Tiffy gave me a @dre@CommOrb@dbl@. I should contact @dre@Savant@dbl@|@dbl@with it.";
     case ^wanted_investigating :
         if (%wanted_daquarius_hint ! ^wanted_daq_told) {
-            $next = "@dbl@Savant sent me records of two people who saw Solus. I should|@dbl@question @dre@Lord Daquarius@dbl@ in Taverley Dungeon, and the @dre@Mage of|@dre@Zamorak@dbl@ in Varrock.";
+            $next = "@dbl@Savant sent me records of two people who saw Solus. I|@dbl@should question @dre@Lord Daquarius@dbl@ in Taverley Dungeon,|@dbl@and the @dre@Mage of Zamorak@dbl@ in Varrock.";
         } else if (%wanted_zammy_mage_hint = ^wanted_mage_price) {
-            $next = "@dbl@Lord Daquarius said Solus left some fur behind. The @dre@Mage of|@dre@Zamorak@dbl@ in Varrock wants @dre@20 rune essence@dbl@ for what he knows.";
+            $next = "@dbl@Lord Daquarius said Solus left some fur behind. The|@dre@Mage of Zamorak@dbl@ in Varrock wants @dre@20 rune essence@dbl@ for|@dbl@what he knows.";
         } else {
-            $next = "@dbl@Lord Daquarius said Solus left some fur behind. I should ask the|@dre@Mage of Zamorak@dbl@ in Varrock's chaos temple about Solus.";
+            $next = "@dbl@Lord Daquarius said Solus left some fur behind. I|@dbl@should ask the @dre@Mage of Zamorak@dbl@ in Varrock's chaos|@dbl@temple about Solus.";
         }
     case ^wanted_hunt :
         if (~wanted_target = ^wanted_m_canifis) {
-            $next = "@dbl@Fur, and East of Varrock: Solus must be in @dre@Canifis@dbl@. I should scan|@dbl@for him there with my CommOrb.";
+            $next = "@dbl@Fur, and East of Varrock: Solus must be in @dre@Canifis@dbl@. I|@dbl@should scan for him there with my CommOrb.";
         } else {
-            $next = "@dbl@Solus keeps escaping by teleport. I should follow the item Savant|@dbl@pulled from his teleport and @dre@scan@dbl@ for him there. @dre@Savant@dbl@ can remind|@dbl@me of the clue.";
+            $next = "@dbl@Solus keeps escaping by teleport. I should follow the|@dbl@item Savant pulled from his teleport and @dre@scan@dbl@ for him|@dbl@there. @dre@Savant@dbl@ can remind me of the clue.";
         }
-    case ^wanted_cornered : $next = "@dbl@Solus is trapped in the @dre@rune essence mine@dbl@. I must defeat him!";
-    case default : $next = "@dbl@I defeated Solus Dellagar. I should take his @dre@hat@dbl@ to @dre@Sir Amik|@dre@Varze@dbl@ as proof.";
+    case ^wanted_cornered : $next = "@dbl@Solus is trapped in the @dre@rune essence mine@dbl@. I must|@dbl@defeat him!";
+    case default : $next = "@dbl@I defeated Solus Dellagar. I should take his @dre@hat@dbl@ to|@dre@Sir Amik Varze@dbl@ as proof.";
 }
 ~quest_journal("Wanted!", append($t, $next));
 

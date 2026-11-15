@@ -212,12 +212,31 @@ return(inzone(^wanted_castle_sw, ^wanted_castle_ne, coord));
 // ---------------------------------------------------------------- the observation records
 // A line said aloud and in the chatbox ("both records also have overhead dialogue repeating the
 // same dialogue", the OSRS wiki's transcript)
+// Ours: the lines move on by themselves, a few ticks each by their length; you are delayed while
+// they show, so a click on the map can't end the record halfway (it left you unseen, with no
+// minimap, where the record was)
 [proc,wanted_cs](npc_uid $who, string $name, npc $head, string $text, string $overhead)
 if (npc_finduid($who) = true) npc_say($overhead);
-~chatnpc_specific($name, $head, $text);
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatnpc_page($name, $head, $page);
+    p_delay(calc(2 + string_length($text) / (35 * $pagetotal)));
+    $page = calc($page + 1);
+}
 
+[proc,wanted_cs_mes](string $text)
+split_init($text, 470, 5, q8_full);
+~mesbox_page(0);
+p_delay(3);
+
+// Ours: while you watch, unseen, nothing hunts you (Lord Daquarius's room is full of Black
+// Knights, who killed the watcher): a fight that never ends, as the clue scrolls' guardians use
+// for %npc_lastcombat (general_use/spade.rs2)
 [proc,wanted_cs_start](coord $watch)
 %wanted_cutscene = 1;
+%lastcombat = sub(^max_32bit_int, 8);
 if_close;
 ~fade_out;
 p_delay(2);
@@ -232,17 +251,24 @@ p_transmogrify(null);
 minimap_toggle(0);
 p_telejump($back);
 %wanted_cutscene = 0;
+%lastcombat = 0;
 p_delay(1);
 ~fade_in;
 
 // logged out while watching: back to the castle
 [proc,wanted_login]
 if (%wanted_cutscene = 1) {
-    %wanted_cutscene = 0;
-    p_transmogrify(null);
-    minimap_toggle(0);
+    ~wanted_cs_reset;
     p_telejump(map_findsquare(^wanted_castle_yard, 0, 2, ^map_findsquare_lineofwalk));
 }
+
+// a record cut short (logging out, dying, the record closed): seen again, the minimap back
+[proc,wanted_cs_reset]
+if (%wanted_cutscene = 0) return;
+%wanted_cutscene = 0;
+%lastcombat = 0;
+p_transmogrify(null);
+minimap_toggle(0);
 
 // Record 1: Lord Daquarius's room in Taverley Dungeon (ours: a few squares east of where he stands)
 [label,wanted_record1]
@@ -265,7 +291,7 @@ npc_facesquare($daq_at);
 if (npc_finduid($daq) = true) npc_facesquare($solus_at);
 p_delay(1);
 ~fade_in;
-~mesbox("Observation Orb #BK-LD-577786 Record begins...");
+~wanted_cs_mes("Observation Orb #BK-LD-577786 Record begins...");
 ~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Lord Daquarius!", "Lord Daquarius!");
 ~wanted_cs($solus, "Solus Dellagar", wanted_solus_for_cutscene, "<p,laugh>Still festering in your pathetic little dungeon, I see.", "Still festering in your pathetic little dungeon, I see.");
 ~wanted_cs($daq, "Lord Daquarius", wanted_lord_daquarius_for_cutscene, "<p,angry>Solus.", "Solus.");
@@ -334,7 +360,7 @@ npc_add($mage_at, wanted_zammy_mage_for_cutscene_pray, 300);
 def_npc_uid $mage = npc_uid;
 p_delay(1);
 ~fade_in;
-~mesbox("Observation Orb #VA-ZM-000964 Record begins...");
+~wanted_cs_mes("Observation Orb #VA-ZM-000964 Record begins...");
 def_coord $solus_at = map_findsquare(movecoord($mage_at, 0, 0, 4), 0, 1, ^map_findsquare_lineofwalk);
 npc_add($solus_at, wanted_solus_for_cutscene, 300);
 def_npc_uid $solus = npc_uid;
