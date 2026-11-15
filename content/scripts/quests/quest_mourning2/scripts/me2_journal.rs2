@@ -14,7 +14,7 @@ if ($s = ^me2_not_started) {
     return;
 }
 if ($s >= ^me2_complete) {
-    ~quest_journal("Mourning's Ends Part 2", "@str@The mourners were digging for the Temple of Light. I found|@str@their lost dig team at its door, took a sample of its darkened|@str@crystal to Arianwyn, and Eluned made a new one. I bounced|@str@light around the temple's maze to reach the death altar,|@str@powered the crystal there and restored the safeguards. Some|@str@dwarves had tunnelled in through the back.||@red@QUEST COMPLETE!");
+    ~quest_journal("Mourning's Ends Part 2", "@str@The mourners were digging for the Temple of Light. I|@str@found their lost dig team at its door, took a sample of|@str@its darkened crystal to Arianwyn, and Eluned made a new|@str@one. I bounced light around the temple's maze to reach|@str@the death altar, powered the crystal there and restored|@str@the safeguards. Some dwarves had tunnelled in through|@str@the back.||@red@QUEST COMPLETE!");
     return;
 }
 def_string $t = "@str@The Head Mourner gave me a key to the excavation site.||";
@@ -22,11 +22,11 @@ def_string $next;
 switch_int ($s) {
     case ^me2_started : $next = "@dbl@He wants me to find out what happened to a missing @dre@dig|@dre@team@dbl@ in the tunnels west of the Mourner Headquarters. I|@dbl@should wear my mourner gear and watch out for the beasts.";
     case ^me2_found_team : $next = "@dbl@I found the dig team dead at the entrance of an ancient|@dbl@temple, surrounded by shadows. I should tell @dre@Arianwyn@dbl@ in|@dre@Lletya@dbl@ before the mourners find out.";
-    case ^me2_sample : $next = "@dbl@Arianwyn thinks the temple's safeguards have failed. He wants|@dbl@a sample of the @dre@darkened crystal@dbl@ somewhere in the temple.";
-    case ^me2_eluned : $next = "@dbl@Arianwyn summoned @dre@Eluned@dbl@. I should hand her the @dre@blackened|@dre@crystal@dbl@ so she can make a new one.";
+    case ^me2_sample : $next = "@dbl@Arianwyn thinks the temple's safeguards have failed.|@dbl@He wants a sample of the @dre@darkened crystal@dbl@ somewhere|@dbl@in the temple.";
+    case ^me2_eluned : $next = "@dbl@Arianwyn summoned @dre@Eluned@dbl@. I should hand her the|@dre@blackened crystal@dbl@ so she can make a new one.";
     case ^me2_eluned_making : $next = "@dbl@Eluned is making a copy of the blackened crystal. I should|@dbl@speak to her.";
-    case ^me2_new_crystal : $next = "@dbl@Eluned made me a @dre@newly made crystal@dbl@. I should ask @dre@Arianwyn@dbl@|@dbl@what to do with it.";
-    case ^me2_altar : $next = "@dbl@I must take the newly made crystal to the @dre@altar@dbl@ at the end of|@dbl@the temple to power it, then put it with the shards of the|@dbl@darkened crystal. The way is through the temple's maze of|@dbl@light doors: beams of light, mirrors and coloured crystals.";
+    case ^me2_new_crystal : $next = "@dbl@Eluned made me a @dre@newly made crystal@dbl@. I should ask|@dre@Arianwyn@dbl@ what to do with it.";
+    case ^me2_altar : $next = "@dbl@I must take the newly made crystal to the @dre@altar@dbl@ at the|@dbl@end of the temple to power it, then put it with the|@dbl@shards of the darkened crystal. The way is through the|@dbl@temple's maze of light doors: beams of light, mirrors|@dbl@and coloured crystals.";
     case ^me2_powered : $next = "@dbl@The crystal is powered. I should put it with the shards of|@dbl@the @dre@darkened crystal@dbl@ on the temple's top floor.";
     case default : $next = "@dbl@The safeguards are restored. I should tell @dre@Arianwyn@dbl@.";
 }
