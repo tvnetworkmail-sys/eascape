@@ -662,6 +662,23 @@ ipcMain.handle('test-items', async (e) => {
   return testItems || [];
 });
 
+// ours: the Market panel (ui/panels/market.js): the live website's market (2006rs.com/market), the
+// same listings on every world, read from its public API; the local test server has no market
+const MARKET = 'https://2006rs.com/market';
+ipcMain.handle('market-listings', async (e, type) => {
+  if (!fromChrome(e)) return null;
+  try {
+    const url = `${MARKET}/api/listings?type=${type === 'sell' ? 'sell' : 'buy'}`;
+    const opts = { cache: 'no-store', headers: { Accept: 'application/json' } };
+    const res = await (gameView ? gameView.webContents.session.fetch(url, opts) : fetch(url, opts));
+    if (!res.ok) return null;
+    const list = await res.json();
+    return Array.isArray(list) ? list : null;
+  } catch {
+    return null;
+  }
+});
+
 ipcMain.on('reload-game', (e) => {
   if (fromChrome(e)) loadWorld(state.world);
 });

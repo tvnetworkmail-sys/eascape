@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('lostlite', {
   hop: (worldId) => ipcRenderer.invoke('hop', worldId),
   testCommand: (cmd) => ipcRenderer.invoke('test-command', cmd), // ours: the Test Server panel
   testItems: () => ipcRenderer.invoke('test-items'),
+  marketListings: (type) => ipcRenderer.invoke('market-listings', type), // ours: the Market panel
   reloadGame: () => ipcRenderer.send('reload-game'),
   refreshWorlds: () => ipcRenderer.send('refresh-worlds'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
