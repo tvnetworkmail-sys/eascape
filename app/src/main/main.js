@@ -4,7 +4,7 @@
 // plugin panels. Two views share the window:
 //   chromeView - fills the window and draws the title bar, tab strip and panels
 //   gameView   - sits on top of chromeView in the game area and runs Lost City's client
-const { app, BaseWindow, WebContentsView, session, ipcMain, shell, dialog, screen, Notification } = require('electron');
+const { app, BaseWindow, BrowserWindow, WebContentsView, session, ipcMain, shell, dialog, screen, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { ConfigManager } = require('./config');
@@ -677,6 +677,43 @@ ipcMain.handle('market-listings', async (e, type) => {
   } catch {
     return null;
   }
+});
+
+// ours: the market's own window: the website's market pages (log in with your website account, then
+// post, edit, bump, pause or remove your offers there). Its own saved session (persist:market), so
+// you stay logged in; it only shows 2006rs.com, other links go to your browser.
+let marketWin = null;
+function openMarket(where) {
+  const url = /^\/(market|login|logout|register)\b/.test(String(where || '')) ? `https://2006rs.com${where}` : `${MARKET}`;
+  if (marketWin && !marketWin.isDestroyed()) {
+    marketWin.loadURL(url).catch(() => {});
+    if (marketWin.isMinimized()) marketWin.restore();
+    marketWin.focus();
+    return;
+  }
+  marketWin = new BrowserWindow({
+    width: 1100,
+    height: 800,
+    title: 'Market',
+    autoHideMenuBar: true,
+    backgroundColor: '#000000',
+    icon: path.join(__dirname, '..', 'ui', 'assets', 'icons', 'logo_256.png'),
+    webPreferences: { partition: 'persist:market', contextIsolation: true, sandbox: true, nodeIntegration: false },
+  });
+  const ours = (u) => { try { return new URL(u).hostname === '2006rs.com'; } catch { return false; } };
+  marketWin.webContents.setWindowOpenHandler(({ url }) => {
+    if (ours(url)) marketWin.loadURL(url).catch(() => {});
+    else if (/^https?:\/\//.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  marketWin.webContents.on('will-navigate', (e, u) => {
+    if (!ours(u)) { e.preventDefault(); if (/^https?:\/\//.test(u)) shell.openExternal(u); }
+  });
+  marketWin.on('closed', () => { marketWin = null; });
+  marketWin.loadURL(url).catch(() => {});
+}
+ipcMain.on('open-market', (e, where) => {
+  if (fromChrome(e)) openMarket(where);
 });
 
 ipcMain.on('reload-game', (e) => {

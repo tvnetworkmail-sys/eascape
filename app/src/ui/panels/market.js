@@ -2,8 +2,9 @@
 // Market panel (ours): the offers on the website's market (2006rs.com/market), in the sidebar.
 // Buying and Selling tabs like the website's, newest first, with a search box. Each row shows the
 // item, how many, what's offered for it, who posted it and how long ago; click a row to open that
-// item's page on the website, where you post and manage your own listings. The listings come from
-// the website's public API (main.js 'market-listings'), refreshed every minute while it's open.
+// item's page. Posting and managing your own offers happen in the market's own window (main.js
+// 'open-market'): the website's market pages, logged in with your website account. The listings
+// come from the website's public API (main.js 'market-listings'), refreshed every minute.
 /* global UI, App */
 window.Panels = window.Panels || [];
 
@@ -72,7 +73,7 @@ window.Panels = window.Panels || [];
     const tipText = [`${l.type === 'buy' ? 'Buying' : 'Selling'} ${Number(l.quantity).toLocaleString('en-US')} x ${l.item.name}`]
       .concat((l.offers || []).map((o) => `${o.title}\n${(o.items || []).map((i) => `  ${Number(i.quantity).toLocaleString('en-US')} ${i.name}`).join('\n')}`))
       .concat(l.notes ? [`"${l.notes}"`] : [])
-      .concat([`Posted by ${l.username}, ${ago(l.updatedAt)} ago`, 'Click to open it on the website'])
+      .concat([`Posted by ${l.username}, ${ago(l.updatedAt)} ago`, 'Click to open it in the market'])
       .join('\n');
     const el = h('div.mk-row', { tip: tipText },
       img(l.item.id, undefined, 32),
@@ -85,7 +86,7 @@ window.Panels = window.Panels || [];
           ...shown.map((i) => h('span', { style: 'display:inline-flex;align-items:center;gap:1px' }, img(i.itemId, i.quantity, 18), h('span', { text: gold(i.quantity) }))),
           more > 0 ? h('span.muted', { text: `+${more}` }) : null),
         h('div.small.muted', { style: 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text: `${l.username} · ${ago(l.updatedAt)}${l.notes ? ` · ${l.notes}` : ''}` })));
-    el.addEventListener('click', () => window.lostlite.openExternal(`${SITE}/market/items/${encodeURIComponent(l.item.slug)}?type=${l.type}`));
+    el.addEventListener('click', () => window.lostlite.openMarket(`/market/items/${encodeURIComponent(l.item.slug)}?type=${l.type}`));
     return el;
   }
 
@@ -123,8 +124,11 @@ window.Panels = window.Panels || [];
       search,
       listEl,
       h('div', { style: 'display:flex;gap:4px;margin-top:8px' },
+        h('button.btn', { text: 'Post an offer', style: 'flex:1', tip: 'Log in with your website account to post', onclick: () => { window.lostlite.openMarket('/market/listings/create'); } }),
+        h('button.btn', { text: 'My offers', style: 'flex:1', tip: 'Edit, bump, pause or remove your offers', onclick: () => { window.lostlite.openMarket('/market/listings'); } })),
+      h('div', { style: 'display:flex;gap:4px;margin-top:4px' },
         h('button.btn', { text: 'Refresh', style: 'flex:1', onclick: () => load(view.type, true) }),
-        h('button.btn', { text: 'Open market', style: 'flex:1', tip: 'Post and manage your listings on the website', onclick: () => window.lostlite.openExternal(`${SITE}/market?type=${view.type}`) }))));
+        h('button.btn', { text: 'Open market', style: 'flex:1', onclick: () => window.lostlite.openMarket(`/market?type=${view.type}`) }))));
     showList();
   }
 
