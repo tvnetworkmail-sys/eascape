@@ -472,10 +472,23 @@ function windowsNotifications() {
   if (process.platform !== 'win32') return;
   try {
     app.setAppUserModelId(APP_ID);
-    if (app.isPackaged) return; // the installer made the shortcut
+    const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', `${APP_NAME}.lnk`);
+    if (app.isPackaged) {
+      // the installer made the shortcut. But a copy run from a folder under the same name and id
+      // (the live app run from a git folder, 13 Nov 2026) replaced it with one that runs start.bat
+      // with Electron's icon, and Windows shows that icon on the taskbar: point it back at this app
+      let had = null;
+      try {
+        had = shell.readShortcutLink(link);
+      } catch {}
+      if (had && path.resolve(had.target || '') !== path.resolve(process.execPath)) {
+        const ok = shell.writeShortcutLink(link, 'replace', { target: process.execPath, cwd: path.dirname(process.execPath), appUserModelId: APP_ID, description: APP_NAME, icon: process.execPath, iconIndex: 0 });
+        log.info(ok ? `Start menu shortcut pointed back at the app: ${link}` : `Couldn't fix the Start menu shortcut (${link})`);
+      }
+      return;
+    }
     const root = path.resolve(app.getAppPath(), '..');
     const start = path.join(root, 'start.bat');
-    const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', `${APP_NAME}.lnk`);
     // the taskbar button takes this shortcut's icon (it shares the app's id), so it's the logo, not
     // Electron's own icon (electron.exe, which it was until 0.16.14)
     const ico = path.join(__dirname, '..', 'ui', 'assets', 'icons', 'logo.ico');
