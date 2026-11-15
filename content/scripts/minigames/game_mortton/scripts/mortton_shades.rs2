@@ -245,41 +245,58 @@ if(npc_getmode = opplayer2) {
     return;
 }
 
-if(%current_temple_aggro > 0 & %npc_int = 0) {
-    %npc_int = 3; //always 3 attacks
-    %npc_action_delay = map_clock;
-    //todo: start hunting temple walls? aploc with range of 3?
-    return;
+// EASCape: shades go for the temple walls of a player repairing it (Lost City left this a todo, so
+// the temple never fell). Ours: a shade picks a player at the temple whose shades are stirred up
+// (repairing raises %current_temple_aggro) and whose walls are up (remembered in
+// %npc_temple_player), walks up to the nearest wall and makes its 3 attacks on it, 4-6 ticks
+// apart, then rests 1-7 ticks. Run from this timer: the walls block an approach to them.
+if (%npc_int = 0) {
+    huntall(^mortton_temple_altar_coord, 15, 0);
+    while (huntnext = true) {
+        if (%current_temple_aggro > 0 & %current_temple_build > 0 & ~inzone_coord_pair_table(mortton_temple_zones, coord) = true) {
+            %npc_temple_player = uid;
+            %npc_int = 3; //always 3 attacks
+        }
+    }
 }
+def_coord $wall = ~shade_temple_wall;
+if (%npc_int > 0 & $wall ! null & distance(npc_coord, ^mortton_temple_altar_coord) <= 10 & finduid(%npc_temple_player) = true & ~inzone_coord_pair_table(mortton_temple_zones, coord) = true) {
+    if (distance(npc_coord, $wall) > 1) {
+        npc_walk($wall);
+        npc_settimer(2);
+        return;
+    }
+    npc_facesquare($wall);
+    ~shade_templeattack;
+    %npc_int = sub(%npc_int, 1);
+    if (%npc_int = 0 & %current_temple_build = 0) {
+        npc_anim(shade_sink, 0);
+        npc_delay(1);
+        npc_changetype(shadeshadow_level1, 500);
+        return;
+    }
+    if (%npc_int > 0) {
+        npc_settimer(~random_range(4, 6)); //4-6t inbetween attacks
+        return;
+    }
+}
+%npc_int = 0;
 
 npc_setmode(null);
 npc_settimer(~random_range(1,7));
 
-[ai_aploc3,_category_226]
-if (%npc_action_delay > map_clock) {
-    return;
-}
-
-if (%npc_int > 0) {
-    ~shade_templeattack;
-    
-    %npc_int = sub(%npc_int, 1);
-    
-    if (%npc_int = 0) {
-        if (%current_temple_build = 0) {
-            npc_anim(shade_sink, 0);
-            npc_delay(1); 
-            npc_changetype(shadeshadow_level1, 500);
-        } else {
-            npc_settimer(~random_range(1, 7));
-        }
-        npc_setmode(null);
-        return;
+// where the temple wall nearest the shade is (ours)
+[proc,shade_temple_wall]()(coord)
+def_coord $best = null;
+def_int $best_dist = 100;
+loc_findallzone(^mortton_temple_altar_coord);
+while (loc_findnext = true) {
+    if (loc_category = category_226 & distance(npc_coord, loc_coord) < $best_dist) {
+        $best = loc_coord;
+        $best_dist = distance(npc_coord, loc_coord);
     }
-    %npc_action_delay = add(map_clock, ~random_range(4, 6)); //4-6t inbetween attacks
-} else {
-    npc_setmode(null);
 }
+return($best);
 
 [proc,shade_templeattack]
 npc_anim(shade_attack_wall, 0);

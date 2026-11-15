@@ -68,12 +68,14 @@ if(oc_category(last_useitem) = mort_serum & compare(nc_name(npc_type),"Afflicted
     ~chatnpc("<p,happy>Oh... thank you, you used the serum on me. Here have|something for your trouble.");
     //17 May 2005 (Update):
     //Serum 208 can now be used on afflicted for better rewards.
-// } else if(oc_category(last_useitem) = category_109 & compare(nc_name(npc_type),"Afflicted") = 0) {
-//     inv_setslot(inv, last_useslot, oc_param(last_useitem, next_obj_stage), 1);
-//     npc_anim(null, 0);
-//     npc_changetype(npc_param(next_npc_type), 50); //50 ticks osrs
-//     queue(208_cure_affliction_reward, 0, 0);
-//     ~chatnpc("<p,happy>Oh... thank you, you used the permanent serum on|me. Here have something for your trouble.");
+    // EASCape: the 17 May 2005 update (before our cutoff): Serum 208 works on the afflicted too,
+    // for better rewards (Lost City 274 predates it)
+} else if(oc_category(last_useitem) = mort_serum_perm & compare(nc_name(npc_type),"Afflicted") = 0) {
+    inv_setslot(inv, last_useslot, oc_param(last_useitem, next_obj_stage), 1);
+    npc_anim(null, 0);
+    npc_changetype(npc_param(next_npc_type), 50); //50 ticks osrs
+    queue(208_cure_affliction_reward, 0, 0);
+    ~chatnpc("<p,happy>Oh... thank you, you used the permanent serum on|me. Here have something for your trouble.");
 } else {
    ~displaymessage(^dm_default); 
 }
@@ -133,81 +135,81 @@ if ($random < 59) {
     }
 }
 
-// [queue,208_cure_affliction_reward]
-// // https://oldschool.runescape.wiki/w/Serum_208#Cure_rewards
-// def_int $random = random(128);
+[queue,208_cure_affliction_reward]
+// https://oldschool.runescape.wiki/w/Serum_208#Cure_rewards
+def_int $random = random(128);
 
-// if ($random < 30) {
-//     inv_add(inv, coins, ~random_range(30, 40));
-//     ~objbox(coins, "The local gives you some coins.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 46) {
-//     inv_add(inv, unidentified_tarromin, ~random_range(2, 5));
-//     ~objbox(unidentified_tarromin, "The local gives you some herbs.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 60) {
-//     inv_add(inv, limestonebrick,  ~random_range(1, 5));
-//     ~objbox(limestonebrick, "The local gives you some limestone.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 74) {
-//     inv_add(inv, swamppaste, ~random_range(10, 35));
-//     ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 84) {
-//     inv_add(inv, oliveoil1, ~random_range(2, 5));
-//     ~objbox(oliveoil1, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 91) {
-//     inv_add(inv, oliveoil2, ~random_range(2, 5));
-//     ~objbox(oliveoil2, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 96) {
-//     inv_add(inv, oliveoil4, ~random_range(1, 3));
-//     ~objbox(oliveoil4, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 101) {
-//     //todo: See if any type of logs have plurality check
-//     inv_add(inv, logs, ~random_range(1, 5));
-//     ~objbox(logs, "The local gives you some logs.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 105) {
-//     inv_add(inv, oliveoil3, ~random_range(1, 3));
-//     ~objbox(oliveoil3, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 109) {
-//     inv_add(inv, shadekey_bronze_bloodred, 1);
-//     ~objbox(shadekey_bronze_bloodred, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 113) {
-//     inv_add(inv, oak_logs, ~random_range(1, 5));
-//     ~objbox(oak_logs, "The local gives you some oak logs.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 116) {
-//     inv_add(inv, shadekey_bronze_crimson, 1);
-//     ~objbox(shadekey_bronze_crimson, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 119) {
-//     inv_add(inv, shadekey_bronze_brown, 1);
-//     ~objbox(shadekey_bronze_brown, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 121) {
-//     def_int $amount = ~random_range(1, 3);
-//     inv_add(inv, snail_corpse2, $amount);
-//     if($amount = 1) {
-//         ~objbox(snail_corpse2, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
-//     } else {
-//         ~objbox(snail_corpse2, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
-//     }
-// } else if ($random < 124) {
-//     def_int $amount = ~random_range(1, 3);
-//     inv_add(inv, snail_corpse1, $amount);
-//     if($amount = 1) {
-//         ~objbox(snail_corpse1, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
-//     } else {
-//         ~objbox(snail_corpse1, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
-//     }
-// } else if ($random < 126) {
-//     inv_add(inv, willow_logs, ~random_range(1, 5));
-//     ~objbox(willow_logs, "The local gives you some willow logs.", 250, 0, divide(^objbox_height, 2));
-// } else if ($random < 127) {
-//     inv_add(inv, maple_logs, ~random_range(1, 5));
-//     ~objbox(maple_logs, "The local gives you some maple logs.", 250, 0, divide(^objbox_height, 2));
-// } else {
-//     def_int $amount = ~random_range(1, 3);
-//     inv_add(inv, snail_corpse3, $amount);
-//     if($amount = 1) {
-//         ~objbox(snail_corpse3, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
-//     } else {
-//         ~objbox(snail_corpse3, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
-//     }
-// }
+if ($random < 30) {
+    inv_add(inv, coins, ~random_range(30, 40));
+    ~objbox(coins, "The local gives you some coins.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 46) {
+    inv_add(inv, unidentified_tarromin, ~random_range(2, 5));
+    ~objbox(unidentified_tarromin, "The local gives you some herbs.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 60) {
+    inv_add(inv, limestonebrick,  ~random_range(1, 5));
+    ~objbox(limestonebrick, "The local gives you some limestone.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 74) {
+    inv_add(inv, swamppaste, ~random_range(10, 35));
+    ~objbox(swamppaste, "The local gives you some swamp paste.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 84) {
+    inv_add(inv, oliveoil1, ~random_range(2, 5));
+    ~objbox(oliveoil1, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 91) {
+    inv_add(inv, oliveoil2, ~random_range(2, 5));
+    ~objbox(oliveoil2, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 96) {
+    inv_add(inv, oliveoil4, ~random_range(1, 3));
+    ~objbox(oliveoil4, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 101) {
+    //todo: See if any type of logs have plurality check
+    inv_add(inv, logs, ~random_range(1, 5));
+    ~objbox(logs, "The local gives you some logs.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 105) {
+    inv_add(inv, oliveoil3, ~random_range(1, 3));
+    ~objbox(oliveoil3, "The local gives you some olive oil.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 109) {
+    inv_add(inv, shadekey_bronze_bloodred, 1);
+    ~objbox(shadekey_bronze_bloodred, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 113) {
+    inv_add(inv, oak_logs, ~random_range(1, 5));
+    ~objbox(oak_logs, "The local gives you some oak logs.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 116) {
+    inv_add(inv, shadekey_bronze_crimson, 1);
+    ~objbox(shadekey_bronze_crimson, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 119) {
+    inv_add(inv, shadekey_bronze_brown, 1);
+    ~objbox(shadekey_bronze_brown, "The local gives you a strange key.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 121) {
+    def_int $amount = ~random_range(1, 3);
+    inv_add(inv, snail_corpse2, $amount);
+    if($amount = 1) {
+        ~objbox(snail_corpse2, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
+    } else {
+        ~objbox(snail_corpse2, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
+    }
+} else if ($random < 124) {
+    def_int $amount = ~random_range(1, 3);
+    inv_add(inv, snail_corpse1, $amount);
+    if($amount = 1) {
+        ~objbox(snail_corpse1, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
+    } else {
+        ~objbox(snail_corpse1, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
+    }
+} else if ($random < 126) {
+    inv_add(inv, willow_logs, ~random_range(1, 5));
+    ~objbox(willow_logs, "The local gives you some willow logs.", 250, 0, divide(^objbox_height, 2));
+} else if ($random < 127) {
+    inv_add(inv, maple_logs, ~random_range(1, 5));
+    ~objbox(maple_logs, "The local gives you some maple logs.", 250, 0, divide(^objbox_height, 2));
+} else {
+    def_int $amount = ~random_range(1, 3);
+    inv_add(inv, snail_corpse3, $amount);
+    if($amount = 1) {
+        ~objbox(snail_corpse3, "The local gives you a snail.", 250, 0, divide(^objbox_height, 2));
+    } else {
+        ~objbox(snail_corpse3, "The local gives you some snails.", 250, 0, divide(^objbox_height, 2));
+    }
+}
 
 [proc,generate_afflicted_speech]()(string)
 def_int $words = random(6);
