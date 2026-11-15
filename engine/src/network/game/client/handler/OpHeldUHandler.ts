@@ -96,8 +96,12 @@ export default class OpHeldUHandler extends ClientGameMessageHandler<OpHeldU> {
         // [opheldu,a]
         if (!script) {
             script = ScriptProvider.getByTriggerSpecific(ServerTriggerType.OPHELDU, useObjType.id, -1);
-            [player.lastItem, player.lastUseItem] = [player.lastUseItem, player.lastItem];
-            [player.lastSlot, player.lastUseSlot] = [player.lastUseSlot, player.lastSlot];
+            // EASCape: swap only when [opheldu,a] exists; swapping anyway left the category scripts
+            // below with the items the wrong way round (sacred oil used on logs: nothing happened)
+            if (script) {
+                [player.lastItem, player.lastUseItem] = [player.lastUseItem, player.lastItem];
+                [player.lastSlot, player.lastUseSlot] = [player.lastUseSlot, player.lastSlot];
+            }
         }
 
         // [opheld,b_category]
