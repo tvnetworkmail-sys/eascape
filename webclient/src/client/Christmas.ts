@@ -80,11 +80,25 @@ export default class Christmas {
         Christmas.baseX = baseX;
         Christmas.baseZ = baseZ;
         Christmas.builtSnow = Christmas.builtWanted && baseZ + 52 < UNDERGROUND_Z;
+        // roofs and trees go by the scene's middle (their built models are shared across the scene)
+        Christmas.sceneDesert = Christmas.desert(baseX + 52, baseZ + 52);
+    }
+    private static sceneDesert: boolean = false;
+
+    // a square of the scene being built is snowy: outdoors (not under a roof), above ground, and not in
+    // the desert
+    static snowy(mapl: Uint8Array[][], level: number, x: number, z: number): boolean {
+        return Christmas.builtSnow && (mapl[level][x][z] & MapFlag.RemoveRoof) === 0 && Christmas.baseZ + z < UNDERGROUND_Z && !Christmas.desert(Christmas.baseX + x, Christmas.baseZ + z);
     }
 
-    // a square of the scene being built is snowy: outdoors (not under a roof) and above ground
-    static snowy(mapl: Uint8Array[][], level: number, x: number, z: number): boolean {
-        return Christmas.builtSnow && (mapl[level][x][z] & MapFlag.RemoveRoof) === 0 && Christmas.baseZ + z < UNDERGROUND_Z;
+    // no snow in the desert (the owner's call, 15 Nov 2026): the Kharidian Desert south of the Shantay
+    // Pass (Bedabin camp, the bandit camp, Pollnivneach to Sophanem and Nardah), and Al Kharid with the
+    // Duel Arena. World squares.
+    static desert(x: number, z: number): boolean {
+        if (x >= 3136 && x < 3520 && z >= 2688 && z < 3136) {
+            return true;
+        }
+        return x >= 3264 && x < 3392 && z >= 3136 && z < 3264;
     }
 
     // an underlay's blended colour (HSL16: hue 6 bits, saturation 3, lightness 7) as snow: white that keeps a
@@ -112,7 +126,7 @@ export default class Christmas {
     // a loc whose model gets frosted: roofs and trees (not the decorated Christmas tree, "Evergreen.":
     // snow would hide its decorations)
     static frosts(loc: LocType, shape: number): boolean {
-        if (!Christmas.builtSnow) {
+        if (!Christmas.builtSnow || Christmas.sceneDesert) {
             return false;
         }
         if (shape >= LocShape.ROOF_STRAIGHT && shape <= LocShape.ROOFEDGE_SQUARE_CORNER) {
@@ -175,7 +189,7 @@ export default class Christmas {
         if (x < 0 || z < 0 || x >= 104 || z >= 104) {
             return false;
         }
-        return (mapl[level][x][z] & MapFlag.RemoveRoof) === 0 && Christmas.baseZ + z < UNDERGROUND_Z;
+        return (mapl[level][x][z] & MapFlag.RemoveRoof) === 0 && Christmas.baseZ + z < UNDERGROUND_Z && !Christmas.desert(Christmas.baseX + x, Christmas.baseZ + z);
     }
 
     // the overlay's seqs move on (by the client cycles, 20 ms each, since the last frame), as an interface
