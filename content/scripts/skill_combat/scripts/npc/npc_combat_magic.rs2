@@ -107,7 +107,11 @@ return($duration);
 
 [proc,npc_spell_success](dbrow $spell_data, int $maxhit, int $duration)
 if_close;
-sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
+// EASCape: not every monster spell has a cast sound (a null sound was a script error, and the
+// live server removes a monster whose script errors)
+if (db_getfield($spell_data, magic_spell_table:sound_cast, 0) ! null) {
+    sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
+}
 def_int $damage = randominc($maxhit);
 if ($maxhit ! null) {
     // npc vs player spells have no 1t extra damage delay. Whereas player vs npc spells do (osrs)
@@ -170,7 +174,11 @@ if ($freeze_time > 0) {
 
 [proc,npc_spell_fail](dbrow $spell_data, int $duration)
 if_close;
-sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
+// EASCape: not every monster spell has a cast sound (a null sound was a script error, and the
+// live server removes a monster whose script errors)
+if (db_getfield($spell_data, magic_spell_table:sound_cast, 0) ! null) {
+    sound_synth(db_getfield($spell_data, magic_spell_table:sound_cast, 0), 0, 0);
+}
 sound_synth(spellfail, 1, $duration);
 spotanim_pl(failedspell_impact, 92, $duration);
 // splashing in osrs causes insta auto retal
