@@ -476,12 +476,15 @@ function windowsNotifications() {
     const root = path.resolve(app.getAppPath(), '..');
     const start = path.join(root, 'start.bat');
     const link = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', `${APP_NAME}.lnk`);
-    const want = { target: fs.existsSync(start) ? start : process.execPath, cwd: root, appUserModelId: APP_ID, description: APP_NAME, icon: process.execPath, iconIndex: 0 };
+    // the taskbar button takes this shortcut's icon (it shares the app's id), so it's the logo, not
+    // Electron's own icon (electron.exe, which it was until 0.16.14)
+    const ico = path.join(__dirname, '..', 'ui', 'assets', 'icons', 'logo.ico');
+    const want = { target: fs.existsSync(start) ? start : process.execPath, cwd: root, appUserModelId: APP_ID, description: APP_NAME, icon: fs.existsSync(ico) ? ico : process.execPath, iconIndex: 0 };
     let have = null;
     try {
       have = shell.readShortcutLink(link);
     } catch {}
-    if (!have || have.appUserModelId !== APP_ID || path.resolve(have.target || '') !== path.resolve(want.target)) {
+    if (!have || have.appUserModelId !== APP_ID || path.resolve(have.target || '') !== path.resolve(want.target) || path.resolve(have.icon || '') !== path.resolve(want.icon)) {
       const ok = shell.writeShortcutLink(link, have ? 'replace' : 'create', want);
       log.info(ok ? `Start menu shortcut made for notifications: ${link}` : `Couldn't make the Start menu shortcut (${link}): notifications may not show`);
     }
