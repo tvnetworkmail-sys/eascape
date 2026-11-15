@@ -75,7 +75,17 @@ return(false);
 
 [proc,fightpit_overlay]
 if_openoverlay(inter_62);
+~fightpit_overlay_update;
+
+// ours: the "Foes Remaining" line (it reads "You're the Winner!" at 0) only shows in the arena;
+// in the waiting room it read "You're the Winner!" to everyone, or a count from a past round
+[proc,fightpit_overlay_update]
 ~fightpit_champion_text;
+if (~in_fightpit_arena(coord) = true) {
+    if_sethide(inter_62:com_2, false);
+} else {
+    if_sethide(inter_62:com_2, true);
+}
 
 [proc,fightpit_champion_text]
 def_string $name = "TzHaar-Xil-Huz";
@@ -136,6 +146,13 @@ if (%npc_int > 5 & $fighting <= 1) {
             }
         }
     }
+    // ours: everyone in the pit sees the new champion's name (it was only set on going in)
+    huntall(0_37_80_31_36, 32, 0);
+    while (huntnext = true) {
+        if (~in_fightpit_arena(coord) = true | ~in_fightpit_wait(coord) = true) {
+            queue(fightpit_refresh, 0, 0);
+        }
+    }
     %npc_int2 = 0;
     %npc_int = 0;
     %npc_lastattack = 0;
@@ -184,8 +201,13 @@ p_teleport(movecoord(^fightpit_start_sw, random(13), 0, random(13)));
 set_player_op("Attack", 2, ^true);
 ~fightpit_overlay;
 
+// the foes are everyone else still in the arena (it counted you too)
 [queue,fightpit_remaining](int $count)
-%tzhaar_fightpit_remaining = $count;
+%tzhaar_fightpit_remaining = max(sub($count, 1), 0);
+~fightpit_overlay_update;
+
+[queue,fightpit_refresh]
+~fightpit_overlay_update;
 
 // the champion stays in the pit (TzHaar-Mej-Kah: "they stay in the pit for next fight"); the
 // tokkul waits for them in the waiting room, and adds up over every round they win
@@ -211,6 +233,10 @@ clearsofttimer(fightpit_champion);
 [ai_applayer2,tzhaar_fightpit_swarm_3a] ~fightcave_ranged(13, ^ranged_style, magmaquris_punch, tzhaar_spine_attack);
 [ai_opplayer2,tzhaar_fightpit_swarm_3a] ~fightcave_ranged(13, ^ranged_style, magmaquris_punch, tzhaar_spine_attack);
 [ai_queue1,tzhaar_fightpit_swarm_3a] ~npc_default_retaliate_ap;
+// ours: no bones (the default death drops them), as the Fight Cave's monsters
+[ai_queue3,tzhaar_fightpit_swarm_1a] gosub(npc_death);
+[ai_queue3,tzhaar_fightpit_swarm_2a] gosub(npc_death);
+[ai_queue3,tzhaar_fightpit_swarm_3a] gosub(npc_death);
 
 [proc,fightpit_monster_timer]
 npc_settimer(10);
