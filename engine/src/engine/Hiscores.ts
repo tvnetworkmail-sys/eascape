@@ -251,3 +251,22 @@ export function npcNames(): string[] {
     }
     return names;
 }
+
+/** The most kills of each NPC and who has them, most first: the NPC kills page's opening list
+ *  (and its search, which shows each match's top killer). */
+export async function npcRecords(): Promise<{ npc: string; name: string; kills: number }[]> {
+    const c = await current();
+    const best = new Map<string, { name: string; kills: number }>();
+    for (const [k, e] of c.entries) {
+        if (c.excluded.has(k)) {
+            continue;
+        }
+        for (const [npc, kills] of e.kills) {
+            const b = best.get(npc);
+            if (!b || kills > b.kills || (kills === b.kills && e.name.localeCompare(b.name) < 0)) {
+                best.set(npc, { name: e.name, kills });
+            }
+        }
+    }
+    return [...best].map(([npc, b]) => ({ npc, ...b })).sort((a, b) => b.kills - a.kills || a.npc.localeCompare(b.npc));
+}

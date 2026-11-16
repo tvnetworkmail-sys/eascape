@@ -12,7 +12,7 @@ import { CrcBuffer, CrcTable } from '#/cache/CrcTable.js';
 
 import OnDemand from '#/engine/OnDemand.js';
 import World from '#/engine/World.js';
-import { lookup as hiscoreLookup, killTable, npcNames, BOSSES } from '#/engine/Hiscores.js';
+import { lookup as hiscoreLookup, killTable, npcNames, npcRecords, BOSSES } from '#/engine/Hiscores.js';
 
 import NullClientSocket from '#/server/NullClientSocket.js';
 
@@ -172,6 +172,11 @@ fastify.get<{ Querystring: { table?: string; rank?: string; name?: string; count
 fastify.get('/hiscores/kills/tables', async (_req, reply) => {
     reply.header('Cache-Control', 'no-store');
     return { bosses: BOSSES.map(b => ({ key: b.key, name: b.name })), npcs: npcNames() };
+});
+
+fastify.get('/hiscores/kills/records', async (_req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    return await npcRecords();
 });
 
 // cache routes
