@@ -35,3 +35,11 @@ one change.
   silently keeps anything live removed on its own (Idle Notifier, 8 Nov).
 - Content `.pack` files (varp, obj, loc and so on): keep both sides' new entries, with no
   clashing ids.
+
+## Player saves: never change the format
+
+- Saves stay at **version 7**, as on live, so live can always roll back to an older game without
+  losing anything. Never add fields or bump the version for new things.
+- New player data goes in **its own file** next to the saves, like the NPC kills:
+  `data/players/<profile>/kills/<username>.json` (`engine/KillStore.ts`), read when the player
+  loads and written with the save when it changed (owner's rule, 16 Nov 2026).

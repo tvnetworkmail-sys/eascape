@@ -582,6 +582,7 @@ const PlayerOps: CommandHandlers = {
         }
         const kills = state.activePlayer.npcKills;
         kills.set(type, Math.min((kills.get(type) ?? 0) + 1, 0x7fffffff));
+        state.activePlayer.npcKillsChanged = true;
     },
 
     // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)

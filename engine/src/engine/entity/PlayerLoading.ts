@@ -4,12 +4,18 @@ import Player, { getExpByLevel, getLevelByExp } from '#/engine/entity/Player.js'
 import { PlayerStat } from '#/engine/entity/PlayerStat.js';
 import World from '#/engine/World.js';
 import Packet from '#/io/Packet.js';
+import { readKills } from '#/engine/KillStore.js';
 import ClientSocket from '#/server/ClientSocket.js';
 import { fromBase37, toBase37 } from '#/util/JString.js';
 
 export class PlayerLoading {
     public static readonly SAV_MAGIC: number = 0x2004;
-    public static readonly SAV_VERSION: number = 8; // EASCape: 8 adds NPC kills
+    // EASCape: saves stay version 7, as on live, so a rollback to an older game can still read every
+    // save; NPC kills are kept in their own files (KillStore). Version 8 saves, which this game wrote
+    // from 16 Nov 2026 until the kills moved out, can still be read: their kills go to the kills
+    // file on the next save, and the save is written as version 7 again.
+    public static readonly SAV_VERSION: number = 7;
+    private static readonly SAV_VERSION_READ: number = 8;
 
     static verify(sav: Packet) {
         if (sav.g2() !== PlayerLoading.SAV_MAGIC) {
@@ -17,7 +23,7 @@ export class PlayerLoading {
         }
 
         const version = sav.g2();
-        if (version > PlayerLoading.SAV_VERSION) {
+        if (version > PlayerLoading.SAV_VERSION_READ) {
             return false;
         }
 
@@ -55,7 +61,7 @@ export class PlayerLoading {
         }
 
         const version = sav.g2();
-        if (version > PlayerLoading.SAV_VERSION) {
+        if (version > PlayerLoading.SAV_VERSION_READ) {
             throw new Error('Unsupported save version');
         }
 
@@ -158,12 +164,19 @@ export class PlayerLoading {
             player.lastLoginTime = sav.g8();
         }
 
-        // EASCape: NPC kills by type
+        // EASCape: NPC kills by type, from their own file (KillStore); a version 8 save still has them
+        // at the end, and they're moved to the file if it doesn't have them yet
+        player.npcKills = readKills(safeName);
         if (version >= 8) {
             const kills = sav.g2();
+            const inSave = new Map<number, number>();
             for (let i = 0; i < kills; i++) {
                 const type = sav.g2();
-                player.npcKills.set(type, sav.g4s());
+                inSave.set(type, sav.g4s());
+            }
+            if (player.npcKills.size === 0 && inSave.size > 0) {
+                player.npcKills = inSave;
+                player.npcKillsChanged = true;
             }
         }
 

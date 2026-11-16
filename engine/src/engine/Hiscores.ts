@@ -22,7 +22,7 @@ const REFRESH_MS = 60_000;
 
 // EASCape: Boss kills and NPC kills (your call, 16 Nov 2026). The bosses' counts are their kill
 // count vars (content eascape_kc, kept since 19 Oct 2026); Barrows is chests opened. Every other
-// NPC is counted by p_npckill in npc_death (kept in the save from 16 Nov 2026), added up by name.
+// NPC is counted by p_npckill in npc_death (from 16 Nov 2026, kept in its own file: KillStore), added up by name.
 export const BOSSES = [
     { key: 'dagannoth_rex', name: 'Dagannoth Rex', varp: 'kc_dagannoth_rex', npcs: ['dagcave_melee_boss'] },
     { key: 'dagannoth_prime', name: 'Dagannoth Prime', varp: 'kc_dagannoth_prime', npcs: ['dagcave_magic_boss'] },

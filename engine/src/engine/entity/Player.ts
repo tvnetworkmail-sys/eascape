@@ -43,6 +43,7 @@ import ScriptState from '#/engine/script/ScriptState.js';
 import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
 import World from '#/engine/World.js';
 import WorldSettings from '#/engine/WorldSettings.js';
+import { writeKills } from '#/engine/KillStore.js';
 import Packet from '#/io/Packet.js';
 import ChatFilterSettings from '#/network/game/server/model/ChatFilterSettings.js';
 import HintArrow from '#/network/game/server/model/HintArrow.js';
@@ -273,12 +274,11 @@ export default class Player extends PathingEntity {
         // last login info
         sav.p8(this.lastLoginTime);
 
-        // EASCape: NPC kills by type (version 8)
-        const kills = [...this.npcKills].filter(([, n]) => n > 0).slice(0, 65535);
-        sav.p2(kills.length);
-        for (const [type, n] of kills) {
-            sav.p2(type);
-            sav.p4(n);
+        // EASCape: NPC kills by type, kept in their own file, not the save, so the save format stays
+        // the same and a rollback keeps them (KillStore)
+        if (this.npcKillsChanged) {
+            writeKills(this.username, this.npcKills);
+            this.npcKillsChanged = false;
         }
 
         sav.p4(Packet.getcrc(sav.data, 0, sav.pos));
@@ -2408,8 +2408,10 @@ export default class Player extends PathingEntity {
     // EASCape: what this player sees on one square and layer goes back to the world's
     // EASCape: the text of the book ~book last opened (not saved; general/book.rs2)
     bookText: string = '';
-    // EASCape: kills by NPC type (p_npckill), kept in the save (version 8), for the hiscores
+    // EASCape: kills by NPC type (p_npckill), for the hiscores, kept in their own file (KillStore)
     npcKills: Map<number, number> = new Map();
+    // set by p_npckill, so Player.save writes the kills file only when they've changed
+    npcKillsChanged: boolean = false;
 
     resetLoc(level: number, x: number, z: number, shape: number): void {
         const key: number = CoordGrid.packCoord(level, x, z) * 4 + locShapeLayer(shape);
