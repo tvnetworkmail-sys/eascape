@@ -4,7 +4,7 @@
 // plugin panels. Two views share the window:
 //   chromeView - fills the window and draws the title bar, tab strip and panels
 //   gameView   - sits on top of chromeView in the game area and runs Lost City's client
-const { app, BaseWindow, BrowserWindow, WebContentsView, session, ipcMain, shell, dialog, screen, Notification } = require('electron');
+const { app, BaseWindow, WebContentsView, session, ipcMain, shell, dialog, screen, Notification, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { ConfigManager } = require('./config');
@@ -40,6 +40,7 @@ const state = {
   stats: null,
   player: null,
   items: null,
+  bank: null, // ours: { key, at, items } your bank when you last opened it (the Market panel)
   entities: null,
   activePanel: null,
   update: null,
@@ -366,6 +367,11 @@ ipcMain.on('game-event', (e, ev) => {
     case 'player':
       state.player = ev.data;
       emit('patch', { player: state.player });
+      bankFor(state.player && state.player.name);
+      break;
+    case 'bank-items':
+      // ours: what's in your bank when you last had it open, for the Market panel's "Your items"
+      bankSet(ev.data);
       break;
     case 'items':
       state.items = ev.data;
@@ -407,6 +413,36 @@ ipcMain.on('game-event', (e, ev) => {
     default:
   }
 });
+
+// ours: your bank as it was when you last opened it, per account, remembered in a file (the game
+// only sends the bank while it's open), for the Market panel's "Your items"
+const BANK_FILE = () => path.join(app.getPath('userData'), 'market-banks.json');
+let banks = null;
+let bankTimer = null;
+function banksLoad() {
+  if (banks) return banks;
+  try { banks = JSON.parse(fs.readFileSync(BANK_FILE(), 'utf8')) || {}; } catch { banks = {}; }
+  return banks;
+}
+function bankFor(name) {
+  const key = typeof name === 'string' ? name.toLowerCase() : '';
+  if (!key || (state.bank && state.bank.key === key)) return;
+  const saved = banksLoad()[key];
+  state.bank = { key, at: saved ? saved.at : 0, items: saved ? saved.items : null };
+  emit('patch', { bank: state.bank });
+}
+function bankSet(items) {
+  const key = state.player && typeof state.player.name === 'string' ? state.player.name.toLowerCase() : '';
+  if (!key || !Array.isArray(items)) return;
+  const clean = items.filter((i) => i && Number.isInteger(i.id)).slice(0, 1000).map((i) => ({ id: i.id, quantity: i.quantity | 0, name: String(i.name || '') }));
+  state.bank = { key, at: Date.now(), items: clean };
+  emit('patch', { bank: state.bank });
+  banksLoad()[key] = { at: state.bank.at, items: clean };
+  clearTimeout(bankTimer);
+  bankTimer = setTimeout(() => {
+    try { fs.writeFileSync(BANK_FILE(), JSON.stringify(banks)); } catch { /* next time */ }
+  }, 3000);
+}
 
 ipcMain.handle('game-init', () => ({
   plugins: plugins.list().filter((d) => d.game).map((d) => ({ id: d.id, game: d.game, group: d.config.group })),
@@ -578,6 +614,7 @@ ipcMain.handle('get-state', (e) => {
     stats: state.stats,
     player: state.player,
     items: state.items,
+    bank: state.bank,
     entities: state.entities,
     pluginState: state.pluginState || {},
     chat: state.chat || [],
@@ -662,58 +699,172 @@ ipcMain.handle('test-items', async (e) => {
   return testItems || [];
 });
 
-// ours: the Market panel (ui/panels/market.js): the live website's market (2006rs.com/market), the
-// same listings on every world, read from its public API; the local test server has no market
-const MARKET = 'https://2006rs.com/market';
+// ours: the Market panel (ui/panels/market.js): the live website's market (2006rs.com/market) in
+// the sidebar, the same listings on every world (the local test server has no market). Public
+// listings and items come from its JSON API; your own offers, posting, editing, bumping, pausing,
+// marking sold and removing use the website's own market pages and forms, logged in here with your
+// game account (the website's /login), so no new window. Only the website's session cookie (sid) is
+// kept, never your password; with "Keep me logged in" it's saved encrypted (safeStorage) until it
+// runs out (the website keeps a session 12 hours). EASCAPE_MARKET_SITE points this at another copy
+// of the website, for testing.
+const MARKET_SITE = /^https?:\/\/[^/]+$/.test(process.env.EASCAPE_MARKET_SITE || '') ? process.env.EASCAPE_MARKET_SITE : 'https://2006rs.com';
+const MARKET = `${MARKET_SITE}/market`;
+const market = { sid: '', loaded: false, keep: false, items: null, itemsDirty: false };
+const marketFile = (name) => path.join(app.getPath('userData'), name);
+function marketSidLoad() {
+  if (market.loaded) return;
+  market.loaded = true;
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return;
+    const saved = JSON.parse(safeStorage.decryptString(fs.readFileSync(marketFile('market-session.bin'))));
+    if (saved && typeof saved.sid === 'string' && saved.expires > Date.now()) {
+      market.sid = saved.sid;
+      market.keep = true;
+    }
+  } catch { /* none saved */ }
+}
+function marketSidSave(sid, maxAge) {
+  market.sid = sid || '';
+  const file = marketFile('market-session.bin');
+  try {
+    if (market.sid && market.keep && safeStorage.isEncryptionAvailable()) {
+      fs.writeFileSync(file, safeStorage.encryptString(JSON.stringify({ sid: market.sid, expires: Date.now() + maxAge * 1000 })));
+    } else fs.unlinkSync(file);
+  } catch { /* nothing saved */ }
+}
+// only the website's market pages, its login and logout
+const marketPath = (p) => typeof p === 'string' && /^\/(market(?:[/?][^\r\n]*)?|login|logout)$/.test(p) && !p.startsWith('//');
+async function marketFetch(p, form) {
+  marketSidLoad();
+  const headers = { Accept: 'text/html' };
+  if (market.sid) headers.Cookie = `sid=${market.sid}`;
+  const opts = { method: form ? 'POST' : 'GET', headers, redirect: 'manual', cache: 'no-store' };
+  if (form) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    opts.body = new URLSearchParams(form).toString();
+  }
+  const res = await fetch(MARKET_SITE + p, opts);
+  // the website sets (or clears) its session cookie at login and logout
+  const cookies = typeof res.headers.getSetCookie === 'function' ? res.headers.getSetCookie() : [res.headers.get('set-cookie') || ''];
+  for (const c of cookies) {
+    const m = /^sid=([^;]*)/.exec(c || '');
+    if (!m) continue;
+    const age = /Max-Age=(\d+)/i.exec(c);
+    marketSidSave(age && Number(age[1]) > 0 ? m[1] : '', age ? Number(age[1]) : 0);
+  }
+  const location = res.headers.get('location') || '';
+  const html = location ? '' : await res.text();
+  // a market page that sends you to the login page: the session ran out
+  if (/^\/login\b/.test(location) && p !== '/login') marketSidSave('', 0);
+  return { status: res.status, location, html, loggedIn: !!market.sid };
+}
+ipcMain.handle('market-page', async (e, p, form) => {
+  if (!fromChrome(e) || !marketPath(p)) return null;
+  if (form !== undefined && (typeof form !== 'object' || form === null || Object.values(form).some((v) => typeof v !== 'string'))) return null;
+  try {
+    return await marketFetch(p, form);
+  } catch (err) {
+    log.warn(`Market: ${p}: ${err && err.message}`);
+    return null;
+  }
+});
+ipcMain.handle('market-login', async (e, username, password, keep) => {
+  if (!fromChrome(e) || typeof username !== 'string' || typeof password !== 'string') return { error: 'Invalid username or password.' };
+  market.keep = !!keep;
+  try {
+    const r = await marketFetch('/login', { username: username.slice(0, 12), password: password.slice(0, 20), next: '/market/listings' });
+    if (r.location && market.sid) return { ok: true };
+    const m = /<p class="red">([^<]*)<\/p>/.exec(r.html || '');
+    return { error: m ? m[1].replace(/&#39;/g, "'").replace(/&amp;/g, '&') : `The website said ${r.status}.` };
+  } catch {
+    return { error: "Couldn't reach the website." };
+  }
+});
+ipcMain.handle('market-logout', async (e, csrf) => {
+  if (!fromChrome(e)) return false;
+  try {
+    if (market.sid && typeof csrf === 'string') await marketFetch('/logout', { csrf });
+  } catch { /* logged out here anyway */ }
+  marketSidSave('', 0);
+  return true;
+});
+ipcMain.handle('market-session', (e) => {
+  if (!fromChrome(e)) return null;
+  marketSidLoad();
+  return { loggedIn: !!market.sid, site: MARKET_SITE };
+});
+async function marketJson(p) {
+  const url = `${MARKET}/api/${p}`;
+  const opts = { cache: 'no-store', headers: { Accept: 'application/json' } };
+  const res = await (gameView && MARKET_SITE === 'https://2006rs.com' ? gameView.webContents.session.fetch(url, opts) : fetch(url, opts));
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error(String(res.status));
+  return res.json();
+}
 ipcMain.handle('market-listings', async (e, type) => {
   if (!fromChrome(e)) return null;
   try {
-    const url = `${MARKET}/api/listings?type=${type === 'sell' ? 'sell' : 'buy'}`;
-    const opts = { cache: 'no-store', headers: { Accept: 'application/json' } };
-    const res = await (gameView ? gameView.webContents.session.fetch(url, opts) : fetch(url, opts));
-    if (!res.ok) return null;
-    const list = await res.json();
+    const list = await marketJson(`listings?type=${type === 'sell' ? 'sell' : 'buy'}`);
     return Array.isArray(list) ? list : null;
   } catch {
     return null;
   }
 });
-
-// ours: the market's own window: the website's market pages (log in with your website account, then
-// post, edit, bump, pause or remove your offers there). Its own saved session (persist:market), so
-// you stay logged in; it only shows 2006rs.com, other links go to your browser.
-let marketWin = null;
-function openMarket(where) {
-  const url = /^\/(market|login|logout|register)\b/.test(String(where || '')) ? `https://2006rs.com${where}` : `${MARKET}`;
-  if (marketWin && !marketWin.isDestroyed()) {
-    marketWin.loadURL(url).catch(() => {});
-    if (marketWin.isMinimized()) marketWin.restore();
-    marketWin.focus();
-    return;
+ipcMain.handle('market-search', async (e, q) => {
+  if (!fromChrome(e) || typeof q !== 'string' || q.trim().length < 2) return [];
+  try {
+    const list = await marketJson(`items?q=${encodeURIComponent(q.trim().slice(0, 40))}`);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return null;
   }
-  marketWin = new BrowserWindow({
-    width: 1100,
-    height: 800,
-    title: 'Market',
-    autoHideMenuBar: true,
-    backgroundColor: '#000000',
-    icon: path.join(__dirname, '..', 'ui', 'assets', 'icons', 'logo_256.png'),
-    webPreferences: { partition: 'persist:market', contextIsolation: true, sandbox: true, nodeIntegration: false },
-  });
-  const ours = (u) => { try { return new URL(u).hostname === '2006rs.com'; } catch { return false; } };
-  marketWin.webContents.setWindowOpenHandler(({ url }) => {
-    if (ours(url)) marketWin.loadURL(url).catch(() => {});
-    else if (/^https?:\/\//.test(url)) shell.openExternal(url);
-    return { action: 'deny' };
-  });
-  marketWin.webContents.on('will-navigate', (e, u) => {
-    if (!ours(u)) { e.preventDefault(); if (/^https?:\/\//.test(u)) shell.openExternal(u); }
-  });
-  marketWin.on('closed', () => { marketWin = null; });
-  marketWin.loadURL(url).catch(() => {});
+});
+// The market's items (name, slug, cost) by id, remembered in a file: your bank can hold hundreds,
+// and an item the market doesn't have (untradeable) is remembered as null
+function marketItemsLoad() {
+  if (market.items) return;
+  market.items = new Map();
+  try {
+    const saved = JSON.parse(fs.readFileSync(marketFile('market-items.json'), 'utf8'));
+    if (saved && saved.site === MARKET_SITE) for (const [id, v] of saved.items) market.items.set(id, v);
+  } catch { /* none yet */ }
 }
+let marketItemsTimer = null;
+function marketItemsSave() {
+  clearTimeout(marketItemsTimer);
+  marketItemsTimer = setTimeout(() => {
+    try {
+      fs.writeFileSync(marketFile('market-items.json'), JSON.stringify({ site: MARKET_SITE, items: [...market.items] }));
+    } catch { /* next time */ }
+  }, 2000);
+}
+ipcMain.handle('market-items', async (e, ids) => {
+  if (!fromChrome(e) || !Array.isArray(ids)) return {};
+  marketItemsLoad();
+  const want = [...new Set(ids.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < 65536))].slice(0, 2000);
+  const missing = want.filter((id) => !market.items.has(id));
+  let next = 0;
+  let failed = false;
+  const worker = async () => {
+    while (next < missing.length && !failed) {
+      const id = missing[next++];
+      try {
+        const it = await marketJson(`items/${id}`);
+        market.items.set(id, it && typeof it.name === 'string' ? { id: it.id, name: it.name, slug: it.slug, cost: it.cost | 0, members: !!it.members } : null);
+      } catch {
+        failed = true;
+      }
+    }
+  };
+  await Promise.all([1, 2, 3, 4, 5, 6].map(worker));
+  if (missing.length) marketItemsSave();
+  const out = {};
+  for (const id of want) if (market.items.has(id)) out[id] = market.items.get(id);
+  return out;
+});
 ipcMain.on('open-market', (e, where) => {
-  if (fromChrome(e)) openMarket(where);
+  // the website's market in your own browser
+  if (fromChrome(e) && marketPath(where || '/market')) shell.openExternal(MARKET_SITE + (where || '/market'));
 });
 
 ipcMain.on('reload-game', (e) => {

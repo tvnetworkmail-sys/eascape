@@ -892,7 +892,7 @@
       const counts = b.installed ? b.installed.counts : com && com[f.invCount];
       if (!items || !counts) return;
       const out = [];
-      for (let i = 0; i < items.length; i++) if (items[i] > 0) out.push({ id: items[i] - 1, quantity: counts[i] | 0 });
+      for (let i = 0; i < items.length; i++) if (items[i] > 0) out.push({ id: items[i] - 1, quantity: counts[i] | 0, name: this.itemLabel(items[i] - 1) }); // ours: the name, for the Market panel
       const key = out.map((x) => `${x.id}:${x.quantity}`).join(',');
       if (key !== b.reported) {
         b.reported = key;
