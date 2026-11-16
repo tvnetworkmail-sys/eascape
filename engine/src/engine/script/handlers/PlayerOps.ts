@@ -574,6 +574,16 @@ const PlayerOps: CommandHandlers = {
         state.pushString(state.activePlayer.bookText);
     },
 
+    // EASCape: one more kill of this NPC type on the player (kept in the save), for the hiscores
+    [ScriptOpcode.P_NPCKILL]: state => {
+        const type = state.popInt();
+        if (type < 0 || type >= NpcType.count) {
+            return;
+        }
+        const kills = state.activePlayer.npcKills;
+        kills.set(type, Math.min((kills.get(type) ?? 0) + 1, 0x7fffffff));
+    },
+
     // EASCape: a stat's experience in tenths (Tears of Guthix rewards the lowest)
     [ScriptOpcode.STAT_XP]: state => {
         const stat: PlayerStat = check(state.popInt(), PlayerStatValid);

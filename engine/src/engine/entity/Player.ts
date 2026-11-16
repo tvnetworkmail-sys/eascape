@@ -273,6 +273,14 @@ export default class Player extends PathingEntity {
         // last login info
         sav.p8(this.lastLoginTime);
 
+        // EASCape: NPC kills by type (version 8)
+        const kills = [...this.npcKills].filter(([, n]) => n > 0).slice(0, 65535);
+        sav.p2(kills.length);
+        for (const [type, n] of kills) {
+            sav.p2(type);
+            sav.p4(n);
+        }
+
         sav.p4(Packet.getcrc(sav.data, 0, sav.pos));
         return sav.data.subarray(0, sav.pos);
     }
@@ -2400,6 +2408,8 @@ export default class Player extends PathingEntity {
     // EASCape: what this player sees on one square and layer goes back to the world's
     // EASCape: the text of the book ~book last opened (not saved; general/book.rs2)
     bookText: string = '';
+    // EASCape: kills by NPC type (p_npckill), kept in the save (version 8), for the hiscores
+    npcKills: Map<number, number> = new Map();
 
     resetLoc(level: number, x: number, z: number, shape: number): void {
         const key: number = CoordGrid.packCoord(level, x, z) * 4 + locShapeLayer(shape);

@@ -493,6 +493,9 @@ const ScriptOpcodePointers: {
     [ScriptOpcode.BOOK_GETTEXT]: {
         require: ['active_player']
     },
+    [ScriptOpcode.P_NPCKILL]: {
+        require: ['active_player']
+    },
     [ScriptOpcode.STAT_HEAL]: {
         require: ['active_player'],
         require2: ['active_player2']

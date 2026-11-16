@@ -440,6 +440,7 @@ export const enum ScriptOpcode {
     P_RESETLOC, // EASCape: undoes p_showloc/p_hideloc on one square and layer
     BOOK_SETTEXT, // EASCape: keeps an open book's text on the player so its pages can be turned
     BOOK_GETTEXT, // EASCape: the text book_settext kept
+    P_NPCKILL, // EASCape: counts an NPC kill on the player, for the hiscores' NPC kills
 
     // Struct ops (4700-4799)
     STRUCT_PARAM = 4700,
@@ -883,6 +884,7 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['P_RESETLOC', ScriptOpcode.P_RESETLOC],
     ['BOOK_SETTEXT', ScriptOpcode.BOOK_SETTEXT],
     ['BOOK_GETTEXT', ScriptOpcode.BOOK_GETTEXT],
+    ['P_NPCKILL', ScriptOpcode.P_NPCKILL],
 
     ['STRUCT_PARAM', ScriptOpcode.STRUCT_PARAM],
 

@@ -12,7 +12,7 @@ import { CrcBuffer, CrcTable } from '#/cache/CrcTable.js';
 
 import OnDemand from '#/engine/OnDemand.js';
 import World from '#/engine/World.js';
-import { lookup as hiscoreLookup } from '#/engine/Hiscores.js';
+import { lookup as hiscoreLookup, killTable, npcNames, BOSSES } from '#/engine/Hiscores.js';
 
 import NullClientSocket from '#/server/NullClientSocket.js';
 
@@ -151,6 +151,27 @@ fastify.get<{ Params: { name: string } }>('/hiscores/player/:name', async (req, 
         return { error: 'not found' };
     }
     return result;
+});
+
+// EASCape: the Boss kills and NPC kills tables (engine/Hiscores.ts): ?table=<boss key>, npc:<name>
+// or npc:all, from ?rank= or around ?name=; and the lists for the hiscores' menu and NPC drop-down
+fastify.get<{ Querystring: { table?: string; rank?: string; name?: string; count?: string } }>('/hiscores/kills', async (req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    const result = await killTable(String(req.query.table ?? '').slice(0, 64), {
+        rank: Number(req.query.rank) || 1,
+        name: req.query.name ? String(req.query.name).slice(0, 12) : undefined,
+        count: Number(req.query.count) || 25
+    });
+    if (!result) {
+        reply.code(404);
+        return { error: 'not found' };
+    }
+    return result;
+});
+
+fastify.get('/hiscores/kills/tables', async (_req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    return { bosses: BOSSES.map(b => ({ key: b.key, name: b.name })), npcs: npcNames() };
 });
 
 // cache routes

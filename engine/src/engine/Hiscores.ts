@@ -8,6 +8,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import NpcType from '#/cache/config/NpcType.js';
+import VarPlayerType from '#/cache/config/VarPlayerType.js';
 import Packet from '#/io/Packet.js';
 import { PlayerLoading } from '#/engine/entity/PlayerLoading.js';
 import World from '#/engine/World.js';
@@ -18,7 +20,63 @@ export const SKILLS = ['attack', 'defence', 'strength', 'hitpoints', 'ranged', '
 const MIN_RANKED_LEVEL = 15;
 const REFRESH_MS = 60_000;
 
-type Entry = { name: string; levels: number[]; xp: number[]; totalLevel: number; totalXp: number };
+// EASCape: Boss kills and NPC kills (your call, 16 Nov 2026). The bosses' counts are their kill
+// count vars (content eascape_kc, kept since 19 Oct 2026); Barrows is chests opened. Every other
+// NPC is counted by p_npckill in npc_death (kept in the save from 16 Nov 2026), added up by name.
+export const BOSSES = [
+    { key: 'dagannoth_rex', name: 'Dagannoth Rex', varp: 'kc_dagannoth_rex', npcs: ['dagcave_melee_boss'] },
+    { key: 'dagannoth_prime', name: 'Dagannoth Prime', varp: 'kc_dagannoth_prime', npcs: ['dagcave_magic_boss'] },
+    { key: 'dagannoth_supreme', name: 'Dagannoth Supreme', varp: 'kc_dagannoth_supreme', npcs: ['dagcave_ranged_boss'] },
+    { key: 'barrows', name: 'Barrows chests', varp: 'kc_barrows_chest', npcs: [] },
+    { key: 'kalphite_queen', name: 'Kalphite Queen', varp: 'kc_kalphite_queen', npcs: ['kalphite_queen', 'kalphite_flyingqueen'] },
+    { key: 'king_black_dragon', name: 'King Black Dragon', varp: 'kc_king_black_dragon', npcs: ['king_dragon'] },
+    { key: 'tztok_jad', name: 'TzTok-Jad', varp: 'kc_tztok_jad', npcs: ['tzhaar_fightcave_swarm_boss'] }
+];
+
+// the bosses' NPC types, and anything else with a boss's name (the Kalphite Queen has other copies)
+let bossTypes: Set<number> | null = null;
+function isBossType(type: number): boolean {
+    if (!bossTypes) {
+        const ids = BOSSES.flatMap(b => b.npcs.map(n => NpcType.getId(n)).filter(id => id >= 0));
+        const bossNames = new Set(ids.map(id => NpcType.get(id)?.name).filter(Boolean));
+        bossTypes = new Set(ids);
+        for (let id = 0; id < NpcType.count; id++) {
+            if (bossNames.has(NpcType.get(id)?.name)) {
+                bossTypes.add(id);
+            }
+        }
+    }
+    return bossTypes.has(type);
+}
+
+// the name an NPC type is counted under ("Goblin" for every goblin), or null when it isn't counted
+function npcName(type: number): string | null {
+    if (type < 0 || type >= NpcType.count || isBossType(type)) {
+        return null;
+    }
+    const name = NpcType.get(type)?.name;
+    return name && name !== 'null' ? name : null;
+}
+
+type Entry = { name: string; levels: number[]; xp: number[]; totalLevel: number; totalXp: number; bosses: number[]; kills: Map<string, number>; totalKills: number };
+
+function killsOf(vars: Int32Array | number[], npcKills: Map<number, number>): Pick<Entry, 'bosses' | 'kills' | 'totalKills'> {
+    const bosses = BOSSES.map(b => {
+        const id = VarPlayerType.getId(b.varp);
+        return id >= 0 ? Math.max(0, vars[id] ?? 0) : 0;
+    });
+    const kills = new Map<string, number>();
+    let totalKills = 0;
+    for (const [type, n] of npcKills) {
+        const name = npcName(type);
+        if (!name || n <= 0) {
+            continue;
+        }
+        kills.set(name, (kills.get(name) ?? 0) + n);
+        totalKills += n;
+    }
+    return { bosses, kills, totalKills };
+}
 
 let cache: { at: number; entries: Map<string, Entry>; excluded: Set<string> } | null = null;
 let building: Promise<void> | null = null;
@@ -43,7 +101,7 @@ async function excludedAccounts(): Promise<Set<string>> {
     return out;
 }
 
-function entryOf(name: string, stats: number[], baseLevels: number[]): Entry {
+function entryOf(name: string, stats: number[], baseLevels: number[], vars: Int32Array | number[], npcKills: Map<number, number>): Entry {
     const levels: number[] = [];
     const xp: number[] = [];
     let totalLevel = 0;
@@ -56,7 +114,7 @@ function entryOf(name: string, stats: number[], baseLevels: number[]): Entry {
         totalLevel += l;
         totalXp += x;
     }
-    return { name, levels, xp, totalLevel, totalXp };
+    return { name, levels, xp, totalLevel, totalXp, ...killsOf(vars, npcKills) };
 }
 
 async function build(): Promise<void> {
@@ -76,7 +134,7 @@ async function build(): Promise<void> {
         try {
             const raw = await fs.promises.readFile(path.join(dir, f));
             const p = PlayerLoading.load(username, new Packet(new Uint8Array(raw)), null);
-            entries.set(username, entryOf(p.displayName, Array.from(p.stats), Array.from(p.baseLevels)));
+            entries.set(username, entryOf(p.displayName, Array.from(p.stats), Array.from(p.baseLevels), p.vars, p.npcKills));
         } catch {
             // an unreadable save: left out
         }
@@ -94,17 +152,24 @@ async function current(): Promise<NonNullable<typeof cache>> {
     // anyone online counts with their live stats
     for (const p of World.players) {
         if (p) {
-            cache!.entries.set(p.username.toLowerCase(), entryOf(p.displayName, Array.from(p.stats), Array.from(p.baseLevels)));
+            cache!.entries.set(p.username.toLowerCase(), entryOf(p.displayName, Array.from(p.stats), Array.from(p.baseLevels), p.vars, p.npcKills));
         }
     }
     return cache!;
 }
 
+export type KillRank = { rank: number; kills: number };
 export type HiscoreResult = {
     name: string;
     overall: { rank: number; level: number; xp: number };
     skills: Record<string, { rank: number; level: number; xp: number }>;
+    // EASCape: every boss (rank -1 with no kills), and the NPCs they've killed, most first
+    bosses: ({ key: string; name: string } & KillRank)[];
+    npcs: { total: KillRank; list: ({ name: string } & KillRank)[] };
 };
+
+// the rank of `kills` among everyone's (1 + how many have more); -1 with none
+const rankOf = (kills: number, all: number[]) => (kills > 0 ? 1 + all.filter(k => k > kills).length : -1);
 
 /** null: no such player (or one left off the hiscores) */
 export async function lookup(name: string): Promise<HiscoreResult | null> {
@@ -127,5 +192,62 @@ export async function lookup(name: string): Promise<HiscoreResult | null> {
         skills[SKILLS[i]] = { rank, level: me.levels[i], xp: me.xp[i] };
     }
     const overallRank = 1 + others.filter((o) => o !== me && (o.totalLevel > me.totalLevel || (o.totalLevel === me.totalLevel && o.totalXp > me.totalXp))).length;
-    return { name: me.name, overall: { rank: overallRank, level: me.totalLevel, xp: me.totalXp }, skills };
+    const bosses = BOSSES.map((b, i) => ({ key: b.key, name: b.name, kills: me.bosses[i], rank: rankOf(me.bosses[i], others.map(o => o.bosses[i])) }));
+    const list = [...me.kills].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, kills]) => ({ name, kills, rank: rankOf(kills, others.map(o => o.kills.get(name) ?? 0)) }));
+    const total = { kills: me.totalKills, rank: rankOf(me.totalKills, others.map(o => o.totalKills)) };
+    return { name: me.name, overall: { rank: overallRank, level: me.totalLevel, xp: me.totalXp }, skills, bosses, npcs: { total, list } };
+}
+
+export type KillTable = { table: string; title: string; rows: { rank: number; name: string; kills: number }[]; total: number };
+
+/** A boss's or an NPC's top killers: table is a boss key, "npc:<name>", or "npc:all" (every NPC
+ *  added up). From `rank` (1 up), or around `name` when given; `count` rows. null: no such table. */
+export async function killTable(table: string, opts: { rank?: number; name?: string; count?: number } = {}): Promise<KillTable | null> {
+    const c = await current();
+    let title: string;
+    let get: (e: Entry) => number;
+    const boss = BOSSES.findIndex(b => b.key === table);
+    if (boss >= 0) {
+        title = BOSSES[boss].name;
+        get = e => e.bosses[boss];
+    } else if (table === 'npc:all') {
+        title = 'All NPCs';
+        get = e => e.totalKills;
+    } else if (table.startsWith('npc:') && npcNames().includes(table.slice(4))) {
+        const name = table.slice(4);
+        title = name;
+        get = e => e.kills.get(name) ?? 0;
+    } else {
+        return null;
+    }
+    const ranked = [...c.entries.entries()].filter(([k, e]) => !c.excluded.has(k) && get(e) > 0).map(([, e]) => ({ name: e.name, kills: get(e) }));
+    ranked.sort((a, b) => b.kills - a.kills || a.name.localeCompare(b.name));
+    const rows = ranked.map(r => ({ rank: rankOf(r.kills, ranked.map(x => x.kills)), name: r.name, kills: r.kills }));
+    const count = Math.max(1, Math.min(opts.count ?? 25, 100));
+    let start = Math.max(0, (opts.rank ?? 1) - 1);
+    if (opts.name) {
+        const key = opts.name.toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+        const at = rows.findIndex(r => r.name.toLowerCase().replace(/[\s_-]+/g, ' ') === key);
+        if (at >= 0) {
+            start = Math.max(0, at - Math.floor(count / 2));
+        }
+    }
+    return { table, title, rows: rows.slice(start, start + count), total: rows.length };
+}
+
+let names: string[] | null = null;
+/** Every NPC name that can be fought (has Attack), A to Z, bosses left out: the NPC kills list. */
+export function npcNames(): string[] {
+    if (!names) {
+        const set = new Set<string>();
+        for (let id = 0; id < NpcType.count; id++) {
+            const t = NpcType.get(id);
+            const name = npcName(id);
+            if (name && t && t.op && t.op.some(o => o && o.toLowerCase() === 'attack')) {
+                set.add(name);
+            }
+        }
+        names = [...set].sort((a, b) => a.localeCompare(b));
+    }
+    return names;
 }

@@ -9,7 +9,7 @@ import { fromBase37, toBase37 } from '#/util/JString.js';
 
 export class PlayerLoading {
     public static readonly SAV_MAGIC: number = 0x2004;
-    public static readonly SAV_VERSION: number = 7;
+    public static readonly SAV_VERSION: number = 8; // EASCape: 8 adds NPC kills
 
     static verify(sav: Packet) {
         if (sav.g2() !== PlayerLoading.SAV_MAGIC) {
@@ -156,6 +156,15 @@ export class PlayerLoading {
         // last login info
         if (version >= 6) {
             player.lastLoginTime = sav.g8();
+        }
+
+        // EASCape: NPC kills by type
+        if (version >= 8) {
+            const kills = sav.g2();
+            for (let i = 0; i < kills; i++) {
+                const type = sav.g2();
+                player.npcKills.set(type, sav.g4s());
+            }
         }
 
         player.combatLevel = player.getCombatLevel();
