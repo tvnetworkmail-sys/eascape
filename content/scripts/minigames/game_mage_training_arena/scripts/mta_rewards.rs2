@@ -1,0 +1,218 @@
+// EASCape: the Mage Training Arena's Rewards Guardian, upstairs (Void MageTrainingArenaRewards.kt).
+// The window is the 377 cache's (inter_339, "Magic Training Arena Shop"); prices: Void's mta_rewards
+// table (the same as the OSRS wiki's). A wand needs the one before it, which it takes.
+
+[opnpc1,magictraining_guard_rewards]
+if (%mta_started = 0) {
+    ~chatnpc("<p,neutral>Greetings. Have you spoken to my fellow Guardian downstairs?");
+    ~chatplayer("<p,neutral>Nope.");
+    ~chatnpc("<p,neutral>Well, you need to talk to him first.");
+    return;
+}
+~chatplayer("<p,neutral>Hi.");
+~chatnpc("<p,neutral>Greetings. What wisdom do you seek?");
+@mta_rewards_menu;
+
+[label,mta_rewards_menu]
+switch_int (~p_choice3("Who are you?", 1, "Can I trade my Pizazz Points please?", 2, "Got anything else I can buy?", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,neutral>Me? I'm here to grant you rewards for any of the Pizazz Points you may have earned in this training arena. Like my fellow Guardians, I am part of the arena and live to ensure its safe running.");
+        ~chatplayer("<p,neutral>I see.");
+        @mta_rewards_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Can I trade my Pizazz Points please?");
+        ~chatnpc("<p,neutral>Why of course.");
+        ~mta_rewards_open;
+    case 3 :
+        ~chatplayer("<p,quiz>Got anything else I can buy?");
+        ~chatnpc("<p,neutral>Well, we do stock a special book that you may be interested in, which provides a comprehensive guide to this training arena. It costs 200gp. Would like one?");
+        if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 1) {
+            ~chatplayer("<p,happy>Yes please.");
+            ~mta_buy(magictraining_arenalorebook);
+        } else {
+            ~chatplayer("<p,neutral>No thanks.");
+        }
+}
+
+[opnpc4,magictraining_guard_rewards]
+if (%mta_started = 0) {
+    ~chatnpc("<p,neutral>Have you spoken to my fellow guardian downstairs?");
+    ~chatplayer("<p,neutral>Nope.");
+    ~chatnpc("<p,neutral>Well, you need to talk to him first.");
+    return;
+}
+~mta_rewards_open;
+
+[proc,mta_rewards_open]
+~mta_rewards_points;
+inv_transmit(magictraining_inventory, inter_339:com_3);
+if_openmain(inter_339);
+
+[proc,mta_rewards_points]
+if_settext(inter_339:com_10, tostring(%mta_tele_points));
+if_settext(inter_339:com_11, tostring(%mta_ench_points));
+if_settext(inter_339:com_12, tostring(%mta_alch_points));
+if_settext(inter_339:com_13, tostring(%mta_grave_points));
+
+[if_close,inter_339]
+inv_stoptransmit(inter_339:com_3);
+
+// Value (Void: the coins for the book, else all four rooms' points)
+[inv_button1,inter_339:com_3]
+def_obj $obj = inv_getobj(magictraining_inventory, last_slot);
+if ($obj = null) return;
+def_int $tele;
+def_int $alch;
+def_int $ench;
+def_int $grave;
+def_int $coins;
+def_obj $needs;
+$tele, $alch, $ench, $grave, $coins, $needs = ~mta_price($obj);
+if ($coins > 0) {
+    mes("The <lowercase(oc_name($obj))> costs <tostring($coins)> gold coins.");
+    return;
+}
+mes("The <oc_name($obj)> costs <tostring($tele)> Telekinetic, <tostring($alch)> Alchemist,");
+mes("<tostring($ench)> Enchantment and <tostring($grave)> Graveyard Pizazz Points.");
+
+// Buy
+[inv_button2,inter_339:com_3]
+def_obj $obj = inv_getobj(magictraining_inventory, last_slot);
+if ($obj = null) return;
+~mta_buy($obj);
+~mta_rewards_points;
+
+[proc,mta_buy](obj $obj)
+def_int $tele;
+def_int $alch;
+def_int $ench;
+def_int $grave;
+def_int $coins;
+def_obj $needs;
+$tele, $alch, $ench, $grave, $coins, $needs = ~mta_price($obj);
+if ($coins > 0) {
+    if (inv_total(inv, coins) < $coins) {
+        mes("You don't have enough coins.");
+        return;
+    }
+    if (inv_freespace(inv) = 0 & inv_total(inv, $obj) = 0) {
+        mes("You don't have enough inventory space.");
+        return;
+    }
+    inv_del(inv, coins, $coins);
+    inv_add(inv, ~mta_named($obj), 1);
+    return;
+}
+if ($obj = magictraining_peachspell & %mta_peaches = 1) {
+    mes("You already unlocked that spell.");
+    return;
+}
+if (%mta_tele_points < $tele | %mta_alch_points < $alch | %mta_ench_points < $ench | %mta_grave_points < $grave) {
+    mes("You cannot afford that item.");
+    return;
+}
+def_inv $from = null;
+if ($needs ! null) {
+    if (inv_total(inv, $needs) > 0) {
+        $from = inv;
+    } else if (inv_total(worn, $needs) > 0) {
+        $from = worn;
+    } else {
+        mes("You don't have the required wand to buy this upgrade.");
+        return;
+    }
+}
+if ($obj ! magictraining_peachspell) {
+    if (inv_freespace(inv) = 0 & $from ! inv & (oc_stackable($obj) = false | inv_total(inv, $obj) = 0)) {
+        mes("You don't have enough inventory space.");
+        return;
+    }
+    if ($from ! null) {
+        inv_del($from, $needs, 1);
+        if ($from = worn) buildappearance(worn);
+    }
+    inv_add(inv, ~mta_named($obj), 1);
+}
+%mta_tele_points = calc(%mta_tele_points - $tele);
+%mta_alch_points = calc(%mta_alch_points - $alch);
+%mta_ench_points = calc(%mta_ench_points - $ench);
+%mta_grave_points = calc(%mta_grave_points - $grave);
+~mta_hat_refresh;
+if ($obj = magictraining_peachspell) {
+    %mta_peaches = 1;
+    if_close;
+    ~mesbox("The Guardian teaches you how to use the Bones to Peaches spell!");
+}
+
+// telekinetic, alchemist, enchantment, graveyard, coins, the wand it needs (Void mta_rewards)
+[proc,mta_price](obj $obj)(int, int, int, int, int, obj)
+switch_obj ($obj) {
+    case magictraining_wand_beg : return(30, 30, 300, 30, 0, null);
+    case magictraining_wand_appr : return(60, 60, 600, 60, 0, magictraining_wand_beg);
+    case magictraining_wand_teach : return(150, 200, 1500, 150, 0, magictraining_wand_appr);
+    case magictraining_wand_master : return(240, 240, 2400, 240, 0, magictraining_wand_teach);
+    case magictraining_infinitytop : return(400, 450, 4000, 400, 0, null);
+    case magictraining_infinityhat : return(350, 400, 3000, 350, 0, null);
+    case magictraining_infinityboots : return(120, 120, 1200, 120, 0, null);
+    case magictraining_infinitygloves : return(175, 225, 1500, 175, 0, null);
+    case magictraining_infinitybottom : return(450, 500, 5000, 450, 0, null);
+    case magictraining_bookofmagic : return(500, 550, 6000, 500, 0, null);
+    case magictraining_peachspell : return(200, 300, 2000, 200, 0, null);
+    case battlestaff : return(1, 2, 20, 2, 0, null);
+    case mistrune, dustrune, mudrune, smokerune, steamrune, lavarune : return(1, 1, 15, 1, 0, null);
+    case cosmicrune : return(0, 0, 5, 0, 0, null);
+    case naturerune : return(0, 1, 0, 1, 0, null);
+    case deathrune : return(2, 1, 20, 1, 0, null);
+    case lawrune : return(2, 0, 0, 0, 0, null);
+    case bloodrune : return(2, 2, 25, 2, 0, null);
+    case magictraining_arenalorebook : return(0, 0, 0, 0, 200, null);
+}
+return(0, 0, 0, 0, 0, null);
+
+// the Arena book (ours: Destroy, as its iop5 offers)
+[opheld5,magictraining_arenalorebook] ~mta_destroy(last_slot, last_item);
+
+[proc,mta_destroy](int $slot, obj $obj)
+if (~p_choice2_header("Yes", 1, "No", 2, "Destroy <oc_name($obj)>?") = 2) return;
+if (inv_getobj(inv, $slot) ! $obj) return;
+inv_delslot(inv, $slot);
+sound_synth(destroy_object, 1, 0);
+
+// ---------------------------------------------------------------- the rewards' level needs
+// The wands: 45, 50, 55 and 60 Magic; the Mage's book 60 (the OSRS wiki's item pages).
+[opheld2,magictraining_wand_beg] @levelrequire_magic(45, last_slot);
+[opheld2,magictraining_wand_appr] @levelrequire_magic(50, last_slot);
+[opheld2,magictraining_wand_teach] @levelrequire_magic(55, last_slot);
+[opheld2,magictraining_wand_master] @levelrequire_magic(60, last_slot);
+[opheld2,magictraining_bookofmagic] @levelrequire_magic(60, last_slot);
+
+// the stock as items to hand over
+[proc,mta_named](obj $obj)(namedobj)
+switch_obj ($obj) {
+    case magictraining_wand_beg : return(magictraining_wand_beg);
+    case magictraining_wand_appr : return(magictraining_wand_appr);
+    case magictraining_wand_teach : return(magictraining_wand_teach);
+    case magictraining_wand_master : return(magictraining_wand_master);
+    case magictraining_infinitytop : return(magictraining_infinitytop);
+    case magictraining_infinityhat : return(magictraining_infinityhat);
+    case magictraining_infinityboots : return(magictraining_infinityboots);
+    case magictraining_infinitygloves : return(magictraining_infinitygloves);
+    case magictraining_infinitybottom : return(magictraining_infinitybottom);
+    case magictraining_bookofmagic : return(magictraining_bookofmagic);
+    case magictraining_peachspell : return(magictraining_peachspell);
+    case battlestaff : return(battlestaff);
+    case mistrune : return(mistrune);
+    case dustrune : return(dustrune);
+    case mudrune : return(mudrune);
+    case smokerune : return(smokerune);
+    case steamrune : return(steamrune);
+    case lavarune : return(lavarune);
+    case cosmicrune : return(cosmicrune);
+    case naturerune : return(naturerune);
+    case deathrune : return(deathrune);
+    case lawrune : return(lawrune);
+    case bloodrune : return(bloodrune);
+    case magictraining_arenalorebook : return(magictraining_arenalorebook);
+}
+return(null);

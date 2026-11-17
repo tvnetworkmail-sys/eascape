@@ -1,0 +1,291 @@
+// EASCape: the Mage Training Arena's Alchemists' Playground (Void AlchemistsPlayground.kt; 2006Scape
+// Alchemy.java, the same eight cupboards, five items and values).
+// The cupboards hold the five items in the same order clockwise, three are empty, and every 70 ticks
+// the Alchemy Guardian moves them round, deals the values out again, and every other time names an
+// item that costs no runes to alch. Alch the items for coins, put the coins in the Coin Collector.
+// Ours: the coins are ordinary coins (the 377 cache has no arena coins; you can't bring any in, and
+// any you hold are taken as you leave).
+
+// the items, in their order round the cupboards (Void mta_alchemist_items)
+[proc,mta_alch_item](obj $obj)(int)
+switch_obj ($obj) {
+    case magictraining_leather_boots : return(1);
+    case magictraining_adamant_kiteshield : return(2);
+    case magictraining_adamant_med_helm : return(3);
+    case magictraining_emerald : return(4);
+    case magictraining_rune_longsword : return(5);
+}
+return(0);
+
+[proc,mta_alch_obj](int $i)(namedobj)
+switch_int ($i) {
+    case 1 : return(magictraining_leather_boots);
+    case 2 : return(magictraining_adamant_kiteshield);
+    case 3 : return(magictraining_adamant_med_helm);
+    case 4 : return(magictraining_emerald);
+    case 5 : return(magictraining_rune_longsword);
+}
+return(null);
+
+[proc,mta_alch_name](int $i)(string)
+switch_int ($i) {
+    case 1 : return("leather boots");
+    case 2 : return("adamant kiteshield");
+    case 3 : return("adamant helm");
+    case 4 : return("emerald");
+    case 5 : return("rune longsword");
+}
+return("");
+
+// ---------------------------------------------------------------- the Alchemy Guardian
+// Every 70 ticks (Void rotate; 2006Scape: 71).
+[ai_timer,magictraining_guard_alchem]
+npc_settimer(^mta_alch_interval);
+if (%mta_alch_value1 = 0) {
+    // first time round: just deal the values
+    ~mta_alch_deal;
+    return;
+}
+%mta_alch_rot = calc((%mta_alch_rot + 1) % 8);
+~mta_alch_deal;
+if (%mta_alch_free ! 0) {
+    %mta_alch_free = 0;
+    npc_say("The costs are changing!");
+    return;
+}
+%mta_alch_free = calc(random(5) + 1);
+if (%mta_alch_free = 1) {
+    npc_say("The <~mta_alch_name(%mta_alch_free)> are free to convert!");
+} else {
+    npc_say("The <~mta_alch_name(%mta_alch_free)> is free to convert!");
+}
+
+// the values 1, 5, 8, 15 and 30 dealt out at random (Void mta_alchemist.values)
+[proc,mta_alch_deal]
+def_int $a = 1;
+def_int $b = 5;
+def_int $c = 8;
+def_int $d = 15;
+def_int $e = 30;
+def_int $i = 0;
+def_int $t;
+while ($i < 8) {
+    switch_int (random(4)) {
+        case 0 :
+            $t = $a;
+            $a = $b;
+            $b = $t;
+        case 1 :
+            $t = $b;
+            $b = $c;
+            $c = $t;
+        case 2 :
+            $t = $c;
+            $c = $d;
+            $d = $t;
+        case default :
+            $t = $d;
+            $d = $e;
+            $e = $t;
+    }
+    $i = calc($i + 1);
+}
+%mta_alch_value1 = $a;
+%mta_alch_value2 = $b;
+%mta_alch_value3 = $c;
+%mta_alch_value4 = $d;
+%mta_alch_value5 = $e;
+
+[opnpc1,magictraining_guard_alchem]
+~chatplayer("<p,neutral>Hi.");
+~chatnpc("<p,neutral>Greetings young one. What wisdom do you seek?");
+@mta_alch_guardian_menu;
+
+[label,mta_alch_guardian_menu]
+switch_int (~p_choice4("What do I have to do in this room?", 1, "What are the rewards?", 2, "Got any tips that may help me?", 3, "Thanks, bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do I have to do in this room?");
+        ~chatnpc("<p,neutral>In this room you will see various cupboards. It is your task to search the cupboards to find items to turn into gold using your low or high alchemy spells. You must deposit the money in the receptacle at the end of the");
+        ~chatnpc("<p,neutral>hall in order to receive your Alchemist Pizazz Points, otherwise the money will be taken from you as you leave through the portal. This money is used for the upkeep of the training arena as well as magic shops all");
+        ~chatnpc("<p,neutral>around Gielinor. Keep an eye on the cost of each items as these will change from time-to-time, as will the location of the items. Occasionally one of the items will be indicated as costing no runestones to convert to money.");
+        @mta_alch_guardian_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the rewards?");
+        ~chatnpc("<p,neutral>You will get experience from casting the alchemist spells, as well as 1 Alchemist Pizazz Point for every 100 coins you deposit, and 10% of the coins you deposit will be given to you as you leave. Keep in mind that you");
+        ~chatnpc("<p,neutral>will not be able to take more than 1000 coins back out with you.");
+        @mta_alch_guardian_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Got any tips that may help me?");
+        ~chatnpc("<p,neutral>You must remember to keep an eye on the various costs of the items. If you watch the movements of the other players, you might be able to guess which are the best places to visit. You will get 1 Pizazz Point for");
+        ~chatnpc("<p,neutral>every 100 coins, so if you have 190 coins, why not get an extra 10?");
+        ~chatplayer("<p,quiz>I see.");
+        ~chatnpc("<p,neutral>Oh, and a word of warning: should you decide to leave this room by a method other than the exit portals, you will be teleported to the entrance and have any items that you picked up in the room removed.");
+        @mta_alch_guardian_menu;
+    case 4 :
+        ~chatplayer("<p,neutral>Thanks, bye!");
+        ~chatnpc("<p,neutral>use what you've learned, young one.");
+}
+
+// ---------------------------------------------------------------- the window
+// your window shows the guardian's values and the free item (Void refresh)
+[softtimer,mta_alch_window] ~mta_alch_refresh;
+
+[proc,mta_alch_refresh]
+if_settext(inter_336:com_3, tostring(%mta_alch_points));
+if (npc_find(coord, magictraining_guard_alchem, 40, 0) = false) return;
+if_settext(inter_336:com_9, tostring(%mta_alch_value1));
+if_settext(inter_336:com_10, tostring(%mta_alch_value2));
+if_settext(inter_336:com_11, tostring(%mta_alch_value3));
+if_settext(inter_336:com_12, tostring(%mta_alch_value4));
+if_settext(inter_336:com_13, tostring(%mta_alch_value5));
+if_sethide(inter_336:com_14, ~mta_alch_not_free(1));
+if_sethide(inter_336:com_15, ~mta_alch_not_free(2));
+if_sethide(inter_336:com_16, ~mta_alch_not_free(3));
+if_sethide(inter_336:com_17, ~mta_alch_not_free(4));
+if_sethide(inter_336:com_18, ~mta_alch_not_free(5));
+
+[proc,mta_alch_not_free](int $i)(boolean)
+if (%mta_alch_free = $i) return(false);
+return(true);
+
+// the item's worth now (needs the guardian as the active npc)
+[proc,mta_alch_value](int $i)(int)
+switch_int ($i) {
+    case 1 : return(%mta_alch_value1);
+    case 2 : return(%mta_alch_value2);
+    case 3 : return(%mta_alch_value3);
+    case 4 : return(%mta_alch_value4);
+    case 5 : return(%mta_alch_value5);
+}
+return(0);
+
+// ---------------------------------------------------------------- the cupboards
+// loc_10783 the first, each one's open cupboard the id after it (2006Scape: firstCupboard 10783,
+// +2 for each of the next seven)
+[oploc1,loc_10783] @mta_cupboard(0, false);
+[oploc1,loc_10785] @mta_cupboard(1, false);
+[oploc1,loc_10787] @mta_cupboard(2, false);
+[oploc1,loc_10789] @mta_cupboard(3, false);
+[oploc1,loc_10791] @mta_cupboard(4, false);
+[oploc1,loc_10793] @mta_cupboard(5, false);
+[oploc1,loc_10795] @mta_cupboard(6, false);
+[oploc1,loc_10797] @mta_cupboard(7, false);
+[oploc1,loc_10784] @mta_cupboard(0, true);
+[oploc1,loc_10786] @mta_cupboard(1, true);
+[oploc1,loc_10788] @mta_cupboard(2, true);
+[oploc1,loc_10790] @mta_cupboard(3, true);
+[oploc1,loc_10792] @mta_cupboard(4, true);
+[oploc1,loc_10794] @mta_cupboard(5, true);
+[oploc1,loc_10796] @mta_cupboard(6, true);
+[oploc1,loc_10798] @mta_cupboard(7, true);
+
+[proc,mta_cupboard_open](int $slot)(loc)
+switch_int ($slot) {
+    case 0 : return(loc_10784);
+    case 1 : return(loc_10786);
+    case 2 : return(loc_10788);
+    case 3 : return(loc_10790);
+    case 4 : return(loc_10792);
+    case 5 : return(loc_10794);
+    case 6 : return(loc_10796);
+}
+return(loc_10798);
+
+[label,mta_cupboard](int $slot, boolean $open)
+if ($open = false) {
+    anim(human_magictraining_open_cupboard, 0);
+    loc_change(~mta_cupboard_open($slot), 35);
+}
+if (npc_find(coord, magictraining_guard_alchem, 40, 0) = false) {
+    mes("The cupboard is empty.");
+    return;
+}
+def_int $i = calc(($slot - %mta_alch_rot + 8) % 8 + 1);
+def_namedobj $obj = ~mta_alch_obj($i);
+if ($obj = null) {
+    mes("The cupboard is empty.");
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You have no free space to hold any more items.");
+    return;
+}
+inv_add(inv, $obj, 1);
+mes("You found: <oc_name($obj)>");
+
+// ---------------------------------------------------------------- alchemy
+// alchemy.rs2: Low or High Alchemy on one of the arena's items (Void onItem). No runes for the free
+// item; the coins are the guardian's value for it.
+[label,mta_alch](int $spell, obj $item)
+if_settabactive(^tab_inventory);
+if (~mta_room(coord) ! ^mta_room_alch) {
+    mes("This item isn't yours to alch, it belongs to the arena!");
+    return;
+}
+def_dbrow $spell_data = ~get_spell_data($spell);
+def_int $i = ~mta_alch_item($item);
+if (npc_find(coord, magictraining_guard_alchem, 40, 0) = false) return;
+def_boolean $free = false;
+if (%mta_alch_free = $i) $free = true;
+def_int $value = ~mta_alch_value($i);
+if ($free = true) {
+    if (stat(magic) < db_getfield($spell_data, magic_spell_table:levelrequired, 0)) {
+        mes("Your Magic level is not high enough for this spell.");
+        return;
+    }
+} else if (~check_spell_requirements($spell_data) = false) {
+    return;
+}
+if (calc(inv_total(inv, coins) + $value) > ^mta_alch_eject) {
+    mes("Warning: You can't deposit more than <tostring(^mta_alch_eject)> coins at a time.");
+}
+if ($free = false) ~delete_spell_runes($spell_data);
+inv_del(inv, $item, 1);
+inv_add(inv, coins, $value);
+if ($spell = ^highlvl_alchemy) {
+    sound_synth(high_alchemy, 1, 0);
+    anim(human_casthighlvlalchemy, 0);
+    spotanim_pl(highlvlalchemy_casting, 92, 0);
+} else {
+    sound_synth(low_alchemy, 1, 0);
+    anim(human_castlowlvlalchemy, 0);
+    spotanim_pl(lowlvlalchemy_casting, 92, 0);
+}
+~give_spell_xp($spell_data);
+if_settabactive(^tab_magic);
+p_delay(2);
+
+// ---------------------------------------------------------------- the Coin Collector
+// A point for each 100 coins, two Magic experience for each coin, and a tenth of them back as you
+// leave, to 1000 (Void; 2006Scape the same). 12,000 or more at once and you're thrown out.
+[oploc1,magictraining_coin_collector]
+def_int $deposit = inv_total(inv, coins);
+if ($deposit = 0) {
+    ~mesbox("You don't have any coins to deposit.");
+    return;
+}
+if ($deposit >= ^mta_alch_eject) {
+    p_telejump(^mta_lobby);
+    ~mesbox("You have been ejected from the arena! You were warned not to deposit more than <tostring(^mta_alch_eject)> coins at once.");
+    return;
+}
+inv_del(inv, coins, $deposit);
+def_int $points = calc($deposit / 100);
+def_int $xp = calc($deposit * 2);
+%mta_alch_reward = min(calc(%mta_alch_reward + $points * 10), ^mta_alch_reward_cap);
+~mta_add_points(^mta_room_alch, $points);
+stat_advance(magic, calc($xp * 10));
+~mesbox("You've just deposited <tostring($deposit)> coins, earning you <tostring($points)> Alchemist Pizazz Points and <tostring($xp)> magic XP. So far you're taking <tostring(%mta_alch_reward)> coins as a reward when you leave!");
+
+// leaving the playground: the coins you made stay, the reward goes to your bank (Void payout)
+[proc,mta_alch_leave](boolean $was_alch)
+if ($was_alch = true & inv_total(inv, coins) > 0) inv_del(inv, coins, inv_total(inv, coins));
+def_int $reward = %mta_alch_reward;
+if ($reward <= 0) return;
+%mta_alch_reward = 0;
+if (inv_total(bank, coins) <= calc(2147483647 - $reward)) {
+    inv_add(bank, coins, $reward);
+} else {
+    obj_add(coord, coins, $reward, ^lootdrop_duration);
+}
+mes("You've been awarded <tostring($reward)> coins straight into your bank as a reward!");

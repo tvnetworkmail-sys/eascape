@@ -1,0 +1,475 @@
+// EASCape: the Mage Training Arena (4 January 2006, "Mage Training Arena": a guide waits in the
+// entrance hall north of the Duel Arena; four rooms of unusual magic earn Pizazz Points for robes,
+// wands and maybe a new spell).
+// The building, its rooms, people, objects, items, windows and sounds are the 377 cache's, and so is
+// the map. How it works and the words: Void (game/.../minigame/mage_training_arena, from the RS and
+// OSRS wikis' transcripts), checked against 2006Scape (minigames/magetrainingarena) and the OSRS wiki.
+// Not here, as later: the Rune Mechanics wizards (2016), the familiar check (Summoning, 2008).
+// Ours: anything marked "ours", and that the rooms are shared (Void gives each player their own
+// copy of the Telekinetic Theatre; this engine has no instances, so each player's statue is theirs
+// alone, seen by no one else).
+
+// ---------------------------------------------------------------- where you are
+[proc,mta_room](coord $c)(int)
+if (inzone(0_52_151_0_0, 2_52_151_63_63, $c) = true) return(^mta_room_tele);
+if (inzone(0_52_150_7_12, 0_52_150_61_63, $c) = true) return(^mta_room_ench);
+if (inzone(1_52_150_5_10, 1_52_150_62_63, $c) = true) return(^mta_room_grave);
+if (inzone(2_52_150_13_18, 2_52_150_63_54, $c) = true) return(^mta_room_alch);
+return(^mta_room_none);
+
+[proc,mta_in_room](coord $c)(boolean)
+if (~mta_room($c) ! ^mta_room_none) return(true);
+return(false);
+
+// the rooms' own things, taken from you whenever you leave a room (Void MageTrainingArena.arenaItems)
+[proc,mta_confiscate]
+~mta_take(magictraining_leather_boots);
+~mta_take(magictraining_adamant_kiteshield);
+~mta_take(magictraining_adamant_med_helm);
+~mta_take(magictraining_emerald);
+~mta_take(magictraining_rune_longsword);
+~mta_take(magictraining_enchan_cube);
+~mta_take(magictraining_enchan_cylinder);
+~mta_take(magictraining_enchan_icosahendron);
+~mta_take(magictraining_enchan_pentamid);
+~mta_take(magictraining_dragonstone);
+~mta_take(magictraining_enchan_shapeorb);
+~mta_take(magictraining_bones1);
+~mta_take(magictraining_bones2);
+~mta_take(magictraining_bones3);
+~mta_take(magictraining_bones4);
+~mta_take(banana);
+~mta_take(peach);
+
+[proc,mta_take](obj $obj)
+if (inv_total(inv, $obj) > 0) inv_del(inv, $obj, inv_total(inv, $obj));
+if (inv_total(worn, $obj) > 0) {
+    inv_del(worn, $obj, inv_total(worn, $obj));
+    buildappearance(worn);
+}
+
+// ---------------------------------------------------------------- coming and going
+// The room's window opens as you arrive and closes as you go (Void entered/exited).
+// (a map square's trigger is for all its floors; the window opens two ticks after you arrive, as the
+// client clears it while it loads the new map)
+[mapzone,0_52_150] weakqueue(mta_arrive, 2, 0);
+[mapzone,0_52_151] weakqueue(mta_arrive, 2, 0);
+
+[queue,mta_arrive]
+~mta_arrive;
+
+[mapzoneexit,0_52_150] ~mta_depart;
+[mapzoneexit,0_52_151] ~mta_depart;
+
+[proc,mta_arrive]
+def_int $room = ~mta_room(coord);
+if ($room = ^mta_room_none) return;
+%mta_room_in = $room;
+switch_int ($room) {
+    case ^mta_room_tele :
+        if_openoverlay(inter_340);
+        ~mta_tele_refresh;
+    case ^mta_room_alch :
+        if_openoverlay(inter_336);
+        ~mta_alch_refresh;
+        softtimer(mta_alch_window, 5);
+    case ^mta_room_ench :
+        if_openoverlay(inter_337);
+        ~mta_ench_refresh;
+        softtimer(mta_ench_window, 5);
+    case ^mta_room_grave :
+        if_openoverlay(inter_338);
+        ~mta_grave_refresh;
+        softtimer(mta_grave_bones, ^mta_grave_interval);
+}
+
+[proc,mta_depart]
+def_int $room = %mta_room_in;
+if ($room = ^mta_room_none) return;
+// moving between the theatre's floors is still the theatre
+if (~mta_room(coord) = $room) return;
+%mta_room_in = ^mta_room_none;
+if_openoverlay(null);
+switch_int ($room) {
+    case ^mta_room_tele : ~mta_tele_leave;
+    case ^mta_room_alch :
+        clearsofttimer(mta_alch_window);
+        ~mta_alch_leave(true);
+    case ^mta_room_ench : clearsofttimer(mta_ench_window);
+    case ^mta_room_grave : clearsofttimer(mta_grave_bones);
+}
+~mta_confiscate;
+
+// login.rs2: logged out in a room, you're back in the entrance hall without the room's things (the
+// Entrance Guardian's warning)
+[proc,mta_login]
+def_int $room = ~mta_room(coord);
+if ($room = ^mta_room_none) return;
+~mta_confiscate;
+if ($room = ^mta_room_alch) {
+    ~mta_alch_leave(true);
+} else {
+    ~mta_alch_leave(false);
+}
+%mta_camera = 0;
+p_telejump(^mta_lobby);
+
+// death.rs2: dying in a room keeps your things and brings you to the entrance hall (Void playerDeath);
+// the Creature Graveyard takes points for it
+[label,player_death_mta]
+def_int $room = ~mta_room(coord);
+~player_death;
+mes("Oh dear you are dead!");
+midi_jingle(death2);
+~combat_clearqueue;
+clearqueue(player_death_default);
+if ($room = ^mta_room_grave) ~mta_grave_death;
+~mta_confiscate;
+if ($room = ^mta_room_alch) {
+    ~mta_alch_leave(true);
+} else {
+    ~mta_alch_leave(false);
+}
+p_teleport(^mta_lobby);
+buildappearance(worn);
+~prayer_deactivate_all;
+anim(null, 0);
+p_stopaction;
+~stat_reset_all;
+healenergy(10000);
+~clear_poison;
+~update_all(null);
+~initalltabs;
+~player_end_poison;
+
+// ---------------------------------------------------------------- the front door
+// A doorway of light: it opens and you walk through (Void: mta_light_door_open, light_beam_start).
+[oploc1,magictraining_temple_door]
+loc_anim(magictraining_light_door_open);
+if (coordz(coord) < coordz(loc_coord)) {
+    p_teleport(movecoord(loc_coord, 0, 0, 1));
+} else {
+    p_teleport(movecoord(loc_coord, 0, 0, -1));
+}
+
+// ---------------------------------------------------------------- the portals
+// The light doorways into the hall (Void: the doorway's open anim, then you walk through).
+[oploc1,loc_10778] @mta_portal(^mta_room_tele);
+[oploc1,loc_10780] @mta_portal(^mta_room_alch);
+[oploc1,loc_10779] @mta_portal(^mta_room_ench);
+[oploc1,loc_10781] @mta_portal(^mta_room_grave);
+
+[label,mta_portal](int $room)
+if (~mta_can_enter($room) = false) return;
+switch_int ($room) {
+    case ^mta_room_tele : ~mta_tele_start;
+    case ^mta_room_alch : p_telejump(^mta_alch_enter);
+    case ^mta_room_ench : p_telejump(^mta_ench_enter);
+    case ^mta_room_grave : p_telejump(^mta_grave_enter);
+}
+mes("You've entered the <~mta_room_name($room)>.");
+
+[oploc1,loc_10782]
+def_int $room = ~mta_room(coord);
+%mta_maze_streak = 0;
+switch_int ($room) {
+    case ^mta_room_tele : p_telejump(^mta_tele_exit);
+    case ^mta_room_alch : p_telejump(^mta_alch_exit);
+    case ^mta_room_ench : p_telejump(^mta_ench_exit);
+    case ^mta_room_grave : p_telejump(^mta_grave_exit);
+    case default : p_telejump(^mta_lobby);
+}
+
+[proc,mta_room_name](int $room)(string)
+switch_int ($room) {
+    case ^mta_room_tele : return("Telekinetic Theatre");
+    case ^mta_room_alch : return("Alchemists' Playground");
+    case ^mta_room_ench : return("Enchanting Chamber");
+    case ^mta_room_grave : return("Creature Graveyard");
+}
+return("");
+
+// What every portal asks of you (Void MageTrainingArena.canEnter).
+[proc,mta_can_enter](int $room)(boolean)
+if (%mta_started = 0 | ~mta_has_hat = false) {
+    ~mesbox("You need a Pizazz Progress Hat in order to enter. Talk to the Entrance Guardian if you don't have one.");
+    return(false);
+}
+def_int $level;
+def_string $spell;
+switch_int ($room) {
+    case ^mta_room_tele :
+        $level = ^mta_tele_level;
+        $spell = "Telekinetic Grab";
+    case ^mta_room_alch :
+        $level = ^mta_alch_level;
+        $spell = "Low Alchemy";
+    case ^mta_room_ench :
+        $level = ^mta_ench_level;
+        $spell = "Lvl-1 Enchant";
+    case ^mta_room_grave :
+        $level = ^mta_grave_level;
+        $spell = "Bones to Bananas";
+}
+if (stat(magic) < $level) {
+    ~mesbox("You need to be able to cast the <$spell> spell in order to enter.");
+    return(false);
+}
+if ($room = ^mta_room_alch & inv_total(inv, coins) > 0) {
+    ~mesbox("You cannot take money into the Alchemists' Playground.");
+    return(false);
+}
+if ($room = ^mta_room_grave & (inv_total(inv, banana) > 0 | inv_total(inv, peach) > 0)) {
+    ~mesbox("You can't take bananas or peaches into the arena.");
+    return(false);
+}
+return(true);
+
+// ---------------------------------------------------------------- Pizazz Points
+[proc,mta_points_total]()(int)
+return(calc(%mta_tele_points + %mta_alch_points + %mta_ench_points + %mta_grave_points));
+
+[proc,mta_add_points](int $room, int $n)
+if ($n <= 0) return;
+switch_int ($room) {
+    case ^mta_room_tele : %mta_tele_points = min(calc(%mta_tele_points + $n), ^mta_tele_max);
+    case ^mta_room_alch : %mta_alch_points = min(calc(%mta_alch_points + $n), ^mta_alch_max);
+    case ^mta_room_ench : %mta_ench_points = min(calc(%mta_ench_points + $n), ^mta_ench_max);
+    case ^mta_room_grave : %mta_grave_points = min(calc(%mta_grave_points + $n), ^mta_grave_max);
+}
+~mta_room_points_refresh;
+~mta_hat_refresh;
+
+[proc,mta_room_points_refresh]
+switch_int (~mta_room(coord)) {
+    case ^mta_room_tele : if_settext(inter_340:com_3, tostring(%mta_tele_points));
+    case ^mta_room_alch : if_settext(inter_336:com_3, tostring(%mta_alch_points));
+    case ^mta_room_ench : if_settext(inter_337:com_3, tostring(%mta_ench_points));
+    case ^mta_room_grave : if_settext(inter_338:com_3, tostring(%mta_grave_points));
+}
+
+[proc,mta_points_text]()(string)
+return("<tostring(%mta_tele_points)> Telekinetic, <tostring(%mta_alch_points)> Alchemist, <tostring(%mta_ench_points)> Enchantment, and <tostring(%mta_grave_points)> Graveyard Pizazz Points.");
+
+// ---------------------------------------------------------------- the progress hat
+[proc,mta_has_hat]()(boolean)
+if (inv_total(inv, magictraining_proghat_dull) > 0 | inv_total(inv, magictraining_proghat_energised) > 0 | inv_total(inv, magictraining_proghat_full) > 0) return(true);
+if (inv_total(worn, magictraining_proghat_dull) > 0 | inv_total(worn, magictraining_proghat_energised) > 0 | inv_total(worn, magictraining_proghat_full) > 0) return(true);
+if (inv_total(bank, magictraining_proghat_dull) > 0 | inv_total(bank, magictraining_proghat_energised) > 0 | inv_total(bank, magictraining_proghat_full) > 0) return(true);
+return(false);
+
+[proc,mta_carries_hat]()(boolean)
+if (inv_total(inv, magictraining_proghat_dull) > 0 | inv_total(inv, magictraining_proghat_energised) > 0 | inv_total(inv, magictraining_proghat_full) > 0) return(true);
+if (inv_total(worn, magictraining_proghat_dull) > 0 | inv_total(worn, magictraining_proghat_energised) > 0 | inv_total(worn, magictraining_proghat_full) > 0) return(true);
+return(false);
+
+// the hat for your points (Void PizazzHat.tier)
+[proc,mta_hat_tier]()(namedobj)
+def_int $total = ~mta_points_total;
+if ($total > ^mta_hat3_points) return(magictraining_proghat_full);
+if ($total > ^mta_hat2_points) return(magictraining_proghat_energised);
+return(magictraining_proghat_dull);
+
+// a fresh hat, in place of any you carry (Void PizazzHat.give)
+[proc,mta_hat_give]
+def_boolean $had = false;
+if (inv_total(inv, magictraining_proghat_dull) > 0) { inv_del(inv, magictraining_proghat_dull, 28); $had = true; }
+if (inv_total(inv, magictraining_proghat_energised) > 0) { inv_del(inv, magictraining_proghat_energised, 28); $had = true; }
+if (inv_total(inv, magictraining_proghat_full) > 0) { inv_del(inv, magictraining_proghat_full, 28); $had = true; }
+if ($had = true) mes("The hat shifts unexpectedly.");
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, ~mta_hat_tier, 1);
+} else {
+    obj_add(coord, ~mta_hat_tier, 1, ^lootdrop_duration);
+}
+
+// the hat you carry or wear changes as your points grow (Void PizazzHat.refresh)
+[proc,mta_hat_refresh]
+def_namedobj $tier = ~mta_hat_tier;
+~mta_hat_swap(inv, magictraining_proghat_dull, $tier);
+~mta_hat_swap(inv, magictraining_proghat_energised, $tier);
+~mta_hat_swap(worn, magictraining_proghat_dull, $tier);
+~mta_hat_swap(worn, magictraining_proghat_energised, $tier);
+
+[proc,mta_hat_swap](inv $inv, namedobj $hat, namedobj $tier)
+if ($hat = $tier) return;
+if (inv_total($inv, $hat) = 0) return;
+if ($inv = worn) {
+    inv_setslot(worn, ^wearpos_hat, $tier, 1);
+    buildappearance(worn);
+} else {
+    inv_del(inv, $hat, 1);
+    inv_add(inv, $tier, 1);
+}
+mes("Your progress hat updates to reflect your achievements.");
+
+[opheld1,magictraining_proghat_dull] @mta_hat_talk;
+[opheld1,magictraining_proghat_energised] @mta_hat_talk;
+[opheld1,magictraining_proghat_full] @mta_hat_talk;
+
+// The hat's greetings (Void PizazzHat.greetings, one at random).
+[label,mta_hat_talk]
+switch_int (random(4)) {
+    case 0 :
+        ~chatplayer("<p,shifty>Hello... Mr Progress Hat?");
+        ~mta_hat_says("That's me, why are you bothering me human?");
+        ~chatplayer("<p,quiz>Sorry, but do you think you could tell me my Pizazz Points?");
+    case 1 :
+        ~chatplayer("<p,shifty>Erm, excuse me Mr Progress Hat?");
+        ~mta_hat_says("Can't you see I'm busy?");
+        ~chatplayer("<p,quiz>But you're just a hat? Can you tell me my Pizazz Point totals?");
+    case 2 :
+        ~chatplayer("<p,shifty>Mr Progress Hat... sir?");
+        ~mta_hat_says("What do you want?");
+        ~chatplayer("<p,quiz>Do you think you could tell me my Pizazz Points?");
+    case default :
+        ~chatplayer("<p,shifty>Mr Progress Hat? Hello?");
+        ~mta_hat_says("I suppose you want to know your Pizazz Points.");
+        ~chatplayer("<p,quiz>That would be nice, yes.");
+}
+~mta_hat_says("Ok, I suppose it's my job. You have: <~mta_points_text>");
+~chatplayer("<p,happy>Thank you!");
+
+[proc,mta_hat_says](string $text)
+~chatnpc_specific("Pizzaz Hat", magictraining_pizazz_hat, "<p,neutral><$text>");
+
+[opheld5,magictraining_proghat_dull] @mta_hat_destroy;
+[opheld5,magictraining_proghat_energised] @mta_hat_destroy;
+[opheld5,magictraining_proghat_full] @mta_hat_destroy;
+
+// Void PizazzHat: destroying it loses your points.
+[label,mta_hat_destroy]
+def_int $slot = last_slot;
+def_obj $hat = last_item;
+~mta_hat_says("How dare you destroy me? You'll lose your Pizazz Points!");
+if (~p_choice2_header("Yes", 1, "No", 2, "Destroy Hat?") = 2) {
+    ~mta_hat_says("I think so too!");
+    return;
+}
+if (inv_getobj(inv, $slot) ! $hat) return;
+inv_delslot(inv, $slot);
+sound_synth(destroy_object, 1, 0);
+%mta_tele_points = 0;
+%mta_alch_points = 0;
+%mta_ench_points = 0;
+%mta_grave_points = 0;
+~mesbox("The hat whispers as you destroy it. You can get another from the Entrance Guardian.");
+
+// ---------------------------------------------------------------- the Entrance Guardian
+[opnpc1,magictraining_guard_entrance]
+~chatplayer("<p,neutral>Hi.");
+if (%mta_started = 1) @mta_entrance_menu;
+~chatnpc("<p,neutral>Greetings. What wisdom do you seek?");
+if (~p_choice2("I'm new to this place. Where am I?", 1, "None, I don't really care.", 2) = 1) {
+    ~chatplayer("<p,quiz>I'm new to this place. Where am I?");
+    @mta_entrance_about;
+}
+~chatplayer("<p,neutral>None, I don't really care.");
+
+[label,mta_entrance_menu]
+switch_int (~p_choice4("Can you tell me about this place again?", 1, "Can you explain the different portals?", 2, "About the progress hat...", 3, "Thanks, bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can you tell me about this place again?");
+        @mta_entrance_about;
+    case 2 :
+        ~chatplayer("<p,neutral>Can you explain the different portals?");
+        @mta_entrance_portals;
+    case 3 :
+        ~chatplayer("<p,neutral>About the progress hat...");
+        if (~mta_has_hat = true) {
+            ~chatnpc("<p,neutral>Which you have stored somewhere I'm sure.");
+            ~chatplayer("<p,neutral>Yes. What's it for?");
+            ~chatnpc("<p,neutral>Collect Pizazz Points from the various areas and the hat will remember your totals. Talk to the hat at any time to find out what points you have. Go upstairs and talk to the Rewards Guardian to claim items for the points.");
+        } else {
+            ~chatnpc("<p,neutral>You want another one don't you.");
+            ~chatplayer("<p,neutral>Sorry, can I?");
+            ~mta_hat_give;
+            ~chatnpc("<p,neutral>Here you go. Talk to the hat to find out your current Pizazz Point totals.");
+        }
+        @mta_entrance_menu;
+    case 4 : ~chatplayer("<p,neutral>Thanks, bye!");
+}
+
+[label,mta_entrance_about]
+~chatnpc("<p,neutral>Well young one, you have entered the Magic Training Arena. It was built at the start of the Fifth Age, when runestones were first discovered. It was made because of the many pointless accidents caused by inexperienced mages.");
+~chatplayer("<p,quiz>Who created it?");
+~chatnpc("<p,neutral>Good question. It was originally made by the ancestors of the wizards in the Wizards Tower. However, it was destroyed by melee and ranged warriors who took offence at the use of this new 'Magic Art'. Recently");
+~chatnpc("<p,neutral>the current denizens of the Wizards Tower have resurrected the arena including various Guardians you will see as you look around. We are here to help and to ensure things run smoothly.");
+~chatplayer("<p,quiz>Interesting. So what can I do here?");
+~chatnpc("<p,neutral>You may train up your skills in the magic arts by travelling through one of the portals at the back of this entrance hall. By training up in one of these areas you will be awarded special Pizazz Points unique to each room.");
+~chatnpc("<p,neutral>With these points you may claim a variety of items from my fellow guardian up the stairs.");
+~chatplayer("<p,quiz>How do you record the points I have earned?");
+if (%mta_started = 1) {
+    ~chatnpc("<p,neutral>With the Pizazz Progress Hat I gave you, of course.");
+    ~chatplayer("<p,neutral>OK.");
+    ~chatnpc("<p,neutral>Oh, and a word of warning: should you decide to log out whilst in any of the rooms in the arena, you will be teleported to the entrance and have any items that you picked up in the room removed.");
+    @mta_entrance_menu;
+}
+~chatnpc("<p,neutral>You really are full of questions! You will need a special Pizzaz Progress Hat! I can give you one if you so wish to train here.");
+~chatplayer("<p,happy>Yes Please!");
+%mta_started = 1;
+~mta_hat_give;
+~chatnpc("<p,neutral>Here you go. Talk to the hat to find out your current Pizzaz Points totals.");
+~chatplayer("<p,shock>Talk to it?");
+~chatnpc("<p,neutral>Well of course, it's a magic Pizazz Progress Hat! Mind your manners though, hats have feelings too!");
+~chatplayer("<p,quiz>Er... if you insist.");
+~chatnpc("<p,neutral>Oh, and a word of warning: should you decide to leave the rooms by any method other than the exit portals, you will be teleported to the entrance and have any items that you picked up in the room removed.");
+~chatplayer("<p,neutral>Okay. Thanks!");
+
+[label,mta_entrance_portals]
+~chatnpc("<p,neutral>They lead to four areas to train your magic: The Telekinetic Theatre, The Alchemists' Playground, The Enchanting Chamber, and The Creature Graveyard.");
+switch_int (~p_choice5("What's the Telekinetic Theatre?", 1, "What's the Alchemists' Playground?", 2, "What's the Enchanting Chamber?", 3, "What's the Creature Graveyard?", 4, "Thanks, bye!", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's the Telekinetic Theatre?");
+        ~chatnpc("<p,neutral>In there you can earn Telekinetic Pizazz Points for trade upstairs.");
+        ~chatplayer("<p,quiz>What will I be doing in there?");
+        ~chatnpc("<p,neutral>That depends on how much of a time-waster you are! You are required to use the Telekinetic Grab spell in order to move a statue through a maze. Casting the spell will move the statue towards you until it reaches a wall.");
+        ~chatnpc("<p,neutral>So by standing on the different sides of the maze you can move the statue North, East, South or West. You will be rewarded Pizazz Points for each maze successfully solved.");
+        @mta_entrance_portals;
+    case 2 :
+        ~chatplayer("<p,quiz>What's the Alchemists' Playground?");
+        ~chatnpc("<p,neutral>In the playground you can earn Alchemist Pizazz Points for trading with the rewards guardian upstairs.");
+        ~chatplayer("<p,quiz>What's in there?");
+        ~chatnpc("<p,neutral>You'll find eight cupboards containing items you can turn to gold using the low and high alchemy spells. The money you earn will be taken from you upon leaving the playground to pay for the upkeep of this training");
+        ~chatnpc("<p,neutral>arena and to help fund magic shops around Gielinor. You will be rewarded with 1 Pizazz Point for every 100 coins deposited and a percentage of the money you create. Keep in mind that you will not be able to take more than 1000 coins back out with you.");
+        ~chatplayer("<p,happy>Sounds simple.");
+        @mta_entrance_portals;
+    case 3 :
+        ~chatplayer("<p,quiz>What's the Enchanting Chamber?");
+        ~chatnpc("<p,neutral>In here you will be able to earn Enchantment Pizazz Points for trade upstairs.");
+        ~chatplayer("<p,quiz>What will I have to do?");
+        ~chatnpc("<p,neutral>You will find yourself amongst various piles of shapes. You can pick up these shapes and use one of your enchanting spells upon it to morph it into an orb. You'll also see a hole in the centre of the room; put the orbs");
+        ~chatnpc("<p,neutral>in here and for every 20 we will credit you with a gift. You will get Pizazz Points for every 10 shapes that you convert and the amount of points depends on the spell you use.");
+        @mta_entrance_portals;
+    case 4 :
+        ~chatplayer("<p,quiz>What's the Creature Graveyard?");
+        ~chatnpc("<p,neutral>In here you will be able to earn Graveyard Pizazz Points for trade upstairs.");
+        ~chatplayer("<p,quiz>But what do I have to do in there?");
+        ~chatnpc("<p,neutral>Patience young one. A great many creatures die in this world and much of their remains can cause clutter. We have taken it upon ourselves to teleport many bones from these creatures into this graveyard for a");
+        ~chatnpc("<p,neutral>use. It's up to you to practice your bones to bananas spell in order to put these bones into immediate use - nutritious food for monsters! Just convert the bones and put them in the holes in the walls. There is a");
+        ~chatnpc("<p,neutral>drawback to this room however, the bones often fall on people so you may want to eat some of those bananas to stay alive. When people die we confiscate Pizazz Points for the effort of teleporting incompetent mages.");
+        @mta_entrance_portals;
+    case 5 : ~chatplayer("<p,neutral>Thanks, bye!");
+}
+
+// ---------------------------------------------------------------- the arena's other people
+// (Void MageTrainingArena: the Charmed Warriors)
+[opnpc1,magictraining_ghost_shoes]
+~chatplayer("<p,quiz>Is there anybody there?");
+~chatnpc("<p,neutral>What do you think?");
+
+[opnpc1,magictraining_ghost_shoes2]
+~chatplayer("<p,quiz>Is there anybody there?");
+~chatnpc("<p,neutral>Wooo wooo! Be afraid for I'm a scary ghost. Wooo!");
+~chatplayer("<p,neutral>Er, whatever.");
+
+[opnpc1,magictraining_ghost_shoes3]
+~chatplayer("<p,quiz>Hello?");
+~chatnpc("<p,neutral>Hey! You haven't paid for your Magic Training Arena Membership money!");
+~chatplayer("<p,happy>You're lying. I can see right through you!");
+~chatnpc("<p,neutral>Oh, HA HA, very funny.");
+
+[opnpc1,magictraining_ghost_shoes4]
+~chatplayer("<p,quiz>Hello?");
+~chatnpc("<p,neutral>Can't you see I'm busy?");
+~chatplayer("<p,neutral>Well, I can't really see YOU.");

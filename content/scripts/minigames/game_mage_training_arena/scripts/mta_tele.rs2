@@ -1,0 +1,298 @@
+// EASCape: the Mage Training Arena's Telekinetic Theatre (Void TelekineticTheatre.kt).
+// Ten mazes on the three floors of map square 52_151. Cast Telekinetic Grab on the guardian statue
+// and it slides away from the walls towards the side of the maze you stand on, until it meets a wall;
+// on the exit square it turns back into a Maze Guardian, who gives you points and the next maze.
+// Ours: the statue is yours alone (an obj only you see; Void gives each player their own copy of
+// the theatre), and the Maze Guardian stands for a minute where everyone can see him.
+
+// maze n (1-10): where you arrive, the statue's start, the exit square, where Observe looks from,
+// and the north, south, west and east edges you stand past to move the statue that way
+// (Void mta_mazes, offsets from the square's south-west corner)
+[proc,mta_maze](int $n)(coord, coord, coord, coord, int, int, int, int)
+switch_int ($n) {
+    case 1 : return(0_52_151_8_54, 0_52_151_15_41, 0_52_151_19_50, 0_52_151_15_45, 51, 40, 9, 20);
+    case 2 : return(1_52_151_34_49, 1_52_151_22_53, 1_52_151_13_44, 1_52_151_17_48, 54, 43, 12, 23);
+    case 3 : return(1_52_151_54_34, 1_52_151_48_22, 1_52_151_57_22, 1_52_151_53_17, 23, 12, 47, 58);
+    case 4 : return(1_52_151_50_42, 1_52_151_46_49, 1_52_151_55_49, 1_52_151_50_53, 59, 48, 45, 56);
+    case 5 : return(0_52_151_46_32, 0_52_151_45_14, 0_52_151_47_18, 0_52_151_45_13, 19, 8, 40, 51);
+    case 6 : return(0_52_151_26_26, 0_52_151_15_16, 0_52_151_14_20, 0_52_151_14_15, 21, 10, 9, 20);
+    case 7 : return(0_52_151_51_52, 0_52_151_40_48, 0_52_151_39_56, 0_52_151_43_51, 57, 46, 37, 48);
+    case 8 : return(2_52_151_31_37, 2_52_151_18_54, 2_52_151_17_54, 2_52_151_19_49, 55, 44, 14, 25);
+    case 9 : return(2_52_151_40_16, 2_52_151_20_10, 2_52_151_11_19, 2_52_151_16_14, 20, 9, 10, 21);
+    case 10 : return(1_52_151_27_29, 1_52_151_23_20, 1_52_151_25_16, 1_52_151_23_20, 26, 15, 17, 28);
+}
+return(null, null, null, null, 0, 0, 0, 0);
+
+// through the portal: your streak starts again and you're taken to a maze
+[proc,mta_tele_start]
+%mta_maze_streak = 0;
+~mta_tele_next;
+
+// an unsolved maze other than the one you're on; all ten solved, they all count again
+[proc,mta_tele_next]
+if (%mta_mazes_solved = calc(pow(2, ^mta_mazes) - 1)) %mta_mazes_solved = 0;
+def_int $left = 0;
+def_int $i = 1;
+while ($i <= ^mta_mazes) {
+    if (testbit(%mta_mazes_solved, calc($i - 1)) = ^false & $i ! %mta_maze) $left = calc($left + 1);
+    $i = calc($i + 1);
+}
+def_int $pick = 0;
+if ($left > 0) {
+    def_int $r = random($left);
+    $i = 1;
+    while ($i <= ^mta_mazes & $pick = 0) {
+        if (testbit(%mta_mazes_solved, calc($i - 1)) = ^false & $i ! %mta_maze) {
+            if ($r = 0) $pick = $i;
+            $r = calc($r - 1);
+        }
+        $i = calc($i + 1);
+    }
+}
+if ($pick = 0) $pick = %mta_maze; // only the maze you're on is left
+if ($pick = 0) $pick = 1;
+~mta_statue_remove;
+%mta_maze = $pick;
+%mta_maze_freed = 0;
+def_coord $base;
+def_coord $statue;
+def_coord $end;
+def_coord $camera;
+def_int $n;
+def_int $s;
+def_int $w;
+def_int $e;
+$base, $statue, $end, $camera, $n, $s, $w, $e = ~mta_maze($pick);
+~mta_camera_reset;
+p_telejump($base);
+~mta_statue_place($statue);
+~mta_tele_refresh;
+
+[proc,mta_tele_refresh]
+if_settext(inter_340:com_3, tostring(%mta_tele_points));
+if_settext(inter_340:com_5, tostring(%mta_maze_streak));
+
+// leaving the theatre
+[proc,mta_tele_leave]
+~mta_statue_remove;
+~mta_camera_reset;
+
+// ---------------------------------------------------------------- the statue
+// %mta_statue_at: where your statue is (temp)
+[proc,mta_statue_place](coord $c)
+~mta_statue_remove;
+obj_add($c, magictraining_guardianstatue, 1, 6000);
+%mta_statue_at = $c;
+
+[proc,mta_statue_remove]
+if (%mta_statue_at = null) return;
+if (obj_find(%mta_statue_at, magictraining_guardianstatue) = true) obj_del;
+%mta_statue_at = null;
+
+// Observe: a view of the maze from above, and back again (Void observe)
+[opobj3,magictraining_guardianstatue] @mta_statue_observe;
+[apobj3,magictraining_guardianstatue] @mta_statue_observe;
+
+[label,mta_statue_observe]
+p_stopaction;
+if (%mta_camera = 1) {
+    ~mta_camera_reset;
+    return;
+}
+def_coord $base;
+def_coord $statue;
+def_coord $end;
+def_coord $camera;
+def_int $n;
+def_int $s;
+def_int $w;
+def_int $e;
+$base, $statue, $end, $camera, $n, $s, $w, $e = ~mta_maze(%mta_maze);
+if ($camera = null) return;
+mes("Click observe on the guardian to reset your camera.");
+%mta_camera = 1;
+if (%mta_maze = 4) {
+    cam_moveto(movecoord($camera, 11, 0, 5), 799, 95, 95);
+    cam_lookat(movecoord($camera, -44, 0, -10), 799, 95, 95);
+    return;
+}
+cam_moveto(movecoord($camera, 0, 0, -10), 798, 95, 95);
+cam_lookat($camera, 0, 95, 95);
+
+[proc,mta_camera_reset]
+if (%mta_camera = 0) return;
+%mta_camera = 0;
+cam_reset;
+
+// Reset: back to where it started (Void)
+[opobj4,magictraining_guardianstatue] @mta_statue_reset;
+[apobj4,magictraining_guardianstatue] @mta_statue_reset;
+
+[label,mta_statue_reset]
+p_stopaction;
+def_coord $base;
+def_coord $statue;
+def_coord $end;
+def_coord $camera;
+def_int $n;
+def_int $s;
+def_int $w;
+def_int $e;
+$base, $statue, $end, $camera, $n, $s, $w, $e = ~mta_maze(%mta_maze);
+if ($statue ! null) ~mta_statue_place($statue);
+
+// telegrab.rs2: Telekinetic Grab on the statue (Void onFloorItemApproach): the runes and the cast,
+// then it slides towards your side of the maze; on a corner, or inside the maze, it can't move.
+[label,mta_tele_grab]
+if (obj_coord ! %mta_statue_at) return;
+def_dbrow $spell_data = ~get_spell_data(^telekinetic_grab);
+if (~check_spell_requirements($spell_data) = false) return;
+if (%mta_cast_clock > map_clock) return;
+%mta_cast_clock = calc(map_clock + 3);
+def_coord $at = obj_coord;
+facesquare($at);
+anim(human_casttelegrab, 0);
+sound_synth(telegrab_all, 1, 0);
+spotanim_pl(telegrab_casting, 92, 0);
+~delete_spell_runes($spell_data);
+def_int $duration = ~coord_projectile(coord, $at, telegrab_travel, 35, 0, 48, 16, -2, 64, 10);
+spotanim_map(telegrab_impact, $at, 0, $duration);
+p_stopaction;
+~give_spell_xp($spell_data);
+def_int $dx;
+def_int $dz;
+$dx, $dz = ~mta_statue_direction;
+p_delay(2);
+if ($dx = 0 & $dz = 0) {
+    mes("Invalid move!");
+    return;
+}
+~mta_statue_slide($dx, $dz);
+
+// which way your side of the maze sends it (Void direction)
+[proc,mta_statue_direction]()(int, int)
+def_coord $base;
+def_coord $statue;
+def_coord $end;
+def_coord $camera;
+def_int $n;
+def_int $s;
+def_int $w;
+def_int $e;
+$base, $statue, $end, $camera, $n, $s, $w, $e = ~mta_maze(%mta_maze);
+def_int $x = calc(coordx(coord) - 3328);
+def_int $z = calc(coordz(coord) - 9664);
+def_int $dx = 0;
+def_int $dz = 0;
+if ($z >= $n) $dz = 1;
+else if ($z <= $s) $dz = -1;
+if ($x <= $w) $dx = -1;
+else if ($x >= $e) $dx = 1;
+if ($dx ! 0 & $dz ! 0) return(0, 0);
+return($dx, $dz);
+
+// a square a tick until it meets a wall or comes to the exit square (Void slide)
+[proc,mta_statue_slide](int $dx, int $dz)
+def_coord $base;
+def_coord $statue;
+def_coord $end;
+def_coord $camera;
+def_int $n;
+def_int $s;
+def_int $w;
+def_int $e;
+$base, $statue, $end, $camera, $n, $s, $w, $e = ~mta_maze(%mta_maze);
+while (%mta_statue_at ! null) {
+    def_coord $from = %mta_statue_at;
+    def_coord $to = movecoord($from, $dx, 0, $dz);
+    if (lineofwalk($from, $to) = false) return;
+    sound_synth(mta_move_statue, 1, 0);
+    ~mta_statue_place($to);
+    if ($to = $end) {
+        ~mta_maze_solved($end);
+        return;
+    }
+    p_delay(0);
+}
+
+// Void win: two points, five in a row ten (with 10 law runes and 1000 Magic experience)
+[proc,mta_maze_solved](coord $end)
+~mta_statue_remove;
+%mta_maze_freed = 1;
+%mta_mazes_solved = setbit(%mta_mazes_solved, calc(%mta_maze - 1));
+%mta_maze_streak = calc(%mta_maze_streak + 1);
+def_boolean $bonus = false;
+if (%mta_maze_streak >= ^mta_maze_streak) {
+    $bonus = true;
+    %mta_maze_streak = 0;
+    stat_advance(magic, 10000);
+    if (inv_freespace(inv) > 0 | inv_total(inv, lawrune) > 0) {
+        inv_add(inv, lawrune, 10);
+    } else {
+        obj_add(coord, lawrune, 10, ^lootdrop_duration);
+    }
+}
+if ($bonus = true) {
+    ~mta_add_points(^mta_room_tele, 10);
+} else {
+    ~mta_add_points(^mta_room_tele, 2);
+}
+~mta_camera_reset;
+~mta_tele_refresh;
+npc_add($end, magictraining_guard_maze, 100);
+npc_setmode(none);
+~mesbox("Congratulations! You have received two Telekinetic Pizazz Points!");
+if ($bonus = true) {
+    ~mesbox("Congratulations on solving five mazes in a row, have 8 bonus points, 10 law runes and extra magic XP!");
+}
+
+// ---------------------------------------------------------------- the guardians
+// The freed Maze Guardian stands on the exit square, walled off from the walkway (Void: approach
+// range 10).
+[opnpc1,magictraining_guard_maze] @mta_maze_guardian;
+[apnpc1,magictraining_guard_maze] @mta_maze_guardian;
+
+[label,mta_maze_guardian]
+p_stopaction;
+// ours: only once you've freed him; before that he's a guardian like the others
+if (%mta_maze_freed = 0) {
+    ~chatplayer("<p,neutral>Hi.");
+    @mta_tele_guardian_menu;
+}
+~chatplayer("<p,neutral>Hi!");
+~chatnpc("<p,neutral>Well done on releasing me. Would you like to try another maze?");
+if (~p_choice2("Yes please!", 1, "No thanks.", 2) = 1) {
+    ~chatplayer("<p,happy>Yes please!");
+    ~chatnpc("<p,neutral>Very well, I shall teleport you.");
+    ~mta_tele_next;
+    weakqueue(mta_arrive, 2, 0);
+    return;
+}
+~chatplayer("<p,neutral>No thanks.");
+~chatnpc("<p,neutral>Very well. Talk to me if you want to move onto the next maze, or you can return to the entrance hall through the portal.");
+
+[opnpc1,magictraining_guard_tele]
+~chatplayer("<p,neutral>Hi.");
+@mta_tele_guardian_menu;
+
+[label,mta_tele_guardian_menu]
+switch_int (~p_choice4("What do I have to do in this room?", 1, "What are the rewards?", 2, "Got any tips that may help me?", 3, "Thanks, bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>What do I have to do in this room?");
+        ~chatnpc("<p,neutral>In this room you will see a maze within which one of my fellow Guardians has been turned to stone for the purpose of this exercise. You must move the statue using your telekinetic grab spell to the exit square at");
+        ~chatnpc("<p,neutral>the edge of the maze to bring the Guardian back to life. Simply stand on the side that you wish for the statue to travel towards and cast the spell on the statue. Once you have solved the maze, the statue will change back");
+        ~chatnpc("<p,neutral>into the Guardian and he will award you with Telekinetic Pizazz Points and teleport you to the next maze. You can switch to a better view of the maze by selecting the 'Observe' option on the statue and return");
+        ~chatnpc("<p,neutral>your view to normal by selecting the same option again. There is also a 'Reset' option on the statue just in case things aren't going too well.");
+        @mta_tele_guardian_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the rewards?");
+        ~chatnpc("<p,neutral>As well as the experience in casting magic, you will get Telekinetic Pizazz Points for each maze successfully solved and bonus points for completing five mazes in a row without returning to the entrance.");
+        @mta_tele_guardian_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Got any tips that may help me?");
+        ~chatnpc("<p,neutral>Have a good look at the maze before you try to solve it because this can save you time and runes required to navigate the maze. Although you will still be getting magic experience for moving the statue incorrectly, you");
+        ~chatnpc("<p,neutral>won't be progressing towards collecting Telekinetic Pizazz Points. Lastly, all the mazes can be solved in ten moves or less.");
+    case 4 :
+        ~chatplayer("<p,neutral>Thanks, bye!");
+        ~chatnpc("<p,neutral>use what you've learned, young one.");
+}

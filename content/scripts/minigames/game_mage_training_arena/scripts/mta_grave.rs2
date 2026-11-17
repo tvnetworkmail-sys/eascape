@@ -1,0 +1,177 @@
+// EASCape: the Mage Training Arena's Creature Graveyard (Void CreatureGraveyard.kt and BonesTo.kt;
+// 2006Scape Graveyard.java).
+// Grab bones from the piles, turn them into bananas (or peaches) and put the fruit down the food
+// chutes: a point, a rune and 50 Magic experience for every 16. Bones fall on you every 10 ticks for
+// 2 hitpoints; a death costs up to 10 points.
+// Ours: a pile turns into the next kind of bones one grab in four (Void counts four grabs a pile).
+
+// the bones and the fruit each kind makes (Void mta_bones)
+[proc,mta_grave_bones_count]()(int)
+return(calc(inv_total(inv, magictraining_bones1) + inv_total(inv, magictraining_bones2) * 2 + inv_total(inv, magictraining_bones3) * 3 + inv_total(inv, magictraining_bones4) * 4));
+
+[oploc1,magictraining_bones_pile1] @mta_grave_grab(magictraining_bones1, magictraining_bones_pile2);
+[oploc1,magictraining_bones_pile2] @mta_grave_grab(magictraining_bones2, magictraining_bones_pile3);
+[oploc1,magictraining_bones_pile3] @mta_grave_grab(magictraining_bones3, magictraining_bones_pile4);
+[oploc1,magictraining_bones_pile4] @mta_grave_grab(magictraining_bones4, magictraining_bones_pile1);
+
+[label,mta_grave_grab](namedobj $bones, loc $next)
+if (inv_freespace(inv) = 0) {
+    mes("You have no free space!");
+    return;
+}
+anim(human_pickupfloor, 0);
+sound_synth(mta_deposit_bone, 1, 0);
+inv_add(inv, $bones, 1);
+if (random(4) = 0) loc_change($next, 1000);
+
+// convert_bones.rs2: Bones to Bananas or Peaches here turn the graveyard's bones, each kind making
+// one to four (Void BonesTo.graveyardBones)
+[proc,mta_grave_convert](namedobj $fruit)(boolean)
+def_int $made = ~mta_grave_bones_count;
+if ($made = 0) return(false);
+inv_del(inv, magictraining_bones1, 28);
+inv_del(inv, magictraining_bones2, 28);
+inv_del(inv, magictraining_bones3, 28);
+inv_del(inv, magictraining_bones4, 28);
+inv_add(inv, $fruit, min($made, inv_freespace(inv)));
+return(true);
+
+// ---------------------------------------------------------------- the food chutes
+[oploc1,magictraining_grave_foodshute]
+def_int $bananas = inv_total(inv, banana);
+def_int $peaches = inv_total(inv, peach);
+if (calc($bananas + $peaches) = 0) {
+    ~mesbox("You don't have any bananas or peaches to deposit.");
+    return;
+}
+inv_del(inv, banana, $bananas);
+inv_del(inv, peach, $peaches);
+def_int $total = calc(%mta_grave_fruit + $bananas + $peaches);
+while ($total >= ^mta_grave_fruit_per_reward) {
+    $total = calc($total - ^mta_grave_fruit_per_reward);
+    %mta_grave_fruit = $total;
+    def_namedobj $rune = bloodrune;
+    switch_int (random(5)) {
+        case 1 : $rune = deathrune;
+        case 2 : $rune = earthrune;
+        case 3 : $rune = waterrune;
+        case 4 : $rune = naturerune;
+    }
+    if (inv_freespace(inv) > 0 | inv_total(inv, $rune) > 0) {
+        inv_add(inv, $rune, 1);
+    } else {
+        obj_add(coord, $rune, 1, ^lootdrop_duration);
+    }
+    ~mta_add_points(^mta_room_grave, 1);
+    stat_advance(magic, ^mta_grave_xp);
+    sound_synth(mta_deposit_fruit, 1, 0);
+    ~mesbox("Congratulations - you've been awarded a <lowercase(oc_name($rune))> and extra magic XP.");
+}
+%mta_grave_fruit = $total;
+
+// ---------------------------------------------------------------- falling bones
+[softtimer,mta_grave_bones]
+if (~mta_room(coord) ! ^mta_room_grave) {
+    clearsofttimer(mta_grave_bones);
+    return;
+}
+sound_synth(mta_bonefall, 1, 0);
+~damage_self(^mta_grave_hit);
+
+// the bones seen falling about the room (Void: 38 squares, each two times in three)
+[ai_timer,magictraining_guard_grave]
+npc_settimer(^mta_grave_interval);
+def_int $i = 0;
+while ($i < 38) {
+    if (random(12) < 8) spotanim_map(~mta_grave_drop_spotanim, ~mta_grave_drop($i), 0, 0);
+    $i = calc($i + 1);
+}
+
+[proc,mta_grave_drop_spotanim]()(spotanim)
+switch_int (random(4)) {
+    case 0 : return(magictraining_bone_drop1);
+    case 1 : return(magictraining_bone_drop2);
+    case 2 : return(magictraining_bone_drop3);
+}
+return(magictraining_bone_drop4);
+
+// Void mta_graveyard.bone_drops
+[proc,mta_grave_drop](int $i)(coord)
+switch_int ($i) {
+    case 0 : return(1_52_150_42_34);
+    case 1 : return(1_52_150_31_34);
+    case 2 : return(1_52_150_32_43);
+    case 3 : return(1_52_150_35_43);
+    case 4 : return(1_52_150_35_33);
+    case 5 : return(1_52_150_39_37);
+    case 6 : return(1_52_150_38_42);
+    case 7 : return(1_52_150_52_47);
+    case 8 : return(1_52_150_47_48);
+    case 9 : return(1_52_150_42_49);
+    case 10 : return(1_52_150_44_44);
+    case 11 : return(1_52_150_51_46);
+    case 12 : return(1_52_150_53_51);
+    case 13 : return(1_52_150_51_56);
+    case 14 : return(1_52_150_45_58);
+    case 15 : return(1_52_150_25_48);
+    case 16 : return(1_52_150_28_53);
+    case 17 : return(1_52_150_18_57);
+    case 18 : return(1_52_150_19_55);
+    case 19 : return(1_52_150_26_34);
+    case 20 : return(1_52_150_24_31);
+    case 21 : return(1_52_150_27_27);
+    case 22 : return(1_52_150_17_31);
+    case 23 : return(1_52_150_17_27);
+    case 24 : return(1_52_150_19_23);
+    case 25 : return(1_52_150_23_21);
+    case 26 : return(1_52_150_40_24);
+    case 27 : return(1_52_150_40_31);
+    case 28 : return(1_52_150_47_30);
+    case 29 : return(1_52_150_47_35);
+    case 30 : return(1_52_150_43_21);
+    case 31 : return(1_52_150_49_21);
+    case 32 : return(1_52_150_53_24);
+    case 33 : return(1_52_150_54_29);
+    case 34 : return(1_52_150_43_35);
+    case 35 : return(1_52_150_37_34);
+    case 36 : return(1_52_150_33_41);
+}
+return(1_52_150_35_44);
+
+[proc,mta_grave_refresh]
+if_settext(inter_338:com_3, tostring(%mta_grave_points));
+
+// death.rs2's MTA death: up to 10 points lost (Void playerDeath)
+[proc,mta_grave_death]
+def_int $lost = min(%mta_grave_points, ^mta_grave_death_penalty);
+if ($lost <= 0) return;
+%mta_grave_points = calc(%mta_grave_points - $lost);
+mes("You lost <tostring($lost)> Pizazz Points upon death!");
+
+[opnpc1,magictraining_guard_grave]
+~chatplayer("<p,neutral>Hello.");
+@mta_grave_guardian_menu;
+
+[label,mta_grave_guardian_menu]
+switch_int (~p_choice4("What do I have to do in this room?", 1, "What are the rewards?", 2, "Got any tips that may help me?", 3, "Thanks, bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do I have to do in this room?");
+        ~chatnpc("<p,neutral>Have you noticed all the bones around the room? These are teleported here from all over Gielinor to help clean up the landscape of countless bones left behind from combat. What better use for these bones than to");
+        ~chatnpc("<p,neutral>convert them to nutritious fruit to be eaten by you mortals? You have to use your Bones to Bananas spell to convert the bones and then place them in the holes on the walls to earn Graveyard Pizazz Points.");
+        ~chatnpc("<p,neutral>Unluckily for you, your health will constantly decrease from getting hit by these dropping bones so you will probably want to eat some of the bananas yourself to increase your stay here.");
+        @mta_grave_guardian_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the rewards?");
+        ~chatnpc("<p,neutral>You will get experience from casting your bones to bananas spell and you will get Graveyard Pizazz Points when you put the bananas though the wall. Occasionally you will also be credited with a runestone");
+        ~chatnpc("<p,neutral>to help you in your future spell casting.");
+        @mta_grave_guardian_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Got any tips that may help me?");
+        ~chatnpc("<p,neutral>Different bones will provide you with different numbers of bananas, so try to find the best type. Collect enough points and you will be able to buy a 'Bones to Peaches' spell from my fellow guardian above the entrance hall.");
+        ~chatnpc("<p,neutral>This spell can be used here just like the bones to bananas spell, except this spell will give you even more experience and the peaches will restore more health!");
+        ~chatplayer("<p,quiz>I see.");
+        ~chatnpc("<p,neutral>Oh, and a word of warning: should you decide to leave this room by a method other than the exit portals, you will be teleported to the entrance and have any items that you picked up in the room removed.");
+    case 4 :
+        ~chatplayer("<p,neutral>Thanks, bye!");
+        ~chatnpc("<p,neutral>use what you've learned, young one.");
+}

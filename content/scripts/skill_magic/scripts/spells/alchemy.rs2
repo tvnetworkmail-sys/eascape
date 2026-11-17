@@ -2,6 +2,8 @@
 [opheldt,magic:lowlvl_alchemy]@magic_spell_low_alch(^lowlvl_alchemy, last_item);
 
 [label,magic_spell_high_alch](int $spell, obj $item)
+// EASCape: the Alchemists' Playground's items (minigames/game_mage_training_arena/mta_alch.rs2)
+if (~mta_alch_item($item) > 0) @mta_alch($spell, $item);
 if_settabactive(^tab_magic);
 if_close;
 // look for spell in db
@@ -38,6 +40,8 @@ p_delay(3);
 
 
 [label,magic_spell_low_alch](int $spell, obj $item)
+// EASCape: the Alchemists' Playground's items (minigames/game_mage_training_arena/mta_alch.rs2)
+if (~mta_alch_item($item) > 0) @mta_alch($spell, $item);
 if_settabactive(^tab_magic); // osrs always sets tab back
 if_close;
 // look for spell in db

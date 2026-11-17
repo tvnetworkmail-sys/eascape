@@ -1,0 +1,39 @@
+// EASCape: test commands for the Mage Training Arena (minigames/game_mage_training_arena).
+
+// ::mtapack - runes for every room: 200 air, law, cosmic, nature, earth and water runes and 500 fire
+// runes (Telekinetic Grab, the alchemies, Lvl-1 to 3 Enchant, Bones to Bananas), and a staff of fire.
+// It doesn't raise your Magic: the rooms want 33, 21, 7 and 15.
+[debugproc,mtapack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(staff_of_fire, 1));
+$banked = calc($banked + ~questpack_give(airrune, 200));
+$banked = calc($banked + ~questpack_give(lawrune, 200));
+$banked = calc($banked + ~questpack_give(cosmicrune, 200));
+$banked = calc($banked + ~questpack_give(naturerune, 200));
+$banked = calc($banked + ~questpack_give(earthrune, 200));
+$banked = calc($banked + ~questpack_give(waterrune, 200));
+$banked = calc($banked + ~questpack_give(firerune, 500));
+~questpack_done("Mage Training Arena", $banked);
+mes("The Entrance Guardian: ::mtatele 1. ::mtapoints <n> sets every room's points.");
+
+// ::mtapoints <n> - every room's Pizazz Points (and you've met the Entrance Guardian)
+[debugproc,mtapoints](int $n)
+if (p_finduid(uid) = false) return;
+%mta_started = 1;
+%mta_tele_points = min($n, ^mta_tele_max);
+%mta_alch_points = min($n, ^mta_alch_max);
+%mta_ench_points = min($n, ^mta_ench_max);
+%mta_grave_points = min($n, ^mta_grave_max);
+~mta_hat_refresh;
+mes("Pizazz Points: <~mta_points_text>");
+
+// ::mtatele <n> - 1 the Entrance Guardian, 2 the Rewards Guardian (upstairs), 3 the portals
+[debugproc,mtatele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(map_findsquare(0_52_51_35_38, 0, 2, ^map_findsquare_lineofwalk));
+    case 2 : p_telejump(map_findsquare(1_52_51_34_53, 0, 2, ^map_findsquare_lineofwalk));
+    case 3 : p_telejump(map_findsquare(0_52_51_35_50, 0, 2, ^map_findsquare_lineofwalk));
+    case default : mes("::mtatele 1-3: 1 Entrance Guardian, 2 Rewards Guardian, 3 the portals");
+}

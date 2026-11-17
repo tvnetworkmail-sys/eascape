@@ -1,0 +1,193 @@
+// EASCape: the Mage Training Arena's Enchanting Chamber (Void EnchantingChamber.kt; 2006Scape
+// Enchanting.java).
+// Take shapes from the piles and enchant them into orbs: the spell's level in points for every ten,
+// a point more for the bonus shape the Enchantment Guardian calls out every 40 ticks, and twice the
+// spell's level for a dragonstone (they lie about the room, the map's own). Every 20 orbs put in the
+// hole give 3 death, blood or cosmic runes.
+
+// the shapes (^ the guardian's bonus number: 1 cube, 2 cylinder, 3 pentamid, 4 icosahedron, the
+// order of the window's pictures)
+[proc,mta_ench_shape](obj $obj)(int)
+switch_obj ($obj) {
+    case magictraining_enchan_cube : return(1);
+    case magictraining_enchan_cylinder : return(2);
+    case magictraining_enchan_pentamid : return(3);
+    case magictraining_enchan_icosahendron : return(4);
+}
+return(0);
+
+[proc,mta_ench_shape_name](int $i)(string)
+switch_int ($i) {
+    case 1 : return("cube");
+    case 2 : return("cylinder");
+    case 3 : return("pentamid");
+    case 4 : return("icosahedron");
+}
+return("");
+
+// ---------------------------------------------------------------- the piles
+[oploc1,loc_10799] @mta_ench_take(magictraining_enchan_cube);
+[oploc1,loc_10800] @mta_ench_take(magictraining_enchan_cylinder);
+[oploc1,loc_10801] @mta_ench_take(magictraining_enchan_icosahendron);
+[oploc1,loc_10802] @mta_ench_take(magictraining_enchan_pentamid);
+
+[label,mta_ench_take](namedobj $shape)
+if (inv_freespace(inv) = 0) {
+    mes("You have no space left in your inventory.");
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_add(inv, $shape, 1);
+
+// ---------------------------------------------------------------- enchanting
+// enchant.rs2: an enchant spell on a shape or the chamber's dragonstone (Void onItem). Three
+// quarters of the spell's usual experience.
+[proc,mta_ench_obj](obj $obj)(boolean)
+if (~mta_ench_shape($obj) > 0 | $obj = magictraining_dragonstone) return(true);
+return(false);
+
+[label,mta_enchant](int $spell, int $slot)
+def_obj $obj = inv_getobj(inv, $slot);
+if (~mta_room(coord) ! ^mta_room_ench) {
+    mes("You can't use this spell on this item.");
+    return;
+}
+if (%mta_cast_clock > map_clock) return;
+def_dbrow $spell_data = ~get_spell_data($spell);
+if (~check_spell_requirements($spell_data) = false) return;
+def_int $level = ~mta_ench_level($spell);
+%mta_cast_clock = calc(map_clock + 1);
+inv_setslot(inv, $slot, magictraining_enchan_shapeorb, 1);
+~delete_spell_runes($spell_data);
+stat_advance(magic, scale(3, 4, db_getfield($spell_data, magic_spell_table:experience, 0)));
+anim(human_cast_enchantring, 0);
+spotanim_pl(enchant_ring, 92, 0);
+sound_synth(~mta_ench_sound($level), 1, 0);
+def_int $points = 0;
+if ($obj = magictraining_dragonstone) {
+    $points = calc($level * 2);
+} else {
+    %mta_ench_converted = calc(%mta_ench_converted + 1);
+    if (%mta_ench_converted >= ^mta_ench_shapes_per_reward) {
+        %mta_ench_converted = 0;
+        $points = $level;
+    }
+    if (npc_find(coord, magictraining_guard_encha, 40, 0) = true) {
+        if (~mta_ench_shape($obj) = %mta_ench_bonus) {
+            $points = calc($points + 1);
+            if ($points = 1) {
+                mes("You get <tostring($points)> bonus point!");
+            } else {
+                mes("You get <tostring($points)> bonus points!");
+            }
+        }
+    }
+}
+~mta_add_points(^mta_room_ench, $points);
+
+[proc,mta_ench_level](int $spell)(int)
+switch_int ($spell) {
+    case ^enchant_lvl1 : return(1);
+    case ^enchant_lvl2 : return(2);
+    case ^enchant_lvl3 : return(3);
+    case ^enchant_lvl4 : return(4);
+    case ^enchant_lvl5 : return(5);
+    case ^enchant_lvl6 : return(6);
+}
+return(1);
+
+// ours: the ring sound of each spell's gem
+[proc,mta_ench_sound](int $level)(synth)
+switch_int ($level) {
+    case 1 : return(enchant_sapphire_ring);
+    case 2 : return(enchant_emerald_ring);
+    case 3 : return(enchant_ruby_ring);
+    case 4 : return(enchant_diamond_ring);
+    case 5 : return(enchant_dragon_ring);
+}
+return(enchant_onyx_ring);
+
+// ---------------------------------------------------------------- the hole
+[oploc1,loc_10803]
+def_int $orbs = inv_total(inv, magictraining_enchan_shapeorb);
+if ($orbs = 0) {
+    mes("You don't have any orbs to deposit.");
+    return;
+}
+inv_del(inv, magictraining_enchan_shapeorb, $orbs);
+anim(human_pickupfloor, 0);
+sound_synth(mta_deposit_orb, 1, 0);
+def_int $total = calc(%mta_ench_orbs + $orbs);
+while ($total >= ^mta_ench_orbs_per_reward) {
+    $total = calc($total - ^mta_ench_orbs_per_reward);
+    %mta_ench_orbs = $total;
+    def_namedobj $rune = deathrune;
+    switch_int (random(3)) {
+        case 1 : $rune = bloodrune;
+        case 2 : $rune = cosmicrune;
+    }
+    if (inv_freespace(inv) > 0 | inv_total(inv, $rune) > 0) {
+        inv_add(inv, $rune, 3);
+    } else {
+        obj_add(coord, $rune, 3, ^lootdrop_duration);
+    }
+    ~mesbox("Congratulations! You've been rewarded with an item for your efforts.");
+}
+%mta_ench_orbs = $total;
+
+// ---------------------------------------------------------------- the Enchantment Guardian
+// the bonus shape changes every 40 ticks (Void changeBonus)
+[ai_timer,magictraining_guard_encha]
+npc_settimer(^mta_ench_interval);
+if (%mta_ench_bonus = 0) {
+    %mta_ench_bonus = calc(random(4) + 1);
+    return;
+}
+// any shape but the one now
+def_int $next = calc(random(3) + 1);
+if ($next >= %mta_ench_bonus) $next = calc($next + 1);
+%mta_ench_bonus = $next;
+npc_say("The bonus shape has changed to the <~mta_ench_shape_name($next)>.");
+
+[softtimer,mta_ench_window] ~mta_ench_refresh;
+
+[proc,mta_ench_refresh]
+if_settext(inter_337:com_3, tostring(%mta_ench_points));
+def_int $bonus = 0;
+if (npc_find(coord, magictraining_guard_encha, 40, 0) = true) $bonus = %mta_ench_bonus;
+if_sethide(inter_337:com_4, ~mta_ench_not_bonus($bonus, 1));
+if_sethide(inter_337:com_5, ~mta_ench_not_bonus($bonus, 2));
+if_sethide(inter_337:com_6, ~mta_ench_not_bonus($bonus, 3));
+if_sethide(inter_337:com_7, ~mta_ench_not_bonus($bonus, 4));
+
+[proc,mta_ench_not_bonus](int $bonus, int $i)(boolean)
+if ($bonus = $i) return(false);
+return(true);
+
+[opnpc1,magictraining_guard_encha]
+~chatnpc("<p,neutral>Greetings young one. How can I enlighten you?");
+@mta_ench_guardian_menu;
+
+[label,mta_ench_guardian_menu]
+switch_int (~p_choice4("What do I have to do in this room?", 1, "What are the rewards?", 2, "Got any tips that may help me?", 3, "Thanks, bye!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What do I have to do in this room?");
+        ~chatnpc("<p,neutral>In this chamber you will see various piles of shapes. You can pick up these shapes and enchant them using the enchant jewelry spells. By enchanting these shapes, you'll be converting them into orbs which can be");
+        ~chatnpc("<p,neutral>placed in the hole in the centre. You will get Enchantment Pizazz Points for every ten shapes that you convert and the points you get depends on the level of enchantment spell you cast. You will get a");
+        ~chatnpc("<p,neutral>bonus Pizazz Point for enchanting a certain shape at a certain time, which I will periodically shout out. You will also be rewarded with an item for every so many orbs you deposit into the hole.");
+        @mta_ench_guardian_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the rewards?");
+        ~chatnpc("<p,neutral>As well as the magic experience from casting your enchantment spells, you will get Enchantment Pizazz Points for converting so many shapes, plus a bonus point for converting shape of the correct type. You");
+        ~chatnpc("<p,neutral>should also note that you will occasionally be rewarded with items when you put one of the enchanted orbs in the floor.");
+        @mta_ench_guardian_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Got any tips that may help me?");
+        ~chatnpc("<p,neutral>Try to guess or keep track of the time between the change of the best shape to enchant. This means you can be ready to run to a different shape when you know it is about to change. Look out for the dragon");
+        ~chatnpc("<p,neutral>gems, as these will get you more Pizazz Points!");
+        ~chatplayer("<p,quiz>I see.");
+        ~chatnpc("<p,neutral>Oh, and a word of warning: should you decide to leave this room by a method other than the exit portals, you will be teleported to the entrance and have any items that you picked up in the room removed.");
+    case 4 :
+        ~chatplayer("<p,neutral>Thanks, bye!");
+        ~chatnpc("<p,neutral>use what you've learned, young one.");
+}

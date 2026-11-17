@@ -10,6 +10,8 @@
 [label,magic_spell_enchant](int $spell, int $slot)
 if_settabactive(^tab_magic);
 def_obj $initial_obj = inv_getobj(inv, $slot);
+// EASCape: the Enchanting Chamber's shapes (minigames/game_mage_training_arena/mta_ench.rs2)
+if (~mta_ench_obj($initial_obj) = true) @mta_enchant($spell, $slot);
 if (inv_total(inv, $initial_obj) < 1) {
     return;
 }

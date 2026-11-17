@@ -25,6 +25,10 @@ if (~in_castlewars_game(coord) = true) {
 if (~in_castlewars_waitingroom(coord) = true) {
     @player_death_castlewars_waitingroom;
 }
+// EASCape: the Mage Training Arena's rooms are safe (minigames/game_mage_training_arena/mta.rs2)
+if (~mta_in_room(coord) = true) {
+    @player_death_mta;
+}
 
 ~player_death;
 ~wanted_cs_reset; // EASCape: Wanted!: dying while watching a CommOrb record (quest_wanted/wanted_commorb.rs2)
