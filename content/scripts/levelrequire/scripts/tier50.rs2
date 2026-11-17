@@ -7,6 +7,16 @@ if (stat_base(attack) < 50 | stat_base(strength) < 50) {
 }
 ~equip(last_slot);
 
+// EASCape: granite legs (Champions, Wyverns and Granite, 12 December 2005): 50 Defence and 50
+// Strength (the OSRS wiki's Granite legs); the words as the granite maul's above (ours)
+[opheld2,granite_legs]
+if (stat_base(defence) < 50 | stat_base(strength) < 50) {
+    mes("You are not a high enough level to use this item.");
+    mes("You need to have Defence and Strength levels of 50.");
+    return;
+}
+~equip(last_slot);
+
 [opheld2,slayer_leafbladed_spear]
 // intentional typo
 if (stat_base(slayer) < 55 | stat_base(attack) < 50) {
