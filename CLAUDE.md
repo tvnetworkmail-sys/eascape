@@ -38,8 +38,11 @@ one change.
 
 ## Player saves: never change the format
 
-- Saves stay at **version 7**, as on live, so live can always roll back to an older game without
-  losing anything. Never add fields or bump the version for new things.
-- New player data goes in **its own file** next to the saves, like the NPC kills:
-  `data/players/<profile>/kills/<username>.json` (`engine/KillStore.ts`), read when the player
-  loads and written with the save when it changed (owner's rule, 16 Nov 2026).
+- Saves stay at **version 7**, as on live, so live can always load its saves on an older build.
+  Never add fields or bump the version.
+- New saved varps (quest progress, minigame points and so on) are fine: they go in the save as
+  usual, and a rollback takes them back like everything else in the game.
+- The NPC kills for the hiscores are the exception. They're kept in **their own file** next to
+  the saves, `data/players/<profile>/kills/<username>.json` (`engine/KillStore.ts`), read when
+  the player loads and written with the save when they changed, so a rollback doesn't wipe them
+  (owner's rule, 16 Nov 2026; clarified 17 Nov 2026 that this is only for the NPC kills).
