@@ -298,12 +298,13 @@ switch_int (~p_choice3("Tell you to leave.", 1, "Ask what you wanted.", 2, "Join
 }
 
 [label,deal_donnie_rum]
-~chatnpc("<p,quiz>Be that the finest, most abrasive 'rum' I've ever smelled?");
-~chatplayer("<p,happy>Yes! That it be!");
-~chatnpc("<p,angry>Hand it over or I'll run ye through!");
+// ours: handed over first, so a zombie's hit (auto retaliate ends the talk) can't lose it
 inv_del(inv, deal_bucket_swill, 1);
 ~deal_stage(^deal_told_donnie);
 ~deal_swabs_calm;
+~chatnpc("<p,quiz>Be that the finest, most abrasive 'rum' I've ever smelled?");
+~chatplayer("<p,happy>Yes! That it be!");
+~chatnpc("<p,angry>Hand it over or I'll run ye through!");
 ~mesbox("The Captain drinks the 'rum' as quickly as possible.");
 ~chatnpc("<p,drunk>Arr.");
 ~chatnpc("<p,neutral>Ye be a good <text_gender("lad", "lass")>, fer a filthy livin' landlubber."); // the OSRS wiki: [lad/lass]
@@ -519,6 +520,9 @@ if (~deal_swab_scared($n) = true) {
     mes("I don't think he will be causing any more trouble.");
     return;
 }
+// ours: scared as soon as you shout, so being hit (auto retaliate ends the script) can't lose it
+~deal_swab_scare($n);
+npc_setmode(null); // and it stops fighting you (ours)
 ~chatplayer("<p,angry>Hey you!");
 switch_int ($n) {
     case 1 : ~chatnpc("<p,angry>Arr! Prepare to die!");
@@ -537,7 +541,6 @@ if_openmain(ahoy_blackout);
 if_settext(ahoy_blackout:com_1, "We interrupt this insult to bring you this soothing picture of a kitten. Normal service will be resumed shortly. Thank you for your patience.");
 p_delay(8);
 if_close;
-~deal_swab_scare($n);
 anim(emote_angry, 0);
 switch_int ($n) {
     case 1 : ~chatplayer("<p,angry>...meaning you'll need a dozen Ogres and a team of highly skilled surgeons to remove them!");
