@@ -215,6 +215,14 @@ if (npc_finduid(%follower_uid) = false) return;
 npc_tele(map_findsquare(coord, 1, 2, ^map_findsquare_lineofwalk));
 npc_setmode(playerfollow);
 
+// ours: the mansion's doors are walked through, which a following cat can't do (it was left behind
+// in the room you came from, and couldn't reach the rats in the next); it comes through with you
+[proc,rc_door_cat]
+if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false) return;
+if (%follower_obj = null) return;
+p_delay(0);
+~rc_cat_follow;
+
 // ---------------------------------------------------------------- the guards and guests
 // The OSRS and RS wikis: a guard or party guest who sees you shouts, and you are teleported to your
 // last checkpoint. Ours: "sees" is within 3 squares with a line of sight (no source has their
