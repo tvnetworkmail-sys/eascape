@@ -92,7 +92,11 @@ switch_int(%grandtree) {
 [label,grandtree_glough_cutscene]
 mes("You can hear footsteps approaching.");
 def_coord $start = 0_38_154_42_8;
-npc_add(movecoord(coord, 3, 0, 0), grandtree_glough, 500); // not sure since osrs changed it, but based off this it's less than the black demons timer 
+// EASCape: back down after the scene was cut short, the Glough still standing here comes again
+// (a second one was added)
+if (npc_find($start, grandtree_glough, 16, 0) = false) {
+    npc_add(movecoord(coord, 3, 0, 0), grandtree_glough, 500); // not sure since osrs changed it, but based off this it's less than the black demons timer 
+}
 npc_tele($start);
 npc_setmode(none);
 npc_walk(movecoord(coord, -1, 0, 0));
