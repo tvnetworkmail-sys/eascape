@@ -374,10 +374,11 @@ inv_del(inv, deal_blindweed_seed, 1);
 anim(farming_seed_dibbing, 0);
 sound_synth(farming_dibbing, 1, 0);
 p_delay(2);
-~mesbox("You plant a seed in the blindweed patch."); // the OSRS wiki's transcript
+// planted before the message, so closing it (or walking off) doesn't lose the seed
 %deal_farming = ^deal_patch_seed;
 stat_advance(farming, 320);
 settimer(deal_blindweed, ^deal_growth_ticks);
+~mesbox("You plant a seed in the blindweed patch."); // the OSRS wiki's transcript
 
 // Void: "I wonder how my Blindweed is coming along..." when it is grown
 [timer,deal_blindweed]
