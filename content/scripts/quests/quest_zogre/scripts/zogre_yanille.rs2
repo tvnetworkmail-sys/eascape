@@ -355,7 +355,7 @@ loc_anim(zogre_bell_ring);
 if (npc_find(coord, zogre_human_zavistic_rarve, 10, 0) = false) {
     npc_add(0_40_48_38_15, zogre_human_zavistic_rarve, 200);
 }
-if (%zogre < ^zogre_sithik & %thzfe_prismsearch < 4) {
+if (%zogre < ^zogre_sithik & %thzfe_prismsearch < 4 & %handsand_quest < ^hand_visit_sandy) { // and The Hand in the Sand (Void)
     ~chatnpc("<p,angry>What are you doing ringing that bell?! Don't you think some of us have work to do?");
     ~chatplayer("<p,neutral>But I was told to ring the bell if I wanted some attention.");
     ~chatnpc("<p,neutral>Well...anyway...we're very busy here, hurry up what do you want?");
@@ -366,7 +366,19 @@ if (%zogre < ^zogre_sithik & %thzfe_prismsearch < 4) {
 
 // called from area_yanille/zavistic_rarve.rs2's Talk-to
 [label,zavistic_menu]
+// Void: Zogre Flesh Eaters and The Hand in the Sand (quest_handsand/handsand_zavistic.rs2)
+if (%zogre >= ^zogre_barricade & %handsand_quest >= ^hand_ask_wizards) {
+    switch_int (~p_choice2("I'm here about the sicks...err Zogres", 1, "I have a rather sandy problem that I'd like to palm off on you.", 2)) {
+        case 1 :
+            ~chatplayer("<p,neutral>I'm here about the sicks...err Zogres");
+            @zavistic_zogre;
+        case 2 :
+            ~chatplayer("<p,neutral>I have a rather sandy problem that I'd like to palm off on you.");
+            @zavistic_handsand;
+    }
+}
 if (%zogre >= ^zogre_barricade) @zavistic_zogre;
+if (%handsand_quest >= ^hand_ask_wizards) @zavistic_handsand;
 ~zavistic_guild_menu;
 
 [label,zavistic_zogre]
@@ -582,6 +594,8 @@ switch_obj (last_useitem) {
         ~chatplayer("<p,happy>Look, I made a portrait of Sithik.");
         ~objbox(zogre_sithik_portrait_bad, "You show the sketch...", 250, 0, divide(^objbox_height, 2));
         ~chatnpc("<p,confused>Who the demonikin is that? Is it meant to be a portrait of Sithik, it doesn't look anything like him!");
+    case handsand_beerhand : @zavistic_hand_reveal; // The Hand in the Sand (quest_handsand/handsand_zavistic.rs2)
+    case handsand_scroll_magic : @zavistic_scroll_reveal;
     case default : ~displaymessage(^dm_default);
 }
 

@@ -1,0 +1,90 @@
+// EASCape: The Hand in the Sand's journal (Void's HandInTheSand.kt words)
+[if_button,questlist:handsand]
+def_int $s = %handsand_quest;
+if ($s = ^hand_not_started) {
+    def_string $thieving = "@dbl@Have level 17 @dre@Thieving@dbl@.";
+    if (stat_base(thieving) >= 17) $thieving = "@str@Have level 17 Thieving.";
+    def_string $crafting = "@dbl@Have level 49 @dre@Crafting@dbl@.";
+    if (stat_base(crafting) >= 49) $crafting = "@str@Have level 49 Crafting.";
+    ~quest_journal("The Hand in the Sand", "@dbl@I can start this quest by speaking to @dre@Bert@dbl@ in @dre@Yanille@dbl@ in the|@dbl@house near the @dre@Sandpit@dbl@.||@dbl@Before I begin I will need to:|<$thieving>|<$crafting>");
+    return;
+}
+def_string $t = "@str@Bert the sandpit worker in Yanille has asked me to|@str@investigate the hand that he found in the sand.";
+if ($s < ^hand_ask_wizards) {
+    $t = append($t, "|@dbl@I need to speak to the @dre@Guard Captain@dbl@ who is in the @dre@Dragon|@dre@Inn@dbl@ south of the @dre@sandpit@dbl@.");
+}
+if ($s >= ^hand_ask_wizards) {
+    $t = append($t, "|@str@I have spoken to the Guard Captain.");
+    if ($s < ^hand_bert_hours) $t = append($t, "|@dbl@I need to see if the @dre@Wizards@dbl@ in the guild in Yanille know|@dbl@anything about the @dre@hand@dbl@.");
+}
+if ($s >= ^hand_bert_hours) {
+    $t = append($t, "|@str@I have shown the hand to the Wizards in Yanille.");
+    if ($s < ^hand_visit_sandy) $t = append($t, "|@dbl@Find out why @dre@Bert's@dbl@ hours have changed.");
+}
+if ($s >= ^hand_visit_sandy) {
+    $t = append($t, "|@str@I have Bert's copy of the Rota.");
+    if ($s < ^hand_confront_bert) $t = append($t, "|@dbl@I should ask @dre@Sandy@dbl@ in the @dre@Sand Corp@dbl@ Offices in @dre@Brimhaven@dbl@|@dbl@about Bert's rota.");
+}
+if ($s >= ^hand_confront_bert) {
+    $t = append($t, "|@str@I have Sandy's copy of the Rota.");
+    if ($s < ^hand_deliver_scroll) $t = append($t, "|@dbl@Show @dre@Bert@dbl@ the changes in his hours.");
+}
+if ($s = ^hand_deliver_scroll) {
+    $t = append($t, "|@dbl@Ring the bell at the Wizard Guild in @dre@Yanille@dbl@ and give @dre@scroll@dbl@ to|@dre@Zavistic Rarve@dbl@.");
+}
+if ($s >= ^hand_make_serum) $t = append($t, "|@str@I have taken the scroll to Zavistic Rarve.");
+if ($s = ^hand_make_serum) $t = append($t, ~handsand_journal_serum);
+if ($s = ^hand_distract_sandy) $t = append($t, "|@dbl@Find a way to make @dre@Sandy@dbl@ drink the @dre@Truth Serum@dbl@.");
+if ($s >= ^hand_drug_coffee) $t = append($t, "|@str@I have distracted Sandy successfully.");
+if ($s >= ^hand_activate_orb) {
+    $t = append($t, "|@str@I have drugged Sandy's coffee.");
+    if ($s < ^hand_interrogate_sandy) $t = append($t, "|@dbl@I must activate the magical scrying orb to record the|@dbl@interview with @dre@Sandy@dbl@.");
+}
+if ($s >= ^hand_interrogate_sandy) {
+    $t = append($t, "|@str@I have activated the magical scrying orb.");
+    if ($s < ^hand_return_orb) $t = append($t, "|@dbl@Ask @dre@Sandy@dbl@ about @dre@Hand in the Sand@dbl@.");
+}
+if ($s >= ^hand_return_orb) {
+    $t = append($t, "|@str@I have interogated Sandy.");
+    if ($s < ^hand_gather_runes) $t = append($t, "|@dbl@Return the information gathered to @dre@Zavistic Rarve@dbl@ in|@dre@Yanille@dbl@ wizard guild.");
+}
+if ($s >= ^hand_gather_runes) {
+    $t = append($t, "|@str@I have returned the information from the orb.");
+    if ($s < ^hand_search_entrana) $t = append($t, "|@dbl@Find and return @dre@5 earth runes@dbl@ and @dre@a bucket of sand@dbl@ to|@dre@Zavistic Rarve@dbl@ in Yanille.");
+}
+if ($s >= ^hand_search_entrana) {
+    $t = append($t, "|@str@The Sandpit has been enchanted.");
+    if ($s < ^hand_return_head) $t = append($t, "|@dbl@Visit the @dre@sandpit@dbl@ on the island of @dre@Entrana@dbl@ and return any|@dbl@other wizard parts.");
+}
+if ($s >= ^hand_return_head) {
+    $t = append($t, "|@str@I have retrieved the head of a wizard.");
+    if ($s < ^hand_complete) $t = append($t, "|@dbl@Return the @dre@wizard head@dbl@ to @dre@Zavistic Rarve@dbl@ in @dre@Yanille@dbl@.");
+}
+if ($s >= ^hand_complete) {
+    $t = append($t, "||@str@The dead wizard has been buried and Sandy arrested for|@str@murder.||@red@QUEST COMPLETE!|@dbl@For an extra reward I must speak to Bert and tell him about|@dbl@his pension.");
+    if (%handsand_bert > 0) $t = append($t, "||@dbl@Every day I may ask @dre@Bert@dbl@ to transport some sand to my|@dbl@bank.");
+}
+~quest_journal("The Hand in the Sand", $t);
+
+[proc,handsand_journal_serum]()(string)
+def_int $serum = %handsand_serum;
+if ($serum = 0) return("|@dre@Betty@dbl@ in @dre@Port Sarim@dbl@ will guide you on how to make some|@dre@Truth Serum@dbl@.");
+def_string $t = "|@dre@Betty@dbl@ has told me what I need to do to make the @dre@Truth|@dre@Serum@dbl@:";
+if ($serum >= ^hand_serum_made) return(append($t, "|@dbl@Talk to @dre@Betty@dbl@ to find out how to use the @dre@Truth Serum@dbl@."));
+if ($serum >= ^hand_serum_lens) return(append($t, "|@dbl@Talk to @dre@Betty@dbl@ to find out how to finish the @dre@Truth Serum@dbl@."));
+if (~handsand_owns(bullseye_lantern_lens) = true) {
+    $t = append($t, "|@str@I have a bullseye lens");
+} else {
+    $t = append($t, "|@dbl@I need to @dre@craft@dbl@ a bullseye lens");
+}
+if ($serum >= ^hand_serum_juice) {
+    $t = append($t, "|@str@I have made some redberry juice");
+} else {
+    $t = append($t, "|@dbl@I need to make some @dre@redberry juice@dbl@ in the bottle @dre@Betty@dbl@ gave me");
+}
+if ($serum >= ^hand_serum_dye) {
+    $t = append($t, "|@str@I have made the pink dye");
+} else {
+    $t = append($t, "|@dbl@I need to make some @dre@pink dye@dbl@");
+}
+return(append($t, "|@dbl@I need to make a @dre@rose tinted lens@dbl@"));

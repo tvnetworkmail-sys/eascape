@@ -82,6 +82,12 @@ switch_obj(last_useitem) {
 ~attempt_brew_potion(last_useslot, last_slot);
 
 [opheldu,white_berries]
+// EASCape: The Hand in the Sand (quest_handsand)
+if (last_useitem = handsand_redberry_juice) @handsand_pink_dye;
+if (last_useitem = handsand_bottle_water) {
+    mes("You'll need to use red berries first.");
+    return;
+}
 ~attempt_brew_potion(last_useslot, last_slot);
 
 [opheldu,dragon_scale_dust]

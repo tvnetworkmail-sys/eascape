@@ -1,0 +1,276 @@
+// EASCape: Zavistic Rarve's Hand in the Sand talk (Void content/area/kandarin/yanille/ZavisticRarve.kt).
+// Reached from his Talk-to and the guild's bell (quest_zogre/zogre_yanille.rs2's zavistic_menu).
+
+[label,zavistic_handsand]
+def_int $s = %handsand_quest;
+if ($s = ^hand_ask_wizards) {
+    if (inv_total(inv, handsand_beerhand) > 0) @zavistic_hand_reveal;
+    ~mesbox("Maybe you should have the hand with you before speaking to Zavistic.");
+    return;
+}
+if ($s = ^hand_bert_hours | $s = ^hand_visit_sandy | $s = ^hand_confront_bert) {
+    ~chatnpc("<p,quiz>Did you find out who killed Clarence yet?");
+    ~chatplayer("<p,sad>Not yet, but don't lose your head over it.");
+    return;
+}
+if ($s = ^hand_deliver_scroll) {
+    if (inv_total(inv, handsand_scroll_magic) > 0) @zavistic_scroll_reveal;
+    ~mesbox("Perhaps you should have the scroll from Bert with you before you speak to Zavistic.");
+    return;
+}
+if ($s = ^hand_make_serum) {
+    if (inv_total(inv, handsand_orb_storage) > 0 | inv_total(inv, handsand_orb_recording) > 0) {
+        ~zavistic_guild_menu_orb(1);
+    } else {
+        ~zavistic_guild_menu_orb(2);
+    }
+    return;
+}
+if ($s = ^hand_distract_sandy | $s = ^hand_drug_coffee | $s = ^hand_activate_orb) {
+    ~chatnpc("<p,quiz>Have you made the serum and talked to Sandy yet?");
+    if (inv_total(inv, handsand_orb_storage) > 0) {
+        ~chatplayer("<p,neutral>Not yet, but don't bust a gut over it!");
+        return;
+    }
+    ~chatplayer("<p,sad>I've lost my magical scrying orb!");
+    ~zavistic_replace_orb;
+    return;
+}
+if ($s = ^hand_interrogate_sandy) {
+    ~zavistic_guild_menu_orb(2);
+    return;
+}
+if ($s = ^hand_return_orb) {
+    if (inv_total(inv, handsand_orb_recording) > 0) {
+        ~mesbox("You hand the magical scrying orb to the Wizard and watch as the recording is played back.");
+        ~chatnpc("<p,angry>Well, well...I think this Sandy needs a lesson, please bring me 5 earth runes and a bucket of sand.");
+    } else {
+        ~chatplayer("<p,sad>I got the whole story from Sandy... but I lost the orb.");
+        ~chatnpc("<p,neutral>It's ok, I saw the whole thing as the orb is connected via magic to me as I enchanted it.");
+        ~chatnpc("<p,angry>I think this Sandy needs a lesson, please bring me 5 earth runes and a bucket of sand.");
+    }
+    %handsand_quest = ^hand_gather_runes;
+    inv_del(inv, handsand_orb_recording, inv_total(inv, handsand_orb_recording));
+    ~chatplayer("<p,shock>Erm, why?");
+    ~chatnpc("<p,angry>Don't question me or you'll end up as braindead as that legless Guard Captain!");
+    ~chatplayer("<p,scared>Umm.. ok, I'll get you the 5 earth runes and bucket of sand.");
+    return;
+}
+if ($s = ^hand_gather_runes) {
+    if (inv_total(inv, earthrune) >= 5 & inv_total(inv, bucket_sand) > 0) {
+        ~chatplayer("<p,quiz>I've brought what you wanted, what are you going to do?");
+        @zavistic_sandpit;
+    }
+    ~chatnpc("<p,happy>You really mean you forgot? Bring me 5 earth runes and 1 bucket of sand to help stop that moneygrabbing Sandy!");
+    return;
+}
+if ($s = ^hand_search_entrana) {
+    ~chatnpc("<p,quiz>Did you visit the Entrana sandpit yet? Ask the worker there if he's found an arm or a leg.");
+    ~chatplayer("<p,neutral>Not yet no. I've been running around like a headless chicken, but I'll get to it!");
+    return;
+}
+if ($s = ^hand_return_head) {
+    if (inv_total(inv, handsand_wizhead) < 1) {
+        ~mesbox("Perhaps you should have the wizard's head with you before speaking to Zavistic.");
+        return;
+    }
+    ~objbox(handsand_wizhead, "You show the wizard the head.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,sad>Alas poor Clarence. I knew him, <displayname>.");
+    ~chatnpc("<p,neutral>Thank you - we shall bury him today. I have sent word for the guards to arrest Sandy, so no one will ever see him again!");
+    ~handsand_complete;
+    return;
+}
+if ($s >= ^hand_complete) {
+    ~chatnpc("<p,happy>Thank you so much for helping to lay Clarence to rest and lock up his murderer!");
+}
+~zavistic_guild_menu;
+
+[label,zavistic_hand_reveal]
+if (%handsand_quest ! ^hand_ask_wizards | inv_total(inv, handsand_beerhand) < 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,quiz>Ummm... Do you have all your wizards?");
+~chatnpc("<p,confused>All my.... whatever do you mean...?");
+~chatplayer("<p,neutral>The Guard Captain asked me to see if you have any... missing... wizards.");
+~chatnpc("<p,shock>That's silly! No one would kill a wizard... would they?");
+~chatplayer("<p,shifty>Erm... no...");
+~chatplayer("<p,neutral>Well.. maybe, you see Bert found this hand and it might belong to.. a wizard!");
+~chatnpc("<p,quiz>Bert? Ahh yes, the sandman who seems to have been working very long hours recently. Let's see that hand...");
+if (inv_total(inv, handsand_beerhand) < 1) return;
+%handsand_quest = ^hand_bert_hours;
+inv_del(inv, handsand_beerhand, 1);
+~objbox(handsand_beerhand, "You hand it over.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,shock>Oh my! This is most definitely Clarence, my most able student! You must find out who did this!");
+~chatplayer("<p,neutral>Do you have any input as to the matter at hand?");
+~chatnpc("<p,neutral>Well.... Ask Bert about the long hours he's been working, that sounds suspicious to me. Digging things up at all hours of the day isn't natural.");
+
+[label,zavistic_scroll_reveal]
+if (%handsand_quest ! ^hand_deliver_scroll | inv_total(inv, handsand_scroll_magic) < 1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,neutral>I talked to Bert and found something very strange about his hours.");
+~chatnpc("<p,quiz>Oh? Did he kill Clarence?");
+~chatplayer("<p,neutral>No, but he doesn't remember changing his hours, and his rota and the original that his boss Sandy had, are different!");
+~chatplayer("<p,neutral>... oh, and this scroll appeared when they changed - he gave it to me.");
+~chatnpc("<p,happy>I recognise that type of scroll! It's used in a mind altering spell of some sort. Did you speak to this... Sandy guy? Perhaps he has a hand in this.");
+~chatplayer("<p,neutral>I took a look around his office. I don't know about a hand in it, I think he has both hands and feet in it!");
+~chatnpc("<p,neutral>Even more suspicious! Here, take this magical scrying orb and get some Truth Serum from Betty in Port Sarim, she owes me a favour, just tell her I sent you if she complains.");
+~chatnpc("<p,neutral>Then you will be equipped to ask Sandy a few questions. Oh Clarence, I will find your murderer!");
+if (inv_total(inv, handsand_scroll_magic) < 1) return;
+%handsand_quest = ^hand_make_serum;
+inv_del(inv, handsand_scroll_magic, 1);
+inv_add(inv, handsand_orb_storage, 1);
+~objbox(handsand_orb_storage, "You exchange the scroll for the magical scrying orb. Perhaps Zavistic can give you even more of a hand to find the murderer?", 250, 0, divide(^objbox_height, 2));
+
+// Void guildMenuWithOrbHelp ($mode 1) and guildMenuWithLostOrb ($mode 2): the guild menu, with
+// "Can you help me more?" or "I've lost my magical scrying orb!" in place of "Ok, thanks."
+[proc,zavistic_guild_menu_orb](int $mode)
+def_string $last = "Can you help me more?";
+if ($mode = 2) $last = "I've lost my magical scrying orb!";
+switch_int (~p_choice4("What is there to do in the Wizards' Guild?", 1, "What are the requirements to get in the Wizards' Guild?", 2, "What do you do in the Guild?", 3, $last, 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What is there to do in the Wizards' Guild?");
+        ~chatnpc("<p,neutral>This is the finest wizards' establishment in the land. We have magic portals to the other towers of wizardry around RuneScape. We have a particularly wide collection of runes in our rune shop. We sell some of");
+        ~chatnpc("<p,neutral>the finest mage robes in the land and we have a training area full of zombies for you to practice your magic on.");
+        ~zavistic_guild_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>What are the requirements to get in the Wizards' Guild?");
+        ~chatnpc("<p,neutral>You need a magic level of 66, the high magic energy level is too dangerous for anyone below that level.");
+        ~zavistic_guild_menu;
+    case 3 :
+        ~chatplayer("<p,neutral>What do you do in the Guild?");
+        ~chatnpc("<p,neutral>I'm the Grand Secretary for the Wizards' Guild, I have lots of correspondence to keep up with, as well as attending to the discipline of the more problematic guild members.");
+        ~zavistic_guild_menu;
+    case 4 :
+        if ($mode = 1) {
+            ~chatplayer("<p,quiz>Can you help me more?");
+            ~zavistic_help_more;
+        } else {
+            ~chatplayer("<p,sad>I've lost my magical scrying orb!");
+            ~zavistic_replace_orb;
+        }
+}
+
+[proc,zavistic_replace_orb]
+if (inv_total(inv, handsand_orb_storage) > 0 | inv_total(inv, handsand_orb_recording) > 0) return;
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,sad>I'd give you another magical scrying orb if you had some space in your inventory.");
+    return;
+}
+if (%handsand_quest = ^hand_interrogate_sandy) {
+    inv_add(inv, handsand_orb_recording, 1);
+    ~chatnpc("<p,neutral>No matter, here, have another I've already activated it for you!");
+    return;
+}
+inv_add(inv, handsand_orb_storage, 1);
+~chatnpc("<p,neutral>No matter, here, have another and please hurry, whoever killed Clarence must pay!");
+
+// one teleport to Betty's shop, for a vial
+[proc,zavistic_help_more]
+if (%handsand_tele = 1) {
+    ~chatnpc("<p,sad>Unfortunately I've already helped you with one teleport, get some exercise - your legs won't fall off!");
+    return;
+}
+~chatnpc("<p,happy>Bring me a vial and I'll help you a little more.");
+if (inv_total(inv, vial_empty) < 1) return;
+~chatplayer("<p,happy>I have a vial here for you.");
+~chatnpc("<p,quiz>Ok, would you like me to transport you to Port Sarim? I'm sticking my neck out a bit helping you like this and can only do it once though!");
+switch_int (~p_choice2("Yes, that would be great!", 1, "No, I prefer using my legs, thanks all the same.", 2)) {
+    case 1 :
+        ~chatplayer("<p,happy>Yes, that would be great!");
+        ~chatnpc("<p,neutral>Off you go then, break a leg!");
+    case 2 :
+        ~chatplayer("<p,sad>No, I prefer using my legs, thanks all the same.");
+        ~chatnpc("<p,neutral>Ok, suit yourself!");
+        return;
+}
+if (inv_total(inv, vial_empty) < 1) return;
+%handsand_tele = 1;
+inv_del(inv, vial_empty, 1);
+if (npc_find(coord, zogre_human_zavistic_rarve, 10, 0) = true) {
+    npc_facesquare(coord);
+    npc_anim(human_castentangle, 0);
+}
+p_delay(1);
+spotanim_pl(pickaxe_summon_effect_spotanim, 92, 0);
+anim(human_shrink, 0);
+sound_synth(teleport_all, 1, 0);
+p_delay(2);
+anim(null, 0);
+p_telejump(0_47_50_6_59); // Void (3014, 3259): in Betty's shop
+
+// Void sandpitRefillCutscene, played in Yanille itself (Void uses an instance; ours: you watch from
+// beside the sandpit, hidden, while Bert walks out to it, and are then put back by Zavistic)
+[label,zavistic_sandpit]
+~chatnpc("<p,happy>Ahh excellent, let's have those! Watch and learn...");
+def_coord $back = coord;
+~fade_out;
+p_delay(2);
+minimap_toggle(2);
+p_transmogrify(desert_treasure_invisible_npc);
+p_telejump(^hand_cs_watch);
+def_npc_uid $bert = null;
+if (npc_find(^hand_cs_watch, handsand_bert, 20, 0) = true) $bert = npc_uid;
+cam_moveto(^hand_cs_watch, 850, 254, 254);
+cam_lookat(^hand_cs_look, 25, 254, 254);
+p_delay(2);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~mesbox("The Wizard chants and your attention is taken to the sandpit where Bert found the hand.");
+if ($bert ! null & npc_finduid($bert) = true) {
+    npc_tele(^hand_cs_bert_out); // Void's cutscene puts him outside his house
+    npc_walk(^hand_cs_bert_pit);
+}
+p_delay(4);
+if ($bert ! null & npc_finduid($bert) = true) {
+    npc_facesquare(^hand_cs_sandpit);
+    npc_anim(prisoner_ready_crying, 0);
+}
+if (loc_find(^hand_cs_sandpit, handsand_sandpit_anim) = true) loc_anim(handsand_sand_magic);
+sound_synth(handsand_sandswirl, 1, 0);
+p_delay(1);
+if ($bert ! null & npc_finduid($bert) = true) {
+    npc_anim(prisoner_ready_crying, 0);
+    npc_say("My sand! My lovely sand");
+}
+p_delay(1);
+~mesbox("Something very strange happens to the Sandpit, it looks like it has filled itself up!");
+p_delay(4);
+~fade_out;
+p_delay(2);
+cam_reset;
+p_transmogrify(null);
+minimap_toggle(0);
+p_telejump($back);
+if ($bert ! null & npc_finduid($bert) = true) npc_tele(0_39_48_54_28); // back in his house (his spawn)
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+if (inv_total(inv, earthrune) < 5 | inv_total(inv, bucket_sand) < 1) return;
+inv_del(inv, earthrune, 5);
+inv_del(inv, bucket_sand, 1);
+%handsand_quest = ^hand_search_entrana;
+if (npc_find(coord, zogre_human_zavistic_rarve, 10, 0) = true) {
+    ~chatnpc("<p,happy>There, the sand pit will now magically refill. No more work for Bert!");
+    ~chatnpc("<p,sad>We must find the rest of Clarence, I've sent some wizards out to some of the sandpits, would you please check the Entrana sandpit?");
+}
+
+[proc,handsand_complete]
+inv_del(inv, handsand_wizhead, inv_total(inv, handsand_wizhead));
+%handsand_quest = ^hand_complete;
+%handsand_question1 = 0;
+%handsand_question2 = 0;
+%handsand_question3 = 0;
+%handsand_tele = 1;
+%handsand_serum = ^hand_serum_finished;
+%handsand_sandy_multi = 2;
+%handsand_coffee_multi = 1;
+%handsand_counter_multi = 0;
+stat_advance(crafting, 90000);
+stat_advance(thieving, 10000);
+session_log(^log_adventure, "Quest complete: The Hand in the Sand");
+~send_quest_complete(questlist:handsand, handsand_sandyhand, 250, ^hand_questpoints, "You have completed\\nThe Hand in the Sand!", "1 Quest Point|9,000 Crafting XP|1,000 Thieving XP|Wizards' Guild Rune Store access|A secret reward from Bert");

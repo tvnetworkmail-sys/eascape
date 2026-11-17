@@ -1,0 +1,49 @@
+// EASCape: test commands for The Hand in the Sand (quests/quest_handsand).
+
+// ::handpack - what the quest needs (the OSRS wiki's list): a beer, 2 empty vials, redberries, white
+// berries, a lantern lens, 5 earth runes, a bucket of sand and 200 coins. It doesn't raise your
+// Thieving or Crafting: Bert wants 17 and 49.
+[debugproc,handpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(beer, 1));
+$banked = calc($banked + ~questpack_give(vial_empty, 2));
+$banked = calc($banked + ~questpack_give(redberries, 1));
+$banked = calc($banked + ~questpack_give(white_berries, 1));
+$banked = calc($banked + ~questpack_give(bullseye_lantern_lens, 1));
+$banked = calc($banked + ~questpack_give(earthrune, 5));
+$banked = calc($banked + ~questpack_give(bucket_sand, 1));
+$banked = calc($banked + ~questpack_give(coins, 200));
+~questpack_done("The Hand in the Sand", $banked);
+mes("::handtele 1-6: Bert, the Guard Captain, the guild's bell, Sandy, Betty, Mazion.");
+
+// ::handstage <n> - sets the quest's stage (%handsand_quest, Void's values: 10 investigate, 20 ask
+// wizards, 30 Bert's hours, 40 visit Sandy, 50 confront Bert, 60 deliver scroll, 70 make serum,
+// 80 distract Sandy, 90 drug coffee, 100 activate orb, 110 interrogate, 120 return orb, 130 runes,
+// 140 Entrana, 150 return head, 160 complete). It doesn't give the items.
+[debugproc,handstage](int $n)
+if (p_finduid(uid) = false) return;
+%handsand_quest = $n;
+if ($n > 0 & $n < ^hand_return_orb) {
+    %handsand_question1 = 1;
+    %handsand_question2 = 1;
+    %handsand_question3 = 1;
+}
+if ($n = ^hand_drug_coffee) %handsand_sandy_multi = 1;
+if ($n ! ^hand_drug_coffee & $n < ^hand_complete) %handsand_sandy_multi = 0;
+if ($n >= ^hand_distract_sandy) %handsand_serum = ^hand_serum_finished;
+~send_quest_progress(questlist:handsand, %handsand_quest, ^hand_complete);
+mes("The Hand in the Sand: stage <tostring($n)>.");
+
+// ::handtele <n> - 1 Bert, 2 the Guard Captain, 3 the Wizards' Guild bell, 4 Sandy, 5 Betty, 6 Mazion
+[debugproc,handtele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(map_findsquare(0_39_48_53_28, 0, 2, ^map_findsquare_lineofwalk));
+    case 2 : p_telejump(map_findsquare(0_39_48_54_6, 0, 2, ^map_findsquare_lineofwalk));
+    case 3 : p_telejump(map_findsquare(0_40_48_38_17, 0, 2, ^map_findsquare_lineofwalk));
+    case 4 : p_telejump(map_findsquare(0_43_49_36_42, 0, 2, ^map_findsquare_lineofwalk));
+    case 5 : p_telejump(map_findsquare(0_47_50_7_59, 0, 2, ^map_findsquare_lineofwalk));
+    case 6 : p_telejump(map_findsquare(0_44_52_3_14, 0, 2, ^map_findsquare_lineofwalk));
+    case default : mes("::handtele 1-6: Bert, the Guard Captain, the guild's bell, Sandy, Betty, Mazion");
+}

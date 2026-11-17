@@ -1,0 +1,570 @@
+// EASCape: The Hand in the Sand's people. Words from Void (content/area/kandarin/yanille/Bert.kt,
+// GuardCaptainYanille.kt, karamja/brimhaven/Sandy.kt, asgarnia/port_sarim/Betty.kt and
+// asgarnia/entrana/Mazion.kt).
+
+// ================================================================ Bert (Yanille)
+[opnpc1,handsand_bert]
+def_int $s = %handsand_quest;
+if ($s = ^hand_not_started) @bert_start;
+if ($s = ^hand_investigate | $s = ^hand_ask_wizards) @bert_guard_captain;
+if ($s = ^hand_bert_hours) @bert_wizard_info;
+if ($s = ^hand_visit_sandy) @bert_sandy_visit;
+if ($s = ^hand_confront_bert) @bert_rotas;
+if ($s >= ^hand_complete) @bert_post_quest;
+@bert_mid_quest;
+
+[label,bert_start]
+~chatnpc("<p,sad>Eeee, wha' shall I do! I'll mos' certainly lose tha job...");
+~chatplayer("<p,quiz>Lose your job? What's wrong, why?");
+~chatnpc("<p,sad>I w-w-work... over yon sand pit... and weeell... I found... this... hand! T'were buried in't Sand!");
+switch_int (~p_choice2("Oh, you found a hand in the sand - that's nice for you.", 1, "Eww a hand, in the sand! Why haven't you told the authorities?", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Oh, you found a hand in the sand - that's nice for you.");
+        return;
+    case 2 : ~chatplayer("<p,shock>Eww a hand, in the sand! Why haven't you told the authorities?");
+}
+~chatnpc("<p,sad>They's no' wha' they once was. Tha cap'ain o'the Guard spends near all o'the time drunk in yon pub.");
+~chatplayer("<p,quiz>Oh? The Guard Captain is drunk in the pub you say? That's not good, what will you do?");
+if (stat_base(thieving) < 17 | stat_base(crafting) < 49) {
+    ~mesbox("You do not meet all of the requirements to start The Hand in the Sand quest.");
+    return;
+}
+~chatnpc("<p,quiz>Weeellll... do yer think yer could 'elp me?");
+switch_int (~p_choice2("I want no part in this!", 1, "Sure, I'll give you a hand.", 2)) {
+    case 1 :
+        ~chatplayer("<p,sad>I want no part in this!");
+        return;
+    case 2 : ~chatplayer("<p,laugh>Sure, I'll give you a hand.");
+}
+~chatnpc("<p,shock>..... Nae, ye can 'ave the 'and as h'evidence.");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>I's would be givin' yer tha 'and, but yer can no' be carryin' it. Come back when ye can.");
+    return;
+}
+%handsand_quest = ^hand_investigate;
+%handsand_question1 = 1;
+%handsand_question2 = 1;
+%handsand_question3 = 1;
+~send_quest_progress(questlist:handsand, %handsand_quest, ^hand_complete);
+inv_add(inv, handsand_sandyhand, 1);
+~objbox(handsand_sandyhand, "Bert gives you a rather smelly, sand covered hand.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,sad>P'raps tha smell will get t'Guard Cap'ain's nose out o'his beer fer 2 seconds!");
+
+[label,bert_guard_captain]
+~chatnpc("<p,quiz>Did ye see yon Guard Capt'n 'bout hand?");
+if (%handsand_quest = ^hand_ask_wizards) {
+    ~chatplayer("<p,neutral>Yes, the Guard Captain said to see the wizards in the guild.");
+    ~chatnpc("<p,sad>So why you hangin' abou' 'ere then? Go ring t'bell at t'mage guild just over yonder!");
+    return;
+}
+if (inv_total(inv, handsand_sandyhand) > 0) {
+    ~chatplayer("<p,neutral>Not at the moment, but I will be seeing him soon.");
+    return;
+}
+~chatplayer("<p,sad>Err, I kind of... lost my grip on it...");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,angry>Tha's no' surprisin' with yer bag so full, come back when s'not.");
+    return;
+}
+inv_add(inv, handsand_sandyhand, 1);
+~chatnpc("<p,angry>Thank t'gods! I tho' I searched up another when I been pickin' this'un up outside... Take tha' blasted thing to yon Guard Captain quick sharp.");
+~chatplayer("<p,happy>Thanks Bert, I'll go see the Guard Captain right now.");
+
+[label,bert_wizard_info]
+~chatnpc("<p,quiz>Wha' info ye find 'bout hand, <displayname>?");
+~chatplayer("<p,neutral>I dug up quite a lot about the hand. Can you tell me about your job?");
+~chatnpc("<p,happy>Sand! Lots o' sand! Me boss be Sandy o' Sandy's Sand Corp based in Brimhaven on tha isle of Karamja an' I hauls sand fr' there to yon sand pit.");
+~chatnpc("<p,happy>I's looong harrrrd hours, bu' keeps me busy, y'know what tha say! 'Idle hands'r Zamorak's tools.'");
+~chatplayer("<p,quiz>So you're employed by Sandy's Sand Corp in Brimhaven. Have you changed your hours recently?");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>Yer coul' see fer yerself iffen yer had space in yorn invent'ry, come back when yer do.");
+    return;
+}
+%handsand_quest = ^hand_visit_sandy;
+inv_add(inv, handsand_rota_bert, 1);
+~chatnpc("<p,neutral>Nae! See fer yersel', here's a copy o' me rota tha' be held a' head office - yer can looksee iffin ye talk t' Sandy, me boss.");
+~chatplayer("<p,happy>Thanks for the Rota Bert. I'll go check for the original with Sandy in Brimhaven.");
+
+[label,bert_sandy_visit]
+~chatnpc("<p,bored>Ey'up <displayname>. Did yer see Sandy in Brimhaven 'bout me rota?");
+if (inv_total(inv, handsand_rota_bert) > 0) {
+    ~chatplayer("<p,neutral>No, I'll fit it in my schedule somewhere soon.");
+    return;
+}
+~chatplayer("<p,sad>Err, no, I kind of... lost it...");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,angry>Lucky fer yorn tha' I's made a copy then ain't it, I's 'ave been given it to yer iffen you 'ad some space in yer invent'ry.");
+    return;
+}
+inv_add(inv, handsand_rota_bert, 1);
+~chatnpc("<p,angry>Lucky fer yorn tha' I's made a copy then ain't it, 'ere 'ave another.");
+
+[label,bert_rotas]
+if (inv_total(inv, handsand_rota_sandy) < 1) {
+    ~mesbox("Maybe you should have the rota from Sandy's desk with you before confronting Bert.");
+    return;
+}
+if (inv_total(inv, handsand_rota_bert) < 1) {
+    // ours: Void's line, but he gives you another copy (as he does before you've seen Sandy)
+    ~chatplayer("<p,sad>Err, no, I kind of... lost it...");
+    if (inv_freespace(inv) < 1) {
+        ~chatnpc("<p,angry>Lucky fer yorn tha' I's made a copy then ain't it, I's 'ave been given it to yer iffen you 'ad some space in yer invent'ry.");
+        return;
+    }
+    inv_add(inv, handsand_rota_bert, 1);
+    ~chatnpc("<p,angry>Lucky fer yorn tha' I's made a copy then ain't it, 'ere 'ave another.");
+    return;
+}
+~chatplayer("<p,sad>I managed to get a copy of the original rota. Your hours changed a week ago!");
+~chatnpc("<p,shock>Nae! Nae! I din't remember tha', bu'... hmmm, aye... tha' migh' be it...");
+~chatplayer("<p,quiz>What? Give me a hand here, I'm having a hard time understanding how you don't remember changing hours!");
+~chatnpc("<p,neutral>I's all be tha wizard's fault! Tha magic leaks fr'm yon magic guild I tells yer! Tha's why this weirrrrd scroll appeareded a week ago!");
+~chatplayer("<p,quiz>A scroll appeared? Can I take a look at it while you look at the rotas?");
+if (inv_total(inv, handsand_rota_bert) < 1 | inv_total(inv, handsand_rota_sandy) < 1) return;
+inv_del(inv, handsand_rota_bert, 1);
+inv_del(inv, handsand_rota_sandy, 1);
+%handsand_quest = ^hand_deliver_scroll;
+inv_add(inv, handsand_scroll_magic, 1);
+~chatnpc("<p,happy>O'course <displayname>, le's be 'avin'yon rota and 'ere be tha scroll, yer be takin' it back ta those inferrrnal wizards quick sharp!");
+
+[label,bert_mid_quest]
+~chatnpc("<p,quiz>I be hopin' tha search is goin' well... are tha wizard's owning up ta anythin' yet?");
+if (%handsand_quest ! ^hand_deliver_scroll | ~handsand_owns(handsand_scroll_magic) = true) {
+    ~chatplayer("<p,neutral>I've found out a lot and will let you know when it's all over.");
+    return;
+}
+~chatplayer("<p,sad>Err, no, I kind of... lost the scroll...");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,neutral>I's be seein' ya drop it on tha' way out, I's 'ave been given it to yer iffen you 'ad some space in yer invent'ry.");
+    return;
+}
+inv_add(inv, handsand_scroll_magic, 1);
+~chatnpc("<p,neutral>I's be seein' ya drop it on tha' way out, 'ere 'tis.");
+
+[label,bert_post_quest]
+if (%handsand_bert > 0) @bert_sand_service;
+~chatplayer("<p,happy>Bert! Good news!");
+~chatnpc("<p,neutral>Arrr...Good news be always handy.");
+~chatplayer("<p,happy>They arrested Sandy for the murder of a wizard and the sand pit now refills itself!");
+~chatnpc("<p,shock>ME JOB! I'VE LOSTED ME JOB! 'ow c'n yer say tha' be good news?? Me wife'll tear me limb fr'm limb!");
+~chatplayer("<p,laugh>Don't worry, the Wizards are going to pay you a large pension so that you can retire...");
+~chatnpc("<p,sad>Bu' wha'll I be doin' wit' me day now! I be lovin' tha sand.");
+~chatplayer("<p,laugh>What will you do with your day? Well....You could build sand castles with your own two hands!");
+~chatnpc("<p,happy>I din't think so... bu' iffen yer ever need someone ta haul buckets o'sand 'round, ye be lettin' me know <displayname>, I's can help yer!");
+~chatplayer("<p,happy>Wow! That would be great, buckets of sand direct to my bank, everday you say? That's great!");
+%handsand_bert = 1;
+~mesbox("Once per day you may ask Bert to help you by carrying 84 buckets of sand to your bank. Just talk to him!");
+
+// once a day (a day by the server's clock, from midnight UTC as Void and the OSRS wiki have it)
+[label,bert_sand_service]
+~chatnpc("<p,happy>'Ello there <displayname>!");
+def_int $today = calc(date_minutes / 1440 + 2);
+if (%handsand_bert = $today) {
+    switch_int (~p_choice2("Did you already give me some sand today?", 1, "I'll see you another time.", 2)) {
+        case 1 :
+            ~chatplayer("<p,quiz>Did you already give me some sand today?");
+            ~chatnpc("<p,happy>Yep, I dropped it off a while ago. Mebbe come back tomorrow fer some more.");
+        case 2 : ~chatplayer("<p,bored>I'll see you another time.");
+    }
+    return;
+}
+switch_int (~p_choice2("Can you deliver my sand to my bank, please?", 1, "I'll see you another time.", 2)) {
+    case 1 : ~chatplayer("<p,quiz>Can you deliver my sand to my bank, please?");
+    case 2 :
+        ~chatplayer("<p,bored>I'll see you another time.");
+        return;
+}
+if (inv_itemspace(bank, bucket_sand, ^hand_bert_sand, inv_size(bank)) = false) {
+    ~chatnpc("<p,sad>Yer bank be too full fer all tha' sand, come back when yer made some room.");
+    return;
+}
+inv_add(bank, bucket_sand, ^hand_bert_sand);
+%handsand_bert = $today;
+~chatnpc("<p,happy>I'll ge' on wit' movin' it. Thankee fer makin' sure Sandy go' it in t'neck fer 'is double dealin's!");
+~objbox(bucket_sand, "Bert delivers the sand to your bank.", 250, 0, divide(^objbox_height, 2));
+
+// ================================================================ the Guard Captain (the Dragon Inn)
+[ai_timer,handsand_guard_captain]
+npc_say("*HIC*");
+
+[opnpc1,handsand_guard_captain]
+if (%handsand_quest = ^hand_investigate) @guardcaptain_hand;
+if (%handsand_quest = ^hand_ask_wizards) @guardcaptain_wizards;
+~chatplayer("<p,quiz>Excuse me...");
+~chatnpc("<p,drunk>I don' need a hand drinkin me beer, go 'way!");
+~chatplayer("<p,quiz>But...");
+~chatnpc("<p,drunk>Talk to tha' hand coz thish face ain't lishtnin'!");
+
+[label,guardcaptain_hand]
+if (inv_total(inv, handsand_sandyhand) < 1) {
+    ~mesbox("Perhaps you should be carrying the hand that Bert gave you as evidence of the crime.");
+    return;
+}
+if (inv_total(inv, beer) < 1) {
+    ~chatnpc("<p,drunk>Need more beer...");
+    return;
+}
+~chatplayer("<p,neutral>Sir? I have some more beer for you...");
+~objbox(beer, "You give the beer to the Guard Captain who takes a large gulp.", 250, 0, divide(^objbox_height, 2));
+if (inv_total(inv, beer) < 1) return;
+inv_del(inv, beer, 1);
+sound_synth(handsand_gulp, 1, 0);
+~chatnpc("<p,drunk>Ahh... jus' wha' I need, now, wha' did you wanna know?");
+~chatplayer("<p,sad>I've come to report that Bert, the sandman, found a hand in the sand pit.");
+~chatnpc("<p,happy>Lucky for him, means he can get even more work done.");
+~chatplayer("<p,shock>But aren't you going to find out who it ... belonged to?");
+if (inv_total(inv, handsand_sandyhand) < 1) return;
+inv_del(inv, handsand_sandyhand, 1);
+%handsand_quest = ^hand_ask_wizards;
+sound_synth(handsand_drop_hand, 1, 0);
+inv_add(inv, handsand_beerhand, 1);
+~objbox(handsand_beerhand, "You hand the... hand... to the Guard Captain, he fumbles with it, drops it in his beer, fishes it out and hands it back.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,drunk>Oops, No 'arm done. S'prob'ly a wizard, i's always the wizards fault, go ask them, jus' ring the bell outshide the guild and talk to the first pointy hatted ninny you shee!");
+~chatplayer("<p,neutral>Err... ok, I'll go ring the bell and talk to a wizard then.");
+
+[label,guardcaptain_wizards]
+~chatplayer("<p,neutral>Hello Sir!");
+~chatnpc("<p,drunk>Go 'way! This pint'sh nearly finished! Unlessh you got more that ish....? Wizards, s'all the wizard's fault...prob'ly that Zavistic one, he'sh the worsht!");
+if (~handsand_owns(handsand_beerhand) = true) {
+    ~chatplayer("<p,neutral>I think I should go talk to the wizards in the guild before he makes me buy him more beer!");
+    return;
+}
+~chatnpc("<p,drunk>E're, you left this 'and in me beer!");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,drunk>No good if you don' have space fer it in yer invent'ry, come back when you do.");
+    return;
+}
+sound_synth(handsand_take_hand, 1, 0);
+inv_add(inv, handsand_beerhand, 1);
+~mesbox("The Guard Captain fishes the hand out of his beer and hands it to you.");
+
+// ================================================================ Sandy (Brimhaven)
+[opnpc1,handsand_sandy]
+def_int $s = %handsand_quest;
+if ($s < ^hand_visit_sandy) {
+    switch_int (random(3)) {
+        case 0 : ~chatnpc("<p,neutral>Nice day for sand isn't it?");
+        case 1 : ~chatnpc("<p,happy>Sand is yellow, Sand is grand, Sand puts money, In my hand!");
+        case default : ~chatnpc("<p,neutral>I'm Sandy of Sandy's Sand Corp, are you in the sand business?");
+    }
+    ~chatplayer("<p,quiz>Errrr... no.");
+    ~chatnpc("<p,angry>Then go away!");
+    return;
+}
+if ($s = ^hand_visit_sandy) {
+    ~chatplayer("<p,neutral>Hello Sir, do you run the Sand Corp?");
+    ~chatnpc("<p,shifty>Who wants to know?");
+    ~chatplayer("<p,neutral>I'm <displayname>. I'm here investigating the possible murder of a wizard.");
+    ~chatnpc("<p,angry>I don't care about that, I have far too much work to do. Let the authorities take care of things like murder and stop snooping around my office!");
+    ~mesbox("Sandy seems very keen to get you out of the office, perhaps you should take a look around.");
+    return;
+}
+if ($s = ^hand_confront_bert) {
+    if (inv_total(inv, handsand_rota_sandy) > 0) {
+        ~mesbox("You already have the rota, perhaps you should take both rotas back to Bert in Yanille.");
+        return;
+    }
+    ~mesbox("Perhaps you should look around Sandy's office a bit.");
+    return;
+}
+if ($s = ^hand_distract_sandy) {
+    ~chatnpc("<p,angry>I don't have time to talk to you. Go away!");
+    @sandy_distract;
+}
+if ($s = ^hand_activate_orb) {
+    ~mesbox("You need to activate the magical scrying orb, obtained from the wizard in Yanille, to capture the conversation with Sandy!");
+    return;
+}
+if ($s = ^hand_interrogate_sandy) {
+    if (inv_total(inv, handsand_orb_recording) < 1) {
+        ~mesbox("Don't forget you need to capture what Sandy says on the magical scrying orb that the wizard in Yanille gave you!");
+        return;
+    }
+    ~chatplayer("<p,quiz>Now, I'm going to ask you some questions and I want you to answer me truthfully...");
+    ~chatnpc("<p,neutral>Ok...");
+    @sandy_questions;
+}
+~chatnpc("<p,angry>I don't have time to talk to you. Go away!");
+
+[label,sandy_distract]
+switch_int (~p_choice3("There's a herd of huge mutant herring about to drop from the sky!", 1, "But the pygmy shrews have eaten all the sand!", 2, "A small parrot with a pink banana is sitting outside your window!", 3)) {
+    case 1 : ~chatplayer("<p,shock>There's a herd of huge mutant herring about to drop from the sky!");
+    case 2 : ~chatplayer("<p,shock>But the pygmy shrews have eaten all the sand!");
+    case 3 : ~chatplayer("<p,shock>A small parrot with a pink banana is sitting outside your window!");
+}
+if (random(3) ! 0) {
+    ~chatnpc("<p,angry>I'm not falling for that one!");
+    return;
+}
+~chatnpc("<p,shock>Wow! I must see this!");
+%handsand_quest = ^hand_drug_coffee;
+%handsand_sandy_multi = 1;
+mes("Sandy turns to look out of the window, now is your chance!");
+
+[label,sandy_questions]
+if (%handsand_question1 = 0 & %handsand_question2 = 0 & %handsand_question3 = 0) {
+    ~chatplayer("<p,shock>I think I have enough evidence now, you can go for now, but I think you're up to your neck in it!");
+    %handsand_quest = ^hand_return_orb;
+    ~objbox(handsand_orb_recording, "Sandy has told you all he knows. The magical scrying orb is full and needs to be returned to the Wizard in Yanille.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+def_string $q1 = "Why is Bert's rota different from the original?";
+def_string $q2 = "Why doesn't Bert remember the change in his hours?";
+def_string $q3 = "What happened to the wizard?";
+def_string $done = "Ok, I'm done with you.";
+def_int $choice;
+if (%handsand_question1 = 1 & %handsand_question2 = 1 & %handsand_question3 = 1) {
+    $choice = ~p_choice4($q1, 1, $q2, 2, $q3, 3, $done, 4);
+} else if (%handsand_question1 = 1 & %handsand_question2 = 1) {
+    $choice = ~p_choice3($q1, 1, $q2, 2, $done, 4);
+} else if (%handsand_question1 = 1 & %handsand_question3 = 1) {
+    $choice = ~p_choice3($q1, 1, $q3, 3, $done, 4);
+} else if (%handsand_question2 = 1 & %handsand_question3 = 1) {
+    $choice = ~p_choice3($q2, 2, $q3, 3, $done, 4);
+} else if (%handsand_question1 = 1) {
+    $choice = ~p_choice2($q1, 1, $done, 4);
+} else if (%handsand_question2 = 1) {
+    $choice = ~p_choice2($q2, 2, $done, 4);
+} else {
+    $choice = ~p_choice2($q3, 3, $done, 4);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz><$q1>");
+        %handsand_question1 = 0;
+        ~chatnpc("<p,neutral>Because... I changed it.");
+    case 2 :
+        ~chatplayer("<p,quiz><$q2>");
+        %handsand_question2 = 0;
+        ~chatnpc("<p,neutral>Because.... because.... I bribed a wizard to put a spell on him so he would believe everything I say!!");
+    case 3 :
+        ~chatplayer("<p,quiz><$q3>");
+        %handsand_question3 = 0;
+        ~chatnpc("<p,angry>I...I... I KILLED HIM! So I wouldn't have to pay him and no one would know. I put his body in the next load of sand.");
+    case 4 :
+        ~chatplayer("<p,neutral><$done>");
+        ~mesbox("You need to ask Sandy all the questions.");
+}
+@sandy_questions;
+
+[opnpc3,handsand_sandy]
+if (%handsand_quest = ^hand_not_started) {
+    mes("Nothing interesting happens.");
+    return;
+}
+anim(human_pickpocket, 0);
+if (inv_freespace(inv) < 1) {
+    ~mesbox("I'd better make room in my inventory first!");
+    return;
+}
+if (random(3) ! 0) {
+    ~mesbox("You felt something but it slipped through your fingers...");
+    return;
+}
+inv_add(inv, handsand_sand, 1);
+~mesbox("You rummage around in Sandy's pockets.....");
+~mesbox("You find a small amount of sand.");
+
+// ================================================================ Mazion (Entrana)
+[opnpc1,handsand_naziom]
+if (%handsand_quest = ^hand_search_entrana) @mazion_head;
+if (%handsand_quest = ^hand_return_head) @mazion_return;
+switch_int (random(3)) {
+    case 0 : ~chatnpc("<p,happy>Hello <displayname>, fine day today!");
+    case 1 : ~chatnpc("<p,happy>Nice weather we're having today!");
+    case default : ~chatnpc("<p,sad>Please leave me alone, a parrot stole my banana.");
+}
+
+[label,mazion_head]
+~chatplayer("<p,happy>Hello there!");
+~chatnpc("<p,neutral>Uh...greetings <displayname>!");
+~chatplayer("<p,shock>Uhh... How do you know my name?");
+~chatnpc("<p,happy>Oh, I like to keep ahead of things.");
+~chatplayer("<p,quiz>Err.. ok. Well, I've been sent from the Wizards' Guild in Yanille. There's been an... incident... Do you have any body parts?");
+~chatnpc("<p,shock>How did you know! I found the most awful thing in my sandpit - a head!");
+~chatplayer("<p,happy>Ahhh good! I need to take it back to be buried!");
+~chatnpc("<p,shock>You're very strange, but if it means I get rid of the horrid thing...");
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,angry>Or I would if you had any room in your bag!");
+    return;
+}
+%handsand_quest = ^hand_return_head;
+inv_add(inv, handsand_wizhead, 1);
+~objbox(handsand_wizhead, "Mazion gives you the head.", 250, 0, divide(^objbox_height, 2));
+
+[label,mazion_return]
+if (inv_total(inv, handsand_wizhead) > 0) {
+    ~chatnpc("<p,shock>I see you still have that head! Take it back to the Wizards in Yanille!");
+    return;
+}
+~chatnpc("<p,happy>Hello again <displayname>!");
+switch_int (~p_choice2("What should I do with the head?", 1, "I've lost my head!", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What should I do with the head?");
+        ~chatnpc("<p,angry>It was you that came demanding the head to give to the wizard in the first place! Go back to Yanille with it!");
+    case 2 :
+        ~chatplayer("<p,shock>I've lost my head!");
+        if (inv_freespace(inv) < 1) {
+            ~chatnpc("<p,neutral>You dropped it and you don't have room to carry it now, come back when you do.");
+            return;
+        }
+        ~chatnpc("<p,neutral>Keep your hair on! You dropped it! Make sure you take it straight back to the wizards else you won't have a leg to stand on.");
+        inv_add(inv, handsand_wizhead, 1);
+        ~objbox(handsand_wizhead, "Mazion hands you the head.", 250, 0, divide(^objbox_height, 2));
+}
+
+// ================================================================ Betty (Port Sarim)
+// called from area_port_sarim/betty.rs2's Talk-to
+[label,betty_handsand]
+if (%handsand_quest >= ^hand_complete) @betty_pink_dye;
+switch_int (~p_choice2("Talk to Betty about the Hand in the Sand.", 1, "Talk to Betty about her shop.", 2)) {
+    case 1 : @betty_hand_chat;
+    case 2 : @betty_shop_menu;
+}
+
+[label,betty_shop_menu]
+switch_int (~p_choice2("Can I see your wares?", 1, "Sorry, I'm not into magic.", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Can I see your wares?");
+        ~chatnpc("<p,happy>Of course.");
+        ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,neutral>Sorry, I'm not into magic.");
+        ~chatnpc("<p,happy>Well, if you see anyone who is, please send them my way.");
+}
+
+[label,betty_hand_chat]
+def_int $s = %handsand_quest;
+if ($s = ^hand_make_serum) {
+    def_int $serum = %handsand_serum;
+    if ($serum = 0) @betty_serum_start;
+    if ($serum = ^hand_serum_lens) @betty_focus_lens;
+    if ($serum = ^hand_serum_made) @betty_last_ingredient;
+    @betty_lens_asked;
+}
+if ($s = ^hand_distract_sandy | $s = ^hand_drug_coffee) {
+    ~chatnpc("<p,happy>Hello deary! How did the serum work?");
+    if (~handsand_owns(handsand_truthserum) = true) {
+        ~chatplayer("<p,idle>I haven't tried it yet.");
+        ~chatnpc("<p,happy>Well don't forget to dilute it in a drink or something else bad things might happen.");
+        @betty_bad_things;
+    }
+    switch_int (~p_choice2("I've forgotten how to use the serum.", 1, "I've lost it!", 2)) {
+        case 1 :
+            ~chatplayer("<p,quiz>I've forgotten how to use the serum.");
+            ~chatnpc("<p,happy>It must be diluted in a drink or something else bad things might happen.");
+            @betty_bad_things;
+        case 2 :
+            ~chatplayer("<p,sad>I've lost it!");
+            @betty_replace_serum;
+    }
+    return;
+}
+~chatnpc("<p,happy>Hello again deary. Come back and tell me what happened when all the fuss is over.");
+~chatplayer("<p,neutral>Ok Betty, I'll be back!");
+
+[label,betty_bad_things]
+~chatplayer("<p,quiz>Bad things?");
+~chatnpc("<p,idle>Well.... bits might drop off.");
+~chatplayer("<p,shock>Oh! I... see. I'll remember to dilute it then.");
+
+[label,betty_replace_serum]
+if (inv_freespace(inv) < 1) {
+    ~chatnpc("<p,happy>That's not a problem, I kept some of it here just in case, but you have no space for it! Come back when you do");
+    return;
+}
+~chatnpc("<p,happy>That's not a problem, I kept some of it here just in case, here you are!");
+inv_add(inv, handsand_truthserum, 1);
+~objbox(handsand_truthserum, "Betty hands you a new vial of truth serum.", 250, 0, divide(^objbox_height, 2));
+
+[label,betty_serum_start]
+~chatplayer("<p,quiz>I've come from Yanille, the wizard says you can make Truth Serum?");
+~chatnpc("<p,happy>This is true deary, I'll need an empty vial.");
+if (inv_total(inv, vial_empty) < 1) {
+    ~chatplayer("<p,sad>I'll have to go find one then, I'll be back!");
+    return;
+}
+~chatplayer("<p,happy>I have one here!");
+inv_del(inv, vial_empty, 1);
+%handsand_serum = ^hand_serum_bottle;
+inv_add(inv, handsand_bottle_water, 1);
+~chatnpc("<p,happy>That's good, now you'll need to make a rose tinted lens. Pink dye can be made from red berries in this bottle to make redberry juice, then add white berries. Just use that on a bullseye lens.");
+
+[label,betty_lens_asked]
+~chatnpc("<p,happy>Hello deary! Have you managed to make that lens yet?");
+def_int $choice;
+if (~handsand_owns(handsand_bottle_water) = true | ~handsand_owns(handsand_redberry_juice) = true | ~handsand_owns(handsand_pink_dye) = true | ~handsand_owns(handsand_rose_lens) = true) {
+    $choice = ~p_choice2("I'm still working on it.", 1, "I'm afraid I've forgotten how!", 2);
+} else {
+    $choice = ~p_choice3("I'm still working on it.", 1, "I'm afraid I've forgotten how!", 2, "I've lost my bottle!", 3);
+}
+switch_int ($choice) {
+    case 1 : ~chatplayer("<p,sad>I'm still working on it.");
+    case 2 :
+        ~chatplayer("<p,sad>I'm afraid I've forgotten how!");
+        ~chatnpc("<p,happy>Pink dye can be made from red berries in the bottle I gave you. Add white berries to make the pink dye and then you just need to use that on a bullseye lens. Good luck!");
+    case 3 :
+        ~chatplayer("<p,shock>I've lost my bottle!");
+        ~chatnpc("<p,happy>Oh don't worry about that deary, I have plenty and you can start the whole thing again.");
+        if (inv_freespace(inv) < 1) {
+            ~chatnpc("<p,happy>I'd let you have another but you don't seem to have a spare hand to carry it, come back when you have room.");
+            return;
+        }
+        inv_add(inv, handsand_bottle_water, 1);
+        ~chatnpc("<p,happy>Here, have another.");
+}
+
+[label,betty_focus_lens]
+if (inv_total(inv, handsand_rose_lens) < 1) {
+    ~mesbox("Perhaps you should have the rose tinted lens with you before speaking to Betty.");
+    return;
+}
+~chatnpc("<p,happy>Wonderful deary. When you're ready, just stand in the open doorway and focus the light on the empty vial on my desk and I'll pour the serum into it.");
+~chatplayer("<p,happy>Ok, what does that do?");
+~chatnpc("<p,happy>Why it makes the person who drinks it unable to hide in the shadow of lies. The light of truth will shine!");
+if (%handsand_counter_multi = 1) return;
+sound_synth(put_down, 1, 0);
+%handsand_counter_multi = 1;
+~objbox(vial_empty, "Betty places a vial on her counter.", 250, 0, divide(^objbox_height, 2));
+
+[label,betty_last_ingredient]
+if (inv_total(inv, handsand_truthserum) < 1) {
+    if (~handsand_owns(handsand_truthserum) = true) {
+        ~mesbox("You'll need to get your Truth Serum out of the bank first!");
+        return;
+    }
+    ~chatplayer("<p,sad>I've lost it!");
+    @betty_replace_serum;
+}
+~chatnpc("<p,happy>Ok, now the last ingredient, something personal from the person you need to tell the truth, else it won't work!");
+if (inv_total(inv, handsand_sand) < 1) {
+    ~chatplayer("<p,sad>Ok, I'll see if I can find something.");
+    return;
+}
+~chatplayer("<p,quiz>What about this sand straight from his pocket?");
+~chatnpc("<p,happy>That's excellent deary!");
+inv_del(inv, handsand_sand, 1);
+~objbox(handsand_sand, "You hand the sand over and watch Betty sprinkle it in the serum, it fizzes.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,happy>Don't forget to dilute it in something like tea or coffee.");
+%handsand_quest = ^hand_distract_sandy;
+%handsand_serum = ^hand_serum_finished;
+
+[label,betty_pink_dye]
+~chatnpc("<p,happy>I heard from Zavistic what a good job you did. If you want some more pink dye, I have made up a batch and you can have some for 20 gold.");
+switch_int (~p_choice2("No thanks.", 1, "Yes please!", 2)) {
+    case 1 :
+        ~chatplayer("<p,neutral>No thanks Betty. Good luck with the shop, I might be back for some dye later.");
+    case 2 :
+        ~chatplayer("<p,happy>Yes please!");
+        if (inv_freespace(inv) < 1) {
+            ~chatnpc("<p,happy>I'm afraid you don't have space in your pack for anything more, come back when you do.");
+            return;
+        }
+        if (inv_total(inv, coins) < 20) {
+            ~mesbox("You don't have enough money at the moment, come back later.");
+            return;
+        }
+        inv_del(inv, coins, 20);
+        inv_add(inv, handsand_pink_dye, 1);
+        ~mesbox("You hand over 20 gold pieces in return for the dye");
+}

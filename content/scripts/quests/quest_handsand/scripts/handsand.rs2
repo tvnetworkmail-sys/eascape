@@ -1,0 +1,173 @@
+// EASCape: The Hand in the Sand (update of 10 January 2006). Words and steps from Void
+// (content/quest/member/hand_in_the_sand/HandInTheSand.kt and the npc files named in each script).
+
+[proc,handsand_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+}
+
+[proc,handsand_owns](obj $obj)(boolean)
+if (calc(inv_total(inv, $obj) + inv_total(bank, $obj) + inv_total(worn, $obj)) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the rotas (Void showRota)
+[opheld1,handsand_rota_bert]
+~handsand_rota("Bert's Rota - Copy", "6am-10pm", "6am-10pm");
+
+[opheld1,handsand_rota_sandy]
+~handsand_rota("Bert's Rota - Original", "9am-6pm", "6am-10pm");
+
+[proc,handsand_rota](string $title, string $hours, string $week6)
+if_settext(messagescroll_handwriting:com_1, "Sandy's Sand Corp - Brimhaven");
+if_settext(messagescroll_handwriting:com_2, $title);
+if_settext(messagescroll_handwriting:com_3, "Week 1   -   <$hours>   -   50gps");
+if_settext(messagescroll_handwriting:com_4, "Week 2   -   <$hours>   -   50gps");
+if_settext(messagescroll_handwriting:com_5, "Week 3   -   <$hours>   -   50gps");
+if_settext(messagescroll_handwriting:com_6, "Week 4   -   <$hours>   -   50gps");
+if_settext(messagescroll_handwriting:com_7, "Week 5   -   <$hours>   -   50gps");
+if_settext(messagescroll_handwriting:com_8, "Week 6   -   <$week6>   -   50gps");
+if_openmain(messagescroll_handwriting);
+
+// ---------------------------------------------------------------- Sandy's office
+[oploc1,handsand_desk]
+if (%handsand_quest ! ^hand_visit_sandy & %handsand_quest ! ^hand_confront_bert) {
+    ~mesbox("You find nothing of interest.");
+    return;
+}
+if (~handsand_owns(handsand_rota_sandy) = true) {
+    ~mesbox("You already have Sandy's original work rota.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~mesbox("I'd better make room in my inventory first!");
+    return;
+}
+if (%handsand_quest = ^hand_visit_sandy) %handsand_quest = ^hand_confront_bert;
+anim(human_pickuptable, 0);
+inv_add(inv, handsand_rota_sandy, 1);
+~mesbox("You quickly sift through some of the papers on Sandy's desk and find a work rota for Bert.");
+
+[oplocu,handsand_coffee_multiloc]
+if (last_useitem ! handsand_truthserum) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%handsand_serum ! ^hand_serum_finished) {
+    ~mesbox("You'll need to have completed the truth serum before doing that!");
+    return;
+}
+if (%handsand_quest ! ^hand_drug_coffee) {
+    ~mesbox("You'll need to distract Sandy before doing that.");
+    return;
+}
+p_arrivedelay;
+anim(human_pickuptable, 0);
+sound_synth(handsand_serum, 1, 0);
+inv_del(inv, handsand_truthserum, 1);
+%handsand_quest = ^hand_activate_orb;
+%handsand_sandy_multi = 0;
+~mesbox("You pour the serum into Sandy's coffee, then a little while later watch him drink it.");
+
+// ---------------------------------------------------------------- the magical scrying orb
+[opheld1,handsand_orb_storage]
+if (%handsand_quest ! ^hand_activate_orb) {
+    mes("Nothing interesting happens!");
+    return;
+}
+sound_synth(handsand_orb, 1, 0);
+inv_setslot(inv, last_slot, handsand_orb_recording, 1);
+%handsand_quest = ^hand_interrogate_sandy;
+~objbox(handsand_orb_recording, "You rub the magical scrying orb as the Wizard told you, it starts to glow, recording everything it sees and hears, now you can talk to Sandy in Brimhaven.", 250, 0, divide(^objbox_height, 2));
+
+// ---------------------------------------------------------------- the truth serum
+[opheldu,handsand_bottle_water]
+switch_obj (last_useitem) {
+    case redberries : @handsand_redberry_juice;
+    case white_berries : mes("You'll need to use red berries first.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,handsand_redberry_juice]
+inv_del(inv, handsand_bottle_water, 1);
+inv_del(inv, redberries, 1);
+inv_add(inv, handsand_redberry_juice, 1);
+if (%handsand_serum < ^hand_serum_juice) %handsand_serum = ^hand_serum_juice;
+mes("Now you just need to add white berries to make the pink dye.");
+
+[opheldu,handsand_redberry_juice]
+if (last_useitem ! white_berries) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@handsand_pink_dye;
+
+[label,handsand_pink_dye]
+inv_del(inv, handsand_redberry_juice, 1);
+inv_del(inv, white_berries, 1);
+inv_add(inv, handsand_pink_dye, 1);
+if (%handsand_quest = ^hand_make_serum & %handsand_serum < ^hand_serum_dye) %handsand_serum = ^hand_serum_dye;
+mes("You add the white berries to the redberry juice and make some pink dye."); // ours: Void adds it without a message
+
+[opheldu,handsand_pink_dye]
+switch_obj (last_useitem) {
+    case bullseye_lantern_lens : @handsand_rose_lens;
+    case black_cape, red_cape, blue_cape, yellow_cape, green_cape, purple_cape, orange_cape : @handsand_pink_cape(last_useitem);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,handsand_rose_lens]
+if (%handsand_quest ! ^hand_make_serum) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, handsand_pink_dye, 1);
+inv_del(inv, bullseye_lantern_lens, 1);
+inv_add(inv, handsand_rose_lens, 1);
+%handsand_serum = ^hand_serum_lens;
+~objbox(handsand_rose_lens, "You have successfully made the rose tinted lens!", 250, 0, divide(^objbox_height, 2));
+
+// the pink cape: the 377 cache's handsand_pink_cape ("It's a bit pink."). Pink dye on a cape
+// makes it, as the other dyes do (OSRS wiki Pink cape); the message is the other dyes' (ours)
+[label,handsand_pink_cape](obj $cape)
+def_struct $cape_struct = oc_param($cape, crafting_capes_struct);
+inv_del(inv, handsand_pink_dye, 1);
+inv_del(inv, $cape, 1);
+inv_add(inv, handsand_pink_cape, 1);
+mes("You dye the <struct_param($cape_struct, color)> cape pink.");
+
+[opheldu,handsand_truthserum]
+if (last_useitem = handsand_sand) {
+    ~mesbox("Perhaps you should let Betty do that, it looks tricky.");
+    return;
+}
+~displaymessage(^dm_default);
+
+[opheldu,handsand_sand]
+if (last_useitem = handsand_truthserum) {
+    ~mesbox("Perhaps you should let Betty do that, it looks tricky.");
+    return;
+}
+~displaymessage(^dm_default);
+
+// Betty's counter, with the vial on it (Void: stand in the open doorway and use the lens on it)
+[aplocu,handsand_counter_multiloc]
+if (last_useitem ! handsand_rose_lens | %handsand_counter_multi = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (loc_find(^hand_betty_doorway, loc_1534) = true) {
+    ~mesbox("You will need to open the door to let the light in first!");
+    return;
+}
+if (coord ! ^hand_betty_doorway) {
+    mes("You need to be standing in the doorway.");
+    return;
+}
+%handsand_counter_multi = 0;
+%handsand_serum = ^hand_serum_made;
+sound_synth(handsand_vialshatter, 1, 0);
+inv_del(inv, handsand_rose_lens, 1);
+inv_add(inv, handsand_truthserum, 1);
+~objbox(handsand_truthserum, "As you focus the light on the vial and Betty pours the potion in, the lens heats up and shatters. After a few seconds Betty hands you the vial of Truth Serum.", 250, 0, divide(^objbox_height, 2));
