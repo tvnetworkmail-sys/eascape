@@ -142,12 +142,19 @@ if (%ratcatch_var ! ^rc_mansion) return(false);
 if (inzone(^rc_mansion_sw, ^rc_mansion_ne, coord) = false) return(false);
 def_int $kind = ~rc_cat_kind;
 if ($kind = 0) return(false);
+// ours: a rat your cat can get to first (in the next room another, lower-numbered rat was picked
+// every time, and the cat could never reach it), else the first one near
 def_int $which = 0;
+def_int $near = 0;
 def_int $i = 1;
 while ($i <= 6 & $which = 0) {
-    if (~rc_raton($i) = 0 & .npc_find(coord, ~rc_partyrat($i), 8, 0) = true) $which = $i;
+    if (~rc_raton($i) = 0 & .npc_find(coord, ~rc_partyrat($i), 8, 0) = true) {
+        if ($near = 0) $near = $i;
+        if (lineofwalk(npc_coord, .npc_coord) = true) $which = $i;
+    }
     $i = calc($i + 1);
 }
+if ($which = 0) $which = $near;
 if ($which = 0) return(false);
 if (.npc_find(coord, ~rc_partyrat($which), 8, 0) = false) return(false);
 say("Go on kitty...kill that rat!");
