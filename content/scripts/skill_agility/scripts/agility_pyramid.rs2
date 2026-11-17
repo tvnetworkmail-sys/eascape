@@ -24,6 +24,11 @@
 //   (20 life points, 2 of ours); "You find nothing at the top of the pyramid."
 // - The OSRS wiki's Simon Templeton transcript (with 1,000 coins, as in 2006).
 //
+// The tweaks of 19 January 2006 ("Agility Pyramid tweaks") are in: going backwards over an obstacle
+// always fails, whatever your level, for very little damage (it drops you a level, which is also
+// the easier way out of the pyramid the post mentions), and the experience is the release rates.
+// The post doesn't say what else made escaping easier, so nothing more is added for it.
+//
 // Ours (marked where used): the failure chances, the animation timings, which way the sidestep
 // faces, the success messages, the landing square on the ground below level 1, and the full
 // inventory case at the top. The RuneScape wiki has two low walls on level 4; the 377 cache's map
@@ -275,7 +280,7 @@ stat_advance(agility, 520);
 // ---------------------------------------------------------------- gaps you cross hanging on
 
 // 2006Scape's squares; 56.4 experience; losing your grip drops you a level for 8 (the OSRS wiki).
-// The 377 cache's agility_pyramid_ledge_* animations: hanging off the ledge, facing the pyramid.
+// The 377 cache's agility_pyramid_ledge_*_right animations: hanging off the ledge, facing the pyramid.
 [oploc1,agility_pyramid_wallhang_start_hotspot] @agility_pyramid_gap_cross;
 [oploc1,agility_pyramid_wallhang_end_hotspot] @agility_pyramid_gap_cross;
 [oploc1,agility_pyramid_wallhang_start_hotspot_ground] @agility_pyramid_gap_cross;
@@ -302,7 +307,7 @@ if (coordy(loc_coord) = 1) {
 p_arrivedelay;
 if (~agility_pyramid_from_start($start, $end) = false) {
     if (coord ! $end) ~forcewalk2($end);
-    ~agility_pyramid_fall(coord, agility_pyramid_ledge_fall_left, 2, "You lose your grip and fall to the level below."); // EASCape: message ours
+    ~agility_pyramid_fall(coord, agility_pyramid_ledge_fall_right, 2, "You lose your grip and fall to the level below."); // EASCape: message ours
     return;
 }
 if (coord ! $start) ~forcewalk2($start);
@@ -312,19 +317,21 @@ $fx, $fz = ~agility_pyramid_forward($start);
 def_int $ox = 0;
 def_int $oz = 0;
 $ox, $oz = ~agility_pyramid_outward($start);
-facesquare(movecoord($start, calc(0 - $ox), 0, calc(0 - $oz)));
-anim(agility_pyramid_ledge_on_left, 0);
+// EASCape: you face the way you're going; the 377 cache's _right animations turn you to hang with
+// the wall on your right (the _left ones left you hanging with your back to it)
+facesquare(movecoord($start, $fx, 0, $fz));
+anim(agility_pyramid_ledge_on_right, 0);
 p_delay(1);
-~bas_set(agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, null);
+~bas_set(agility_pyramid_ledge_walk_right, agility_pyramid_ledge_walk_right, agility_pyramid_ledge_walk_right, agility_pyramid_ledge_walk_right, agility_pyramid_ledge_walk_right, agility_pyramid_ledge_walk_right, null);
 def_coord $mid = movecoord($start, calc($fx * 2), 0, calc($fz * 2));
 ~forcemove($mid);
 if (~agility_pyramid_success(false) = false) {
-    ~agility_pyramid_fall($mid, agility_pyramid_ledge_fall_left, 8, "You lose your grip and fall to the level below."); // EASCape: message ours
+    ~agility_pyramid_fall($mid, agility_pyramid_ledge_fall_right, 8, "You lose your grip and fall to the level below."); // EASCape: message ours
     return;
 }
 ~forcemove($end);
 ~update_bas;
-anim(agility_pyramid_ledge_off_left, 0);
+anim(agility_pyramid_ledge_off_right, 0);
 p_delay(0);
 mes("You make it across the gap."); // EASCape: ours
 stat_advance(agility, 564);
