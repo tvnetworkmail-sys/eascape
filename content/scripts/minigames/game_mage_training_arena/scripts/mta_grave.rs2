@@ -44,8 +44,8 @@ if (calc($bananas + $peaches) = 0) {
     ~mesbox("You don't have any bananas or peaches to deposit.");
     return;
 }
-inv_del(inv, banana, $bananas);
-inv_del(inv, peach, $peaches);
+if ($bananas > 0) inv_del(inv, banana, $bananas);
+if ($peaches > 0) inv_del(inv, peach, $peaches);
 def_int $total = calc(%mta_grave_fruit + $bananas + $peaches);
 while ($total >= ^mta_grave_fruit_per_reward) {
     $total = calc($total - ^mta_grave_fruit_per_reward);
@@ -65,7 +65,11 @@ while ($total >= ^mta_grave_fruit_per_reward) {
     ~mta_add_points(^mta_room_grave, 1);
     stat_advance(magic, ^mta_grave_xp);
     sound_synth(mta_deposit_fruit, 1, 0);
-    ~mesbox("Congratulations - you've been awarded a <lowercase(oc_name($rune))> and extra magic XP.");
+    if ($rune = earthrune) {
+        ~mesbox("Congratulations - you've been awarded an <lowercase(oc_name($rune))> and extra magic XP.");
+    } else {
+        ~mesbox("Congratulations - you've been awarded a <lowercase(oc_name($rune))> and extra magic XP.");
+    }
 }
 %mta_grave_fruit = $total;
 
