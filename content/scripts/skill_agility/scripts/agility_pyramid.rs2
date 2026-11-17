@@ -1,0 +1,682 @@
+// EASCape: the Agility Pyramid (update of 16 January 2006, "Agility Pyramid": a pyramid between
+// Sophanem and Nardah, level 30 Agility, gaps, planks and moving walls, an Agility bonus and a
+// treasure at the top, "Talk to Simon when you get there!").
+//
+// Sources, in this order:
+// - The 377 cache: the course is already placed in maps/m52_44.jm2 (the pyramid, levels 1-3 on
+//   planes 1-3) and maps/m47_73.jm2 (a copy of the pyramid 320 squares west and 1856 north; its
+//   planes 2 and 3 are levels 4 and 5), with Simon Templeton and the two pyramid blocks in the
+//   NPC section; the locs, npcs, the pyramid top (agility_pyramid_gold_pyramid), the varp
+//   agility_pyramid and its varbits (the level you're on, the five stone blocks' tilts, the top,
+//   Simon), the agility_pyramid_* animations and the pyramid_* sounds.
+// - 2006Scape (PyramidAgility.java, Agility.java): which way each obstacle goes and from which
+//   square, the stairs (up a level, 3 squares north), the climbing rocks into the pyramid area
+//   (3343 <-> 3349, level 30, "You enter/leave the agility pyramid."), level 30 on every obstacle.
+// - The OSRS wiki (Agility Pyramid and its obstacle pages): the obstacles and their experience
+//   (stone block 12, low wall 8, ledge 52, plank 56.4, gap cross 56.4, gap jump 22, climbing rocks
+//   and pyramid blocks 0), the damage when you fail (stone block 6, going back over one 1, low wall
+//   4 with no fall, ledge 10, pyramid block 8, plank 10, gaps 8), that a failure drops you a level,
+//   the pyramid blocks' 15-tick cycle (in the way for 5 ticks), the top only coming back once you
+//   go through the doorway, and that the doorway gives the lap bonus (with no reward if you haven't
+//   got the top). The OSRS wiki: tops sold for 1,000 coins before 11 February 2016.
+// - The RuneScape wiki (Agility Pyramid): the order of the obstacles, level by level; the lap
+//   bonus was 300 until 14 March 2016; going backwards over a ledge, plank or gap always fails
+//   (20 life points, 2 of ours); "You find nothing at the top of the pyramid."
+// - The OSRS wiki's Simon Templeton transcript (with 1,000 coins, as in 2006).
+//
+// Ours (marked where used): the failure chances, the animation timings, which way the sidestep
+// faces, the success messages, the landing square on the ground below level 1, and the full
+// inventory case at the top. The RuneScape wiki has two low walls on level 4; the 377 cache's map
+// has only the south one (3367,2837 as the OSRS wiki gives it), so that's the course here. The
+// OSRS wiki says you stop and wait rather than walk into a pyramid block that's out; here it
+// pushes you off.
+
+// ---------------------------------------------------------------- where you are
+
+// the course level of a square: 1-3 on the pyramid's planes, 4-5 on the copy's planes 2 and 3
+[proc,agility_pyramid_level_of](coord $c)(int)
+if (coordx($c) < 3328) return(calc(coordy($c) + 2));
+return(coordy($c));
+
+// EASCape: the varbit the 377 cache's multilocs read (agility_pyramid_penny_multiloc_level_2 and
+// _level_4 hide the filler block where the pyramid blocks come out while you're on their level)
+[proc,agility_pyramid_set_level]
+if (inzone(0_52_44_24_14, 3_52_44_51_38, coord) = true | inzone(2_47_73_32_20, 3_47_73_41_30, coord) = true) {
+    %agility_pyramid_level = ~agility_pyramid_level_of(coord);
+} else {
+    %agility_pyramid_level = 0;
+}
+
+// clockwise round the pyramid (the RuneScape wiki: "The course runs clockwise"): which way is
+// forward from this square. The pyramid's middle is 3364.5,2841.5 (the copy's 3044.5,4697.5).
+[proc,agility_pyramid_forward](coord $c)(int, int)
+def_int $dx = 0;
+def_int $dz = 0;
+$dx, $dz = ~agility_pyramid_outward($c);
+if ($dx < 0) return(0, 1);   // west side: north
+if ($dx > 0) return(0, -1);  // east side: south
+if ($dz > 0) return(1, 0);   // north side: east
+return(-1, 0);               // south side: west
+
+// which way is off the edge from this square
+[proc,agility_pyramid_outward](coord $c)(int, int)
+def_int $mx = 6729;
+def_int $mz = 5683;
+if (coordx($c) < 3328) {
+    $mx = 6089;
+    $mz = 9395;
+}
+def_int $dx = calc(coordx($c) * 2 - $mx);
+def_int $dz = calc(coordz($c) * 2 - $mz);
+if (abs($dx) >= abs($dz)) {
+    if ($dx > 0) return(1, 0);
+    return(-1, 0);
+}
+if ($dz > 0) return(0, 1);
+return(0, -1);
+
+// the square a fall from here lands on: two squares out (each level is two squares in from the
+// one below) and a plane down; from level 4 that's level 3 on the pyramid itself. Below level 1 is
+// the ground round the pyramid: ours, the first open square out from there.
+[proc,agility_pyramid_below](coord $c)(coord)
+def_int $ox = 0;
+def_int $oz = 0;
+$ox, $oz = ~agility_pyramid_outward($c);
+def_coord $dest = movecoord($c, calc($ox * 2), -1, calc($oz * 2));
+if (coordx($c) < 3328 & coordy($dest) = 1) {
+    $dest = movecoord($dest, 320, 2, -1856);
+}
+// the ground inside the pyramid is walled off: land outside it
+def_int $i = 0;
+while ($i < 8 & coordy($dest) = 0 & inzone(0_52_44_24_13, 0_52_44_49_38, $dest) = true) {
+    $dest = movecoord($dest, $ox, 0, $oz);
+    $i = calc($i + 1);
+}
+$i = 0;
+while ($i < 8 & map_blocked($dest) = true) {
+    $dest = movecoord($dest, $ox, 0, $oz);
+    $i = calc($i + 1);
+}
+return($dest);
+
+[proc,agility_pyramid_req]()(boolean)
+if (stat(agility) < 30) {
+    ~mesbox("You need an Agility level of 30 to attempt the Agility Pyramid."); // EASCape: ours, the level is 2006Scape's and the wikis'
+    return(false);
+}
+return(true);
+
+// a failure: fall a level from $from and take $damage
+[proc,agility_pyramid_fall](coord $from, seq $anim, int $damage, string $message)
+anim($anim, 0);
+sound_synth(pyramid_slip, 1, 0);
+p_delay(1);
+~update_bas;
+p_telejump(~agility_pyramid_below($from));
+~agility_pyramid_set_level;
+anim(null, 0);
+mes($message);
+~agility_pyramid_hurt($damage);
+
+[proc,agility_pyramid_hurt](int $damage)
+if ($damage > 0) {
+    damage(uid, 1, $damage);
+    if (gender() = 0) {
+        sound_synth(human_hit2, 1, 20);
+    } else {
+        sound_synth(female_hit2, 1, 20);
+    }
+}
+p_delay(0);
+if (stat(hitpoints) = 0) return;
+~ring_of_life_check;
+
+// EASCape: ours, the chances (no 2006 source gives them). The OSRS wiki: at 69 only the jumps can
+// still go wrong, from 75 nothing does; the jumps here are sure from 75, the rest from 69.
+[proc,agility_pyramid_success](boolean $jump)(boolean)
+if ($jump = true) return(stat_random(agility, 98, 307));
+return(stat_random(agility, 106, 322));
+
+// the end of an obstacle you're standing nearer to is where you start from; true if that's the
+// end the course comes from
+[proc,agility_pyramid_from_start](coord $start, coord $end)(boolean)
+if (distance(coord, $start) <= distance(coord, $end)) return(true);
+return(false);
+
+// ---------------------------------------------------------------- climbing rocks to the pyramid
+
+// 2006Scape: from 3343 over the cliff to 3349 ("You enter the agility pyramid.", level 30) and
+// back ("You leave the agility pyramid."); no experience (2006Scape, the OSRS wiki)
+[oploc1,agility_pyramid_climbing_rocks]
+def_int $z = max(2843, min(2846, coordz(coord)));
+if (coordx(loc_coord) = 3344) {
+    if (~agility_pyramid_req = false) return;
+    p_arrivedelay;
+    def_coord $from = movecoord(loc_coord, -1, 0, calc($z - coordz(loc_coord)));
+    if (coord ! $from) ~forcewalk2($from);
+    // EASCape: down backwards like the Trollheim rocks (trollheim_rocks.rs2); the timing is ours
+    anim(human_climbing_down, 10);
+    p_exactmove(coord, movecoord($from, 6, 0, 0), 0, 150, ^exact_west);
+    p_delay(4);
+    anim(null, 0);
+    mes("You enter the agility pyramid.");
+    return;
+}
+p_arrivedelay;
+def_coord $from = movecoord(loc_coord, 1, 0, calc($z - coordz(loc_coord)));
+if (coord ! $from) ~forcewalk2($from);
+~set_forcemove_bas(human_climbing);
+~forcemove(movecoord($from, -6, 0, 0));
+~update_bas;
+mes("You leave the agility pyramid.");
+
+// ---------------------------------------------------------------- stairs
+
+// 2006Scape: the stairs take you up a level, three squares north of where you stood. Level 3's
+// stairs (on plane 3) come out on level 4, plane 2 of the copy.
+[oploc1,agility_pyramid_steps1]
+if (~agility_pyramid_req = false) return;
+def_int $lat = max(0, min(1, calc(coordx(coord) - coordx(loc_coord))));
+def_coord $dest = movecoord(loc_coord, $lat, 1, 2);
+if (coordx(loc_coord) >= 3328 & coordy(loc_coord) = 3) {
+    $dest = movecoord(loc_coord, calc($lat - 320), -1, calc(2 + 1856));
+}
+p_telejump($dest);
+~agility_pyramid_set_level;
+
+[oploc1,agility_pyramid_steps_top_hotspot]
+def_int $lat = max(0, min(1, calc(coordx(coord) - coordx(loc_coord))));
+def_coord $dest = movecoord(loc_coord, $lat, -1, -1);
+if (coordx(loc_coord) < 3328 & coordy(loc_coord) = 2) {
+    $dest = movecoord(loc_coord, calc($lat + 320), 1, calc(-1 - 1856));
+}
+p_telejump($dest);
+~agility_pyramid_set_level;
+
+// ---------------------------------------------------------------- low walls
+
+// over the wall the way the course goes: 8 experience; now and then you slip for 4 (the OSRS wiki)
+[oploc1,agility_pyramid_low_wall]
+if (~agility_pyramid_req = false) return;
+def_int $fx = 0;
+def_int $fz = 0;
+$fx, $fz = ~agility_pyramid_forward(loc_coord);
+def_coord $wall = loc_coord;
+if ($fz ! 0) {
+    $wall = movecoord(loc_coord, max(0, min(1, calc(coordx(coord) - coordx(loc_coord)))), 0, 0);
+} else {
+    $wall = movecoord(loc_coord, 0, 0, max(0, min(1, calc(coordz(coord) - coordz(loc_coord)))));
+}
+if (calc((coordx(coord) - coordx($wall)) * $fx + (coordz(coord) - coordz($wall)) * $fz) > 0) {
+    mes("You can't climb the wall from this side."); // EASCape: ours
+    return;
+}
+def_coord $start = movecoord($wall, calc(0 - $fx), 0, calc(0 - $fz));
+def_coord $end = movecoord($wall, $fx, 0, $fz);
+p_arrivedelay;
+if (coord ! $start) ~forcewalk2($start);
+if (~agility_pyramid_success(false) = false) {
+    // EASCape: the slip (the OSRS wiki: 4 hitpoints, no fall); the fail animation is the 377 cache's
+    anim(human_lowwall_fail, 0);
+    p_delay(1);
+    mes("You slip and hurt yourself on the wall."); // EASCape: ours
+    ~agility_pyramid_hurt(4);
+    return;
+}
+sound_synth(climb_wall, 1, 40);
+~agility_exactmove(human_lowwall, 0, 2, $start, $end, 15, 60, ~agility_pyramid_dir($fx, $fz), false); // EASCape: timing ours
+stat_advance(agility, 80);
+
+[proc,agility_pyramid_dir](int $fx, int $fz)(int)
+if ($fz > 0) return(^exact_north);
+if ($fz < 0) return(^exact_south);
+if ($fx > 0) return(^exact_east);
+return(^exact_west);
+
+// ---------------------------------------------------------------- ledges (sidestep)
+
+// 2006Scape's start squares; 52 experience; a slip drops you a level for 10 (the OSRS wiki)
+[oploc1,agility_pyramid_ledge_hotspot]
+switch_int (~agility_pyramid_level_of(loc_coord)) {
+    case 1 : ~agility_pyramid_ledge(1_52_44_35_35, 1_52_44_40_35); // 3363,2851 -> 3368,2851
+    case 2 : ~agility_pyramid_ledge(2_52_44_44_25, 2_52_44_44_20); // 3372,2841 -> 3372,2836
+}
+
+[oploc1,agility_pyramid_ledgebalance_start_south_hotspot] ~agility_pyramid_ledge(1_52_44_36_16, 1_52_44_31_16); // 3364,2832 -> 3359,2832
+[oploc1,agility_pyramid_ledgebalance_end_south_hotspot] ~agility_pyramid_ledge(1_52_44_36_16, 1_52_44_31_16);
+[oploc1,agility_pyramid_ledgebalance_start_west_hotspot] ~agility_pyramid_ledge(3_52_44_31_26, 3_52_44_31_31); // 3359,2842 -> 3359,2847
+[oploc1,agility_pyramid_ledgebalance_end_west_hotspot] ~agility_pyramid_ledge(3_52_44_31_26, 3_52_44_31_31);
+
+[proc,agility_pyramid_ledge](coord $start, coord $end)
+if (~agility_pyramid_req = false) return;
+p_arrivedelay;
+if (~agility_pyramid_from_start($start, $end) = false) {
+    // the RuneScape wiki: going backwards always falls
+    if (coord ! $end) ~forcewalk2($end);
+    ~agility_pyramid_fall(coord, agility_pyramid_sidestep_fall, 2, "You lose your footing and fall to the level below."); // EASCape: message ours
+    return;
+}
+if (coord ! $start) ~forcewalk2($start);
+mes("You put your foot on the ledge and try to edge across..."); // EASCape: ours (the Barbarian course's ledge words)
+anim(human_into_sidestepl, 0);
+~set_forcemove_bas(human_walk_sidestepl); // EASCape: ours, which way you face
+def_coord $mid = movecoord($start, calc((coordx($end) - coordx($start)) / 2), 0, calc((coordz($end) - coordz($start)) / 2));
+~forcemove($mid);
+if (~agility_pyramid_success(false) = false) {
+    ~agility_pyramid_fall($mid, agility_pyramid_sidestep_fall, 10, "You lose your footing and fall to the level below."); // EASCape: message ours
+    return;
+}
+sound_synth(balancing_ledge, 1, 0);
+~forcemove($end);
+~update_bas;
+mes("You skillfully edge across the gap."); // EASCape: ours (as the Barbarian course's ledge)
+stat_advance(agility, 520);
+
+// ---------------------------------------------------------------- gaps you cross hanging on
+
+// 2006Scape's squares; 56.4 experience; losing your grip drops you a level for 8 (the OSRS wiki).
+// The 377 cache's agility_pyramid_ledge_* animations: hanging off the ledge, facing the pyramid.
+[oploc1,agility_pyramid_wallhang_start_hotspot] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_end_hotspot] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_start_hotspot_ground] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_end_hotspot_ground] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_start_south_hotspot] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_end_south_hotspot] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_start_west_hotspot] @agility_pyramid_gap_cross;
+[oploc1,agility_pyramid_wallhang_end_west_hotspot] @agility_pyramid_gap_cross;
+
+[label,agility_pyramid_gap_cross]
+if (~agility_pyramid_req = false) return;
+def_coord $start;
+def_coord $end;
+if (coordy(loc_coord) = 1) {
+    $start = 1_52_44_44_16; // 3372,2832 -> 3367,2832
+    $end = 1_52_44_39_16;
+} else if (coordx(loc_coord) < 3359) {
+    $start = 2_52_44_29_20; // 3357,2836 -> 3357,2841
+    $end = 2_52_44_29_25;
+} else {
+    $start = 2_52_44_31_33; // 3359,2849 -> 3364,2849
+    $end = 2_52_44_36_33;
+}
+p_arrivedelay;
+if (~agility_pyramid_from_start($start, $end) = false) {
+    if (coord ! $end) ~forcewalk2($end);
+    ~agility_pyramid_fall(coord, agility_pyramid_ledge_fall_left, 2, "You lose your grip and fall to the level below."); // EASCape: message ours
+    return;
+}
+if (coord ! $start) ~forcewalk2($start);
+def_int $fx = 0;
+def_int $fz = 0;
+$fx, $fz = ~agility_pyramid_forward($start);
+def_int $ox = 0;
+def_int $oz = 0;
+$ox, $oz = ~agility_pyramid_outward($start);
+facesquare(movecoord($start, calc(0 - $ox), 0, calc(0 - $oz)));
+anim(agility_pyramid_ledge_on_left, 0);
+p_delay(1);
+~bas_set(agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, agility_pyramid_ledge_walk_left, null);
+def_coord $mid = movecoord($start, calc($fx * 2), 0, calc($fz * 2));
+~forcemove($mid);
+if (~agility_pyramid_success(false) = false) {
+    ~agility_pyramid_fall($mid, agility_pyramid_ledge_fall_left, 8, "You lose your grip and fall to the level below."); // EASCape: message ours
+    return;
+}
+~forcemove($end);
+~update_bas;
+anim(agility_pyramid_ledge_off_left, 0);
+p_delay(0);
+mes("You make it across the gap."); // EASCape: ours
+stat_advance(agility, 564);
+
+// ---------------------------------------------------------------- gaps you jump
+
+// over the two-square hole the way the course goes: 22 experience; missing your footing drops you
+// a level for 8 (the OSRS wiki); the 377 cache's agility_pyramid_gap_jump(_fall)
+[oploc1,agility_pyramid_jump_hotspot]
+if (~agility_pyramid_req = false) return;
+def_coord $mid = movecoord(loc_coord, 1, 0, 1);
+def_int $fx = 0;
+def_int $fz = 0;
+$fx, $fz = ~agility_pyramid_forward($mid);
+def_coord $start;
+if ($fz ! 0) {
+    def_int $x = max(0, min(1, calc(coordx(coord) - coordx(loc_coord))));
+    $start = movecoord(loc_coord, $x, 0, -1);
+    if ($fz < 0) $start = movecoord(loc_coord, $x, 0, 2);
+} else {
+    def_int $z = max(0, min(1, calc(coordz(coord) - coordz(loc_coord))));
+    $start = movecoord(loc_coord, -1, 0, $z);
+    if ($fx < 0) $start = movecoord(loc_coord, 2, 0, $z);
+}
+def_coord $end = movecoord($start, calc($fx * 3), 0, calc($fz * 3));
+def_coord $hole = movecoord($start, $fx, 0, $fz);
+p_arrivedelay;
+if (~agility_pyramid_from_start($start, $end) = false) {
+    if (coord ! $end) ~forcewalk2($end);
+    ~agility_pyramid_fall(movecoord($end, calc(0 - $fx), 0, calc(0 - $fz)), agility_pyramid_gap_jump_fall, 2, "You miss your footing and fall to the level below."); // EASCape: message ours
+    return;
+}
+if (coord ! $start) ~forcewalk2($start);
+if (~agility_pyramid_success(true) = false) {
+    anim(agility_pyramid_gap_jump_fall, 0);
+    p_exactmove($start, $hole, 15, 40, ~agility_pyramid_dir($fx, $fz)); // EASCape: timing ours
+    p_delay(1);
+    sound_synth(jump_and_fall, 1, 0);
+    p_telejump(~agility_pyramid_below($hole));
+    ~agility_pyramid_set_level;
+    anim(null, 0);
+    mes("You miss your footing and fall to the level below."); // EASCape: ours
+    ~agility_pyramid_hurt(8);
+    return;
+}
+sound_synth(jump_further, 1, 0);
+~agility_exactmove(agility_pyramid_gap_jump, 0, 1, $start, $end, 15, 45, ~agility_pyramid_dir($fx, $fz), false); // EASCape: timing ours
+stat_advance(agility, 220);
+
+// ---------------------------------------------------------------- planks
+
+// 2006Scape's planks (level 1's going south, level 3's going west); 56.4 experience; a slip drops
+// you a level for 10 (the OSRS wiki)
+[oploc1,agility_pyramid_plank_start] @agility_pyramid_plank;
+[oploc1,agility_pyramid_plank_end] @agility_pyramid_plank;
+
+[label,agility_pyramid_plank]
+if (~agility_pyramid_req = false) return;
+def_coord $start = 1_52_44_47_30; // 3375,2846 -> 3375,2839
+def_coord $end = 1_52_44_47_23;
+if (coordy(loc_coord) = 3) {
+    $start = 3_52_44_43_19; // 3371,2835 -> 3364,2835
+    $end = 3_52_44_36_19;
+}
+p_arrivedelay;
+if (~agility_pyramid_from_start($start, $end) = false) {
+    if (coord ! $end) ~forcewalk2($end);
+    ~agility_pyramid_fall(coord, agility_pyramid_logfall_r, 2, "You slip and fall to the level below."); // EASCape: message ours
+    return;
+}
+if (coord ! $start) ~forcewalk2($start);
+mes("You walk carefully across the plank..."); // EASCape: ours
+~set_forcemove_bas(human_walk_logbalance);
+def_coord $mid = movecoord($start, calc((coordx($end) - coordx($start)) / 2), 0, calc((coordz($end) - coordz($start)) / 2));
+~forcemove($mid);
+if (~agility_pyramid_success(false) = false) {
+    ~agility_pyramid_fall($mid, agility_pyramid_logfall_r, 10, "You slip and fall to the level below."); // EASCape: message ours
+    return;
+}
+sound_synth(log_balance, 2, 0);
+~forcemove($end);
+~update_bas;
+mes("...You make it safely to the other side."); // EASCape: ours (the Barbarian course's log words)
+stat_advance(agility, 564);
+
+// ---------------------------------------------------------------- stone blocks
+
+// The five stone blocks (the 377 cache's agility_pyramid_tilting_floor_multi_1-5, each on the
+// plane under the level it's on; an invisible wall in the middle of each stops you walking over).
+// Stepping on one: it tilts and throws you over (12 experience), or rolls you down a level for 6;
+// back over one always rolls you down, for 1 (the OSRS wiki). The zones they're in watch for you.
+[zone,1_52_44_24_24] settimer(agility_pyramid_blocks, 1);
+[zone,1_52_44_40_16] settimer(agility_pyramid_blocks, 1);
+[zone,2_52_44_40_32] settimer(agility_pyramid_blocks, 1);
+[zone,2_47_73_40_24] settimer(agility_pyramid_blocks, 1);
+[zone,3_47_73_32_24] settimer(agility_pyramid_blocks, 1);
+
+[timer,agility_pyramid_blocks]
+def_int $block = ~agility_pyramid_block_at(coord);
+if ($block = -1) {
+    if (~agility_pyramid_block_zone(coord) = false) cleartimer(agility_pyramid_blocks);
+    return;
+}
+cleartimer(agility_pyramid_blocks);
+queue(agility_pyramid_block, 0, $block);
+
+[proc,agility_pyramid_block_zone](coord $c)(boolean)
+if (inzone(1_52_44_24_24, 1_52_44_31_31, $c) = true) return(true);
+if (inzone(1_52_44_40_16, 1_52_44_47_23, $c) = true) return(true);
+if (inzone(2_52_44_40_32, 2_52_44_47_39, $c) = true) return(true);
+if (inzone(2_47_73_40_24, 2_47_73_47_31, $c) = true) return(true);
+if (inzone(3_47_73_32_24, 3_47_73_39_31, $c) = true) return(true);
+return(false);
+
+// which block (1-5, as the varbits agility_pyramid_tilt_1-5) you're standing on, or -1; the
+// squares are on the level you walk on, a plane above the block's loc
+[proc,agility_pyramid_block_at](coord $c)(int)
+if (inzone(1_52_44_26_25, 1_52_44_27_26, $c) = true) return(1); // 3354,2841
+if (inzone(2_52_44_40_33, 2_52_44_41_34, $c) = true) return(2); // 3368,2849 (level 2)
+if (inzone(1_52_44_46_19, 1_52_44_47_20, $c) = true) return(3); // 3374,2835
+if (inzone(2_47_73_40_27, 2_47_73_41_28, $c) = true) return(4); // 3048,4699 (level 4)
+if (inzone(3_47_73_36_27, 3_47_73_37_28, $c) = true) return(5); // 3044,4699 (level 5)
+return(-1);
+
+[proc,agility_pyramid_block_coord](int $block)(coord)
+switch_int ($block) {
+    case 1 : return(1_52_44_26_25);
+    case 2 : return(2_52_44_40_33);
+    case 3 : return(1_52_44_46_19);
+    case 4 : return(2_47_73_40_27);
+    case 5 : return(3_47_73_36_27);
+}
+return(null);
+
+[proc,agility_pyramid_set_tilt](int $block, int $value)
+switch_int ($block) {
+    case 1 : %agility_pyramid_tilt_1 = $value;
+    case 2 : %agility_pyramid_tilt_2 = $value;
+    case 3 : %agility_pyramid_tilt_3 = $value;
+    case 4 : %agility_pyramid_tilt_4 = $value;
+    case 5 : %agility_pyramid_tilt_5 = $value;
+}
+
+[queue,agility_pyramid_block](int $block)
+if (~agility_pyramid_block_at(coord) ! $block) {
+    settimer(agility_pyramid_blocks, 1);
+    return;
+}
+// the block's south-west square, on the level it's on (its loc is on the plane below)
+def_coord $sw = ~agility_pyramid_block_coord($block);
+def_int $fx = 0;
+def_int $fz = 0;
+$fx, $fz = ~agility_pyramid_forward(movecoord($sw, 1, 0, 1));
+// forward if you're on the near half of the block
+def_int $along = calc((coordx(coord) - coordx($sw)) * $fx + (coordz(coord) - coordz($sw)) * $fz);
+if ($fx < 0 | $fz < 0) $along = calc($along + 1);
+p_stopaction;
+~agility_pyramid_set_tilt($block, 1);
+if ($along > 0) {
+    // backwards: always rolls you down
+    anim(agility_pyramid_tilt_fall, 0);
+    p_delay(1);
+    ~agility_pyramid_set_tilt($block, 0);
+    p_telejump(~agility_pyramid_below(coord));
+    ~agility_pyramid_set_level;
+    anim(null, 0);
+    mes("The stone block rolls you off the pyramid."); // EASCape: ours
+    ~agility_pyramid_hurt(1);
+    settimer(agility_pyramid_blocks, 1);
+    return;
+}
+if (~agility_pyramid_success(false) = false) {
+    anim(agility_pyramid_tilt_fall, 0);
+    p_delay(1);
+    ~agility_pyramid_set_tilt($block, 0);
+    p_telejump(~agility_pyramid_below(coord));
+    ~agility_pyramid_set_level;
+    anim(null, 0);
+    mes("The stone block rolls you off the pyramid."); // EASCape: ours
+    ~agility_pyramid_hurt(6);
+    settimer(agility_pyramid_blocks, 1);
+    return;
+}
+// thrown over: from the near half to the square past the block
+def_coord $end = movecoord(coord, calc($fx * 2), 0, calc($fz * 2));
+~agility_exactmove(agility_pyramid_gap_jump, 0, 1, coord, $end, 10, 40, ~agility_pyramid_dir($fx, $fz), false); // EASCape: ours, the jump and its timing
+~agility_pyramid_set_tilt($block, 0);
+stat_advance(agility, 120);
+settimer(agility_pyramid_blocks, 1);
+
+// ---------------------------------------------------------------- the pyramid blocks
+
+// The two moving blocks (the 377 cache's agility_pyramid_penny_waterfall_npc_east on level 1 and
+// _north on level 3). The OSRS wiki: a 15-tick cycle, in the way for 5 of them (from the tick it
+// starts to come out to one after it starts to go back), not in step with each other; mistimed,
+// it pushes you down a level for 8. No experience.
+[ai_timer,agility_pyramid_penny_waterfall_npc_east] ~agility_pyramid_block_move(1_52_44_44_31, 1, 0, 0);
+[ai_timer,agility_pyramid_penny_waterfall_npc_north] ~agility_pyramid_block_move(3_52_44_38_29, 0, 1, 7); // EASCape: ours, the second one 7 ticks behind
+
+[proc,agility_pyramid_block_move](coord $home, int $dx, int $dz, int $offset)
+def_int $phase = modulo(calc(map_clock + $offset), 15);
+def_coord $out = movecoord($home, calc($dx * 2), 0, calc($dz * 2));
+if ($phase = 0) {
+    npc_walk($out);
+} else if ($phase = 4) {
+    npc_walk($home);
+}
+if ($phase > 4) return;
+// in the way: push anyone on the two squares by two it covers
+huntall(movecoord($out, 1, 0, 1), 2, 0);
+while (huntnext = true) {
+    if (inzone($out, movecoord($out, 1, 0, 1), coord) = true) {
+        queue(agility_pyramid_pushed, 0, 0);
+    }
+}
+
+[queue,agility_pyramid_pushed](int $unused)
+if (~agility_pyramid_level_of(coord) ! 1 & ~agility_pyramid_level_of(coord) ! 3) return;
+if (inzone(1_52_44_46_31, 1_52_44_47_32, coord) = false & inzone(3_52_44_38_31, 3_52_44_39_32, coord) = false) return;
+p_stopaction;
+sound_synth(pyramid_block, 1, 0);
+def_int $ox = 0;
+def_int $oz = 0;
+$ox, $oz = ~agility_pyramid_outward(coord);
+anim(agility_pyramid_block_push_2, 0);
+p_exactmove(coord, movecoord(coord, $ox, 0, $oz), 0, 30, ~agility_pyramid_dir(calc(0 - $ox), calc(0 - $oz))); // EASCape: timing ours
+p_delay(1);
+p_telejump(~agility_pyramid_below(coord));
+~agility_pyramid_set_level;
+anim(null, 0);
+mes("The pyramid block pushes you off the level."); // EASCape: ours
+~agility_pyramid_hurt(8);
+
+// ---------------------------------------------------------------- the top
+
+// The climbing rocks by the doorway: climb up for the pyramid top (the RuneScape wiki: "The player
+// will reach up, grab the pyramid top and come back down"), once a lap: it comes back when you
+// go through the doorway. The 377 cache's multiloc shows the top while %agility_pyramid_top is 0.
+[oploc1,agility_pyramid_wall_rocks]
+if (~agility_pyramid_req = false) return;
+p_arrivedelay;
+facesquare(movecoord(coord, 1, 0, 0));
+anim(agility_pyramid_top_climb, 0);
+p_delay(2);
+if (%agility_pyramid_top = 1) {
+    mes("You find nothing at the top of the pyramid."); // the RuneScape wiki
+    return;
+}
+if (inv_freespace(inv) = 0) {
+    mes("You haven't got room to carry the pyramid top."); // EASCape: ours
+    return;
+}
+%agility_pyramid_top = 1;
+inv_add(inv, agility_pyramid_gold_pyramid, 1);
+mes("You find a golden pyramid!"); // EASCape: ours
+
+// The doorway: down to the foot of the pyramid, with the lap bonus if you've got the top (300 in
+// 2006: the RuneScape wiki, raised to 500 on 14 March 2016; the OSRS wiki: the doorway gives it, and
+// nothing if you forgot the top). It puts the top back for your next lap.
+[oploc1,agility_pyramid_door_hotspot] @agility_pyramid_doorway;
+[oploc1,agility_pyramid_door_hotspot_mirror] @agility_pyramid_doorway;
+
+[label,agility_pyramid_doorway]
+if (~agility_pyramid_req = false) return;
+p_arrivedelay;
+// EASCape: ours, out by the doorway at the bottom of the south side (agility_pyramid_door_bottom_hotspot, 3364,2830)
+p_telejump(0_52_44_36_13);
+~agility_pyramid_set_level;
+if (%agility_pyramid_top = 1) {
+    %agility_pyramid_top = 0;
+    stat_advance(agility, 3000);
+    mes("You climb down through the pyramid and complete the course."); // EASCape: ours
+} else {
+    mes("You climb down through the pyramid."); // EASCape: ours
+}
+
+// ---------------------------------------------------------------- Simon Templeton
+
+// The OSRS wiki's transcript (Transcript:Simon_Templeton), with 2006's 1,000 coins a top (the OSRS
+// wiki: 10,000 from 11 February 2016, "up from 1,000 coins"). %agility_pyramid_simon_job: he's told
+// you about the job; %agility_pyramid_simon_job_done: you've sold him a top.
+[opnpc1,agility_pyramid_simon]
+if (%agility_pyramid_simon_job = 0) {
+    ~chatplayer("<p,neutral>Hello.");
+    ~chatnpc("<p,happy>G'day, mate. I'm Simon - Simon Templeton. Who are you?");
+    ~chatplayer("<p,neutral>I'm <displayname>. What are you doing all the way out here?");
+    ~chatnpc("<p,neutral>I've been contracted to retrieve artefacts from the top of this magnificent pyramid.");
+    ~chatplayer("<p,quiz>So, why are you down here and not up there then?");
+    ~chatnpc("<p,sad>Well, it's me back - an old injury I picked up in Sophanem has come back to haunt me. I was working for the Museum of Varrock, and the gold I had been given wasn't enough to pay for the carpet rides, let");
+    ~chatnpc("<p,sad>alone any decent equipment. But that was a long time ago... I can't even lift a chisel right now. There's no way I can climb all the way up there.");
+    ~chatplayer("<p,quiz>How on earth did you get down the cliff face, then?");
+    ~chatnpc("<p,sad>That's what set off the injury. I was fine before I scrabbled down that pesky slope. I think it will be a while before I can climb back up again; I must be getting old.");
+    ~chatnpc("<p,happy>Hang on a second... You look like you're pretty agile and up for a challenge. How about you retrieve it for me?");
+    ~chatnpc("<p,happy>I'll tell you what, I'll give you 1000 coins for every artefact you get for me.");
+    ~chatplayer("<p,neutral>I'll see what I can do.");
+    ~chatnpc("<p,happy>Good on ya, mate!");
+    %agility_pyramid_simon_named = 1;
+    %agility_pyramid_simon_job = 1;
+    return;
+}
+def_int $tops = inv_total(inv, agility_pyramid_gold_pyramid);
+if (%agility_pyramid_simon_job_done = 0) {
+    ~chatplayer("<p,neutral>Hello, Simon.");
+    ~chatnpc("<p,happy>G'day, <displayname>.");
+    ~chatplayer("<p,neutral>How's it going?");
+    ~chatnpc("<p,happy>Not bad, mate, not bad at all. Got any artefacts for me?");
+    if ($tops = 0) {
+        ~chatplayer("<p,neutral>No, I haven't.");
+        ~chatnpc("<p,neutral>Try harder, mate! It won't be long till some other critter turns up and snatches them out from under your eyes.");
+        ~chatplayer("<p,neutral>I will, goodbye.");
+        ~chatnpc("<p,happy>Bye, cobber.");
+        return;
+    }
+} else {
+    ~chatnpc("<p,happy>G'day, mate. Got any new pyramid artefacts for me?");
+    if ($tops = 0) {
+        ~chatplayer("<p,neutral>No, I haven't.");
+        ~chatnpc("<p,neutral>Well, keep my offer in mind if you do find one.");
+        ~chatplayer("<p,neutral>I will. Goodbye, Simon.");
+        ~chatnpc("<p,happy>Bye, mate.");
+        return;
+    }
+}
+if ($tops = 1) {
+    switch_int (~p_choice2("Sell it.", 1, "Keep it.", 2)) {
+        case 1 : @agility_pyramid_simon_sell;
+        case 2 : ~chatplayer("<p,neutral>I have one, but I want to keep it for now.");
+    }
+} else {
+    switch_int (~p_choice2("Sell them.", 1, "Keep them.", 2)) {
+        case 1 : @agility_pyramid_simon_sell;
+        case 2 : ~chatplayer("<p,neutral>I have some, but I want to keep them for now.");
+    }
+}
+~chatnpc("<p,neutral>Careful, mate, people might come looking for a thing like that!");
+~chatplayer("<p,neutral>Thanks for the advice, but I'll hang onto it for now.");
+~chatnpc("<p,happy>Bye, cobber.");
+
+[opnpcu,agility_pyramid_simon]
+if (last_useitem ! agility_pyramid_gold_pyramid) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@agility_pyramid_simon_sell;
+
+[label,agility_pyramid_simon_sell]
+def_int $tops = inv_total(inv, agility_pyramid_gold_pyramid);
+if ($tops = 0) return;
+inv_del(inv, agility_pyramid_gold_pyramid, $tops);
+inv_add(inv, coins, calc($tops * 1000));
+%agility_pyramid_simon_job_done = 1;
+~objbox(agility_pyramid_gold_pyramid, "You hand over the artefact(s) and Simon hands you <tostring(calc($tops * 1000))> coins.", 250, 0, divide(^objbox_height, 2));
+~chatnpc("<p,happy>Ripper! Thanks a bundle, mate! Thanks to you I can fulfill me contract. You're a true blue! The boss will be pleased.");
+~chatplayer("<p,quiz>Glad I was able to help... but who is your boss? I thought you worked for the museum?");
+~chatnpc("<p,neutral>Mind your own bizzo, mate. But if you get any more, you know where I am!");

@@ -1,0 +1,33 @@
+// EASCape: test commands for the Agility Pyramid (skill_agility/agility_pyramid.rs2).
+
+// ::pyramid - to the foot of the pyramid by Simon Templeton, with 30 Agility if you had less and
+// four full waterskins for the desert heat
+[debugproc,pyramid]
+if (p_finduid(uid) = false) return;
+if (stat_base(agility) < 30) stat_advance(agility, 133630); // 13,363 experience: level 30
+def_int $banked = ~questpack_give(water_skin4, 4);
+~questpack_done("the Agility Pyramid", $banked);
+p_telejump(0_52_44_32_13);
+mes("::pyramidlevel 1 to 5 takes you to the start of a level; ::pyramidreset puts back the top and Simon.");
+
+// ::pyramidlevel <n> - to the start of level n (the top of its stairs)
+[debugproc,pyramidlevel](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(1_52_44_27_17);
+    case 2 : p_telejump(2_52_44_29_19);
+    case 3 : p_telejump(3_52_44_31_21);
+    case 4 : p_telejump(2_47_73_33_23);
+    case 5 : p_telejump(3_47_73_35_25);
+    case default : mes("::pyramidlevel 1 to 5");
+}
+~agility_pyramid_set_level;
+
+// ::pyramidreset - the top back on the pyramid, and Simon as if you'd never met him
+[debugproc,pyramidreset]
+if (p_finduid(uid) = false) return;
+%agility_pyramid_top = 0;
+%agility_pyramid_simon_named = 0;
+%agility_pyramid_simon_job = 0;
+%agility_pyramid_simon_job_done = 0;
+mes("The pyramid top is back, and Simon hasn't met you.");
