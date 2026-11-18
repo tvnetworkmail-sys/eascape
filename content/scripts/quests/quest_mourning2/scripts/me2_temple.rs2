@@ -295,8 +295,8 @@ if ($v <= 6) {
         }
         ~me2_setcontent($node, 0);
         inv_add(inv, mourning_mirror, 1);
-        ~objbox(mourning_mirror, "You take the mirror.", 250, 0, divide(^objbox_height, 2));
         ~me2_light_update;
+        ~objbox(mourning_mirror, "You take the mirror.", 250, 0, divide(^objbox_height, 2));
         return;
     }
     if ($choice = 2) ~me2_rotate($node, $v);
@@ -312,9 +312,10 @@ if (inv_freespace(inv) = 0) {
 }
 ~me2_setcontent($node, 0);
 inv_add(inv, $obj, 1);
+// the beams change straight away, before the box (it may never be clicked through)
+~me2_light_update;
 if ($v >= ^me2_held_fractured1) ~objbox($obj, "You take the fractured crystal from the pillar.", 250, 0, divide(^objbox_height, 2));
 else ~objbox($obj, "You take the <lowercase(oc_name($obj))>.", 250, 0, divide(^objbox_height, 2));
-~me2_light_update;
 
 [proc,me2_held_obj](int $v)(namedobj)
 switch_int ($v) {
@@ -392,8 +393,8 @@ if ($item = mourning_mirror) {
     if ($d > 6) $d = 1;
     inv_delslot(inv, $slot);
     ~me2_setcontent($node, $d);
-    ~objbox(mourning_mirror, "You place the mirror in the pillar.", 250, 0, divide(^objbox_height, 2));
     ~me2_light_update;
+    ~objbox(mourning_mirror, "You place the mirror in the pillar.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 if ($item = mourning_fractured_crystal_1 | $item = mourning_fractured_crystal_2) {
@@ -412,8 +413,8 @@ if ($item = mourning_fractured_crystal_1 | $item = mourning_fractured_crystal_2)
     }
     inv_delslot(inv, $slot);
     ~me2_setcontent($node, $held);
-    ~objbox($item, "This crystal only fits the pillar with the clear side facing <$side>.", 250, 0, divide(^objbox_height, 2));
     ~me2_light_update;
+    ~objbox($item, "This crystal only fits the pillar with the clear side facing <$side>.", 250, 0, divide(^objbox_height, 2));
     return;
 }
 def_int $crystal = ^me2_held_yellow;
@@ -421,8 +422,8 @@ if ($item = mourning_crystal_cyan) $crystal = ^me2_held_cyan;
 if ($item = mourning_crystal_blue) $crystal = ^me2_held_blue;
 inv_delslot(inv, $slot);
 ~me2_setcontent($node, $crystal);
-~objbox($item, "You place the <lowercase(oc_name($item))> in the pillar.", 250, 0, divide(^objbox_height, 2)); // ours
 ~me2_light_update;
+~objbox($item, "You place the <lowercase(oc_name($item))> in the pillar.", 250, 0, divide(^objbox_height, 2)); // ours
 
 // ---------------------------------------------------------------- the light doors: white while
 // the right colour lights them (me2_light.rs2)
