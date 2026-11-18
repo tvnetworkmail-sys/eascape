@@ -68,7 +68,12 @@ switch_obj(last_useitem) {
 }
 
 [opheldu,lemon_slices] @finish_cocktail(last_useitem, last_item);
-[opheldu,orange_slices] @finish_cocktail(last_useitem, last_item);
+[opheldu,orange_slices]
+// EASCape: Recipe for Disaster's dyed oranges (hundred_goblins.rs2)
+switch_obj (last_useitem) {
+    case reddye, yellowdye, bluedye, greendye, purpledye, orangedye : @hundred_dye_oranges(last_useitem);
+}
+@finish_cocktail(last_useitem, last_item);
 [opheldu,lime_slices] @finish_cocktail(last_useitem, last_item);
 [opheldu,lemon_chunks]
 switch_int(oc_param(last_useitem, gnome_cooking_type)) {
@@ -96,6 +101,7 @@ switch_int(oc_param(last_useitem, gnome_cooking_type)) {
 }
 
 [opheldu,gnome_spice]
+if (last_useitem = fishing_bait) @hundred_spice_maggots(gnome_spice); // EASCape: Recipe for Disaster (hundred_goblins.rs2)
 switch_int(oc_param(last_useitem, gnome_cooking_type)) {
     case ^gnome_cocktail : @finish_cocktail(last_useitem, last_item);
     case ^gnome_bowl, ^gnome_batta, ^gnome_crunchies : @finish_gnome_food(last_useitem, last_item);

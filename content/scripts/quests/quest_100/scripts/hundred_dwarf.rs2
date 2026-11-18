@@ -1,0 +1,328 @@
+// EASCape: Recipe for Disaster: Freeing the Mountain Dwarf. Words from the OSRS wiki's transcript;
+// the steps from its quest guide (the barmaids' prices, the coin in the Asgarnian ale, four of them
+// to get Rohak drunk, the rock cake cooled by ice gloves or an icefiend's dying breath). Lines
+// marked "ours" have no source.
+// %hundred_dwarf_quest: 10 asked Aris, 20 met Rohak, 30 know the barmaid's secret, 40 Rohak drunk
+// and agreed, 50 paid, 60 cake made. %hundred_dwarf_drunk: ales he's had (he sobers up between,
+// ours: 100 ticks). %hundred_dwarf_multi_dad: 1 once he's told you he's Rohak.
+
+[proc,hundred_dwarf_helping]()(boolean)
+if (%hundred_dwarf_quest >= 10 & %100dwarfvisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_dwarf_ambassador_multi]
+if (%fishingcompo < ^fishingcompo_complete) {
+    mes("You need to have completed Fishing Contest to help him."); // ours: the subquest's requirement
+    return;
+}
+~chatplayer("<p,quiz>How do I protect you I wonder....");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>To protect our short angry friend from the culinaromancer's magics, I suggest that you seek out his father within the mountain tunnel that he guards.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>His fondness for rock cakes could prove key in freeing him.");
+if (%hundred_dwarf_quest < 10) %hundred_dwarf_quest = 10;
+
+[oplocu,hundred_dwarf_ambassador_multi]
+if (last_useitem = hundred_dwarf_hot_rockcake) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,angry>STOP! What do you think you're doing!");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,angry>You can't feed him red hot rock cakes! You'll kill him! Find a way to cool them down.");
+    ~chatplayer("<p,neutral>Oh, ok, I'll find a way to cool them down then.");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I hear there's a rather chilly reception on top of a rather icey mountain.");
+    return;
+}
+if (last_useitem ! hundred_dwarf_cool_rockcake | ~hundred_dwarf_helping = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, hundred_dwarf_cool_rockcake, 1);
+%100dwarfvisible = 0;
+stat_advance(slayer, 10000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("the Mountain Dwarf", hundred_dwarf_cool_rockcake, "1,000 Slayer XP");
+
+// ---------------------------------------------------------------- Rohak, under White Wolf Mountain
+[opnpc1,hundred_dwarf_dad_multi]
+if (~hundred_dwarf_helping = false) {
+    ~chatnpc("<p,neutral>Mind yer step down here."); // ours: off the quest
+    return;
+}
+if (%hundred_dwarf_quest < 20) {
+    ~chatplayer("<p,shock>...son...time bubble...culinaromancer...freeze...rockcakes!");
+    ~chatnpc("<p,confused>...");
+    ~chatnpc("<p,confused>I have absolutely no clue what you are on about. Sit down, catch your breath and explain please!");
+    ~chatplayer("<p,neutral>Ok. Your son, the one who guards the tunnel entrance?");
+    ~chatnpc("<p,happy>Oh aye. Good lad he is.");
+    ~chatplayer("<p,neutral>Well he's at a special meeting and he's frozen by the culinaromancer!");
+    ~chatnpc("<p,confused>Ok... you lost me again. I just got back from visitin' him up top, he's fine.");
+    ~chatplayer("<p,angry>He's in a TIME BUBBLE!");
+    ~chatnpc("<p,neutral>Oh that. No no, he's quite ok. That was last week.");
+    ~chatplayer("<p,neutral>I need your rock cakes to free him from it.");
+    %hundred_dwarf_multi_dad = 1;
+    ~chatnpc_specific("Rohak", hundred_dwarf_dad_rohak, "<p,angry>You're delusional. Never would old Rohak give away his special recipe, not for all the golden nectar from the Rising Sun!");
+    %hundred_dwarf_quest = 20;
+    return;
+}
+if (%hundred_dwarf_quest < 40) {
+    if (inv_total(inv, hundred_dwarf_asgarnian_ale) > 0) @hundred_dwarf_drink;
+    ~chatnpc("<p,angry>I would never give away me special rock cake recipe, not for all the golden nectar from the Rising Sun!");
+    return;
+}
+if (%hundred_dwarf_quest = 40) {
+    if (%hundred_dwarf_drunk >= 4) {
+        ~chatnpc("<p,drunk>Ahhh, yer me besht mate... mate.");
+        ~chatplayer("<p,neutral>You're a good friend Rohak, do you think you could do me a favour?");
+        ~chatnpc("<p,drunk>Fer you <displayname>? Fer you I'd... I'd... shlide down a shlope of thishtlesh wif no 'elmet on!");
+        ~chatplayer("<p,neutral>I don't need you to do that ... friend. Just something as simple as baking me some of your wonderful rock cakes. Hmm? For your good friend?");
+        ~chatnpc("<p,drunk>Fer you! Anyfin'! Fer a price of course!");
+        ~chatplayer("<p,happy>Good. I'm sure I have some gold somewhere!");
+        %hundred_dwarf_drunk = 0;
+        return;
+    }
+    ~chatplayer("<p,quiz>How much gold do you want to make the cake?");
+    ~chatnpc("<p,shock>WHAT?! That wasn't a dream? Oh my aching head...");
+    ~chatplayer("<p,neutral>No, not a dream, you agreed to make me your special rock cake, for a fee.");
+    ~chatnpc("<p,sad>Oh.");
+    ~chatnpc("<p,angry>100 gold, no less!");
+    if (inv_total(inv, coins) < 100) {
+        ~chatplayer("<p,sad>Maybe I should have some more money with me, he did say he'd want payment...");
+        return;
+    }
+    ~chatnpc("<p,neutral>Also... you'll need to get the ingredients too. Milk, flour, egg and bowl of water, mind it's a bowl and not a dirty bucket.");
+    inv_del(inv, coins, 100);
+    ~mesbox("You hand over 100 gold.");
+    ~chatplayer("<p,neutral>You didn't say I'd have to run around... but ok! Milk, flour, egg, bowl of water....I'll be back!");
+    %hundred_dwarf_quest = 50;
+    return;
+}
+if (%hundred_dwarf_quest = 60) {
+    ~chatnpc("<p,quiz>Got any use out of that rock cake I made you <displayname>?");
+    if (~obj_gettotal(hundred_dwarf_hot_rockcake) > 0 | ~obj_gettotal(hundred_dwarf_cool_rockcake) > 0) {
+        ~chatplayer("<p,neutral>Not yet but I will. I'm going to save your son.");
+        ~chatnpc("<p,angry>I keep tellin you, he's fine!");
+        return;
+    }
+    ~chatplayer("<p,sad>I appear to have lost it somewhere, can you make me another?");
+    ~chatnpc("<p,neutral>I suppose so, but you'll need all the ingredients like last time.");
+}
+@hundred_dwarf_ingredients;
+
+[label,hundred_dwarf_ingredients]
+def_int $count = 0;
+if (inv_total(inv, egg) > 0) $count = add($count, 1);
+if (inv_total(inv, pot_flour) > 0) $count = add($count, 1);
+if (inv_total(inv, bucket_milk) > 0) $count = add($count, 1);
+if (inv_total(inv, bowl_water) > 0) $count = add($count, 1);
+if ($count = 0) {
+    ~chatnpc("<p,neutral>Have you forgotten the ingredients list? I'll need an egg, a pot of flour, a bucket of milk and a bowl of water to make these cakes for you.");
+    ~chatplayer("<p,neutral>Ok, I'll see about getting them.");
+    return;
+}
+if ($count < 4) {
+    ~chatplayer("<p,neutral>I have found some of the things you asked for:");
+    def_string $egg = "I don't have an egg, I'll look for some chickens";
+    if (inv_total(inv, egg) > 0) $egg = "I have the egg";
+    def_string $flour = "I don't have a pot of flour, but I'll investigate the windmills";
+    if (inv_total(inv, pot_flour) > 0) $flour = "I have a pot of flour";
+    def_string $milk = "I don't have any milk but I'll check out the cows";
+    if (inv_total(inv, bucket_milk) > 0) $milk = "I have the bucket of milk";
+    def_string $water = "I don't have a bowl of water, I'd better go and fill one"; // ours: the transcript's line is cut short
+    if (inv_total(inv, bowl_water) > 0) $water = "I have the bowl of water!";
+    ~chatplayer("<p,neutral><$egg>, <$flour>, <$milk>, <$water>");
+    ~chatnpc("<p,angry>That's all well and good...but come back when you have all the ingredients. You're lucky Dwarves stick to their word else I might not make these cakes for you.");
+    ~chatplayer("<p,neutral>Okay okay I'll get right on it! Keep your beard on!");
+    ~chatnpc("<p,angry>What did you say?");
+    ~chatplayer("<p,scared>N..n...nothing honest!");
+    return;
+}
+if (%hundred_dwarf_quest = 60) {
+    ~chatplayer("<p,neutral>I lost the rock cake! But I have more ingredients, will you make me some more please?");
+    ~chatnpc("<p,neutral>Oh... I suppose so. Give me the ingredients.");
+} else {
+    ~chatplayer("<p,confused>I have all the items you asked for...is that it? I could make these!");
+    ~chatnpc("<p,angry>No you couldn't, there's a special ingredient, but I'm not going to tell you what it is!");
+    ~chatplayer("<p,neutral>Well... here's the ingredients anyway.");
+}
+inv_del(inv, egg, 1);
+inv_del(inv, pot_flour, 1);
+inv_add(inv, pot_empty, 1);
+inv_del(inv, bucket_milk, 1);
+inv_add(inv, bucket_empty, 1);
+inv_del(inv, bowl_water, 1);
+inv_add(inv, bowl_empty, 1);
+~objbox(egg, "You hand over the ingredients and watch the dwarf make the cake.", 250, 0, divide(^objbox_height, 2));
+~mesbox("Rohak places the cake on the table.");
+obj_add(^hundred_dwarf_cake_table, hundred_dwarf_hot_rockcake, 1, ^lootdrop_duration);
+%hundred_dwarf_quest = 60;
+~chatnpc("<p,happy>There, as good as my word. Hot rock cakes to my special recipe.");
+
+// the asgoldian ales (four to get him drunk; ours: he sobers up 100 ticks after the last)
+[opnpcu,hundred_dwarf_dad_multi]
+if (last_useitem = hundred_dwarf_asgarnian_ale & %hundred_dwarf_quest >= 20 & %hundred_dwarf_quest < 40 & ~hundred_dwarf_helping = true) @hundred_dwarf_drink;
+mes("Nothing interesting happens.");
+
+[label,hundred_dwarf_drink]
+inv_del(inv, hundred_dwarf_asgarnian_ale, 1);
+inv_add(inv, beer_glass, 1);
+%hundred_dwarf_drunk = add(%hundred_dwarf_drunk, 1);
+settimer(hundred_dwarf_sober, 100);
+switch_int (%hundred_dwarf_drunk) {
+    case 1 :
+        ~chatplayer("<p,happy>Here, have a drink.");
+        ~mesbox("You hand the ale to the dwarf who slurps it with a noise of a thousand seals celebrating a rain of fish.");
+        ~chatnpc("<p,quiz>Is that what I think it is?");
+        ~chatplayer("<p,happy>Maybe!");
+        ~chatnpc("<p,happy>That's from the Rising Sun, the barmaid there will never tell me the recipe she uses. It's divine!");
+        ~chatplayer("<p,neutral>Speaking of recipes....");
+        ~chatnpc("<p,drunk>No! I shwears I'll never tell...");
+        ~mesbox("The dwarf nurses the very last drops of the pint as if he'd really like more.");
+    case 2 :
+        ~chatplayer("<p,happy>Here, have another.");
+        ~chatnpc("<p,drunk>Don't mind if I do!");
+    case 3 :
+        ~chatplayer("<p,happy>I think you deserve another pint.");
+        ~chatnpc("<p,drunk>Don't mind if I do!");
+    case default :
+        ~chatplayer("<p,happy>I'm sure another pint will go down nicely.");
+        ~chatnpc("<p,drunk>Don't mind if I do!");
+        ~mesbox("Several beers later....");
+        %hundred_dwarf_quest = 40;
+        cleartimer(hundred_dwarf_sober);
+}
+
+[timer,hundred_dwarf_sober]
+cleartimer(hundred_dwarf_sober);
+if (%hundred_dwarf_quest < 40) %hundred_dwarf_drunk = 0;
+
+// ---------------------------------------------------------------- the barmaids' secret
+[proc,hundred_dwarf_barmaid]()(boolean)
+if (~hundred_dwarf_helping = true & %hundred_dwarf_quest >= 20) return(true);
+return(false);
+
+[label,hundred_dwarf_barmaid_menu]
+~chatnpc("<p,happy>Heya! What can I get you?");
+if (~p_choice2("What ales are you serving?", 1, "What can you tell me about dwarves and ale?", 2) = 1) @risingsun_barmaid_what_ales;
+~chatplayer("<p,quiz>What can you tell me about dwarves and ale?");
+if (%hundred_dwarf_quest >= 30) {
+    ~chatnpc("<p,neutral>Oh it's you again. Forgotten the secret already?");
+    ~chatplayer("<p,neutral>No... I just... misplaced it.");
+    ~chatnpc("<p,neutral>Mmmmm... the secret is in the gold. Drop a gold coin into asgarnian ale and you'll get this weird golden ale that the dwarves seem to love, I think they're genetically attracted to gold.");
+    ~chatplayer("<p,neutral>Thanks, I won't forg...err... misplace it, this time.");
+    return;
+}
+~chatnpc("<p,confused>Erm... they like it?");
+~chatplayer("<p,neutral>No no no... I mean what kind of ale do they drink?");
+~chatnpc("<p,neutral>Well I know for sure that they enjoy my special recipe.");
+~chatplayer("<p,quiz>Oh? Would you tell me?");
+~chatnpc("<p,neutral>And lose money? I think not!");
+def_int $choice;
+if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+    $choice = ~p_choice3("I could offer you some in return, how about 100 gold?", 1, "I could offer you some in return, how about 200 gold?", 2, "(Persuade)I'm really quite trustworthy once you get to know me.", 3);
+} else {
+    $choice = ~p_choice2("I could offer you some in return, how about 100 gold?", 1, "I could offer you some in return, how about 200 gold?", 2);
+}
+if ($choice = 3) {
+    ~chatplayer("<p,neutral>Oh go on, I'm really quite trustworthy once you get to know me.");
+    ~chatnpc("<p,neutral>Mmmmm... the secret is in the gold. Drop a gold coin into asgarnian ale and you'll get this weird golden ale that the dwarves seem to love. I think they're genetically attracted to gold.");
+    ~chatplayer("<p,happy>Thanks.");
+    ~chatnpc("<p,shock>What...what am I saying? I just gave you the secret!");
+    %hundred_dwarf_quest = 30;
+    return;
+}
+if ($choice = 2) {
+    if (inv_total(inv, coins) < 200) {
+        ~chatplayer("<p,sad>But I don't have the money on me. I'll have to come back.");
+        return;
+    }
+    ~chatplayer("<p,neutral>I could offer you some in return, how about 200 gold?");
+    if (inv_total(worn, ring_of_charos_unlocked) > 0) {
+        ~chatnpc("<p,happy>You're a good person... for you, 150 and you have a deal.");
+        inv_del(inv, coins, 150);
+        ~mesbox("You hand over 150 gold.");
+    } else {
+        ~chatnpc("<p,quiz>You sure you haven't got anymore?");
+        ~chatplayer("<p,neutral>Just 200... honest!");
+        ~chatnpc("<p,neutral>Hand it over then and I'll tell you the secret.");
+        inv_del(inv, coins, 200);
+        ~mesbox("You hand over 200 gold.");
+    }
+    @hundred_dwarf_secret;
+}
+~chatplayer("<p,neutral>I could offer you some in return, how about 100 gold?");
+def_namedobj $treat = null;
+def_int $price = 0;
+if (inv_total(inv, chocolate_bar) > 0) {
+    ~chatnpc("<p,happy>You have CHOCOLATE in your pack, I can smell it! 50 gold and chocolate and the secret is yours!!");
+    $treat = chocolate_bar;
+    $price = 50;
+} else if (inv_total(inv, plain_pizza) > 0) {
+    ~chatnpc("<p,neutral>Welll... maybe... look.. I'm on duty here at the bar so I can't get anything to eat, I could murder a pizza.");
+    ~chatplayer("<p,happy>I just happen to have some on me.");
+    ~chatnpc("<p,happy>Pizza and 100 gold and the secret is yours!");
+    $treat = plain_pizza;
+    $price = 100;
+} else {
+    ~chatnpc("<p,neutral>Sorry, no deal, that wouldn't even cover my expenses.");
+    return;
+}
+def_string $keep = "Sorry, that chocolate is mine.";
+if ($treat = plain_pizza) $keep = "Sorry, that pizza is mine.";
+if (~p_choice2("You have a deal.", 1, $keep, 2) = 2) {
+    ~chatplayer("<p,neutral>Sorry, no deal.");
+    ~chatnpc("<p,neutral>Your loss! Next customer please!");
+    return;
+}
+if (inv_total(inv, coins) < $price) {
+    ~chatplayer("<p,sad>Oh, I don't have enough money on me.");
+    return;
+}
+~chatplayer("<p,happy>You have a deal. Here you go...");
+inv_del(inv, $treat, 1);
+inv_del(inv, coins, $price);
+if ($treat = plain_pizza) ~mesbox("You hand over the pizza and money.");
+else ~mesbox("You hand over the chocolate and money.");
+@hundred_dwarf_secret;
+
+[label,hundred_dwarf_secret]
+~chatnpc("<p,neutral>Mmmmm... the secret is in the gold. Drop a gold coin into asgarnian ale and you'll get this weird golden ale that the dwarves seem to love, I think they're genetically attracted to gold.");
+%hundred_dwarf_quest = 30;
+
+// a coin in the ale (ours: the message; you need to know the secret)
+[opheldu,asgarnian_ale] if (last_useitem = coins) @hundred_dwarf_gold_ale; ~displaymessage(^dm_default);
+[opheldu,coins] if (last_useitem = asgarnian_ale) @hundred_dwarf_gold_ale; ~displaymessage(^dm_default);
+[label,hundred_dwarf_gold_ale]
+if (%hundred_dwarf_quest < 30) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, coins, 1);
+inv_del(inv, asgarnian_ale, 1);
+inv_add(inv, hundred_dwarf_asgarnian_ale, 1);
+mes("You drop a gold coin into the ale.");
+
+// ---------------------------------------------------------------- the hot rock cake
+[opobj3,hundred_dwarf_hot_rockcake]
+def_obj $gloves = inv_getobj(worn, ^wearpos_hands);
+if ($gloves = null) {
+    // ours: no gloves, it burns you and you drop it
+    mes("You try to pick up the rock cake, but it's red hot!");
+    queue(damage_player, 0, 2);
+    return;
+}
+if ($gloves = ice_gloves) {
+    if (~pickup_obj_check_for_space(obj_type, obj_count) = false) return;
+    anim(human_pickuptable, 0);
+    obj_takeitem(inv);
+    sound_synth(pick2, 1, 0);
+    inv_del(inv, hundred_dwarf_hot_rockcake, 1);
+    inv_add(inv, hundred_dwarf_cool_rockcake, 1);
+    mes("Your ice gloves cool the hot rock cake as you pick it up.");
+    return;
+}
+@pickup_obj;
+
+// the icefiend's dying breath cools it
+[queue,hundred_icefiend_breath](int $unused)
+if (inv_total(inv, hundred_dwarf_hot_rockcake) < 1) return;
+def_int $n = inv_total(inv, hundred_dwarf_hot_rockcake);
+inv_del(inv, hundred_dwarf_hot_rockcake, $n);
+inv_add(inv, hundred_dwarf_cool_rockcake, $n);
+mes("The dying breath of the icefiend cools your hot rock cake.");

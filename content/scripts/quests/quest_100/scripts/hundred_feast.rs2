@@ -254,10 +254,10 @@ if (%hundred_main_quest_var >= ^hundred_complete) $qp = add($qp, 1);
 return($qp);
 
 // freeing one of the council: off they go (Aris's lines are each subquest's)
-[proc,hundred_free_done](string $who)
+[proc,hundred_free_done](string $who, namedobj $dish, string $rewards)
 def_int $freed = ~hundred_freed;
 if ($freed >= 8 & %hundred_main_quest_var = ^hundred_feast_seen) %hundred_main_quest_var = ^hundred_all_freed;
-~send_quest_complete(questlist:hundred_main, hundred_rewardlamp, 250, 1, "You have freed <$who>!", "1 Quest Point|Further access to the|Culinaromancer's chest");
+~send_quest_complete(questlist:hundred_main, $dish, 250, 1, "You have freed <$who>!", "1 Quest Point|<$rewards>|Further access to the|Culinaromancer's chest");
 
 // ---------------------------------------------------------------- the chest (Lumbridge Castle cellar)
 [proc,hundred_chest_level]()(int)

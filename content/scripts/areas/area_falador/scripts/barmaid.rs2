@@ -10,6 +10,9 @@
 [apnpc1,risingsun_barmaid2]
 @falador_bar_dialogue;
 
+[opnpc1,risingsun_barmaid3] @falador_bar_dialogue; // EASCape: Tina had no Talk-to script
+[apnpc1,risingsun_barmaid3] @falador_bar_dialogue;
+
 [opnpcu,risingsun_barmaid]
 @falador_pub_barcrawl_use;
 
@@ -28,6 +31,7 @@ if(testbit(%barcrawl, ^risingsun_index) = ^false & last_useitem = barcrawl_card)
 }
 
 [label,falador_bar_dialogue]
+if (~hundred_dwarf_barmaid = true) @hundred_dwarf_barmaid_menu; // EASCape: Recipe for Disaster (hundred_dwarf.rs2)
 if(testbit(%barcrawl, ^risingsun_index) = ^false & inv_total(inv, barcrawl_card) > 0) {
     @risingsun_barmaid_barcrawl_dialogue;
 }

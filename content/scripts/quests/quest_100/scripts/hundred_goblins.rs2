@@ -1,0 +1,305 @@
+// EASCape: Recipe for Disaster: Freeing the Goblin Generals. Words from the OSRS wiki's transcript;
+// the dyes, spices and water that make the ingredients and their messages from the wiki's item
+// pages; lines marked "ours" have no source. The cauldron's explosion is told in dialogue.
+// %100goblin: 10 asked Aris, 20 asked Mudknuckles (charcoal), 30 the cauldron blown up, 40 told
+// the recipe, 50 given the slop. %100goblin_explosion: 1 once the cauldron's gone through the roof.
+
+[proc,hundred_goblins_helping]()(boolean)
+if (%100goblin >= 10 & %100goblinsvisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// ---------------------------------------------------------------- in the dining room
+[oploc1,hundred_goblin1_multi] @hundred_goblin_inspect;
+[oploc1,hundred_goblin2_multi] @hundred_goblin_inspect;
+
+[label,hundred_goblin_inspect]
+if (%goblinquest ! ^gobdip_complete) {
+    mes("You need to have completed Goblin Diplomacy to help them."); // ours: the subquest's requirement
+    return;
+}
+~chatplayer("<p,quiz>Which one of these am I actually meant to be saving?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Hmmm... neither of them were at the previous council meeting.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>The goblins get through leaders so fast I find it hard to keep track. I heard the last leader died during a game of pin the tail on the basilisk.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Well, no worries. I'm sure if you just find something that they'll both eat then that should work. I hope.");
+~chatplayer("<p,neutral>Remembering the last time I dealt with these two, that may be easier said than done.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Well you could try asking some of the other goblins in their village for ideas. You should be able to find it just to the North of Falador, unless they've decided the sky is the wrong colour there or something.");
+if (%100goblin < 10) %100goblin = 10;
+
+[oplocu,hundred_goblin1_multi] @hundred_goblin_feed;
+[oplocu,hundred_goblin2_multi] @hundred_goblin_feed;
+
+[label,hundred_goblin_feed]
+if (last_useitem ! 100goblin_compromise_mush) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, 100goblin_compromise_mush, 1);
+%100goblinsvisible = 0;
+stat_advance(cooking, 10000);
+stat_advance(farming, 10000);
+stat_advance(crafting, 10000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("the Goblin Generals", 100goblin_compromise_mush, "1,000 Cooking, Farming|and Crafting XP");
+
+// ---------------------------------------------------------------- the generals in Goblin Village
+[label,hundred_goblin_generals]
+if (~p_choice2("Can I ask about what food you like?", 1, "So how is life for the goblins?", 2) = 2) {
+    if (npc_type = general_wartface) @goblin_diplomacy_completed;
+    @goblin_diplomacy_completed;
+}
+~chatplayer("<p,quiz>Can I ask about what food you like?");
+~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>What? Why?");
+switch_int (~p_choice3("I need to save you from the Culinaromancer's spell.", 1, "Market research.", 2, "Erm... no particular reason.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>I need to save you from the Culinaromancer's spell.");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>From who's what?");
+        ~chatplayer("<p,neutral>At the council meeting in Lumbridge, there was a Culinaromancer who tried to cast an evil spell on you!");
+        ~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>Lumbridge...?");
+        ~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>Oh yeah. Me remember. Me was goblin representy thingy.");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>No you weren't! That was me!");
+        ~chatplayer("<p,quiz>Never mind that, don't you remember the spell?");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>All me remember is Wartface stealin' chair!");
+        ~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>Weren't your chair. You shouldn' even've been there!");
+        ~chatplayer("<p,neutral>But...");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>I there before you were. So I get chair...");
+        ~chatplayer("<p,neutral>Never mind.");
+    case 2 :
+        ~chatplayer("<p,neutral>Market research.");
+        ~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>But us never use your markets.");
+        ~chatplayer("<p,neutral>Exactly. That's why we need to find out what goblins eat, so we can better cater to your needs.");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>Go away human, we busy.");
+        ~chatplayer("<p,neutral>But it'll only take a minute of your time.");
+        ~chatnpc_specific("General Bentnoze", general_bentnoze, "<p,goblinchat>I said we busy!");
+    case 3 :
+        ~chatplayer("<p,neutral>Erm... no particular reason.");
+        ~chatnpc_specific("General Wartface", general_wartface, "<p,goblinchat>Me see no particular reason to answer you then.");
+}
+
+[label,hundred_village_goblin]
+~chatplayer("<p,neutral>Hey, I need your help. Wartface and Bentnoze have been cursed!");
+~chatnpc("<p,goblinchat>What that got to do with me?");
+~chatplayer("<p,neutral>I need to find a meal they'd both eat.");
+~chatnpc("<p,goblinchat>Me no chef, ask village cook instead.");
+
+// ---------------------------------------------------------------- Mudknuckles
+[opnpc1,goblin_cook]
+~chatnpc("<p,goblinchat>Go away human, me's busy here!");
+~chatplayer("<p,quiz>Busy doing what?");
+~chatnpc("<p,goblinchat>Me's working on new way of cooking. Will be most famous-est goblin cook ever.");
+if (~hundred_goblins_helping = false) {
+    ~chatplayer("<p,neutral>Well, I guess I'll leave you to it."); // ours: not on the quest
+    ~chatnpc("<p,goblinchat>Yes, Mudknuckles too busy to talk.");
+    return;
+}
+if (%100goblin >= 20 & inv_total(inv, charcoal) > 0) {
+    switch_int (~p_choice4("I've got the charcoal you were after.", 1, "What is this new way of cooking?", 2, "I need your help...", 3, "Well, I guess I'll leave you to it.", 4)) {
+        case 1 : @hundred_goblin_explosion;
+        case 2 : @hundred_goblin_newway;
+        case 3 : @hundred_goblin_help;
+        case 4 : @hundred_goblin_leave;
+    }
+}
+switch_int (~p_choice3("What is this new way of cooking?", 1, "I need your help...", 2, "Well, I guess I'll leave you to it.", 3)) {
+    case 1 : @hundred_goblin_newway;
+    case 2 : @hundred_goblin_help;
+    case 3 : @hundred_goblin_leave;
+}
+
+[label,hundred_goblin_leave]
+~chatplayer("<p,neutral>Well, I guess I'll leave you to it.");
+~chatnpc("<p,goblinchat>Yes, Mudknuckles too busy to talk.");
+
+[label,hundred_goblin_newway]
+~chatplayer("<p,quiz>What is this new way of cooking?");
+~chatnpc("<p,goblinchat>Got the idea from the dwarves. Saw them playing with something. They called it a malty canned nun or summat. Used lotsa heat and bright light.");
+~chatnpc("<p,goblinchat>Wouldn't tell Mudknuckles how it worked of course. But I figured it out. Mudknuckles is smarter than them. Now I'm gonna be able to cook better'n anyone. And faster too, yes.");
+if (~p_choice2("I need your help...", 1, "Well, good luck with that.", 2) = 1) @hundred_goblin_help;
+~chatplayer("<p,neutral>Well, good luck with that.");
+~chatnpc("<p,goblinchat>No luck. Will work cos Mudknuckles destined for great things.");
+
+[label,hundred_goblin_help]
+~chatplayer("<p,neutral>I need your help. Wartface and Bentnoze have been trapped by a terrible curse!");
+~chatnpc("<p,goblinchat>Oh, maybe that why Mudknuckles not been shouted at recently.");
+~chatnpc("<p,goblinchat>Hmmm, s'pose me should help. But first Mudknuckles must finish experiment. Unfortunately is missing one vital ingredient.");
+if (~p_choice2("What do you need? Maybe I can get it for you.", 1, "I guess I'll come back later then.", 2) = 2) {
+    ~chatplayer("<p,neutral>I guess I'll come back later then.");
+    return;
+}
+~chatplayer("<p,neutral>What do you need? Maybe I can get it for you.");
+~chatnpc("<p,goblinchat>Is called charcoal. Mudknuckles hear you can get it from shops on Karamja, but the customs officers, they no like goblins any more.");
+~chatnpc("<p,goblinchat>Burnt trees, they good too. Smash 'em up with axes. But Mudknuckles only knows of burnt trees in the wilderness, and Mudknuckles too afraid to go there.");
+~chatplayer("<p,neutral>Ok, I'll see what I can do.");
+if (%100goblin < 20) %100goblin = 20;
+
+[label,hundred_goblin_explosion]
+~chatplayer("<p,happy>I've got the charcoal you were after.");
+~chatnpc("<p,goblinchat>Really? Then no time to lose. Mudknuckles already have everything else. Sulphur 'n stuff.");
+~chatplayer("<p,confused>Sulphur? Er...");
+~chatnpc("<p,goblinchat>Must be moving. Follow me.");
+inv_del(inv, charcoal, 1);
+~chatplayer("<p,confused>Are you sure this is a good idea?");
+~chatnpc("<p,goblinchat>Absolutely, best idea Mudknuckles ever had.");
+~chatplayer("<p,confused>I'm really not convinced that...");
+mes("The cauldron begins to shake.");
+~chatplayer("<p,scared>Should it shake like that?");
+~chatnpc("<p,goblinchat>It fine, it...");
+sound_synth(100_cauldron_explodes, 1, 0);
+~fade_out;
+p_delay(2);
+%100goblin = 30;
+%100goblin_explosion = 1;
+p_telejump(^hundred_goblin_charred_kitchen);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~chatplayer("<p,shock>Mudknuckles?");
+~chatnpc_specific("Goblin Cook", goblin_cook_charred, "<p,goblinchat>It...");
+~chatnpc_specific("Goblin Cook", goblin_cook_charred, "<p,goblinchat>It worked!");
+~chatplayer("<p,shock>It did... ?!");
+
+// after the explosion
+[opnpc1,goblin_cook_charred]
+~chatnpc("<p,goblinchat>You the human who helped me. Mudknuckles is very grateful, will be famous real soon now. Is just collecting results. And so many results! On walls, on ceiling, everywhere!");
+~chatnpc("<p,goblinchat>I thinking of calling it fast food, 'cos of how fast it goes from raw to burnt, see?");
+def_string $third = "I need your help...";
+def_boolean $ready = false;
+if (inv_total(inv, 100goblin_dyed_oranges) > 0 & inv_total(inv, 100goblin_spicey_maggots) > 0 & inv_total(inv, 100goblin_soggy_bread) > 0 & ~hundred_goblins_helping = true & %100goblin >= 40) {
+    $third = "I've got the ingredients we need...";
+    $ready = true;
+}
+switch_int (~p_choice4("That sounds like a great idea.", 1, "Do you think that will sell?", 2, $third, 3, "I'll leave you to your experimentation then.", 4)) {
+    case 1 :
+        ~chatplayer("<p,happy>That sounds like a great idea.");
+        ~chatnpc("<p,goblinchat>You think so? Everyone else think Mudknuckles crazy. Seem think explosive cooking might be dangerous or summat.");
+        ~chatnpc("<p,goblinchat>Can't see why. Not like you gonna get food poisoning. Food is very well cooked.");
+        ~chatplayer("<p,neutral>Er... yes... I'm sure food poisoning was what they were worried about.");
+    case 2 :
+        ~chatplayer("<p,quiz>Do you think that will sell? Like you said, it's burnt.");
+        ~chatnpc("<p,goblinchat>So maybe some imperfections, but fast food will sell. People buy anything when in hurry, even if does taste like sawdust.");
+    case 3 :
+        if ($ready = true) @hundred_goblin_slop;
+        if (~hundred_goblins_helping = false) {
+            ~chatplayer("<p,neutral>I need your help..."); // ours: off the quest
+            ~chatnpc("<p,goblinchat>Mudknuckles too busy collecting results.");
+            return;
+        }
+        if (%100goblin < 40) @hundred_goblin_recipe;
+        if (inv_total(inv, 100goblin_compromise_mush) > 0) {
+            ~chatplayer("<p,quiz>I need your help. Are you sure Wartface and Bentnoze will both eat this dish we've made?");
+            ~chatnpc("<p,goblinchat>Highly unlikely, but is best Mudknuckles can come up with am afraid.");
+            return;
+        }
+        if (%100goblin >= 50) {
+            ~chatplayer("<p,sad>I need your help. I lost the dish you gave to me to save Wartface and Bentnoze.");
+            ~chatnpc("<p,goblinchat>Is ok, Mudknuckles make plenty. Take some more.");
+            ~objbox(100goblin_compromise_mush, "The goblin hands you another bowl of the appealing grey mush.", 250, 0, divide(^objbox_height, 2));
+            inv_add(inv, 100goblin_compromise_mush, 1);
+            return;
+        }
+        ~chatplayer("<p,neutral>I need your help. About that dish that both Wartface and Bentnoze would eat...");
+        switch_int (~p_choice3("What was the problem with the orange slices?", 1, "Why did Bentnoze object to the maggots?", 2, "What did Wartface have against bread?", 3)) {
+            case 1 :
+                ~chatplayer("<p,quiz>What was the problem with the orange slices?");
+                ~chatnpc("<p,goblinchat>Well Bentnoze wanted fruit in the dish. But Wartface, only fruit he eat is sliced oranges, and Bentnoze object to the colour of them.");
+            case 2 :
+                ~chatplayer("<p,quiz>Why did Bentnoze object to the maggots?");
+                ~chatnpc("<p,goblinchat>Bentnoze not like maggots, say they're too bland. Would only eat them if they spicier.");
+            case 3 :
+                ~chatplayer("<p,quiz>What did Wartface have against bread?");
+                ~chatnpc("<p,goblinchat>Wartface think bread too crunchy. He prefer his food to be soggier.");
+        }
+    case 4 : ~chatplayer("<p,neutral>I'll leave you to your experimentation then.");
+}
+
+[label,hundred_goblin_recipe]
+~chatplayer("<p,neutral>I need your help...");
+~chatnpc("<p,goblinchat>Yes, yes, Mudknuckles very grateful, how can I help?");
+~chatplayer("<p,neutral>Your leaders, Wartface and Bentnoze, have been trapped by a terrible curse!");
+~chatnpc("<p,goblinchat>So that's why Mudknuckles not been shouted at recently. But how can I be helping? Cooking and magic no mix.");
+~chatnpc("<p,goblinchat>Tried that before, Mudknuckles had some very angry wizards at door after trying to burn staffs to cook on.");
+~chatplayer("<p,neutral>I need to create a dish that both of the Generals would eat to save them from the curse.");
+~chatnpc("<p,goblinchat>Oh...");
+~chatplayer("<p,quiz>What?");
+~chatnpc("<p,goblinchat>Is impossible. Mudknuckles try it before, but their requests, they make no sense.");
+~chatplayer("<p,quiz>Why, what did they want?");
+~chatnpc("<p,goblinchat>Well Bentnoze wanted fruit in the dish. But Wartface, only fruit he eat is sliced oranges.");
+~chatplayer("<p,neutral>That doesn't sound too bad.");
+~chatnpc("<p,goblinchat>Maybe, but Bentnoze objects to the colour.");
+~chatplayer("<p,quiz>Anything else?");
+~chatnpc("<p,goblinchat>Wartface, he want some nice juicy maggots.");
+~chatplayer("<p,quiz>Where can I get maggots?");
+~chatnpc("<p,goblinchat>Humans use them all the time for fishing. Mudknuckles think this a crazy waste of maggots mind, but each to their own.");
+~chatplayer("<p,quiz>Each to their own indeed, but what's the problem?");
+~chatnpc("<p,goblinchat>Bentnoze not like maggots, say they're too bland. Would only eat them if they spicier.");
+~chatplayer("<p,quiz>Ok, is there anything other than orange slices and maggots?");
+~chatnpc("<p,goblinchat>Bentnoze asked for some bread in the mix.");
+~chatplayer("<p,quiz>Let me guess, Wartface complained right?");
+~chatnpc("<p,goblinchat>Yep, Wartface think bread too crunchy. He prefer slimier soggier food, like the maggots.");
+~chatplayer("<p,quiz>So let me get this straight. I need orange slices which aren't orange, maggots that aren't bland, and bread which isn't crunchy?");
+~chatnpc("<p,goblinchat>Yep, 'bout sums it up. Bring 'em all to me and Mudknuckles will make suitable dish.");
+~chatplayer("<p,neutral>Wonderful. Well, I guess I'll have to see what I can do.");
+%100goblin = 40;
+
+[label,hundred_goblin_slop]
+~chatplayer("<p,neutral>I've got the ingredients we need to make a meal for Wartface and Bentnoze.");
+~chatnpc("<p,goblinchat>Mudknuckles is confused. Ingredients make no sense. But give 'em here and Mudknuckles make what you need.");
+inv_del(inv, 100goblin_dyed_oranges, 1);
+inv_del(inv, 100goblin_spicey_maggots, 1);
+inv_del(inv, 100goblin_soggy_bread, 1);
+~chatnpc("<p,goblinchat>There you go, but don't go blaming Mudknuckles if doesn't work.");
+~objbox(100goblin_compromise_mush, "The goblin hands you a bowl containing some kind of indescribable grey mush.", 250, 0, divide(^objbox_height, 2));
+inv_add(inv, 100goblin_compromise_mush, 1);
+%100goblin = 50;
+~chatplayer("<p,happy>Great, thanks!");
+
+// ---------------------------------------------------------------- the ladders (ours: where they lead)
+[oploc1,100_goblin_ladder_down]
+anim(human_climbing_down, 0);
+p_delay(1);
+if (%100goblin_explosion = 1) p_telejump(^hundred_goblin_charred_kitchen);
+else p_telejump(^hundred_goblin_kitchen);
+
+[oploc1,100_goblin_ladder_up] @hundred_goblin_up;
+[oploc1,100_goblin_ladder_up_charred] @hundred_goblin_up;
+[label,hundred_goblin_up]
+anim(human_climbing, 0);
+p_delay(1);
+p_telejump(^hundred_goblin_village_ladder);
+
+// ---------------------------------------------------------------- the ingredients
+[label,hundred_dye_oranges](obj $dye)
+if ($dye ! purpledye & $dye ! bluedye & $dye ! greendye) {
+    mes("I doubt this dye will affect the colour significantly.");
+    mes("Maybe a different colour of dye would be more effective.");
+    return;
+}
+inv_del(inv, $dye, 1);
+inv_del(inv, orange_slices, 1);
+inv_add(inv, 100goblin_dyed_oranges, 1);
+mes("You add the dye to the oranges. They turn an appealing greyish brown colour.");
+
+[label,hundred_spice_maggots](obj $spice)
+inv_del(inv, $spice, 1);
+inv_del(inv, fishing_bait, 1);
+inv_add(inv, 100goblin_spicey_maggots, 1);
+mes("You add a light dusting of spices to the maggots.");
+
+[opheldu,fishing_bait]
+switch_obj (last_useitem) {
+    case spicespot, gnome_spice : @hundred_spice_maggots(last_useitem);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,hundred_soggy_bread](obj $water, namedobj $empty)
+inv_del(inv, $water, 1);
+inv_add(inv, $empty, 1);
+inv_del(inv, bread, 1);
+inv_add(inv, 100goblin_soggy_bread, 1);
+mes("You soak the nice crispy bread until it becomes slimy to the touch.");
+
+[opheldu,bread]
+switch_obj (last_useitem) {
+    case bucket_water : @hundred_soggy_bread(bucket_water, bucket_empty);
+    case jug_water : @hundred_soggy_bread(jug_water, jug_empty);
+    case default : ~displaymessage(^dm_default);
+}
