@@ -76,3 +76,14 @@ switch_int ($n) {
     case 8 : p_telejump(^myq2_tomb_outside);
     case default : mes("::~myq2tele 1-8");
 }
+
+// ::~ttevent <kind> - Temple Trekking: on a trek, start an event of this kind now (1 combat,
+// 2 Abidor Crank, 3 the bridge, 4 the river)
+[debugproc,ttevent](int $kind)
+if (p_finduid(uid) = false) return;
+if (%tt_follower = 0) {
+    mes("Start a trek first.");
+    return;
+}
+~tt_clear;
+@tt_start_event($kind);

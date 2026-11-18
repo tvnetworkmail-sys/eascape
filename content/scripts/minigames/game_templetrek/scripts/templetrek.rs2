@@ -1,0 +1,753 @@
+// EASCape: Temple Trekking (the update of 28 March 2006): escort one of Burgh de Rott's people to
+// Paterdomus. Followers' words from the OSRS wiki's transcripts of them; Abidor Crank's, the bridge's
+// and the river's from the RuneScape wiki's Temple Trekking transcript. Points and rewards follow the
+// OSRS wiki (Temple Trekking: Trek points and the reward formula). Monster stats from Void and the
+// OSRS wiki (the npcs' configs).
+// Ours, with no route-map interface: a trek is three events (the OSRS wiki: "most often 3"), each
+// picked at random (combat, Abidor Crank, the bridge or the river), in the cache's event map squares;
+// the follower's hitpoints and food (each heals 10); monsters going for the follower now and then;
+// the reward chosen in a dialogue. Not here: the bog, the boat's tentacles, the campsite, nail beasts
+// and Burgh de Rott Ramble (2007).
+
+// ---------------------------------------------------------------- the followers
+[opnpc1,templetrek_multi_retired_soldier_easy] @tt_follower_talk(1);
+[opnpc1,templetrek_multi_retired_man_easy] @tt_follower_talk(2);
+[opnpc1,templetrek_multi_woman_med] @tt_follower_talk(3);
+[opnpc1,templetrek_multi_man_med] @tt_follower_talk(4);
+[opnpc1,templetrek_multi_child_hard] @tt_follower_talk(5);
+[opnpc1,templetrek_multi_oldman_hard] @tt_follower_talk(6);
+[opnpcu,templetrek_multi_retired_soldier_easy] @tt_follower_food;
+[opnpcu,templetrek_multi_retired_man_easy] @tt_follower_food;
+[opnpcu,templetrek_multi_woman_med] @tt_follower_food;
+[opnpcu,templetrek_multi_man_med] @tt_follower_food;
+[opnpcu,templetrek_multi_child_hard] @tt_follower_food;
+[opnpcu,templetrek_multi_oldman_hard] @tt_follower_food;
+
+[proc,tt_follower_type](int $f)(npc)
+switch_int ($f) {
+    case 1 : return(templetrek_retired_soldier_easy);
+    case 2 : return(templetrek_retired_man_easy);
+    case 3 : return(templetrek_woman_med);
+    case 4 : return(templetrek_man_med);
+    case 5 : return(templetrek_child_hard);
+}
+return(templetrek_oldman_hard);
+
+// monsters in a combat event: easy 3, medium 4, hard 5 (OSRS wiki)
+[proc,tt_monster_count](int $f)(int)
+if ($f <= 2) return(3);
+if ($f <= 4) return(4);
+return(5);
+
+[label,tt_follower_talk](int $f)
+~chatplayer("<p,neutral>Hello there. What are you doing here?");
+~chatnpc("<p,neutral>I'm waiting here hoping that someone can guide me to the Paterdomus, the temple on the Salve.");
+def_int $op = ~p_choice5("Where is Paterdomus?", 1, "Why do you want to go to Paterdomus?", 2, "Could you defend yourself if we met enemies...?", 3, "I can take you to Paterdomus.", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>Where is Paterdomus?");
+            ~chatnpc("<p,neutral>Oh, Paterdomus is that rather impressive looking temple on the Salve... I'm sure you must have passed it on your way into Morytania.");
+        case 2 :
+            ~chatplayer("<p,neutral>Why do you want to go to Paterdomus?");
+            ~chatnpc("<p,neutral>I'm hoping to get back to civilisation and see what the lands of Misthalin look like.");
+        case 3 :
+            ~chatplayer("<p,neutral>Could you defend yourself if we met enemies on the route to Paterdomus?");
+            if ($f <= 2) ~chatnpc("<p,neutral>Let's just say that I'm somewhat experienced and I'm happy to take on my fair share of bad guys. You don't need to worry about that.");
+            else if ($f <= 4) ~chatnpc("<p,neutral>I can defend myself somewhat if we run into trouble...yes, but let's hope that we don't, eh!");
+            else ~chatnpc("<p,scared>What sort of guide are you? I'm pretty healthy, but you'll have to protect me else I'll be sure to die... Oh, I do hope you can manage that.");
+        case 4 :
+            ~chatplayer("<p,neutral>I can take you to Paterdomus.");
+            @tt_follower_go($f);
+    }
+    $op = ~p_choice5("Where is Paterdomus?", 1, "Why do you want to go to Paterdomus?", 2, "Could you defend yourself if we met enemies...?", 3, "I can take you to Paterdomus.", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,tt_follower_go](int $f)
+if (%myreque_2_quest < ^myq2_complete) {
+    ~chatnpc("<p,neutral>I don't think you know your way around Morytania well enough yet."); // ours (In Aid of the Myreque is needed)
+    return;
+}
+~chatnpc("<p,happy>Oh really? That would be great! I'll give you a small reward once we reach our destination.");
+~chatnpc("<p,neutral>Ok, which route should we take?");
+// ours: the choice's words (the OSRS wiki: 1 the long way through Mort Myre, 2 along the Salve, 3 through Canifis and the Hollows)
+def_int $route = ~p_choice4("Route 1, the long way round through the swamp (easiest).", 1, "Route 2, along the River Salve.", 2, "Route 3, the shortcut through the Hollows (hardest).", 3, "Not right now actually.", 0);
+if ($route = 0) {
+    ~chatplayer("<p,neutral>Not right now actually.");
+    return;
+}
+if_close;
+%tt_trek = 0;
+%tt_follower = $f;
+%tt_route = $route;
+%tt_events = ^tt_events_per_trek;
+%tt_event = 0;
+%templetrek_npc_point_value = 0;
+@tt_next_event;
+
+// food for the follower before setting off (OSRS wiki: up to 15, the follower's backpack)
+[proc,tt_food_ok](obj $obj)(boolean)
+switch_obj ($obj) {
+    case snail_corpse_cooked1, snail_corpse_cooked2, snail_corpse_cooked3, salmon, stew, mort_slimey_eel_cooked, cooked_meat, tuna, hundred_pirate_fishcake, lobster, bass, redberry_pie, apple_pie, garden_pie, fish_pie, cake, chocolate_cake, sweetcorn_cooked, potato_butter : return(true);
+}
+return(false);
+
+[label,tt_follower_food]
+def_obj $food = last_useitem;
+if (~tt_food_ok($food) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatnpc("<p,happy>Ah, so you want to give me some supplies, eh? Let me just open me backpack.");
+def_int $room = calc(^tt_food_max - %templetrek_multi_npc_food_give);
+if ($room < 1) {
+    mes("Their backpack is full of food."); // ours
+    return;
+}
+def_int $give = min($room, inv_total(inv, $food));
+inv_del(inv, $food, $give);
+%templetrek_multi_npc_food_give = calc(%templetrek_multi_npc_food_give + $give);
+mes("You give them <tostring($give)> food; they have <tostring(%templetrek_multi_npc_food_give)> of <tostring(^tt_food_max)>."); // ours: in place of the follower inventory
+
+// ---------------------------------------------------------------- the trek
+[label,tt_next_event]
+~tt_clear;
+if (%tt_event >= %tt_events) @tt_finish;
+%tt_event = calc(%tt_event + 1);
+%tt_done = 0;
+%tt_left = 0;
+%tt_killed = 0;
+// ours: which event (combat most often)
+def_int $r = random(10);
+def_int $kind = ^tt_kind_combat;
+if ($r = 6) $kind = ^tt_kind_abidor;
+if ($r = 7 | $r = 8) $kind = ^tt_kind_bridge;
+if ($r = 9) $kind = ^tt_kind_river;
+@tt_start_event($kind);
+
+[label,tt_start_event](int $kind)
+%tt_kind = $kind;
+%tt_arena = random(8);
+def_npc $who = ~tt_follower_type(%tt_follower);
+if ($kind = ^tt_kind_bridge) {
+    p_telejump(^tt_bridge_start);
+    ~tt_spawn_follower(^tt_bridge_follower, $who);
+    npc_add(^tt_bridge_zombie, templetrek_zombie, 1000);
+    %npc_attacking_uid = uid;
+    // ours: the gap in the bridge can't be walked over until it's mended
+    loc_add(0_32_78_42_47, inviswall, 0, centrepiece_straight, 1000);
+    loc_add(0_32_78_42_48, inviswall, 0, centrepiece_straight, 1000);
+    ~chatnpc_specific(nc_name($who), $who, "<p,sad>Blimey! Looks like we're going to have to go back to Burgh de Rott. We can't get over that bridge!");
+    ~chatplayer("<p,neutral>Oh, I'm sure we can find a way!");
+} else if ($kind = ^tt_kind_river) {
+    p_telejump(^tt_river_start);
+    ~tt_spawn_follower(^tt_river_follower, $who);
+    loc_add(^tt_river_rucksack, templetrek_swing_rucksack, 0, centrepiece_straight, 1000);
+    ~chatnpc_specific(nc_name($who), $who, "<p,sad>Well that's torn it... Looks like we can't get over this bog. We'll have to go back to Burgh de Rott.");
+    ~chatplayer("<p,neutral>Oh, I'm sure we can find a way through!");
+} else {
+    p_telejump(~tt_arena_coord(%tt_arena, 0, 0));
+    ~tt_spawn_follower(~tt_arena_coord(%tt_arena, 1, 0), $who);
+    if ($kind = ^tt_kind_abidor) {
+        npc_add(~tt_arena_coord(%tt_arena, 0, 6), templetrek_good_samaritan, 1000);
+        %npc_attacking_uid = uid;
+    } else {
+        ~tt_spawn_monsters;
+    }
+}
+queue(tt_engage, 3, 0);
+softtimer(tt_watch, 2);
+
+// the four combat squares (31, 34, 35 and 36 of row 78) have the same two arenas, west and east
+[proc,tt_arena_coord](int $arena, int $dx, int $dz)(coord)
+def_int $square = divide($arena, 2);
+def_int $x = 15;
+if (modulo($arena, 2) = 1) $x = 46;
+def_int $sx = 0;
+if ($square = 1) $sx = 192;
+if ($square = 2) $sx = 256;
+if ($square = 3) $sx = 320;
+return(movecoord(0_31_78_0_38, calc($sx + $x + $dx), 0, $dz));
+
+[proc,tt_spawn_follower](coord $c, npc $who)
+npc_add($c, $who, 1000);
+%npc_attacking_uid = uid;
+
+[proc,tt_monster](int $route)(npc)
+def_int $t = random(5);
+switch_int ($t) {
+    case 0 :
+        if ($route = 1) return(templetrek_vampire_1);
+        if ($route = 2) return(templetrek_vampire_2);
+        return(templetrek_vampire_3);
+    case 1 :
+        if ($route = 1) return(templetrek_ghast_vis_1);
+        if ($route = 2) return(templetrek_ghast_vis_2);
+        return(templetrek_ghast_vis_3);
+    case 2 :
+        if ($route = 1) return(templetrek_snake_1);
+        if ($route = 2) return(templetrek_snake_2);
+        return(templetrek_snake_3);
+    case 3 :
+        if ($route = 1) return(templetrek_giantsnail_1);
+        if ($route = 2) return(templetrek_giantsnail_2);
+        return(templetrek_giantsnail_3);
+}
+if ($route = 1) return(templetrek_shade_1);
+if ($route = 2) return(templetrek_shade_2);
+return(templetrek_shade_3);
+
+[proc,tt_spawn_monsters]
+def_npc $type = ~tt_monster(%tt_route);
+def_int $count = ~tt_monster_count(%tt_follower);
+%tt_left = $count;
+def_int $n = 0;
+while ($n < $count) {
+    def_int $dx = 0;
+    def_int $dz = 12;
+    switch_int ($n) {
+        case 1 : $dx = -3;
+        case 2 : $dx = 3;
+        case 3 :
+            $dx = -2;
+            $dz = 14;
+        case 4 :
+            $dx = 2;
+            $dz = 14;
+    }
+    npc_add(~tt_arena_coord(%tt_arena, $dx, $dz), $type, 1000);
+    %npc_attacking_uid = uid;
+    $n = calc($n + 1);
+}
+if (npc_find(~tt_arena_coord(%tt_arena, 1, 0), ~tt_follower_type(%tt_follower), 3, 0) = true) {
+    if (compare(nc_name($type), "Ghast") = 0) npc_say("Ghasts! Please don't let them take me."); // ours
+}
+
+// sets the follower following you and the monsters on you
+[queue,tt_engage](int $unused)
+npc_findallany(coord, 25, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) {
+        if (npc_type = ~tt_follower_type(%tt_follower)) {
+            npc_settimer(3);
+            npc_setmode(playerfollow);
+        } else if (npc_type ! templetrek_good_samaritan) {
+            npc_setmode(opplayer2);
+        }
+    }
+}
+
+[proc,tt_clear]
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) npc_del;
+}
+
+[proc,tt_in_trek]()(boolean)
+if (inzone(0_31_78_0_0, 0_37_78_63_63, coord) = true) return(true);
+return(false);
+
+// teleporting out, or dying, ends the trek
+[softtimer,tt_watch]
+if (%tt_follower = 0) {
+    clearsofttimer(tt_watch);
+    return;
+}
+if (~tt_in_trek = true & stat(hitpoints) > 0) return;
+clearsofttimer(tt_watch);
+queue(tt_abandoned, 0, 0);
+
+[queue,tt_abandoned](int $unused)
+~tt_clear;
+%tt_trek = 0;
+
+[proc,tt_login]
+if (~tt_in_trek = false) return;
+%tt_trek = 0;
+p_telejump(^tt_burgh);
+
+[proc,tt_add_points](int $points)
+%templetrek_npc_point_value = min(^tt_points_max, calc(%templetrek_npc_point_value + $points));
+
+// ---------------------------------------------------------------- the paths out of an event
+[oploc1,templetrek_swamp_success_path] mes("A path leading out of this swampy dead end.");
+[oploc1,templetrek_swamp_fail_path] mes("A path leading out of Mort Myre, you'll be running away if you go down here.");
+
+[oploc2,templetrek_swamp_success_path]
+if (%tt_follower = 0) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%tt_done = 0) {
+    mes("You can't leave your follower behind; deal with what's here first."); // ours
+    return;
+}
+@tt_next_event;
+
+[oploc2,templetrek_swamp_evade_path]
+if (%tt_follower = 0) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%tt_done = 1) @tt_next_event;
+// route 1 may evade any event; route 2 once half the monsters are dead; route 3 never (OSRS wiki)
+if (%tt_route = 3 | (%tt_route = 2 & calc(%tt_killed * 2) < calc(%tt_killed + %tt_left))) {
+    mes("You can't evade this event; you'll have to deal with it."); // ours
+    return;
+}
+@tt_next_event;
+
+[oploc2,templetrek_swamp_fail_path]
+if (%tt_follower = 0) {
+    p_telejump(^tt_burgh);
+    return;
+}
+clearsofttimer(tt_watch);
+~tt_clear;
+%tt_trek = 0;
+p_telejump(^tt_burgh);
+mes("You run away, back to Burgh de Rott, leaving the trek."); // ours
+
+[label,tt_finish]
+def_npc $who = ~tt_follower_type(%tt_follower);
+def_int $route = %tt_route;
+clearsofttimer(tt_watch);
+%tt_trek = 0;
+%templetrek_npc_point_value = max(^tt_points_min, %templetrek_npc_point_value);
+p_telejump(^tt_paterdomus);
+~chatnpc_specific(nc_name($who), $who, "<p,happy>Many thanks for getting me safely to the temple. Here's your reward.");
+def_namedobj $token = templetrek_blue_token;
+if ($route = 2) $token = templetrek_yellow_token;
+if ($route = 3) $token = templetrek_red_token;
+if (inv_freespace(inv) > 0) inv_add(inv, $token, 1);
+else obj_add(coord, $token, 1, ^lootdrop_duration);
+~objbox($token, "<nc_name($who)> gives you a reward token!", 250, 0, 0);
+
+// ---------------------------------------------------------------- combat
+[proc,tt_is_trek_monster](npc $type)(boolean)
+switch_npc ($type) {
+    case templetrek_vampire_1, templetrek_vampire_2, templetrek_vampire_3, templetrek_ghast_vis_1, templetrek_ghast_vis_2, templetrek_ghast_vis_3,
+        templetrek_snake_1, templetrek_snake_2, templetrek_snake_3, templetrek_giantsnail_1, templetrek_giantsnail_2, templetrek_giantsnail_3,
+        templetrek_shade_1, templetrek_shade_2, templetrek_shade_3, templetrek_zombie : return(true);
+}
+return(false);
+
+[opnpc2,templetrek_vampire_1] @tt_attack;
+[opnpc2,templetrek_vampire_2] @tt_attack;
+[opnpc2,templetrek_vampire_3] @tt_attack;
+[opnpc2,templetrek_ghast_vis_1] @tt_attack;
+[opnpc2,templetrek_ghast_vis_2] @tt_attack;
+[opnpc2,templetrek_ghast_vis_3] @tt_attack;
+[opnpc2,templetrek_snake_1] @tt_attack;
+[opnpc2,templetrek_snake_2] @tt_attack;
+[opnpc2,templetrek_snake_3] @tt_attack;
+[opnpc2,templetrek_giantsnail_1] @tt_attack;
+[opnpc2,templetrek_giantsnail_2] @tt_attack;
+[opnpc2,templetrek_giantsnail_3] @tt_attack;
+[opnpc2,templetrek_shade_1] @tt_attack;
+[opnpc2,templetrek_shade_2] @tt_attack;
+[opnpc2,templetrek_shade_3] @tt_attack;
+[opnpc2,templetrek_zombie] @tt_attack;
+
+[label,tt_attack]
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return;
+}
+@player_combat_start;
+
+[ai_queue3,templetrek_vampire_1] @tt_monster_died;
+[ai_queue3,templetrek_vampire_2] @tt_monster_died;
+[ai_queue3,templetrek_vampire_3] @tt_monster_died;
+[ai_queue3,templetrek_ghast_vis_1] @tt_monster_died;
+[ai_queue3,templetrek_ghast_vis_2] @tt_monster_died;
+[ai_queue3,templetrek_ghast_vis_3] @tt_monster_died;
+[ai_queue3,templetrek_snake_1] @tt_monster_died;
+[ai_queue3,templetrek_snake_2] @tt_monster_died;
+[ai_queue3,templetrek_snake_3] @tt_monster_died;
+[ai_queue3,templetrek_giantsnail_1] @tt_monster_died;
+[ai_queue3,templetrek_giantsnail_2] @tt_monster_died;
+[ai_queue3,templetrek_giantsnail_3] @tt_monster_died;
+[ai_queue3,templetrek_shade_1] @tt_monster_died;
+[ai_queue3,templetrek_shade_2] @tt_monster_died;
+[ai_queue3,templetrek_shade_3] @tt_monster_died;
+
+[label,tt_monster_died]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(tt_monster_down, 0, 0);
+
+[queue,tt_monster_down](int $unused)
+if (%tt_follower = 0 | %tt_kind ! ^tt_kind_combat) return;
+%tt_left = max(0, calc(%tt_left - 1));
+%tt_killed = calc(%tt_killed + 1);
+if (%tt_route = 1) ~tt_add_points(325);
+else if (%tt_route = 2) ~tt_add_points(625);
+else ~tt_add_points(1125);
+if (%tt_left > 0) return;
+%tt_done = 1;
+mes("The way ahead is clear; you can continue the trek."); // ours
+
+// the zombie by the bridge drops a bronze axe (OSRS wiki)
+[ai_queue3,templetrek_zombie]
+def_coord $where = npc_coord;
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+obj_add($where, bronze_axe, 1, ^lootdrop_duration);
+
+// the follower: follows you; monsters go for them now and then; they eat when hurt
+[ai_timer,templetrek_retired_soldier_easy] @tt_follower_tick;
+[ai_timer,templetrek_retired_man_easy] @tt_follower_tick;
+[ai_timer,templetrek_woman_med] @tt_follower_tick;
+[ai_timer,templetrek_man_med] @tt_follower_tick;
+[ai_timer,templetrek_child_hard] @tt_follower_tick;
+[ai_timer,templetrek_oldman_hard] @tt_follower_tick;
+
+[label,tt_follower_tick]
+if (finduid(%npc_attacking_uid) = false) {
+    npc_del;
+    return;
+}
+if (npc_getmode ! playerfollow) npc_setmode(playerfollow);
+npc_huntall(npc_coord, 12, 0);
+while (.npc_findnext = true) {
+    if (.%npc_attacking_uid = %npc_attacking_uid & ~tt_is_trek_monster(.npc_type) = true & .npc_type ! templetrek_zombie) {
+        if (distance(.npc_coord, npc_coord) > 1) {
+            if (random(4) = 0) .npc_tele(map_findsquare(npc_coord, 1, 1, ^map_findsquare_lineofwalk));
+        } else if (random(3) = 0) {
+            .npc_facesquare(npc_coord);
+            @tt_follower_hit(randominc(nc_param(.npc_type, eascape_maxhit)));
+        }
+    }
+}
+
+[label,tt_follower_hit](int $damage)
+if ($damage < 1) {
+    npc_damage(^hitmark_block, 0);
+    return;
+}
+if ($damage >= npc_stat(hitpoints)) {
+    npc_say("Arrgghhh!"); // ours
+    npc_del;
+    queue(tt_follower_died, 0, 0);
+    return;
+}
+npc_damage(^hitmark_damage, $damage);
+if (calc(npc_stat(hitpoints) * 5) < calc(npc_basestat(hitpoints) * 2) & %templetrek_multi_npc_food_give > 0) {
+    npc_statheal(hitpoints, 10, 0);
+    queue(tt_follower_ate, 0, 0);
+}
+
+[queue,tt_follower_ate](int $unused)
+%templetrek_multi_npc_food_give = max(0, calc(%templetrek_multi_npc_food_give - 1));
+
+[queue,tt_follower_died](int $unused)
+clearsofttimer(tt_watch);
+~tt_clear;
+%tt_trek = 0;
+~mesbox("Your follower has been killed. The trek has failed."); // ours
+p_telejump(^tt_burgh);
+
+[opnpc1,templetrek_retired_soldier_easy] @tt_follower_chat;
+[opnpc1,templetrek_retired_man_easy] @tt_follower_chat;
+[opnpc1,templetrek_woman_med] @tt_follower_chat;
+[opnpc1,templetrek_man_med] @tt_follower_chat;
+[opnpc1,templetrek_child_hard] @tt_follower_chat;
+[opnpc1,templetrek_oldman_hard] @tt_follower_chat;
+
+[label,tt_follower_chat]
+if (%npc_attacking_uid ! uid) return;
+if (%tt_kind = ^tt_kind_combat & %tt_left > 0) {
+    ~chatnpc("<p,scared>Can't you see I'm being attacked...?");
+    return;
+}
+switch_int (random(5)) {
+    case 0 : ~chatnpc("<p,sad>Oh, I hate this trip, but it's better than staying in Burgh de Rott.");
+    case 1 : ~chatnpc("<p,scared>It's scary here...let's get going!");
+    case 2 : ~chatnpc("<p,neutral>When are we going to get to Paterdomus?");
+    case 3 : ~chatnpc("<p,neutral>We don't have all day to stand around chatting; let's press on.");
+    case 4 : ~chatnpc("<p,neutral>Do you visit Paterdomus often? You seem to know the route well.");
+}
+
+[opnpcu,templetrek_retired_soldier_easy] @tt_follower_feed;
+[opnpcu,templetrek_retired_man_easy] @tt_follower_feed;
+[opnpcu,templetrek_woman_med] @tt_follower_feed;
+[opnpcu,templetrek_man_med] @tt_follower_feed;
+[opnpcu,templetrek_child_hard] @tt_follower_feed;
+[opnpcu,templetrek_oldman_hard] @tt_follower_feed;
+
+// during a trek any food heals 10 (OSRS wiki)
+[label,tt_follower_feed]
+if (%npc_attacking_uid ! uid | ~is_food_item(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (npc_stat(hitpoints) >= npc_basestat(hitpoints)) {
+    mes("They don't need feeding right now."); // ours
+    return;
+}
+inv_del(inv, last_useitem, 1);
+npc_statheal(hitpoints, 10, 0);
+npc_say("Thanks, I'll get this down my neck.");
+
+// ---------------------------------------------------------------- Abidor Crank
+[opnpc1,templetrek_good_samaritan]
+if (%npc_attacking_uid ! uid) return;
+~chatplayer("<p,neutral>Hello there...");
+if (%tt_done = 1) {
+    ~chatnpc("<p,neutral>Oh, hello again... Sorry my friend, but I've nothing more to offer than my hope that you make it through the Myre in one piece.");
+    return;
+}
+~chatnpc("<p,happy>Ah, hello there, my friend. You look like you could do with some assistance.");
+~chatplayer("<p,confused>We do?");
+~chatnpc("<p,happy>Yes, of course... Here, prepare yourselves!");
+npc_anim(human_casting, 0);
+// 15 hitpoints and up to 12 Defence (OSRS wiki: depending on your Defence level, ours: a tenth of it, at least 3, at most 12)
+stat_heal(hitpoints, 15, 0);
+def_int $boost = max(3, min(12, divide(stat_base(defence), 10)));
+if (stat(defence) < calc(stat_base(defence) + $boost)) stat_boost(defence, $boost, 0);
+def_int $rotten = inv_total(inv, rotten_food);
+if ($rotten > 0) {
+    inv_del(inv, rotten_food, $rotten);
+    inv_add(inv, stew, $rotten);
+    mes("Your rotten food has been changed into stew.");
+}
+%tt_done = 1;
+~chatnpc("<p,happy>There you go. Right, I must be off now. Good luck with your travels.");
+if (npc_find(coord, ~tt_follower_type(%tt_follower), 8, 0) = true) npc_statheal(hitpoints, 15, 0);
+
+// ---------------------------------------------------------------- the bridge
+[oploc1,templetrek_bridge_broken] ~mesbox("I could mend this if I had some wood...");
+[oploc1,templetrek_bridge_fixed_1] mes("This bridge is partially broken.");
+[oploc1,templetrek_bridge_fixed_2] mes("This bridge is partially broken.");
+[oploc1,templetrek_bridge_fixed_3] mes("This bridge can be traversed safely.");
+[oplocu,templetrek_bridge_broken] @tt_bridge_mend(templetrek_bridge_fixed_1);
+[oplocu,templetrek_bridge_fixed_1] @tt_bridge_mend(templetrek_bridge_fixed_2);
+[oplocu,templetrek_bridge_fixed_2] @tt_bridge_mend(templetrek_bridge_fixed_3);
+
+[label,tt_bridge_mend](loc $next)
+def_obj $wood = last_useitem;
+if (string_indexof_string(lowercase(oc_name($wood)), "logs") = -1 & $wood ! woodplank) {
+    ~doubleobjbox(logs, woodplank, "You'll need to find some logs or obtain a plank of wood to fix this.", 250);
+    return;
+}
+// a hammer, or an axe in your hand (OSRS wiki)
+if (inv_total(inv, hammer) < 1 & oc_category(inv_getobj(worn, ^wearpos_rhand)) ! weapon_axe) {
+    mes("You need a hammer, or an axe in your hand, to mend the bridge."); // ours
+    return;
+}
+inv_del(inv, $wood, 1);
+anim(human_hammer_hit, 0);
+if ($wood = woodplank) mes("You place a beam down over the shaky wooden support struts.");
+else mes("You place a log down over the shaky wooden support struts.");
+p_delay(1);
+mes("You carefully repair this section of the bridge.");
+loc_change($next, 300);
+if ($next = templetrek_bridge_fixed_3 & %tt_kind = ^tt_kind_bridge & %tt_done = 0) {
+    %tt_done = 1;
+    ~tt_add_points(^tt_points_puzzle);
+}
+
+[oploc2,templetrek_bridge_fixed_3]
+p_telejump(^tt_bridge_far);
+if (npc_find(coord, ~tt_follower_type(%tt_follower), 20, 0) = true) npc_tele(map_findsquare(^tt_bridge_far, 1, 1, ^map_findsquare_lineofwalk));
+
+// ---------------------------------------------------------------- the river
+[oploc1,templetrek_swing_rucksack]
+if (inv_total(inv, knife) > 0) {
+    mes("There's nothing else of use in the backpack."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+inv_add(inv, knife, 1);
+mes("You find a knife in the backpack."); // ours
+
+[oplocu,templetrek_swamptree_small_vines]
+if (last_useitem ! knife) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+anim(human_pickuptable, 0);
+inv_add(inv, templetrek_short_vine, 1);
+mes("You slice a bit of vine off the tree.");
+if (inv_total(inv, templetrek_short_vine) < 3) mes("You need at least 3 vines in order to make a long vine.");
+[oplocu,templetrek_swamptree_small_empty]
+if (last_useitem ! knife) {
+    ~displaymessage(^dm_default);
+    return;
+}
+mes("You don't see what you would gain from that, there is nothing left on this tree.");
+
+[opheldu,templetrek_short_vine]
+if (last_useitem ! templetrek_short_vine & last_item ! templetrek_short_vine) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, templetrek_short_vine) < 3) {
+    mes("You need at least 3 vines in order to make a long vine.");
+    return;
+}
+inv_del(inv, templetrek_short_vine, 3);
+inv_add(inv, templetrek_long_vine, 1);
+~objbox(templetrek_long_vine, "You twist the vines together to make a long vine.", 250, 0, 0);
+
+[oploc1,templetrek_swamptree_branch] mes("You'll need some sort of rope to lasso around the branch. Perhaps there is something nearby you can use?");
+[oplocu,templetrek_swamptree_branch]
+if (last_useitem ! templetrek_long_vine) {
+    mes("You'll need some sort of rope to lasso around the branch. Perhaps there is something nearby you can use?");
+    return;
+}
+inv_del(inv, templetrek_long_vine, 1);
+anim(human_throw, 0);
+mes("You throw the vine up to the branch; it wraps around the branch.");
+loc_change(templetrek_swamptree_branch_vine, 300);
+
+[oploc1,templetrek_swamptree_branch_vine] mes("A long vine hanging from a branch.");
+[oploc2,templetrek_swamptree_branch_vine]
+if (coordz(coord) >= coordz(loc_coord)) {
+    mes("The swing is just too far away!");
+    return;
+}
+p_telejump(^tt_river_far);
+say("It's safe, come across!");
+if (npc_find(coord, ~tt_follower_type(%tt_follower), 20, 0) = true) {
+    npc_tele(map_findsquare(^tt_river_far, 1, 1, ^map_findsquare_lineofwalk));
+    npc_say("That was fun. Let's head on!");
+}
+if (%tt_kind = ^tt_kind_river & %tt_done = 0) {
+    %tt_done = 1;
+    ~tt_add_points(^tt_points_puzzle);
+}
+
+// ---------------------------------------------------------------- the reward token
+[opheld1,templetrek_blue_token] @tt_token(1);
+[opheld1,templetrek_yellow_token] @tt_token(2);
+[opheld1,templetrek_red_token] @tt_token(3);
+
+// what the points buy (OSRS wiki): low + (high - low) * (points - 325) / (8000 - 325)
+[proc,tt_reward_count](int $low, int $high)(int)
+def_int $points = max(^tt_points_min, %templetrek_npc_point_value);
+return(calc($low + ($high - $low) * ($points - ^tt_points_min) / (^tt_points_max - ^tt_points_min)));
+
+[label,tt_token](int $tier)
+def_obj $token = last_item;
+def_int $op = ~p_choice5("Pure essence", 1, "Bow strings or silver bars", 2, "Herbs, or coal and iron ore", 3, "Watermelon seeds or raw lobsters", 4, "A tome of experience", 5);
+def_namedobj $obj = null;
+def_int $count = 0;
+def_namedobj $obj2 = null;
+def_int $count2 = 0;
+if ($op = 1) {
+    $obj = cert_blankrune_high;
+    $count = ~tt_tier_count($tier, 50, 150, 120, 380, 370, 660);
+} else if ($op = 2) {
+    if (~p_choice2("Bow strings", 1, "Silver bars", 2) = 1) {
+        $obj = cert_bow_string;
+        $count = ~tt_tier_count($tier, 100, 200, 150, 250, 200, 300);
+    } else {
+        $obj = cert_silver_bar;
+        $count = ~tt_tier_count($tier, 5, 50, 50, 100, 100, 150);
+    }
+} else if ($op = 3) {
+    if (~p_choice2("Herbs", 1, "Coal and iron ore", 2) = 1) {
+        def_int $herbs = ~tt_tier_count($tier, 5, 15, 10, 20, 15, 30);
+        $obj = cert_unidentified_tarromin;
+        if (random(2) = 0) $obj = cert_unidentified_harralander;
+        $count = divide(calc($herbs * 2), 3);
+        $obj2 = cert_unidentified_toadflax;
+        $count2 = calc($herbs - $count);
+    } else {
+        def_int $ore = ~tt_tier_count($tier, 21, 72, 66, 165, 150, 216);
+        $obj2 = cert_iron_ore;
+        $count2 = divide($ore, 3);
+        $obj = cert_coal;
+        $count = calc($ore - $count2);
+    }
+} else if ($op = 4) {
+    if (~p_choice2("Watermelon seeds", 1, "Raw lobsters", 2) = 1) {
+        $obj = watermelon_seed;
+        $count = ~tt_tier_count($tier, 10, 20, 15, 30, 20, 40);
+    } else {
+        $obj = cert_raw_lobster;
+        $count = ~tt_tier_count($tier, 2, 35, 30, 65, 60, 80);
+    }
+} else if ($op = 5) {
+    $obj = ~tt_tome($tier);
+    $count = 1;
+}
+if ($obj = null) return;
+if (inv_total(inv, $token) < 1) return;
+inv_del(inv, $token, 1);
+if ($count > 0) inv_add(inv, $obj, $count);
+if ($obj2 ! null & $count2 > 0) inv_add(inv, $obj2, $count2);
+%templetrek_npc_point_value = 0;
+mes("You exchange your reward token."); // ours
+
+[proc,tt_tier_count](int $tier, int $l1, int $h1, int $l2, int $h2, int $l3, int $h3)(int)
+if ($tier = 1) return(~tt_reward_count($l1, $h1));
+if ($tier = 2) return(~tt_reward_count($l2, $h2));
+return(~tt_reward_count($l3, $h3));
+
+// a tome in a random skill (OSRS wiki), its colour the token's
+[proc,tt_tome](int $tier)(namedobj)
+switch_int (calc(random(7) * 3 + $tier)) {
+    case 1 : return(templetrek_tome_agility_level_1);
+    case 2 : return(templetrek_tome_agility_level_2);
+    case 3 : return(templetrek_tome_agility_level_3);
+    case 4 : return(templetrek_tome_firemaking_level_1);
+    case 5 : return(templetrek_tome_firemaking_level_2);
+    case 6 : return(templetrek_tome_firemaking_level_3);
+    case 7 : return(templetrek_tome_fishing_level_1);
+    case 8 : return(templetrek_tome_fishing_level_2);
+    case 9 : return(templetrek_tome_fishing_level_3);
+    case 10 : return(templetrek_tome_mining_level_1);
+    case 11 : return(templetrek_tome_mining_level_2);
+    case 12 : return(templetrek_tome_mining_level_3);
+    case 13 : return(templetrek_tome_slayer_level_1);
+    case 14 : return(templetrek_tome_slayer_level_2);
+    case 15 : return(templetrek_tome_slayer_level_3);
+    case 16 : return(templetrek_tome_thieving_level_1);
+    case 17 : return(templetrek_tome_thieving_level_2);
+    case 18 : return(templetrek_tome_thieving_level_3);
+    case 19 : return(templetrek_tome_woodcutting_level_1);
+    case 20 : return(templetrek_tome_woodcutting_level_2);
+}
+return(templetrek_tome_woodcutting_level_3);
+
+// reading a tome: blue 1,100-1,650, yellow 2,035-3,025, red 4,015-5,005 experience (OSRS wiki)
+[opheld1,templetrek_tome_agility_level_1] @tt_tome_read(agility, 1);
+[opheld1,templetrek_tome_agility_level_2] @tt_tome_read(agility, 2);
+[opheld1,templetrek_tome_agility_level_3] @tt_tome_read(agility, 3);
+[opheld1,templetrek_tome_firemaking_level_1] @tt_tome_read(firemaking, 1);
+[opheld1,templetrek_tome_firemaking_level_2] @tt_tome_read(firemaking, 2);
+[opheld1,templetrek_tome_firemaking_level_3] @tt_tome_read(firemaking, 3);
+[opheld1,templetrek_tome_fishing_level_1] @tt_tome_read(fishing, 1);
+[opheld1,templetrek_tome_fishing_level_2] @tt_tome_read(fishing, 2);
+[opheld1,templetrek_tome_fishing_level_3] @tt_tome_read(fishing, 3);
+[opheld1,templetrek_tome_mining_level_1] @tt_tome_read(mining, 1);
+[opheld1,templetrek_tome_mining_level_2] @tt_tome_read(mining, 2);
+[opheld1,templetrek_tome_mining_level_3] @tt_tome_read(mining, 3);
+[opheld1,templetrek_tome_slayer_level_1] @tt_tome_read(slayer, 1);
+[opheld1,templetrek_tome_slayer_level_2] @tt_tome_read(slayer, 2);
+[opheld1,templetrek_tome_slayer_level_3] @tt_tome_read(slayer, 3);
+[opheld1,templetrek_tome_thieving_level_1] @tt_tome_read(thieving, 1);
+[opheld1,templetrek_tome_thieving_level_2] @tt_tome_read(thieving, 2);
+[opheld1,templetrek_tome_thieving_level_3] @tt_tome_read(thieving, 3);
+[opheld1,templetrek_tome_woodcutting_level_1] @tt_tome_read(woodcutting, 1);
+[opheld1,templetrek_tome_woodcutting_level_2] @tt_tome_read(woodcutting, 2);
+[opheld1,templetrek_tome_woodcutting_level_3] @tt_tome_read(woodcutting, 3);
+
+[label,tt_tome_read](stat $stat, int $tier)
+def_int $xp = calc(1100 + random(551));
+if ($tier = 2) $xp = calc(2035 + random(991));
+if ($tier = 3) $xp = calc(4015 + random(991));
+inv_del(inv, last_item, 1);
+stat_advance($stat, calc($xp * 10));
+mes("You read the tome and learn a great deal."); // ours

@@ -6,7 +6,7 @@
 
 // ---------------------------------------------------------------- juvinates and silver
 [proc,myq2_is_juvinate](npc $type)(boolean)
-if (compare(nc_name($type), "Vampyre Juvinate") = 0) return(true);
+if (compare(nc_name($type), "Vampyre Juvinate") = 0 | compare(nc_name($type), "Juvinate") = 0) return(true); // the second: Temple Trekking's
 return(false);
 
 // what a hit can do to a juvinate: silver weapons in melee only
@@ -540,3 +540,13 @@ clearsofttimer(myq2_escort_watch);
 ~mesbox("You manage to slay the rest of the vampyre juvinates and continue on your journey.");
 p_telejump(^myq2_temple_arrive);
 ~chatnpc_specific("Ivan Strom", route_ivan_strom, "<p,happy>Many thanks for bringing me safely to the temple, I'm going to rush on ahead as I'm eager to get out of these muddy clothes. It might be worth chatting to Drezel, even if it's just to inform him I've arrived.");
+
+// logged out in the blood tithe fight or on the escort: the fight resets; out of the swamp
+[proc,myq2_login]
+if (%myreque_2_quest >= ^myq2_complete) %templetrek_npcs_visible = 1;
+if (%myq2_fight > 0) {
+    %myq2_fight = 0;
+    if (%myreque_2_quest = ^myq2_tithe) %blood_tithe_visible = 1;
+}
+if (%myq2_route > 0) %myq2_route = 0;
+if (~myq2_in_swamp = true) p_telejump(^myq2_escort_quit);
