@@ -1,0 +1,504 @@
+// EASCape: Recipe for Disaster: Freeing Pirate Pete. Words from the OSRS wiki's transcript; the steps
+// from its quest guide (Murphy's diving gear from a fishbowl, 27kg at most, no cats, kelp, 5 rocks to
+// stand on the sea bed, 5 mudskipper hides and then a needle and 3 bronze wire for Nung, a crab from his
+// pen, the four ground ingredients mixed and cooked into a fishcake). Lines marked "ours" have no source.
+// The stages are in hundred.constant. %hundred_pirate_rocks: rocks in your pockets under the sea.
+// %hundred_pirate_number_of_hides: hides given to Nung. %hundred_pirate_underwater_onfloor: 1 while
+// standing on the sea bed (in the cave or the pen), else you swim.
+
+[proc,hundred_pirate_helping]()(boolean)
+if (%100_pirate_quest_var >= ^hundred_pirate_inspected & %100piratevisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+[proc,hundred_pirate_underwater]()(boolean)
+if (inzone(1_46_148_0_0, 1_46_148_63_63, coord) = true) return(true);
+return(false);
+
+[proc,hundred_pirate_swimming]()(boolean)
+if (~hundred_pirate_underwater = true & %hundred_pirate_underwater_onfloor = 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_pirate_multi]
+if (stat_base(cooking) < 31) {
+    mes("You need a Cooking level of 31 to help him."); // ours: the subquest's requirement
+    return;
+}
+if (inv_total(inv, hundred_pirate_fishcake) > 0 & %100_pirate_quest_var >= ^hundred_pirate_cook) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,angry>Stop messing about and use the fishcakes on him!");
+    return;
+}
+~chatplayer("<p,quiz>How would I go about protecting this nautical fellow from the curse of the culinaromancer then?");
+if (%100_pirate_quest_var = 0) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Hmmm... Wait a moment, my fortune-teller-sense is tingling...");
+    ~chatplayer("<p,confused>Erm... okay...");
+} else {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,quiz>Err... have you forgotten about the fishcakes already?");
+    ~chatplayer("<p,shifty>I might have, I might not have.");
+    ~chatplayer("<p,neutral>This time-travelling stuff just has me a little worn out ok?");
+}
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Ah yes. To immunise him from the culinaromancer's attack, you will need to feed him fishcakes.");
+~chatplayer("<p,quiz>Fishcakes? What, like chocolate cake with fish instead of chocolate?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>No... Like small bread crumbed fishy delicacies.");
+~chatplayer("<p,quiz>Um... So how would I make those then?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I don't know. I am a fortune-teller, not a cook.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I don't suppose it occurred to you to ask the actual cook in the room right next door to us?");
+~chatplayer("<p,happy>Ooooh yeah... I'll be right back!");
+if (%100_pirate_quest_var = 0) {
+    %100_pirate_quest_var = ^hundred_pirate_inspected;
+} else {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,angry>And try not to forget this time!");
+}
+
+[oplocu,hundred_pirate_multi]
+if (last_useitem ! hundred_pirate_fishcake | ~hundred_pirate_helping = false | %100_pirate_quest_var < ^hundred_pirate_cook) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, hundred_pirate_fishcake, 1);
+%100piratevisible = 0;
+%100_pirate_quest_var = ^hundred_pirate_freed;
+stat_advance(cooking, 10000);
+stat_advance(crafting, 10000);
+stat_advance(fishing, 10000);
+stat_advance(smithing, 10000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("Pirate Pete", hundred_pirate_fishcake, "1,000 Cooking, Crafting,|Fishing and Smithing XP");
+
+// ---------------------------------------------------------------- the cook, with all four ingredients
+[proc,hundred_pirate_has_ingredients]()(boolean)
+if (inv_total(inv, hundred_pirate_ground_cod) > 0 & inv_total(inv, hundred_pirate_ground_kelp) > 0
+    & inv_total(inv, hundred_pirate_ground_giant_crab_meat) > 0 & inv_total(inv, hundred_pirate_breadcrumbs) > 0) {
+    return(true);
+}
+return(false);
+
+[label,hundred_cook_fishcakes_done]
+~chatplayer("<p,happy>I have all the ingredients for fishcakes!");
+~chatnpc("<p,happy>Great! Just like before! I've been reading the recipe and I know how to make the fishcakes now.");
+~chatnpc("<p,neutral>It's pretty simple actually. All you have to do is use the ingredients on each other and then cook the fishcakes on a range.");
+if (%100_pirate_quest_var < ^hundred_pirate_cook) %100_pirate_quest_var = ^hundred_pirate_cook;
+~chatplayer("<p,quiz>That's it?");
+~chatnpc("<p,happy>Yes. I thought that there was a page missing from the cookbook because it seemed so easy, but it turns out it really IS that easy!");
+
+// ---------------------------------------------------------------- grinding, slicing and mixing
+[opheldu,raw_cod] if (%hundred_pirate_cod_intro = 1) ~attempt_grind_ingredient(last_useslot, last_slot); else ~displaymessage(^dm_default);
+[opheldu,hundred_pirate_kelp] if (%hundred_pirate_kelp_intro = 1) ~attempt_grind_ingredient(last_useslot, last_slot); else ~displaymessage(^dm_default);
+[opheldu,hundred_pirate_giant_crab_meat] if (%hundred_pirate_meat_intro = 1) ~attempt_grind_ingredient(last_useslot, last_slot); else ~displaymessage(^dm_default);
+
+[label,hundred_pirate_breadcrumbs]
+if (%hundred_pirate_crumb_intro = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, bread, 1);
+inv_add(inv, hundred_pirate_breadcrumbs, 1);
+mes("You slice the bread into breadcrumbs.");
+
+[opheldu,hundred_pirate_ground_cod] @hundred_pirate_mix(last_useitem);
+[opheldu,hundred_pirate_ground_kelp] @hundred_pirate_mix(last_useitem);
+[opheldu,hundred_pirate_ground_giant_crab_meat] @hundred_pirate_mix(last_useitem);
+[opheldu,hundred_pirate_breadcrumbs] @hundred_pirate_mix(last_useitem);
+
+[label,hundred_pirate_mix](obj $other)
+if ($other ! hundred_pirate_ground_cod & $other ! hundred_pirate_ground_kelp & $other ! hundred_pirate_ground_giant_crab_meat & $other ! hundred_pirate_breadcrumbs) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%100_pirate_quest_var < ^hundred_pirate_cook) {
+    mes("You do not yet know how to make fishcakes.");
+    return;
+}
+if (~hundred_pirate_has_ingredients = false) {
+    mes("You need ground cod, ground kelp, ground crab meat and breadcrumbs to make a fishcake."); // ours
+    return;
+}
+inv_del(inv, hundred_pirate_ground_cod, 1);
+inv_del(inv, hundred_pirate_ground_kelp, 1);
+inv_del(inv, hundred_pirate_ground_giant_crab_meat, 1);
+inv_del(inv, hundred_pirate_breadcrumbs, 1);
+inv_add(inv, hundred_pirate_raw_fishcake, 1);
+mes("You mix all the ingredients together to make an uncooked fishcake.");
+
+// the crab's shell and claw (a reward: OSRS wiki, Crafting 15 and 32.5 XP; the chance to break them
+// came in 2019, so here they never break)
+[label,hundred_pirate_crab_armour](obj $fresh, namedobj $made)
+if (stat(crafting) < 15) {
+    mes("You need a Crafting level of 15 to do that."); // ours
+    return;
+}
+inv_del(inv, $fresh, 1);
+inv_add(inv, $made, 1);
+stat_advance(crafting, 325);
+mes("You chisel the <lowercase(oc_name($fresh))> into a <lowercase(oc_name($made))>."); // ours
+
+// ---------------------------------------------------------------- Murphy, at Port Khazard
+[proc,hundred_pirate_murphy_option]()(boolean)
+if (%100_pirate_quest_var < ^hundred_pirate_recipe) return(false);
+if (~p_choice2("Talk about Recipe for Disaster.", 1, "Talk about something else.", 2) = 1) return(true);
+return(false);
+
+[label,hundred_pirate_murphy]
+if (%100_pirate_quest_var < ^hundred_pirate_murphy) {
+    ~chatplayer("<p,quiz>Murphy, what can you tell me about giant crabs?");
+    ~chatnpc("<p,neutral>Giant Crabs? Why, I used to haul up a few of those whenever I set my nets around Rimmington.");
+    ~chatnpc("<p,quiz>Why the interest?");
+    ~chatplayer("<p,neutral>I need to get some Giant Crab Meat and Kelp. Can you tell me where I can get some?");
+    ~chatnpc("<p,neutral>Well, the only thing I can think to do is to go down there and look to see if there are any left.");
+    ~chatplayer("<p,confused>Go down there? What do you mean?");
+    ~chatnpc("<p,happy>As in under the water!");
+    ~chatnpc("<p,quiz>Tell me, can you get your hands on a fishbowl?");
+    ~chatplayer("<p,quiz>I'm sure I will be able to if I put my mind to it, why do you ask?");
+    ~chatnpc("<p,neutral>Well, I know how to rig up a handy set of breathing gear that can allow you to keep air inside the fishbowl.");
+    ~chatnpc("<p,neutral>You just put the barrel of air on your back, with the fishbowl over your head, and then dive over the side.");
+    ~chatnpc("<p,neutral>It should hold enough air to keep you alive for quite some time.");
+    ~chatplayer("<p,scared>That sounds pretty dangerous...");
+    ~chatnpc("<p,neutral>Not at all. I'll even weigh anchor with the chain somewhere easy to reach so you can climb out easily enough if you run into trouble.");
+    ~chatplayer("<p,scared>I'm still not happy about this...");
+    ~chatnpc("<p,neutral>Well, I can't think of any other way to check. If you come up with a better plan then feel free to tell me.");
+    ~chatnpc("<p,neutral>In the meantime I'll wait, and if you want me to take you diving I'll be ready.");
+    ~chatnpc("<p,quiz>By the way, why are you so interested in crabs all of a sudden?");
+    ~chatplayer("<p,shifty>I can't tell you I'm afraid. The very fabric of space and time could collapse!");
+    ~chatnpc("<p,confused>O...k...");
+    ~chatnpc("<p,neutral>Well, I guess some people will do anything for a bit of fresh seafood.");
+    %100_pirate_quest_var = ^hundred_pirate_murphy;
+    return;
+}
+if (%100_pirate_quest_var < ^hundred_pirate_gear) {
+    ~chatnpc("<p,happy>Ahoy there! Up for a bit of a swim?");
+    if (inv_total(inv, fishbowl_empty) < 1) {
+        ~chatplayer("<p,neutral>Not just yet.");
+        ~chatnpc("<p,neutral>Well, whenever you want me to get you some diving gear, just come and see me with a fishbowl.");
+        return;
+    }
+    ~chatplayer("<p,happy>I certainly am.");
+    ~chatnpc("<p,happy>Great! I'll sort that fishbowl out for you.");
+    inv_del(inv, fishbowl_empty, 1);
+    inv_add(inv, hundred_pirate_diving_helmet, 1);
+    // the diving apparatus falls to the floor if your pack is full
+    if (inv_freespace(inv) > 0) inv_add(inv, hundred_pirate_diving_backpack, 1);
+    else obj_add(coord, hundred_pirate_diving_backpack, 1, ^lootdrop_duration);
+    %100_pirate_quest_var = ^hundred_pirate_gear;
+    ~objbox(hundred_pirate_diving_helmet, "Murphy attaches some tubes to the backpack and the fishbowl and puts a rubber hood inside.", 250, 0, divide(^objbox_height, 2));
+    ~chatnpc("<p,happy>There you go.");
+    ~chatplayer("<p,scared>Are you sure this is safe?");
+    ~chatnpc("<p,happy>Sure! It's as sound as my ship!");
+    ~chatnpc("<p,quiz>Want me to take you out now?");
+    @hundred_pirate_dive_choice;
+}
+if (~obj_gettotal(hundred_pirate_diving_helmet) < 1) {
+    ~chatplayer("<p,quiz>Murphy, can I get another diving helmet?");
+    if (inv_freespace(inv) < 1) {
+        ~chatnpc("<p,neutral>Well sure, just as soon as you have some spare space for it.");
+        return;
+    }
+    inv_add(inv, hundred_pirate_diving_helmet, 1);
+    ~chatnpc("<p,neutral>Sure, here you go. Try not to lose this one, I'm not a very good glassblower.");
+    ~chatplayer("<p,quiz>What do you mean?");
+    ~chatnpc("<p,neutral>Well, the bowls I make tend to shatter under pressure into razor-sharp shards of lethal, face shredding shrapnel.");
+    ~chatnpc("<p,happy>Don't let it bother you, I think I know what I'm doing wrong now.");
+    ~chatplayer("<p,confused>O...k...");
+    return;
+}
+if (~obj_gettotal(hundred_pirate_diving_backpack) < 1) {
+    ~chatplayer("<p,quiz>Hello Murphy. Do you have a spare diving backpack?");
+    ~chatnpc("<p,neutral>Sure, I have plenty after the...little incident.");
+    ~chatplayer("<p,quiz>What 'little incident'?");
+    ~chatnpc("<p,shifty>Nothing to worry yourself about.");
+    if (inv_freespace(inv) < 1) {
+        ~chatnpc("<p,neutral>Well, I have plenty of them under the tap, getting sluiced off. When you have space for one come and see me.");
+        return;
+    }
+    inv_add(inv, hundred_pirate_diving_backpack, 1);
+    ~chatnpc("<p,happy>Here, have this one. Only dropped once!");
+    ~chatplayer("<p,shock>Is that blood?");
+    ~chatnpc("<p,shifty>No, no.");
+    ~chatnpc("<p,shifty>Well, yes.");
+    ~chatnpc("<p,neutral>But seriously, what are the chances of getting a jellyfish jammed in there again?");
+    return;
+}
+~chatnpc("<p,happy>Ahoy there! All set for a dive?");
+@hundred_pirate_dive_choice;
+
+[label,hundred_pirate_dive_choice]
+if (~p_choice2("Yes, Let's go diving.", 1, "Not just yet.", 2) = 2) {
+    ~chatplayer("<p,neutral>Not just yet.");
+    ~chatnpc("<p,neutral>Ok, well I'll be here if you change your mind.");
+    return;
+}
+~chatplayer("<p,happy>Yes, Let's go diving.");
+if (inv_getobj(worn, ^wearpos_hat) ! hundred_pirate_diving_helmet | inv_getobj(worn, ^wearpos_back) ! hundred_pirate_diving_backpack) {
+    ~chatnpc("<p,neutral>Well I can't take you out until you are properly geared up.");
+    ~chatnpc("<p,sad>We lost three diving parties that way!");
+    ~chatplayer("<p,neutral>Ok, well I'll just put my diving helmet and diving backpack on.");
+    return;
+}
+if (weight > 27000) {
+    ~chatnpc("<p,happy>Well that's the sort of spirit I like to see. However you are far too heavy to go diving right now.");
+    ~chatplayer("<p,quiz>What do you mean?");
+    ~chatnpc("<p,neutral>Well, I can't take you diving if you are carrying more than 27kg worth of equipment.");
+    ~chatnpc("<p,neutral>We arrived at that number through trial and error, and the errors were not pretty let me assure you.");
+    ~chatplayer("<p,quiz>So what can I do?");
+    ~chatnpc("<p,neutral>Well, if you pop over to a bank and leave all your heavy equipment behind then I'll take you out.");
+    ~chatnpc("<p,happy>See you then!");
+    return;
+}
+// every follower here is a cat or a kitten
+if (npc_finduid(%follower_uid) = true) {
+    ~chatnpc("<p,angry>You want that cat of yours to drown or something?");
+    ~chatplayer("<p,quiz>You mean you can't make them an adorable set of tiny diving gear?");
+    ~chatnpc("<p,angry>No. Just...no.");
+    ~chatnpc("<p,neutral>I'm not taking you out for a dive with that cat following you.");
+    ~chatnpc("<p,neutral>I'm not a cat person, and it'd have to stay on the ship while you were down.");
+    return;
+}
+if (calc(inv_totalcat(inv, cat) + inv_totalcat(inv, kitten)) > 0) {
+    ~chatnpc("<p,neutral>You know, I can see your cat right there.");
+    ~chatplayer("<p,quiz>What do you mean?");
+    ~chatnpc("<p,neutral>I'm looking right at it. See, it's just there in your bag!");
+    ~chatnpc("<p,angry>I'm not taking you out with that cat. I'm not some sort of cat-sitter, so go and put it somewhere safe, then come back.");
+    ~chatplayer("<p,confused>O'kay...");
+    ~chatplayer("<p,neutral>I still think I should get some cat-sized diving gear...");
+    return;
+}
+~chatnpc("<p,happy>Ok, let's be off then.");
+// ours: the trip out by boat is a short fade, not the cutscene
+if_close;
+p_delay(1);
+p_telejump(^hundred_pirate_seabed);
+%hundred_pirate_underwater_onfloor = 0;
+%hundred_pirate_rocks = 0;
+%hundred_pirate_first_dive = 1;
+~update_bas;
+softtimer(hundred_pirate_underwater, 2);
+~chatplayer("<p,happy>Ok, see you soon Murphy!");
+~chatnpc_specific("Murphy", murphy, "<p,happy>Good luck, I'll weigh anchor. Climb up the chain to get aboard.");
+
+// ---------------------------------------------------------------- under the sea
+// leaving the sea any other way (a teleport, dying) stops the swimming and empties your pockets
+[softtimer,hundred_pirate_underwater]
+if (~hundred_pirate_underwater = true) return;
+clearsofttimer(hundred_pirate_underwater);
+queue(hundred_pirate_left_sea, 0, 0);
+
+[queue,hundred_pirate_left_sea](int $unused)
+~hundred_pirate_surfaced;
+
+[proc,hundred_pirate_surfaced]
+%hundred_pirate_rocks = 0;
+%hundred_pirate_underwater_onfloor = 0;
+// the hides don't survive the trip up (OSRS wiki: give them to Nung before surfacing)
+def_int $hides = inv_total(inv, hundred_pirate_mudskipper_hide);
+if ($hides > 0) inv_del(inv, hundred_pirate_mudskipper_hide, $hides);
+~update_bas;
+
+[oploc1,anchor_middle]
+if (~hundred_pirate_underwater = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%hundred_pirate_rocks > 0) mes("You have to drop all of your rocks to surface.");
+anim(human_climbing, 0);
+p_delay(1);
+~chatnpc_specific("Murphy", murphy, "<p,quiz>How did it go?");
+~chatplayer("<p,neutral>Not too bad.");
+~chatnpc_specific("Murphy", murphy, "<p,happy>Great, I'll take us back in.");
+p_telejump(^hundred_pirate_pier);
+clearsofttimer(hundred_pirate_underwater);
+~hundred_pirate_surfaced;
+mes("You return to port.");
+
+[oploc1,kelp_pickingpoint]
+if (inv_freespace(inv) < 1) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+anim(human_pickupfloor, 0);
+p_delay(1);
+inv_add(inv, hundred_pirate_kelp, 1);
+mes("You take some Kelp.");
+
+[opobj3,hundred_pirate_rock]
+if (%hundred_pirate_rocks >= 5) {
+    mes("You have enough rocks to stand on the sea bed if you need to.");
+    return;
+}
+if (~pickup_obj_check_for_space(obj_type, obj_count) = false) return;
+anim(human_pickupfloor, 0);
+obj_takeitem(inv);
+sound_synth(pick2, 1, 0);
+// they go in your pockets, not your pack
+inv_del(inv, hundred_pirate_rock, 1);
+%hundred_pirate_rocks = add(%hundred_pirate_rocks, 1);
+mes("You pick up a rock and put it in your pocket.");
+
+[oploc1,seabed2_cavewall_mudskipper_caveentrancel] @hundred_pirate_cave_enter;
+[oploc1,seabed2_cavewall_mudskipper_caveentrancer] @hundred_pirate_cave_enter;
+[label,hundred_pirate_cave_enter]
+if (%100_pirate_quest_var < ^hundred_pirate_hides) {
+    mes("You have no idea what is in there, best leave it for the time being.");
+    return;
+}
+if (%hundred_pirate_rocks < 5) {
+    mes("You need to collect 5 rocks to get into the pen.");
+    return;
+}
+mes("You enter the cave...");
+p_telejump(^hundred_pirate_cave_in);
+%hundred_pirate_underwater_onfloor = 1;
+~update_bas;
+
+[oploc1,seabed2_cavewall_mudskipper_caveexitl] @hundred_pirate_cave_exit;
+[oploc1,seabed2_cavewall_mudskipper_caveexitr] @hundred_pirate_cave_exit;
+[label,hundred_pirate_cave_exit]
+p_telejump(^hundred_pirate_cave_out);
+%hundred_pirate_underwater_onfloor = 0;
+~update_bas;
+mes("You exit the cave.");
+mes("You kick off the sea bed and begin swimming again.");
+
+[oploc1,pen_wall_doorl] @hundred_pirate_pen;
+[oploc1,pen_wall_doorr] @hundred_pirate_pen;
+[label,hundred_pirate_pen]
+if (coordz(coord) > coordz(^hundred_pirate_pen_out)) {
+    p_telejump(^hundred_pirate_pen_out);
+    %hundred_pirate_underwater_onfloor = 0;
+    ~update_bas;
+    mes("You kick off from the sea bed and begin swimming again.");
+    return;
+}
+if (%100_pirate_quest_var < ^hundred_pirate_pen) {
+    ~chatnpc_specific("Mogre Guard", 100_pirate_mogre_guard, "<p,angry>Hey! Nung says no fishies in da big crunchy claws!");
+    ~chatnpc_specific("Mogre Guard", 100_pirate_mogre_guard, "<p,angry>You want crunchies, you talk to him, an' hope he not hungry!");
+    return;
+}
+if (%hundred_pirate_spoken_to_guards = 0) {
+    ~chatnpc_specific("Mogre Guard", 100_pirate_mogre_guard, "<p,angry>Hey! Nung says no fishies...");
+    ~chatplayer("<p,neutral>I just spoke to Nung, he said it was ok.");
+    ~chatnpc_specific("Mogre Guard", 100_pirate_mogre_guard, "<p,neutral>Well...if Nung say it ok, den go ahead.");
+    %hundred_pirate_spoken_to_guards = 1;
+}
+if (%hundred_pirate_rocks < 5) {
+    mes("You try to enter the pen, but the current is too strong.");
+    mes("You need to collect 5 rocks to get into the pen.");
+    return;
+}
+p_telejump(^hundred_pirate_pen_in);
+%hundred_pirate_underwater_onfloor = 1;
+~update_bas;
+mes("With the rocks in your pocket you can quite easily land on the sea bed.");
+mes("It is a little slippery, but you should be able to fight normally.");
+
+[queue,hundred_pirate_crab_killed](int $unused)
+if (%100_pirate_quest_var = ^hundred_pirate_pen) %100_pirate_quest_var = ^hundred_pirate_crab;
+
+[opnpc1,100_pirate_mogre_guard]
+~chatnpc("<p,happy>Silly fishy! You lookin' like likkle Mogre wid your likkle arms an' wid your likkle legs!");
+~chatnpc("<p,happy>Swim along silly round head fishy!");
+~chatnpc("<p,neutral>Dont let dem big skippies eat you!");
+
+[opnpc1,100_pirate_mogre_nung]
+if (%100_pirate_quest_var >= ^hundred_pirate_pen) {
+    ~chatnpc("<p,neutral>Hey fishy. If you's a good fishy I might sell yous bitses of skippy skin clothes.");
+    ~chatnpc("<p,neutral>But Nung needs time to makes them first.");
+    return;
+}
+if (%100_pirate_quest_var >= ^hundred_pirate_wire) {
+    if (inv_total(inv, needle) < 1 | inv_total(inv, bronzecraftwire) < 3) {
+        ~chatnpc("<p,quiz>Has da fish brung Nung the wiry stuff and the needly thing?");
+        ~chatplayer("<p,neutral>Not yet.");
+        ~chatnpc("<p,neutral>Nung not supprised, the upsies is real scaredy for da little fishies like you.");
+        return;
+    }
+    ~chatplayer("<p,happy>Nung, I have the needle and wire.");
+    ~chatnpc("<p,happy>Nung thinks this is a useful fishy he finds. Gimme!");
+    inv_del(inv, needle, 1);
+    inv_del(inv, bronzecraftwire, 3);
+    %100_pirate_quest_var = ^hundred_pirate_pen;
+    ~chatnpc("<p,happy>Nung have all da wiry stuff and needly things he needs to make da biggestest skippy skin hat ever!");
+    ~chatnpc("<p,happy>You's a good little fishy, you eat as many big crunchy claws as you want.");
+    ~chatnpc("<p,happy>Maybe you get big and strong like Nung!");
+    ~chatplayer("<p,happy>Thanks!");
+    return;
+}
+if (%100_pirate_quest_var >= ^hundred_pirate_hides_given) @hundred_pirate_nung_wire;
+if (%100_pirate_quest_var >= ^hundred_pirate_hides) {
+    def_int $held = inv_total(inv, hundred_pirate_mudskipper_hide);
+    if ($held < 1) {
+        ~chatnpc("<p,quiz>Hey fishy! You gots da skippy skins?");
+        ~chatplayer("<p,neutral>Not yet.");
+        ~chatnpc("<p,angry>Den no crunchy claws for you!");
+        return;
+    }
+    ~chatplayer("<p,neutral>Nung, I have your giant Mudskipper Skins.");
+    ~chatnpc("<p,quiz>What you say? Has da silly round headed fishy got da big skippy skins?");
+    ~chatplayer("<p,bored>Sigh...");
+    ~chatplayer("<p,neutral>Yes, I have the big skippy skins.");
+    ~chatnpc("<p,happy>Silly round head fishy done good! Gimme!");
+    def_int $wanted = sub(5, %hundred_pirate_number_of_hides);
+    if ($held > $wanted) $held = $wanted;
+    inv_del(inv, hundred_pirate_mudskipper_hide, $held);
+    %hundred_pirate_number_of_hides = add(%hundred_pirate_number_of_hides, $held);
+    if (%hundred_pirate_number_of_hides < 5) {
+        ~chatnpc("<p,neutral>Ya, dis fishy is a good fishy, but it no count good like Nung! Nung say dere are dis many hides left for da fishy to get.");
+        ~mesbox("Nung holds up <tostring(sub(5, %hundred_pirate_number_of_hides))> of his fingers.");
+        ~chatnpc("<p,neutral>Go get me da hides little fishy!");
+        return;
+    }
+    %100_pirate_quest_var = ^hundred_pirate_hides_given;
+    @hundred_pirate_nung_wire;
+}
+~chatnpc("<p,angry>Hey, silly fishy wit da round head!");
+~chatplayer("<p,quiz>Me?");
+~chatnpc("<p,quiz>Ya! What kinda fishy you's tinkin you are?");
+~chatplayer("<p,neutral>I'm not any kind of fishy, err, fish.");
+~chatnpc("<p,quiz>Well what you doin' here if you's no a fishy?");
+~chatplayer("<p,neutral>Well I'm trying to get some Giant Crab meat.");
+~chatnpc("<p,laugh>Dis fishy is a funny fishy!");
+~chatnpc("<p,quiz>Whats this fishy wanting?");
+~chatplayer("<p,neutral>You see those big crabs? I want one of those.");
+~chatnpc("<p,angry>You's here to stealin' my big crunchy claws?");
+~chatnpc("<p,angry>Nung should smash your stoopid round head!");
+~chatnpc("<p,angry>Always the big nettings was taking my big crunchy claws, I put them in the cages, and now you's come to get them.");
+~chatnpc("<p,angry>Swim away little fishy or I eat you till you's dead!");
+~chatplayer("<p,scared>Wait, could I buy some of the crab meat?");
+~chatnpc("<p,quiz>Silly round head fishy want to swaps big crunchy claws?");
+~chatnpc("<p,neutral>Naaah...you no real deal. I bet you no do Nung big favour.");
+~chatplayer("<p,neutral>Seriously, I need to get that meat. I'll do your big favour if you want.");
+~chatnpc("<p,laugh>Hah! Silly round head fishy! If you get Nung 5 big skippy skins, den maybe Nung thinking you ok.");
+~chatplayer("<p,quiz>Big skippy skins?");
+~chatnpc("<p,neutral>Ya, da big skippies live over dere.");
+mes("Nung points at the cave in the western wall."); // ours: in place of the cutscene of the cave entrance
+~chatnpc("<p,neutral>You need lotsa big big stones to get down dere. Den you kill da big skippies and bring da skins to Nung.");
+~chatnpc("<p,neutral>You do dis, den maybe Nung let you swaps da big crunchy claws.");
+%100_pirate_quest_var = ^hundred_pirate_hides;
+
+[label,hundred_pirate_nung_wire]
+~chatnpc("<p,happy>Ya, da round head fishy does a good big favour for Nung.");
+~chatnpc("<p,neutral>I am thinkin you's ok enough to swaps the giant crunchy claws now.");
+~chatplayer("<p,happy>Great! How much do you want for them?");
+~chatnpc("<p,neutral>You's gotta get me somefing to make dese hides to a cloak and flippers and hat, den I lets you have all the big crunchy claws you can get.");
+~chatnpc("<p,neutral>But it not be easy");
+~chatplayer("<p,neutral>Well I'll do it. What do I need? An item of ancient power? Something from the deepest, darkest dungeon in the world?");
+~chatplayer("<p,quiz>What sort of monsters will I need to fight? I'd best grab myself some potions too.");
+~chatplayer("<p,quiz>Will there be traps? Should I bring cakes?");
+~chatnpc("<p,neutral>Ya, it real dangerous for a fishy.");
+~chatnpc("<p,neutral>You's gotta go up to da topsies, and your gotta get a needly-thing and some wirey stuff.");
+~chatplayer("<p,neutral>A needle.");
+~chatnpc("<p,neutral>Ya.");
+~chatplayer("<p,neutral>And bronze wire.");
+~chatnpc("<p,neutral>Ya. Tree wirey stuffs.");
+~chatplayer("<p,quiz>So, all I have to do is bring you three rolls of bronze wire and a needle, and I can have all the Giant Crabs I can kill?");
+~chatnpc("<p,neutral>Ya, but be a sneaky round head fishy. Da topsies has not water for a little fishy like you to breathing.");
+~chatnpc("<p,shock>It REAL dangerous.");
+~chatplayer("<p,bored>Yeah, sounds it.");
+%100_pirate_quest_var = ^hundred_pirate_wire;
+
+// ---------------------------------------------------------------- eating (OSRS wiki: the fishcake heals 11,
+// the cooked crab meat 2 a bite over 5 bites; consume_normal.dbrow)
+[opheld1,hundred_pirate_fishcake] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,hundred_pirate_giant_crab_meat_5] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,hundred_pirate_giant_crab_meat_4] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,hundred_pirate_giant_crab_meat_3] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,hundred_pirate_giant_crab_meat_2] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,hundred_pirate_giant_crab_meat_1] @player_consume_item(consume_effect_stat, 2, 3);

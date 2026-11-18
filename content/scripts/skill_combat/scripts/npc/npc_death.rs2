@@ -20,6 +20,7 @@ if (finduid(%npc_aggressive_player) = true) {
     }
     %lastcombat = null; // allows other npcs to hunt you immediately
     ~eascape_boss_kc; // EASCape: boss kill counts
+    if (npc_type = hundred_pirate_giant_crab | npc_type = hundred_pirate_giant_crab_2) queue(hundred_pirate_crab_killed, 0, 0); // EASCape: Freeing Pirate Pete (hundred_pirate.rs2)
     p_npckill(npc_type); // EASCape: every kill, for the hiscores' NPC kills (engine/Hiscores.ts)
 }
 npc_anim(npc_param(death_anim), 0);
