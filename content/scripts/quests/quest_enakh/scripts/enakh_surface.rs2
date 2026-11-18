@@ -1,0 +1,536 @@
+// EASCape: Enakhra's Lament (update of 23 January 2006), the surface part: Lazim, the statue and the
+// Desert Quarry. Words: read from the owner's video of the quest (quests/quest_enakh notes); the
+// branches the video doesn't show follow the RuneScape and OSRS wikis' walkthroughs in our words,
+// marked "ours". Varbits, multilocs and items are the 377 cache's.
+
+[proc,enakh_give](namedobj $obj)
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, $obj, 1);
+} else {
+    obj_add(coord, $obj, 1, ^lootdrop_duration);
+}
+
+[proc,enakh_statue_set](int $value)
+// the statue multiloc: the stage in bits 13-15, the fall in bits 16-17
+%enakh_statue_multivar = $value;
+
+// ================================================================ Lazim on the surface
+[opnpc1,enakh_lazim_statue_east_multinpc]
+def_int $s = %enakh_quest;
+if ($s = ^enakh_not_started) @enakh_lazim_start;
+if ($s >= ^enakh_complete) {
+    // ours: after the quest (the camulet's unlimited charges are a later update)
+    ~chatnpc("<p,neutral>Hello again, adventurer. Have you come to gloat?");
+    return;
+}
+if ($s >= ^enakh_in_temple) {
+    ~chatnpc("<p,neutral>What are you doing up here? The treasure is in the temple!"); // ours
+    return;
+}
+@enakh_lazim_statue;
+
+[label,enakh_lazim_start]
+~chatnpc("<p,neutral>Ah, an adventurer. Could you spare some of your time to help me?");
+~chatplayer("<p,quiz>Why, what's the matter?");
+~chatnpc("<p,sad>It's a sorry tale. I was once an accomplished sculptor, you see.");
+~chatnpc("<p,neutral>But I have been struck by my muse while travelling the desert, and want nothing more than to build a statue in this area.");
+~chatplayer("<p,quiz>So, what would you need my help with?");
+~chatnpc("<p,neutral>As I said, I can't hold a chisel, but I can guide you in crafting the statue for me.");
+~chatnpc("<p,quiz>Well, will you help me with my art?");
+switch_int (~p_choice2("Of course!", 1, "I don't know, that sounds like a lot of work.", 2)) {
+    case 1 :
+        ~chatplayer("<p,happy>Of course!");
+    case 2 :
+        ~chatplayer("<p,neutral>I don't know, that sounds like a lot of work.");
+        ~chatnpc("<p,sad>Oh well. Come back if you change your mind."); // ours
+        return;
+}
+~chatplayer("<p,neutral>You'll have to explain it to me as you go along, but count me in.");
+~chatnpc("<p,happy>Excellent.");
+%enakh_quest = ^enakh_started;
+~send_quest_progress(questlist:enakh, %enakh_quest, ^enakh_complete);
+@enakh_lazim_what_now;
+
+[label,enakh_lazim_what_now]
+~chatplayer("<p,quiz>What should I be doing to make your statue?");
+~chatnpc("<p,neutral>There is a stone quarry nearby; I require several blocks of sandstone in order to make the statue.");
+~chatplayer("<p,shock>I can't mine a block that big!");
+~chatnpc("<p,neutral>Well, then, bring me enough smaller blocks to make thirty two kilograms, and I will deal with it.");
+@enakh_lazim_weights_menu;
+
+[label,enakh_lazim_weights_menu]
+switch_int (~p_choice2("So, how much do different blocks of sandstone weigh?", 1, "Okay, I'll get on with it.", 2)) {
+    case 1 :
+        ~chatplayer("<p,quiz>So, how much do different blocks of sandstone weigh?");
+        // ours: the wikis' summary (1, 2, 5 and 10 kg, the bigger ones as your Mining gets better)
+        ~chatnpc("<p,neutral>Tiny blocks weigh one kilogram, small ones two, medium ones five and large ones ten. The better a miner you are, the bigger the blocks you'll chip off.");
+        ~chatnpc("<p,neutral>A chisel will break a big block into smaller ones, if you need to.");
+        @enakh_lazim_weights_menu;
+    case 2 :
+        ~chatplayer("<p,neutral>Okay, I'll get on with it.");
+}
+
+// the statue, stage by stage
+[label,enakh_lazim_statue]
+def_int $stage = %enakh_statue_stage;
+def_int $carry = %enakh_lazim_carrying_stone;
+if ($stage = 0) {
+    if (inv_total(inv, enakh_sandstone_crafted_base+legs) > 0) {
+        ~chatplayer("<p,happy>I've made the base of the statue!");
+        ~chatnpc("<p,neutral>Excellent. Now, just put it on the flat ground next to me.");
+        return;
+    }
+    if (inv_total(inv, enakh_sandstone_huge_base+legs) > 0) {
+        ~chatnpc("<p,neutral>Just chisel that block into the base of the statue, and put it on the flat ground next to me."); // ours
+        return;
+    }
+    if (~enakh_has_sandstone = true) @enakh_lazim_take_stone(32, "base");
+    if ($carry > 0) {
+        ~chatnpc("<p,neutral>I'm now carrying <tostring($carry)> kg of your inexpertly-quarried stone.");
+        ~chatnpc("<p,neutral>I need <tostring(calc(32 - $carry))> kg more stone to make the base.");
+        return;
+    }
+    @enakh_lazim_what_now;
+}
+if ($stage = ^enakh_statue_base) {
+    if (inv_total(inv, enakh_sandstone_crafted_body) > 0) {
+        ~chatnpc("<p,neutral>Well, put the body on the statue, then!"); // ours
+        return;
+    }
+    if (inv_total(inv, enakh_sandstone_huge_body) > 0) {
+        ~chatnpc("<p,neutral>Chisel that block into the body of the statue, and put it on the base."); // ours
+        return;
+    }
+    if (~enakh_has_sandstone = true) @enakh_lazim_take_stone(20, "body");
+    if ($carry > 0) {
+        ~chatnpc("<p,neutral>I'm now carrying <tostring($carry)> kg of your inexpertly-quarried stone.");
+        ~chatnpc("<p,neutral>I need <tostring(calc(20 - $carry))> kg more stone to make the body.");
+        return;
+    }
+    ~chatplayer("<p,quiz>What do you want me to do now?");
+    ~chatnpc("<p,neutral>Hmph. Well, the base of the statue is done, but it needs a body. Twenty kilograms should be enough for you to make it.");
+    @enakh_lazim_body_menu;
+}
+if ($stage = ^enakh_statue_body) {
+    ~chatnpc("<p,angry>You utter incompetent! Have you added the body to the statue yet?");
+    ~chatplayer("<p,neutral>Of course I have!");
+    ~chatnpc("<p,quiz>Hmm, then perhaps I'm still missing something...");
+    ~chatplayer("<p,quiz>What do you want me to do next?");
+    ~chatnpc("<p,neutral>Oh, I don't know, adventurer. Go and chisel the statue a bit more, or something.");
+    ~chatplayer("<p,neutral>Okay then.");
+    return;
+}
+if ($stage = ^enakh_statue_chiselled) {
+    if (%enakh_choose_statue_head = 0) @enakh_lazim_choose_head;
+    if (~enakh_has_head_item = true) {
+        ~chatnpc("<p,neutral>Well, put the head on the statue, then!"); // ours
+        return;
+    }
+    if (inv_total(inv, enakh_granite_medium) > 0) {
+        ~chatplayer("<p,happy>I've got some stone for the statue's head!");
+        ~chatnpc("<p,neutral>Excellent. Those medium-sized blocks you have there should be perfect.");
+        ~chatnpc("<p,neutral>Just craft one into the correct head.");
+        return;
+    }
+    ~chatnpc("<p,neutral>The head should be made out of granite, which you can find in that quarry nearby.");
+    return;
+}
+
+[label,enakh_lazim_body_menu]
+switch_int (~p_choice2("I'll do it right away!", 1, "So, how much do different blocks of sandstone weigh?", 2)) {
+    case 1 : ~chatplayer("<p,happy>I'll do it right away!");
+    case 2 :
+        ~chatplayer("<p,quiz>So, how much do different blocks of sandstone weigh?");
+        ~chatnpc("<p,neutral>Tiny blocks weigh one kilogram, small ones two, medium ones five and large ones ten. The better a miner you are, the bigger the blocks you'll chip off."); // ours
+        @enakh_lazim_body_menu;
+}
+
+[proc,enakh_has_sandstone]()(boolean)
+if (calc(inv_total(inv, enakh_sandstone_tiny) + inv_total(inv, enakh_sandstone_small) + inv_total(inv, enakh_sandstone_medium) + inv_total(inv, enakh_sandstone_large)) > 0) return(true);
+return(false);
+
+// handing over sandstone, a block at a time, up to $total kg
+[label,enakh_lazim_take_stone](int $total, string $part)
+~chatplayer("<p,happy>I have some sandstone for you!");
+if (%enakh_lazim_carrying_stone = 0) {
+    ~chatnpc("<p,neutral>Well, hand it over, then.");
+} else {
+    ~chatnpc("<p,neutral>I'm now carrying <tostring(%enakh_lazim_carrying_stone)> kg of your inexpertly-quarried stone.");
+}
+@enakh_lazim_more_stone($total, $part);
+
+[label,enakh_lazim_more_stone](int $total, string $part)
+def_int $need = calc($total - %enakh_lazim_carrying_stone);
+switch_int (random(3)) {
+    case 0 : ~chatnpc("<p,neutral>I need <tostring($need)> kg more stone to make the <$part>. Any more stone you want to burden me down with?");
+    case 1 : ~chatnpc("<p,neutral>I need <tostring($need)> kg more stone to make the <$part>. Do you have any more stone you want to offload onto me?");
+    case default : ~chatnpc("<p,neutral>I need <tostring($need)> kg more stone to make the <$part>. Have you any more to make me carry?");
+}
+if (~p_choice2("Yes, I have more stone.", 1, "No, that's all for now.", 2) = 2) {
+    ~chatplayer("<p,neutral>No, that's all for now.");
+    return;
+}
+~chatplayer("<p,neutral>Yes, I have more stone.");
+@enakh_lazim_pick_block($total, $part);
+
+[label,enakh_lazim_pick_block](int $total, string $part)
+// one option per size you carry, then the question (the video's menu)
+def_string $why = "Why won't you take more than <tostring($total)> kg of stone?";
+def_string $o1 = "";
+def_string $o2 = "";
+def_string $o3 = "";
+def_string $o4 = "";
+def_int $r1 = 0;
+def_int $r2 = 0;
+def_int $r3 = 0;
+def_int $n = 0;
+def_int $kg;
+def_int $i = 0;
+while ($i < 4) {
+    def_namedobj $block = ~enakh_sandstone_by_index($i);
+    if (inv_total(inv, $block) > 0) {
+        $kg = ~enakh_sandstone_kg($block);
+        def_string $text = "Here's a <~enakh_sandstone_size($block)> <tostring($kg)> kg block.";
+        if ($n = 0) { $o1 = $text; $r1 = $kg; }
+        else if ($n = 1) { $o2 = $text; $r2 = $kg; }
+        else if ($n = 2) { $o3 = $text; $r3 = $kg; }
+        else { $o4 = $text; }
+        $n = calc($n + 1);
+    }
+    $i = calc($i + 1);
+}
+def_int $choice;
+if ($n = 1) {
+    $choice = ~p_choice2($o1, 1, $why, 9);
+} else if ($n = 2) {
+    $choice = ~p_choice3($o1, 1, $o2, 2, $why, 9);
+} else if ($n = 3) {
+    $choice = ~p_choice4($o1, 1, $o2, 2, $o3, 3, $why, 9);
+} else {
+    $choice = ~p_choice5($o1, 1, $o2, 2, $o3, 3, $o4, 4, $why, 9);
+}
+if ($choice = 9) {
+    ~chatplayer("<p,quiz><$why>");
+    ~chatnpc("<p,angry>Any more than that, and I'd never be able to carry it all! If a block is too big, break it up with your chisel."); // ours (the wikis: he won't carry more, and says to break big blocks)
+    @enakh_lazim_pick_block($total, $part);
+}
+if ($choice = 1) $kg = $r1;
+else if ($choice = 2) $kg = $r2;
+else if ($choice = 3) $kg = $r3;
+else $kg = 10;
+def_namedobj $chosen = ~enakh_sandstone_of_kg($kg);
+~chatplayer("<p,neutral>Here's a <~enakh_sandstone_size($chosen)> <tostring($kg)> kg block.");
+if (calc(%enakh_lazim_carrying_stone + $kg) > $total) {
+    ~chatnpc("<p,angry>That's too much! I only need <tostring(calc($total - %enakh_lazim_carrying_stone))> kg more. Break it up with your chisel first."); // ours
+    return;
+}
+if (inv_total(inv, $chosen) < 1) return;
+inv_del(inv, $chosen, 1);
+%enakh_lazim_carrying_stone = calc(%enakh_lazim_carrying_stone + $kg);
+switch_int ($kg) {
+    case 1 : ~chatnpc("<p,neutral>How kind. Every little helps, I suppose."); // ours: no source for the tiny block
+    case 2 : ~chatnpc("<p,neutral>So generous of you, adventurer.");
+    case 5 : ~chatnpc("<p,neutral>Oh, joy. I'm sure I'll treasure it.");
+    case default : ~chatnpc("<p,neutral>Thank you, adventurer.");
+}
+if (%enakh_lazim_carrying_stone >= $total) @enakh_lazim_block_done($part);
+if (random(2) = 0) {
+    ~chatnpc("<p,neutral>That makes <tostring(%enakh_lazim_carrying_stone)> kg I'm carrying now.");
+} else {
+    ~chatnpc("<p,neutral>That's <tostring(%enakh_lazim_carrying_stone)> kg I have now.");
+}
+@enakh_lazim_more_stone($total, $part);
+
+[label,enakh_lazim_block_done](string $part)
+~chatnpc("<p,happy>That's enough for the <$part> of the statue, certainly.");
+%enakh_lazim_carrying_stone = 0;
+if (compare($part, "base") = 0) {
+    ~enakh_give(enakh_sandstone_huge_base+legs);
+    ~objbox(enakh_sandstone_huge_base+legs, "Lazim magically binds the stone into a single block.", 250, 0, divide(^objbox_height, 2)); // ours
+} else {
+    ~enakh_give(enakh_sandstone_huge_body);
+    ~objbox(enakh_sandstone_huge_body, "Lazim magically binds the stone into a single block.", 250, 0, divide(^objbox_height, 2)); // ours
+}
+~chatplayer("<p,shock>How am I supposed to carry that? It's huge!");
+~chatnpc("<p,angry>Oh, stop whining. The last adventurer who helped me was carrying around a girl in a barrel.");
+~chatnpc("<p,neutral>Zamorak only knows why, but he didn't complain.");
+
+[proc,enakh_sandstone_by_index](int $i)(namedobj)
+if ($i = 0) return(enakh_sandstone_tiny);
+if ($i = 1) return(enakh_sandstone_small);
+if ($i = 2) return(enakh_sandstone_medium);
+return(enakh_sandstone_large);
+
+[proc,enakh_sandstone_of_kg](int $kg)(namedobj)
+if ($kg = 1) return(enakh_sandstone_tiny);
+if ($kg = 2) return(enakh_sandstone_small);
+if ($kg = 5) return(enakh_sandstone_medium);
+return(enakh_sandstone_large);
+
+[proc,enakh_sandstone_kg](namedobj $block)(int)
+if ($block = enakh_sandstone_tiny) return(1);
+if ($block = enakh_sandstone_small) return(2);
+if ($block = enakh_sandstone_medium) return(5);
+return(10);
+
+[proc,enakh_sandstone_size](namedobj $block)(string)
+if ($block = enakh_sandstone_tiny) return("tiny");
+if ($block = enakh_sandstone_small) return("small");
+if ($block = enakh_sandstone_medium) return("medium");
+return("large");
+
+// choosing the head
+[label,enakh_lazim_choose_head]
+~chatnpc("<p,happy>Ah, adventurer. As you can see, the statue is nearly complete. All it needs is a head.");
+~chatnpc("<p,neutral>The head should be made out of granite, which you can find in that quarry nearby.");
+@enakh_lazim_head_menu;
+
+[label,enakh_lazim_head_menu]
+switch_int (~p_choice4("I think it should have my head!", 1, "I think it should have your head.", 2, "I think it should have a god's head.", 3, "I think it should have a camel's head.", 4)) {
+    case 1 :
+        ~chatplayer("<p,happy>I think it should have my head!");
+        ~chatnpc("<p,laugh>Your head? On my statue? I think not!"); // ours (the wikis: he refuses)
+        @enakh_lazim_head_menu;
+    case 2 :
+        ~chatplayer("<p,neutral>I think it should have your head.");
+        ~chatnpc("<p,happy>My head? Well, I suppose it is a very fine head. Very well."); // ours
+        %enakh_choose_statue_head = ^enakh_head_lazim;
+    case 3 :
+        ~chatplayer("<p,neutral>I think it should have a god's head.");
+        ~chatnpc("<p,neutral>I see...");
+        ~chatplayer("<p,quiz>Whose head do you think I should make?");
+        ~chatnpc("<p,neutral>Well, some of the people in the desert worship a god called Icthlarin.");
+        switch_int (~p_choice2("I'll use Zamorak's head for the statue.", 1, "I'll use Icthlarin's head for the statue.", 2)) {
+            case 1 :
+                ~chatplayer("<p,neutral>I'll use Zamorak's head for the statue.");
+                %enakh_choose_statue_head = ^enakh_head_zamorak;
+            case 2 :
+                ~chatplayer("<p,neutral>I'll use Icthlarin's head for the statue.");
+                %enakh_choose_statue_head = ^enakh_head_icthlarin;
+        }
+    case 4 :
+        ~chatplayer("<p,neutral>I think it should have a camel's head.");
+        ~chatnpc("<p,neutral>A camel? How... unusual. Very well."); // ours
+        %enakh_choose_statue_head = ^enakh_head_camel;
+}
+
+[proc,enakh_has_head_item]()(boolean)
+if (calc(inv_total(inv, enakh_statue_head_lazim) + inv_total(inv, enakh_statue_head_zamorak) + inv_total(inv, enakh_statue_head_icthlarin) + inv_total(inv, enakh_statue_head_camel)) > 0) return(true);
+return(false);
+
+// ================================================================ chiselling
+[opheldu,enakh_sandstone_huge_base+legs]
+if (last_useitem ! chisel & last_useitem ! enakh_chisel) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(enakh_player_chisel, 0); // ours: the animation
+p_delay(2);
+inv_del(inv, enakh_sandstone_huge_base+legs, 1);
+inv_add(inv, enakh_sandstone_crafted_base+legs, 1);
+mes("You chisel away at the block of sandstone, and form the statue's base and legs.");
+
+[opheldu,enakh_sandstone_huge_body]
+if (last_useitem ! chisel & last_useitem ! enakh_chisel) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(enakh_player_chisel, 0);
+p_delay(2);
+inv_del(inv, enakh_sandstone_huge_body, 1);
+inv_add(inv, enakh_sandstone_crafted_body, 1);
+mes("You chisel away at the block of sandstone, and form the statue's body.");
+
+// breaking blocks with a chisel (the wikis; how a block splits is ours)
+[opheldu,enakh_sandstone_large] @enakh_split(enakh_sandstone_large, enakh_sandstone_medium, 2, null, 0);
+[opheldu,enakh_sandstone_medium] @enakh_split(enakh_sandstone_medium, enakh_sandstone_small, 2, enakh_sandstone_tiny, 1);
+[opheldu,enakh_sandstone_small] @enakh_split(enakh_sandstone_small, enakh_sandstone_tiny, 2, null, 0);
+
+[label,enakh_split](namedobj $block, namedobj $into, int $n, namedobj $extra, int $m)
+if (last_useitem ! chisel & last_useitem ! enakh_chisel) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_freespace(inv) < calc($n + $m - 1)) {
+    mes("You don't have enough room in your inventory to break that up."); // ours
+    return;
+}
+anim(enakh_player_chisel, 0);
+inv_del(inv, $block, 1);
+inv_add(inv, $into, $n);
+if ($extra ! null) inv_add(inv, $extra, $m);
+mes("You break the sandstone into smaller pieces."); // ours
+
+// the head, from a 5 kg block of granite
+[opheldu,enakh_granite_medium]
+if (last_useitem ! chisel & last_useitem ! enakh_chisel) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%enakh_quest = ^enakh_in_temple & %enakh_seen_pedestal = 1 & inv_total(inv, enakh_camel_mould_positive) > 0) @enakh_carve_akthanakos_head;
+if (%enakh_quest ! ^enakh_started | %enakh_statue_stage ! ^enakh_statue_chiselled | %enakh_choose_statue_head = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~chatplayer("<p,quiz>Hmm. Which head did I decide to use for the statue?");
+def_int $head = ~p_choice4("The head of Lazim, the sculptor", ^enakh_head_lazim, "The head of the god Zamorak", ^enakh_head_zamorak, "The head of the god Icthlarin", ^enakh_head_icthlarin, "The head of a camel", ^enakh_head_camel);
+~chatplayer("<p,happy>There, that looks good.");
+if (inv_total(inv, enakh_granite_medium) < 1) return;
+anim(enakh_player_chisel, 0);
+inv_del(inv, enakh_granite_medium, 1);
+inv_add(inv, ~enakh_head_obj($head), 1);
+mes("You carefully chisel the granite block into the likeness of <~enakh_head_name($head)>.");
+
+[proc,enakh_head_obj](int $head)(namedobj)
+if ($head = ^enakh_head_lazim) return(enakh_statue_head_lazim);
+if ($head = ^enakh_head_zamorak) return(enakh_statue_head_zamorak);
+if ($head = ^enakh_head_icthlarin) return(enakh_statue_head_icthlarin);
+return(enakh_statue_head_camel);
+
+[proc,enakh_head_of_obj](obj $obj)(int)
+if ($obj = enakh_statue_head_lazim) return(^enakh_head_lazim);
+if ($obj = enakh_statue_head_zamorak) return(^enakh_head_zamorak);
+if ($obj = enakh_statue_head_icthlarin) return(^enakh_head_icthlarin);
+if ($obj = enakh_statue_head_camel) return(^enakh_head_camel);
+return(0);
+
+[proc,enakh_head_name](int $head)(string)
+if ($head = ^enakh_head_lazim) return("Lazim"); // ours
+if ($head = ^enakh_head_zamorak) return("the god Zamorak");
+if ($head = ^enakh_head_icthlarin) return("the god Icthlarin");
+return("a camel"); // ours
+
+[proc,enakh_head_who](int $head)(string)
+if ($head = ^enakh_head_lazim) return("me");
+if ($head = ^enakh_head_zamorak) return("Zamorak");
+if ($head = ^enakh_head_icthlarin) return("Icthlarin");
+return("a camel");
+
+// ================================================================ building the statue
+[oplocu,enakh_statue_east_multiloc]
+def_int $stage = %enakh_statue_stage;
+if (%enakh_quest ! ^enakh_started) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (last_useitem = enakh_sandstone_crafted_base+legs & $stage = 0) {
+    anim(human_pickuptable, 0);
+    inv_del(inv, enakh_sandstone_crafted_base+legs, 1);
+    %enakh_statue_stage = ^enakh_statue_base;
+    mes("You place the base of the statue on the flat ground."); // ours
+    return;
+}
+if (last_useitem = enakh_sandstone_crafted_body & $stage = ^enakh_statue_base) {
+    anim(human_pickuptable, 0);
+    inv_del(inv, enakh_sandstone_crafted_body, 1);
+    %enakh_statue_stage = ^enakh_statue_body;
+    mes("You place the body on the base of the statue."); // ours
+    return;
+}
+if ((last_useitem = chisel | last_useitem = enakh_chisel) & $stage = ^enakh_statue_body) {
+    anim(enakh_player_chisel, 0);
+    p_delay(2);
+    %enakh_statue_stage = ^enakh_statue_chiselled;
+    mes("You chisel away at the statue."); // ours
+    ~chatnpc_specific("Lazim", enakh_lazim, "<p,quiz>It shouldn't have taken this long... did I miscalculate?");
+    return;
+}
+def_int $head = ~enakh_head_of_obj(last_useitem);
+if ($head > 0 & $stage = ^enakh_statue_chiselled) @enakh_place_head($head);
+~displaymessage(^dm_default);
+
+[label,enakh_place_head](int $head)
+~chatnpc_specific("Lazim", enakh_lazim, "<p,angry>Hold it! I know you adventurers.");
+~chatnpc_specific("Lazim", enakh_lazim, "<p,neutral>I bet you've managed to make the wrong head, or something like that.");
+~chatplayer("<p,neutral>I know what I'm doing, honest...");
+~chatnpc_specific("Lazim", enakh_lazim, "<p,angry>I don't care if you think you know what you're doing. Let me have a look at that head.");
+~chatplayer("<p,neutral>Fine, fine...");
+def_int $chosen = %enakh_choose_statue_head;
+~chatnpc_specific("Lazim", enakh_lazim, "<p,neutral>You said you'd make the statue's head look like <~enakh_head_who($chosen)>.");
+if ($head ! $chosen) {
+    // ours: the wikis: he insults you, takes the granite and lets you choose again
+    ~chatnpc_specific("Lazim", enakh_lazim, "<p,angry>And this looks nothing like it! Useless! Go and get some more granite, and decide properly this time.");
+    inv_del(inv, ~enakh_head_obj($head), 1);
+    %enakh_choose_statue_head = 0;
+    return;
+}
+~chatnpc_specific("Lazim", enakh_lazim, "<p,neutral>Hmm. You're not a particularly good sculptor, adventurer, but it's at least recognisable.");
+inv_del(inv, ~enakh_head_obj($head), 1);
+anim(human_pickuptable, 0);
+def_int $base = calc(^enakh_statue_head + $head - 1);
+%enakh_statue_multivar = $base;
+p_delay(1);
+~chatplayer("<p,shock>What's going on?");
+// the statue cracks and falls through (the 377 cache's crack multilocs), and you with it
+%enakh_statue_multivar = calc($base + 8);
+sound_synth(cave_collapse_1, 1, 0);
+p_delay(1);
+%enakh_statue_multivar = calc($base + 16);
+p_delay(1);
+%enakh_statue_multivar = calc($base + 24);
+~fade_out;
+p_delay(2);
+%enakh_quest = ^enakh_in_temple;
+%enakh_where_is_lazim = ^enakh_lazim_fallen_statue;
+%enakh_fallen_statue_multivar = 3;
+p_telejump(^enakh_temple_landing);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+damage(uid, 1, 2); // ours: the fall hurts a little
+~chatplayer("<p,shock>Argh my duodenum!");
+~chatplayer("<p,angry>Ow... Lazim has some explaining to do!");
+
+// ================================================================ the Desert Quarry (sandstone 35, granite 45)
+// The OSRS wiki (Sandstone rocks, Granite rocks): sandstone 1/2/5/10 kg for 30/40/50/60
+// experience, granite 500g/2kg/5kg for 50/60/75; the size is random, the bigger ones likelier with
+// Mining; a rock is empty for about 5.4 seconds after each piece. The chances are the wiki chart's
+// level 35/45 and 99 values, straight-line between (ours).
+[label,get_ore_quarry]
+db_find(mining_table:rock, loc_type);
+def_dbrow $data = db_findnext;
+if ($data = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_boolean $granite = false;
+if (compare(db_getfield($data, mining_table:ore_name, 0), "granite") = 0) $granite = true;
+def_int $lvl = stat(mining);
+def_int $roll = random(1000);
+def_namedobj $out = null;
+def_int $exp = 0;
+if ($granite = false) {
+    // 1 kg 224->268, 2 kg 144->222, 5 kg 115->238, 10 kg 82->199 (per mille, level 35 -> 99)
+    def_int $t1 = ~enakh_lerp(224, 268, 35, $lvl);
+    def_int $t2 = calc($t1 + ~enakh_lerp(144, 222, 35, $lvl));
+    def_int $t3 = calc($t2 + ~enakh_lerp(115, 238, 35, $lvl));
+    def_int $t4 = calc($t3 + ~enakh_lerp(82, 199, 35, $lvl));
+    if ($roll < $t1) { $out = enakh_sandstone_tiny; $exp = 300; }
+    else if ($roll < $t2) { $out = enakh_sandstone_small; $exp = 400; }
+    else if ($roll < $t3) { $out = enakh_sandstone_medium; $exp = 500; }
+    else if ($roll < $t4) { $out = enakh_sandstone_large; $exp = 600; }
+} else {
+    // 500g 159->207, 2 kg 133->222, 5 kg 129->254 (per mille, level 45 -> 99)
+    def_int $g1 = ~enakh_lerp(159, 207, 45, $lvl);
+    def_int $g2 = calc($g1 + ~enakh_lerp(133, 222, 45, $lvl));
+    def_int $g3 = calc($g2 + ~enakh_lerp(129, 254, 45, $lvl));
+    if ($roll < $g1) { $out = enakh_granite_tiny; $exp = 500; }
+    else if ($roll < $g2) { $out = enakh_granite_small; $exp = 600; }
+    else if ($roll < $g3) { $out = enakh_granite_medium; $exp = 750; }
+}
+if ($out = null) {
+    p_oploc(3);
+    return;
+}
+p_delay(0);
+loc_change(loc_param(next_loc_stage_mining), 9);
+sound_synth(mine, 1, 0);
+anim(null, 0);
+inv_add(inv, $out, 1);
+stat_advance(mining, $exp);
+mes("You manage to quarry some <db_getfield($data, mining_table:ore_name, 0)>."); // ours
+
+[proc,enakh_lerp](int $low, int $high, int $from, int $lvl)(int)
+if ($lvl <= $from) return($low);
+if ($lvl >= 99) return($high);
+return(calc($low + ($high - $low) * ($lvl - $from) / (99 - $from)));

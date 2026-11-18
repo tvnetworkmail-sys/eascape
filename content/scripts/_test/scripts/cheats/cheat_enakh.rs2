@@ -1,0 +1,57 @@
+// EASCape: test commands for Enakhra's Lament (quests/quest_enakh).
+
+// ::enakhpack - what the quest needs (the OSRS wiki's list): a chisel, a pickaxe, a tinderbox, logs,
+// oak, willow and maple logs, a lit candle, coal, bread, 2 soft clay, and runes for Fire Bolt, Wind
+// Bolt and Crumble Undead. It doesn't raise your levels (Crafting 50, Firemaking 45, Prayer 43,
+// Magic 39, Mining 35/45 for the quarry).
+[debugproc,enakhpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(chisel, 1));
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+$banked = calc($banked + ~questpack_give(logs, 1));
+$banked = calc($banked + ~questpack_give(oak_logs, 1));
+$banked = calc($banked + ~questpack_give(willow_logs, 1));
+$banked = calc($banked + ~questpack_give(maple_logs, 1));
+$banked = calc($banked + ~questpack_give(lit_candle, 1));
+$banked = calc($banked + ~questpack_give(coal, 1));
+$banked = calc($banked + ~questpack_give(bread, 1));
+$banked = calc($banked + ~questpack_give(softclay, 2));
+$banked = calc($banked + ~questpack_give(firerune, 20));
+$banked = calc($banked + ~questpack_give(airrune, 30));
+$banked = calc($banked + ~questpack_give(chaosrune, 10));
+$banked = calc($banked + ~questpack_give(earthrune, 10));
+~questpack_done("Enakhra's Lament", $banked);
+mes("::enakhtele 1-5: Lazim, the quarry, the temple bottom, the pedestal, the second Boneguard.");
+
+// ::enakhstage <n> - %enakh_quest (10 started, 20 in the temple, 30 head on the pedestal, 40 the
+// rooms done, 50 Boneguard crumbled, 60 helping, 65 wall built, 70 complete). It sets nothing else.
+[debugproc,enakhstage](int $n)
+if (p_finduid(uid) = false) return;
+%enakh_quest = $n;
+if ($n >= ^enakh_in_temple) %enakh_where_is_lazim = ^enakh_lazim_fallen_statue;
+if ($n >= ^enakh_head_placed) {
+    %enakh_where_is_lazim = ^enakh_lazim_pedestal;
+    %enakh_pedestal_head = 1;
+}
+if ($n >= ^enakh_rooms_done) {
+    %enakh_blood_room = 1;
+    %enakh_ice_room = 1;
+    %enakh_smoke_room = 1;
+    %enakh_shadow_room = 1;
+}
+~send_quest_progress(questlist:enakh, %enakh_quest, ^enakh_complete);
+mes("Enakhra's Lament: stage <tostring($n)>.");
+
+// ::enakhtele <n> - 1 Lazim, 2 the quarry, 3 the temple bottom, 4 the pedestal, 5 the second Boneguard
+[debugproc,enakhtele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(map_findsquare(0_49_45_55_44, 0, 2, ^map_findsquare_lineofwalk));
+    case 2 : p_telejump(map_findsquare(0_49_45_38_51, 0, 3, ^map_findsquare_lineofwalk));
+    case 3 : p_telejump(map_findsquare(^enakh_temple_landing, 0, 2, ^map_findsquare_lineofwalk));
+    case 4 : p_telejump(map_findsquare(1_48_145_32_30, 0, 2, ^map_findsquare_lineofwalk));
+    case 5 : p_telejump(map_findsquare(1_48_145_33_19, 0, 2, ^map_findsquare_lineofwalk));
+    case default : mes("::enakhtele 1-5");
+}

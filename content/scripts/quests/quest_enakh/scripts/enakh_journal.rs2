@@ -1,0 +1,54 @@
+// EASCape: Enakhra's Lament's journal (ours: no source has its words; the steps are the wikis')
+[if_button,questlist:enakh]
+def_int $s = %enakh_quest;
+if ($s = ^enakh_not_started) {
+    def_string $crafting = "@dbl@Level 50 @dre@Crafting";
+    if (stat_base(crafting) >= 50) $crafting = "@str@Level 50 Crafting";
+    def_string $firemaking = "@dbl@Level 45 @dre@Firemaking";
+    if (stat_base(firemaking) >= 45) $firemaking = "@str@Level 45 Firemaking";
+    def_string $prayer = "@dbl@Level 43 @dre@Prayer";
+    if (stat_base(prayer) >= 43) $prayer = "@str@Level 43 Prayer";
+    def_string $magic = "@dbl@Level 39 @dre@Magic";
+    if (stat_base(magic) >= 39) $magic = "@str@Level 39 Magic";
+    ~quest_journal("Enakhra's Lament", "@dbl@I can start this quest by speaking to @dre@Lazim@dbl@ in the desert@dbl@|@dbl@south of the @dre@Bandit Camp@dbl@.||@dbl@To complete this quest I will need:|<$crafting>|<$firemaking>|<$prayer>|<$magic>");
+    return;
+}
+if ($s >= ^enakh_complete) {
+    ~quest_journal("Enakhra's Lament", "@str@I helped Lazim build a statue in the desert, which fell|@str@through into Enakhra's temple. I found my way to its top,|@str@and freed Akthanakos from Enakhra's spell.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@Lazim asked me to help him build a statue in the desert.";
+if ($s = ^enakh_started) {
+    def_int $stage = %enakh_statue_stage;
+    if ($stage = 0) $t = append($t, "|@dbl@I need to bring him @dre@32 kg of sandstone@dbl@ from the quarry for|@dbl@the statue's base.");
+    else if ($stage = ^enakh_statue_base) $t = append($t, "|@dbl@I need to bring him @dre@20 kg of sandstone@dbl@ for the statue's body.");
+    else if ($stage = ^enakh_statue_body) $t = append($t, "|@dbl@I should ask @dre@Lazim@dbl@ what the statue needs next.");
+    else if (%enakh_choose_statue_head = 0) $t = append($t, "|@dbl@I should talk to @dre@Lazim@dbl@ about the statue's head.");
+    else $t = append($t, "|@dbl@I need to carve the statue's head from @dre@granite@dbl@ and put it|@dbl@on the statue.");
+    ~quest_journal("Enakhra's Lament", $t);
+    return;
+}
+$t = append($t, "|@str@The statue fell through the ground into an ancient temple.");
+if ($s = ^enakh_in_temple) {
+    $t = append($t, "|@dbl@I need to find my way up through the temple, using the|@dre@statue's limbs@dbl@ and the @dre@sigils@dbl@ to open its doors.");
+    if (%enakh_seen_pedestal = 1) $t = append($t, "|@dbl@A head needs to fit the @dre@pedestal@dbl@ by the barrier.");
+    ~quest_journal("Enakhra's Lament", $t);
+    return;
+}
+$t = append($t, "|@str@I placed a head in the pedestal by the barrier.");
+if ($s = ^enakh_head_placed) {
+    $t = append($t, "|@dbl@I need to deal with the @dre@four rooms@dbl@ on this floor to open|@dbl@the magic barrier.");
+    ~quest_journal("Enakhra's Lament", $t);
+    return;
+}
+$t = append($t, "|@str@I opened the magic barrier.");
+if ($s = ^enakh_rooms_done) {
+    $t = append($t, "|@dbl@A @dre@Boneguard@dbl@ blocks the way upstairs. Perhaps a spell that|@dbl@crumbles the undead would help.");
+} else if ($s = ^enakh_boneguard_crumbled) {
+    $t = append($t, "|@str@I freed the spirit trapped in the first Boneguard.|@dbl@Another @dre@Boneguard@dbl@ waits below. I should talk to it.");
+} else if ($s = ^enakh_helping) {
+    $t = append($t, "|@dbl@I need to finish building the @dre@wall@dbl@ that shields the Boneguard|@dbl@from Enakhra's magic.");
+} else {
+    $t = append($t, "|@str@I finished the wall.|@dbl@I should talk to the @dre@Boneguard@dbl@ again.");
+}
+~quest_journal("Enakhra's Lament", $t);

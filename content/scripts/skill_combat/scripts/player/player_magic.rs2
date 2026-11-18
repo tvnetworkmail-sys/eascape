@@ -68,6 +68,8 @@ if (npc_type = ungadulu_good) {
 
 [proc,pvm_default_spell](int $spell)
 def_dbrow $spell_data = ~get_spell_data($spell);
+// EASCape: Enakhra's Lament's fountain and furnace (quest_enakh/enakh_temple.rs2)
+if (~enakh_spell_npc($spell) = true) return;
 // EASCape: Desert Treasure's ice blocks can be hit with spells too
 if (npc_type = troll_block_1 | npc_type = troll_block_2) {
     ~dt_ice_block_spell($spell_data);

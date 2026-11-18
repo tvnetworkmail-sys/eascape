@@ -1,0 +1,745 @@
+// EASCape: Enakhra's Lament, the temple. Words from the owner's video of the quest; the steps from the
+// RuneScape and OSRS wikis' walkthroughs; anything else is marked "ours". The cutscenes are shown as
+// their lines of speech, a page every few seconds (ours: the actors aren't put on).
+
+// a cutscene line: speaker, head, text (the video's cutscene pages run on their own)
+[proc,enakh_cs](string $name, npc $head, string $text)
+split_init($text, 380, 4, q8_full);
+def_int $page = 0;
+def_int $pagetotal = split_pagecount;
+while ($page < $pagetotal) {
+    ~chatnpc_cutscene_page($name, $head, $page);
+    p_delay(calc(2 + split_linecount($page) * 2));
+    $page = calc($page + 1);
+}
+
+// ================================================================ Lazim in the temple
+[opnpc1,enakh_lazim_fallen_statue_east_multinpc]
+if (%enakh_lazim_whendidyouarrive = 0) @enakh_lazim_temple_intro;
+if (%enakh_left_arm_taken = 0 | %enakh_right_arm_taken = 0 | %enakh_left_leg_taken = 0 | %enakh_right_leg_taken = 0) {
+    ~chatnpc("<p,neutral>You can use your chisel or pick to take them from the statue. They should be the right size.");
+    return;
+}
+~chatnpc("<p,neutral>Well, what are you waiting for? Find a way up to the next floor!"); // ours
+
+[label,enakh_lazim_temple_intro]
+~chatnpc("<p,happy>Ah, excellent, it's all gone as planned.");
+~chatplayer("<p,shock>Gone as planned?");
+~chatplayer("<p,angry>We just fell through the ground into some weird temple!");
+~chatnpc("<p,neutral>Of course we did! That's why I had you build a statue.");
+~chatplayer("<p,quiz>I don't think you really are a sculptor. What are you looking for in this temple?");
+~chatnpc("<p,shifty>Oh, nothing. No treasure here. No priceless artefacts from the lost ages of Gielinor, or anything like that.");
+~chatplayer("<p,neutral>I'll be leaving, then.");
+~chatnpc("<p,shock>Wait! If you help me, then...");
+~chatplayer("<p,happy>That sounds better. So, where's the treasure?");
+~chatnpc("<p,neutral>At the top of the temple. We've fallen through to the very bottom, so you'll have to climb up to the next floor.");
+~chatplayer("<p,neutral>That's good, but...");
+~chatnpc("<p,neutral>The stories I've heard say there are odd doors in this temple, that have locks that don't need keys, but... rather large limbs.");
+~chatplayer("<p,shock>Yuck!");
+~chatnpc("<p,neutral>You can use your chisel or pick to take them from the statue. They should be the right size.");
+%enakh_lazim_whendidyouarrive = 1;
+if (%enakh_lazim_handedoverhead = 0) {
+    // the wikis: Lazim gives you back the statue's head
+    %enakh_lazim_handedoverhead = 1;
+    ~enakh_give(~enakh_head_obj(%enakh_choose_statue_head));
+    ~objbox(~enakh_head_obj(%enakh_choose_statue_head), "Lazim hands you the statue's head.", 250, 0, divide(^objbox_height, 2)); // ours
+}
+
+// ================================================================ the fallen statue's limbs
+[oplocu,enakh_fallen_statue_east_multiloc]
+if (last_useitem ! chisel & last_useitem ! enakh_chisel & oc_category(last_useitem) ! weapon_pickaxe) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%enakh_left_arm_taken = 1 & %enakh_right_arm_taken = 1 & %enakh_left_leg_taken = 1 & %enakh_right_leg_taken = 1) {
+    ~mesbox("The statue has no limbs left for you to take.");
+    return;
+}
+@enakh_limb_menu;
+
+[label,enakh_limb_menu]
+def_string $la = "Remove the statue's left arm";
+def_string $ra = "Remove the statue's right arm";
+def_string $ll = "Remove the statue's left leg";
+def_string $rl = "Remove the statue's right leg";
+// only the limbs still on it (the video's menus)
+def_int $choice = 0;
+def_int $mask = calc(%enakh_left_arm_taken + %enakh_right_arm_taken * 2 + %enakh_left_leg_taken * 4 + %enakh_right_leg_taken * 8);
+if ($mask = 0) $choice = ~p_choice4($la, 1, $ra, 2, $ll, 3, $rl, 4);
+else if ($mask = 1) $choice = ~p_choice3($ra, 2, $ll, 3, $rl, 4);
+else if ($mask = 2) $choice = ~p_choice3($la, 1, $ll, 3, $rl, 4);
+else if ($mask = 4) $choice = ~p_choice3($la, 1, $ra, 2, $rl, 4);
+else if ($mask = 8) $choice = ~p_choice3($la, 1, $ra, 2, $ll, 3);
+else if ($mask = 3) $choice = ~p_choice2($ll, 3, $rl, 4);
+else if ($mask = 5) $choice = ~p_choice2($ra, 2, $rl, 4);
+else if ($mask = 9) $choice = ~p_choice2($ra, 2, $ll, 3);
+else if ($mask = 6) $choice = ~p_choice2($la, 1, $rl, 4);
+else if ($mask = 10) $choice = ~p_choice2($la, 1, $ll, 3);
+else if ($mask = 12) $choice = ~p_choice2($la, 1, $ra, 2);
+else if ($mask = 14) $choice = 1;
+else if ($mask = 13) $choice = 2;
+else if ($mask = 11) $choice = 3;
+else $choice = 4;
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough room in your inventory."); // ours
+    return;
+}
+anim(enakh_player_chisel, 0);
+p_delay(1);
+switch_int ($choice) {
+    case 1 :
+        %enakh_left_arm_taken = 1;
+        inv_add(inv, enakh_arm_left, 1);
+        mes("You carefully remove the statue's left arm. It's very heavy.");
+    case 2 :
+        %enakh_right_arm_taken = 1;
+        inv_add(inv, enakh_arm_right, 1);
+        mes("You carefully remove the statue's right arm. It's very heavy.");
+    case 3 :
+        %enakh_left_leg_taken = 1;
+        inv_add(inv, enakh_leg_left, 1);
+        mes("You carefully remove the statue's left leg. It's very heavy.");
+    case 4 :
+        %enakh_right_leg_taken = 1;
+        inv_add(inv, enakh_leg_right, 1);
+        mes("You carefully remove the statue's right leg. It's very heavy.");
+}
+
+// ================================================================ the limb doors
+[oploc1,enakh_door_left_arm] if (%enakh_left_armlock = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_right_arm] if (%enakh_right_armlock = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_left_leg] if (%enakh_left_leglock = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_right_leg] if (%enakh_right_leglock = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+
+[proc,enakh_door_locked]
+mes("The door is locked."); // ours
+
+[oplocu,enakh_door_left_arm] @enakh_limb_door(enakh_arm_left, 1);
+[oplocu,enakh_door_right_arm] @enakh_limb_door(enakh_arm_right, 2);
+[oplocu,enakh_door_left_leg] @enakh_limb_door(enakh_leg_left, 3);
+[oplocu,enakh_door_right_leg] @enakh_limb_door(enakh_leg_right, 4);
+
+[label,enakh_limb_door](namedobj $limb, int $which)
+if (last_useitem ! enakh_arm_left & last_useitem ! enakh_arm_right & last_useitem ! enakh_leg_left & last_useitem ! enakh_leg_right) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_boolean $arm_door = false;
+if ($which <= 2) $arm_door = true;
+def_boolean $arm_item = false;
+if (last_useitem = enakh_arm_left | last_useitem = enakh_arm_right) $arm_item = true;
+def_string $what = "leg";
+if ($arm_item = true) $what = "arm";
+if (last_useitem ! $limb) {
+    if ($arm_door = $arm_item) {
+        ~mesbox("That <$what> doesn't quite fit into the lock.");
+    } else {
+        ~mesbox("That <$what> doesn't fit into the lock.");
+    }
+    return;
+}
+inv_del(inv, $limb, 1);
+if ($which = 1) %enakh_left_armlock = 1;
+else if ($which = 2) %enakh_right_armlock = 1;
+else if ($which = 3) %enakh_left_leglock = 1;
+else %enakh_right_leglock = 1;
+~mesbox("You place the <$what> in the lock. It fits exactly.");
+~chatplayer("<p,shock>Ow, my head...");
+def_int $opened = calc(%enakh_left_armlock + %enakh_right_armlock + %enakh_left_leglock + %enakh_right_leglock);
+~enakh_vision($opened);
+~eascape_door_walk;
+
+// the visions of the temple's past, one for each door you open (the video's order)
+[proc,enakh_vision](int $n)
+if ($n = 1) {
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,happy>At last, it's complete. A temple fit for my lord.");
+} else if ($n = 2) {
+    ~enakh_cs("Knight", enakh_cutscene_knight, "<p,angry>All right, men, destroy that evil sorceress... and her temple with her!");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,angry>You will never have this temple - it belongs to my lord!");
+    ~enakh_cs("Knight", enakh_cutscene_knight, "<p,angry>F-for Avarrocka!");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,laugh>Ah ha ha ha ha!");
+    ~enakh_cs("Knight", enakh_cutscene_knight, "<p,shock>Aaaaaargh!");
+} else if ($n = 3) {
+    ~enakh_cs("Akthanakos", enakh_akthanakos_mahjarrat, "<p,quiz>Well, why would Zamorak want a temple? You said he needed weapons instead.");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,sad>I wish I'd never supported him.");
+    ~enakh_cs("Akthanakos", enakh_akthanakos_mahjarrat, "<p,happy>So you've seen sense? You'll join our side?");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,neutral>Of course.");
+} else {
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,neutral>Surely this would make a good weapon...");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,angry>No, no! Curse it, that doesn't work!");
+}
+if_close;
+
+// ================================================================ the sigils
+[oploc1,enakh_pedestal_sigil_z] @enakh_take_sigil(enakh_sigil_z, %enakh_z_door);
+[oploc1,enakh_pedestal_sigil_m] @enakh_take_sigil(enakh_sigil_m, %enakh_m_door);
+[oploc1,enakh_pedestal_sigil_r] @enakh_take_sigil(enakh_sigil_r, %enakh_r_door);
+[oploc1,enakh_pedestal_sigil_k] @enakh_take_sigil(enakh_sigil_k, %enakh_k_door);
+
+[label,enakh_take_sigil](namedobj $sigil, int $used)
+if ($used = 1 | ~enakh_owns($sigil) = true) {
+    mes("The pedestal is empty."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough room in your inventory."); // ours
+    return;
+}
+anim(human_pickuptable, 0);
+inv_add(inv, $sigil, 1);
+mes("You take the metal sigil. It's cold to the touch.");
+
+[proc,enakh_owns](obj $obj)(boolean)
+if (calc(inv_total(inv, $obj) + inv_total(bank, $obj)) > 0) return(true);
+return(false);
+
+[oploc1,enakh_door_z_sigil] if (%enakh_z_door = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_m_sigil] if (%enakh_m_door = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_r_sigil] if (%enakh_r_door = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+[oploc1,enakh_door_k_sigil] if (%enakh_k_door = 1) { ~eascape_door_walk; } else { ~enakh_door_locked; }
+
+[oplocu,enakh_door_z_sigil] @enakh_sigil_door(enakh_sigil_z, 1);
+[oplocu,enakh_door_m_sigil] @enakh_sigil_door(enakh_sigil_m, 2);
+[oplocu,enakh_door_r_sigil] @enakh_sigil_door(enakh_sigil_r, 3);
+[oplocu,enakh_door_k_sigil] @enakh_sigil_door(enakh_sigil_k, 4);
+
+[label,enakh_sigil_door](namedobj $sigil, int $which)
+if (last_useitem ! enakh_sigil_z & last_useitem ! enakh_sigil_m & last_useitem ! enakh_sigil_r & last_useitem ! enakh_sigil_k) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (last_useitem ! $sigil) {
+    ~mesbox("That sigil doesn't fit into the lock."); // ours
+    return;
+}
+inv_del(inv, $sigil, 1);
+if ($which = 1) %enakh_z_door = 1;
+else if ($which = 2) %enakh_m_door = 1;
+else if ($which = 3) %enakh_r_door = 1;
+else %enakh_k_door = 1;
+~mesbox("You place the sigil in the lock. It fits exactly.");
+~eascape_door_walk;
+
+// ================================================================ sand piles and the secret entrances
+// a sand pile leads up to one of the four boulders above, and opens it for you (the wikis)
+[oploc1,enakh_temple_sand_pile]
+def_coord $to;
+if (coordx(loc_coord) < 3084) {
+    %enakh_boulder_w_multivar = 1;
+    $to = 0_49_45_10_28; // west boulder 3146,2908
+} else if (coordz(loc_coord) > 9320 & coordx(loc_coord) < 3100) {
+    %enakh_boulder_n_multivar = 1;
+    $to = 0_49_45_12_57; // north boulder 3148,2937
+} else if (coordz(loc_coord) < 9300) {
+    %enakh_boulder_s_multivar = 1;
+    $to = 0_49_45_53_8; // south boulder 3189,2888
+} else {
+    %enakh_boulder_e_multivar = 1;
+    $to = 0_49_45_58_45; // east boulder 3194,2925
+}
+anim(human_climbing, 0); // ours
+p_delay(1);
+p_telejump(map_findsquare($to, 1, 1, ^map_findsquare_none)); // beside the boulder
+
+// you land where the corner ladder from the floor below comes up, beside the sand pile
+[oploc1,enakh_secret_boulder_multiloc_n] @enakh_boulder_down(1_48_145_14_56);
+[oploc1,enakh_secret_boulder_multiloc_e] @enakh_boulder_down(1_48_145_55_50);
+[oploc1,enakh_secret_boulder_multiloc_s] @enakh_boulder_down(1_48_145_50_6);
+[oploc1,enakh_secret_boulder_multiloc_w] @enakh_boulder_down(1_48_145_7_25);
+
+[label,enakh_boulder_down](coord $to)
+anim(human_climbing_down, 0); // ours
+p_delay(1);
+p_telejump($to);
+
+// ================================================================ the pedestal
+[oplocu,enakh_pedestal_multiloc]
+def_int $head = ~enakh_head_of_obj(last_useitem);
+if ($head > 0) {
+    // the wikis: the statue's head fits imperfectly
+    %enakh_seen_pedestal = 1;
+    ~mesbox("You try the stone head in the hollow on the pedestal, but it doesn't quite fit."); // ours
+    return;
+}
+if (last_useitem = softclay) {
+    if (%enakh_pedestal_head = 0) {
+        inv_del(inv, softclay, 1);
+        inv_add(inv, enakh_camel_mould_positive, 1);
+        %enakh_seen_pedestal = 1;
+        ~mesbox("You press the soft clay into the hollow, and make a positive mould of it.");
+        return;
+    }
+    // the wikis: soft clay on the camel head once it's in place makes a camel mask
+    inv_del(inv, softclay, 1);
+    inv_add(inv, enakh_camel_mask, 1);
+    ~mesbox("You press the soft clay against the stone head, and make a mask of it."); // ours
+    return;
+}
+if (last_useitem = enakh_stone_head_akthanakos & %enakh_pedestal_head = 0) {
+    inv_del(inv, enakh_stone_head_akthanakos, 1);
+    %enakh_pedestal_head = 1;
+    ~mesbox("You place the stone head into the hollow. It fits exactly.");
+    ~chatplayer("<p,shock>Ow, not another headache...");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,happy>But it's still a nice temple, isn't it?");
+    ~enakh_cs("Akthanakos", enakh_akthanakos_mahjarrat, "<p,quiz>Wait... What is this?");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,laugh>Ha ha ha. You believed me, didn't you?");
+    ~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,angry>I would never desert my lord!");
+    if_close;
+    if (%enakh_quest < ^enakh_head_placed) %enakh_quest = ^enakh_head_placed;
+    %enakh_where_is_lazim = ^enakh_lazim_pedestal;
+    return;
+}
+~displaymessage(^dm_default);
+
+// the head for the pedestal, from the mould (the video's message)
+[label,enakh_carve_akthanakos_head]
+if (inv_total(inv, enakh_granite_medium) < 1 | inv_total(inv, enakh_camel_mould_positive) < 1) return;
+anim(enakh_player_chisel, 0);
+inv_del(inv, enakh_granite_medium, 1);
+inv_add(inv, enakh_stone_head_akthanakos, 1);
+mes("You carefully chisel the granite block to match the mould you made.");
+
+[opnpc1,enakh_lazim_pedestal_multinpc]
+if (%enakh_quest < ^enakh_rooms_done) {
+    // ours: the wikis: the barrier opens once the four rooms' puzzles are done, each lighting a globe
+    ~chatnpc("<p,neutral>That barrier must open once the four rooms on this floor are dealt with. See the globes on the pedestal? One lights up for each.");
+    ~chatnpc("<p,neutral>The knight trapped in the north-west room might know something. Start with him.");
+    return;
+}
+~chatnpc("<p,happy>The barrier's open! Be careful up there - I've heard there are traps, giant skeletons and the like."); // ours
+
+// before the head: Lazim on the floor below talks about the pedestal (ours: the wikis' gist)
+[opnpc1,enakh_lazim_altar_multinpc]
+~chatnpc("<p,neutral>The treasure must be close now!"); // ours
+
+// ================================================================ the barrier
+[oploc1,enakh_magic_wall]
+if (%enakh_quest < ^enakh_rooms_done) {
+    mes("The barrier won't let you through."); // ours
+    return;
+}
+def_int $dz = 1;
+if (coordz(coord) > coordz(loc_coord)) $dz = -1;
+p_telejump(movecoord(coord, 0, 0, calc($dz * 2)));
+mes("You walk through the barrier easily.");
+
+// ================================================================ the four rooms
+[proc,enakh_room_done]
+if (%enakh_blood_room = 1 & %enakh_ice_room = 1 & %enakh_smoke_room = 1 & %enakh_shadow_room = 1 & %enakh_quest < ^enakh_rooms_done) {
+    %enakh_quest = ^enakh_rooms_done;
+}
+
+// ice: a fire bolt or better on the fountain's crust (player_magic.rs2 calls this)
+[proc,enakh_spell_npc](int $spell)(boolean)
+if (npc_type ! enakh_dummy_fountain_multinpc & npc_type ! enakh_dummy_furnace_multinpc & npc_type ! enakh_dummy_fountain & npc_type ! enakh_dummy_furnace) return(false);
+p_stopaction;
+def_boolean $fountain = false;
+if (npc_type = enakh_dummy_fountain_multinpc | npc_type = enakh_dummy_fountain) $fountain = true;
+def_boolean $fire = false;
+if ($spell = ^fire_bolt | $spell = ^fire_blast | $spell = ^fire_wave) $fire = true;
+def_boolean $wind = false;
+if ($spell = ^wind_bolt | $spell = ^wind_blast | $spell = ^wind_wave) $wind = true;
+if (($fountain = true & $fire = false) | ($fountain = false & $wind = false)) {
+    mes("Nothing interesting happens."); // ours
+    return(true);
+}
+def_dbrow $spell_data = ~get_spell_data($spell);
+if (map_clock < %action_delay) return(true);
+if (~check_spell_requirements($spell_data) = false) return(true);
+def_int $duration = ~pvm_spell_cast($spell_data);
+p_delay(max(0, sub(divide($duration, 30), 1)));
+if ($fountain = true) {
+    %enakh_ice_room = 1;
+    mes("With a hiss of steam, the ice melts away from the fountain.");
+} else {
+    %enakh_smoke_room = 1;
+    mes("Wind rushes through the furnace, clearing away what's blocking it.");
+    mes("The smoke clears from the room.");
+}
+~enakh_room_done;
+return(true);
+
+[opnpc2,enakh_dummy_fountain_multinpc] ~mesbox("The ice is magical. A fire spell might melt it."); // ours (Pentyn's hint)
+[opnpc2,enakh_dummy_furnace_multinpc] ~mesbox("The grate is blocked. A strong wind might clear it."); // ours (Pentyn's hint)
+
+// shadow: six braziers, each wanting its own fuel (the 377 cache: logs, oak, willow, maple, a
+// candle and coal); looking at the remains needs 45 Firemaking (the OSRS wiki)
+[oploc1,enakh_brazier_1_multiloc] ~enakh_brazier_look(1);
+[oploc1,enakh_brazier_2_multiloc] ~enakh_brazier_look(2);
+[oploc1,enakh_brazier_3_multiloc] ~enakh_brazier_look(3);
+[oploc1,enakh_brazier_4_multiloc] ~enakh_brazier_look(4);
+[oploc1,enakh_brazier_5_multiloc] ~enakh_brazier_look(5);
+[oploc1,enakh_brazier_6_multiloc] ~enakh_brazier_look(6);
+
+[proc,enakh_brazier_look](int $n)
+if (~enakh_brazier_lit($n) = true) {
+    mes("The brazier is burning brightly."); // ours
+    return;
+}
+if (stat(firemaking) < 45) {
+    mes("You can't tell what was burnt in this brazier."); // ours
+    return;
+}
+mes("These look like the remains of <~enakh_brazier_fuel_name($n)>."); // ours
+
+[proc,enakh_brazier_fuel_name](int $n)(string)
+if ($n = 1) return("normal logs");
+if ($n = 2) return("oak logs");
+if ($n = 3) return("willow logs");
+if ($n = 4) return("maple logs");
+if ($n = 5) return("a candle");
+return("coal");
+
+[proc,enakh_brazier_lit](int $n)(boolean)
+def_int $v = 0;
+if ($n = 1) $v = %enakh_brazier_1_multivar;
+else if ($n = 2) $v = %enakh_brazier_2_multivar;
+else if ($n = 3) $v = %enakh_brazier_3_multivar;
+else if ($n = 4) $v = %enakh_brazier_4_multivar;
+else if ($n = 5) $v = %enakh_brazier_5_multivar;
+else $v = %enakh_brazier_6_multivar;
+if ($v = 1) return(true);
+return(false);
+
+[oplocu,enakh_brazier_1_multiloc] @enakh_brazier_fuel(1, logs);
+[oplocu,enakh_brazier_2_multiloc] @enakh_brazier_fuel(2, oak_logs);
+[oplocu,enakh_brazier_3_multiloc] @enakh_brazier_fuel(3, willow_logs);
+[oplocu,enakh_brazier_4_multiloc] @enakh_brazier_fuel(4, maple_logs);
+[oplocu,enakh_brazier_5_multiloc] @enakh_brazier_fuel(5, lit_candle);
+[oplocu,enakh_brazier_6_multiloc] @enakh_brazier_fuel(6, coal);
+
+[label,enakh_brazier_fuel](int $n, namedobj $fuel)
+if (~enakh_brazier_lit($n) = true) {
+    mes("The brazier is already lit."); // ours
+    return;
+}
+if (last_useitem ! $fuel) {
+    if (last_useitem = logs | last_useitem = oak_logs | last_useitem = willow_logs | last_useitem = maple_logs | last_useitem = lit_candle | last_useitem = coal) {
+        mes("That doesn't seem to be the right fuel for this brazier."); // ours
+    } else {
+        ~displaymessage(^dm_default);
+    }
+    return;
+}
+if ($fuel ! lit_candle & inv_total(inv, tinderbox) < 1) {
+    mes("You need a tinderbox to light the brazier."); // ours
+    return;
+}
+anim(human_pickuptable, 0);
+inv_del(inv, $fuel, 1);
+if ($n = 1) %enakh_brazier_1_multivar = 1;
+else if ($n = 2) %enakh_brazier_2_multivar = 1;
+else if ($n = 3) %enakh_brazier_3_multivar = 1;
+else if ($n = 4) %enakh_brazier_4_multivar = 1;
+else if ($n = 5) %enakh_brazier_5_multivar = 1;
+else %enakh_brazier_6_multivar = 1;
+if ($fuel = lit_candle) {
+    mes("You place the lit candle carefully in the brazier.");
+} else if ($fuel = coal) {
+    mes("You place the coal in the brazier, and carefully light it.");
+} else {
+    mes("You place the <lowercase(oc_name($fuel))> in the brazier, and carefully light them.");
+}
+if (%enakh_brazier_1_multivar = 1 & %enakh_brazier_2_multivar = 1 & %enakh_brazier_3_multivar = 1 & %enakh_brazier_4_multivar = 1 & %enakh_brazier_5_multivar = 1 & %enakh_brazier_6_multivar = 1) {
+    %enakh_shadow_room = 1;
+    mes("The room is lit up again."); // ours
+    ~enakh_room_done;
+}
+
+// blood: Pentyn, the frozen knight
+[opnpc1,enakh_pentyn]
+if (%enakh_blood_room = 1) @enakh_pentyn_advice;
+~chatnpc("<p,angry>Have you come to torture me again?");
+~chatplayer("<p,confused>What?");
+~chatnpc("<p,angry>Oh, you may look human, but I know you're not. I've heard stories.");
+~chatplayer("<p,confused>I, er... what?");
+~chatnpc("<p,angry>You'll never get what you want from me. I'm a soldier of Avarrocka, and will stand strong!");
+~chatplayer("<p,neutral>Look, I'm not going to hurt you!");
+~chatnpc("<p,sad>Besides, I am already wounded, and have been so for many years, thanks to this spell you cast on me. And hungry. So very, very hungry.");
+
+[opnpcu,enakh_pentyn]
+if (%enakh_blood_room = 1) {
+    ~chatnpc("<p,neutral>Thank you, but I'm not hungry any more."); // ours
+    return;
+}
+def_obj $food = last_useitem;
+def_string $line = ~enakh_pentyn_food($food);
+if (compare($line, "") = 0) {
+    ~chatnpc("<p,sad>I can't eat that."); // ours
+    return;
+}
+~chatplayer("<p,happy>I've got some food you can have. It's quite tasty.");
+if (inv_total(inv, $food) < 1) return;
+inv_del(inv, $food, 1);
+~chatnpc("<p,happy><$line>");
+~chatplayer("<p,quiz>Are you feeling better now?");
+~chatnpc("<p,happy>Yes, thank you.");
+%enakh_blood_room = 1;
+~enakh_room_done;
+@enakh_pentyn_advice;
+
+// the food (the OSRS wiki: bread, a pie, a cake, a pizza or a topped potato, not half eaten); his
+// memory of home for each: the video has one ("My daughter..."), the others are ours
+[proc,enakh_pentyn_food](obj $food)(string)
+if ($food = bread) return("My daughter was learning to cook this when I left.");
+if ($food = cake | $food = chocolate_cake) return("My wife used to bake cakes like this for my birthday."); // ours
+if ($food = plain_pizza | $food = meat_pizza | $food = anchovie_pizza | $food = pineapple_pizza) return("My son loved pizza. I hope he still does."); // ours
+if ($food = apple_pie | $food = meat_pie | $food = redberry_pie) return("My mother made the best pies in all of Avarrocka."); // ours
+if ($food = potato_butter | $food = potato_cheese | $food = potato_chilli+carne | $food = potato_egg+tomato | $food = potato_mushroom+onion | $food = potato_tuna+sweetcorn) return("My brother grew potatoes. He'd have liked this."); // ours
+return("");
+
+[label,enakh_pentyn_advice]
+~chatnpc("<p,neutral>I'm afraid that I'm trapped here, but I still remember something of this floor of the temple.");
+switch_int (~p_choice2("It's okay, I don't need any help.", 1, "What do you remember?", 2)) { // the second is ours
+    case 1 : ~chatplayer("<p,neutral>It's okay, I don't need any help.");
+    case 2 :
+        ~chatplayer("<p,quiz>What do you remember?");
+        // ours: the wikis' summary of his advice
+        ~chatnpc("<p,neutral>The fountain was frozen over by her magic; neither torches nor swords would touch it, but a fire spell might.");
+        ~chatnpc("<p,neutral>The furnace needs a strong breeze to clear it. And the fires in the dark room have gone out - they need relighting, each with what it once burned.");
+}
+
+// ================================================================ the Boneguard above the barrier
+[opnpc2,enakh_boneguard_multinpc]
+~chatnpc("<p,angry>Leave this temple at once, or I shall be forced to attack!");
+~chatnpc("<p,angry>I will defend this door until I am released from this prison of bone...");
+~chatnpc("<p,angry>Now, flee before I attack you!");
+%enakh_player_seen_boneguard = 1;
+
+// crumble undead (player_magic's crumble undead calls this first)
+[proc,enakh_crumble](boolean $hit)(boolean)
+if (npc_type ! enakh_boneguard_multinpc & npc_type ! enakh_boneguard) return(false);
+if (%enakh_quest >= ^enakh_boneguard_crumbled) return(true);
+def_dbrow $spell_data = ~get_spell_data(^crumble_undead);
+if (map_clock < %action_delay) return(true);
+if (~check_spell_requirements($spell_data) = false) return(true);
+def_int $duration = ~pvm_spell_cast($spell_data);
+p_delay(max(0, sub(divide($duration, 30), 1)));
+// the OSRS wiki: it has to hit; ours: a magic hit roll
+if (~player_npc_hit_roll(^magic_style) = false) {
+    mes("Your spell fails to take hold."); // ours
+    return(true);
+}
+%enakh_quest = ^enakh_boneguard_crumbled;
+~chatnpc_specific("Freed Spirit", enakh_desert_spirit, "<p,happy>Thank you, kind sir... now I am free from my imprisonment.");
+return(true);
+
+// the pile of bones left behind (Void EnakhrasTemple.kt: climbing over moves you to the other side)
+[opnpc1,enakh_boneguard_multinpc]
+if (%enakh_quest < ^enakh_boneguard_crumbled) return;
+def_int $dz = -3;
+if (coordz(coord) < coordz(npc_coord)) $dz = 3;
+p_telejump(movecoord(coord, 0, 0, $dz));
+mes("You climb over the pile of bones."); // ours
+
+// ================================================================ Akthanakos, the second Boneguard
+[opnpc1,enakh_akthanakos_multinpc]
+def_int $s = %enakh_quest;
+if ($s >= ^enakh_complete) {
+    ~chatnpc("<p,happy>Thank you again, young man."); // ours
+    return;
+}
+if ($s = ^enakh_wall_built) @enakh_akthanakos_freed;
+if ($s = ^enakh_helping) @enakh_akthanakos_menu;
+if (%enakh_akthanakos_hits_dodged >= 3) @enakh_akthanakos_impressed;
+// he attacks; with Protect from Melee on, you dodge (the OSRS wiki); the lines are the video's
+switch_int (%enakh_akthanakos_hits_dodged) {
+    case 0 : ~chatnpc("<p,angry>Leave this place, before I am forced to attack!");
+    case 1 : ~chatnpc("<p,angry>If you value your life, young man, then flee!");
+    case default : ~chatnpc("<p,angry>You should not be here! This is a dangerous place for beings such as you!");
+}
+%enakh_player_seen_larger_boneguard = 1;
+npc_anim(skeleton_attack, 0); // ours
+if (%prayer14 = ^true) {
+    %enakh_akthanakos_hits_dodged = calc(%enakh_akthanakos_hits_dodged + 1);
+    if (%enakh_akthanakos_hits_dodged >= 3) @enakh_akthanakos_impressed;
+} else {
+    %enakh_akthanakos_hits_dodged = 0;
+    damage(uid, 1, randominc(5)); // ours: the damage
+}
+
+[label,enakh_akthanakos_impressed]
+~chatnpc("<p,happy>I am impressed, young man. You seem to have more resilience than those I have fought off before.");
+~chatplayer("<p,quiz>Why, what's wrong?");
+~chatnpc("<p,sad>I am trapped in this form against my will... it has been a long and painful struggle to even regain control over my own mind.");
+@enakh_akthanakos_first_menu;
+
+[label,enakh_akthanakos_first_menu]
+switch_int (~p_choice3("Who's trapped you in this form?", 1, "Why did you attack me?", 2, "Of course, I'll help you out.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who's trapped you in this form?");
+        ~chatnpc("<p,angry>Enakhra. She stands beyond this wall, keeping me bound with her spells."); // ours
+        @enakh_akthanakos_first_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Why did you attack me?");
+        ~chatnpc("<p,sad>Her spells force me to guard this place. I can't always stop myself."); // ours
+        @enakh_akthanakos_first_menu;
+    case 3 :
+        ~chatplayer("<p,happy>Of course, I'll help you out. But first of all, do you have any treasure?");
+        ~chatplayer("<p,shifty>I, er, was just wondering...");
+        ~chatnpc("<p,neutral>Certainly, young man. If you help me, I will give you a valuable amulet, and some of my knowledge.");
+        ~chatplayer("<p,happy>That's good enough for me. What do I have to do?");
+        ~chatnpc("<p,neutral>Enakhra keeps me trapped in this form with magic.");
+        ~chatnpc("<p,sad>Unfortunately, she has strengthened her spells lately, and I can no longer will myself to continue building.");
+        %enakh_quest = ^enakh_helping;
+        %enakh_player_helps_akthanakos = 1;
+        @enakh_akthanakos_menu;
+}
+
+[label,enakh_akthanakos_menu]
+switch_int (~p_choice4("About this wall...", 1, "Could you tell me more about Enakhra?", 2, "Could you tell me more about yourself?", 3, "Okay, I'll start building.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>About this wall...");
+        ~chatnpc("<p,neutral>Take stone from the rubble, add it to the wall and trim it with a chisel. Once it's finished, it will block her sight of me."); // ours (the wikis)
+        @enakh_akthanakos_menu;
+    case 2 :
+        ~chatplayer("<p,quiz>Could you tell me more about Enakhra?");
+        ~chatnpc("<p,angry>She is a coward and a traitor. She backed Zamorak, and built this temple as a gift to him."); // ours (the OSRS wiki's summary)
+        @enakh_akthanakos_menu;
+    case 3 :
+        ~chatplayer("<p,quiz>Could you tell me more about yourself?");
+        ~chatnpc("<p,sad>I was once a proud mage. Now look at me - a bag of bones, her slave for thousands of years."); // ours (the OSRS wiki's summary)
+        @enakh_akthanakos_menu;
+    case 4 :
+        ~chatplayer("<p,neutral>Okay, I'll start building.");
+        ~chatnpc("<p,happy>Thank you. Once you are finished, the wall itself will shield me from most of her magic, and I will be free to move once more.");
+}
+
+// the wall: three blocks of stone, each added and trimmed (the 377 cache's wall stages 2-5)
+[oploc1,enakh_rubblepile_by_largewall]
+if (%enakh_quest ! ^enakh_helping) {
+    mes("Nothing interesting happens."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough room in your inventory."); // ours
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_add(inv, enakh_sandstone_large, 1);
+mes("You pick up a block of stone from the pile of rubble.");
+
+[oplocu,enakh_largewall_r_multiloc] @enakh_wall_use;
+[oplocu,enakh_largewall_l_multiloc] @enakh_wall_use;
+
+[label,enakh_wall_use]
+if (%enakh_quest ! ^enakh_helping) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (last_useitem = enakh_sandstone_large & %enakh_largewall_needs_trimming = 0) {
+    anim(human_pickuptable, 0);
+    inv_del(inv, enakh_sandstone_large, 1);
+    %enakh_largewall_needs_trimming = 1;
+    mes("You add the stone to the wall.");
+    return;
+}
+if ((last_useitem = chisel | last_useitem = enakh_chisel) & %enakh_largewall_needs_trimming = 1) {
+    anim(enakh_player_chisel, 0);
+    p_delay(1);
+    %enakh_largewall_needs_trimming = 0;
+    %enakh_largewall_multivar = calc(%enakh_largewall_multivar + 1);
+    mes("You trim the stone that was added to the wall.");
+    if (%enakh_largewall_multivar >= 3) {
+        %enakh_quest = ^enakh_wall_built;
+        ~chatnpc_specific("Enakhra", enakh_enakhra_hooded, "<p,angry>No! What have you done?");
+        ~chatplayer("<p,happy>The wall's finally built!");
+    }
+    return;
+}
+if (last_useitem = enakh_sandstone_large) {
+    mes("You need to trim the last stone first."); // ours
+    return;
+}
+~displaymessage(^dm_default);
+
+// freed: the amulet and the end
+[label,enakh_akthanakos_freed]
+~chatnpc("<p,happy>Thank you. Thank you very much for all your help.");
+~chatnpc("<p,happy>I can feel Enakhra's control over me fading. Finally, I can be free from this imprisonment...");
+%enakh_akthanakos_form = 1;
+~chatnpc_specific("Akthanakos", enakh_akthanakos_freed, "<p,happy>After thousands of years... finally, I am no longer her slave.");
+~chatnpc_specific("Akthanakos", enakh_akthanakos_freed, "<p,neutral>As thanks for your help, young man, please take this amulet of mine.");
+~chatplayer("<p,quiz>Wow. Er, what does it do?");
+~chatnpc_specific("Akthanakos", enakh_akthanakos_freed, "<p,neutral>It allows you to understand the speech of the Ugthanki, my patron animals, and other camels.");
+// the end: Enakhra blows the wall down and the two face each other (the video's words)
+%enakh_largewall_multivar = 4;
+sound_synth(cave_collapse_1, 1, 0);
+%enakh_enakhra_form = 0;
+~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,angry>After so many years, why didn't you just give up?");
+~enakh_cs("Enakhra", enakh_enakhra_hooded, "<p,angry>Now my lord will punish you for destroying his weapon.");
+~enakh_cs("Akthanakos", enakh_akthanakos_freed, "<p,laugh>Ha ha... in that case, I'm sure lord Zaros will be happy to intervene.");
+%enakh_enakhra_form = 1;
+%enakh_akthanakos_form = 2;
+~enakh_cs("Enakhra", enakh_enakhra_mahjarrat, "<p,angry>I'll be waiting for you in the north, Akthanakos.");
+~enakh_cs("Akthanakos", enakh_akthanakos_mahjarrat, "<p,neutral>It'll be a pleasure to fight you once more...");
+if_close;
+~enakh_complete;
+
+[proc,enakh_complete]
+%enakh_quest = ^enakh_complete;
+%enakh_camulet_charge = 4;
+~enakh_give(camulet);
+stat_advance(crafting, 70000);
+stat_advance(magic, 70000);
+stat_advance(mining, 70000);
+stat_advance(firemaking, 70000);
+session_log(^log_adventure, "Quest complete: Enakhra's Lament");
+~send_quest_complete(questlist:enakh, camulet, 250, ^enakh_questpoints, "You have completed Enakhra's Lament!", "2 Quest Points|7000 Crafting, Magic, Mining|and Firemaking XP|Akthanakos's Camulet");
+
+// Enakhra herself (ours: the OSRS wiki's summary of what she says)
+[opnpc1,enakh_enakhra_multinpc]
+~chatnpc("<p,angry>Don't interrupt me, mortal! Akthanakos grows harder to control by the day, and still he clings to Zaros.");
+~chatnpc("<p,angry>You dishonour my lord Zamorak by being here. Begone!");
+
+// ================================================================ the camulet (Void Camulet.kt)
+[opheld4,camulet]
+if (%enakh_camulet_charge = 0) {
+    ~mesbox("Your Camulet has run out of teleport charges. You can renew them by applying camel dung.");
+    return;
+}
+%enakh_camulet_charge = calc(%enakh_camulet_charge - 1);
+mes("You rub the amulet...");
+~enakh_camulet_teleport;
+
+[proc,enakh_camulet_teleport]
+// ours: the jewellery teleport's look
+anim(human_castteleport, 0);
+spotanim_pl(teleport_casting, 92, 0);
+sound_synth(teleport_all, 1, 0);
+p_delay(2);
+p_telejump(map_findsquare(^enakh_camulet_tele, 0, 1, ^map_findsquare_lineofwalk));
+anim(null, 0);
+
+[opheld3,camulet]
+def_int $c = %enakh_camulet_charge;
+if ($c = 1) {
+    mes("Your Camulet has 1 charge left.");
+} else {
+    mes("Your Camulet has <tostring($c)> charges left.");
+}
+if ($c = 0) mes("You can recharge it by applying camel dung.");
+
+[opheldu,camulet]
+if (last_useitem ! feud_camel_pooh_bucket) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@enakh_camulet_dung;
+
+[opheldu,feud_camel_pooh_bucket]
+if (last_useitem ! camulet) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@enakh_camulet_dung;
+
+[label,enakh_camulet_dung]
+if (%enakh_camulet_charge >= 4) {
+    mes("Your Camulet already has 4 charges.");
+    return;
+}
+inv_del(inv, feud_camel_pooh_bucket, 1);
+inv_add(inv, bucket_empty, 1);
+%enakh_camulet_charge = 4;
+mes("You recharge the Camulet using camel dung. Yuck!");
