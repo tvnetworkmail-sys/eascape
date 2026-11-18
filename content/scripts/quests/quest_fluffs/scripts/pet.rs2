@@ -90,6 +90,7 @@ switch_int (getbit_range(%cat_growth, 5, 10)) {
 [opheld5,kittenobject_light] ~cat_drop;
 [opheld5,kittenobject_brown] ~cat_drop;
 [opheld5,kittenobject_black] ~cat_drop;
+[opheld5,kittenobject_hell] ~cat_drop; // EASCape: Recipe for Disaster's hellcats
 [opheld5,kittenobject_browngrey] ~cat_drop;
 [opheld5,kittenobject_bluegrey] ~cat_drop;
 
@@ -97,6 +98,7 @@ switch_int (getbit_range(%cat_growth, 5, 10)) {
 [opheld5,growncatobject_light] ~cat_drop;
 [opheld5,growncatobject_brown] ~cat_drop;
 [opheld5,growncatobject_black] ~cat_drop;
+[opheld5,growncatobject_hell] ~cat_drop;
 [opheld5,growncatobject_browngrey] ~cat_drop;
 [opheld5,growncatobject_bluegrey] ~cat_drop;
 
@@ -104,6 +106,7 @@ switch_int (getbit_range(%cat_growth, 5, 10)) {
 [opheld5,overgrowncatobject_light] ~cat_drop;
 [opheld5,overgrowncatobject_brown] ~cat_drop;
 [opheld5,overgrowncatobject_black] ~cat_drop;
+[opheld5,overgrowncatobject_hell] ~cat_drop;
 [opheld5,overgrowncatobject_browngrey] ~cat_drop;
 [opheld5,overgrowncatobject_bluegrey] ~cat_drop;
 
@@ -221,6 +224,7 @@ if (%npc_attacking_uid ! uid | %follower_uid ! npc_uid) {
 @pet_chase;
 
 [label,pet_chase]
+if (~hundred_dave_chase = true) return; // EASCape: Recipe for Disaster's hell-rats (quest_100/hundred_dave.rs2)
 if (~rc_chase = true) return; // EASCape: Rat Catchers: the mansion's rats (quest_ratcatchers/rc_journal.rs2)
 if (oc_category(nc_param(npc_type, pet_item_id)) = overgrown) {
     mes("The cat is just too big to catch vermin.");

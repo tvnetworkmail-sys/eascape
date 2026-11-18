@@ -1,0 +1,461 @@
+// EASCape: Recipe for Disaster: Freeing Evil Dave. Words from the OSRS wiki's transcript; from its
+// quest guide: your cat chasing the hell-rats in Dave's basement for the stolen spices (red, yellow,
+// brown or orange, 1-4 doses), seven of them turning it into a hellcat, a stew needing each of the
+// four spices at its own amount (1-3), Dave saying how many are right. Lines marked "ours" have no
+// source.
+// %hundred_dave_main: 1 asked Aris, 2 Dave told you about his mum's stew, 3 Doris told you the rats
+// took her spices, 4 Dave tasted the right stew. %hundred_dave_<colour>: the spices in your spicy
+// stew; %hundred_dave_<colour>_target: what Dave's stew had. %hundred_dave_hellrats_caught: up to
+// 7. %hundred_dave_trapdoor: the basement's trapdoor open.
+
+[proc,hundred_dave_helping]()(boolean)
+if (%hundred_dave_main >= 1 & %100davevisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_dave_multi]
+if (%hundred_dave_main >= 4) {
+    ~mesbox("You should use the stew on Dave.");
+    return;
+}
+if (stat_base(cooking) < 25 | %fluffs < ^fluffs_complete | %agrith_quest < ^agrith_complete) {
+    mes("You need 25 Cooking and to have completed Gertrude's Cat and Shadow of the Storm to help him."); // ours: the subquest's requirements
+    return;
+}
+if (%hundred_dave_main >= 1) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Remember, you need to make a particular stew for Evil Dave. Speak to him outside the time warp, because from his point of view out there you have already rescued him so he has already eaten the stew. He lives in Edgeville.");
+    return;
+}
+~chatplayer("<p,quiz>Evil Dave? What's he doing on the secret council?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>The council is meant to include one dark wizard, but obviously the other members did not want to include anyone who was a real threat.");
+~chatplayer("<p,quiz>So how do I free him?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>To free Evil Dave you must make a stew, but it must be seasoned in a very particular way. The only way to find the recipe would be to ask someone who has tasted the stew.");
+~chatplayer("<p,quiz>But who could that be?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Remember that from the point of view of the outside world, anything you do in here has already happened. All the people here are out in the world, because from their point of view you have already rescued them.");
+~chatplayer("<p,quiz>You mean I need to talk to Evil Dave outside the time bubble?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Yes. He lives in Edgeville.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>With his mother.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>In her basement. I make no judgement about that.");
+~chatplayer("<p,confused>Oooooookaaaaay....");
+%hundred_dave_main = 1;
+
+[oplocu,hundred_dave_multi]
+if (last_useitem ! hundred_dave_stew | ~hundred_dave_helping = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%hundred_dave_main < 4) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>You should make sure that's the correct recipe first.");
+    return;
+}
+if (~hundred_dave_right_spices = false) {
+    ~mesbox("That's not the right kind of stew.");
+    return;
+}
+inv_del(inv, hundred_dave_stew, 1);
+inv_add(inv, bowl_empty, 1);
+~chatnpc_specific("Evil Dave", hundred_evil_dave, "<p,confused>Woah, what happened?");
+~chatplayer("<p,neutral>I've just saved you from a buffet worse than death!");
+~chatnpc_specific("Evil Dave", hundred_evil_dave, "<p,happy>Hey, this is pretty evil stew!");
+~chatplayer("<p,neutral>Yes. Now it's very important you remember what the stew tasted like!");
+%100davevisible = 0;
+stat_advance(cooking, 70000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!"); // ours: Aris's line, as for the others
+~hundred_free_done("Evil Dave", hundred_dave_stew, "7,000 Cooking XP");
+
+// ---------------------------------------------------------------- Doris
+[opnpc1,hundred_dave_mum]
+if (~hundred_dave_helping = true & %hundred_dave_main = 2) {
+    ~chatnpc("<p,happy>Hello again.");
+    ~chatplayer("<p,quiz>May I use your spices for making stew?");
+    ~chatnpc("<p,neutral>You can if you can find them. Dave's hell-rats stole them all!");
+    ~chatplayer("<p,neutral>I'd better go and kill some hell-rats then.");
+    %hundred_dave_main = 3;
+    // what his stew had: each spice 1-3 (the wiki)
+    %hundred_dave_red_target = add(random(3), 1);
+    %hundred_dave_yellow_target = add(random(3), 1);
+    %hundred_dave_brown_target = add(random(3), 1);
+    %hundred_dave_orange_target = add(random(3), 1);
+    return;
+}
+if (~hundred_dave_helping = true & %hundred_dave_main = 3) {
+    ~chatnpc("<p,happy>Hello again. Did you make your stew?");
+    ~chatplayer("<p,neutral>I haven't been able to make any stew that Dave likes yet.");
+    ~chatnpc("<p,neutral>Oh, he's terribly hard to please, isn't he? I never know how to make food evil enough for him, I just have to try different things and see what he likes.");
+    return;
+}
+if (~hundred_dave_helping = true & %hundred_dave_main = 4) {
+    ~chatnpc("<p,happy>Hello dearie. Did Dave like the stew you gave him?");
+    ~chatplayer("<p,happy>Yes. I'm just about to go back in time to give it to him in the first place.");
+    ~chatnpc("<p,happy>Have a nice time then.");
+    return;
+}
+~chatnpc("<p,happy>Hello, dearie?");
+if (~p_choice2("Is Dave in?", 1, "Can Dave come out to play?", 2) = 2) {
+    ~chatplayer("<p,quiz>Can Dave come out to play?");
+    ~chatnpc("<p,angry>I know he's a grown man who lives in his mum's basement and hardly ever sees daylight, but there's no need to be nasty about it.");
+    return;
+}
+~chatplayer("<p,quiz>Is Dave in?");
+~chatnpc("<p,quiz>Yes, he's just down in the cellar. Are you one of his evil friends?");
+if (~p_choice2("Yes, I'm evil!", 1, "No, I just want to talk to him.", 2) = 1) {
+    ~chatplayer("<p,evillaugh>Yes, I'm evil!");
+    ~chatnpc("<p,happy>Well, I hope the two of you have a good time. Try not to make too much mess.");
+    return;
+}
+~chatplayer("<p,neutral>No, I just want to talk to him.");
+~chatnpc("<p,happy>Oh, that's good. He needs to spend time with more normal people. He hardly ever leaves that cellar, it can't be healthy.");
+
+// ---------------------------------------------------------------- the basement of doom
+[oploc1,100_dave_celler_trapdoor]
+if (%hundred_dave_trapdoor = 0) {
+    anim(human_pickupfloor, 0);
+    %hundred_dave_trapdoor = 1;
+    return;
+}
+anim(human_climbing_down, 0);
+p_delay(1);
+p_telejump(^hundred_dave_basement);
+[oploc2,100_dave_celler_trapdoor] %hundred_dave_trapdoor = 0;
+
+[label,hundred_dave_upstairs]
+p_telejump(^hundred_dave_house);
+
+[opnpc1,hundred_evil_dave]
+~chatnpc("<p,evillaugh>Welcome to my BASEMENT OF DOOM!");
+@hundred_dave_menu;
+
+[label,hundred_dave_menu]
+def_string $third = "What did you eat at the secret council meeting?";
+if (%hundred_dave_main >= 2) $third = "Let me try to explain the time travel thing again...";
+def_int $choice;
+if (~hundred_dave_helping = true) $choice = ~p_choice5("Nice basement!", 1, "Weren't you going to give up evil?", 2, $third, 3, "So have you had any luck with the demon-summoning?", 4, "See you later.", 5);
+else {
+    $choice = ~p_choice4("Nice basement!", 1, "Weren't you going to give up evil?", 2, "So have you had any luck with the demon-summoning?", 3, "See you later.", 4);
+    if ($choice >= 3) $choice = add($choice, 1);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,happy>Nice basement!");
+        ~chatnpc("<p,angry>Nice?!");
+        ~chatplayer("<p,evillaugh>I mean, evil!");
+        ~chatnpc("<p,evillaugh>Yeah! I'm going to use it to summon DEMONS to DO MY BIDDING, or raise an ARMY OF THE UNDEAD! And then I'm going to totally, like, take over the world!");
+        ~chatnpc("<p,evillaugh>Ah-ha-ha-ha-ha-haa!");
+    case 2 :
+        ~chatplayer("<p,quiz>Weren't you going to give up evil?");
+        ~chatnpc("<p,sad>Yeah, well...");
+        ~chatnpc("<p,sad>I did try. I wore this bright red jumper and I got up in the morning and spent the day outside in the sunshine...");
+        ~mesbox("*Dave shudders*");
+        ~chatnpc("<p,sad>But I couldn't keep it up. I just didn't find anything good very interesting, you know?");
+        ~chatnpc("<p,sad>Sometimes I worry about the consequences of evil. I don't really want anyone to get hurt, not like what happened with Denath.");
+        ~chatnpc("<p,angry>But I can't not be evil! It's just who I am!");
+        ~chatnpc("<p,evillaugh>Ah-ha-ha-ha-ha-haa!");
+    case 3 :
+        if (%hundred_dave_main >= 2) {
+            ~chatplayer("<p,neutral>Let me try to explain the time travel thing again...");
+            @hundred_dave_explain;
+        }
+        ~chatplayer("<p,quiz>What did you eat at the secret council meeting?");
+        ~chatnpc("<p,happy>Hey, the council meeting! They wanted me to be their evil representative! That proves I'm a great dark wizard! Right?");
+        ~chatplayer("<p,neutral>Right...");
+        ~chatnpc("<p,quiz>But anyway, why do you want to know what I ate?");
+        ~chatplayer("<p,neutral>I need to make that exact food in order to save you from the culinomancer's spell.");
+        ~chatnpc("<p,confused>What? But that was last week! You've already saved me!");
+        ~chatplayer("<p,neutral>Sort of, it's complicated. It works like this...");
+        @hundred_dave_explain;
+    case 4 :
+        ~chatplayer("<p,quiz>So have you had any luck with the demon-summoning?");
+        ~chatnpc("<p,neutral>Well, I thought I should start small, so I asked Wizard Grayzag for some help with summoning imps...");
+        ~chatplayer("<p,quiz>And did you manage to summon any?");
+        ~chatnpc("<p,sad>Well, not imps, exactly. It turns out they're not the lowest form of demon after all. I got these hell-rats.");
+        ~chatnpc("<p,angry>They're hardly evil at all! They're just like regular rats only they smell vaguely of sulphur!");
+    case 5 :
+        ~chatplayer("<p,happy>See you later!");
+        ~chatnpc("<p,evillaugh>If my ARMY OF DARKNESS doesn't get you first!");
+        return;
+}
+@hundred_dave_menu;
+
+[label,hundred_dave_explain]
+switch_int (~p_choice5("Although you're here, you're also still in the time freeze.", 1, "From YOUR point of view I've saved you, but from MINE I haven't.", 2, "I've got to take the food back in time to give it to you.", 3, "You've got to tell me because the magic requires it!", 4, "Oh, never mind.", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Although you're here, you're also still in the time freeze.");
+        ~chatnpc("<p,confused>What?");
+        ~chatplayer("<p,neutral>I mean, the whole room was frozen in time at the moment the culinomancer cast his spell, right?");
+        ~chatnpc("<p,confused>What? I didn't notice anything.");
+        ~chatplayer("<p,angry>Of course you didn't! You were frozen!");
+        ~chatnpc("<p,confused>So how can I be there and also here? Which one is me?");
+        ~chatnpc("<p,confused>I mean, I feel like I'm me, but what if I'm not me?");
+        ~chatnpc("<p,scared>That would be terrible!");
+        ~chatplayer("<p,angry>They're both you!");
+        ~chatnpc("<p,confused>How does that work?");
+    case 2 :
+        ~chatplayer("<p,neutral>From YOUR point of view I've saved you, but from MINE I haven't.");
+        ~chatnpc("<p,happy>Well that's all right, as long as I'm saved from my point of view!");
+        ~chatplayer("<p,angry>But I have to save you, otherwise you won't be saved!");
+        ~chatnpc("<p,confused>But I'm here so you must already have saved me!");
+        ~chatplayer("<p,angry>That's what I meant, from your point of view I've saved you but from mine I haven't!");
+        ~chatnpc("<p,confused>What?");
+    case 3 :
+        ~chatplayer("<p,neutral>I've to take the food back in time to give it to you.");
+        ~chatnpc("<p,quiz>Why?");
+        ~chatplayer("<p,neutral>Because otherwise you won't be saved from the culinomancer's spell.");
+        ~chatnpc("<p,confused>But I was saved from the spell! I remember it!");
+        ~chatplayer("<p,neutral>Exactly! That's why I know I have to go back and save you!");
+        ~chatnpc("<p,quiz>What will happen if you don't?");
+        switch_int (~p_choice3("I can't not, I already have!", 1, "There will be a temporal paradox and the universe will implode!", 2, "I don't know", 3)) {
+            case 1 :
+                ~chatplayer("<p,neutral>I can't not, because I already have!");
+                ~chatnpc("<p,confused>What?");
+                ~chatplayer("<p,neutral>The fact that you're here means I already did save you, which means that you have to tell me the correct recipe. It's logically impossible for you not to!");
+                ~chatnpc("<p,confused>I don't understand this at all.");
+            case 2 :
+                ~chatplayer("<p,shock>There will be a temporal paradox and the universe will implode!");
+                ~chatnpc("<p,scared>Oh no! That would be bad, and not even in an evil way!");
+                ~chatplayer("<p,neutral>Exactly! So you've got to tell me the recipe!");
+                ~chatnpc("<p,confused>But I still don't understand why you need the recipe when you've already saved me!");
+            case 3 :
+                ~chatplayer("<p,neutral>I don't know.");
+                ~chatnpc("<p,neutral>That's not very helpful. I don't even understand why you need the recipe anyway.");
+        }
+    case 4 :
+        ~chatplayer("<p,angry>You've got to tell me because the magic requires it!");
+        if (%hundred_dave_main >= 2) {
+            ~chatnpc("<p,neutral>That's what you said before! Honestly, why make it more complicated than it needs to be?");
+            return;
+        }
+        ~chatnpc("<p,happy>All right! Now that makes perfect sense!");
+        ~chatplayer("<p,quiz>So what was it?");
+        ~chatnpc("<p,quiz>What was what?");
+        ~chatplayer("<p,neutral>The food you ate at the council meeting.");
+        ~chatnpc("<p,evillaugh>It was, like, this totally evil stew!");
+        ~chatplayer("<p,quiz>Evil stew? How was it evil?");
+        ~chatnpc("<p,neutral>Well, it kind of tasted evil, you know? You know, how you taste something and you think, that's really EVIL?");
+        ~chatplayer("<p,neutral>I think you're mixing up 'good' and 'evil' again!");
+        ~chatnpc("<p,quiz>What? Well, I'm evil, and I only like evil stuff, and I liked that, so it must be evil. Right?");
+        ~chatplayer("<p,neutral>I suppose that makes some kind of sense. But I need to reproduce this stew, so can you describe it in more detail?");
+        ~chatnpc("<p,neutral>Well it tasted like the stews my mum makes. She puts these spices in them. But it was like she'd got the amounts totally right this time.");
+        ~chatplayer("<p,neutral>Okay, I'd better talk to your mum.");
+        %hundred_dave_main = 2;
+        return;
+    case 5 :
+        ~chatplayer("<p,neutral>Oh, never mind.");
+        return;
+}
+@hundred_dave_menu;
+
+// ---------------------------------------------------------------- tasting
+[opnpcu,hundred_evil_dave]
+if (last_useitem = stew) {
+    ~chatplayer("<p,quiz>Could you taste this stew please?");
+    ~chatnpc("<p,angry>That stew doesn't have any spices in it at all! That can't be right!");
+    return;
+}
+if (last_useitem ! hundred_dave_stew | ~hundred_dave_helping = false | %hundred_dave_main < 3) {
+    mes("Nothing interesting happens.");
+    return;
+}
+~chatplayer("<p,quiz>Could you taste this stew please?");
+def_int $right = ~hundred_dave_count_right;
+if ($right = 4) {
+    ~chatnpc("<p,evillaugh>TOTALLY EVIL! That's EXACTLY how the stew tasted!");
+    ~chatplayer("<p,shock>Don't eat it all!");
+    ~chatplayer("<p,neutral>Now I just have to go back in time and give it to your earlier self!");
+    ~chatnpc("<p,quiz>What? Why can't I eat it?");
+    ~chatplayer("<p,neutral>You've already eaten it! This is the stew that you remember tasting in the first place!");
+    ~chatnpc("<p,confused>So confused...");
+    %hundred_dave_main = 4;
+    return;
+}
+// he eats it
+inv_del(inv, hundred_dave_stew, 1);
+inv_add(inv, bowl_empty, 1);
+switch_int ($right) {
+    case 0 : ~chatnpc("<p,neutral>That's nothing like the stew I tasted. All the spices are wrong.");
+    case 1 : ~chatnpc("<p,neutral>Hmm... I think you've got the amount of one spice right, but the others are wrong.");
+    case 2 : ~chatnpc("<p,neutral>You've got the amount of two of the spices right, but two of them are wrong.");
+    case 3 : ~chatnpc("<p,happy>That stew is pretty evil! But I think one of the spices is still a bit wrong.");
+}
+
+[proc,hundred_dave_count_right]()(int)
+def_int $n = 0;
+if (%hundred_dave_red = %hundred_dave_red_target) $n = add($n, 1);
+if (%hundred_dave_yellow = %hundred_dave_yellow_target) $n = add($n, 1);
+if (%hundred_dave_brown = %hundred_dave_brown_target) $n = add($n, 1);
+if (%hundred_dave_orange = %hundred_dave_orange_target) $n = add($n, 1);
+return($n);
+
+[proc,hundred_dave_right_spices]()(boolean)
+if (~hundred_dave_count_right = 4) return(true);
+return(false);
+
+// eating it: the right one is kept for Dave
+[opheld1,hundred_dave_stew]
+if (~hundred_dave_helping = true & %hundred_dave_main = 4 & ~hundred_dave_right_spices = true) {
+    mes("I should take that stew into the time-freeze to unlock Dave.");
+    return;
+}
+inv_setslot(inv, last_slot, bowl_empty, 1);
+anim(human_eat, 0);
+mes("You eat the stew."); // ours: as a stew
+stat_heal(hitpoints, 11, 0);
+
+// ---------------------------------------------------------------- spicing a stew
+// your spicy stew's spices are held for one stew at a time (the cache's variables); a plain stew
+// starts again from none (ours)
+[proc,hundred_dave_spice_info](obj $shaker)(int, int)
+switch_obj ($shaker) {
+    case hundred_dave_spice_red_4 : return(1, 4);
+    case hundred_dave_spice_red_3 : return(1, 3);
+    case hundred_dave_spice_red_2 : return(1, 2);
+    case hundred_dave_spice_red_1 : return(1, 1);
+    case hundred_dave_spice_yellow_4 : return(2, 4);
+    case hundred_dave_spice_yellow_3 : return(2, 3);
+    case hundred_dave_spice_yellow_2 : return(2, 2);
+    case hundred_dave_spice_yellow_1 : return(2, 1);
+    case hundred_dave_spice_brown_4 : return(3, 4);
+    case hundred_dave_spice_brown_3 : return(3, 3);
+    case hundred_dave_spice_brown_2 : return(3, 2);
+    case hundred_dave_spice_brown_1 : return(3, 1);
+    case hundred_dave_spice_orange_4 : return(4, 4);
+    case hundred_dave_spice_orange_3 : return(4, 3);
+    case hundred_dave_spice_orange_2 : return(4, 2);
+    case hundred_dave_spice_orange_1 : return(4, 1);
+}
+return(0, 0);
+
+[proc,hundred_dave_shaker](int $colour, int $doses)(namedobj)
+if ($doses <= 0) return(hundred_dave_spice_empty);
+switch_int ($colour) {
+    case 1 : return(enum(int, namedobj, hundred_dave_red_shakers, $doses));
+    case 2 : return(enum(int, namedobj, hundred_dave_yellow_shakers, $doses));
+    case 3 : return(enum(int, namedobj, hundred_dave_brown_shakers, $doses));
+}
+return(enum(int, namedobj, hundred_dave_orange_shakers, $doses));
+
+[opheldu,hundred_dave_spice_red_4] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_red_3] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_red_2] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_red_1] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_yellow_4] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_yellow_3] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_yellow_2] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_yellow_1] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_brown_4] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_brown_3] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_brown_2] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_brown_1] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_orange_4] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_orange_3] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_orange_2] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,hundred_dave_spice_orange_1] @hundred_dave_spice(last_item, last_slot, last_useitem, last_useslot);
+[opheldu,stew] @hundred_dave_spice(last_useitem, last_useslot, last_item, last_slot);
+[opheldu,hundred_dave_stew] @hundred_dave_spice(last_useitem, last_useslot, last_item, last_slot);
+
+[label,hundred_dave_spice](obj $shaker, int $shaker_slot, obj $food, int $food_slot)
+def_int $colour;
+def_int $doses;
+$colour, $doses = ~hundred_dave_spice_info($shaker);
+if ($colour = 0 | ($food ! stew & $food ! hundred_dave_stew)) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%hundred_dave_main < 4 & ~hundred_dave_helping = false & %hundred_main_quest_var < ^hundred_complete & %100davevisible = 1) {
+    mes("You don't know how to make a spicy stew."); // ours
+    return;
+}
+if ($food = stew) {
+    %hundred_dave_red = 0;
+    %hundred_dave_yellow = 0;
+    %hundred_dave_brown = 0;
+    %hundred_dave_orange = 0;
+}
+def_int $have = 0;
+switch_int ($colour) {
+    case 1 : $have = %hundred_dave_red;
+    case 2 : $have = %hundred_dave_yellow;
+    case 3 : $have = %hundred_dave_brown;
+    case 4 : $have = %hundred_dave_orange;
+}
+if ($have >= 3) {
+    mes("The stew can't take any more of that spice."); // ours
+    return;
+}
+$have = add($have, 1);
+switch_int ($colour) {
+    case 1 : %hundred_dave_red = $have;
+    case 2 : %hundred_dave_yellow = $have;
+    case 3 : %hundred_dave_brown = $have;
+    case 4 : %hundred_dave_orange = $have;
+}
+inv_setslot(inv, $shaker_slot, ~hundred_dave_shaker($colour, sub($doses, 1)), 1);
+inv_setslot(inv, $food_slot, hundred_dave_stew, 1);
+mes("You add a dose of spice to the stew."); // ours
+
+// ---------------------------------------------------------------- the cat and the hell-rats
+// hooked into the pet cat's Chase-vermin (quest_fluffs/pet.rs2): false when no hell-rat is near
+[proc,hundred_dave_chase]()(boolean)
+if (.npc_find(coord, hundred_dave_hellrat, 10, 1) = false) return(false);
+if (%hundred_dave_main < 3 & %100davevisible = 1) {
+    mes("Your cat isn't interested in these rats."); // ours: before Doris asks
+    return(true);
+}
+def_category $cat = oc_category(nc_param(npc_type, pet_item_id));
+if ($cat = overgrown) {
+    mes("The cat is just too big to catch vermin.");
+    return(true);
+}
+say("Go on kitty...kill that rat!");
+p_delay(0);
+npc_say("Meeeeeoooowww!");
+p_delay(0);
+.npc_say("Eek!");
+if (lineofwalk(coord, .npc_coord) = false) {
+    mes("Your cat cannot get to its prey.");
+    return(true);
+}
+npc_setmode(none);
+npc_walk(.npc_coord);
+p_delay(1);
+npc_anim(cat_pounce, 0);
+p_delay(1);
+npc_setmode(playerfollow);
+def_int $chance = random(2);
+if ($cat = kitten) $chance = random(10);
+if ($cat = wilycat) {
+    $chance = 0;
+    if (random(100) >= 93) $chance = 1;
+}
+if ($chance ! 0) {
+    mes("The rat manages to get away!");
+    return(true);
+}
+.npc_del;
+npc_say("MeeeoooooW!");
+say("Hey well done kitty, you got it!");
+// a spice, 1-4 doses (the wiki)
+def_namedobj $spice = ~hundred_dave_shaker(add(random(4), 1), add(random(4), 1));
+if (inv_freespace(inv) > 0) inv_add(inv, $spice, 1);
+else obj_add(coord, $spice, 1, ^lootdrop_duration);
+mes("Your cat finds some spice the hell-rat had stolen."); // ours
+if (%hundred_dave_hellrats_caught < 7) {
+    %hundred_dave_hellrats_caught = add(%hundred_dave_hellrats_caught, 1);
+    if (%hundred_dave_hellrats_caught = 7) ~hundred_dave_hellcat;
+}
+return(true);
+
+// seven hell-rats make your cat a hellcat (ours: the message)
+[proc,hundred_dave_hellcat]
+def_npc $to = null;
+switch_category (oc_category(nc_param(npc_type, pet_item_id))) {
+    case kitten : $to = kittenpet_hell;
+    case cat : $to = growncat_hell;
+    case wilycat : $to = wileycat_hell;
+    case lazycat : $to = lazycat_hell;
+}
+if ($to = null) return;
+npc_changetype_keepall($to, ^max_32bit_int);
+%follower_uid = npc_uid;
+%follower_obj = nc_param(npc_type, pet_item_id);
+npc_say("Hiss!");
+~mesbox("Your cat has caught so many hell-rats that it has turned into a hellcat!");

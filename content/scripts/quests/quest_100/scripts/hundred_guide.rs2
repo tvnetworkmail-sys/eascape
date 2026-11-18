@@ -1,0 +1,375 @@
+// EASCape: Recipe for Disaster: Freeing the Lumbridge Guide. Words from the OSRS wiki's transcript;
+// from its quest guide: Traiborn's three quizzes (name the person in the vision, general questions
+// about the lands, the memory test with the 2006 cache's five groups of items, hundred_100guide_
+// flourinv1-5, shown in its window inter_375), its people, its questions and their answers.
+// Ours: the wrong answers offered beside the right ones, which group goes with which question, the
+// vision shown as the person's face with the name hidden.
+// %100guide_prog: 1 asked Aris, 2 Traiborn told you the ingredients. %100guide_eggdone/milkdone/
+// flourdone: Traiborn holds each enchanted one. %100guide_tot: right answers so far in a quiz;
+// %100guide_q1/q2: the quiz's earlier questions (not asked twice); %100guide_lastgame: the set.
+
+[proc,hundred_guide_helping]()(boolean)
+if (%100guide_prog >= 1 & %100guidevisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_guide_multi]
+if (%100guide_prog >= 1) {
+    ~chatplayer("<p,quiz>Hi, what do I have to do again to help the Lumbridge Guide?");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Go have a word with Traiborn in the Wizards' Tower, he should be able to help you out with a Cake of Guidance!");
+    ~chatplayer("<p,neutral>Okay.");
+    return;
+}
+if (stat_base(cooking) < 40 | %chompybird < ^chompybird_complete | %biohazard < ^biohazard_complete | %demonstart < ^demon_complete | %murderquest < ^murder_complete | %druidspirit < ^druidspirit_complete | %ballquest < ^ball_complete) {
+    mes("You need 40 Cooking, and to have completed Big Chompy Bird Hunting, Biohazard, Demon Slayer, Murder Mystery, Nature Spirit and Witch's House to help him."); // ours
+    return;
+}
+~chatplayer("<p,quiz>How can I help the Lumbridge Guide?");
+~chatnpc_specific("Aris", hundred_aris, "<p,quiz>Well, what better to help the Lumbridge Guide than a 'Cake of Guidance'. Would you like to help?");
+if (~p_choice2("Yes, I'm sure I can make a cake.", 1, "Nah, leave him where he is.", 2) = 2) {
+    ~chatplayer("<p,neutral>Nah, leave him where he is."); // the transcript's reply is missing
+    return;
+}
+~chatplayer("<p,happy>Yes, I'm sure I can make a cake.");
+~chatplayer("<p,quiz>Sounds a bit weird though. What does it involve?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Well, I'm not too familiar with the fine details, you'll have to go and speak with Traiborn in the Wizards' Tower. He'll know what you need.");
+~chatplayer("<p,happy>Okay, thanks, I'll get right on it!");
+%100guide_prog = 1;
+
+[oplocu,hundred_guide_multi]
+if (last_useitem ! 100guide_guidecake | ~hundred_guide_helping = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, 100guide_guidecake, 1);
+inv_add(inv, cake_tin, 1);
+%100guidevisible = 0;
+stat_advance(cooking, 25000);
+stat_advance(magic, 25000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!"); // ours, as for the others
+~hundred_free_done("the Lumbridge Guide", 100guide_guidecake, "2,500 Cooking and Magic XP");
+
+// ---------------------------------------------------------------- Traiborn
+[label,hundred_guide_traiborn]
+~chatnpc("<p,shock>Ello young thingummywut.");
+if (~p_choice2("Ask about helping the Lumbridge Guide.", 1, "Talk about other issues.", 2) = 2) {
+    def_int $option = ~traiborn_dialogue_options(%demonstart);
+    if ($option = 1) {
+        ~chatplayer("<p,shock>What's a thingummywut?");
+        @traiborn_thingummywut_shock;
+    }
+    ~chatplayer("<p,neutral>Teach me to be a mighty and powerful wizard.");
+    @traiborn_teach_me;
+}
+if (%100guide_prog < 2) {
+    ~chatplayer("<p,neutral>Hi. I was wondering if you could help me?");
+    ~chatnpc("<p,neutral>You don't look like you have a problem.");
+    ~chatplayer("<p,neutral>Well I do. I need to make something called a Cake of Guidance, and I was told that you could help me out.");
+    ~chatnpc("<p,happy>Mmmmm. Cake of Guidance. Yummy Yum! Did you know they're imbued with knowledge and information itself? When eaten it will give anyone the guidance they need to get back on track. So you say you're making one?"); // ours: the end of his line is cut off in the transcript
+    ~chatplayer("<p,neutral>Erm. No I don't think I did. I need to make that cake for the Lumbridge Guide. He's been frozen in time and needs help.");
+    ~chatnpc("<p,neutral>Oh dear, it's a strange day when the Lumbridge Guide needs guidance. Don't worry, I shall help you make your chocolate cake.");
+    ~chatplayer("<p,angry>Not a chocolate cake - a CAKE OF GUIDANCE.");
+    ~chatnpc("<p,angry>Make up your mind!");
+    ~chatplayer("<p,quiz>I have. So what do I need to do?");
+    ~chatnpc("<p,neutral>You don't know? Deary me. You'll need to enchant three ingredients with your own knowledge. Bring me the basic ingredients and I will help you with the enchantment.");
+    ~chatplayer("<p,quiz>What are the ingredients?");
+    ~chatnpc("<p,happy>An eggy peggy, some floury woury and some milky wilky.");
+    ~chatplayer("<p,neutral>So to the sane world, an egg, flour and milk. No problem, I'll be right back.");
+    ~chatnpc("<p,happy>Have a nice time!");
+    ~chatplayer("<p,neutral>...Thanks.");
+    %100guide_prog = 2;
+    return;
+}
+if (%100guide_eggdone = 1 & %100guide_milkdone = 1 & %100guide_flourdone = 1) @hundred_guide_bake;
+~chatplayer("<p,happy>Hi!");
+~chatnpc("<p,quiz>Brought any ingredients?");
+if (%100guide_eggdone = 0 & inv_total(inv, egg) > 0) @hundred_guide_egg_offer;
+if (%100guide_milkdone = 0 & inv_total(inv, bucket_milk) > 0) @hundred_guide_milk_offer;
+if (%100guide_flourdone = 0 & inv_total(inv, pot_flour) > 0) @hundred_guide_flour_offer;
+~chatplayer("<p,quiz>What do I need again?");
+~chatnpc("<p,neutral>I need you to bring me...");
+if (%100guide_eggdone = 0) ~chatnpc("<p,neutral>An egg.");
+if (%100guide_flourdone = 0) ~chatnpc("<p,neutral>A pot of flour.");
+if (%100guide_milkdone = 0) ~chatnpc("<p,neutral>A bucket of milk.");
+~chatnpc("<p,happy>I will then enchant them for you so you can make your Chocolate cake!");
+~chatplayer("<p,angry>Cake of guidance.");
+~chatnpc("<p,neutral>That's what I said.");
+~chatplayer("<p,neutral>I hope you know what you're doing.");
+~chatnpc("<p,happy>Of course. Take care, and don't talk to strangers!");
+
+// all three enchanted: bake it (he hands back any you've lost)
+[label,hundred_guide_bake]
+if (inv_total(inv, 100guide_guidecake) > 0 | inv_total(inv, 100guide_guidecake_uncooked) > 0) {
+    ~chatplayer("<p,happy>I made the cake. Just need to go use it now! Thanks for your help!");
+    ~chatnpc("<p,happy>Wah hey! Good work Bill.");
+    ~chatplayer("<p,confused>Who's Bill?");
+    ~chatnpc("<p,happy>Who knows!?");
+    return;
+}
+~chatplayer("<p,neutral>What should I be doing now?");
+~chatnpc("<p,neutral>Sleeping?");
+~chatplayer("<p,neutral>No I mean in regards to making the cake.");
+~chatnpc("<p,happy>Ah, bake it!");
+if (~obj_gettotal(100guide_egg) = 0) {
+    ~chatplayer("<p,sad>I lost the egg!");
+    ~chatnpc("<p,happy>That's okay, I have another up my sleeve.");
+    ~chatplayer("<p,confused>Strange place to put it.");
+    ~chatnpc("<p,quiz>Is it?");
+    ~chatplayer("<p,angry>Yes!");
+    ~hundred_guide_give(100guide_egg);
+}
+if (~obj_gettotal(100guide_pot_flour) = 0) {
+    ~chatplayer("<p,sad>I lost the flour!");
+    ~chatnpc("<p,happy>Good job I have another to hand then isn't it!");
+    ~hundred_guide_give(100guide_pot_flour);
+}
+if (~obj_gettotal(100guide_bucket_milk) = 0) {
+    ~chatplayer("<p,sad>I lost the milk!");
+    ~chatnpc("<p,happy>What would you do without me? I can give you another...");
+    ~hundred_guide_give(100guide_bucket_milk);
+}
+~chatplayer("<p,happy>Thank you.");
+
+[proc,hundred_guide_give](namedobj $obj)
+if (inv_freespace(inv) > 0) inv_add(inv, $obj, 1);
+else obj_add(coord, $obj, 1, ^lootdrop_duration);
+
+[label,hundred_guide_enchanted](namedobj $item, namedobj $enchanted)
+inv_del(inv, $item, 1);
+~hundred_guide_give($enchanted);
+if (%100guide_eggdone = 1 & %100guide_milkdone = 1 & %100guide_flourdone = 1) {
+    ~chatplayer("<p,quiz>So I've enchanted all three ingredients now?");
+    ~chatnpc("<p,happy>Indeed, best you go bake the cake! You can do it the same way as making an ordinary cake.");
+    ~chatplayer("<p,happy>Thank you.");
+}
+
+// ---------------------------------------------------------------- the egg: name that person
+[label,hundred_guide_egg_offer]
+~chatplayer("<p,happy>Yes, an egg!");
+~chatnpc("<p,happy>Egg-cellent...");
+~chatplayer("<p,neutral>I can't believe you said that, so I will just pretend you didn't.");
+~chatnpc("<p,sad>Boo. Hiss. You're no fun. I will need your help for the enchantment - you must imbue it with knowledge itself. You must complete a quiz to enact the enchantment.");
+if (~p_choice2("Okay. Let's start!", 1, "Maybe later.", 2) = 2) @hundred_guide_later;
+~chatplayer("<p,happy>Okay. Let's start!");
+~chatnpc("<p,neutral>Okay. You will be presented with some people that you may have come across on your travels - it's up to you to recall their names. Guess three correctly without error and you will succeed in enchanting the egg."); // ours: the end of his line is cut off in the transcript
+@hundred_guide_egg_quiz;
+
+[label,hundred_guide_egg_quiz]
+%100guide_tot = 0;
+%100guide_q1 = 0;
+%100guide_q2 = 0;
+while (%100guide_tot < 3) {
+    def_int $who = ~hundred_guide_pick(10);
+    def_npc $npc = enum(int, npc, hundred_guide_people, $who);
+    def_string $right = enum(int, string, hundred_guide_names, $who);
+    ~chatnpc_specific("? ? ? ?", $npc, "<p,neutral>...");
+    ~chatnpc("<p,quiz>Name that person!");
+    def_int $wrong1 = add(1, modulo(add($who, random(4)), 10));
+    if ($wrong1 = $who) $wrong1 = add(1, modulo($who, 10));
+    def_int $wrong2 = add(1, modulo(add($wrong1, add(1, random(3))), 10));
+    if ($wrong2 = $who | $wrong2 = $wrong1) $wrong2 = add(1, modulo(add($wrong2, 4), 10));
+    if (~hundred_guide_ask($right, enum(int, string, hundred_guide_names, $wrong1), enum(int, string, hundred_guide_names, $wrong2), $who) = false) {
+        ~chatnpc("<p,neutral>Nope, that's not right, you'll have to start again.");
+        if (~p_choice2_header("Okay. Let's start!", 1, "No thanks.", 2, "Try again?") = 1) @hundred_guide_egg_quiz;
+        return;
+    }
+    %100guide_tot = add(%100guide_tot, 1);
+    if (%100guide_tot = 1) ~chatnpc("<p,happy>Correct - and now the second character:");
+    else if (%100guide_tot = 2) ~chatnpc("<p,happy>Correct - and now the third and final character:");
+}
+~chatnpc("<p,happy>Congratulations!");
+~chatnpc("<p,happy>That's correct.");
+~chatplayer("<p,quiz>That wasn't so bad. Now what?");
+~chatnpc("<p,neutral>Well, there is the case of the magic words of enchantment - repeat after me:");
+~chatnpc("<p,neutral>Dandolino Zadribrim!");
+~chatplayer("<p,neutral>Dandy lino zadim!");
+~chatnpc("<p,neutral>Not quite, but it'll do. I will hold onto the Enchanted Egg for you until you need it.");
+%100guide_eggdone = 1;
+@hundred_guide_enchanted(egg, 100guide_egg);
+
+// a question not yet asked in this quiz, 1..$n
+[proc,hundred_guide_pick](int $n)(int)
+def_int $q = add(random($n), 1);
+while ($q = %100guide_q1 | $q = %100guide_q2) $q = add(modulo($q, $n), 1);
+if (%100guide_q1 = 0) %100guide_q1 = $q;
+else %100guide_q2 = $q;
+return($q);
+
+// three answers, the right one in a place that changes with the question (ours)
+[proc,hundred_guide_ask](string $right, string $wrong1, string $wrong2, int $seed)(boolean)
+def_int $place = modulo($seed, 3);
+def_int $pick;
+if ($place = 0) {
+    $pick = ~p_choice3($right, 1, $wrong1, 2, $wrong2, 3);
+    if ($pick = 1) return(true);
+} else if ($place = 1) {
+    $pick = ~p_choice3($wrong1, 1, $right, 2, $wrong2, 3);
+    if ($pick = 2) return(true);
+} else {
+    $pick = ~p_choice3($wrong1, 1, $wrong2, 2, $right, 3);
+    if ($pick = 3) return(true);
+}
+return(false);
+
+[label,hundred_guide_later]
+~chatplayer("<p,neutral>Maybe later.");
+~chatnpc("<p,neutral>Okie dokey, watch out for evil cows.");
+~chatplayer("<p,confused>Erm, okay.");
+
+// ---------------------------------------------------------------- the milk: questions about the lands
+[label,hundred_guide_milk_offer]
+~chatplayer("<p,happy>I've got some milk! Can we enchant it?");
+~chatnpc("<p,happy>Mmmm milk. By all means, you're going to have to complete a quiz first to bring forth guidance and enact the enchantment.");
+if (~p_choice2("Okay. I'm ready!", 1, "Maybe later.", 2) = 2) @hundred_guide_later;
+~chatplayer("<p,happy>Okay. I'm ready!");
+~chatnpc("<p,neutral>Okay. You must answer 3 general questions about our lands correctly without getting one wrong. You have as many chances as you need.");
+@hundred_guide_milk_quiz;
+
+[label,hundred_guide_milk_quiz]
+%100guide_tot = 0;
+%100guide_q1 = 0;
+%100guide_q2 = 0;
+while (%100guide_tot < 3) {
+    ~mesbox("--- Question <tostring(add(%100guide_tot, 1))> ---");
+    def_int $q = ~hundred_guide_pick(14);
+    def_string $question;
+    def_string $right;
+    def_string $wrong1;
+    def_string $wrong2;
+    $question, $right, $wrong1, $wrong2 = ~hundred_guide_milk_question($q);
+    ~chatnpc("<p,quiz><$question>");
+    if (~hundred_guide_ask($right, $wrong1, $wrong2, $q) = false) {
+        ~chatnpc("<p,neutral>That's not right. You'll have to start again.");
+        if (~p_choice2("Okay. I'm ready!", 1, "Maybe later.", 2) = 1) @hundred_guide_milk_quiz;
+        return;
+    }
+    %100guide_tot = add(%100guide_tot, 1);
+    if (%100guide_tot = 1) ~chatnpc("<p,happy>Correct! Good job! Two more to go.");
+    else if (%100guide_tot = 2) ~chatnpc("<p,happy>Correct! Well done. One more to go.");
+}
+~chatnpc("<p,happy>Correct! Well done. That's all three answered!");
+~chatnpc("<p,happy>That's correct.");
+~chatplayer("<p,quiz>Now what?");
+~chatnpc("<p,neutral>Repeat after me... Skalindom Ralinaplo.");
+~chatplayer("<p,neutral>Skelly domy ralipo!");
+~chatnpc("<p,neutral>....Close enough. The milk has now been enchanted!");
+~chatplayer("<p,quiz>You're making this up aren't you?");
+~chatnpc("<p,angry>How dare you! Now get me the next ingredient! I will hold onto the Enchanted Milk for you until you need it.");
+%100guide_milkdone = 1;
+@hundred_guide_enchanted(bucket_milk, 100guide_bucket_milk);
+
+// the OSRS wiki's questions and answers; the wrong answers ours
+[proc,hundred_guide_milk_question](int $q)(string, string, string, string)
+switch_int ($q) {
+    case 1 : return("What is the combat level of the goblins near Lumbridge?", "2", "5", "13");
+    case 2 : return("What is the defence level requirement to wear a Mystic Hat?", "20", "40", "1");
+    case 3 : return("A glass vial is to 33 as a glass orb is to...", "46", "40", "12");
+    case 4 : return("A gold ring is to 5 as a holy symbol is to...", "16", "20", "8");
+    case 5 : return("How much GP does it take to bribe a guard at the toll gate to Al Kharid?", "10", "5", "20");
+    case 6 : return("I can hear howling in one direction and buzzing in the other - where am I?", "Catherby", "Seers' Village", "Draynor Village");
+    case 7 : return("If I'm going to need glass, first I will need...", "Sand, bucket, soda ash, glassblowing pipe", "Clay, water and a furnace", "Sand and a hammer");
+    case 8 : return("I'm in a bar west of Pollnivneach. Where am I?", "Bandit Camp", "Nardah", "Al Kharid");
+    case 9 : return("Take the fire runes for Fire Strike, times the air runes for Wind Strike, plus the earth runes for Earth Wave. What do you get?", "10", "13", "7");
+    case 10 : return("The River Salve runs from...", "North to south", "South to north", "East to west");
+    case 11 : return("What doesn't lie between Morytania and Asgarnia?", "Keep Le Faye", "Varrock", "Paterdomus");
+    case 12 : return("What ingredients are used in a cake?", "Flour, eggs, milk", "Flour, water, eggs", "Milk, butter, sugar");
+    case 13 : return("Which tower is closest to the Crafting Guild?", "Dark Wizards' Tower", "Wizards' Tower", "The Clock Tower");
+}
+return("What is the nearest guild to the Fishing Platform, as the seagull flies?", "Legends'", "Fishing", "Ranging");
+
+// ---------------------------------------------------------------- the flour: the memory test
+[label,hundred_guide_flour_offer]
+~chatplayer("<p,happy>I have obtained a pot of flour!");
+~chatnpc("<p,neutral>So you want to enchant it now? You'll have to take active part by completing a little quiz to imbue the flour with knowledge and enact the enchantment.");
+if (~p_choice2("Quiz me!", 1, "Maybe later.", 2) = 2) @hundred_guide_later;
+~chatplayer("<p,happy>Quiz me!");
+~chatnpc("<p,neutral>For enchanting this item you will be shown a selection of items, when you stop viewing this selection you'll have to answer three questions correctly in a row and then the flour will be enchanted with guidance.");
+%100guide_tot = 0;
+%100guide_q1 = 0;
+%100guide_q2 = 0;
+@hundred_guide_flour_show;
+
+// one of the five groups, shown in the cache's window; its question follows when you close it
+[label,hundred_guide_flour_show]
+def_int $set = ~hundred_guide_pick(5);
+%100guide_lastgame = $set;
+inv_transmit(enum(int, inv, hundred_guide_flourinvs, $set), inter_375:com_48);
+if_openmain(inter_375);
+
+[if_close,inter_375]
+inv_stoptransmit(inter_375:com_48);
+if (%100guide_lastgame > 0 & %100guide_flourdone = 0 & ~hundred_guide_helping = true) queue(hundred_guide_flour_ask, 0, %100guide_lastgame);
+
+[queue,hundred_guide_flour_ask](int $set)
+%100guide_lastgame = 0;
+def_string $question;
+    def_string $right;
+    def_string $wrong1;
+    def_string $wrong2;
+    $question, $right, $wrong1, $wrong2 = ~hundred_guide_flour_question($set);
+~chatnpc_specific("Wizard Traiborn", traiborn, "<p,quiz><$question>");
+if (~hundred_guide_ask($right, $wrong1, $wrong2, add($set, 1)) = false) {
+    ~chatnpc_specific("Wizard Traiborn", traiborn, "<p,neutral>Sorry, that's not right. You'll have to start again.");
+    if (~p_choice2_header("Quiz me!", 1, "No thanks.", 2, "Try again?") = 1) {
+        %100guide_tot = 0;
+        %100guide_q1 = 0;
+        %100guide_q2 = 0;
+        @hundred_guide_flour_show;
+    }
+    return;
+}
+%100guide_tot = add(%100guide_tot, 1);
+if (%100guide_tot = 1) {
+    ~chatnpc_specific("Wizard Traiborn", traiborn, "<p,happy>That's correct - onto the second set!");
+    @hundred_guide_flour_show;
+}
+if (%100guide_tot = 2) {
+    ~chatnpc_specific("Wizard Traiborn", traiborn, "<p,happy>Correct - and now the third and final set:");
+    @hundred_guide_flour_show;
+}
+~chatnpc_specific("Wizard Traiborn", traiborn, "<p,happy>That's correct.");
+~chatplayer("<p,quiz>And that's it?");
+~chatnpc_specific("Wizard Traiborn", traiborn, "<p,neutral>You have to repeat the magic words of course!");
+~chatplayer("<p,neutral>Oh, of course...");
+~chatnpc_specific("Wizard Traiborn", traiborn, "<p,neutral>Splendidium romelno!");
+~chatplayer("<p,neutral>Spendy dum romeo!");
+~chatnpc_specific("Wizard Traiborn", traiborn, "<p,happy>We shall make a wizard of you yet. I will hold onto the enchanted flour for you until you need it.");
+%100guide_flourdone = 1;
+inv_del(inv, pot_flour, 1);
+~hundred_guide_give(100guide_pot_flour);
+
+// the OSRS wiki's questions about the groups; which group each goes with, and the wrong answers, ours
+[proc,hundred_guide_flour_question](int $set)(string, string, string, string)
+switch_int ($set) {
+    case 1 : return("Which item began with the letter 'm'?", "Mind talisman", "Chaos talisman", "Jade");
+    case 2 : return("Which items were amongst those you were shown?", "Book of Balance, Magic logs, Pike", "Unholy book, Magic logs, Pike", "Book of Balance, Maple logs, Salmon");
+    case 3 : return("Which of the following items were NOT shown to you?", "Trout", "Herring", "Salmon");
+    case 4 : return("How many types of rune were there?", "Two", "One", "Three");
+}
+return("How many weapons were you shown?", "Three", "Two", "Four");
+
+// ---------------------------------------------------------------- the cake
+[opheldu,100guide_egg] @hundred_guide_mix;
+[opheldu,100guide_bucket_milk] @hundred_guide_mix;
+[opheldu,100guide_pot_flour] @hundred_guide_mix;
+
+[label,hundred_guide_mix]
+if (last_useitem ! cake_tin & last_item ! cake_tin) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, 100guide_egg) < 1 | inv_total(inv, 100guide_bucket_milk) < 1 | inv_total(inv, 100guide_pot_flour) < 1) {
+    mes("You need the enchanted egg, milk and flour to make the cake."); // ours
+    return;
+}
+inv_del(inv, 100guide_egg, 1);
+inv_del(inv, 100guide_bucket_milk, 1);
+inv_add(inv, bucket_empty, 1);
+inv_del(inv, 100guide_pot_flour, 1);
+inv_add(inv, pot_empty, 1);
+inv_del(inv, cake_tin, 1);
+inv_add(inv, 100guide_guidecake_uncooked, 1);
+mes("You mix the enchanted ingredients in the cake tin."); // ours
+
+// the window's Close Window is a plain button
+[if_button,inter_375:com_73] if_close;
