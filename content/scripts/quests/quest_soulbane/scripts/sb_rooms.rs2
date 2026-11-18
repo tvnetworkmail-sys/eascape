@@ -191,6 +191,11 @@ if (~sb_room_at(coord) > 0) {
 npc_add(map_findsquare($c, 0, 2, ^map_findsquare_lineofwalk), $type, 3000);
 %npc_attacking_uid = uid;
 
+// exactly there (the bigger ones, which a free square nearby could put in a wall)
+[proc,sb_spawn_at](coord $c, npc $type)
+npc_add($c, $type, 3000);
+%npc_attacking_uid = uid;
+
 [proc,sb_is_monster](npc $type)(boolean)
 switch_npc ($type) {
     case soulbane_anger_bear, soulbane_anger_unicorn, soulbane_anger_rat, soulbane_anger_goblin, soulbane_fear_reaper,
