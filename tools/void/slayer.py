@@ -22,12 +22,12 @@ from slayer_map import CATEGORY
 VOID, WRITE = sys.argv[1], '--write' in sys.argv
 # EASCape: monsters to import that aren't Slayer monsters (quest areas), from VOID_EXTRA (comma list)
 # plus the ones already imported that way (kept so re-runs give the same result)
-EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant', 'chaoselemental', 'mole_giant', 'hundred_pirate_giant_mudskipper', 'hundred_pirate_giant_mudskipper_2', 'hundred_pirate_giant_crab', 'hundred_ilm_snake'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
+EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant', 'chaoselemental', 'mole_giant', 'hundred_pirate_giant_mudskipper', 'hundred_pirate_giant_mudskipper_2', 'hundred_pirate_giant_crab', 'hundred_ilm_snake', 'hundred_minion1', 'hundred_minion2', 'hundred_minion3', 'hundred_minion4', 'hundred_minion5_air', 'hundred_minion5_melee', 'hundred_minion5_water', 'hundred_minion5_fire', 'hundred_minion5_ranged', 'hundred_minion5_earth', 'hundred_culinaromancer_final'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
 # EASCape: Void items that are ours under another name (the 2007 cache's, ported by name)
 ITEM_AS = {'gorak_claws': 'ft2_gorak_claws'}
 # EASCape: Void items that need quest state we don't track (Rag and Bone Man's wish list): the slot drops nothing
 ITEM_SKIP = {'dagannoth_ribs'}
-EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak', 'chaoselemental': 'chaos_elemental', 'mole_giant': 'giant_mole', 'hundred_pirate_giant_mudskipper': 'mudskipper', 'hundred_pirate_giant_mudskipper_2': 'mudskipper_2', 'hundred_pirate_giant_crab': 'crab_underwater', 'hundred_ilm_snake': 'big_snake'}
+EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak', 'chaoselemental': 'chaos_elemental', 'mole_giant': 'giant_mole', 'hundred_pirate_giant_mudskipper': 'mudskipper', 'hundred_pirate_giant_mudskipper_2': 'mudskipper_2', 'hundred_pirate_giant_crab': 'crab_underwater', 'hundred_ilm_snake': 'big_snake', 'hundred_minion1': 'agrith_na_na', 'hundred_minion2': 'flambeed_normal', 'hundred_minion3': 'karamel_normal', 'hundred_minion4': 'dessourt_normal', 'hundred_minion5_air': 'gelatinnoth_mother_white', 'hundred_minion5_melee': 'gelatinnoth_mother_orange', 'hundred_minion5_water': 'gelatinnoth_mother_blue', 'hundred_minion5_fire': 'gelatinnoth_mother_red', 'hundred_minion5_ranged': 'gelatinnoth_mother_green', 'hundred_minion5_earth': 'gelatinnoth_mother_brown', 'hundred_culinaromancer_final': 'culinaromancer_normal'}
 OUT = os.path.join(CONTENT, 'scripts', 'eascape_void')
 
 vnpc = void_npcs(VOID)

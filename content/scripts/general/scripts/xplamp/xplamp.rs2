@@ -114,6 +114,23 @@ if (map_members = ^false & ~stat_members($stat) = ^true) {
 // more (the OSRS wiki); the messages are ours
 // EASCape: One Small Favour's antique lamps: 10,000 experience in a skill of level 30 or more
 // (the OSRS wiki); the messages are ours
+// EASCape: Recipe for Disaster's antique lamp: 20,000 experience in a skill of level 50 or more
+// (the OSRS wiki); the messages are ours (quest_100/hundred_culin.rs2)
+if (%xplamp_kind = 3) {
+    if (stat_base($stat) < 50) {
+        mes("You need at least level 50 in that skill to use this lamp.");
+        return;
+    }
+    if_close;
+    if (inv_total(inv, hundred_rewardlamp) = 0) return;
+    inv_del(inv, hundred_rewardlamp, 1);
+    %xplamp = ^xplamp_none;
+    %xplamp_kind = 0;
+    stat_advance($stat, 200000);
+    sound_synth(found_gem, 1, 0);
+    ~mesbox("You have been awarded 20,000 <enum(stat, string, stat_names, $stat)> experience!");
+    return;
+}
 if (%xplamp_kind = 2) {
     if (stat_base($stat) < 30) {
         mes("You need at least level 30 in that skill to use this lamp.");

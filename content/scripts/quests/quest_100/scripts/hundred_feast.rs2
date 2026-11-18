@@ -118,6 +118,7 @@ if_openoverlay(null);
 
 // ---------------------------------------------------------------- Aris
 [opnpc1,hundred_aris]
+if (%hundred_main_quest_var = ^hundred_all_freed) @hundred_culin_aris; // hundred_culin.rs2
 ~chatplayer("<p,neutral>Hi.");
 ~chatnpc("<p,neutral>Hello there adventurer. How can I assist you?");
 @hundred_aris_menu;
@@ -256,7 +257,10 @@ return($qp);
 // freeing one of the council: off they go (Aris's lines are each subquest's)
 [proc,hundred_free_done](string $who, namedobj $dish, string $rewards)
 def_int $freed = ~hundred_freed;
-if ($freed >= 8 & %hundred_main_quest_var = ^hundred_feast_seen) %hundred_main_quest_var = ^hundred_all_freed;
+if ($freed >= 8 & %hundred_main_quest_var = ^hundred_feast_seen) {
+    %hundred_main_quest_var = ^hundred_all_freed;
+    queue(hundred_culin_cutscene, 3, 0); // hundred_culin.rs2
+}
 ~send_quest_complete(questlist:hundred_main, $dish, 250, 1, "You have freed <$who>!", "1 Quest Point|<$rewards>|Further access to the|Culinaromancer's chest");
 
 // ---------------------------------------------------------------- the chest (Lumbridge Castle cellar)

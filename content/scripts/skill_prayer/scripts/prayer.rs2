@@ -1,4 +1,9 @@
 [proc,prayer_checks](dbrow $data)(boolean)
+// EASCape: no prayers in the Culinaromancer's dimension (Recipe for Disaster, quest_100/hundred_culin.rs2)
+if (~hundred_culin_in_arena = true) {
+    mes("The gods can't hear your prayers here."); // ours
+    return(false);
+}
 if (stat(prayer) < 1) {
     // osrs
     if (stat_base(prayer) >= db_getfield($data, prayers:level, 0)) {

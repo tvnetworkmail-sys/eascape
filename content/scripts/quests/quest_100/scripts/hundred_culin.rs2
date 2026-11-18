@@ -1,0 +1,324 @@
+// EASCape: Recipe for Disaster: Defeating the Culinaromancer. Words from the OSRS wiki's transcript;
+// the fight from its quest guide (no prayers in his dimension; Agrith-Na-Na, Flambeed (ice gloves to
+// hold a weapon), Karamel (lowers your stats), Dessourt, the Gelatinnoth Mother (hurt only by the style
+// her colour shows) and then the Culinaromancer; you can leave between them and come back where you
+// were; an antique lamp of 20,000 XP for a skill of 50 or more). Their stats are Void's. There's no
+// instance here: each player gets their own foe, which only they can fight (ours). Lines marked "ours"
+// have no source.
+
+[proc,hundred_culin_in_arena]()(boolean)
+if (inzone(0_29_83_16_0, 0_29_83_63_63, coord) = true) return(true);
+return(false);
+
+// what the last part asks (OSRS wiki: 175 quest points, Desert Treasure and Horror from the Deep)
+[proc,hundred_culin_reqs]()(boolean)
+if (%qp < 175 | %deserttreasure < ^deserttreasure_complete | %horrorquest < ^horror_complete) return(false);
+return(true);
+
+// ---------------------------------------------------------------- after the last of the council is freed
+[queue,hundred_culin_cutscene](int $unused)
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Now you've freed them all, I'll restart time so you can deal with the culinaromancer.");
+~chatplayer("<p,neutral>If you're sure...");
+~chatnpc_specific("Aris", hundred_aris, "<p,angry>TEMPUS PROCEDIT!");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,confused>What was that?");
+~chatnpc_specific("Aris", hundred_aris, "<p,angry>We have broken your feeble spell! Begone!");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>You DARED to meddle?");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>But you cannot defeat me! I'LL BE BACK!");
+%100culinaromancervisible = 0;
+mes("The Culinaromancer teleports away, leaving a portal behind him."); // ours: in place of the cutscene
+~chatplayer("<p,happy>Hooray - he's gone!");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>One day he'll return. You must go through the portal and finish him off.");
+
+[label,hundred_culin_aris]
+~chatplayer("<p,neutral>Hi.");
+~chatnpc("<p,neutral>Adventurer, you must hurry! You have freed the members of the secret council, but we must ensure that the Culinaromancer is defeated once and for all!");
+~chatnpc("<p,neutral>Follow him into the portal and make sure he never leaves again!");
+
+[label,hundred_culin_cook]
+~chatplayer("<p,quiz>So... You don't happen to remember what I did after the Culinaromancer escaped into that magic portal thingy do you?");
+~chatnpc("<p,happy>Of course I do! It was amazing!");
+~chatnpc("<p,happy>You jumped in right behind him and fought him to the death!");
+~chatplayer("<p,neutral>...Oh yeah, that's right. And it was a really easy fight wasn't it...?");
+~chatnpc("<p,neutral>Oh no! You told me it was really hard, and that you had to defeat a string of monsters without any prayer!");
+~chatplayer("<p,confused>Oh. I did, did I? Oh.");
+
+// ---------------------------------------------------------------- the portal in Lumbridge Castle
+[oploc1,hundred_portal_multi]
+if (%hundred_main_quest_var ! ^hundred_all_freed) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (~hundred_culin_reqs = false) {
+    mes("You need 175 quest points, and to have completed Desert Treasure and Horror from the Deep,"); // ours
+    mes("before you can follow him.");
+    return;
+}
+if (%hundred_culin_wave = 0) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral><displayname>, I must warn you, inside that dimension you will have no assistance from the gods, and your prayers will not work at all!");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Also be aware that he will use his powers to draw upon the might of foes you have fought before, and that dimensional instability means that your lost items will be irretrievable should you die...");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Take care, I suspect the Culinaromancer will not give up so easily!");
+    %hundred_culin_wave = 1;
+}
+if_close;
+~prayer_deactivate_all;
+p_telejump(^hundred_culin_arrive);
+~hundred_culin_next;
+
+[oploc1,hundred_exit_portal]
+~hundred_culin_clear;
+p_telejump(^hundred_culin_back);
+
+// takes away anything of this player's still in the arena
+[proc,hundred_culin_clear]
+npc_findallany(^hundred_culin_foe, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) npc_del;
+}
+
+// ---------------------------------------------------------------- the waves
+[proc,hundred_culin_next]
+~hundred_culin_clear;
+if (%hundred_culin_wave < 1 | %hundred_culin_wave > 6) return;
+def_npc $foe = hundred_culinaromancer_final;
+switch_int (%hundred_culin_wave) {
+    case 1 : $foe = hundred_minion1;
+    case 2 : $foe = hundred_minion2;
+    case 3 : $foe = hundred_minion3;
+    case 4 : $foe = hundred_minion4;
+    case 5 : $foe = hundred_minion5_air;
+}
+switch_int (%hundred_culin_wave) {
+    case 1 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>You DARE come HERE?!?!");
+    case 2 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>You will regret following me!");
+    case 3 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>You should not meddle in affairs that do not concern you!");
+    case 4 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>This will be your death!");
+    case 5 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>I still have a few tricks left!");
+    case 6 : ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>It seems I will have to deal with you myself!");
+}
+// the Culinaromancer watches until it's his turn
+if (%hundred_culin_wave < 6) {
+    npc_add(^hundred_culin_watch, hundred_culinaromancer_book1, 1000);
+    %npc_attacking_uid = uid;
+    switch_int (%hundred_culin_wave) {
+        case 1 : npc_say("Say hello to my little friend!");
+        case 2 : npc_say("I will not be thwarted by you!");
+        case 3 : npc_say("I have waited a long time for my revenge!");
+        case 4 : npc_say("Let's see how you deal with this!");
+        case 5 : npc_say("You've been lucky so far, but no more!");
+    }
+}
+npc_add(^hundred_culin_foe, $foe, 1000);
+%npc_attacking_uid = uid;
+// a new npc takes its own type's mode and timer when it first runs, so they're set a tick later
+queue(hundred_culin_engage, 3, 0);
+
+[queue,hundred_culin_engage](int $unused)
+npc_findallany(^hundred_culin_foe, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & npc_type ! hundred_culinaromancer_book1) {
+        if (npc_type = hundred_minion5_air) npc_settimer(20);
+        npc_setmode(opplayer2);
+        return;
+    }
+}
+
+// a foe killed: on to the next (its death, ai_queue3 below)
+[queue,hundred_culin_killed](int $wave)
+if (%hundred_culin_wave ! $wave) return;
+if ($wave < 5) ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>NOOOooo...");
+if ($wave = 5) ~chatnpc_specific("Culinaromancer", hundred_culinaromancer_end, "<p,angry>You have caused me enough grief! I guess I'll have to finish you off myself!");
+if ($wave = 6) @hundred_culin_won;
+%hundred_culin_wave = add($wave, 1);
+~hundred_culin_next;
+
+[label,hundred_culin_won]
+%hundred_culin_wave = 7;
+~hundred_culin_clear;
+mes("His head and chest inflate before popping into a variety of desserts."); // ours: in place of the cutscene
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work <displayname>! I think that will be the last we'll see of him! You'd better come back now.");
+%hundred_main_quest_var = ^hundred_complete;
+p_telejump(^hundred_culin_back);
+// the lamp lands at your feet if your pack is full (OSRS wiki)
+if (inv_freespace(inv) > 0) inv_add(inv, hundred_rewardlamp, 1);
+else obj_add(coord, hundred_rewardlamp, 1, ^lootdrop_duration);
+~send_quest_complete(questlist:hundred_main, hundred_rewardlamp, 250, 1, "You have completed Recipe for Disaster!", "1 Quest Point|An antique lamp|Full access to the|Culinaromancer's chest");
+
+// ---------------------------------------------------------------- the foes
+[proc,hundred_culin_wave_of](npc $type)(int)
+switch_npc ($type) {
+    case hundred_minion1 : return(1);
+    case hundred_minion2 : return(2);
+    case hundred_minion3 : return(3);
+    case hundred_minion4 : return(4);
+    case hundred_minion5_air, hundred_minion5_melee, hundred_minion5_water, hundred_minion5_fire, hundred_minion5_ranged, hundred_minion5_earth : return(5);
+    case hundred_culinaromancer_final : return(6);
+}
+return(0);
+
+[opnpc2,hundred_minion1] @hundred_culin_attack;
+[opnpc2,hundred_minion2] @hundred_culin_attack;
+[opnpc2,hundred_minion3] @hundred_culin_attack;
+[opnpc2,hundred_minion4] @hundred_culin_attack;
+[opnpc2,hundred_minion5_air] @hundred_culin_attack;
+[opnpc2,hundred_minion5_melee] @hundred_culin_attack;
+[opnpc2,hundred_minion5_water] @hundred_culin_attack;
+[opnpc2,hundred_minion5_fire] @hundred_culin_attack;
+[opnpc2,hundred_minion5_ranged] @hundred_culin_attack;
+[opnpc2,hundred_minion5_earth] @hundred_culin_attack;
+[opnpc2,hundred_culinaromancer_final] @hundred_culin_attack;
+[apnpc2,hundred_minion1] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion2] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion3] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion4] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_air] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_melee] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_water] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_fire] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_ranged] @hundred_culin_attack_ap;
+[apnpc2,hundred_minion5_earth] @hundred_culin_attack_ap;
+[apnpc2,hundred_culinaromancer_final] @hundred_culin_attack_ap;
+
+[proc,hundred_culin_mine]()(boolean)
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return(false);
+}
+// Flambeed: a weapon is too hot to hold without ice gloves (OSRS wiki: it goes back in your pack)
+if (npc_type = hundred_minion2 & inv_getobj(worn, ^wearpos_hands) ! ice_gloves) {
+    def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
+    if ($weapon ! null) {
+        if (inv_freespace(inv) < 1) {
+            mes("Your weapon is too hot to hold, and you've no room to put it away."); // ours
+            return(false);
+        }
+        inv_moveitem(worn, inv, $weapon, 1);
+        ~update_bas;
+        ~update_weapon_category($weapon);
+        mes("Your weapon is too hot to hold without ice gloves!"); // ours
+    }
+}
+return(true);
+
+[label,hundred_culin_attack]
+if (~hundred_culin_mine = false) return;
+@player_combat_start;
+
+[label,hundred_culin_attack_ap]
+if (~hundred_culin_mine = false) return;
+@player_combat_start_ap;
+
+[ai_queue3,hundred_minion1] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion2] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion3] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion4] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_air] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_melee] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_water] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_fire] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_ranged] @hundred_culin_foe_died;
+[ai_queue3,hundred_minion5_earth] @hundred_culin_foe_died;
+[ai_queue3,hundred_culinaromancer_final] @hundred_culin_foe_died;
+
+// each leaves a dessert (OSRS wiki: Flambeed a cake, Karamel a choc-ice, Dessourt chocolate dust)
+[label,hundred_culin_foe_died]
+def_int $wave = ~hundred_culin_wave_of(npc_type);
+def_coord $where = npc_coord;
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+if ($wave = 2) obj_add($where, cake, 1, ^lootdrop_duration);
+if ($wave = 3) obj_add($where, elid_choc_ice, 1, ^lootdrop_duration);
+if ($wave = 4) obj_add($where, chocolate_dust, 1, ^lootdrop_duration);
+queue(hundred_culin_killed, 1, $wave);
+
+// the ranged and magic foes (eascape_npc_projattack.rs2)
+[ai_queue1,hundred_minion3] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion3] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion3] @hundred_culin_karamel;
+[ai_queue1,hundred_culinaromancer_final] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_culinaromancer_final] npc_setmode(applayer2);
+[ai_applayer2,hundred_culinaromancer_final] ~eascape_npc_projattack(^magic_style);
+
+// Karamel: her magic lowers your stats (ours: 1 off Attack, Strength, Defence and Magic each hit)
+[label,hundred_culin_karamel]
+def_int $clock = %npc_action_delay;
+~eascape_npc_projattack(^magic_style);
+if (%npc_action_delay ! $clock & finduid(%npc_attacking_uid) = true) {
+    stat_sub(attack, 1, 0);
+    stat_sub(strength, 1, 0);
+    stat_sub(defence, 1, 0);
+    stat_sub(magic, 1, 0);
+}
+
+// the Gelatinnoth Mother changes colour, and with it the one style that hurts her (ours: every 20
+// ticks, in turn; any spell of her element for the four elements)
+[ai_timer,hundred_minion5_air] @hundred_culin_mother_turn(hundred_minion5_water);
+[ai_timer,hundred_minion5_water] @hundred_culin_mother_turn(hundred_minion5_melee);
+[ai_timer,hundred_minion5_melee] @hundred_culin_mother_turn(hundred_minion5_earth);
+[ai_timer,hundred_minion5_earth] @hundred_culin_mother_turn(hundred_minion5_fire);
+[ai_timer,hundred_minion5_fire] @hundred_culin_mother_turn(hundred_minion5_ranged);
+[ai_timer,hundred_minion5_ranged] @hundred_culin_mother_turn(hundred_minion5_air);
+
+[label,hundred_culin_mother_turn](npc $next)
+npc_changetype($next, 1000);
+npc_settimer(20);
+if (finduid(%npc_attacking_uid) = true) npc_setmode(opplayer2);
+
+[ai_queue2,hundred_minion5_air] @hundred_culin_mother_hit(1);
+[ai_queue2,hundred_minion5_water] @hundred_culin_mother_hit(2);
+[ai_queue2,hundred_minion5_earth] @hundred_culin_mother_hit(3);
+[ai_queue2,hundred_minion5_fire] @hundred_culin_mother_hit(4);
+[ai_queue2,hundred_minion5_melee] @hundred_culin_mother_hit(5);
+[ai_queue2,hundred_minion5_ranged] @hundred_culin_mother_hit(6);
+
+[label,hundred_culin_mother_hit](int $weak)
+def_int $damage = last_int;
+if (finduid(%npc_aggressive_player) = true) {
+    if (~hundred_culin_style_used ! $weak) $damage = 0;
+}
+~npc_default_damage($damage);
+
+// what the player last hit with: 1 air, 2 water, 3 earth, 4 fire (a spell in the last few ticks),
+// 5 melee, 6 ranged, 0 another spell
+[proc,hundred_culin_style_used]()(int)
+if (add(%hundred_culin_spell_clock, 6) >= map_clock) {
+    switch_int (%hundred_culin_spell) {
+        case ^wind_strike, ^wind_bolt, ^wind_blast, ^wind_wave : return(1);
+        case ^water_strike, ^water_bolt, ^water_blast, ^water_wave : return(2);
+        case ^earth_strike, ^earth_bolt, ^earth_blast, ^earth_wave : return(3);
+        case ^fire_strike, ^fire_bolt, ^fire_blast, ^fire_wave : return(4);
+    }
+    return(0);
+}
+if (%damagetype = ^ranged_style) return(6);
+return(5);
+
+// player_magic.rs2 calls this for each spell cast at an npc
+[proc,hundred_culin_cast](int $spell)
+%hundred_culin_spell = $spell;
+%hundred_culin_spell_clock = map_clock;
+
+// the antique lamp (xplamp.rs2's kind 3)
+[opheld1,hundred_rewardlamp]
+%xplamp_kind = 3;
+%xplamp = ^xplamp_none;
+if_openmain(xplamp);
+
+// the Gelatinnoth Mother fires from range (OSRS wiki: a ranged attack)
+[ai_queue1,hundred_minion5_air] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_air] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_air] ~eascape_npc_projattack(^ranged_style);
+[ai_queue1,hundred_minion5_water] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_water] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_water] ~eascape_npc_projattack(^ranged_style);
+[ai_queue1,hundred_minion5_melee] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_melee] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_melee] ~eascape_npc_projattack(^ranged_style);
+[ai_queue1,hundred_minion5_earth] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_earth] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_earth] ~eascape_npc_projattack(^ranged_style);
+[ai_queue1,hundred_minion5_fire] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_fire] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_fire] ~eascape_npc_projattack(^ranged_style);
+[ai_queue1,hundred_minion5_ranged] ~npc_default_retaliate_ap;
+[ai_opplayer2,hundred_minion5_ranged] npc_setmode(applayer2);
+[ai_applayer2,hundred_minion5_ranged] ~eascape_npc_projattack(^ranged_style);

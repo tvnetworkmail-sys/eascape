@@ -1,0 +1,24 @@
+// EASCape test cheat: `::~culinwin` finishes off your current foe in the Culinaromancer's
+// dimension (Recipe for Disaster, quests/quest_100/scripts/hundred_culin.rs2), as if you'd killed it
+[debugproc,culinwin]
+npc_findallany(^hundred_culin_foe, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & npc_type ! hundred_culinaromancer_book1) {
+        npc_heropoints(1);
+        npc_queue(3, 0, 0);
+        return;
+    }
+}
+mes("No foe of yours here.");
+
+// `::~culintimer` (test): restarts your foe's timer and sets it on you
+[debugproc,culintimer]
+npc_findallany(^hundred_culin_foe, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & npc_type ! hundred_culinaromancer_book1) {
+        mes("found <nc_name(npc_type)>");
+        npc_settimer(5);
+        npc_setmode(opplayer2);
+        return;
+    }
+}
