@@ -1,6 +1,14 @@
 [opnpc1,wyson] 
+// EASCape: the Giant Mole's claws and skins (update of 7 March 2006): 2009scape's lines
+// (WysonTheGardenerDialogue.kt, from videos); each one for a bird's nest of seeds
+def_int $claws = inv_total(inv, mole_claw);
+def_int $skins = inv_total(inv, mole_skin);
+if ($claws > 0 | $skins > 0) @wyson_mole_parts($claws, $skins);
 ~chatnpc("<p,neutral>I'm the gardener around here.|Do you have any gardening that needs doing?");
 def_int $option = ~p_choice2("I'm looking for woad leaves.", 1, "Not right now, thanks.", 2);
+@wyson_woad($option);
+
+[label,wyson_woad](int $option)
 if($option = 1) {
     ~chatplayer("<p,neutral>I'm looking for woad leaves.");
     ~chatnpc("<p,shifty>How much are you willing to pay?");
@@ -38,3 +46,52 @@ if($option = 1) {
 } else if($option = 2) {
     ~chatplayer("<p,neutral>Not right now, thanks.");
 }
+
+[label,wyson_mole_parts](int $claws, int $skins)
+if ($claws > 0 & $skins > 0) {
+    ~chatnpc("<p,happy>If I'm not mistaken, you've got some claws and skin from a big mole there! I'll trade 'em for bird nests if ye likes. Or was ye wantin' some woad leaves instead?");
+    switch_int (~p_choice5("Yeah, I will trade the mole claws.", 1, "Okay, I will trade the mole skin.", 2, "Alright, I'll trade the claws and skin.", 3, "Yes please, I need woad leaves.", 4, "Sorry, but I'm not interested.", 5)) {
+        case 1 :
+            ~chatplayer("<p,neutral>Yeah, I will trade the mole claws.");
+            ~wyson_nests(mole_claw);
+        case 2 :
+            ~chatplayer("<p,neutral>Okay, I will trade the mole skin.");
+            ~wyson_nests(mole_skin);
+        case 3 :
+            ~chatplayer("<p,neutral>Alright, I'll trade the claws and skin.");
+            ~wyson_nests(mole_claw);
+            ~wyson_nests(mole_skin);
+        case 4 : @wyson_woad(1);
+        case 5 : @wyson_woad(2);
+    }
+    ~chatnpc("<p,happy>Pleasure doing business with ya.");
+    return;
+}
+def_namedobj $part = mole_claw;
+def_string $line = "If I'm not mistaken, you've got some claws from a big mole there! I'll trade it for bird nests if ye likes. Or was ye wantin' some woad leaves instead?";
+def_string $trade = "Yeah, I will trade the mole claws.";
+if ($skins > 0) {
+    $part = mole_skin;
+    $line = "If I'm not mistaken, you've got some skin from a big mole there! I'll trade it for bird nests if ye likes. Or was ye wantin' some woad leaves instead?";
+    $trade = "Ok, I will trade the mole skin.";
+}
+~chatnpc("<p,happy><$line>");
+switch_int (~p_choice3($trade, 1, "Yes please, I need woad leaves.", 2, "Sorry, but I'm not interested.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral><$trade>");
+        ~wyson_nests($part);
+        ~chatnpc("<p,happy>Pleasure doing business with ya.");
+    case 2 : @wyson_woad(1);
+    case 3 : @wyson_woad(2);
+}
+
+// one nest for each (ours: what doesn't fit is dropped at your feet, as 2009scape does)
+[proc,wyson_nests](namedobj $part)
+def_int $n = inv_total(inv, $part);
+inv_del(inv, $part, $n);
+while ($n > 0) {
+    if (inv_freespace(inv) > 0) inv_add(inv, bird_nest_cheapseeds, 1);
+    else obj_add(coord, bird_nest_cheapseeds, 1, ^lootdrop_duration);
+    $n = sub($n, 1);
+}
+

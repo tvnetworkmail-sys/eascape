@@ -1,0 +1,179 @@
+// EASCape: the Giant Mole (update of 7 March 2006). From 2009scape (GiantMoleNPC.java): the four
+// mole hills in Falador Park you dig into (2009scape and Void: 3005,3376 2999,3375 2996,3377
+// 2989,3378), "It's going to be dark down there, I should bring a light source.", "You seem to
+// have dropped down into a network of mole tunnels."; she burrows away when hit below 100 hitpoints
+// (above 5; 24% a hit), facing a random way, dust and a hole, half the time splattering mud on
+// anyone close that puts out an open flame ("Your <light> seems to have been extinguished by the
+// mud."), and comes up at one of twelve places in the lair. From Void (GiantMole.kt): the lair is
+// dark without a light. Stats, drops and animations: her npc config (from Void, tools/void/slayer.py).
+// Ours: where you land and the rope back up (the 2006 map's rope at 1752,5136); the lair's
+// darkness is 2006's full-screen shade (inter_248), as the Lumbridge Swamp Caves'.
+
+// ---------------------------------------------------------------- the way in and out
+[proc,mole_hill](coord $coord)(boolean)
+if ($coord = 0_46_52_61_48 | $coord = 0_46_52_55_47 | $coord = 0_46_52_52_49 | $coord = 0_46_52_45_50) return(true);
+return(false);
+
+[label,mole_dig]
+p_arrivedelay;
+p_stopaction;
+if (~swamp_cave_has_light = false) {
+    mes("It's going to be dark down there, I should bring a light source.");
+    return;
+}
+anim(human_dig, 0);
+p_delay(1);
+// ours: the 2009 warning window isn't in the 2006 cache, so a choice
+if (~p_choice2_header("Yes, I'll go down.", 1, "No.", 2, "Dig down into the mole tunnels?") ! 1) return;
+p_telejump(^mole_lair_landing);
+mes("You seem to have dropped down into a network of mole tunnels.");
+~mole_lair_dark_refresh;
+
+[oploc1,mole_rope_02]
+p_arrivedelay;
+anim(human_climbing, 0);
+p_delay(1);
+switch_int (random(4)) {
+    case 0 : p_telejump(0_46_52_61_48);
+    case 1 : p_telejump(0_46_52_55_47);
+    case 2 : p_telejump(0_46_52_52_49);
+    case default : p_telejump(0_46_52_45_50);
+}
+~mole_lair_dark_refresh;
+
+// ---------------------------------------------------------------- darkness
+[proc,mole_in_lair](coord $coord)(boolean)
+if (coordx($coord) < 1728 | coordx($coord) > 1791) return(false);
+if (coordz($coord) < 5120 | coordz($coord) > 5247) return(false);
+return(true);
+
+[proc,mole_lair_dark_refresh]
+if (~mole_in_lair(coord) = false) {
+    if (%mole_lair_dark ! 0) {
+        if_openoverlay(null);
+        %mole_lair_dark = 0;
+    }
+    cleartimer(mole_lair_dark);
+    return;
+}
+if (~swamp_cave_has_light = true) {
+    if (%mole_lair_dark ! 1) {
+        if_openoverlay(null);
+        %mole_lair_dark = 1;
+    }
+} else if (%mole_lair_dark ! 2) {
+    if_openoverlay(inter_248);
+    %mole_lair_dark = 2;
+}
+settimer(mole_lair_dark, 1);
+
+[timer,mole_lair_dark] ~mole_lair_dark_refresh;
+
+[mapzone,0_27_80] ~mole_lair_dark_refresh; @music_playbyregion(coord);
+[mapzone,0_27_81] ~mole_lair_dark_refresh; @music_playbyregion(coord);
+[mapzoneexit,0_27_80] ~mole_lair_dark_refresh;
+[mapzoneexit,0_27_81] ~mole_lair_dark_refresh;
+
+// ---------------------------------------------------------------- the mole
+[ai_queue1,mole_giant]
+if (%mole_burrowing_until > map_clock) return;
+def_int $hp = npc_stat(hitpoints);
+if ($hp < 100 & $hp > 5 & random(100) < 24) {
+    %mole_burrowing_until = calc(map_clock + 5);
+    npc_setmode(null);
+    npc_queue(5, 0, 0);
+    return;
+}
+gosub(npc_default_retaliate);
+
+[ai_opplayer2,mole_giant]
+if (%mole_burrowing_until > map_clock) {
+    npc_setmode(null);
+    return;
+}
+gosub(npc_default_attack);
+
+// down she goes, and up again somewhere else 4 ticks later
+[ai_queue5,mole_giant]
+def_int $dir = random(4);
+def_coord $hole = movecoord(npc_coord, 1, 0, 0);
+if ($dir = 0) $hole = movecoord(npc_coord, 1, 0, 2);
+else if ($dir = 1) $hole = movecoord(npc_coord, 2, 0, 1);
+else if ($dir = 2) $hole = movecoord(npc_coord, 0, 0, 1);
+npc_facesquare($hole);
+~mole_dust(movecoord(npc_coord, 1, 0, 1));
+npc_anim(mole_burrow_down, 0);
+spotanim_map(mole_mude_hole_spotanim, $hole, 0, 0);
+~sound_area(mole_burrow_down, 0, npc_coord, 10);
+npc_delay(1);
+if (random(2) = 0) {
+    huntall(npc_coord, 3, 0);
+    while (huntnext = true) {
+        queue(mole_mud, 0, 0);
+    }
+}
+npc_delay(2);
+npc_tele(~mole_surface_coord);
+~mole_dust(movecoord(npc_coord, 1, 0, 1));
+npc_anim(mole_burrow_up, 0);
+spotanim_map(mole_mud_hole_up_spotanim, movecoord(npc_coord, 1, 0, 1), 0, 0);
+~sound_area(mole_burrow_up, 0, npc_coord, 10);
+
+[proc,mole_dust](coord $centre)
+def_int $x = -1;
+while ($x < 2) {
+    def_int $z = -1;
+    while ($z < 2) {
+        spotanim_map(mole_mud_cloud_spotanim, movecoord($centre, $x, 0, $z), 0, 0);
+        $z = add($z, 1);
+    }
+    $x = add($x, 1);
+}
+
+// 2009scape's twelve places (another one if she'd come up where she is)
+[proc,mole_surface_coord]()(coord)
+def_int $i = random(12);
+def_coord $to = ~mole_surface($i);
+if (distance($to, npc_coord) < 15) $to = ~mole_surface(calc(($i + 1) % 12));
+return($to);
+
+[proc,mole_surface](int $i)(coord)
+switch_int ($i) {
+    case 0 : return(0_27_80_32_63); // 1760,5183
+    case 1 : return(0_27_81_8_39); // 1736,5223
+    case 2 : return(0_27_81_49_51); // 1777,5235
+    case 3 : return(0_27_80_11_30); // 1739,5150
+    case 4 : return(0_27_80_41_28); // 1769,5148
+    case 5 : return(0_27_81_22_11); // 1750,5195
+    case 6 : return(0_27_81_50_23); // 1778,5207
+    case 7 : return(0_27_81_44_15); // 1772,5199
+    case 8 : return(0_27_80_46_53); // 1774,5173
+    case 9 : return(0_27_80_32_42); // 1760,5162
+    case 10 : return(0_27_80_25_31); // 1753,5151
+    case default : return(0_27_80_11_32); // 1739,5152
+}
+
+// the mud puts out a candle or a torch (a lantern's flame is covered)
+[queue,mole_mud](int $unused)
+p_stopaction;
+def_obj $lit = null;
+def_namedobj $unlit = null;
+def_string $name = "";
+if (inv_total(inv, lit_candle) > 0) {
+    $lit = lit_candle;
+    $unlit = unlit_candle;
+    $name = "candle";
+} else if (inv_total(inv, lit_black_candle) > 0) {
+    $lit = lit_black_candle;
+    $unlit = unlit_black_candle;
+    $name = "black candle";
+} else if (inv_total(inv, torch_lit) > 0) {
+    $lit = torch_lit;
+    $unlit = torch_unlit;
+    $name = "torch";
+}
+if ($lit = null) return;
+inv_del(inv, $lit, 1);
+inv_add(inv, $unlit, 1);
+mes("Your <$name> seems to have been extinguished by the mud.");
+~mole_lair_dark_refresh;

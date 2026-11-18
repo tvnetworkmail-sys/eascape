@@ -49,3 +49,32 @@ if(inv_freespace(inv) < 1) {
 if($mes = true) mes("You take <enum(namedobj, string, bird_nest_mes, $reward)> out of the bird's nest.");
 inv_setslot(inv, $slot, bird_nest_empty, 1);
 inv_add(inv, $reward, 1);
+
+// EASCape: the nests Wyson gives for the Giant Mole's claws and skins (update of 7 March 2006:
+// "vegetable seeds or, sometimes, tree seeds"). Void's cheap seed table (birds_nest.drops.toml,
+// 800 a roll); its evil turnip seeds, and its 8 in 800 of nothing, aren't in: rolled out of 702
+// (ours). Message ours, as the tree seeds'.
+[opheld1,bird_nest_cheapseeds]
+if (inv_freespace(inv) < 1) {
+    ~mesbox("Your inventory is too full to take anything out of the bird's nest.");
+    return;
+}
+def_namedobj $seed = cabbage_seed;
+def_int $count = 9;
+def_string $what = "some cabbage seeds";
+def_int $rand = random(702);
+if ($rand < 1) { $seed = spirit_tree_seed; $count = 1; $what = "a Spirit Tree seed"; }
+else if ($rand < 2) { $seed = magic_tree_seed; $count = 1; $what = "a Magic Tree seed"; }
+else if ($rand < 12) { $seed = yew_seed; $count = 1; $what = "a yew tree seed"; }
+else if ($rand < 22) { $seed = maple_seed; $count = 1; $what = "a maple tree seed"; }
+else if ($rand < 42) { $seed = willow_seed; $count = 1; $what = "a willow tree seed"; }
+else if ($rand < 72) { $seed = acorn; $count = 1; $what = "an acorn"; }
+else if ($rand < 92) { $seed = ranarr_seed; $count = 1; $what = "a ranarr seed"; }
+else if ($rand < 212) { $seed = sweetcorn_seed; $count = 3; $what = "some sweetcorn seeds"; }
+else if ($rand < 302) { $seed = strawberry_seed; $count = 3; $what = "some strawberry seeds"; }
+else if ($rand < 402) { $seed = limpwurt_seed; $count = 2; $what = "some limpwurt seeds"; }
+else if ($rand < 492) { $seed = watermelon_seed; $count = 2; $what = "some watermelon seeds"; }
+else if ($rand < 602) { $seed = tomato_seed; $count = 6; $what = "some tomato seeds"; }
+mes("You take <$what> out of the bird's nest.");
+inv_setslot(inv, last_slot, bird_nest_empty, 1);
+inv_add(inv, $seed, $count);

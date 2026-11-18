@@ -1,0 +1,260 @@
+// EASCape: canoes on the River Lum (update of 7 March 2006). From Void (Canoes.kt, CanoeStation.kt,
+// canoe_stations.tables.toml): chop the station's tree (12 Woodcutting), shape it with your axe
+// (each try 3 ticks, Void's chances per axe), float it, paddle it; the five stations in order
+// (Lumbridge, the Champions' Guild, Barbarian Village, Edgeville, the Wilderness pond), how far each
+// canoe goes (a log 1 station, a dugout 2, a stable dugout 3, a waka 4), where you arrive and where
+// the canoe sinks, the arrival messages and the Wilderness warning. From 2009scape
+// (CanoeListener.kt): the station's states as this cache numbers them, the levels (27, 42, 57),
+// the experience (30, 60, 90, 150), only a waka going to the Wilderness ("Expert woodcutters can
+// make a canoe that handles underground river sections", the update), and which parts of the two
+// windows show. Ours: the trip is a fade (the 2006 cache has no travel window); Void's "don't show
+// this warning again" isn't offered; the tree stays chopped until you paddle off.
+// %canoestation_state_*: 0 tree, 1-4 shaped (log, dugout, stable dugout, waka), 5-8 being pushed
+// in, 9 falling, 10 fallen, 11-14 in the water.
+
+[oploc1,canoeing_canoestation_lumbridge] @canoe_station(0);
+[oploc1,canoeing_canoestation_championsguild] @canoe_station(1);
+[oploc1,canoeing_canoestation_barbarianvillage] @canoe_station(2);
+[oploc1,canoeing_canoestation_edgeville] @canoe_station(3);
+
+[proc,canoe_state](int $station)(int)
+switch_int ($station) {
+    case 0 : return(%canoestation_state_lumbridge);
+    case 1 : return(%canoestation_state_championsguild);
+    case 2 : return(%canoestation_state_barbarianvillage);
+    case 3 : return(%canoestation_state_edgeville);
+}
+return(0);
+
+[proc,canoe_set_state](int $station, int $state)
+switch_int ($station) {
+    case 0 : %canoestation_state_lumbridge = $state;
+    case 1 : %canoestation_state_championsguild = $state;
+    case 2 : %canoestation_state_barbarianvillage = $state;
+    case 3 : %canoestation_state_edgeville = $state;
+}
+
+[label,canoe_station](int $station)
+p_arrivedelay;
+facesquare(loc_coord);
+def_int $state = ~canoe_state($station);
+if ($state = 0) @canoe_chop($station);
+if ($state = 10) @canoe_shape($station);
+if ($state >= 1 & $state <= 4) @canoe_float($station, $state);
+if ($state >= 11 & $state <= 14) @canoe_paddle($station);
+
+// ---------------------------------------------------------------- the tree
+[label,canoe_chop](int $station)
+if (stat(woodcutting) < 12) {
+    ~mesbox("You must have at least level 12 woodcutting to start making canoes.");
+    return;
+}
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+anim(struct_param(oc_param($axe, woodcutting_struct), skill_anim), 0);
+p_delay(1);
+anim(null, 0);
+~canoe_set_state($station, 9);
+loc_anim(canoeing_station_animations);
+sound_synth(tree_fall, 1, 0);
+p_delay(1);
+~canoe_set_state($station, 10);
+
+// ---------------------------------------------------------------- shaping it
+[label,canoe_shape](int $station)
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+%canoe_startfrom = $station;
+def_int $level = stat(woodcutting);
+~canoe_unlock(canoeing:com_6, canoeing:com_33, $level, 27);
+~canoe_unlock(canoeing:com_3, canoeing:com_36, $level, 42);
+~canoe_unlock(canoeing:com_14, canoeing:com_30, $level, 57);
+if_openmain(canoeing);
+
+[proc,canoe_unlock](component $button, component $silhouette, int $level, int $need)
+if ($level >= $need) {
+    if_sethide($button, false);
+    if_sethide($silhouette, true);
+} else {
+    if_sethide($button, true);
+    if_sethide($silhouette, false);
+}
+
+[if_button,canoeing:com_8] @canoe_make(1);
+[if_button,canoeing:com_25] @canoe_make(1);
+[if_button,canoeing:com_6] @canoe_make(2);
+[if_button,canoeing:com_26] @canoe_make(2);
+[if_button,canoeing:com_3] @canoe_make(3);
+[if_button,canoeing:com_27] @canoe_make(3);
+[if_button,canoeing:com_14] @canoe_make(4);
+[if_button,canoeing:com_28] @canoe_make(4);
+
+[label,canoe_make](int $canoe)
+if_close;
+def_int $station = %canoe_startfrom;
+if (~canoe_state($station) ! 10) return;
+def_int $need = 12;
+def_string $name = "log canoe";
+def_int $xp = 300;
+if ($canoe = 2) {
+    $need = 27;
+    $name = "dugout canoe";
+    $xp = 600;
+} else if ($canoe = 3) {
+    $need = 42;
+    $name = "stable dugout canoe";
+    $xp = 900;
+} else if ($canoe = 4) {
+    $need = 57;
+    $name = "waka canoe";
+    $xp = 1500;
+}
+if (stat(woodcutting) < $need) {
+    mes("You need a Woodcutting level of <tostring($need)> to make a <$name>."); // ours
+    return;
+}
+def_namedobj $axe = ~woodcutting_axe_checker(true);
+if ($axe = null) return;
+def_seq $carve = ~canoe_carve_anim($axe);
+def_int $low;
+def_int $high;
+$low, $high = ~canoe_axe_chance($axe);
+def_int $tries = 0;
+while ($tries < 50) {
+    anim($carve, 0);
+    p_delay(2);
+    if (stat_random(woodcutting, $low, $high) = true) {
+        anim(null, 0);
+        ~canoe_set_state($station, $canoe);
+        stat_advance(woodcutting, $xp);
+        return;
+    }
+    $tries = add($tries, 1);
+}
+anim(null, 0);
+
+[proc,canoe_carve_anim](namedobj $axe)(seq)
+switch_obj ($axe) {
+    case dragon_axe : return(human_canoeing_carve_dragon_axe);
+    case rune_axe : return(human_canoeing_carve_rune_axe);
+    case adamant_axe : return(human_canoeing_carve_adamant_axe);
+    case mithril_axe : return(human_canoeing_carve_mithril_axe);
+    case black_axe : return(human_canoeing_carve_black_axe);
+    case steel_axe : return(human_canoeing_carve_steel_axe);
+    case iron_axe : return(human_canoeing_carve_iron_axe);
+}
+return(human_canoeing_carve_bronze_axe);
+
+// Void's canoe chances (hatchet.items.toml canoe_chance_min/max)
+[proc,canoe_axe_chance](namedobj $axe)(int, int)
+switch_obj ($axe) {
+    case dragon_axe : return(112, 350);
+    case rune_axe : return(112, 350);
+    case adamant_axe : return(96, 300);
+    case mithril_axe : return(80, 250);
+    case black_axe : return(72, 225);
+    case steel_axe : return(64, 200);
+    case iron_axe : return(48, 150);
+}
+return(32, 100);
+
+// ---------------------------------------------------------------- into the water
+[label,canoe_float](int $station, int $canoe)
+~canoe_set_state($station, calc($canoe + 4));
+anim(canoeing_pushing_into_water, 0);
+loc_anim(canoeing_station_animations);
+sound_synth(canoe_roll, 1, 0);
+p_delay(2);
+anim(null, 0);
+~canoe_set_state($station, calc($canoe + 10));
+
+// ---------------------------------------------------------------- off you go
+[label,canoe_paddle](int $station)
+%canoe_startfrom = $station;
+def_int $reach = calc(~canoe_state($station) - 10); // a log 1 .. a waka 4
+// the four stations' rows; the Wilderness only for a waka
+if_sethide(canoe_map:com_13, ~canoe_row_hidden($station, 0, $reach));
+if_sethide(canoe_map:com_15, ~canoe_row_hidden($station, 1, $reach));
+if_sethide(canoe_map:com_17, ~canoe_row_hidden($station, 2, $reach));
+if_sethide(canoe_map:com_40, ~canoe_row_hidden($station, 3, $reach));
+if_sethide(canoe_map:com_33, true);
+if ($reach >= 4) if_sethide(canoe_map:com_33, false);
+if_sethide(canoe_map:com_52, true);
+if_sethide(canoe_map:com_49, true);
+if_sethide(canoe_map:com_46, true);
+if_sethide(canoe_map:com_38, true);
+if ($station = 0) if_sethide(canoe_map:com_52, false);
+else if ($station = 1) if_sethide(canoe_map:com_49, false);
+else if ($station = 2) if_sethide(canoe_map:com_46, false);
+else if ($station = 3) if_sethide(canoe_map:com_38, false);
+if_openmain(canoe_map);
+
+[proc,canoe_row_hidden](int $from, int $row, int $reach)(boolean)
+if ($from = $row) return(true);
+if (~canoe_distance($from, $row) > $reach) return(true);
+return(false);
+
+[proc,canoe_distance](int $a, int $b)(int)
+if ($a > $b) return(calc($a - $b));
+return(calc($b - $a));
+
+[if_button,canoe_map:com_34] @canoe_travel(0);
+[if_button,canoe_map:com_35] @canoe_travel(1);
+[if_button,canoe_map:com_36] @canoe_travel(2);
+[if_button,canoe_map:com_41] @canoe_travel(3);
+[if_button,canoe_map:com_37] @canoe_travel(4);
+
+[label,canoe_travel](int $to)
+if_close;
+def_int $from = %canoe_startfrom;
+def_int $state = ~canoe_state($from);
+if ($state < 11 | $state > 14 | $to = $from) return;
+def_int $canoe = calc($state - 10);
+if (($to = 4 & $canoe < 4) | ($to < 4 & ~canoe_distance($to, $from) > $canoe)) return;
+if ($to = 4) {
+    ~mesbox("@red@Warning@bla@ This canoe will take you deep into the @red@Wilderness@bla@. There are no trees suitable to make a canoe there. You will have to walk back.");
+    if (~p_choice2_header("Yes, I'm brave.", 1, "Eeep! The Wilderness... No thank you.", 2, "Are you sure you wish to travel") ! 1) return;
+}
+def_coord $arrive = ~canoe_arrive($to);
+def_coord $sink = ~canoe_sink($to);
+~fade_out;
+p_delay(calc(~canoe_distance($to, $from) + 2));
+p_telejump($arrive);
+~canoe_set_state($from, 0);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+def_loc $sinking = canoeing_log_sinking;
+if ($canoe = 2) $sinking = canoeing_dugout_sinking;
+else if ($canoe = 3) $sinking = canoeing_catamaran_sinking;
+else if ($canoe = 4) $sinking = canoeing_waka_sinking;
+loc_add($sink, $sinking, 1, centrepiece_straight, 3);
+loc_anim(canoeing_sinking);
+sound_synth(canoe_sink, 1, 0);
+switch_int ($to) {
+    case 0 : mes("You arrive at Lumbridge.");
+    case 1 : mes("You arrive at the Champions' Guild.");
+    case 2 : mes("You arrive at the Barbarian's Village.");
+    case 3 : mes("You arrive at Edgeville.");
+    case 4 : mes("You arrive in the Wilderness. There are no trees suitable to make a canoe.");
+}
+if ($to = 4) mes("Your canoe sinks into the water after the hard journey. Looks like you're walking back.");
+else mes("Your canoe sinks into the water after the hard journey.");
+
+[proc,canoe_arrive](int $station)(coord)
+switch_int ($station) {
+    case 0 : return(0_50_50_31_50); // 3231,3250
+    case 1 : return(0_49_52_63_16); // 3199,3344
+    case 2 : return(0_48_53_37_23); // 3109,3415
+    case 3 : return(0_48_54_57_45); // 3129,3501
+}
+return(0_49_59_6_20); // 3142,3796
+
+[proc,canoe_sink](int $station)(coord)
+switch_int ($station) {
+    case 0 : return(0_50_50_35_48); // 3235,3248
+    case 1 : return(0_49_52_61_13); // 3197,3341
+    case 2 : return(0_48_53_35_22); // 3107,3414
+    case 3 : return(0_48_54_57_49); // 3129,3505
+}
+return(0_49_59_6_19); // 3142,3795
