@@ -50,8 +50,9 @@ def_coord $prev = ~me2_trap_getprev;
 ~me2_trap_setprev($c);
 def_int $d = enum(coord, int, me2_trap, $c);
 if ($d = -1 | $prev = $c) return;
-// only walking up to the trap's wall sets it off, not stepping away from it
-if ($prev ! ~me2_trap_step($c, modulo(add($d, 2), 4))) return;
+// stepping on the square in front of it sets it off, from whichever way you came (the RS wiki),
+// but not landing there from the far side (you've just dodged past, or been pushed back)
+if ($prev = ~me2_trap_step($c, $d)) return;
 queue(me2_trap_dodge, 0, $d);
 
 [proc,me2_trap_step](coord $c, int $d)(coord)
