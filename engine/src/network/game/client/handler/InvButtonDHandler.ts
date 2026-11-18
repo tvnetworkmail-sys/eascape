@@ -47,9 +47,21 @@ export default class InvButtonDHandler extends ClientGameMessageHandler<InvButto
         player.lastTargetSlot = targetSlot;
 
         const script = ScriptProvider.getByTrigger(ServerTriggerType.INV_BUTTOND, comId);
+        const protect = script ? Component.get(com.rootLayer).overlay == false : false;
+
+        // EASCape: the client has already swapped the two slots on its side. If the drag script
+        // can't run because another script holds protected access (a level-up or other dialogue
+        // still open, an "Enter amount" box), executeScript does nothing, so put the client's
+        // slots back as for delayed above. Without this the client kept showing the swapped items
+        // (an uncut emerald where the server had a harralander potion (unf)), and a deposit or use
+        // of that slot was refused as "item does not exist" with no message.
+        if (script && protect && player.protect) {
+            player.write(new UpdateInvPartial(comId, inv, slot, targetSlot));
+            return false;
+        }
+
         if (script) {
-            const root = Component.get(com.rootLayer);
-            player.executeScript(ScriptRunner.init(script, player), root.overlay == false);
+            player.executeScript(ScriptRunner.init(script, player), protect);
         } else if (Environment.NODE_DEBUG) {
             player.messageGame(`No trigger for [inv_buttond,${com.comName}]`);
         }
