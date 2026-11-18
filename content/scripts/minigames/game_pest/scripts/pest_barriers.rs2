@@ -1,0 +1,169 @@
+// EASCape: Pest Control's barricades and gates (2009scape: PCObjectHandler, PestControlSession).
+// Hits take them down a step (barricades: whole, damaged, destroyed; gates: whole, damaged twice,
+// destroyed), a hammer and logs mend them a step. Each loc's next and last step are its params
+// (pest.loc).
+
+// what stands on this square: 0 nothing, 1 a barricade or gate that can still be hit, 2 one that's
+// destroyed
+[proc,pest_barrier_state](coord $c)(int)
+loc_findallzone($c);
+while (loc_findnext = true) {
+    if (loc_coord = $c & loc_category = pest_barrier) {
+        if (loc_param(pest_damaged) ! null) return(1);
+        return(2);
+    }
+}
+return(0);
+
+// the one on this square takes a hit
+[proc,pest_barrier_hit_at](coord $c)
+loc_findallzone($c);
+while (loc_findnext = true) {
+    if (loc_coord = $c & loc_category = pest_barrier) {
+        if (loc_param(pest_damaged) ! null) loc_change(loc_param(pest_damaged), ^pest_loc_duration);
+        return;
+    }
+}
+
+// ---------------------------------------------------------------- repairing
+[oploc3,_pest_barrier]
+def_loc $mended = loc_param(pest_repaired);
+if ($mended = null) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (inv_total(inv, hammer) < 1) {
+    mes("You'll need a hammer to make any repairs!");
+    return;
+}
+if (inv_total(inv, logs) < 1) {
+    mes("You'll need some logs to make any repairs!");
+    return;
+}
+inv_del(inv, logs, 1);
+anim(pest_repair, 0);
+sound_synth(pest_hammer, 1, 0);
+loc_change($mended, ^pest_loc_duration);
+
+// ---------------------------------------------------------------- the gates
+[oploc1,_pest_barrier]
+switch_loc (loc_type) {
+    case pest_wall_gate_damaged_2, pest_wall_gate_damaged_2_open, pest_wall_gate_damaged_2_mirror, pest_wall_gate_damaged_2_mirror_open,
+        pest_wall_gate_destroyed, pest_wall_gate_destroyed_open, pest_wall_gate_destroyed_mirror, pest_wall_gate_destroyed_mirror_open :
+        mes("It's too damaged to be moved!");
+        return;
+}
+if (loc_param(pest_toggle) = null) return;
+def_coord $c = loc_coord;
+def_coord $other = ~pest_gate_partner($c, ~pest_gate_closed(loc_type));
+~pest_gate_swing_at($c);
+if ($other ! null) ~pest_gate_swing_at($other);
+sound_synth(door_open, 1, 0);
+
+// its other half: beside it, open or shut as it is
+[proc,pest_gate_partner](coord $c, boolean $closed)(coord)
+def_coord $try;
+def_int $i = 0;
+while ($i < 4) {
+    $try = ~pest_beside($c, $i);
+    loc_findallzone($try);
+    while (loc_findnext = true) {
+        if (loc_coord = $try & loc_category = pest_barrier) {
+            if (loc_param(pest_toggle) ! null & ~pest_gate_closed(loc_type) = $closed) return($try);
+        }
+    }
+    $i = add($i, 1);
+}
+return(null);
+
+// the gate half on this square opens or shuts. The mirrored half is the left one
+// (doors/doubledoors.rs2)
+[proc,pest_gate_swing_at](coord $c)
+loc_findallzone($c);
+while (loc_findnext = true) {
+    if (loc_coord = $c & loc_category = pest_barrier & loc_param(pest_toggle) ! null) {
+        def_loc $to = loc_param(pest_toggle);
+        def_boolean $mirror = ~pest_gate_mirror(loc_type);
+        def_boolean $closed = ~pest_gate_closed(loc_type);
+        def_int $angle = loc_angle;
+        def_int $dx = 0;
+        def_int $dz = 0;
+        loc_del(^pest_loc_duration);
+        if ($closed = true) {
+            $dx, $dz = ~door_open($angle, wall_straight);
+            if ($mirror = true) loc_add(movecoord($c, $dx, 0, $dz), $to, calc(($angle + 3) % 4), wall_straight, ^pest_loc_duration);
+            else loc_add(movecoord($c, $dx, 0, $dz), $to, calc(($angle + 1) % 4), wall_straight, ^pest_loc_duration);
+            return;
+        }
+        def_int $shut = calc(($angle + 3) % 4);
+        if ($mirror = true) $shut = calc(($angle + 1) % 4);
+        $dx, $dz = ~door_open($shut, wall_straight);
+        loc_add(movecoord($c, calc(0 - $dx), 0, calc(0 - $dz)), $to, $shut, wall_straight, ^pest_loc_duration);
+        return;
+    }
+}
+
+[proc,pest_beside](coord $c, int $i)(coord)
+switch_int ($i) {
+    case 0 : return(movecoord($c, 1, 0, 0));
+    case 1 : return(movecoord($c, -1, 0, 0));
+    case 2 : return(movecoord($c, 0, 0, 1));
+}
+return(movecoord($c, 0, 0, -1));
+
+[proc,pest_gate_closed](loc $type)(boolean)
+switch_loc ($type) {
+    case pest_wall_gate_fixed, pest_wall_gate_damaged_1, pest_wall_gate_damaged_2, pest_wall_gate_destroyed,
+        pest_wall_gate_fixed_mirror, pest_wall_gate_damaged_1_mirror, pest_wall_gate_damaged_2_mirror, pest_wall_gate_destroyed_mirror : return(true);
+}
+return(false);
+
+[proc,pest_gate_mirror](loc $type)(boolean)
+switch_loc ($type) {
+    case pest_wall_gate_fixed_mirror, pest_wall_gate_damaged_1_mirror, pest_wall_gate_damaged_2_mirror, pest_wall_gate_destroyed_mirror,
+        pest_wall_gate_fixed_mirror_open, pest_wall_gate_damaged_1_mirror_open, pest_wall_gate_damaged_2_mirror_open, pest_wall_gate_destroyed_mirror_open : return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- a new game: all whole, gates shut
+[proc,pest_reset_barriers]
+def_int $i = 0;
+while ($i < enum_getoutputcount(pest_barriers)) {
+    ~pest_shut_at(enum(int, coord, pest_barriers, $i));
+    $i = add($i, 1);
+}
+$i = 0;
+while ($i < enum_getoutputcount(pest_barriers)) {
+    ~pest_mend_at(enum(int, coord, pest_barriers, $i));
+    $i = add($i, 1);
+}
+
+[proc,pest_shut_at](coord $c)
+loc_findallzone($c);
+while (loc_findnext = true) {
+    if (loc_coord = $c & loc_category = pest_barrier & loc_param(pest_toggle) ! null) {
+        if (~pest_gate_closed(loc_type) = false) {
+            ~pest_gate_swing_at($c);
+        }
+        return;
+    }
+}
+
+// mended a step at a time till it's whole
+[proc,pest_mend_at](coord $c)
+def_int $steps = 0;
+while ($steps < 4) {
+    if (~pest_mend_step($c) = false) return;
+    $steps = add($steps, 1);
+}
+
+[proc,pest_mend_step](coord $c)(boolean)
+loc_findallzone($c);
+while (loc_findnext = true) {
+    if (loc_coord = $c & loc_category = pest_barrier) {
+        if (loc_param(pest_repaired) = null) return(false);
+        loc_change(loc_param(pest_repaired), ^pest_loc_duration);
+        return(true);
+    }
+}
+return(false);

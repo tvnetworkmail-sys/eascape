@@ -1,0 +1,320 @@
+// EASCape: Pest Control (18 April 2006). The game itself, ported from 2009scape's
+// (PestControlActivityPlugin, PestControlSession, PCPortalNPC, PCSquireNPC). As it was at first: one
+// lander, no combat level needed, no damage needed for the reward (the RuneScape wiki's history),
+// portals open from the start (their shields came in 2007). One island, one game at a time (ours:
+// 2009scape copies the island for each game).
+
+// ---------------------------------------------------------------- where
+[proc,pest_in_lander](coord $c)(boolean)
+if (inzone(^pest_lander_sw, ^pest_lander_ne, $c) = true) return(true);
+return(false);
+
+[proc,pest_on_island](coord $c)(boolean)
+if (inzone(^pest_island_sw, ^pest_island_ne, $c) = true) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the squire by the lander runs it all
+[ai_timer,pest_squire_lander]
+if (%pest_state = 1) {
+    ~pest_game_tick;
+    return;
+}
+def_int $aboard = ~pest_count_lander;
+if ($aboard < ^pest_min_players) {
+    %pest_countdown = 0;
+    return;
+}
+if (%pest_countdown = 0) {
+    %pest_countdown = ^pest_lander_wait;
+    npc_say("The lander will leave in 1 minute."); // ours: there were no lander timers until 6 June 2006
+    return;
+}
+%pest_countdown = sub(%pest_countdown, 1);
+if (%pest_countdown = 50) npc_say("The lander will leave in 30 seconds.");
+if (%pest_countdown > 0) return;
+~pest_start;
+
+[proc,pest_count_lander]()(int)
+def_int $n = 0;
+huntall(^pest_lander_in, 6, 0);
+while (huntnext = true) {
+    if (~pest_in_lander(coord) = true) $n = add($n, 1);
+}
+return($n);
+
+[proc,pest_count_island]()(int)
+def_int $n = 0;
+huntall(^pest_knight_coord, 40, 0);
+while (huntnext = true) {
+    if (~pest_on_island(coord) = true) $n = add($n, 1);
+}
+return($n);
+
+// ---------------------------------------------------------------- the start
+[proc,pest_start]
+%pest_state = 1;
+%pest_clock = 0;
+%pest_countdown = 0;
+%pest_portals = 0;
+%pest_count = 0;
+%pest_knight_hp = 200;
+~pest_clear_island;
+~pest_reset_barriers;
+~pest_glow(200);
+huntall(^pest_lander_in, 6, 0);
+while (huntnext = true) {
+    if (~pest_in_lander(coord) = true) queue(pest_join, 0, 0);
+}
+def_int $life = calc(^pest_game_ticks + 500);
+.npc_add(^pest_knight_coord, pest_voidknight_control1, $life);
+.npc_add(^pest_squire_coord, pest_squire_instance, $life);
+.npc_add(^pest_portal_w, pest_portal_1_active, $life);
+.npc_add(^pest_portal_e, pest_portal_2_active, $life);
+.npc_add(^pest_portal_se, pest_portal_3_active, $life);
+.npc_add(^pest_portal_sw, pest_portal_4_active, $life);
+
+[queue,pest_join](int $unused)
+if (~pest_in_lander(coord) = false) return;
+p_telejump(movecoord(^pest_island_land, random(4), 0, random(6)));
+~chatnpc_specific("Squire", pest_squire_instance, "<p,angry>You must defend the Void Knight while the portals are unsummoned. The ritual takes twenty minutes though, so you can help out by destroying them yourselves!");
+~chatnpc_specific("Squire", pest_squire_instance, "<p,angry>Now GO GO GO!");
+
+// ---------------------------------------------------------------- each tick of a game
+[proc,pest_game_tick]
+%pest_clock = add(%pest_clock, 1);
+if (%pest_knight_hp <= 0) {
+    ~pest_end(false);
+    return;
+}
+if (%pest_portals = 30) { // bits 1-4: all four
+    ~pest_end(true);
+    return;
+}
+if (%pest_clock >= ^pest_game_ticks) {
+    ~pest_end(true);
+    return;
+}
+if (modulo(%pest_clock, 10) = 0) {
+    // nobody left on the island: it's lost (ours, so the island's free for the next lander)
+    if (~pest_count_island = 0) {
+        ~pest_end(false);
+        return;
+    }
+    ~pest_glow(%pest_knight_hp);
+}
+if (modulo(%pest_clock, ^pest_spawn_ticks) = 0) {
+    ~pest_spawn_all;
+}
+
+// ---------------------------------------------------------------- the end
+[proc,pest_end](boolean $won)
+%pest_state = 0;
+huntall(^pest_knight_coord, 40, 0);
+while (huntnext = true) {
+    if (~pest_on_island(coord) = true) {
+        if ($won = true) queue(pest_finish, 0, 1);
+        else queue(pest_finish, 0, 0);
+    }
+}
+~pest_clear_island;
+
+// everything of the game's goes: the pests, the portals, the knight and his squire
+[proc,pest_clear_island]
+npc_huntall(^pest_knight_coord, 45, 0);
+while (.npc_findnext = true) {
+    if (~pest_npc_of_game(.npc_category) = true) .npc_del;
+}
+%pest_count = 0;
+
+[proc,pest_npc_of_game](category $cat)(boolean)
+switch_category ($cat) {
+    case pest_splatter, pest_shifter, pest_ravager, pest_spinner, pest_torcher, pest_defiler, pest_brawler, pest_portal, pest_knight, pest_squire : return(true);
+}
+return(false);
+
+[queue,pest_finish](int $won)
+p_telejump(movecoord(^pest_leave, 0, 0, random(2)));
+~pest_restore;
+if ($won = 0) {
+    ~chatnpc_specific("Squire", pest_squire_instance, "<p,sad>The Void Knight was killed, another of our Order has fallen and that Island is lost.");
+    return;
+}
+if (%pest_points >= ^pest_points_max) {
+    ~chatnpc_specific("Squire", pest_squire_instance, "<p,happy>Congratulations! You managed to destroy all the portals! But you already have as many Void Knight Commendation points as we can give."); // ours
+    return;
+}
+%pest_points = add(%pest_points, 1);
+~chatnpc_specific("Squire", pest_squire_instance, "<p,happy>Congratulations! You managed to destroy all the portals! We've awarded you one Void Knight Commendation point.");
+~mesbox("<col=08088a>You now have <col=8a0808><tostring(%pest_points)><col=08088a> Void Knight Commendation points!</col>|You can speak to a Void Knight to exchange your points for rewards.");
+
+// full health, prayer and run energy, poison gone, boosts gone (the RuneScape wiki)
+[proc,pest_restore]
+~stat_reset_all;
+healenergy(10000);
+~clear_poison;
+~player_end_poison;
+
+// ---------------------------------------------------------------- dying, and logging in
+[label,player_death_pest]
+~player_death;
+mes("Oh dear you are dead!");
+midi_jingle(death2);
+~combat_clearqueue;
+clearqueue(player_death_default);
+p_telejump(movecoord(^pest_island_land, random(4), 0, random(6)));
+buildappearance(worn);
+~prayer_deactivate_all;
+anim(null, 0);
+p_stopaction;
+~stat_reset_all;
+healenergy(10000);
+~clear_pk_skull;
+~clear_poison;
+~update_all(null);
+~initalltabs;
+~player_end_poison;
+
+// back on the outpost if you logged out in the lander or on the island
+[proc,pest_login]
+if (~pest_in_lander(coord) = true | ~pest_on_island(coord) = true) {
+    p_telejump(^pest_leave);
+}
+
+// ---------------------------------------------------------------- the Void Knight
+[ai_queue1,pest_voidknight_control1]
+[ai_queue3,pest_voidknight_control1]
+[ai_queue2,pest_voidknight_control1]
+if (npc_stat(hitpoints) = 0) return;
+if (last_int <= 0) {
+    npc_damage(^hitmark_block, 0);
+    return;
+}
+npc_damage(^hitmark_damage, last_int);
+%pest_knight_hp = npc_stat(hitpoints);
+if (%pest_knight_hp > 0) return;
+npc_del;
+
+// a portal's gone: he gains 50 (2009scape)
+[ai_queue5,pest_voidknight_control1]
+npc_statheal(hitpoints, 50, 0);
+%pest_knight_hp = npc_stat(hitpoints);
+
+// his glow, by how he's doing (ours: the cache has it in four colours, and there was nothing else to
+// show his health until June 2006)
+[proc,pest_glow](int $hp)
+def_loc $want = pest_void_knight_glow_white;
+if ($hp <= 50) $want = pest_void_knight_glow_red;
+else if ($hp <= 100) $want = pest_void_knight_glow_orange;
+else if ($hp <= 150) $want = pest_void_knight_glow_yellow;
+if (loc_find(^pest_knight_coord, $want) = true) return;
+if (loc_find(^pest_knight_coord, pest_void_knight_glow_white) = true | loc_find(^pest_knight_coord, pest_void_knight_glow_yellow) = true | loc_find(^pest_knight_coord, pest_void_knight_glow_orange) = true | loc_find(^pest_knight_coord, pest_void_knight_glow_red) = true) {
+    loc_change($want, ^pest_loc_duration);
+}
+
+// ---------------------------------------------------------------- the portals
+[ai_queue1,_pest_portal]
+[ai_queue3,_pest_portal]
+def_npc $type = npc_type;
+def_int $i = ~pest_portal_index($type);
+def_coord $at = npc_coord;
+%pest_portals = setbit(%pest_portals, $i);
+// the spinners round it burst (2009scape)
+npc_huntall($at, 8, 0);
+while (.npc_findnext = true) {
+    if (.npc_category = pest_spinner & .%pest_portal = $i) .npc_queue(6, 0, 0);
+}
+if (npc_find(^pest_knight_coord, pest_voidknight_control1, 2, 0) = true) npc_queue(5, 0, 0);
+if (npc_find($at, $type, 2, 0) = true) gosub(npc_death);
+
+// a spinner mends it by a tenth (2009scape)
+[ai_queue5,_pest_portal]
+npc_statheal(hitpoints, 20, 0);
+
+[proc,pest_portal_index](npc $type)(int)
+switch_npc ($type) {
+    case pest_portal_1_active : return(1);
+    case pest_portal_2_active : return(2);
+    case pest_portal_3_active : return(3);
+    case pest_portal_4_active : return(4);
+}
+return(0);
+
+[proc,pest_portal_coord](int $i)(coord)
+switch_int ($i) {
+    case 1 : return(^pest_portal_w);
+    case 2 : return(^pest_portal_e);
+    case 3 : return(^pest_portal_se);
+    case 4 : return(^pest_portal_sw);
+}
+return(null);
+
+[proc,pest_portal_type](int $i)(npc)
+switch_int ($i) {
+    case 1 : return(pest_portal_1_active);
+    case 2 : return(pest_portal_2_active);
+    case 3 : return(pest_portal_3_active);
+    case 4 : return(pest_portal_4_active);
+}
+return(null);
+
+// where its pests come out: three squares from it, towards the knight (2009scape)
+[proc,pest_portal_exit](int $i)(coord)
+switch_int ($i) {
+    case 1 : return(0_41_40_9_31);
+    case 2 : return(0_41_40_53_28);
+    case 3 : return(0_41_40_45_15);
+    case 4 : return(0_41_40_21_14);
+}
+return(null);
+
+// ---------------------------------------------------------------- the pests
+// every 35 ticks each portal still open sends some: two, and one more for every ten players (2009scape's
+// novice lander)
+[proc,pest_spawn_all]
+def_int $players = ~pest_count_island;
+def_int $amount = calc(2 + $players / 10);
+def_int $i = 1;
+while ($i <= 4) {
+    if (testbit(%pest_portals, $i) = ^false) ~pest_spawn($i, $amount);
+    $i = add($i, 1);
+}
+
+[proc,pest_spawn](int $portal, int $amount)
+def_int $n = 0;
+def_coord $exit = ~pest_portal_exit($portal);
+while ($n < $amount) {
+    if (%pest_count >= ^pest_max_pests) return;
+    def_npc $type = ~pest_roll($portal);
+    def_coord $c = map_findsquare(movecoord($exit, $n, 0, 0), 0, 2, ^map_findsquare_lineofwalk);
+    .npc_add($c, $type, calc(^pest_game_ticks + 500));
+    .%pest_portal = $portal;
+    %pest_count = add(%pest_count, 1);
+    $n = add($n, 1);
+}
+
+// one roll of seven: splatter, shifter, ravager, spinner (a torcher if it has three), torcher, defiler,
+// brawler (a defiler if it has two) (2009scape)
+[proc,pest_roll](int $portal)(npc)
+def_enum $list = pest_shifters;
+switch_int (random(7)) {
+    case 0 : $list = pest_splatters;
+    case 1 : $list = pest_shifters;
+    case 2 : $list = pest_ravagers;
+    case 3 :
+        $list = pest_spinners;
+        if (~pest_kind_count($portal, pest_spinner) >= 3) $list = pest_torchers;
+    case 4 : $list = pest_torchers;
+    case 5 : $list = pest_defilers;
+    case 6 :
+        $list = pest_brawlers;
+        if (~pest_kind_count($portal, pest_brawler) >= 2) $list = pest_defilers;
+}
+return(enum(int, npc, $list, random(enum_getoutputcount($list))));
+
+[proc,pest_kind_count](int $portal, category $cat)(int)
+def_int $n = 0;
+npc_huntall(^pest_knight_coord, 45, 0);
+while (.npc_findnext = true) {
+    if (.npc_category = $cat & .%pest_portal = $portal) $n = add($n, 1);
+}
+return($n);

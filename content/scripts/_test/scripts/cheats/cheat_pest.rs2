@@ -1,0 +1,34 @@
+// EASCape: test commands for Pest Control (minigames/game_pest).
+
+// ::~pesttele <n> - 1 the Port Sarim squire, 2 the outpost by the lander, 3 the island's landing
+[debugproc,pesttele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(0_47_50_32_3);
+    case 2 : p_telejump(^pest_leave);
+    case 3 : p_telejump(^pest_island_land);
+    case default : mes("::~pesttele 1 Port Sarim, 2 the lander, 3 the island");
+}
+
+// ::~pestgame - what a game stands at
+[debugproc,pestgame]
+mes("state <tostring(%pest_state)> clock <tostring(%pest_clock)> countdown <tostring(%pest_countdown)> knight <tostring(%pest_knight_hp)> portals <tostring(%pest_portals)> pests <tostring(%pest_count)>");
+
+// ::~pestend <0|1> - end the game now, lost or won
+[debugproc,pestend](int $won)
+if (%pest_state ! 1) return;
+if ($won = 1) %pest_portals = 30;
+else %pest_knight_hp = 0;
+
+// ::~pestpoints <n>
+[debugproc,pestpoints](int $n)
+if (p_finduid(uid) = false) return;
+%pest_points = $n;
+mes("Points: <tostring(%pest_points)>");
+
+// ::~pestpack - a hammer, logs and an axe
+[debugproc,pestpack]
+if (p_finduid(uid) = false) return;
+inv_add(inv, hammer, 1);
+inv_add(inv, logs, 5);
+inv_add(inv, bronze_axe, 1);

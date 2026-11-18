@@ -1,0 +1,61 @@
+// EASCape: the Void Knights' rewards (Pest Control, 18 April 2006): the cache's own "Void Knights'
+// Training Options" (inter_389). At first points bought only experience: a point gave your level
+// squared over six, over twelve for Prayer (the RuneScape wiki's Pest Control history). Armour, the
+// mace and the packs came on 6 June 2006.
+
+[opnpc3,pest_voidknight_1] ~pest_rewards_open;
+[opnpc3,pest_voidknight_2] ~pest_rewards_open;
+[opnpc3,pest_voidknight_3] ~pest_rewards_open;
+[opnpc3,pest_voidknight_4] ~pest_rewards_open;
+
+[proc,pest_rewards_open]
+%if1 = 0;
+if_settext(inter_389:com_90, "");
+if_openmain(inter_389);
+
+[if_button,inter_389:com_68] ~pest_reward_choose(1);
+[if_button,inter_389:com_75] ~pest_reward_choose(1);
+[if_button,inter_389:com_69] ~pest_reward_choose(2);
+[if_button,inter_389:com_76] ~pest_reward_choose(2);
+[if_button,inter_389:com_70] ~pest_reward_choose(3);
+[if_button,inter_389:com_77] ~pest_reward_choose(3);
+[if_button,inter_389:com_71] ~pest_reward_choose(4);
+[if_button,inter_389:com_78] ~pest_reward_choose(4);
+[if_button,inter_389:com_72] ~pest_reward_choose(5);
+[if_button,inter_389:com_79] ~pest_reward_choose(5);
+[if_button,inter_389:com_73] ~pest_reward_choose(6);
+[if_button,inter_389:com_80] ~pest_reward_choose(6);
+[if_button,inter_389:com_74] ~pest_reward_choose(7);
+[if_button,inter_389:com_81] ~pest_reward_choose(7);
+
+[proc,pest_reward_choose](int $i)
+%if1 = $i;
+if_settext(inter_389:com_90, "<tostring(~pest_reward_xp($i))> xp");
+
+[if_button,inter_389:com_87]
+if (%if1 < 1) return;
+if (%pest_points < 1) {
+    mes("You don't have enough points."); // ours
+    return;
+}
+def_stat $stat = ~pest_reward_stat(%if1);
+def_int $xp = ~pest_reward_xp(%if1);
+%pest_points = sub(%pest_points, 1);
+stat_advance($stat, calc($xp * 10));
+mes("The Void Knight has granted you <tostring($xp)> <~stat_name($stat)> experience."); // ours
+
+[proc,pest_reward_stat](int $i)(stat)
+switch_int ($i) {
+    case 1 : return(attack);
+    case 2 : return(strength);
+    case 3 : return(defence);
+    case 4 : return(ranged);
+    case 5 : return(magic);
+    case 6 : return(hitpoints);
+}
+return(prayer);
+
+[proc,pest_reward_xp](int $i)(int)
+def_int $level = stat_base(~pest_reward_stat($i));
+if ($i = 7) return(calc($level * $level / 12));
+return(calc($level * $level / 6));

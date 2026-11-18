@@ -29,6 +29,10 @@ if (~in_castlewars_waitingroom(coord) = true) {
 if (~mta_in_room(coord) = true) {
     @player_death_mta;
 }
+// EASCape: Pest Control's island is safe (minigames/game_pest/pest_game.rs2)
+if (~pest_on_island(coord) = true) {
+    @player_death_pest;
+}
 
 ~player_death;
 ~wanted_cs_reset; // EASCape: Wanted!: dying while watching a CommOrb record (quest_wanted/wanted_commorb.rs2)

@@ -1,0 +1,190 @@
+// EASCape: the Void Knights' Outpost (Pest Control, 18 April 2006): the ships, the lander, the
+// squires and the Void Knights. Dialogue from 2009scape (SquireDialogue, OutpostSquireDialogue,
+// VoidKnightDialogue, SquireMagicDialogue).
+
+// ---------------------------------------------------------------- the ships
+[opnpc1,pest_squire_ship_portsarim]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+switch_int (~p_choice4("Who are you?", 1, "Where does this ship go?", 2, "I'd like to go to your outpost.", 3, "I'm fine thanks.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Who are you?");
+        ~chatnpc("<p,neutral>I'm a Squire for the Void Knights.");
+        ~chatplayer("<p,confused>The who?");
+        ~chatnpc("<p,neutral>The Void Knights, they are great warriors of balance who do Guthix's work here in Gielinor.");
+    case 2 :
+        ~chatplayer("<p,neutral>Where does this ship go?");
+        ~chatnpc("<p,neutral>To the Void Knight outpost. It's a small island just off Karamja.");
+        if (~p_choice2("I'd like to go to your outpost.", 1, "That's nice.", 2) = 1) {
+            ~chatplayer("<p,neutral>I'd like to go to your outpost.");
+            @pest_sail_out;
+        }
+        ~chatplayer("<p,neutral>That's nice.");
+    case 3 :
+        ~chatplayer("<p,neutral>I'd like to go to your outpost.");
+        @pest_sail_out;
+    case 4 : ~chatplayer("<p,neutral>I'm fine thanks.");
+}
+
+[label,pest_sail_out]
+~chatnpc("<p,neutral>Certainly, right this way.");
+~set_sail("the Void Knights' Outpost", "You board the ship.", 1_41_41_39_52, ^sail_port_sarim_to_pest, 12);
+
+[opnpc1,pest_squire_ship_island]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+if (~p_choice2("I'd like to go back to Port Sarim please.", 1, "I'm fine thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'm fine thanks.");
+    return;
+}
+~chatplayer("<p,neutral>I'd like to go back to Port Sarim please.");
+~chatnpc("<p,neutral>Ok, but please come back soon and help us.");
+~set_sail("Port Sarim", "You board the ship.", 1_47_49_33_62, ^sail_pest_to_port_sarim, 12);
+
+// ---------------------------------------------------------------- the lander
+[oploc1,pest_lander_gangplank]
+p_arrivedelay;
+p_telejump(^pest_lander_in);
+mes("You board the lander.");
+if (%pest_state = 1) mes("A lander is already on the island. This one leaves when it's back."); // ours: one island
+
+[oploc1,pest_lander_ladder]
+p_telejump(^pest_leave);
+
+// 2009scape: "The knights don't appreciate you teleporting off their craft!" (skill_magic/teleport.rs2)
+[proc,pest_tele_allowed](coord $c)(boolean)
+if (~pest_in_lander($c) = true) {
+    mes("The knights don't appreciate you teleporting off their craft!");
+    return(false);
+}
+return(true);
+
+// ours: 2009scape's lander squire speaks of three landers and a level 40 limit, from 2007
+[opnpc1,pest_squire_lander]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+switch_int (~p_choice3("Who are you?", 1, "What's going on here?", 2, "I'm fine thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Who are you?");
+        ~chatnpc("<p,neutral>I'm a squire for the Void Knights.");
+        ~chatplayer("<p,confused>The who?");
+        ~chatnpc("<p,neutral>The Void Knights, they are great warriors of balance who do Guthix's work here in Gielinor.");
+    case 2 :
+        ~chatplayer("<p,neutral>What's going on here?");
+        ~chatnpc("<p,neutral>This is where we launch our lander to combat the invasion of the nearby islands.");
+        ~chatplayer("<p,neutral>So how does it work?");
+        ~chatnpc("<p,neutral>Simple. If you'd be willing to help us then just wait in the lander and we'll launch it as soon as it's ready.");
+    case 3 : ~chatplayer("<p,neutral>I'm fine thanks.");
+}
+
+// ---------------------------------------------------------------- the squire on the island
+[opnpc1,pest_squire_instance]
+~chatnpc("<p,angry>Be quick, we're under attack!");
+switch_int (~p_choice4("What's going on?", 1, "How do I repair things?", 2, "I want to leave.", 3, "I'd better get back to it then.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>What's going on?");
+        ~chatnpc("<p,neutral>This island is being invaded by outsiders and the Void Knight over there is using a ritual to unsummon their portals. We must defend the Void Knight at all costs. However if you get an opening you can destroy the portals.");
+    case 2 :
+        ~chatplayer("<p,neutral>How do I repair things?");
+        ~chatnpc("<p,neutral>There are trees on the island. You'll need to chop them down for logs and use a hammer to repair the defences. Be careful though, the trees here don't grow back very fast so your resources are limited!");
+    case 3 :
+        ~chatplayer("<p,neutral>I want to leave.");
+        p_telejump(^pest_leave);
+    case 4 : ~chatplayer("<p,neutral>I'd better get back to it then.");
+}
+
+// ---------------------------------------------------------------- the squires and knights of the outpost
+[opnpc1,pest_squire_1] @pest_squire_talk;
+[opnpc1,pest_squire_2] @pest_squire_talk;
+[opnpc1,pest_squire_3] @pest_squire_talk;
+[opnpc1,pest_squire_4] @pest_squire_talk;
+[opnpc1,pest_squire_blacksmith] @pest_squire_talk;
+[opnpc1,pest_voidknight_1] @pest_knight_talk;
+[opnpc1,pest_voidknight_2] @pest_knight_talk;
+[opnpc1,pest_voidknight_3] @pest_knight_talk;
+[opnpc1,pest_voidknight_4] @pest_knight_talk;
+
+[label,pest_squire_talk]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+switch_int (~p_choice3("Who are you?", 1, "What is this place?", 2, "I'm fine thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Who are you?");
+        ~chatnpc("<p,neutral>I'm a Squire for the Void Knights.");
+        ~chatplayer("<p,confused>The who?");
+        ~chatnpc("<p,neutral>The Void Knights, they are great warriors of balance who do Guthix's work here in Gielinor.");
+        @pest_order_work;
+    case 2 : @pest_this_place;
+    case 3 : ~chatplayer("<p,neutral>I'm fine thanks.");
+}
+
+[label,pest_knight_talk]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+switch_int (~p_choice3("Who are you?", 1, "What is this place?", 2, "I'm fine thanks.", 3)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Who are you?");
+        ~chatnpc("<p,neutral>I'm a Void Knight, one of the order of Guthix. We are warriors of balance who do Guthix's work here in Gielinor.");
+        @pest_order_work;
+    case 2 : @pest_this_place;
+    case 3 : ~chatplayer("<p,neutral>I'm fine thanks.");
+}
+
+[label,pest_order_work]
+switch_int (~p_choice4("Wow, can I join?", 1, "What kind of work?", 2, "What's 'Gielinor'?", 3, "Uh huh, sure.", 4)) {
+    case 1 :
+        ~chatplayer("<p,happy>Wow, can I join?");
+        ~chatnpc("<p,neutral>Entry is strictly invite only, however we do need help continuing Guthix's work.");
+        ~chatplayer("<p,neutral>What kind of work?");
+        @pest_help_us;
+    case 2 :
+        ~chatplayer("<p,neutral>What kind of work?");
+        ~chatnpc("<p,neutral>Ah well, you see, we try to keep Gielinor as Guthix intended, it's very challenging. Actually we've been having some problems recently, maybe you could help us?");
+        switch_int (~p_choice3("Yeah OK, what's the problem?", 1, "What's 'Gielinor'?", 2, "I'd rather not, sorry.", 3)) {
+            case 1 :
+                ~chatplayer("<p,neutral>Yeah ok, what's the problem?");
+                @pest_help_us;
+            case 2 : @pest_gielinor;
+            case 3 : ~chatplayer("<p,neutral>I'd rather not sorry.");
+        }
+    case 3 : @pest_gielinor;
+    case 4 : ~chatplayer("<p,neutral>Uh huh, sure.");
+}
+
+[label,pest_gielinor]
+~chatplayer("<p,confused>What's 'Gielinor'?");
+~chatnpc("<p,neutral>It is the name that Guthix gave to this world, so we honour him with its use.");
+
+[label,pest_help_us]
+~chatnpc("<p,neutral>Well the order has become quite diminished over the years, it's a very long process to learn the skills of a Void Knight. Recently there have been breaches into our realm from somewhere else, and strange creatures");
+~chatnpc("<p,neutral>have been pouring through. We can't let that happen, and we'd be very grateful if you'd help us.");
+if (~p_choice2("How can I help?", 1, "Sorry, but I can't.", 2) = 2) {
+    ~chatplayer("<p,neutral>Sorry, but I can't.");
+    return;
+}
+~chatplayer("<p,neutral>How can I help?");
+~chatnpc("<p,neutral>We send launchers from our outpost to the nearby islands. If you go and wait in the lander there that'd really help.");
+
+[label,pest_this_place]
+~chatplayer("<p,neutral>What is this place?");
+~chatnpc("<p,neutral>This is our outpost. From here we send launchers out to the nearby islands to beat back the invaders.");
+switch_int (~p_choice3("What invaders?", 1, "How can I help?", 2, "Good luck with that.", 3)) {
+    case 1 :
+        ~chatplayer("<p,confused>What invaders?");
+        ~chatnpc("<p,neutral>Recently there have been breaches into our realm from somewhere else, and strange creatures have been pouring through. We can't let that happen, and we'd be very grateful if you'd help us.");
+    case 2 :
+        ~chatplayer("<p,neutral>How can I help?");
+        ~chatnpc("<p,neutral>We send launchers from our outpost to the nearby islands. If you go and wait in the lander there that'd really help.");
+    case 3 : ~chatplayer("<p,neutral>Good luck with that.");
+}
+
+// ---------------------------------------------------------------- the shops
+[opnpc1,pest_squire_storemaster] @pest_shop_talk;
+[opnpc1,pest_squire_rangeshop] @pest_shop_talk;
+[opnpc1,pest_squire_runeshop] @pest_shop_talk;
+[opnpc3,pest_squire_storemaster] ~openshop_activenpc;
+[opnpc3,pest_squire_rangeshop] ~openshop_activenpc;
+[opnpc3,pest_squire_runeshop] ~openshop_activenpc;
+
+[label,pest_shop_talk]
+~chatnpc("<p,neutral>Hi, how can I help you?");
+if (~p_choice2("What do you have for sale?", 1, "I'm fine thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>I'm fine thanks.");
+    return;
+}
+~openshop_activenpc;
