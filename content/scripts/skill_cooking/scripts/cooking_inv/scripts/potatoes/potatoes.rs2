@@ -15,6 +15,8 @@ if (last_useitem = potato_baked) {
 [opheldu,potato_butter]
 if (last_useitem = cheese) {
     @make_cheese_potato;
+} else if (last_useitem = bowl_chilli+carne | last_useitem = bowl_egg+tomato | last_useitem = bowl_mushroom+onion | last_useitem = bowl_tuna+sweetcorn) {
+    ~topping_potato(potato_butter, last_useitem); // EASCape: potato toppings (potato_toppings.rs2)
 } else {
     ~displaymessage(^dm_default);
 }

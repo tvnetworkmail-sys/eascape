@@ -1,0 +1,146 @@
+// EASCape: baked potato toppings (update of 30 January 2006). Recipes, levels, experience and
+// messages from Void (cooking.recipes.toml); chopping the garlic and the tuna, and the knife message,
+// from 2009scape (ToppingListener.kt: Void's garlic says "onion"); chilli con carne's level 11 from
+// the OSRS wiki (Void gives none). The mixes give no experience of their own except where Void
+// gives some; the cooked parts are in cooking_generic.dbrow.
+
+// ---------------------------------------------------------------- into a bowl
+[opheldu,tuna]
+switch_obj (last_useitem) {
+    case bowl_empty : ~topping_mix(tuna, bowl_empty, bowl_tuna, null, 1, 0, true, "tuna", "You chop the tuna into the bowl.");
+    case bowl_sweetcorn : ~topping_mix(tuna, bowl_sweetcorn, bowl_tuna+sweetcorn, null, 67, 0, true, "tuna", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bittercap_mushroom]
+switch_obj (last_useitem) {
+    case bowl_empty : ~topping_mix(bittercap_mushroom, bowl_empty, bowl_mushroom_raw, null, 1, 0, true, "mushroom", "You slice the mushroom into the bowl.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,sweetcorn_cooked]
+switch_obj (last_useitem) {
+    case bowl_empty : ~topping_mix(sweetcorn_cooked, bowl_empty, bowl_sweetcorn, null, 1, 0, false, "", "You put the cooked sweetcorn into the bowl.");
+    case bowl_tuna : ~topping_mix(sweetcorn_cooked, bowl_tuna, bowl_tuna+sweetcorn, null, 67, 0, true, "tuna", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// (egg, garlic and the empty bowl's own scripts send these here: cakes.rs2, dt_blood.rs2, water_sources.rs2)
+[proc,topping_bowl](obj $ingredient)
+switch_obj ($ingredient) {
+    case egg : ~topping_mix(egg, bowl_empty, bowl_egg_raw, null, 1, 0, false, "", "You carefully break the egg into the bowl.");
+    case garlic : ~topping_mix(garlic, bowl_empty, bowl_garlic, null, 1, 0, true, "garlic", "You chop the garlic into the bowl.");
+    case tuna : ~topping_mix(tuna, bowl_empty, bowl_tuna, null, 1, 0, true, "tuna", "You chop the tuna into the bowl.");
+    case bittercap_mushroom : ~topping_mix(bittercap_mushroom, bowl_empty, bowl_mushroom_raw, null, 1, 0, true, "mushroom", "You slice the mushroom into the bowl.");
+    case sweetcorn_cooked : ~topping_mix(sweetcorn_cooked, bowl_empty, bowl_sweetcorn, null, 1, 0, false, "", "You put the cooked sweetcorn into the bowl.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- the toppings
+[opheldu,bowl_garlic]
+switch_obj (last_useitem) {
+    case gnome_spice : ~topping_mix(gnome_spice, bowl_garlic, bowl_chilli, null, 9, 250, false, "", "You add the spices to the garlic to make a spicy sauce.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_chilli]
+switch_obj (last_useitem) {
+    case cooked_meat : ~topping_mix(cooked_meat, bowl_chilli, bowl_chilli+carne, null, 11, 250, true, "meat", "You chop up the meat and add it to the sauce in the bowl.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_egg_scrambled]
+switch_obj (last_useitem) {
+    case tomato : ~topping_mix(tomato, bowl_egg_scrambled, bowl_egg+tomato, null, 23, 0, false, "", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_mushroom_fried]
+switch_obj (last_useitem) {
+    case bowl_onion_fried : ~topping_mix(bowl_onion_fried, bowl_mushroom_fried, bowl_mushroom+onion, bowl_empty, 57, 0, false, "", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_onion_fried]
+switch_obj (last_useitem) {
+    case bowl_mushroom_fried : ~topping_mix(bowl_onion_fried, bowl_mushroom_fried, bowl_mushroom+onion, bowl_empty, 57, 0, false, "", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_tuna]
+switch_obj (last_useitem) {
+    case sweetcorn_cooked : ~topping_mix(sweetcorn_cooked, bowl_tuna, bowl_tuna+sweetcorn, null, 67, 0, true, "tuna", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,bowl_sweetcorn]
+switch_obj (last_useitem) {
+    case tuna : ~topping_mix(tuna, bowl_sweetcorn, bowl_tuna+sweetcorn, null, 67, 0, true, "tuna", "You mix the ingredients to make the topping.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- on the potato
+[opheldu,bowl_chilli+carne] ~topping_potato(last_useitem, bowl_chilli+carne);
+[opheldu,bowl_egg+tomato] ~topping_potato(last_useitem, bowl_egg+tomato);
+[opheldu,bowl_mushroom+onion] ~topping_potato(last_useitem, bowl_mushroom+onion);
+[opheldu,bowl_tuna+sweetcorn] ~topping_potato(last_useitem, bowl_tuna+sweetcorn);
+
+// (potatoes.rs2's potato with butter sends its toppings here)
+[proc,topping_potato](obj $used, obj $topping)
+if ($used ! potato_butter) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_obj ($topping) {
+    case bowl_chilli+carne : ~topping_mix(bowl_chilli+carne, potato_butter, potato_chilli+carne, bowl_empty, 41, 150, false, "", "You add the topping to the potato.");
+    case bowl_egg+tomato : ~topping_mix(bowl_egg+tomato, potato_butter, potato_egg+tomato, bowl_empty, 51, 450, false, "", "You add the topping to the potato.");
+    case bowl_mushroom+onion : ~topping_mix(bowl_mushroom+onion, potato_butter, potato_mushroom+onion, bowl_empty, 64, 550, false, "", "You add the topping to the potato.");
+    case bowl_tuna+sweetcorn : ~topping_mix(bowl_tuna+sweetcorn, potato_butter, potato_tuna+sweetcorn, bowl_empty, 68, 100, false, "", "You add the topping to the potato.");
+    case default : ~displaymessage(^dm_default);
+}
+
+// $xp in tenths, as stat_advance takes it
+[proc,topping_mix](namedobj $a, namedobj $b, namedobj $product, namedobj $extra, int $level, int $xp, boolean $knife, string $cut, string $message)
+if (map_members = ^false) {
+    mes("You can only make that on a members' server.");
+    return;
+}
+if ($knife = true & inv_total(inv, knife) < 1) {
+    def_string $verb = "slice";
+    if ($a = cooked_meat) $verb = "cut";
+    ~mesbox("You need a knife in order to <$verb> up the <$cut>."); // 2009scape
+    return;
+}
+if (stat(cooking) < $level) {
+    ~mesbox("You need a Cooking level of at least <tostring($level)> in order to do this."); // 2009scape
+    return;
+}
+if (inv_total(inv, $a) < 1 | inv_total(inv, $b) < 1) return;
+inv_del(inv, $a, 1);
+inv_del(inv, $b, 1);
+inv_add(inv, $product, 1);
+if ($extra ! null) inv_add(inv, $extra, 1);
+if ($xp > 0) stat_advance(cooking, $xp);
+mes($message);
+
+// eating them (healing in consume_normal.dbrow); the bowls come back
+[opheld1,potato_chilli+carne] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,potato_egg+tomato] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,potato_mushroom+onion] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,potato_tuna+sweetcorn] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_chilli] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_chilli+carne] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_egg_scrambled] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_egg+tomato] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_onion_fried] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_mushroom_fried] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_mushroom+onion] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_tuna] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_tuna+sweetcorn] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,bowl_sweetcorn] @player_consume_item(consume_effect_stat, 2, 3);
+[opheld1,sweetcorn_cooked] @player_consume_item(consume_effect_stat, 2, 3);
+
+// emptying the burnt ones
+[opheld1,bowl_egg_burnt] @player_empty_item;
+[opheld1,bowl_onion_burnt] @player_empty_item;
+[opheld1,bowl_mushroom_burnt] @player_empty_item;
