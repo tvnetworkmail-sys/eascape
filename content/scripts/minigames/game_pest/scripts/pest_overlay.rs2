@@ -1,0 +1,44 @@
+// EASCape: Pest Control's overlays (6 June 2006: "much more information available in the waiting
+// areas, as well as some nice new interfaces during the game itself... the health of the Void
+// Knight, the status of the portals and the amount of damage you have inflicted"). The layout is
+// ours: the cache has no such interfaces.
+
+[proc,pest_overlay_start]
+if (~pest_in_lander(coord) = true) if_openoverlay(pest_lander);
+else if_openoverlay(pest_game);
+~pest_overlay_update;
+softtimer(pest_overlay, 3);
+
+[softtimer,pest_overlay] ~pest_overlay_update;
+
+[proc,pest_overlay_update]
+if (~pest_in_lander(coord) = true) {
+    def_string $leave = "Next Departure: 30 seconds";
+    if (%pest_state = 1) $leave = "Next Departure: after this game";
+    else if (%pest_countdown = 0) $leave = "Waiting for volunteers";
+    else if (%pest_countdown > 50) $leave = "Next Departure: 1 min";
+    if_settext(pest_lander:departure, $leave);
+    if_settext(pest_lander:ready, "Players Ready: <tostring(~pest_count_lander)>");
+    if_settext(pest_lander:points, "Points: <tostring(%pest_points)>");
+    return;
+}
+if (~pest_on_island(coord) = true & %pest_state = 1) {
+    def_int $mins = calc((^pest_game_ticks - %pest_clock + 99) / 100);
+    if_settext(pest_game:time, "Time: <tostring($mins)> min");
+    if (%pest_knight_hp > 50) if_settext(pest_game:knight, "Void Knight: <tostring(%pest_knight_hp)>");
+    else if_settext(pest_game:knight, "Void Knight: <col=ff0000><tostring(%pest_knight_hp)></col>");
+    ~pest_overlay_portal(pest_game:portal_w, 1);
+    ~pest_overlay_portal(pest_game:portal_e, 2);
+    ~pest_overlay_portal(pest_game:portal_se, 3);
+    ~pest_overlay_portal(pest_game:portal_sw, 4);
+    if (%pest_zeal > 350) if_settext(pest_game:damage, "Damage: <col=00ff00>LOTS!</col>"); // 2009scape
+    else if (%pest_zeal >= 50) if_settext(pest_game:damage, "Damage: <col=00ff00><tostring(%pest_zeal)></col>");
+    else if_settext(pest_game:damage, "Damage: <tostring(%pest_zeal)>");
+    return;
+}
+if_openoverlay(null);
+clearsofttimer(pest_overlay);
+
+[proc,pest_overlay_portal](component $com, int $i)
+if (testbit(%pest_portals, $i) = ^true) if_setcolour($com, 0xFF0000);
+else if_setcolour($com, 0x00FF00);

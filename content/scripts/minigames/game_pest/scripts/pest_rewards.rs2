@@ -1,7 +1,8 @@
 // EASCape: the Void Knights' rewards (Pest Control, 18 April 2006): the cache's own "Void Knights'
 // Training Options" (inter_389). At first points bought only experience: a point gave your level
 // squared over six, over twelve for Prayer (the RuneScape wiki's Pest Control history). Armour, the
-// mace and the packs came on 6 June 2006.
+// mace and the packs came on 6 June 2006 (not in the 377 cache), with 10% extra for 100 points spent
+// at once.
 
 [opnpc3,pest_voidknight_1] ~pest_rewards_open;
 [opnpc3,pest_voidknight_2] ~pest_rewards_open;
@@ -40,7 +41,15 @@ if (%pest_points < 1) {
 }
 def_stat $stat = ~pest_reward_stat(%if1);
 def_int $xp = ~pest_reward_xp(%if1);
-%pest_points = sub(%pest_points, 1);
+def_int $spend = 1;
+// 6 Jun 2006: 100 points at once give 10% more (ours: asked in the chat, the cache's interface has no
+// such button)
+if (%pest_points >= 100) {
+    if (~p_choice2("Spend 1 point.", 1, "Spend 100 points (10% extra).", 2) = 2) $spend = 100;
+    if (%pest_points < $spend) return;
+}
+if ($spend = 100) $xp = calc($xp * 110);
+%pest_points = sub(%pest_points, $spend);
 stat_advance($stat, calc($xp * 10));
 mes("The Void Knight has granted you <tostring($xp)> <~stat_name($stat)> experience."); // ours
 
