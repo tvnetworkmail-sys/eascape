@@ -11,24 +11,9 @@ if(%cookquest = 0) {
 } else if(%cookquest = 1) {
     @cooks_assistant_inprogress;
 } else if(%cookquest = ^cook_complete) {
-    ~chatnpc("<p,happy>How is the adventuring going, my friend?");
-
-    def_int $option = ~p_choice4("I am getting strong and mighty.", 1, "I keep on dying.", 2, "Nice hat!", 3, "Can I use your range?", 4);
-
-    if($option = 1) {
-        ~chatplayer("<p,happy>I am getting strong and mighty.");
-        ~chatnpc("<p,happy>Glad to hear it.");
-    } else if($option = 2) {
-        ~chatplayer("<p,sad>I keep on dying.");
-        ~chatnpc("<p,happy>Ah well, at least you keep coming back to life!");
-    } else if($option = 3) {
-        ~chatplayer("<p,happy>Nice hat!");
-        ~chatnpc("<p,sad>Err thank you. It's a pretty ordinary cooks hat really.");
-    } else if($option = 4) {
-        ~chatplayer("<p,neutral>Can I use your range?");
-        ~chatnpc("<p,happy>Go ahead - it's a very good range.|It's easier to use than most other ranges.");
-    }
-
+    // EASCape: Recipe for Disaster (quest_100/hundred_start.rs2)
+    if (%hundred_main_quest_var > ^hundred_not_started) @hundred_cook;
+    @hundred_cook_options;
 }
 
 [label,trail_cook]

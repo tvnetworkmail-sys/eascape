@@ -1,0 +1,282 @@
+// EASCape: Recipe for Disaster: the dining room, the feast's cutscene, Aris, the council frozen in
+// time and the Culinaromancer's chest. Words from the OSRS wiki's transcript (Another Cook's Quest);
+// the chest's stock from the 727 cache (hundred_foodchest1-10, hundred_rewardchest1-10) and the OSRS
+// wiki's Culinaromancer's Chest (prices, which stock with how far you are). Lines marked "ours" have
+// no source.
+
+// ---------------------------------------------------------------- the doors
+// Lumbridge Castle's dining room: once the cook has his ingredients it's the room frozen in time
+[oploc1,hundred_lumbridge_door] @hundred_door(^hundred_lumbridge_kitchen_side, ^hundred_bubble_kitchen_side);
+[oploc1,hundred_lumbridge_doubledoorl] @hundred_door(^hundred_lumbridge_hall_side, ^hundred_bubble_hall_side);
+[oploc1,hundred_lumbridge_doubledoorr] @hundred_door(^hundred_lumbridge_hall_side, ^hundred_bubble_hall_side);
+[oploc1,hundred_portal_door1] @hundred_leave(^hundred_lumbridge_kitchen_side);
+[oploc1,hundred_portal_door2] @hundred_leave(^hundred_lumbridge_hall_side);
+[oploc1,hundred_portal_door3] @hundred_leave(^hundred_lumbridge_hall_side);
+
+[label,hundred_door](coord $outside, coord $inside)
+if (coordx(loc_coord) < 2000) @hundred_leave($outside); // the bubble room's own doors
+if (%hundred_main_quest_var < ^hundred_given) {
+    ~eascape_door_walk;
+    return;
+}
+if (%hundred_main_quest_var = ^hundred_given) @hundred_feast_cutscene;
+~fade_out;
+p_delay(1);
+p_telejump($inside);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+
+[label,hundred_leave](coord $outside)
+~fade_out;
+p_delay(1);
+p_telejump($outside);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+
+// ---------------------------------------------------------------- the feast
+[label,hundred_feast_cutscene]
+~fade_out;
+p_delay(2);
+p_telejump(^hundred_cutscene_door);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>Welcome, gentlemen, to Lumbridge Castle.");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome Osman, Spymaster for the Emir of Al Kharid.");
+~chatnpc_specific("Osman", 100_osman, "<p,neutral>I thank you for your hospitality.");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome the chief guard of the White Wolf Mountain dwarves.");
+~chatnpc_specific("Mountain Dwarf", 100_dwarf_mountain, "<p,happy>The beer's good!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome Pirate Pete from Braindeath Island.");
+~chatnpc_specific("Pirate Pete", 100_pirate, "<p,angry>Your rum's got no flavour!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome the chief of the Goblin Village.");
+~chatnpc_specific("General Bentnoze", 100_general_bentnoze, "<p,angry>That me! Give me chair!");
+~chatnpc_specific("General Wartface", 100_general_wartface, "<p,angry>No, it me! Chair mine!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome Skrach Uglogwee of the Feldip Hills ogres.");
+~chatnpc_specific("Skrach Uglogwee", 100_skrach_uglogwee, "<p,neutral>Der ogres, dey call me Bone Cruncher.");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>I welcome my neighbour, Phileas the Lumbridge Guide.");
+~chatnpc_specific("Lumbridge Guide", 100_lumbridge_guide, "<p,happy>I didn't have far to travel!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>From the town of Edgeville, I welcome Evil Dave.");
+~chatnpc_specific("Evil Dave", 100_agrith_dave, "<p,evillaugh>These secret meetings are SOOO EVIL!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>A hearty welcome to Sir Amik Varze, leader of the White Knights...");
+~chatnpc_specific("Sir Amik Varze", 100_sir_amik_varze, "<p,angry>Do get a move on!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>...and finally, I welcome the ruler of Ape Atoll, Awowogei.");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,quiz>Awowogei?");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>Please sit down!");
+~chatnpc_specific("Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>Ikik...");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,angry>SIT DOWN!");
+~chatnpc_specific("Lumbridge Guide", 100_lumbridge_guide, "<p,neutral>I think he's lost his Amulet of Manspeak.");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>Aris seems to be late...");
+~mesbox("A mysterious old man appears beside the Duke and bows."); // ours: the cutscene's action
+~chatnpc_specific("Mysterious Old Man", macro_mysterious_old_man_underwater, "<p,happy>Greetings, Horacio!");
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,confused>Oh, what now?");
+~chatnpc_specific("Mysterious Old Man", macro_mysterious_old_man_underwater, "<p,happy>Here you go Horacio, it's all yours!");
+~mesbox("The old man disappears, and the Duke is taken with him."); // ours
+~chatnpc_specific("Duke Horacio", duke_of_lumbridge, "<p,neutral>Excuse me while I deal with this...");
+~chatnpc_specific("Osman", 100_osman, "<p,neutral>We should do something about that old man.");
+~chatnpc_specific("Mountain Dwarf", 100_dwarf_mountain, "<p,neutral>Agreed.");
+~chatnpc_specific("Evil Bob", macro_evil_bob_outside, "<p,happy>Meoooooow!");
+~chatnpc_specific("Osman", 100_osman, "<p,shock>Nooooooooooooo!");
+~mesbox("Osman is whisked away."); // ours
+~chatnpc_specific("Mountain Dwarf", 100_dwarf_mountain, "<p,shock>Wow - another one!");
+~chatplayer("<p,happy>Ooh - nice food!");
+~chatnpc_specific("Skrach Uglogwee", 100_skrach_uglogwee, "<p,neutral>You come here.");
+~chatplayer("<p,quiz>Hello?");
+~chatnpc_specific("Skrach Uglogwee", 100_skrach_uglogwee, "<p,quiz>Is you my dinner?");
+~chatnpc_specific("General Bentnoze", 100_general_bentnoze, "<p,angry>Let go!");
+~chatplayer("<p,shock>No, I'm not!");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer, "<p,evillaugh>Aha! I'm BACK!");
+~chatnpc_specific("Awowogei", 100_mm_awowogei_cutscene, "<p,shock>Ek uhuh!");
+~chatnpc_specific("Sir Amik Varze", 100_sir_amik_varze, "<p,quiz>Did we invite you?");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer, "<p,evillaugh>Hah! Your chef did! And now I'll kill you!");
+~mesbox("The Culinaromancer casts a spell at the council."); // ours
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer, "<p,evillaugh>MUAHAHAHA!");
+~chatnpc_specific("Aris", hundred_aris, "<p,sad>Sorry I'm late...");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer, "<p,evillaugh>I remember you...");
+~chatnpc_specific("Aris", hundred_aris, "<p,scared>Aaargh!");
+~chatnpc_specific("Culinaromancer", hundred_culinaromancer, "<p,evillaugh>Muahahaha!");
+~chatnpc_specific("Aris", hundred_aris, "<p,angry>TEMPUS CESSIT!");
+~fade_out;
+p_delay(2);
+%hundred_main_quest_var = ^hundred_feast_seen;
+%100dwarfvisible = 1;
+%100goblinsvisible = 1;
+%100piratevisible = 1;
+%100guidevisible = 1;
+%100davevisible = 1;
+%100ogrevisible = 1;
+%100amikvisible = 1;
+%100monkeyvisible = 1;
+%100culinaromancervisible = 1;
+p_telejump(^hundred_bubble_kitchen_side);
+~fade_in;
+p_delay(1);
+if_openoverlay(null);
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral><displayname>, you must help me defeat this evil!");
+~send_quest_progress(questlist:hundred_main, 3, 10);
+
+// ---------------------------------------------------------------- Aris
+[opnpc1,hundred_aris]
+~chatplayer("<p,neutral>Hi.");
+~chatnpc("<p,neutral>Hello there adventurer. How can I assist you?");
+@hundred_aris_menu;
+
+[label,hundred_aris_menu]
+switch_int (~p_choice5("Who are you?", 1, "What just happened?", 2, "Who's that guy?", 3, "Who are these people?", 4, "Did this room get bigger?", 5)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Who are you?");
+        ~chatnpc("<p,neutral>I am the fortune-teller. My friends call me Aris.");
+        ~chatplayer("<p,neutral>Okay then Aris...");
+        ~chatnpc("<p,quiz>Was there something you wanted to ask me about?");
+    case 2 :
+        ~chatplayer("<p,neutral>I do have a question. A very GOOD question.");
+        ~chatnpc("<p,quiz>Oh yes? What's that then?");
+        ~chatplayer("<p,angry>Just what in the flipping hippo is going on?!?!?");
+        ~chatnpc("<p,confused>...flipping hippo?");
+        ~chatplayer("<p,quiz>Yeeeess.... You've never heard that phrase?");
+        ~chatnpc("<p,neutral>No, no I'm quite sure that I never have.");
+        ~chatplayer("<p,angry>Well, that's not the point!");
+        ~chatplayer("<p,neutral>Please, tell me what just happened!");
+        ~chatnpc("<p,neutral>Certainly. That fellow over there in the chef's hat is called the Culinaromancer.");
+        ~chatnpc("<p,neutral>A hundred years ago, he threatened the secret council with death, but was foiled by the quick thinking of his assistant, who managed to trap him in another dimension.");
+        ~chatnpc("<p,neutral>As a result of that action, the assistant was offered a job for life as head cook of Lumbridge, for himself and all his future descendants.");
+        ~chatnpc("<p,neutral>Now, apparently the current head cook of Lumbridge decided to recreate his ancestors greatest achievement, not realising that his achievement was not a meal but a powerful food-magic, and by recreating the spell he has inadvertently freed the evil Culinaromancer from his prison, to wreak havoc upon this world once more.");
+        ~chatnpc("<p,neutral>Naturally, when I saw what was happening, I intervened with a simple Tempus Cessit spell, so that we would have time to immunise the secret council from his attack, and so that we can defeat the Culinaromancer once and for all.");
+        ~chatplayer("<p,confused>Um... what?");
+        ~chatnpc("<p,quiz>You want me to explain it again?");
+        ~chatplayer("<p,neutral>Yes please. But slower. And more understandable.");
+        ~chatnpc("<p,neutral>(sigh) Okay then: 100 years ago, the evil food magician was defeated and banished.");
+        ~chatnpc("<p,neutral>Because of you and the Lumbridge cook, he is now free.");
+        ~chatnpc("<p,neutral>He was about to slaughter all of these people, but I stopped time so that you could protect them.");
+        ~chatplayer("<p,quiz>You stopped time? And... wait, I have to protect them? Why me?");
+        ~chatnpc("<p,neutral>Yes I stopped time. And YOU have to do it partly because you helped release him by getting those ingredients, and partly because I am stuck here keeping the spell intact.");
+        ~chatplayer("<p,quiz>Isn't stopping time kind of... You know, dangerous?");
+        ~chatnpc("<p,neutral>Oh, unbelievably so. This is why I have limited the time bubble to this room and this room alone.");
+        ~chatplayer("<p,quiz>Huh? How does that work?");
+        ~chatnpc("<p,neutral>Everything outside this room continues to flow through time. This is why outside of this room you have already defeated the Culinaromancer, and protected the members of the secret council.");
+        ~chatnpc("<p,neutral>Inside this room however you have not.");
+        ~chatplayer("<p,confused>Uh... what?");
+        ~chatnpc("<p,neutral>Where time has been frozen in this room, outside it continues to flow, so this room is now currently in what we would call 'the past', meaning events inside here have already happened, and the longer time continues to flow outside, the more removed from normal time this room becomes.");
+        ~chatplayer("<p,quiz>Wait... so I've already saved all of these council members and defeated the Culinaromancer?");
+        ~chatnpc("<p,neutral>Yes. But only outside. What you need to do now is save them in here as well, so that time can resume its normal ebb and flow.");
+        ~chatnpc("<p,neutral>Otherwise there will be increasing temporal pressure, and the entire universe might explode!");
+        ~chatplayer("<p,shock>Not the whole universe! That's where I keep my stuff!");
+        ~chatnpc("<p,neutral>Yes. That is why it is so important that you protect them all.");
+        ~chatplayer("<p,confused>But... You said I already had...?");
+        ~chatnpc("<p,neutral>Yes. You have. In the future, which is also the present, but not in the present, which is also the past.");
+        ~chatplayer("<p,confused>My brain hurts...");
+        ~chatnpc("<p,neutral>Yes, time travel tends to do that to people.");
+        ~chatnpc("<p,neutral>I suggest you don't worry about it too much, just make sure you protect each council member and then defeat the Culinaromancer.");
+        ~chatplayer("<p,quiz>How would I do that?");
+        ~chatnpc("<p,neutral>Each council member will have their own unique dish that will serve to counteract the Culinaromancer's spell.");
+        ~chatnpc("<p,neutral>Inspect the one you wish to save, and I will offer any advice I have.");
+        ~chatnpc("<p,quiz>Was there anything else you wanted to ask me about?");
+    case 3 :
+        ~chatplayer("<p,quiz>Who's that guy over there? Seemed like you knew each other.");
+        ~chatnpc("<p,neutral>He calls himself the Culinaromancer. He is an extremely evil man, with incredibly powerful magics.");
+        ~chatplayer("<p,quiz>Culinaromancer?");
+        ~chatnpc("<p,neutral>Yes, that's correct. Just as an Oneiromancer draws their magical powers from dreams, or a necromancer draws their strength from the energies of the dead, a Culinaromancer uses food as his source of magical power.");
+        ~chatplayer("<p,quiz>Food? What's so dangerous about food?");
+        ~chatnpc("<p,neutral>Do not underestimate the latent power of foodstuffs as a source of magical energy.");
+        ~chatnpc("<p,neutral>Not only are they a fundamental life-force, but they often evoke great emotional attachment.");
+        ~chatnpc("<p,neutral>Do not underestimate him, part of his strength lies in the fact his unique type of magical power is quite obscure, I have seen many fall before him.");
+        ~chatplayer("<p,neutral>Okay, so he's powerful, but I don't get why he's here!");
+        ~chatnpc("<p,neutral>Ah, it is a very old story indeed.");
+        ~chatnpc("<p,neutral>A hundred years ago, he worked here in Lumbridge castle for the then Duke as a cook.");
+        ~chatnpc("<p,neutral>This was all a pretence, of course. As part of his duties he was allowed access to many exotic and esoteric foodstuffs. These allowed him to experiment with his magic and increase his power exponentially.");
+        ~chatnpc("<p,neutral>Building his power was just the first step however.");
+        ~chatplayer("<p,quiz>How do you mean?");
+        ~chatnpc("<p,neutral>Knowing of the regular meetings of the secret council here in Lumbridge, the Culinaromancer decided that he would eliminate all of them as the first step to his plans for world domination.");
+        ~chatplayer("<p,quiz>Would that have worked?");
+        ~chatnpc("<p,neutral>Possibly, we might never know. As his plans were coming to fruition his assistant discovered them, and used his own magic against him, to trap him in another dimension where his powers would be useless.");
+        ~chatplayer("<p,quiz>Then how did he escape?");
+        ~chatnpc("<p,neutral>Well, the current cook of Lumbridge obviously discovered an ancient manuscript of his ancestors, and believing it to be a recipe decided to recreate the spell that banished him.");
+        ~chatnpc("<p,neutral>Which obviously seems to have opened the portal enough for him to escape back to this dimension. So this is partly your fault.");
+        ~chatplayer("<p,quiz>Oh. Those ingredients?");
+        ~chatnpc("<p,neutral>Yes, those ingredients. So I hold you responsible for assisting me in ridding him of this dimension once and for all.");
+        ~chatplayer("<p,sad>Yeah... I had a feeling you were going to say that...");
+        ~chatnpc("<p,quiz>Are you clear on what you have to do, or was there something you wished me to explain?");
+    case 4 :
+        ~chatplayer("<p,quiz>Who are these people? Seems like quite the random selection in here!");
+        ~chatnpc("<p,neutral>The people you see assembled here are the self-styled secret council of Gielinor.");
+        ~chatplayer("<p,quiz>'Self-styled' council? What do you mean?");
+        ~chatnpc("<p,neutral>Many centuries ago, a small group from around the world of Gielinor decided that these lands needed to be directed, that it was too risky to leave the fates of this land to luck and the gods.");
+        ~chatnpc("<p,neutral>They decided that every 10 years they would meet to discuss current events, and shape how the world might then develop.");
+        ~chatplayer("<p,quiz>So they're pretty influential people?");
+        ~chatnpc("<p,neutral>No, not really. For all of their grand schemes and ideas, nothing ever gets done except every ten years they have a bit of a posh meal together and a bit of a gossip.");
+        ~chatplayer("<p,quiz>I see... But this evil cook guy that just appeared thinks they might be important?");
+        ~chatnpc("<p,neutral>I don't really know what he thinks.");
+        ~chatnpc("<p,neutral>Either way I'm not prepared to let him get away with a brazen attack on anybody while I have the power to stop him.");
+        ~chatnpc("<p,neutral>And given that this is partly your fault, I fully expect your assistance in saving them.");
+        ~chatplayer("<p,shock>MY fault??");
+        ~chatnpc("<p,neutral>Yes. You were the one who provided the cook with the ingredients that he needed to allow the Culinaromancer to return to this dimension.");
+        ~chatplayer("<p,confused>I just don't understand any of this...");
+        ~chatnpc("<p,quiz>What exactly is it that you don't understand?");
+    case 5 :
+        ~chatplayer("<p,quiz>Uh... Is it me, or did this room just get much bigger?");
+        ~chatnpc("<p,neutral>Ah, that would be the time dilation effect.");
+        ~chatplayer("<p,confused>The... time dilation... effect?");
+        ~chatnpc("<p,neutral>Yes. As time has stopped flowing in the normal way, your eyes are playing tricks on you, as the pictures absorbed by your eyes take slightly longer to reach your brain than normal.");
+        ~chatplayer("<p,confused>Erm... what?");
+        ~chatnpc("<p,neutral>As everybody knows, time flows from north to south, so my freezing time means that this room has apparently stretched slightly along its horizontal axis.");
+        ~chatplayer("<p,confused>Um... does that even make sense?");
+        ~chatnpc("<p,neutral>Don't let it worry you too much. It's just an optical illusion, the room is exactly the same size as it always has been, it just appears to be a tiny bit bigger.");
+        ~chatnpc("<p,quiz>Anything else you wanted to know?");
+}
+if (~p_choice2("Ask something else.", 1, "Nothing thanks.", 2) = 1) @hundred_aris_menu; // ours: how the menu comes back
+~chatplayer("<p,neutral>Ah, forget it, I don't want to talk to you now.");
+~chatnpc("<p,angry>Yes, I'm sure you have far more important things to do than SAVING THE ENTIRE UNIVERSE!");
+
+// ---------------------------------------------------------------- the frozen Culinaromancer
+[opnpc1,culinaromancer_froze] mes("He's been frozen in time."); // ours
+
+// ---------------------------------------------------------------- how far you are
+// freed council members (each one's chair empty once they're gone)
+[proc,hundred_freed]()(int)
+if (%hundred_main_quest_var < ^hundred_feast_seen) return(0);
+def_int $n = 0;
+if (%100dwarfvisible = 0) $n = add($n, 1);
+if (%100goblinsvisible = 0) $n = add($n, 1);
+if (%100piratevisible = 0) $n = add($n, 1);
+if (%100guidevisible = 0) $n = add($n, 1);
+if (%100davevisible = 0) $n = add($n, 1);
+if (%100ogrevisible = 0) $n = add($n, 1);
+if (%100amikvisible = 0) $n = add($n, 1);
+if (%100monkeyvisible = 0) $n = add($n, 1);
+return($n);
+
+// a quest point for Another Cook's Quest, each council member and the Culinaromancer (the wiki)
+[proc,hundred_questpoints]()(int)
+if (%hundred_main_quest_var < ^hundred_given) return(0);
+def_int $qp = calc(1 + ~hundred_freed);
+if (%hundred_main_quest_var >= ^hundred_complete) $qp = add($qp, 1);
+return($qp);
+
+// freeing one of the council: off they go (Aris's lines are each subquest's)
+[proc,hundred_free_done](string $who)
+def_int $freed = ~hundred_freed;
+if ($freed >= 8 & %hundred_main_quest_var = ^hundred_feast_seen) %hundred_main_quest_var = ^hundred_all_freed;
+~send_quest_complete(questlist:hundred_main, hundred_rewardlamp, 250, 1, "You have freed <$who>!", "1 Quest Point|Further access to the|Culinaromancer's chest");
+
+// ---------------------------------------------------------------- the chest (Lumbridge Castle cellar)
+[proc,hundred_chest_level]()(int)
+def_int $n = calc(1 + ~hundred_freed);
+if (%hundred_main_quest_var >= ^hundred_complete) $n = 10;
+if ($n > 10) $n = 10;
+return($n);
+
+[oploc1,hundred_goodchest]
+if (%hundred_main_quest_var < ^hundred_complete) {
+    mes("You can't use the chest as a bank until you have finished the quest."); // ours
+    return;
+}
+@openbank;
+
+[oploc2,hundred_goodchest]
+def_inv $shop = enum(int, inv, hundred_foodchests, ~hundred_chest_level);
+~openshop($shop, 400, 1300, 20, "Culinaromancer's Chest");
+
+[oploc3,hundred_goodchest]
+def_inv $shop = enum(int, inv, hundred_rewardchests, ~hundred_chest_level);
+~openshop($shop, 400, 1300, 20, "Culinaromancer's Chest");

@@ -1,0 +1,41 @@
+// EASCape: Recipe for Disaster's journal (ours: the lines follow the quest's stages; each council
+// member's line is filled in by its subquest's ~hundred_journal_<member>)
+[if_button,questlist:hundred_main]
+def_int $s = %hundred_main_quest_var;
+if ($s = ^hundred_not_started) {
+    def_string $cook = "@dbl@Completed @dre@Cook's Assistant";
+    if (%cookquest = ^cook_complete) $cook = "@str@Completed Cook's Assistant";
+    def_string $level = "@dbl@Level 10 @dre@Cooking";
+    if (stat_base(cooking) >= 10) $level = "@str@Level 10 Cooking";
+    ~quest_journal("Recipe for Disaster", "@dbl@I can start this quest by speaking to the @dre@Cook@dbl@ in the|@dre@kitchen of Lumbridge Castle@dbl@.||@dbl@To start this quest I will need:|<$cook>|<$level>");
+    return;
+}
+if ($s = ^hundred_ingredients) {
+    ~quest_journal("Recipe for Disaster", "@dbl@The @dre@Cook@dbl@ in Lumbridge Castle wants to recreate a feast his|@dbl@ancestor cooked a hundred years ago. He needs:|@dre@An eye of newt|@dre@A glass of Greenman's ale|@dre@A rotten tomato|@dre@A freshly made 'Dirty Blast'@dbl@ (a fresh fruit blast with ashes)");
+    return;
+}
+if ($s = ^hundred_given) {
+    ~quest_journal("Recipe for Disaster", "@str@I gave the Cook the ingredients for his feast.|@dbl@He wants me to go into the @dre@dining room@dbl@ and see it.");
+    return;
+}
+def_string $t = "@str@I gave the Cook the ingredients for his feast, but it freed|@str@the evil Culinaromancer. Aris froze time in the dining room.";
+if ($s < ^hundred_complete) {
+    $t = append($t, "||@dbl@I need to save each member of the secret council with|@dbl@their favourite dish. @dre@Aris@dbl@ will help if I inspect them.|");
+    $t = append($t, ~hundred_journal_line("the Mountain Dwarf", %100dwarfvisible, 1));
+    $t = append($t, ~hundred_journal_line("the Goblin Generals", %100goblinsvisible, 2));
+    $t = append($t, ~hundred_journal_line("Pirate Pete", %100piratevisible, 3));
+    $t = append($t, ~hundred_journal_line("the Lumbridge Guide", %100guidevisible, 4));
+    $t = append($t, ~hundred_journal_line("Evil Dave", %100davevisible, 5));
+    $t = append($t, ~hundred_journal_line("Skrach Uglogwee", %100ogrevisible, 6));
+    $t = append($t, ~hundred_journal_line("Sir Amik Varze", %100amikvisible, 7));
+    $t = append($t, ~hundred_journal_line("King Awowogei", %100monkeyvisible, 8));
+    if ($s = ^hundred_all_freed) $t = append($t, "||@dbl@The whole council is safe. I must follow the|@dre@Culinaromancer@dbl@ through his portal and defeat him.");
+    ~quest_journal("Recipe for Disaster", $t);
+    return;
+}
+~quest_journal("Recipe for Disaster", "<$t>||@str@I saved every member of the secret council and defeated|@str@the Culinaromancer.||@red@QUEST COMPLETE!");
+
+[proc,hundred_journal_line](string $name, int $visible, int $who)(string)
+if ($visible = 0) return("|@str@I saved <$name>.");
+if (~hundred_inspected($who) = true) return("|@dbl@I am saving @dre@<$name>@dbl@.");
+return("|@dbl@I still need to save @dre@<$name>@dbl@.");

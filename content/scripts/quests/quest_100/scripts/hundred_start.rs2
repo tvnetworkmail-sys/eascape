@@ -1,0 +1,413 @@
+// EASCape: Recipe for Disaster (update of 15 March 2006): the start, Another Cook's Quest, the feast
+// and Aris in the dining room. Words from the OSRS wiki's transcript (Transcript:Recipe for
+// Disaster/Another Cook's Quest); lines marked "ours" have no source. The cutscene is told in
+// dialogue (ours: its teleports and spells aren't shown).
+// %hundred_main_quest_var: 0, 1 getting the ingredients, 2 given (go into the dining room),
+// 3 the feast seen (free the council), 4 all of them free (the portal), 5 complete.
+
+// ---------------------------------------------------------------- the cook
+[label,hundred_cook]
+if (%hundred_main_quest_var = ^hundred_ingredients) @hundred_cook_ingredients;
+if (%hundred_main_quest_var = ^hundred_given) {
+    ~chatplayer("<p,neutral>How's that banquet going?");
+    ~chatnpc("<p,happy>Why haven't you gone and looked at the feast I have prepared yet? Trust me, it will be a sight the likes of which you will never see again!");
+    ~chatplayer("<p,neutral>I don't know... I'm just... quite busy, I guess...");
+    ~chatnpc("<p,angry>No, honestly, you MUST go in there!");
+    ~chatnpc("<p,angry>GO IN THERE!");
+    return;
+}
+@hundred_cook_success;
+
+// the cook's options once Cook's Assistant is done
+[label,hundred_cook_options]
+~chatnpc("<p,happy>How is the adventuring going, my friend?");
+def_int $option = ~p_choice4("Do you have any other quests for me?", 1, "I am getting strong and mighty.", 2, "I keep on dying.", 3, "Can I use your range?", 4);
+if ($option = 1) @hundred_cook_offer;
+if ($option = 2) {
+    ~chatplayer("<p,happy>I am getting strong and mighty.");
+    ~chatnpc("<p,happy>Glad to hear it.");
+} else if ($option = 3) {
+    ~chatplayer("<p,sad>I keep on dying.");
+    ~chatnpc("<p,happy>Ah well, at least you keep coming back to life!");
+} else {
+    ~chatplayer("<p,neutral>Can I use your range?");
+    ~chatnpc("<p,happy>Go ahead - it's a very good range.|It's easier to use than most other ranges.");
+}
+
+[label,hundred_cook_offer]
+~chatplayer("<p,happy>Do you have any other quests for me? That last one of yours was so much fun, I was hoping you would!");
+~chatnpc("<p,sad>Ooooh dear, I might have, but it's all very embarrassing...");
+~chatplayer("<p,quiz>Embarrassing? How do you mean?");
+~chatnpc("<p,neutral>Weeellll... You know I told you that it was the Duke's birthday?");
+~chatplayer("<p,quiz>Yup, that's why I had to go and collect you things to make a cake with wasn't it?");
+~chatnpc("<p,neutral>Yeeeesssss... Weeeelllll...");
+~chatnpc("<p,sad>It isn't. I don't even know when his birthday is!");
+if (~p_choice2_header("Angry! It makes me angry!", 1, "I don't really care to be honest.", 2, "How does that make you feel?") = 1) {
+    ~chatplayer("<p,angry>GRRRR! Why did you have me running around finding ingredients for you then?!?!");
+} else {
+    ~chatplayer("<p,quiz>So you lied to me to get me to do you a favour?");
+    ~chatplayer("<p,neutral>Fair enough, you're not the first, but why lie? You could have just asked me, I'd have been happy to help.");
+}
+~chatnpc("<p,sad>I needed to test you and see if I could trust you...");
+~chatnpc("<p,sad>I am in a terrible pickle, and I desperately need somebody trustworthy to help me out!");
+switch_int (~p_choice3("What seems to be the problem?", 1, "No thanks, I don't want to help.", 2, "How do you still have a job?", 3)) {
+    case 2 :
+        ~chatplayer("<p,neutral>You know... Thinking about it...");
+        ~chatplayer("<p,neutral>I just can't be bothered to help you out. You'll have to find some other adventurer to do your little quest for you.");
+        ~chatnpc("<p,sad>I guess I don't have anything more to say to you then.");
+        ~chatplayer("<p,neutral>I guess you don't.");
+        return;
+    case 3 :
+        ~chatplayer("<p,quiz>I'm curious... How exactly do you still have a job?");
+        ~chatnpc("<p,confused>I'm sorry? How do you mean?");
+        ~chatplayer("<p,neutral>It's just surprising that you would still have employment as head cook of Lumbridge castle, given how obviously bad at your job you are.");
+        ~chatnpc("<p,angry>WHAT?");
+        ~chatplayer("<p,neutral>Well, things you would expect every kitchen to have... Eggs, milk, flour... You know... But you don't.");
+        ~chatplayer("<p,angry>And what is worse, you don't even go off and get them yourself, you expect people like me to run around after you!");
+        ~chatnpc("<p,sad>I know I'm such a failure... I bring shame to my honourable ancestor, and now I need help again...");
+        ~chatplayer("<p,quiz>Help again?");
+}
+~chatplayer("<p,quiz>You need help AGAIN? Well, what seems to be the problem?");
+~chatnpc("<p,neutral>Well, you're obviously trustworthy, I guess I could tell you...");
+~chatplayer("<p,neutral>Please do. The suffering of others always seems to turn out very profitable for me.");
+~chatnpc("<p,neutral>Well... It's like this...");
+~chatnpc("<p,quiz>Did you ever hear of Franizzard Van Lumbcook?");
+~chatplayer("<p,neutral>Erm... Can't say I have.");
+~chatplayer("<p,neutral>And with a name like that, I'm sure I would remember.");
+~chatnpc("<p,neutral>Well, he was a great chef, and also my ancestor.");
+~chatnpc("<p,neutral>One hundred years ago there was a very important meeting held here in Lumbridge Castle, and he cooked a banquet for the meeting, which was so stupendously amazing that he was offered a job for life, along with all of his descendants.");
+~chatplayer("<p,neutral>So you have your job because a hundred years ago your ancestor was a very good cook.");
+~chatplayer("<p,neutral>I don't see how that's much of a problem for you...");
+~chatplayer("<p,neutral>In fact I would say you are a VERY LUCKY man indeed. Frankly, I'd have fired you by now if you worked for me.");
+~chatnpc("<p,sad>Oooooh no.... You don't understand...");
+~chatnpc("<p,neutral>This big important secret meeting that Franizzard cooked for is held here in Lumbridge castle every 10 years, and tonight will be the tenth anniversary of it!");
+~chatplayer("<p,neutral>Still not seeing the problem...");
+~chatnpc("<p,sad>Well, I have always felt like a failure as a cook, and that my job here is down to the skills of my ancestor.");
+~chatnpc("<p,neutral>I want to prove to the world that I am a great cook too!");
+~chatnpc("<p,sad>But to do that... (sigh) No, it just won't work...");
+~chatplayer("<p,angry>What won't? Come on man, pull yourself together and speak to me!");
+~chatnpc("<p,sad>(sniff) Weeeeelll... I thought that I would recreate the meal Franizzard cooked all of those years ago, the one that impressed everybody so much... There's just this small problem though...");
+~chatplayer("<p,neutral>Let me take a wild guess: You have the recipe but you don't have any of the ingredients, and OBVIOUSLY you can't just go and get them yourself?");
+~chatnpc("<p,shock>Yes! However did you know?");
+~chatplayer("<p,neutral>Call it a hunch.");
+~chatplayer("<p,neutral>Okay, tell me what you're after and then I'll decide if I want to help you or not.");
+~chatnpc("<p,neutral>Well, they are common enough ingredients, although I must admit the recipe I am following is very strange indeed...");
+~chatnpc("<p,neutral>I will pay you upfront for any expenses you may incur while obtaining them, and of course you may keep the change for being so helpful to me.");
+~chatnpc("<p,sad>Please can you help me? The feast is scheduled to start very soon, and I simply cannot leave!");
+// the quest's requirement (ours: how you're told)
+if (stat_base(cooking) < 10) {
+    mes("You need a Cooking level of 10 to start this quest.");
+    return;
+}
+if (~p_choice2_header("Yes.", 1, "No.", 2, "Start the Recipe for Disaster quest?") = 2) {
+    ~chatplayer("<p,neutral>To be honest... I just can't be bothered.");
+    ~chatplayer("<p,neutral>Sorry about that.");
+    ~chatnpc("<p,sad>Oh nooooo... What am I going to do now?");
+    ~chatplayer("<p,neutral>Dunno. Maybe I'll change my mind and come back later and help you.");
+    ~chatnpc("<p,sad>Oooohhh... I really hope you do...");
+    return;
+}
+~chatplayer("<p,happy>I would love to help you! What do I have to do?");
+~chatnpc("<p,neutral>Well, I have an incredibly important banquet that I have to prepare for, and I am using an ancient cookbook to recreate the meal my famous ancestor made a hundred years ago.");
+~chatnpc("<p,neutral>Most of the ingredients I was able to obtain fairly easily, but there were some... oddities... that I have been unable to lay my hands on.");
+~chatplayer("<p,quiz>Like what?");
+~chatnpc("<p,neutral>I need the following ingredients as soon as possible!");
+~chatnpc("<p,neutral>One Eye Of Newt|A freshly made 'Dirty Blast'|A rotten tomato");
+~chatnpc("<p,neutral>And a glass of greenman's ale.");
+%hundred_main_quest_var = ^hundred_ingredients;
+~send_quest_progress(questlist:hundred_main, 1, 10);
+if (inv_freespace(inv) > 0 | inv_total(inv, coins) > 0) inv_add(inv, coins, 100);
+else obj_add(coord, coins, 100, ^lootdrop_duration);
+~chatnpc("<p,neutral>I have given you 100 coins to cover any expenses you may incur, feel free to keep the change.");
+~chatplayer("<p,happy>I'll go look for those for you then!");
+
+[label,hundred_cook_ingredients]
+~chatplayer("<p,neutral>About those ingredients you wanted for the banquet...");
+~chatnpc("<p,neutral>Did you bring them? Remember, I need an eye of newt, a glass of greenman's ale, a rotten tomato, and a 'Dirty Blast'!");
+def_boolean $newt = false;
+def_boolean $ale = false;
+def_boolean $tomato = false;
+def_boolean $blast = false;
+def_int $count = 0;
+if (inv_total(inv, eye_of_newt) > 0) { $newt = true; $count = add($count, 1); }
+if (inv_total(inv, greenmans_ale) > 0) { $ale = true; $count = add($count, 1); }
+if (inv_total(inv, rotten_tomato) > 0) { $tomato = true; $count = add($count, 1); }
+if (inv_total(inv, hundred_fruit_blast) > 0) { $blast = true; $count = add($count, 1); }
+if ($count = 4) {
+    ~chatplayer("<p,happy>You will be happy to know... I have all of that with me!");
+    inv_del(inv, eye_of_newt, 1);
+    inv_del(inv, greenmans_ale, 1);
+    inv_del(inv, rotten_tomato, 1);
+    inv_del(inv, hundred_fruit_blast, 1);
+    %hundred_main_quest_var = ^hundred_given;
+    ~send_quest_complete(questlist:hundred_main, hundred_fruit_blast, 250, 1, "You have completed Another Cook's Quest!", "1 Quest Point|Access to the Culinaromancer's chest|when you've seen the feast");
+    ~chatnpc("<p,happy>You absolutely MUST go through into the dining room just there and see the feast I have prepared.");
+    ~chatnpc("<p,happy>I simply won't take no for an answer!");
+    return;
+}
+if ($count = 0) {
+    ~chatplayer("<p,sad>Erm... Sorry, I don't have any of that with me...");
+    ~chatnpc("<p,angry>Well come back when you have all of them! And hurry! It is a VERY important meeting!");
+} else {
+    ~chatplayer("<p,neutral>Weeelll... I have some of that stuff with me, but not all of it...");
+    if ($count = 3) {
+        if ($newt = false) ~chatplayer("<p,neutral>I've got a 'Dirty Blast', a Greenman's ale and a rotten tomato, I just need to get the eye of newt!");
+        else if ($tomato = false) ~chatplayer("<p,neutral>I've got the 'Dirty Blast', a Greenman's ale and the eye of newt, I just have to find myself a rotten tomato...");
+        else if ($ale = false) ~chatplayer("<p,neutral>I managed to find a 'Dirty Blast', a rotten tomato and an eye of newt, but I didn't manage to get a hold of a Greenman's ale yet...");
+        else ~chatplayer("<p,neutral>I've got you a Greenman's ale, the rotten tomato and the eye of newt, but haven't had any luck on the 'Dirty Blast' yet...");
+    } else {
+        def_string $have = "";
+        if ($newt = true) $have = ~hundred_and($have, "an eye of newt");
+        if ($ale = true) $have = ~hundred_and($have, "a Greenman's ale");
+        if ($tomato = true) $have = ~hundred_and($have, "a rotten tomato");
+        if ($blast = true) $have = ~hundred_and($have, "a 'Dirty Blast'");
+        ~chatplayer("<p,neutral>I'm afraid I only have <$have> with me...");
+    }
+    ~chatnpc("<p,neutral>Come back and see me when you've got everything I need!");
+}
+@hundred_cook_where;
+
+[proc,hundred_and](string $list, string $item)(string)
+if (string_length($list) = 0) return($item);
+return("<$list> and <$item>");
+
+[label,hundred_cook_where]
+switch_int (~p_choice5("Okay then.", 1, "Where do I get an eye of newt?", 2, "Where do I get a rotten tomato?", 3, "Where do I get a greenman's ale?", 4, "Where do I get a 'Dirty Blast'?", 5)) {
+    case 1 :
+        ~chatplayer("<p,neutral>Okay then. I'll get on it.");
+        return;
+    case 2 :
+        ~chatplayer("<p,quiz>Where would I find an eye of newt?");
+        ~chatnpc("<p,confused>I don't know. A newt's face?");
+        ~chatplayer("<p,neutral>Thank you so much for that help.");
+        ~chatnpc("<p,neutral>Ah, I don't know where they get them, they usually have them at herblore and magic shops.");
+    case 3 :
+        ~chatplayer("<p,quiz>Where would I find a rotten tomato?");
+        ~chatnpc("<p,neutral>I'm not entirely sure, but I hear they're sold for public spectacles.");
+        ~chatplayer("<p,quiz>Public spectacles?");
+        ~chatnpc("<p,neutral>Yeah. Pre-arranged combats, caught thieves on show, that sort of thing.");
+    case 4 :
+        ~chatplayer("<p,quiz>Where would I find a greenman's ale?");
+        ~chatnpc("<p,neutral>Well, as the official sponsored drink of Castle Wars it might be worth looking around there.");
+    case 5 :
+        ~chatplayer("<p,quiz>Where would I find a 'Dirty Blast'? I've never heard of it before.");
+        ~chatnpc("<p,neutral>Yes, I must admit I had never heard of it either until reading through my ancestor's cookbook.");
+        ~chatnpc("<p,quiz>Tell me, do you know how to make a Fruit Blast?");
+        if (~p_choice2("YES", 1, "NO", 2) = 1) {
+            ~chatplayer("<p,quiz>A Fruit Blast? Sure, like they sell at Blurberry's Bar, right?");
+            ~chatnpc("<p,neutral>Ah, so you've heard of it then? But for this recipe I'd need a fresh one; you can't just buy me one from a shop or from your friends.");
+            ~chatnpc("<p,neutral>Well, a 'Dirty Blast' is a freshly made Fruit Blast, but then for some reason you add ash at the end!");
+            ~chatplayer("<p,quiz>Freshly made? Why did you specify that?");
+            ~chatnpc("<p,neutral>Apparently the ash reacts with the freshly squeezed juice in the glass. It means you can't just buy one Blurberry made earlier, you'll have to make it yourself.");
+            ~chatplayer("<p,neutral>Oh. Well, it shouldn't take that long.");
+            ~chatnpc("<p,happy>That's the spirit!");
+        } else {
+            ~chatplayer("<p,confused>A Fruit Blast? Can't say I've ever heard of it...");
+            ~chatnpc("<p,neutral>Ah, well, they're a popular Gnomic delicacy served at the Blurberry bar. But for this recipe I'd need a fresh one; you can't just buy me one from a shop or from your friends.");
+            ~chatnpc("<p,neutral>Basically, what you do is juice a pineapple, an orange and a lemon, then put them all into a cocktail shaker.");
+            ~chatnpc("<p,neutral>Pour that into a glass, then top with a slice of lemon.");
+            ~chatplayer("<p,quiz>Okaaaay... So what's a 'Dirty Blast'?");
+            ~chatnpc("<p,neutral>Well, apparently after you have done the above then by adding ashes you create a unique new drink.");
+            ~chatplayer("<p,neutral>Sounds horrible..");
+            ~chatnpc("<p,neutral>I agree, but it's what the recipe specifically needs.");
+            ~chatnpc("<p,neutral>Bear in mind it will only work with very fresh ingredients, so you will have to make your own cocktail, not rely on one of the pre made ones Blurberry sells.");
+        }
+}
+@hundred_cook_where;
+
+// ---------------------------------------------------------------- the dirty blast
+[opheldu,fruit_blast] if (last_useitem = ashes) @hundred_dirty_blast; ~displaymessage(^dm_default);
+
+[label,hundred_dirty_blast]
+inv_del(inv, ashes, 1);
+inv_del(inv, fruit_blast, 1);
+inv_add(inv, hundred_fruit_blast, 1);
+~chatplayer("<p,neutral>That looks disgusting, but it's what the cook asked for...");
+
+[opheld1,hundred_fruit_blast] ~chatplayer("<p,angry>No thanks, that looks DISGUSTING! I won't drink that!");
+
+// ---------------------------------------------------------------- the cook remembers (Recipe for Success)
+// which council members you've asked Aris about (each subquest's first stage)
+[proc,hundred_inspected](int $who)(boolean)
+switch_int ($who) {
+    case 1 : if (%hundred_dwarf_quest > 0) return(true);
+    case 2 : if (%100goblin > 0) return(true);
+    case 3 : if (%100_pirate_quest_var > 0) return(true);
+    case 4 : if (%100guide_prog > 0) return(true);
+    case 5 : if (%hundred_dave_main > 0) return(true);
+    case 6 : if (%100_ogre_prog > 0) return(true);
+    case 7 : if (%chickenquest > 0) return(true);
+    case 8 : if (%hundred_ilm_quest > 0) return(true);
+}
+return(false);
+
+[label,hundred_cook_success]
+~chatplayer("<p,neutral>Can we talk about what happened in the dining room?");
+~chatnpc("<p,happy>Wow! You were incredible! The way you defeated the Culinaromancer, you made it seem so easy!");
+if (%hundred_timebubble_exposition = 0) {
+    %hundred_timebubble_exposition = 1;
+    ~chatplayer("<p,confused>Uh... What?");
+    ~chatnpc("<p,happy>With the foods, and that big portal thingy, and everything!");
+    ~chatnpc("<p,happy>I'm just glad you were around, who knows WHAT could have happened if you weren't able to help us!");
+    ~chatplayer("<p,confused>I'm sorry, I don't have any clue what you...");
+    ~chatplayer("<p,neutral>Oh. Oh, right. This must be part of that whole time-bubble thing that Aris told me about.");
+    ~chatplayer("<p,neutral>So the cook outside of the bubble remembers me having already saved the council members even though I haven't actually gone and done it yet...");
+    ~chatplayer("<p,confused>Gah! This time travel stuff makes my head hurt!");
+    return;
+}
+~chatplayer("<p,quiz>So... I don't suppose you can remember exactly how I defeated him can you?");
+~chatnpc("<p,quiz>Of course! Which bit can't you remember doing?");
+@hundred_cook_remind(0);
+
+[label,hundred_cook_remind](int $page)
+def_int $who = 0;
+if ($page = 0) {
+    switch_int (~p_choice4("Protecting the Dwarf", 1, "Protecting the Goblins", 2, "Protecting the Pirate", 3, "More...", 4)) {
+        case 1 : $who = 1;
+        case 2 : $who = 2;
+        case 3 : $who = 3;
+        case 4 : @hundred_cook_remind(1);
+    }
+} else if ($page = 1) {
+    switch_int (~p_choice5("Previous...", 1, "Protecting the Lumbridge Guide", 2, "Protecting Evil Dave", 3, "Protecting the Ogre", 4, "More...", 5)) {
+        case 1 : @hundred_cook_remind(0);
+        case 2 : $who = 4;
+        case 3 : $who = 5;
+        case 4 : $who = 6;
+        case 5 : @hundred_cook_remind(2);
+    }
+} else {
+    switch_int (~p_choice4("Previous...", 1, "Protecting Sir Amik Varze", 2, "Protecting the Monkey", 3, "Defeating the Culinaromancer", 4)) {
+        case 1 : @hundred_cook_remind(1);
+        case 2 : $who = 7;
+        case 3 : $who = 8;
+        case 4 :
+            ~chatnpc("<p,happy>Oh MAN! That was AWESOME!");
+            ~chatnpc("<p,happy>After you managed to save all of the members of the secret council with those weird foods, the culinaromancer tried to make a run for it, but you followed him into his magic portal and Biff! Bang! Boom! sorted him out once and for all!");
+            ~chatnpc("<p,happy>Did you ever know that you're my hero?");
+            ~chatplayer("<p,neutral>Oh yeah... I remember now...");
+            @hundred_cook_more;
+    }
+}
+switch_int ($who) {
+    case 1 : ~chatplayer("<p,confused>That dwarf... I somehow can't remember how I managed to save him...");
+    case 2 : ~chatplayer("<p,confused>Those bickering goblins... How did I protect them again?");
+    case 3 : ~chatplayer("<p,confused>I can't quite remember how I managed to save that pirate...");
+    case 4 : ~chatplayer("<p,confused>The Lumbridge guide... I can't really rememember what I did to save him...");
+    case 5 :
+        ~chatplayer("<p,neutral>That fellow with the unhealthy obsession with black... Dave his name is...");
+        ~chatplayer("<p,confused>I can't quite remember what I did to protect him...");
+    case 6 : ~chatplayer("<p,quiz>Just remind me again how I managed to unfreeze Skrach?");
+    case 7 : ~chatplayer("<p,confused>That white knight... Sir Amik Varze... I can't quite remember how I saved him...");
+    case 8 : ~chatplayer("<p,confused>The monkey king... However did I save him from the culinaromancer...?");
+}
+if (~hundred_inspected($who) = false) {
+    if ($who = 2) ~chatnpc_specific("Aris", hundred_aris, "<p,angry>Ask me how to protect them first, otherwise you will cause a time paradox! I'm keeping an eye on you, you know!");
+    else ~chatnpc_specific("Aris", hundred_aris, "<p,angry>Ask me how to protect him first, otherwise you will cause a time paradox! I'm keeping an eye on you, you know!");
+    return;
+}
+switch_int ($who) {
+    case 1 :
+        ~chatnpc("<p,neutral>The dwarf? Oh, yeah, I think that was an easy one, didn't you say?");
+        ~chatplayer("<p,confused>I did? Er, I did.");
+        ~chatnpc("<p,neutral>You went to see his dad in the tunnels under white wolf mountain, and then got some rock cakes, if I remember rightly.");
+    case 2 : ~chatnpc("<p,neutral>Well, that was a weird one alright, you told me that they couldn't agree on what food they liked, so you ended up just mushing a bunch of stuff together somehow which seemed to do the trick.");
+    case 3 : @hundred_cook_fishcakes;
+    case 4 :
+        ~chatnpc("<p,neutral>Oh, you told me that that crazy wizard in the wizards' tower helped you with that.");
+        ~chatplayer("<p,quiz>That crazy wizard at the wizards' tower? Was I not any more specific than that?");
+        ~chatnpc("<p,neutral>No, not really. I think you might have mentioned the name Traiborn though.");
+    case 5 :
+        ~chatnpc("<p,happy>Oh yeah! I didn't understand that one myself, but apparently you went and asked him how he likes his stew, then made him remember it after he'd tasted it!");
+        ~chatplayer("<p,confused>Uh... what?");
+        ~chatnpc("<p,neutral>Yeah, I didn't understand it either, but you mentioned something about demonic incursions and evil cats too!");
+    case 6 :
+        ~chatnpc("<p,neutral>Certainly. Everyone knows that Skrach loves Jubbly Chompy, preferably roasted on a spit! The bird's carcass is so big, it can't be cooked any other way.");
+        ~chatplayer("<p,quiz>And how do I get one of those?");
+        ~chatnpc("<p,neutral>I wouldn't know much about that, but I believe you talked to Rantz quite a bit over in the Feldip hills. Apparently, he got you to do him quite a few favours before you actually got the Jubbly.");
+    case 7 :
+        ~chatplayer("<p,neutral>...but it was something to do with creme brulee supreme...");
+        ~chatnpc("<p,happy>Ah yes! Why, I was so impressed with that recipe you created that I memorised it!");
+        ~chatplayer("<p,quiz>Ah, you did, did you? I don't suppose you could refresh my memory about that?");
+        ~chatnpc("<p,neutral>But of course! It was an unusual dish, an unusual dish indeed! First you blend together, in a pot, some milk and some cream. Then add cornflour to the mixture.");
+        ~chatplayer("<p,quiz>Cornflour? How do I... er, how DID I make that then?");
+        ~chatnpc("<p,neutral>Oh, you told me you used sweetcorn in a mill!");
+        ~chatplayer("<p,quiz>Really? Weird. Okay, what did I do then?");
+        ~chatnpc("<p,neutral>Then you travelled to the Kharazi Jungle and searched the plants there until you found a vanilla stick, which was then added to the mixture.");
+        ~chatnpc("<p,neutral>After that you told me that you sought out and killed the fearsome Evil Chicken, to get one of his eggs, which was then mixed with the other ingredients.");
+        ~chatnpc("<p,neutral>Finally you made some cinnamon by grinding the branch of a Dramen Tree and sprinkled it on top of the creme brulee.");
+        ~chatplayer("<p,neutral>Sounds easy enough so far. Er, I mean it was easy enough up to that point.");
+        ~chatnpc("<p,happy>Yes, but then came the impressive part!");
+        ~chatnpc("<p,neutral>Apparently, a creme brulee supreme needs to be flambed at exactly the right temperature, and the only fire that is hot enough to do this is the breath of a dragon. Luckily, while killing black dragons near the Evil Chicken's lair, you came across a method of forcing a dragon to your will so that it would complete the dish, which you then used to protect Sir Amik!");
+        ~chatplayer("<p,quiz>I definitely said that I had to kill some black dragons to do that?");
+        ~chatnpc("<p,neutral>Oh yes. You were quite adamant about it. Specifically black dragons. Specifically near the Evil Chicken's lair.");
+    case 8 : ~chatnpc("<p,neutral>Well, it was something that sounded ABSOLUTELY DISGUSTING that you picked up on Ape Atoll...");
+}
+~chatplayer("<p,neutral>Oh yeah... I remember now...");
+@hundred_cook_more;
+
+[label,hundred_cook_more]
+~chatnpc("<p,quiz>Did you want a reminder on any other of your brave exploits?");
+@hundred_cook_remind(0);
+
+[label,hundred_cook_fishcakes]
+~chatplayer("<p,neutral>I can't quite remember how I managed to save that pirate...");
+~chatnpc("<p,neutral>The pirate? Yes, you used fishcakes didn't you?");
+~chatplayer("<p,confused>I did? Er... I mean I did.");
+~chatplayer("<p,neutral>Out of interest, could you just help me quickly with that?");
+~chatplayer("<p,quiz>Can you tell me how to make fishcakes?");
+~chatnpc("<p,quiz>Fishcakes? As in with fish eggs and fish milk?");
+~chatplayer("<p,neutral>Don't be silly, that would never work.");
+~chatplayer("<p,quiz>Can you check to see if there is a recipe for them?");
+~chatnpc("<p,neutral>Of course.");
+mes("The Chef checks one of his cookbooks.");
+~chatnpc("<p,happy>Found it!");
+~chatnpc("<p,neutral>Apparently you need Ground Cod, Ground Kelp, Ground Giant Crab Meat and Breadcrumbs.");
+if (%100_pirate_quest_var < ^hundred_pirate_recipe) %100_pirate_quest_var = ^hundred_pirate_recipe;
+@hundred_cook_fishcake_q(false);
+
+[label,hundred_cook_fishcake_q](boolean $asked)
+// ours: six choices don't fit one menu, so the last two are under More...
+def_int $choice = ~p_choice5("Where do I get Ground Cod?", 1, "Where do I get Ground Kelp?", 2, "Where do I get Ground Giant Crab Meat?", 3, "Where do I get Breadcrumbs?", 4, "More...", 5);
+if ($choice = 5) {
+    if ($asked = true) $choice = add(~p_choice2("What do I do with all of it?", 1, "Thanks!", 2), 4);
+    else $choice = 5;
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>Where do I get Ground Cod?");
+        %hundred_pirate_cod_intro = 1;
+        ~chatnpc("<p,neutral>Well, if you use a pestle and mortar on a raw cod that will grind it up nicely.");
+    case 2 :
+        ~chatplayer("<p,quiz>Where do I get Ground kelp?");
+        ~chatnpc("<p,neutral>There are apparently some kelp patches off the coast near Rimmington. Murphy knows more about that.");
+        ~chatnpc("<p,neutral>As for the grinding part, all you have to do is use a pestle and mortar on it, that ought to get it sorted.");
+        ~chatnpc("<p,neutral>Murphy also used to bring in Giant Crabs occasionally. He hasn't had any of them in for a while though.");
+        ~chatnpc("<p,neutral>You had best go and have a word with him to see if he can tell you what happened.");
+        %hundred_pirate_meat_intro = 1;
+        %hundred_pirate_kelp_intro = 1;
+    case 3 :
+        ~chatplayer("<p,quiz>Where do I get Ground Giant Crab meat?");
+        ~chatnpc("<p,neutral>Well, Murphy used to bring in Giant Crabs occasionally. He hasn't had any of them in for a while though.");
+        ~chatnpc("<p,neutral>You had best go and have a word with him to see if he can tell you what happened.");
+        ~chatnpc("<p,neutral>Oh, and there are apparently some kelp patches off the coast near Rimmington. Murphy knows about that too.");
+        ~chatnpc("<p,neutral>As for the grinding part, all you have to do is use a pestle and mortar on it, that ought to get it sorted.");
+        %hundred_pirate_meat_intro = 1;
+        %hundred_pirate_kelp_intro = 1;
+    case 4 :
+        ~chatplayer("<p,quiz>Where do I get Breadcrumbs?");
+        %hundred_pirate_crumb_intro = 1;
+        ~chatnpc("<p,neutral>That's easy, all you do is use a knife to slice the bread up into tiny, tiny chunks.");
+    case 5 :
+        ~chatplayer("<p,quiz>What did I do with all of it?");
+        ~chatnpc("<p,neutral>I'm not entirely sure. What am I, an encyclopedia?");
+        ~chatnpc("<p,neutral>I'll have a look through my cookbook while I wait for the ingredients.");
+        ~chatplayer("<p,neutral>Ok, I'll go out and get all of the stuff and bring it to you.");
+        ~chatnpc("<p,neutral>Ok.");
+        ~chatnpc("<p,quiz>Is there anything else you need to know?");
+    case 6 :
+        ~chatplayer("<p,happy>Thanks!");
+        ~chatnpc("<p,happy>No problem!");
+        return;
+}
+@hundred_cook_fishcake_q(true);
