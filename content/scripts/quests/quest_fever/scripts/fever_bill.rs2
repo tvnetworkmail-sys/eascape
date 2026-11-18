@@ -1,0 +1,188 @@
+// EASCape: Cabin Fever: Bill Teach on the Adventurous during the battle, the trip to Mos
+// Le'Harmless and the quest's end. Words from the owner's video; lines marked "ours" have none.
+
+[opnpc1,fever_quest_ship_teach]
+switch_int (%fever_quest) {
+    case ^fever_cannon_task : @fever_cannon_orders;
+    case ^fever_cannon_done :
+        ~chatplayer("<p,happy>Arr! I've blown their cannon to smithereens Cap'n!");
+        ~chatnpc("<p,angry>Yer not a pirate yet lad, so stop talkin' like that!");
+        ~chatnpc("<p,neutral>Well, ye've sorted out their cannon, but we're takin' on water.");
+        ~chatnpc("<p,neutral>Go below deck and sort out the leaks.");
+        ~chatplayer("<p,quiz>Will smearing swamp paste on the holes do?");
+        ~chatnpc("<p,neutral>No lad, these holes were made by cannon fire.");
+        ~chatnpc("<p,neutral>Ye'll need to get some planks from the repair locker and tack them in place. Then ye smear swamp paste over the planks to seal the hole.");
+        %fever_quest = ^fever_holes_task;
+        ~chatplayer("<p,happy>Arr! I'll have this ship ship-shape in no time! Arr!");
+        ~chatnpc("<p,angry>Wait 'till we make landfall before ye start actin' like a pirate!");
+    case ^fever_holes_task :
+        ~chatplayer("<p,confused>Errr...I may well have been caught up in the whole 'pirate' thing, and I can't seem to remember what I need to do now...");
+        ~chatnpc("<p,angry>Zounds...");
+        ~chatnpc("<p,neutral>Ye'll need to get some planks from the repair locker and tack them in place. Then ye smear swamp paste over the planks to seal the hole.");
+        ~chatplayer("<p,happy>Arr! I be rememberin' now Cap'n!");
+        ~chatnpc("<p,sad>This is what I get when I ask random strangers for help...");
+    case ^fever_holes_done :
+        ~chatplayer("<p,happy>The holes be plugged Cap'n!");
+        ~chatnpc("<p,quiz>Nailed shut and waterproofed?");
+        ~chatplayer("<p,happy>Aye!");
+        ~chatnpc("<p,happy>Good work lad.");
+        ~chatnpc("<p,neutral>If ye weren't set on yellin' 'Arr!' all the time I'd think ye was a born sailor.");
+        ~chatnpc("<p,neutral>Regardless, those cowardly dogs seem a little too scared to swing over.");
+        ~chatnpc("<p,neutral>Why not pay them a visit and go plunder their hold?");
+        ~chatplayer("<p,happy>Arr! I'll plunder their booty and no mistake!");
+        ~chatnpc("<p,angry>Gadzooks...");
+        %fever_quest = ^fever_plunder_task;
+        @fever_plunder_orders;
+    case ^fever_plunder_task :
+        @fever_plunder_orders; // ours: the orders again
+    case ^fever_plunder_done :
+        ~chatnpc("<p,angry>I warn ye, lad, if the first word out of yer mouth is 'Arr' I'll be wearing yer spleen as a novelty hat before ye reach the second 'r'!");
+        ~chatplayer("<p,happy>Ahoy shipmate!");
+        ~chatnpc("<p,sad>I should have seen that comin'");
+        ~chatplayer("<p,happy>Cap'n! I've put ten loads of plunder in the chest, in the hold!");
+        ~chatplayer("<p,quiz>Are we all done now?");
+        ~chatnpc("<p,neutral>Not yet! Let's give em a blast with the cannon before we leave!");
+        ~chatplayer("<p,confused>How, the cannon is broken.");
+        ~chatnpc("<p,neutral>Alright lad, try and stay with me on this one.");
+        ~chatnpc("<p,neutral>See, there is a secret technique for making things that be broken right again.");
+        ~chatnpc("<p,neutral>We call this magical process...repairin'.");
+        ~chatplayer("<p,angry>I know what repairing is!");
+        %fever_quest = ^fever_repair_task;
+        @fever_repair_orders;
+    case ^fever_repair_task :
+        if (%fever_cannon = ^fever_cannon_broken | %fever_cannon = ^fever_cannon_barrelless) @fever_repair_orders;
+        // ours: the video doesn't show Bill telling you how to load it (its player's own note:
+        // "add gunpowder > ramrod > cannonball > fuse > fire")
+        ~chatplayer("<p,happy>The cannon's ready again Cap'n!");
+        ~chatnpc("<p,neutral>Then load her up. Clean her out with a Ramrod from the gun locker, pour in some powder from the barrel and pack it down with the Ramrod.");
+        ~chatnpc("<p,neutral>Then roll in a canister round, put a fuse in her and fire at their crew.");
+    case ^fever_crew_hit :
+        ~chatplayer("<p,happy>Well, that seems to have showed them Cap'n!");
+        ~chatnpc("<p,happy>Great! This ordeal will soon be over!");
+        ~chatplayer("<p,happy>Aye Cap'n, we'll beat these pirates yet!");
+        ~chatnpc("<p,confused>Pirates?");
+        ~chatnpc("<p,neutral>Yes, that ordeal too!");
+        ~chatnpc("<p,neutral>Now lad, we'll send them to the bottom of the sea.");
+        ~chatplayer("<p,quiz>How?");
+        %fever_quest = ^fever_sink_task;
+        @fever_sink_orders;
+    case ^fever_sink_task : @fever_sink_orders;
+    case ^fever_sunk : @fever_ending;
+    case default : ~chatnpc("<p,neutral>I'll be on deck if ye need me."); // the video's words
+}
+
+[label,fever_cannon_orders]
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,angry>Arr! They seek te hole the ship! Go and take care of their cannon.");
+~chatplayer("<p,quiz>How?");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>If ye grab some fuse from the gun locker, and a rope from the repair locker, then ye can use the rope on the sails to swing over and deal with their cannon.");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>Just take the fuse, use it on the barrel of gunpowder next to the cannon, and then light it with something.");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>A lantern, a tinderbox, it doesn't matter.");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>End of problem.");
+~chatplayer("<p,quiz>How do I get back?");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>They have masts as well don't they?");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>Just do the same trick using some rope on their sails and swing over.");
+~chatplayer("<p,happy>Arr! I'll hop to it Cap'n!");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,angry>Stop doin' that!");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,angry>Ye ain't a pirate yet by a long shot!");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>I'll be on deck if ye need me.");
+~chatplayer("<p,neutral>Now to take care of that cannon!");
+
+[label,fever_plunder_orders]
+~chatnpc("<p,neutral>Look, just go below their decks and search their hold for Plunder.");
+~chatnpc("<p,neutral>Come back here and drop it in the chest in the hold.");
+~chatnpc("<p,neutral>Ye should be able to round up ten loads of the stuff if ye keep searchin' the hold, but it may take a while for the stuff to reappear.");
+~chatplayer("<p,happy>Aye aye Cap'n! One plunderin' comin' right up!");
+~chatnpc("<p,angry>I've been a pirate all me life and I've never heard anyone keep harpin' on like that!");
+~chatnpc("<p,angry>Stop it!");
+
+[label,fever_repair_orders]
+~chatplayer("<p,quiz>How do I repair the cannon?");
+~chatnpc("<p,neutral>Ye need to remove the old barrel, then replace it with a new one from the gun locker downstairs.");
+~chatplayer("<p,quiz>And then what?");
+~chatnpc("<p,neutral>I don't want to overload ye with too many details right now. Come tell me when the cannon is ready again.");
+
+[label,fever_sink_orders]
+~chatnpc("<p,neutral>Well, ye'll shoot holes in their hull with the cannon.");
+~chatnpc("<p,neutral>Essentially ye do what ye just did, but use a cannonball from the gun locker in the hold instead of the canister rounds.");
+~chatplayer("<p,happy>Arr! I'll sink them scurvy dogs!");
+~chatnpc("<p,angry>Again with the 'Arr!'...");
+~chatnpc("<p,neutral>Give it three tries and see if they sink, that many holes should do it.");
+
+// back to Port Phasmatys during the battle (ours: Bill sails you; the battle waits for you)
+[opnpc3,fever_quest_ship_teach]
+if (%fever_quest >= ^fever_sunk) @fever_ending;
+@fever_sail(^fever_port_deck);
+
+// ---------------------------------------------------------------- the end: Mama's bar on Mos Le'Harmless
+[label,fever_ending]
+~chatnpc("<p,happy>Let's head to the island!");
+if_close;
+~fade_out;
+p_delay(3);
+p_telejump(^fever_harmless_bar);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatnpc_specific("Mama", fever_cutscene_mama_la_fiette, "<p,shock>Bill? You look like you've been to Davey Jones' locker and back.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,sad>Oh, Miss La'Fiette, if only I were that lucky.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,sad>My crew deserted and I was stuck with an adventurer mannin' me ship.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,sad>He was as piratical as a bunch of Dwellberries...");
+~chatplayer("<p,angry>I am still here you know...");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Aye lad, I remember.");
+~chatnpc_specific("Mama", fever_cutscene_mama_la_fiette, "<p,neutral>I'll leave you two alone.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>All right...");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Ok <displayname>, yer now a pirate, but...");
+~chatplayer("<p,happy>Arr!");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,angry>BUT ye can't just go around talking like some pirate in a fancy play.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,angry>No self-respectin' pirate says 'Arr' that much!");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Well, except for Fancy Dan, but that be another story.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Here, have this book. It'll learn ye how to be a pirate.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Or at least learn ye te talk proper like one.");
+~chatplayer("<p,quiz>So all I have to do is read this book and I'm a pirate?");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Aye...that be all ye need te do.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Ye'll need that book if ye want te trade with some of the pirates round here.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>Outsiders tend not te understand them if ye catch me drift.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,happy>Anyway, I'd have been shark bait without ye.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,happy>If ye get a moment come see me fer yer share of the loot.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,neutral>I'm sure as soon as ye stop yellin' 'Arr!' ye'll make a great pirate.");
+~chatnpc_specific("Bill Teach", fever_cutscene_teach, "<p,happy>Thanks <displayname>. If ye need a lift back, just come see me.");
+~fever_complete;
+
+[proc,fever_complete]
+%fever_quest = ^fever_complete;
+%fever_given_book = 1;
+~fever_ship_reset;
+inv_del(inv, fever_fuse, 28);
+inv_del(inv, fever_rope, 28);
+inv_del(inv, fever_repair_plank, 28);
+inv_del(inv, fever_tack, 1000);
+inv_del(inv, fever_cannon, 28);
+inv_del(inv, fever_cannon_prod, 28);
+inv_del(inv, fever_cannister_load, 28);
+inv_del(inv, fever_cannon_ball, 28);
+inv_del(inv, fever_gunpowder, 28);
+inv_del(inv, fever_plunder, 28);
+if (inv_freespace(inv) > 0) inv_add(inv, fever_piracy_book, 1);
+else obj_add(coord, fever_piracy_book, 1, ^lootdrop_duration);
+stat_advance(smithing, 70000);
+stat_advance(crafting, 70000);
+stat_advance(agility, 70000);
+session_log(^log_adventure, "Quest complete: Cabin Fever");
+~send_quest_complete(questlist:fever, fever_piracy_book, 250, ^fever_questpoints, "You have completed Cabin Fever!", "2 Quest Points|The Little Book o' Piracy|7000 Smithing XP, 7000|Crafting XP and 7000 Agility|XP");
+
+// ---------------------------------------------------------------- Bill in Mama's bar afterwards
+// his share of the loot: 10,000 coins (the wikis); his words ours
+[opnpc1,fever_harmless_teach]
+if (%fever_quest < ^fever_complete) return;
+if (%fever_gold = 0) {
+    ~chatnpc("<p,happy>Ahoy, lad! Here be yer share of the loot."); // ours
+    if (inv_freespace(inv) = 0 & inv_total(inv, coins) = 0) {
+        ~mesbox("You don't have enough room in your inventory."); // ours
+        return;
+    }
+    %fever_gold = 1;
+    inv_add(inv, coins, 10000);
+    mes("Bill gives you 10,000 coins."); // ours
+    return;
+}
+@fever_bill_book;

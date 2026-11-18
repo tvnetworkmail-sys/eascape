@@ -1,0 +1,505 @@
+// EASCape: Cabin Fever on the Adventurous and the enemy ship (the cache's ships at 1812-1826,
+// 4815-4845; ours on the west, theirs on the east). Messages from the owner's video of the quest;
+// lines marked "ours" have no source. The cache's variables hold each player's ship.
+
+[proc,fever_on_quest]()(boolean)
+if (%fever_quest >= ^fever_cannon_task & %fever_quest < ^fever_complete) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the lockers
+[oploc1,fever_repair_locker] loc_change(fever_repair_locker_open, 100);
+[oploc2,fever_repair_locker_open] loc_change(fever_repair_locker, 100);
+[oploc1,fever_weapons_locker] loc_change(fever_weapons_locker_open, 100);
+[oploc2,fever_weapons_locker_open] loc_change(fever_weapons_locker, 100);
+
+// ours: the video's lockers show their stock in a window; here it is a menu
+[oploc1,fever_repair_locker_open]
+if (~fever_on_quest = false) {
+    mes("This locker is empty."); // ours
+    return;
+}
+switch_int (~p_choice5("Rope", 1, "Repair planks", 2, "Tacks", 3, "Swamp paste", 4, "Hammer", 5)) {
+    case 1 : ~fever_take(fever_rope, 1, "You take a coil of rope.");
+    case 2 :
+        if (%fever_quest ! ^fever_holes_task) {
+            mes("You do not need any Repair Planks right now."); // ours, as the gun locker's
+            return;
+        }
+        if (inv_freespace(inv) < 2) {
+            mes("You do not have enough space for that.");
+            return;
+        }
+        // a set is two planks, enough for one hole (ours)
+        ~fever_take(fever_repair_plank, 2, "You take a set of repair planks.");
+    case 3 :
+        if (%fever_quest ! ^fever_holes_task) {
+            mes("You do not need any Tacks right now."); // ours
+            return;
+        }
+        if (inv_total(inv, fever_tack) >= 30) {
+            mes("You already have enough tacks.");
+            return;
+        }
+        // a handful is ten, enough for one hole (ours)
+        ~fever_take(fever_tack, 10, "You take a handful of tacks.");
+    case 4 :
+        if (%fever_quest ! ^fever_holes_task) {
+            mes("You do not need any Swamp Paste right now."); // ours
+            return;
+        }
+        if (inv_total(inv, swamppaste) >= 3) {
+            mes("You already have enough swamp paste.");
+            return;
+        }
+        ~fever_take(swamppaste, 1, "You take a load of swamp paste.");
+    case 5 :
+        if (inv_total(inv, hammer) > 0) {
+            mes("You already have a hammer."); // ours
+            return;
+        }
+        ~fever_take(hammer, 1, "You take a hammer.");
+}
+
+[oploc1,fever_weapons_locker_open]
+if (~fever_on_quest = false) {
+    mes("This locker is empty."); // ours
+    return;
+}
+def_boolean $working = false;
+if (%fever_quest >= ^fever_repair_task & %fever_cannon ! ^fever_cannon_broken & %fever_cannon ! ^fever_cannon_barrelless) $working = true;
+switch_int (~p_choice5("Fuse", 1, "Cannon barrel", 2, "Ramrod", 3, "Canister round", 4, "Cannon ball", 5)) {
+    case 1 :
+        if ((%fever_quest = ^fever_cannon_task & %fever_enemy_cannon = 0 & %fever_gunpowder_barrel = 0) | $working = true) {
+            if (inv_total(inv, fever_fuse) > 0) {
+                mes("You already have some Fuse."); // ours
+                return;
+            }
+            ~fever_take(fever_fuse, 1, "You take some fuse.");
+            return;
+        }
+        mes("You do not need any Fuse right now.");
+    case 2 :
+        if (inv_total(inv, fever_cannon) > 0) {
+            mes("You already have a cannon barrel.");
+            return;
+        }
+        if (%fever_quest >= ^fever_repair_task & (%fever_cannon = ^fever_cannon_broken | %fever_cannon = ^fever_cannon_barrelless)) {
+            ~fever_take(fever_cannon, 1, "You take a cannon barrel.");
+            return;
+        }
+        mes("You do not need a cannon barrel right now."); // ours, as the others
+    case 3 :
+        if ($working = false) {
+            mes("You do not need a Ramrod right now.");
+            return;
+        }
+        if (inv_total(inv, fever_cannon_prod) > 0) {
+            mes("You already have a Ramrod."); // ours
+            return;
+        }
+        ~fever_take(fever_cannon_prod, 1, "You take a Ramrod."); // ours
+    case 4 :
+        if ($working = false | %fever_quest ! ^fever_repair_task) {
+            mes("You do not need a canister round right now.");
+            return;
+        }
+        if (inv_total(inv, fever_cannister_load) > 0) {
+            mes("You already have a canister round."); // ours
+            return;
+        }
+        ~fever_take(fever_cannister_load, 1, "You take a canister round."); // ours
+    case 5 :
+        if ($working = false | %fever_quest ! ^fever_sink_task) {
+            mes("You do not need a cannon ball right now.");
+            return;
+        }
+        ~fever_take(fever_cannon_ball, 1, "You take a cannon ball.");
+}
+
+[proc,fever_take](namedobj $obj, int $count, string $message)
+if (inv_freespace(inv) < 1 & (oc_stackable($obj) = false | inv_total(inv, $obj) = 0)) {
+    mes("You do not have enough space for that.");
+    return;
+}
+inv_add(inv, $obj, $count);
+mes($message);
+
+// our powder barrel, by the cannon
+[oploc1,fever_your_gunpowder_barrel]
+if (%fever_quest < ^fever_repair_task | %fever_quest >= ^fever_sunk | %fever_cannon = ^fever_cannon_broken | %fever_cannon = ^fever_cannon_barrelless) {
+    mes("You do not need any gunpowder right now."); // ours, as the gun locker's
+    return;
+}
+if (inv_total(inv, fever_gunpowder) > 0) {
+    mes("You already have some gunpowder."); // ours
+    return;
+}
+~fever_take(fever_gunpowder, 1, "You take some gunpowder");
+
+// ---------------------------------------------------------------- the rigging
+[oploc1,fever_climbing_net]
+anim(human_climbing, 0);
+p_delay(1);
+if (coordx(coord) < 1820) p_telejump(^fever_our_rigging);
+else p_telejump(^fever_enemy_rigging);
+mes("You climb up the net.");
+
+[oploc1,fever_climb_down_location]
+anim(human_climbing_down, 0);
+p_delay(1);
+if (coordx(coord) < 1820) p_telejump(^fever_our_deck);
+else p_telejump(^fever_enemy_deck);
+mes("You climb down the net.");
+
+// a rope on the sails swings you across to the other ship (42 Agility). Ours: how often you fall
+// in, and that you land on the other ship's deck either way.
+[oplocu,fever_sail1_hoistedl_climb]
+if (last_useitem ! fever_rope & last_useitem ! rope) {
+    mes("Nothing interesting happens.");
+    return;
+}
+def_obj $rope = last_useitem;
+if (~fever_on_quest = false) {
+    mes("You have no reason to swing over there."); // ours
+    return;
+}
+if (stat(agility) < 42) {
+    ~mesbox("You need an Agility level of 42 to swing across."); // ours
+    return;
+}
+inv_del(inv, $rope, 1);
+anim(fever_rope_tie, 0);
+mes("You attach a rope to the sails.");
+p_delay(1);
+anim(fever_player_rope_swing_start, 0);
+p_delay(2);
+def_coord $to = ^fever_enemy_deck;
+if (coordx(coord) > 1819) $to = ^fever_our_deck;
+def_int $fail = calc(70 - stat(agility));
+if ($fail < 10) $fail = 10;
+if (random(100) < $fail) {
+    p_telejump($to);
+    anim(fever_player_rope_swing_land_fail, 0);
+    mes("You fall in the water with a splash!");
+    mes("You have to swim across, which puts a considerable drain on your energy.");
+    healenergy(calc(0 - runenergy / 2));
+    return;
+}
+p_telejump($to);
+anim(fever_player_rope_swing_land_success, 0);
+mes("You make it across ok!");
+mes("The rope falls off the mast! Clearly your knots are sub-sailor standard.");
+
+// ---------------------------------------------------------------- their cannon
+[oplocu,fever_multi_gunpowder_barrel]
+if (last_useitem = fever_fuse) {
+    if (%fever_quest ! ^fever_cannon_task | %fever_gunpowder_barrel ! 0) {
+        mes("Nothing interesting happens.");
+        return;
+    }
+    inv_del(inv, fever_fuse, 1);
+    %fever_gunpowder_barrel = 2;
+    %fever_fuse_1 = 1;
+    %fever_fuse_2 = 1;
+    mes("You attach the fuse to the barrel.");
+    return;
+}
+if (~fever_lights(last_useitem) = true & %fever_gunpowder_barrel = 2) {
+    mes("You are a little too close. Try lighting the end of the fuse.");
+    return;
+}
+mes("Nothing interesting happens.");
+
+[oploc1,fever_multi_gunpowder_barrel] mes("You don't need any gunpowder from their barrel."); // ours
+
+[oplocu,fever_multi_fuse_1] @fever_light_fuse;
+[oplocu,fever_multi_fuse_2] @fever_light_fuse;
+
+[label,fever_light_fuse]
+if (~fever_lights(last_useitem) = false | %fever_gunpowder_barrel ! 2) {
+    mes("Nothing interesting happens.");
+    return;
+}
+mes("You light the fuse...");
+spotanim_map(fever_fuse_light, loc_coord, 0, 0);
+p_delay(3);
+spotanim_map(fever_explosion, 1_28_75_30_31, 0, 0);
+%fever_gunpowder_barrel = 1;
+%fever_enemy_cannon = 1;
+%fever_fuse_1 = 0;
+%fever_fuse_2 = 0;
+if (%fever_quest = ^fever_cannon_task) %fever_quest = ^fever_cannon_done;
+mes("...and destroy the barrel and the cannon.");
+
+// "A lantern, a tinderbox, it doesn't matter."
+[proc,fever_lights](obj $obj)(boolean)
+switch_obj ($obj) {
+    case tinderbox, fever_tinderbox, candle_lantern_lit, candle_lantern_black_lit, oil_lantern_lit, bullseye_lantern_lit, lit_candle, lit_black_candle : return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- the holes in our hold (45 Crafting)
+[oploc1,fever_multi_hole_1] @fever_hole(1);
+[oploc1,fever_multi_hole_2] @fever_hole(2);
+[oploc1,fever_multi_hole_3] @fever_hole(3);
+[oplocu,fever_multi_hole_1] @fever_hole(1);
+[oplocu,fever_multi_hole_2] @fever_hole(2);
+[oplocu,fever_multi_hole_3] @fever_hole(3);
+
+[label,fever_hole](int $hole)
+def_int $state = ~fever_hole_state($hole);
+if ($state = 2 | %fever_quest < ^fever_holes_task) return;
+if (stat(crafting) < 45) {
+    ~mesbox("You need a Crafting level of 45 to repair the hull."); // ours
+    return;
+}
+if ($state = 0) {
+    if (inv_total(inv, fever_repair_plank) < 2) {
+        mes("You need 2 Repair Planks to repair this hole.");
+        return;
+    }
+    if (inv_total(inv, fever_tack) < 10) {
+        mes("You need 10 Tacks to repair this hole."); // ours
+        return;
+    }
+    if (inv_total(inv, hammer) < 1) {
+        mes("You need a Hammer to repair this hole.");
+        return;
+    }
+    anim(fever_nail_plank, 0);
+    p_delay(2);
+    inv_del(inv, fever_repair_plank, 2);
+    inv_del(inv, fever_tack, 10);
+    ~fever_set_hole($hole, 1);
+    %fever_holes_patched = calc(%fever_holes_patched + 1);
+    mes("You nail the Planks over the hole!");
+    return;
+}
+if (inv_total(inv, swamppaste) < 1) {
+    mes("You need Swamp Paste to waterproof this hole.");
+    return;
+}
+anim(human_pickupfloor, 0);
+p_delay(1);
+inv_del(inv, swamppaste, 1);
+~fever_set_hole($hole, 2);
+%fever_holes_proofed = calc(%fever_holes_proofed + 1);
+mes("You smear the Swamp Paste over the hole!");
+if (%fever_hole_1 = 2 & %fever_hole_2 = 2 & %fever_hole_3 = 2 & %fever_quest = ^fever_holes_task) %fever_quest = ^fever_holes_done;
+
+[proc,fever_hole_state](int $hole)(int)
+if ($hole = 1) return(%fever_hole_1);
+if ($hole = 2) return(%fever_hole_2);
+return(%fever_hole_3);
+
+[proc,fever_set_hole](int $hole, int $state)
+if ($hole = 1) %fever_hole_1 = $state;
+else if ($hole = 2) %fever_hole_2 = $state;
+else %fever_hole_3 = $state;
+
+// ---------------------------------------------------------------- plunder from their hold
+[oploc1,fever_multi_crate] @fever_plunder(1, "crate");
+[oploc1,fever_multi_chest] @fever_plunder(2, "chest");
+[oploc1,fever_multi_barrel] @fever_plunder(3, "barrel");
+
+[label,fever_plunder](int $which, string $name)
+if (%fever_quest ! ^fever_plunder_task) {
+    mes("This <$name> is empty."); // the video's chest; the crate and barrel ours
+    return;
+}
+def_int $state = %fever_crate;
+if ($which = 2) $state = %fever_chest;
+else if ($which = 3) $state = %fever_barrel;
+if ($state = 1) {
+    mes("This <$name> has been recently plundered.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You do not have enough space for that.");
+    return;
+}
+anim(human_pickuptable, 0);
+inv_add(inv, fever_plunder, 1);
+if ($which = 1) %fever_crate = 1;
+else if ($which = 2) %fever_chest = 1;
+else %fever_barrel = 1;
+mes("You find some plunder!");
+queue(fever_plunder_refill, ^fever_plunder_refill, $which);
+
+[queue,fever_plunder_refill](int $which)
+if ($which = 1) %fever_crate = 0;
+else if ($which = 2) %fever_chest = 0;
+else %fever_barrel = 0;
+
+[oploc1,fever_plunder_deposit]
+if (%fever_plunder_points = 1) {
+    mes("There is 1 load of plunder in the chest."); // ours
+    return;
+}
+mes("There are <tostring(%fever_plunder_points)> loads of plunder in the chest."); // ours
+
+[oploc2,fever_plunder_deposit]
+if (%fever_plunder_points >= ^fever_plunder_needed) {
+    mes("This chest is full of plunder.");
+    return;
+}
+def_int $have = inv_total(inv, fever_plunder);
+if ($have = 0) {
+    mes("You don't have any plunder."); // ours
+    return;
+}
+def_int $room = calc(^fever_plunder_needed - %fever_plunder_points);
+if ($have > $room) $have = $room;
+inv_del(inv, fever_plunder, $have);
+%fever_plunder_points = calc(%fever_plunder_points + $have);
+mes("You deposit as much plunder as you can.");
+if (%fever_plunder_points >= ^fever_plunder_needed) {
+    mes("This chest is full of plunder.");
+    if (%fever_quest = ^fever_plunder_task) %fever_quest = ^fever_plunder_done;
+}
+
+// ---------------------------------------------------------------- our cannon (50 Smithing; 40 Ranged
+// to aim it). Load it: clean it with the Ramrod, then powder, the Ramrod, the shot, a fuse, and fire.
+[oploc1,fever_multi_cannon]
+switch_int (%fever_cannon) {
+    case ^fever_cannon_broken :
+        if (%fever_quest < ^fever_repair_task) {
+            mes("You have more pressing matters to deal with."); // ours
+            return;
+        }
+        if (stat(smithing) < 50) {
+            ~mesbox("You need a Smithing level of 50 to repair the cannon."); // ours
+            return;
+        }
+        anim(human_pickuptable, 0);
+        %fever_cannon = ^fever_cannon_barrelless;
+        mes("You remove the broken cannon barrel.");
+    case ^fever_cannon_barrelless : @fever_attach_barrel;
+    case ^fever_cannon_ready : @fever_fire;
+    case default :
+        mes("You inspect the cannon...");
+        if (%fever_cannon_clean = 1) mes("The cannon has been fired, but not cleaned with a Ramrod.");
+        else if (%fever_cannon_ammo ! 0) mes("The cannon is loaded and needs a fuse."); // ours
+        else if (%fever_cannon_powder = 1 & %fever_cannon_tamp = 0) mes("The powder needs packing with a Ramrod."); // ours
+        else if (%fever_cannon_powder = 1) mes("The cannon needs a shot loaded."); // ours
+        else mes("Overall everything seems fine.");
+}
+
+[oploc2,fever_multi_cannon]
+%fever_cannon_powder = 0;
+%fever_cannon_tamp = 0;
+%fever_cannon_ammo = 0;
+%fever_cannon_gonna_blow = 0;
+mes("You empty out the cannon."); // ours
+
+[label,fever_attach_barrel]
+if (inv_total(inv, fever_cannon) < 1) {
+    mes("You need a new barrel from the gun locker."); // ours
+    return;
+}
+if (stat(smithing) < 50) {
+    ~mesbox("You need a Smithing level of 50 to repair the cannon."); // ours
+    return;
+}
+anim(human_pickuptable, 0);
+inv_del(inv, fever_cannon, 1);
+%fever_cannon = ^fever_cannon_ok;
+%fever_cannon_clean = 1;
+mes("You attach the new barrel to the cannon base.");
+
+[oplocu,fever_multi_cannon]
+def_obj $used = last_useitem;
+if (%fever_cannon = ^fever_cannon_barrelless & $used = fever_cannon) @fever_attach_barrel;
+if (%fever_cannon ! ^fever_cannon_ok) {
+    mes("Nothing interesting happens.");
+    return;
+}
+switch_obj ($used) {
+    case fever_cannon_prod :
+        anim(fever_prod_cannon1, 0);
+        if (%fever_cannon_clean = 1) {
+            %fever_cannon_clean = 0;
+            mes("You clean out the cannon.");
+            return;
+        }
+        if (%fever_cannon_ammo ! 0) %fever_cannon_gonna_blow = 1;
+        else if (%fever_cannon_powder = 1) %fever_cannon_tamp = 1;
+        mes("You shove the Ramrod into the cannon barrel.");
+    case fever_gunpowder :
+        if (%fever_cannon_clean = 1) {
+            mes("You should clean out the cannon with a Ramrod first."); // ours
+            return;
+        }
+        if (%fever_cannon_powder = 1) {
+            mes("There is already powder in the cannon."); // ours
+            return;
+        }
+        anim(fever_load_cannon1, 0);
+        inv_del(inv, fever_gunpowder, 1);
+        %fever_cannon_powder = 1;
+        mes("You pour the powder into the cannon.");
+    case fever_cannister_load, fever_cannon_ball :
+        if (%fever_cannon_powder = 0 | %fever_cannon_tamp = 0 | %fever_cannon_ammo ! 0) {
+            mes("The cannon isn't ready for that yet."); // ours
+            return;
+        }
+        inv_del(inv, $used, 1);
+        if ($used = fever_cannister_load) {
+            anim(fever_load_cannon1_cannister, 0);
+            %fever_cannon_ammo = ^fever_ammo_canister;
+            mes("You roll the canister round into the cannon.");
+        } else {
+            anim(fever_load_cannon2, 0);
+            %fever_cannon_ammo = ^fever_ammo_ball;
+            mes("You roll the cannonball into the cannon.");
+        }
+    case fever_fuse :
+        if (%fever_cannon_ammo = 0) {
+            mes("The cannon isn't ready for that yet."); // ours
+            return;
+        }
+        inv_del(inv, fever_fuse, 1);
+        %fever_cannon_fuse = 1;
+        %fever_cannon = ^fever_cannon_ready;
+        mes("You ready the cannon for firing.");
+    case default : mes("Nothing interesting happens.");
+}
+
+[label,fever_fire]
+if (stat(ranged) < 40) {
+    ~mesbox("You need a Ranged level of 40 to aim the cannon."); // ours
+    return;
+}
+def_int $ammo = %fever_cannon_ammo;
+def_boolean $blow = false;
+if (%fever_cannon_gonna_blow = 1) $blow = true;
+%fever_cannon_powder = 0;
+%fever_cannon_tamp = 0;
+%fever_cannon_ammo = 0;
+%fever_cannon_fuse = 0;
+%fever_cannon_gonna_blow = 0;
+%fever_cannon_clean = 1;
+spotanim_map(fever_cannon_blast, loc_coord, 0, 0);
+if ($blow = true) {
+    // ours: packed after the shot, the barrel bursts
+    %fever_cannon = ^fever_cannon_broken;
+    spotanim_map(fever_explosion, loc_coord, 0, 0);
+    mes("The cannon bursts!");
+    return;
+}
+%fever_cannon = ^fever_cannon_ok;
+if ($ammo = ^fever_ammo_canister) {
+    mes("You fire the cannon at the crew!");
+    mes("You hit them!");
+    if (%fever_quest = ^fever_repair_task) %fever_quest = ^fever_crew_hit;
+    return;
+}
+mes("You shoot the cannon ball at the enemy ship!");
+// ours: how often a shot holes their hull
+if (%fever_quest ! ^fever_sink_task | random(100) >= calc(30 + stat(ranged) / 2)) {
+    mes("You fail to damage the hull.");
+    return;
+}
+%fever_holes_in_the_hull = calc(%fever_holes_in_the_hull + 1);
+mes("You hit their hull!"); // ours
+if (%fever_holes_in_the_hull >= 3) %fever_quest = ^fever_sunk;

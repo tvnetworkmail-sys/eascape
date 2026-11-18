@@ -316,6 +316,9 @@ if (%handsand_quest >= ^hand_complete) { // EASCape: The Hand in the Sand (quest
 if (%enakh_quest >= ^enakh_complete) { // EASCape: Enakhra's Lament (quest_enakh)
     $questpoints = add($questpoints, ^enakh_questpoints);
 }
+if (%fever_quest >= ^fever_complete) { // EASCape: Cabin Fever (quest_fever)
+    $questpoints = add($questpoints, ^fever_questpoints);
+}
 if (%lt_stage >= ^lt_complete) {
     $questpoints = add($questpoints, ^lt_questpoints);
 }
@@ -472,6 +475,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:zogre, %zogre, ^zogre_complete);
 ~send_quest_progress_colour(questlist:handsand, %handsand_quest, ^hand_complete); // EASCape
 ~send_quest_progress_colour(questlist:enakh, %enakh_quest, ^enakh_complete); // EASCape
+~send_quest_progress_colour(questlist:fever, %fever_quest, ^fever_complete); // EASCape: Cabin Fever
 ~send_quest_progress_colour(questlist:lost_tribe, %lt_stage, ^lt_complete);
 ~send_quest_progress_colour(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
 ~send_quest_progress_colour(questlist:rd, %rd_main, ^recruitmentdrive_complete); // EASCape: Recruitment Drive (quest_rd)

@@ -1,0 +1,124 @@
+// EASCape: Mos Le'Harmless (Cabin Fever, 7 February 2006). Its pirates talk in a slang outsiders
+// can't follow (the wikis: you need the Book o' piracy to understand them and to trade); without
+// the book they all give this fixed script, which is Two Feet Charley's from 2009scape
+// (CharleyDialogue.kt). Shops from the 727 cache. Lines marked "ours" have no source.
+
+[label,fever_pirate_slang]
+~chatplayer("<p,happy>Hello!");
+~chatnpc("<p,happy>Arr? Be ye wantin' te go on account with our gang o' fillibusters?");
+~chatnpc("<p,happy>The powder monkey be takin' a caulk after gettin' rowdy on bumboo, so there be plenty of room for ye.");
+~chatplayer("<p,confused>Riiiiight...");
+~chatplayer("<p,neutral>I'll just be over here if you need me.");
+
+[proc,fever_has_book]()(boolean)
+if (inv_total(inv, fever_piracy_book) > 0) return(true);
+return(false);
+
+// the shopkeepers
+[apnpc1,fever_pirate_two_feet_charley]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@fever_charley;
+[opnpc1,fever_pirate_two_feet_charley] @fever_charley;
+
+[label,fever_charley]
+if (~fever_has_book = false) @fever_pirate_slang;
+~chatnpc("<p,happy>I got fish, you got gold?");
+switch_int (~p_choice3("Yes.", 1, "Yes, but I don't want your fish.", 2, "What happened to your legs?", 3)) {
+    case 1 :
+        ~chatplayer("<p,happy>Yes.");
+        ~openshop_activenpc;
+    case 2 :
+        ~chatplayer("<p,happy>Yes, but I don't want your fish.");
+        ~chatnpc("<p,happy>Then what are ye doin' in a fish shop? Looking fer work?");
+        ~chatplayer("<p,happy>Possibly, do you have any quests?");
+        ~chatnpc("<p,quiz>I dunno, I haven't gone through the last catch yet. What sort of a fish is it?");
+        ~chatplayer("<p,happy>A quest isn't a type of fish!");
+        ~chatnpc("<p,happy>Then I don't have any, and yer wastin' my time!");
+    case 3 :
+        ~chatplayer("<p,quiz>What happened to your legs?");
+        ~chatnpc("<p,happy>Ye wanna know what happened to my legs?");
+        ~chatnpc("<p,happy>Yer too much of a lilly-livered, hat wearin' landlubber to know what happened to my legs!");
+        ~chatplayer("<p,happy>No I'm not! I've seen some freaky stuff! I can take it!");
+        ~chatnpc("<p,happy>All right, lad, since yer so insistent, I'll tell ye.");
+        ~chatnpc("<p,happy>See, I was clingin' onto a barrel, me ship havin' just had an encounter with this albatross.");
+        ~chatnpc("<p,happy>The sea was thrashin' and wild, but not so wild that I didn't see the fins of some sharks closin' in on me.");
+        ~chatnpc("<p,happy>I managed to yank a sliver of wood from the barrel just as one of them grabbed me from below, but I slipped down the things throat by about two feet before I managed te kill it.");
+        ~chatplayer("<p,happy>How did you survive?");
+        ~chatnpc("<p,happy>A passin' ship saw the sharks and knew there would be survivors in the water. They sent a longboat and picked me up, but not before the sharks had taken off my legs.");
+        ~chatnpc("<p,happy>And that lad is why they call me two feet Charley, because they found me jammed two feet down a shark's throat.");
+        ~chatplayer("<p,sad>I think I'm gonna be sick...");
+        ~chatnpc("<p,happy>I knew ye couldn't handle the truth!");
+}
+[opnpc3,fever_pirate_two_feet_charley] @fever_shop;
+[apnpc3,fever_pirate_two_feet_charley] @fever_shop_ap;
+
+// ours: with the book the others just do business
+[opnpc1,fever_smithing_smith] @fever_shop;
+[opnpc3,fever_smithing_smith] @fever_shop;
+[opnpc1,fever_harpoon_joe] @fever_shop;
+[opnpc3,fever_harpoon_joe] @fever_shop;
+[opnpc1,fever_dodgy_mike] @fever_shop;
+[opnpc3,fever_dodgy_mike] @fever_shop;
+// they stand behind their counters
+[apnpc1,fever_smithing_smith] @fever_shop_ap;
+[apnpc3,fever_smithing_smith] @fever_shop_ap;
+[apnpc1,fever_harpoon_joe] @fever_shop_ap;
+[apnpc3,fever_harpoon_joe] @fever_shop_ap;
+[apnpc1,fever_dodgy_mike] @fever_shop_ap;
+[apnpc3,fever_dodgy_mike] @fever_shop_ap;
+
+[label,fever_shop_ap]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@fever_shop;
+
+[label,fever_shop]
+if (~fever_has_book = false) @fever_pirate_slang;
+~openshop_activenpc;
+
+// Mama (2009scape MamaDialogue.java; ours: she has nothing to sell, as no source gives her stock)
+[apnpc1,fever_mama_la_fiette]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@fever_mama;
+[opnpc1,fever_mama_la_fiette] @fever_mama;
+[label,fever_mama]
+~chatnpc("<p,happy>Ar, darlin'! How might ya' Mama help ye?");
+if (~p_choice2("I'd like to see what you have", 1, "Nevermind", 2) = 1) {
+    ~chatnpc("<p,neutral>Mama's got nothin' fer ye today, darlin'."); // ours
+}
+[opnpc3,fever_mama_la_fiette] ~chatnpc("<p,neutral>Mama's got nothin' fer ye today, darlin'."); // ours
+
+// the island's pirates and its militia (ours: what they say once you can follow them)
+[opnpc1,_fever_pirate]
+if (~fever_has_book = false) @fever_pirate_slang;
+~chatnpc("<p,neutral>Ahoy, matey. Mind yer step in Mos Le'Harmless."); // ours
+
+// the bank (ours: the bankers serve anyone)
+[opnpc1,fever_banker_01] @talk_to_banker;
+[opnpc1,fever_banker_02] @talk_to_banker;
+[opnpc3,fever_banker_01] @openbank;
+[opnpc3,fever_banker_02] @openbank;
+[apnpc1,fever_banker_01] @fever_banker_ap(1);
+[apnpc1,fever_banker_02] @fever_banker_ap(1);
+[apnpc3,fever_banker_01] @fever_banker_ap(3);
+[apnpc3,fever_banker_02] @fever_banker_ap(3);
+
+[label,fever_banker_ap](int $op)
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+if ($op = 3) @openbank;
+@talk_to_banker;
+
+// the Book o' piracy (ours: the wikis show it opening on pirate slang, but give none of its words)
+[opheld1,fever_piracy_book]
+~mesbox("The book is full of pirate tales and pirate slang. With it you should be able to follow what the pirates of Mos Le'Harmless are saying."); // ours

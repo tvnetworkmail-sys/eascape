@@ -1,0 +1,38 @@
+// EASCape: test commands for Cabin Fever (quests/quest_fever).
+
+// ::feverpack - what you bring (a hammer, swamp paste and a tinderbox; the rest is in the ship's
+// lockers). It doesn't raise your levels (Agility 42, Crafting 45, Smithing 50, Ranged 40).
+[debugproc,feverpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(swamppaste, 3));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+~questpack_done("Cabin Fever", $banked);
+mes("::fevertele 1-4: Bill in Port Phasmatys, his ship there, the quest ship, Mos Le'Harmless.");
+
+// ::feverstage <n> - %fever_quest (10 started, 20 cannon, 30 cannon done, 40 holes, 50 holes done,
+// 60 plunder, 70 plunder done, 80 repair, 90 crew hit, 100 sink, 110 sunk, 140 complete).
+[debugproc,feverstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n >= ^fever_cannon_task) ~fever_ship_reset;
+%fever_quest = $n;
+if ($n >= ^fever_cannon_done) %fever_enemy_cannon = 1;
+if ($n >= ^fever_holes_done) {
+    %fever_hole_1 = 2;
+    %fever_hole_2 = 2;
+    %fever_hole_3 = 2;
+}
+if ($n >= ^fever_plunder_done) %fever_plunder_points = ^fever_plunder_needed;
+~send_quest_progress(questlist:fever, %fever_quest, ^fever_complete);
+mes("Cabin Fever: stage <tostring($n)>.");
+
+[debugproc,fevertele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(map_findsquare(^fever_port_bill, 0, 2, ^map_findsquare_lineofwalk));
+    case 2 : p_telejump(^fever_port_deck);
+    case 3 : p_telejump(^fever_our_deck);
+    case 4 : p_telejump(map_findsquare(^fever_harmless_bar, 0, 2, ^map_findsquare_lineofwalk));
+    case default : mes("::fevertele 1-4");
+}

@@ -1,0 +1,75 @@
+// EASCape: Cabin Fever's journal. The plunder lines are the owner's video's; the rest ours.
+[if_button,questlist:fever]
+def_int $s = %fever_quest;
+if ($s = ^fever_not_started) {
+    def_string $agility = "@dbl@Level 42 @dre@Agility";
+    if (stat_base(agility) >= 42) $agility = "@str@Level 42 Agility";
+    def_string $crafting = "@dbl@Level 45 @dre@Crafting";
+    if (stat_base(crafting) >= 45) $crafting = "@str@Level 45 Crafting";
+    def_string $smithing = "@dbl@Level 50 @dre@Smithing";
+    if (stat_base(smithing) >= 50) $smithing = "@str@Level 50 Smithing";
+    def_string $ranged = "@dbl@Level 40 @dre@Ranged";
+    if (stat_base(ranged) >= 40) $ranged = "@str@Level 40 Ranged";
+    def_string $hunt = "@dbl@Completed @dre@Pirate's Treasure";
+    if (%hunt = ^hunt_complete) $hunt = "@str@Completed Pirate's Treasure";
+    def_string $deal = "@dbl@Completed @dre@Rum Deal";
+    if (%deal_quest >= ^deal_complete) $deal = "@str@Completed Rum Deal";
+    def_string $peril = "@dbl@Completed @dre@Priest in Peril";
+    if (%priestperil >= ^priestperil_complete) $peril = "@str@Completed Priest in Peril";
+    ~quest_journal("Cabin Fever", "@dbl@I can start this quest by speaking to @dre@Bill Teach@dbl@ in|@dre@Port Phasmatys@dbl@.||@dbl@To complete this quest I will need:|<$agility>|<$crafting>|<$smithing>|<$ranged>|<$hunt>|<$deal>|<$peril>");
+    return;
+}
+if ($s >= ^fever_complete) {
+    if (%fever_gold = 0) {
+        ~quest_journal("Cabin Fever", "@str@I helped Bill Teach fight off a rival pirate captain and|@str@sail the Adventurous to Mos Le'Harmless. He gave me|@str@a Book o' piracy, and my share of the loot is waiting|@str@for me with him in Mama's bar.||@red@QUEST COMPLETE!");
+        return;
+    }
+    ~quest_journal("Cabin Fever", "@str@I helped Bill Teach fight off a rival pirate captain and|@str@sail the Adventurous to Mos Le'Harmless. He gave me|@str@a Book o' piracy and my share of the loot.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@I agreed to help Bill Teach sail the Adventurous home to|@str@Mos Le'Harmless.";
+if ($s = ^fever_started) {
+    $t = "@dbl@I agreed to help @dre@Bill Teach@dbl@ sail the Adventurous home to|@dbl@Mos Le'Harmless. She's at Port Phasmatys' @dre@east dock@dbl@.";
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+if ($s = ^fever_cannon_task) {
+    $t = append($t, "|@dbl@A rival ship attacked us. I need to swing over to it with a|@dre@rope@dbl@, fix a @dre@fuse@dbl@ to their powder barrel and light it.");
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+$t = append($t, "|@str@I blew up the enemy's cannon.");
+if ($s = ^fever_cannon_done) {
+    $t = append($t, "|@dbl@I should tell @dre@Bill@dbl@.");
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+if ($s = ^fever_holes_task) {
+    $t = append($t, "|@dbl@I need to nail @dre@repair planks@dbl@ over the three holes in our|@dbl@hold and waterproof them with @dre@swamp paste@dbl@.");
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+if ($s = ^fever_holes_done) {
+    $t = append($t, "|@dbl@I have repaired and waterproofed the holes in the hull. I|@dbl@should tell Bill in case he wants me to do anything else.");
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+$t = append($t, "|@str@I have repaired and waterproofed the holes in the hull. I|@str@should tell Bill in case he wants me to do anything else.");
+if ($s = ^fever_plunder_task) {
+    $t = append($t, "||@dbl@Bill wants me to take @red@ten@dbl@ loads of @red@Plunder@dbl@ from the enemy|@dbl@hold and put them into the chest in our hold.||@dbl@I have stashed @red@<tostring(%fever_plunder_points)>@dbl@ loads of plunder so far.");
+    ~quest_journal("Cabin Fever", $t);
+    return;
+}
+$t = append($t, "|@str@I stashed ten loads of plunder in our hold.");
+if ($s = ^fever_plunder_done) {
+    $t = append($t, "|@dbl@I should tell @dre@Bill@dbl@.");
+} else if ($s = ^fever_repair_task) {
+    $t = append($t, "|@dbl@I need to repair our @dre@cannon@dbl@ with a new barrel from the gun|@dbl@locker and fire a @dre@canister round@dbl@ at their crew.");
+} else if ($s = ^fever_crew_hit) {
+    $t = append($t, "|@str@I fired a canister round at their crew.|@dbl@I should tell @dre@Bill@dbl@.");
+} else if ($s = ^fever_sink_task) {
+    $t = append($t, "|@str@I fired a canister round at their crew.|@dbl@I need to blast @dre@three holes@dbl@ in their hull with @dre@cannon balls@dbl@.");
+} else {
+    $t = append($t, "|@str@I sank the enemy ship.|@dbl@I should tell @dre@Bill@dbl@.");
+}
+~quest_journal("Cabin Fever", $t);

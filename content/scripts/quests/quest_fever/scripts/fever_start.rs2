@@ -1,0 +1,198 @@
+// EASCape: Cabin Fever (update of 7 February 2006). Bill Teach in Port Phasmatys, his ship at the
+// east dock, and the trips to Mos Le'Harmless. Words from the owner's video of the quest; lines
+// marked "ours" have no source. Needs Pirate's Treasure, Rum Deal and Priest in Peril (the quest's
+// requirements); the skills (42 Agility, 45 Crafting, 50 Smithing, 40 Ranged) are checked where they
+// are used (fever_ship.rs2).
+
+[opnpc1,fever_teach]
+if (%fever_quest = ^fever_not_started) @fever_start;
+if (%fever_quest = ^fever_started) {
+    ~chatnpc("<p,neutral>My ship is the Adventurous, and she's at the east dock.");
+    ~chatnpc("<p,neutral>I'm all ready te get underway, and I'll see ye onboard when yer ready te go too.");
+    return;
+}
+if (%fever_quest < ^fever_complete) {
+    ~chatnpc("<p,neutral>I'll see ye onboard when yer ready te go."); // ours
+    return;
+}
+@fever_bill_book;
+
+[label,fever_start]
+~chatnpc("<p,drunk>Mumblelandlubbermumblemumble...");
+if (%hunt ! ^hunt_complete | %deal_quest < ^deal_complete | %priestperil < ^priestperil_complete) {
+    // ours: the quest's requirements
+    mes("You need to have completed Pirate's Treasure, Rum Deal and Priest in Peril to help Bill Teach.");
+    return;
+}
+~chatplayer("<p,happy>Hello!");
+~chatnpc("<p,angry>What right have ye to be so happy, landlubber?");
+~chatplayer("<p,neutral>Well it is quite a nice day.");
+~chatnpc("<p,sad>Aye, that it is.");
+~chatnpc("<p,sad>Will ye forgive an old sailor his temper lad? I'm in dire straits indeed.");
+~chatplayer("<p,quiz>What's the problem? I may be able to help.");
+~chatnpc("<p,sad>I dunno, lad, I need a pirate to help me with my problem, but none will sail with me.");
+~chatnpc("<p,neutral>Well, ye look like ye might have the right stuff, tell me would ye like te be a pirate?");
+if (~p_choice2("Yes, I've always wanted to be a pirate!", 1, "No thanks, it sounds quite dangerous.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks, it sounds quite dangerous.");
+    ~chatnpc("<p,sad>Aye, I thought as much."); // ours
+    return;
+}
+~chatplayer("<p,happy>Yes, I've always wanted to be a pirate!");
+~chatplayer("<p,happy>A life on the open waves, swinging on the rigging, walking the plank...");
+~chatplayer("<p,happy>I'd love to be a pirate!");
+~chatnpc("<p,neutral>Well I dunno... it takes more grit than most have te be a pirate.");
+~chatnpc("<p,quiz>Tell me, be ye as agile as a cat on a hot tin roof?");
+~chatplayer("<p,neutral>Well, I am quite agile...");
+~chatnpc("<p,quiz>Be ye a smith and craftsman of great renown?");
+~chatplayer("<p,happy>Arr! That I be!");
+~chatnpc("<p,quiz>Be ye the kind of keen-eyed archer that can hit an albatross at one hundred paces?");
+~chatplayer("<p,happy>Aye! Ye point me te the Albatross and I'll bring it down Cap'n!");
+~chatnpc("<p,quiz>Have ye rendered great services to pirates in the past?");
+~chatplayer("<p,happy>Arr! I be the least land-lubberin' landlubber that ye ever did see!");
+~chatplayer("<p,angry>I'll send those scurvy-riddled bilge-dogs to the bottom of the sea!");
+~chatplayer("<p,angry>Fire another broadside Mr Bosun!");
+~chatplayer("<p,angry>Flog 'em fer bein' lazy sons of whelks!");
+~chatplayer("<p,happy>Arr! Arr!");
+~chatnpc("<p,neutral>Well lad, I don't think ye could pirate yer way out of a chest full of piracy.");
+~chatplayer("<p,sad>Awww...");
+~chatnpc("<p,neutral>But since nobody else will risk the trip ye'll do!");
+~chatnpc("<p,neutral>Well lad, I be Bill Teach, the Captain of the Adventurous, one of the finest ships ever to sail these waters.");
+~chatnpc("<p,neutral>I'm in port doin' some legitimate tradin' before headin' back to Mos Le'Harmless.");
+~chatplayer("<p,quiz>Mos Le'Harmless? Where is that?");
+~chatnpc("<p,neutral>It's a pirate stronghold off the southern coast of Morytania.");
+~chatnpc("<p,neutral>Been in existence for years it has, the best place for pirates to relax with the exception of Brimhaven.");
+~chatnpc("<p,neutral>Would be THE best, but we don't have their fancy Agility Arena.");
+~chatplayer("<p,quiz>Will it be OK for me to go there if I am not a pirate?");
+~chatnpc("<p,neutral>Of course lad, once we make landfall ye'll have worked as a sailor on a pirate vessel, which is one of the easiest ways to become a true pirate.");
+~chatnpc("<p,neutral>This brings me back to the reason I'm stuck here of course, and the reason I need your help.");
+~chatnpc("<p,sad>Last night I got into a war o' words with another Cap'n, and he has vowed to sink my ship and put all of my crew to the sword.");
+~chatplayer("<p,shock>How horrible! How did your crew react?");
+~chatnpc("<p,sad>By desertin'.");
+~chatplayer("<p,quiz>All of them?");
+~chatnpc("<p,sad>Every last one!");
+~chatnpc("<p,neutral>The second I leave port I'll come under attack. I think I'll be able te make it if I have another person helpin' out, but I wouldn't stand a chance by me self.");
+~chatnpc("<p,quiz>Ye said ye would help me out lad, will ye stand by yer word?");
+if (~p_choice2("Yes, I am a man of my word.", 1, "No, if it's so dangerous your crew left, count me out.", 2) = 2) {
+    ~chatplayer("<p,neutral>No, if it's so dangerous your crew left, count me out.");
+    ~chatnpc("<p,sad>Then I'll be stuck here a while yet."); // ours
+    return;
+}
+~chatplayer("<p,neutral>Yes, I am a man of my word.");
+%fever_quest = ^fever_started;
+~chatnpc("<p,happy>Arr! Ye struck me as a man of integrity!");
+~chatnpc("<p,neutral>My ship is the Adventurous, and she's at the east dock.");
+~chatnpc("<p,neutral>I'm all ready te get underway, and I'll see ye onboard when yer ready te go too.");
+~chatplayer("<p,happy>You won't...err...I mean ye'll not regret it Cap'n!");
+~chatnpc("<p,neutral>I'm sure I won't.");
+
+// after the quest: a new book if you lost yours (Void BillTeach.kt, from the wiki's transcript)
+[label,fever_bill_book]
+if (~obj_gettotal(fever_piracy_book) > 0) {
+    ~chatnpc("<p,neutral>If yer after a lift go to the ship and I'll take ye where ye want to go.");
+    return;
+}
+~chatplayer("<p,sad>Cap'n, I lost that book you gave me.");
+~chatnpc("<p,neutral>Ye'll notice I'm not fallin' to the floor in shock right now.");
+~chatnpc("<p,neutral>Look, if I gives ye another copy will ye keep a better eye on it?");
+~chatplayer("<p,happy>Aye Cap'n!");
+~chatnpc("<p,neutral>Then here, have this other copy I dug up.");
+if (inv_freespace(inv) = 0) {
+    ~mesbox("You don't have enough room in your inventory."); // ours
+    return;
+}
+inv_add(inv, fever_piracy_book, 1);
+
+// ---------------------------------------------------------------- the gangplanks
+[oploc1,fever_gangplank]
+if (%fever_quest < ^fever_started) {
+    mes("You have no business on that ship."); // ours
+    return;
+}
+p_telejump(^fever_port_deck);
+mes("You board the Adventurous.");
+
+[oploc1,fever_gangplank_exit] p_telejump(^fever_port_pier);
+[oploc1,fever_gangplank_harmless]
+p_telejump(^fever_harmless_deck);
+mes("You board the Adventurous.");
+[oploc1,fever_gangplank_exit_harmless] p_telejump(^fever_harmless_pier);
+
+// ---------------------------------------------------------------- Bill on his ship in Port Phasmatys
+[opnpc1,fever_port_ship_teach]
+if (%fever_quest >= ^fever_complete) {
+    if (~p_choice2("Take me to Mos Le'Harmless.", 1, "No thanks.", 2) = 1) @fever_sail(^fever_harmless_deck); // ours
+    return;
+}
+if (%fever_quest = ^fever_started) {
+    ~chatnpc("<p,shock>Ye came!");
+    ~chatplayer("<p,neutral>You seem rather surprised.");
+    ~chatnpc("<p,neutral>Well, I had the feelin' ye might have run off when ye realised how much of a task ye had ahead of ye.");
+    ~chatplayer("<p,happy>Don't ye worry about me, Cap'n! I'm the scurviest, throat-cuttinest pirate to ever walk the mainplank! Arr!");
+    ~chatnpc("<p,neutral>Aye, I should have remembered ye was eager.");
+}
+~chatnpc("<p,quiz>Ye all ready to go lad?");
+if (~p_choice2("Let's go Cap'n!", 1, "Can I just go grab something?", 2) = 2) {
+    ~chatplayer("<p,quiz>Can I just go grab something?");
+    ~chatnpc("<p,neutral>Be quick about it, lad."); // ours
+    return;
+}
+~chatplayer("<p,happy>Let's go Cap'n!");
+if (%fever_quest = ^fever_started) @fever_set_sail;
+@fever_sail(^fever_ship_start);
+
+// back from Mos Le'Harmless
+[opnpc1,fever_harmless_port_ship_teach]
+if (%fever_quest < ^fever_complete) return;
+if (~p_choice2("Take me to Port Phasmatys.", 1, "No thanks.", 2) = 1) @fever_sail(^fever_port_deck); // ours
+
+[label,fever_sail](coord $to)
+if_close;
+~fade_out;
+p_delay(3);
+p_telejump($to);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+// the voyage: the other Cap'n's ship finds them (the video's cutscene)
+[label,fever_set_sail]
+~fever_ship_reset;
+%fever_quest = ^fever_cannon_task;
+if_close;
+~fade_out;
+p_delay(3);
+p_telejump(^fever_ship_start);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+~chatplayer("<p,neutral>Well, it looks like they've found us Cap'n.");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>Ye don't say lad.");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>Well, without anyone else te help ye'll have te do some hard work if we don't want to end up walkin' home on the sea bed.");
+~chatplayer("<p,quiz>What will you be doing?");
+~chatnpc_specific("Bill Teach", fever_quest_ship_teach, "<p,neutral>Well if their first shot hadn't taken out the cannon I'd be firing that at them.");
+@fever_cannon_orders;
+
+// the ship as it is when the battle starts: our cannon shot out, three holes in the hold, theirs
+// whole (ours: the cache's variables, set here so a second try starts the same)
+[proc,fever_ship_reset]
+%fever_cannon = ^fever_cannon_broken;
+%fever_cannon_powder = 0;
+%fever_cannon_tamp = 0;
+%fever_cannon_ammo = 0;
+%fever_cannon_fuse = 0;
+%fever_cannon_clean = 0;
+%fever_cannon_gonna_blow = 0;
+%fever_enemy_cannon = 0;
+%fever_holes_in_the_hull = 0;
+%fever_hole_1 = 0;
+%fever_hole_2 = 0;
+%fever_hole_3 = 0;
+%fever_holes_patched = 0;
+%fever_holes_proofed = 0;
+%fever_gunpowder_barrel = 0;
+%fever_fuse_1 = 0;
+%fever_fuse_2 = 0;
+%fever_plunder_points = 0;
+%fever_crate = 0;
+%fever_chest = 0;
+%fever_barrel = 0;
