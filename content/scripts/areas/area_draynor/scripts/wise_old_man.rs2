@@ -267,7 +267,14 @@ if ($choice = 1) {
 @wom_anything_else;
 
 [label,wom_strange_beasts]
-def_int $choice = ~p_choice4("Biggest & Baddest", 1, "Poison and how to survive it", 2, "Wealth through slaughter", 3, "Random events", 4);
+def_int $choice;
+// EASCape: Recipe for Disaster's Evil Chicken, once the cook has given the recipe (quest_100/hundred_amik.rs2)
+if (%chickenquest >= ^hundred_amik_recipe & %chickenquest < ^hundred_amik_freed) {
+    $choice = ~p_choice5("Biggest & Baddest", 1, "Poison and how to survive it", 2, "Wealth through slaughter", 3, "Random events", 4, "The Evil Chicken", 5);
+    if ($choice = 5) @hundred_amik_wom;
+} else {
+    $choice = ~p_choice4("Biggest & Baddest", 1, "Poison and how to survive it", 2, "Wealth through slaughter", 3, "Random events", 4);
+}
 if ($choice = 1) {
     ~chatplayer("<p,happy>What's the biggest monster in the world?");
     ~chatnpc("<p,happy>There's a mighty fire-breathing dragon living underground in the deep Wilderness, known as the King Black Dragon. It's a fearsome beast, with a breath that can poison you, freeze you to the ground or incinerate you where you stand.");

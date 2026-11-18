@@ -25,9 +25,28 @@
 @millbase_opu;
 
 [oploc1,millbase]
-if(%millcheck_multi = 1 & %flour > 0) @millbase_take;
+if(%millcheck_multi = 1 & (%flour > 0 | %cornflour > 0)) @millbase_take;
 
 [label,millbase_take]
+// EASCape: sweetcorn makes cornflour (Recipe for Disaster: "you used sweetcorn in a mill"); the
+// words for it are flour's with cornflour in (ours)
+if (%cornflour > 0) {
+    p_arrivedelay;
+    if (inv_total(inv, pot_empty) < 1) {
+        mes("You need an empty pot to hold the cornflour in.");
+        return;
+    }
+    inv_del(inv, pot_empty, 1);
+    inv_add(inv, chickenquest_pot_cornflour, 1);
+    %cornflour = sub(%cornflour, 1);
+    if (%cornflour > 0 | %flour > 0) {
+        mes("You fill a pot with cornflour from the bin.");
+    } else {
+        %millcheck_multi = 0;
+        mes("You fill a pot with the last of the cornflour in the bin.");
+    }
+    return;
+}
 if (%flour > 0) {
     @take_flour_bin;
 } else {
@@ -56,6 +75,17 @@ if (inv_total(inv, pot_empty) < 1) {
 }
 
 [oplocu,hopper_full] // OSRS never changes to this loc?
+if (last_useitem = sweetcorn) { // EASCape: %hopper_full 2 is sweetcorn (ours)
+    if(%hopper_full = ^false) {
+        %hopper_full = 2;
+        anim(human_pickuptable, 0);
+        mes("You put the sweetcorn in the hopper.");
+        inv_delslot(inv, last_useslot);
+        return;
+    }
+    mes("There is already grain in the hopper.");
+    return;
+}
 if (last_useitem = grain) {
     if(%hopper_full = ^false) {
         %hopper_full = ^true;
@@ -70,6 +100,17 @@ if (last_useitem = grain) {
 }
 
 [oplocu,_hopper_nonfull]
+if (last_useitem = sweetcorn) { // EASCape: %hopper_full 2 is sweetcorn (ours)
+    if(%hopper_full = ^false) {
+        %hopper_full = 2;
+        anim(human_pickuptable, 0);
+        mes("You put the sweetcorn in the hopper.");
+        inv_delslot(inv, last_useslot);
+        return;
+    }
+    mes("There is already grain in the hopper.");
+    return;
+}
 if (last_useitem = grain) {
     if(%hopper_full = ^false) {
         %hopper_full = ^true;
@@ -91,8 +132,21 @@ sound_synth(hopperlever, 1, 0);
 loc_change(hoppercontrol_inuse, 3);
 anim(human_pickuptable, 0);
 
+if (%hopper_full = 2) {
+    if (calc(%flour + %cornflour) > 29) {
+        mes("The flour bin downstairs is full, I should empty it first.");
+        return;
+    }
+    mes("You operate the hopper. The sweetcorn slides down the chute.");
+    sound_synth(millstones, 1, 0);
+    %hopper_full = ^false;
+    %millcheck_multi = 1;
+    %cornflour = add(%cornflour, 1);
+    if (calc(%flour + %cornflour) = 30) mes("The flour bin downstairs is now full.");
+    return;
+}
 if (%hopper_full = ^true) {
-    if (%flour > 29) {
+    if (calc(%flour + %cornflour) > 29) {
         mes("The flour bin downstairs is full, I should empty it first.");
         return;
     }
@@ -103,7 +157,7 @@ if (%hopper_full = ^true) {
     %hopper_full = ^false;
     %millcheck_multi = 1;
     %flour = add(%flour, 1);
-    if (%flour = 30) {
+    if (calc(%flour + %cornflour) = 30) {
         mes("The flour bin downstairs is now full.");
     }
 } else {

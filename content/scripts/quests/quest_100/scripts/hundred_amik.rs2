@@ -1,0 +1,291 @@
+// EASCape: Recipe for Disaster: Freeing Sir Amik Varze. Words from the OSRS wiki's transcript; the steps
+// from its quest guide (milk and cream, cornflour from sweetcorn in a mill, a vanilla pod from the
+// Kharazi Jungle, the Evil Chicken's egg from its lair in Zanaris, cinnamon ground from a dramen branch,
+// and K'klik's flame from a black dragon's token, rubbed in Lumbridge or Zanaris). The lair's shrine,
+// portal and tunnel rope are Void's (EvilChickenLair.kt, evil_chicken_lair.teles.toml). Lines marked
+// "ours" have no source. The stages are in hundred.constant.
+
+[proc,hundred_amik_helping]()(boolean)
+if (%chickenquest >= ^hundred_amik_asked & %100amikvisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// what the subquest asks before you can help (OSRS wiki: 107 quest points, Legends' Quest started,
+// Family Crest, Heroes' Quest, Shilo Village, Underground Pass and Waterfall Quest done)
+[proc,hundred_amik_reqs]()(boolean)
+if (%qp < 107 | %legendsquest = 0 | %crestquest ! ^crest_complete | %heroquest ! ^hero_complete
+    | %zombiequeen ! ^zombiequeen_complete | %upass ! ^upass_complete | %waterfall_quest ! ^waterfall_complete) {
+    return(false);
+}
+return(true);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_varze_multi]
+if (~hundred_amik_reqs = false) {
+    mes("You need 107 quest points, to have started Legends' Quest, and to have completed Family Crest,"); // ours
+    mes("Heroes' Quest, Shilo Village, Underground Pass and Waterfall Quest to help him.");
+    return;
+}
+if (%chickenquest = 0) {
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>To protect this noble knight from the magic of the culinaromancer, you will have to give him a creme brulee.");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Not just any creme brulee mind you, but a creme brulee supreme!");
+} else {
+    ~chatplayer("<p,quiz>Could you give me that recipe again, please?");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Certainly, forgetful hero.");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>To protect this noble knight from the magic of the culinaromancer, you will have to give him a creme brulee.");
+}
+~chatplayer("<p,quiz>Well that doesn't sound too hard. What's so supreme about a creme brulee supreme?");
+~chatnpc_specific("Aris", hundred_aris, "<p,angry>Are you going to constantly ask me questions?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I am a fortune-teller, not a cook, and again I would suggest you speak to the cook next door who will be much more helpful on such culinary matters.");
+if (%chickenquest = 0) ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Although I happen to know that one of the ingredients is the egg of the evil chicken.");
+~chatplayer("<p,bored>The evil chicken? Great. He only ever seems to show up when I don't want him to.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I believe the wise old man in Draynor has studied the Evil Chicken.");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I would suggest you speak to him to get you on the right track. And tell him Bubbykins says hi.");
+~chatplayer("<p,confused>Er... Bubbykins?");
+~chatnpc_specific("Aris", hundred_aris, "<p,angry>That is not important right now. Go! Protect Sir Amik from the magic that threatens his life, my spell will only hold so long!");
+~chatplayer("<p,neutral>Just give me 5 minutes and I'll be back!");
+if (%chickenquest = 0) %chickenquest = ^hundred_amik_asked;
+
+[oplocu,hundred_varze_multi]
+if (last_useitem ! chickenquest_brulee_mixture_supreme | ~hundred_amik_helping = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, chickenquest_brulee_mixture_supreme, 1);
+%100amikvisible = 0;
+%chickenquest = ^hundred_amik_freed;
+stat_advance(cooking, 40000);
+stat_advance(hitpoints, 40000);
+mes("Congratulations, you have saved Sir Amik Varze.");
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("Sir Amik Varze", chickenquest_brulee_mixture_supreme, "4,000 Cooking XP|4,000 Hitpoints XP|The Evil Chicken's lair");
+
+// the cook gives the recipe (hundred_start.rs2)
+[proc,hundred_amik_cook_told]
+if (%chickenquest = ^hundred_amik_asked) %chickenquest = ^hundred_amik_recipe;
+
+// ---------------------------------------------------------------- the Wise Old Man (wise_old_man.rs2)
+[label,hundred_amik_wom]
+~chatplayer("<p,quiz>Could you tell me about the Evil Chicken, please?");
+~chatnpc("<p,neutral>The Evil Chicken! Many are the myths and legends surrounding this foul bird. Some say that it is the result of a mad mage's attempt to summon a demon, others say that it was once a");
+~chatnpc("<p,neutral>normal chicken that realised how limited its farmyard life was. It threw off its chains and attempted to unite the other chickens in revenge against their human captors.");
+~chatnpc("<p,angry>When that failed the Evil Chicken grew angry with its brethren and swore to kill any human or chicken that it ever encountered again!");
+~chatnpc("<p,shifty>It is whispered that there is a coven of witches that meet, on the night of the full moon in the fabled fairy kingdom, to worship this bird and that they can summon it to do their twisted will!");
+~chatplayer("<p,quiz>Right, so if you were looking for the chicken where would you go?");
+~chatnpc("<p,neutral>I would start in the lands of the fairies, possibly there is some truth in the rumours of summoning the chicken there. Actually, I've done further research, it may be around");
+~chatnpc("<p,neutral>here somewhere, if you're really thinking of going there you should be extremely careful, it's claimed that the chicken has forced some very powerful creatures to guard his lair.");
+if (%chickenquest = ^hundred_amik_recipe) %chickenquest = ^hundred_amik_lair;
+@wom_anything_else;
+
+// ---------------------------------------------------------------- the Kharazi Jungle's vanilla plants
+[oploc1,chickenquest_vanilla_plant]
+mes("You search through the leaves of the vanilla plant.");
+anim(human_pickupfloor, 0);
+p_delay(1);
+if (inv_freespace(inv) < 1) {
+    mes("You need to make some space in your inventory to do that.");
+    return;
+}
+inv_add(inv, chickenquest_vanilla_pod, 1);
+mes("You pick a vanilla pod.");
+
+// ---------------------------------------------------------------- the Evil Chicken's lair
+[proc,hundred_amik_lair_open]()(boolean)
+if (%chickenquest >= ^hundred_amik_lair) return(true);
+return(false);
+
+[oplocu,fairy_chicken_shrine]
+if (last_useitem = egg) {
+    mes("Nice idea, but nothing interesting happens.");
+    return;
+}
+if (last_useitem ! raw_chicken | ~hundred_amik_lair_open = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, raw_chicken, 1);
+mes("You place the raw chicken on the shrine.");
+anim(human_pickuptable, 0);
+p_delay(1);
+p_telejump(^hundred_amik_lair_in);
+// the Evil Chicken waits by its nest for anyone still after its egg (ours: it's spawned for them)
+if (%chickenquest < ^hundred_amik_freed & ~hundred_amik_has_egg = false) {
+    if (npc_find(^hundred_amik_nest, chickenquest_evil_chicken, 12, 0) = false) {
+        npc_add(^hundred_amik_nest, chickenquest_evil_chicken, 1000);
+    }
+}
+
+[proc,hundred_amik_has_egg]()(boolean)
+if (~obj_gettotal(chickenquest_evil_chicken_egg) > 0 | ~obj_gettotal(chickenquest_brulee_mixture_egg) > 0
+    | ~obj_gettotal(chickenquest_brulee_mixture_cinamon) > 0 | ~obj_gettotal(chickenquest_brulee_mixture_supreme) > 0) {
+    return(true);
+}
+return(false);
+
+[oploc1,100_portal_chicken]
+p_telejump(^hundred_amik_shrine);
+
+[oplocu,chickenquest_chamber_entrance]
+if (last_useitem ! rope) {
+    ~displaymessage(^dm_default);
+    return;
+}
+inv_del(inv, rope, 1);
+mes("You tie the rope to the top of the tunnel and throw it down.");
+loc_change(chickenquest_chamber_entrance_withrope, 300); // Void: the rope lasts 3 minutes
+
+[oploc1,chickenquest_chamber_entrance_withrope]
+anim(human_climbing_down, 0);
+p_delay(1);
+p_telejump(^hundred_amik_rope_down);
+
+[oploc1,chickenquest_chamber_exit]
+anim(human_climbing, 0);
+p_delay(1);
+p_telejump(^hundred_amik_rope_up);
+
+[ai_queue3,chickenquest_evil_chicken]
+def_coord $where = npc_coord;
+~npc_default_death;
+if (npc_findhero = ^true) obj_add($where, chickenquest_evil_chicken_egg, 1, ^lootdrop_duration);
+
+// a black dragon here drops K'klik's token for someone still to flambe their brulee (black_dragon.rs2)
+[proc,hundred_amik_dragon_token](coord $where)
+if (inzone(0_38_68_0_0, 0_38_68_63_63, $where) = false) return;
+if (%chickenquest < ^hundred_amik_lair | %chickenquest >= ^hundred_amik_freed) return;
+if (~obj_gettotal(chickenquest_dragon_coin) > 0 | ~obj_gettotal(chickenquest_brulee_mixture_supreme) > 0) return;
+obj_add($where, chickenquest_dragon_coin, 1, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- K'klik
+[opheld1,chickenquest_dragon_coin]
+if (inzone(0_50_50_0_0, 0_50_50_63_63, coord) = false & inzone(0_37_68_0_0, 0_38_69_63_63, coord) = false) {
+    mes("The dragon's token doesn't seem to work here. Try it in Lumbridge town or Zanaris.");
+    return;
+}
+~mesbox("The world begins to fade...");
+~chatplayer("<p,confused>What happened? I rubbed that coin and everything went black!");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,quiz>Who are you? You're not the hero I gave my token to!");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,quiz>How did you get that coin you used to summon me?");
+~chatplayer("<p,neutral>I took it from the dead body of a black dragon.");
+~chatplayer("<p,neutral>I didn't realise what it would do if I rubbed it.");
+~chatplayer("<p,quiz>Who, or what, are you anyway?");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>My name is K'klik. I am a Fairy Dragon.");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,sad>One of the last surviving members of my race, I fear.");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>Enough of that: you summoned me, so how can I help?");
+~chatplayer("<p,confused>I'm afraid I don't understand.");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>The person who holds my token can summon me by rubbing it.");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>They then have the right to request one thing of me before returning my token.");
+~chatplayer("<p,quiz>So I can ask one thing of you?");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>That's right. What do you want?");
+@hundred_amik_wish;
+
+[label,hundred_amik_wish]
+def_int $choice;
+if (inv_total(inv, chickenquest_brulee_mixture_cinamon) > 0) {
+    $choice = ~p_choice4("Please flambe this creme brulee for me.", 1, "Could I just keep your token for when I really need it, please?", 2, "Can I wish for some xp?", 3, "I'd like a horse, please.", 4);
+} else {
+    $choice = add(~p_choice3("Could I just keep your token for when I really need it, please?", 1, "Can I wish for some xp?", 2, "I'd like a horse, please.", 3), 1);
+}
+switch_int ($choice) {
+    case 1 :
+        ~chatplayer("<p,quiz>Please flambe this creme brulee for me.");
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,happy>Sure, that's easy.");
+        if (inv_getobj(worn, ^wearpos_hands) = ice_gloves) @hundred_amik_flambe(false);
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>I think you need to wear some sort of protective gloves, otherwise I'll flambé your arm.");
+        @hundred_amik_gloves;
+    case 2 :
+        ~chatplayer("<p,quiz>Could I just keep your token for when I really need it, please?");
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>I suppose that seems fair. Alright, just call me when you need me.");
+    case 3 :
+        ~chatplayer("<p,quiz>Can I wish for some xp?");
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>Sorry, can't help. You'll have to ask the genie for that.");
+        @hundred_amik_wish;
+    case 4 :
+        ~chatplayer("<p,happy>I'd like a horse, please.");
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>No horses in Gielinor. Try again.");
+        @hundred_amik_wish;
+}
+
+[label,hundred_amik_gloves]
+switch_int (~p_choice2("Go ahead, I'll be fine.", 1, "What gloves do you have in mind?", 2)) {
+    case 1 : @hundred_amik_go_ahead;
+    case 2 :
+        ~chatplayer("<p,quiz>What gloves do you have in mind?");
+        ~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>A pair of ice gloves should do the trick.");
+        if (~p_choice2("Go ahead, I'll be fine.", 1, "I'll go fetch them then.", 2) = 1) @hundred_amik_go_ahead;
+        ~chatplayer("<p,neutral>I'll go fetch them then.");
+}
+
+[label,hundred_amik_go_ahead]
+~chatplayer("<p,neutral>Go ahead, I'll be fine.");
+~chatnpc_specific("K'klik", chickenquest_fairy_dragon, "<p,neutral>Okay, if you're sure.");
+@hundred_amik_flambe(true);
+
+// the flame: up to 50 without ice gloves (OSRS wiki), most of it taken by an anti-dragon shield
+// (ours: up to 9 then)
+[label,hundred_amik_flambe](boolean $burnt)
+inv_del(inv, chickenquest_brulee_mixture_cinamon, 1);
+inv_add(inv, chickenquest_brulee_mixture_supreme, 1);
+inv_del(inv, chickenquest_dragon_coin, 1);
+if ($burnt = true) {
+    if (inv_getobj(worn, ^wearpos_lhand) = antidragonbreathshield) {
+        mes("Your shield absorbs most of the dragon fire!");
+        ~damage_self(randominc(9));
+    } else {
+        ~damage_self(randominc(50));
+    }
+}
+mes("The dragon's token has vanished from your backpack.");
+
+// ---------------------------------------------------------------- the brulee
+[label,hundred_amik_mix](obj $a, obj $b, namedobj $made, namedobj $left, string $message)
+inv_del(inv, $a, 1);
+inv_del(inv, $b, 1);
+inv_add(inv, $made, 1);
+if ($left ! null) inv_add(inv, $left, 1);
+mes($message);
+
+// ours: what's left over; the mixture is in the milk's bucket until the vanilla goes in, then in a pot
+[label,hundred_amik_milk_cream] @hundred_amik_mix(bucket_milk, pot_of_cream, chickenquest_milky_mixture, pot_empty, "You mix the pot of cream and the milk together.");
+
+[opheldu,chickenquest_milky_mixture]
+if (last_useitem = chickenquest_pot_cornflour) @hundred_amik_mix(chickenquest_milky_mixture, chickenquest_pot_cornflour, chickenquest_cornflour_milky_mixture, pot_empty, "You mix the cornflour into the milk and cream mixture.");
+~displaymessage(^dm_default);
+
+[opheldu,chickenquest_cornflour_milky_mixture]
+if (last_useitem = chickenquest_vanilla_pod) @hundred_amik_mix(chickenquest_cornflour_milky_mixture, chickenquest_vanilla_pod, chickenquest_brulee_mixture, bucket_empty, "You add the vanilla pod to the brulee mixture.");
+~displaymessage(^dm_default);
+
+[opheldu,chickenquest_brulee_mixture]
+if (last_useitem = chickenquest_evil_chicken_egg) @hundred_amik_mix(chickenquest_brulee_mixture, chickenquest_evil_chicken_egg, chickenquest_brulee_mixture_egg, null, "You mix in the Evil Chicken's egg.");
+~displaymessage(^dm_default);
+
+[opheldu,chickenquest_brulee_mixture_egg]
+if (last_useitem = chickenquest_cinamon) @hundred_amik_mix(chickenquest_brulee_mixture_egg, chickenquest_cinamon, chickenquest_brulee_mixture_cinamon, null, "You sprinkle cinnamon on top of the brulee mixture. Now it just needs flambeing.");
+~displaymessage(^dm_default);
+
+[label,hundred_amik_cinnamon]
+inv_del(inv, dramen_branch, 1);
+inv_add(inv, chickenquest_cinamon, 1);
+anim(human_herbing_grind, 0);
+mes("You grind the branch into powder.");
+
+// emptying them
+[opheld4,chickenquest_milky_mixture] @hundred_amik_empty(bucket_empty);
+[opheld4,chickenquest_cornflour_milky_mixture] @hundred_amik_empty(bucket_empty);
+[opheld4,chickenquest_brulee_mixture] @hundred_amik_empty(pot_empty);
+[opheld4,chickenquest_brulee_mixture_egg] @hundred_amik_empty(pot_empty);
+[opheld4,chickenquest_brulee_mixture_cinamon] @hundred_amik_empty(pot_empty);
+[opheld4,chickenquest_brulee_mixture_supreme] @hundred_amik_empty(pot_empty);
+[opheld4,chickenquest_pot_cornflour]
+inv_delslot(inv, last_slot);
+inv_add(inv, pot_empty, 1);
+mes("You empty the contents of the pot onto the floor.");
+
+[label,hundred_amik_empty](namedobj $left)
+def_obj $item = last_item;
+def_int $slot = last_slot;
+if (~p_choice2_header("Yes", 1, "No", 2, "Are you sure you want to empty that pot?") = 2) return;
+if (inv_getobj(inv, $slot) ! $item) return;
+inv_delslot(inv, $slot);
+inv_add(inv, $left, 1);
+mes("You empty the contents of the pot onto the floor.");
