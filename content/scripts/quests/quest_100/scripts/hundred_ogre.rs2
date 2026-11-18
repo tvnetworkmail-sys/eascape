@@ -1,0 +1,542 @@
+// EASCape: Recipe for Disaster: Freeing Skrach Uglogwee. Words from the OSRS wiki's transcripts (the
+// subquest's and the ogre boat's); the steps from its quest guide (Rantz's boat from an old tree, an
+// axe on it twice, his arrow to Karamja, a chompy roasted on an iron spit by the arrow, the ride back;
+// a balloon toad from swamp gas, a bloated toad, a rock and a ball of wool; the jubbly shot with an ogre
+// bow, plucked and roasted on an ogre spit-roast). Lines marked "ours" have no source. The stages are
+// in hundred.constant.
+
+[proc,hundred_ogre_helping]()(boolean)
+if (%100_ogre_prog >= ^hundred_ogre_asked & %100ogrevisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_ogre_multi]
+if (%chompybird < ^chompybird_complete) {
+    mes("You need to have completed Big Chompy Bird Hunting to help him."); // ours: the subquest's requirement
+    return;
+}
+if (stat_base(cooking) < 41 | stat_base(firemaking) < 20) {
+    mes("You need a Cooking level of 41 and a Firemaking level of 20 to help him."); // ours
+    return;
+}
+if (%100_ogre_prog >= ^hundred_ogre_asked) {
+    ~chatplayer("<p,quiz>What should I do now to help Skrach?");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Skrach needs Jubbly chompy in order to be unfrozen, you'll need to talk to Rantz about how to get that. Perhaps the cook can be more helpful.");
+    return;
+}
+~chatplayer("<p,quiz>How can I help Skrach?");
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Skrach! He'd be un-frozen in a jiffy if he just had some Jubbly.");
+~chatplayer("<p,confused>And once again, but in English this time?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Sorry...Skrach, being an ogre likes Chompies, and a real delicacy is Jubbly Chompy bird. Do you think you could get some?");
+if (~p_choice2("Yes, I'm sure I can get some Jubbly Chompy.", 1, "Nah, leave that Ogre in the frozen dimension!", 2) = 2) {
+    ~chatplayer("<p,neutral>Nah, leave that Ogre in the frozen dimension!");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Alas, I can certainly relate to what you say. However, he deserves to be set free, the same as everyone else.");
+    return;
+}
+~chatplayer("<p,happy>Yes, I'm sure I can get some Jubbly Chompy.");
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>That's the spirit!");
+~chatplayer("<p,quiz>Ok then, what's involved...how do I get this Jubbly chompy?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Ah, well, that's where it breaks down a bit you see. The only 'thing' alive which might help you get the Jubbly Chompy is the most confusing beast that Gielinor has ever known.");
+~chatnpc_specific("Aris", hundred_aris, "<p,sad>The situation is lost I am afraid and I understand totally if you decide not to help Skrach.");
+~chatplayer("<p,neutral>Oh come on...it can't be that difficult..");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I'm afraid it is. You see...you need to go and speak to an Ogre called Rantz over in the Feldip hills.");
+~chatplayer("<p,neutral>Ahh right...I see..");
+~chatnpc_specific("Aris", hundred_aris, "<p,quiz>How do you feel about getting Jubbly Chompy now and freeing Skrach?");
+if (~p_choice2("No way am I going to talk to Rantz.", 1, "Oh Ok then, I guess I'll talk to Rantz.", 2) = 1) {
+    ~chatplayer("<p,angry>No way am I going to talk to Rantz.");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I quite understand...");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I really do...");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,neutral>There's no excuse for him really...");
+    ~chatnpc_specific("Aris", hundred_aris, "<p,sad>Poor old Skrach...");
+    return;
+}
+~chatplayer("<p,neutral>Oh Ok then, I guess I'll talk to Rantz.");
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Well, I do pity you, and wish you the best of luck!");
+%100_ogre_prog = ^hundred_ogre_asked;
+
+[oplocu,hundred_ogre_multi]
+if (last_useitem ! 100_jubbly_meat_cooked | ~hundred_ogre_helping = false | %100_ogre_prog < ^hundred_ogre_told) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, 100_jubbly_meat_cooked, 1);
+%100ogrevisible = 0;
+%100_ogre_prog = ^hundred_ogre_freed;
+stat_advance(woodcutting, 15000);
+stat_advance(cooking, 15000);
+stat_advance(crafting, 15000);
+stat_advance(ranged, 15000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("Skrach Uglogwee", 100_jubbly_meat_cooked, "1,500 Woodcutting, Cooking,|Crafting and Ranged XP|The ogre boat");
+
+// ---------------------------------------------------------------- Rantz, by his cave (rantz.rs2)
+[proc,hundred_ogre_rantz_option]()(boolean)
+if (%100_ogre_prog < ^hundred_ogre_asked | %100_ogre_prog >= ^hundred_ogre_freed) return(false);
+return(true);
+
+[label,hundred_ogre_rantz]
+~chatnpc("<p,neutral>Hey deyr, t'anks for da chompy, it was scrumbly!");
+switch_int (~p_choice3("Hey, I wanted to ask about hats...", 1, "I'm trying to free Skrach, can you help?", 2, "Actually, I don't need to talk to you...sorry.", 3)) {
+    case 1 : @hundred_ogre_hats;
+    case 3 :
+        ~chatplayer("<p,neutral>Actually, I don't need to talk to you...sorry.");
+        return;
+}
+~chatplayer("<p,quiz>I'm trying to free Skrach, can you help?");
+if (%100_ogre_prog >= ^hundred_ogre_told) @hundred_ogre_rantz_jubbly_how;
+if (%100_ogre_prog >= ^hundred_ogre_agreed) {
+    ~chatnpc("<p,neutral>Dat's da good fing, you's creature goes down by da watery place, over near da cabbage! Me's says more der'.");
+    return;
+}
+if (%100_ogre_prog = ^hundred_ogre_refused) {
+    ~chatnpc("<p,neutral>You's creatures says dis before! Skrach big boss? Skrach like da Jubbly chompy...is bestest yums like chompy.");
+} else {
+    ~chatnpc("<p,neutral>Skrach...he big boss? Skrach like da Jubbly chompy...is bestest yums like chompy.");
+}
+~chatplayer("<p,quiz>Ok, so can you help me get some Jubbly Chompy?");
+~chatnpc("<p,neutral>Rantz tell creature hows to stick da Jubbly...just like da Chompy...");
+~chatnpc("<p,laugh>Soon, creature be da ogre too like Rantz! Harr, har, har!");
+~chatplayer("<p,neutral>A nice thought, but unlikely...");
+~chatnpc("<p,neutral>But creature do Rantz stuffsies first...yous creature gets Rantz to other lands over 'der so Rantz gets da stuffsies for da glugs-glugs.");
+~mesbox("Rantz points to the North East, in the direction of Karamja.");
+~chatnpc("<p,quiz>Yous do dis creature for da Jubbly?");
+@hundred_ogre_rantz_deal;
+
+[label,hundred_ogre_rantz_deal]
+switch_int (~p_choice4("What's involved?", 1, "What do I get in return?", 2, "Ok, I'll do it.", 3, "No way am I doing that!", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What's involved?");
+        ~chatnpc("<p,neutral>You's creature gets Rantz to other lands over 'der so Rantz gets da stuffsies for da glug-glugs.");
+        @hundred_ogre_rantz_deal;
+    case 2 :
+        ~chatplayer("<p,quiz>What do I get in return?");
+        ~chatnpc("<p,neutral>Me's shows da creatures how to sneaky, sneaky stick da Jubbly!");
+        @hundred_ogre_rantz_deal;
+    case 3 :
+        ~chatplayer("<p,neutral>Ok, I'll do it.");
+        ~chatnpc("<p,happy>Dat's da good fing, you's creature goes down by da watery place, over near da cabbage! Me's says more der'.");
+        ~mesbox("Rantz points to the south east near a largish tree.");
+        ~chatplayer("<p,happy>Ok, will do!");
+        %100_ogre_prog = ^hundred_ogre_agreed;
+        %100_ogre_rantz_visible = 1;
+    case 4 :
+        ~chatplayer("<p,angry>No way am I doing that!");
+        %100_ogre_prog = ^hundred_ogre_refused;
+}
+
+[label,hundred_ogre_hats]
+~chatplayer("<p,neutral>Hey, I hear you're giving away free hats!");
+~chatnpc("<p,neutral>Huh, dat's a true thing but you's godda be da good shooter wiv da stabbie chucker and stick lotsa chompies for da hatsie.");
+@multi5("What are the hats like?", rantz_hatslike, "Can you show me the hats please?", rantz_showhats, "How many chompies do I have to stick?", rantz_stick, "Can I have a hat please?", rantz_givehats, "Ok, thanks.", rantz_ok);
+
+// ---------------------------------------------------------------- Rantz, down by the water
+[opnpc1,100_rantz_multi_npc]
+def_string $ask;
+if (%100_ogre_prog < ^hundred_ogre_tree) {
+    $ask = "Ok, here I am...I guess this is the watery place? What now?";
+} else if (%100_ogre_prog < ^hundred_ogre_roots) {
+    $ask = "Can you tell me how to get Jubbly now?";
+} else if (%100_ogre_prog < ^hundred_ogre_hollow) {
+    $ask = "Now can you please tell me how to get Jubbly?";
+} else if (%100_ogre_prog < ^hundred_ogre_arrow) {
+    $ask = "Ok, the boat's ready, now tell me how to get a Jubbly?";
+} else {
+    $ask = "Ok, now tell me how to get Jubbly!";
+}
+switch_int (~p_choice3("Ask about hats...", 1, $ask, 2, "Actually, I don't need to talk to you...sorry.", 3)) {
+    case 1 : @hundred_ogre_hats;
+    case 3 :
+        ~chatplayer("<p,neutral>Actually, I don't need to talk to you...sorry.");
+        return;
+}
+if (%100_ogre_prog < ^hundred_ogre_tree) {
+    ~chatplayer("<p,quiz>Ok, here I am...I guess this is the watery place? What now?");
+    ~chatnpc("<p,neutral>You's creatures says what Rantz need for da going over da big water to da over'der place.");
+    ~mesbox("Rantz points to the North East...");
+    ~chatplayer("<p,neutral>Oh, so you want to go to Karamja...hmmmm, it's a bit of a long walk. You'd probably be better off with a boat!");
+    ~chatnpc("<p,angry>Is what me's says...you's creature no helpsies...just says Rantz saysies back!");
+    ~chatplayer("<p,neutral>Ohhhh...sorry! Ok, for a boat you'll need something that floats in order to make a hull.");
+    ~chatnpc("<p,quiz>Uh rocksie?");
+    ~chatplayer("<p,neutral>Close!... But perhaps a tree would be better?");
+    // ours: no cutscene; Rantz kicks the tree over where he stands
+    ~chatnpc("<p,happy>Me finks me has found one...");
+    npc_anim(100_jubbly_ogre_kick, 0);
+    p_delay(1);
+    %100_ogre_jubbly_push_tree = 1;
+    mes("Rantz kicks over the old tree.");
+    p_delay(2);
+    %100_ogre_jubbly_push_tree = 2;
+    %100_ogre_prog = ^hundred_ogre_tree;
+    ~chatplayer("<p,neutral>...very good...");
+    return;
+}
+if (%100_ogre_prog < ^hundred_ogre_roots) {
+    ~chatplayer("<p,quiz>Can you tell me how to get Jubbly now?");
+    ~chatnpc("<p,neutral>You's creatures not done for Rantz fingies yet! Da boatsie is da guddun...will carry rantz to da over place?");
+    ~chatplayer("<p,neutral>You can't use that as a boat! The roots are still hanging off it.");
+    ~chatnpc("<p,happy>Ok, you's creature makes it better!");
+    return;
+}
+if (%100_ogre_prog < ^hundred_ogre_hollow) {
+    ~chatplayer("<p,quiz>Now can you please tell me how to get Jubbly?");
+    ~chatnpc("<p,neutral>Creatures not done yet! Da boatsie not good for da stuffsies! Da stuffsies for da glug-glugs goes in da watery stuffs.");
+    ~chatplayer("<p,neutral>Well, yes, you've got no space to put anything in there... it needs to be hollowed out a bit.");
+    ~chatnpc("<p,happy>Ok, you's creature makes it better!");
+    return;
+}
+if (%100_ogre_prog < ^hundred_ogre_arrow) {
+    ~chatplayer("<p,quiz>Ok, the boat's ready, now tell me how to get a Jubbly.");
+    ~chatnpc("<p,neutral>Yous do other stuffsies for Rantz first. We's needs da bestest groundy for da walking on new land.");
+    ~chatplayer("<p,confused>Bestest groundy? New land?");
+    ~chatnpc("<p,neutral>Rantz use stabbie chucker and stick da dirt for da over der' place. You's creature make da chompy by da stabber so Fycie and Bugs sniffs da bestest yumms and splosh over wiv da boatsie!");
+    ~chatplayer("<p,confused>???");
+    ~mesbox("Rantz prepares to shoot the bow...");
+    npc_anim(100_jubbly_ogre_bow, 0);
+    sound_synth(ogre_bow, 1, 0);
+    p_delay(2);
+    mes("Rantz shoots an arrow out to sea."); // ours: in place of the cutscene
+    %100_ogre_jubbly_arrow_tree = 1;
+    %100_ogre_prog = ^hundred_ogre_arrow;
+    ~chatnpc("<p,neutral>Ok you's person...goes find da stabber!");
+    return;
+}
+if (%100_ogre_prog < ^hundred_ogre_back) {
+    ~chatplayer("<p,quiz>Please, can you just show me how to catch a Jubbly!");
+    ~chatnpc("<p,angry>Creatures not done Rantz stuffsies yet!");
+    ~chatplayer("<p,quiz>Ok, what do you need me to do now?");
+    ~chatnpc("<p,neutral>Rantz done used da stabbie chucker and stock da dirt for da over der' place. You's creature make da chompy by da stabber so Fycie and Bugs sniffs da bestest yumms and splosh over wiv da boatsie!");
+    ~chatplayer("<p,confused>Huh?");
+    ~chatnpc("<p,neutral>You's creature...goes to da over der' place and cook da chompy by da stabber!");
+    ~mesbox("Rantz points over to the north east, in the dim distance you can see a beach near Tai Bwo Wannai.");
+    return;
+}
+~chatplayer("<p,quiz>Ok, now tell me how to get Jubbly!");
+if (%100_ogre_prog = ^hundred_ogre_back) {
+    ~chatnpc("<p,quiz>What's creature's say?");
+    ~chatplayer("<p,angry>I've helped with your scheme to get over to Karamja, now help me by telling me how to get Jubbly!");
+    ~chatnpc("<p,laugh>Ohhh, get's Jubbly...dat's da easy fing...you's creature is a bit stoopid for not know dat!");
+    ~chatplayer("<p,angry>Just tell me!");
+    ~chatnpc("<p,neutral>Okays creature's keeps hairsies on...");
+    %100_ogre_prog = ^hundred_ogre_told;
+}
+@hundred_ogre_rantz_jubbly_how;
+
+[label,hundred_ogre_rantz_jubbly_how]
+~chatnpc("<p,neutral>Ok then you's creature...you's use da big blowers on da fatsie toady. Creature makes da fatsie toady and den needs da rocksie an da wooly fing to stick it down da ground.");
+
+// ---------------------------------------------------------------- the old tree that becomes a boat
+[oplocu,100_jubbly_multi_push_tree]
+if (oc_param(last_useitem, woodcutting_struct) = null) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_obj $axe = last_useitem;
+if (%100_ogre_prog = ^hundred_ogre_tree) {
+    anim(struct_param(oc_param(last_useitem, woodcutting_struct), skill_anim), 0);
+    p_delay(2);
+    anim(null, 0);
+    %100_ogre_jubbly_push_tree = 3;
+    %100_ogre_prog = ^hundred_ogre_roots;
+    ~objbox($axe, "You trim the roots of the tree back.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+if (%100_ogre_prog = ^hundred_ogre_roots) {
+    anim(struct_param(oc_param(last_useitem, woodcutting_struct), skill_anim), 0);
+    p_delay(2);
+    anim(null, 0);
+    %100_ogre_jubbly_push_tree = 4;
+    %100_ogre_prog = ^hundred_ogre_hollow;
+    ~objbox($axe, "You hollow out a bit of the boat...", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- the chompy by the arrow, on Karamja
+// (cooking.rs2's fire hook calls this when a skewered chompy goes on a fire)
+[proc,hundred_ogre_beach_fire]
+if (%100_ogre_prog ! ^hundred_ogre_arrow) return;
+if (inzone(0_43_48_5_4, 0_43_48_15_14, coord) = false) return; // ours: by the tree with the arrow
+queue(hundred_ogre_beach, 6, inv_total(inv, cooked_chompy));
+
+[queue,hundred_ogre_beach](int $before)
+if (%100_ogre_prog ! ^hundred_ogre_arrow | inv_total(inv, cooked_chompy) <= $before) return;
+%100_ogre_prog = ^hundred_ogre_cooked;
+~mesbox("You hear a commotion out to sea...");
+// ours: no cutscene of them swimming in; the boat is just there
+%100_ogre_jubbly_push_tree = 5;
+%100_ogre_jubbly_boat_visible = 1;
+%100_ogre_boat_free_ride = 1;
+~chatnpc_specific("Bugs", bugs, "<p,happy>Hey there...we's could smell da Chompy from ages back...it smells lish!");
+~chatnpc_specific("Bugs", bugs, "<p,neutral>Dad says you can get a lift back with us if you want?");
+
+// ---------------------------------------------------------------- the ogre boat
+// the boats float off the shore, so they're spoken to from a few squares away
+[apnpc1,100_jubbly_multi_boat_karamja]
+if (npc_range(coord) > 4) {
+    p_aprange(4);
+    return;
+}
+@hundred_ogre_boat_karamja;
+[opnpc1,100_jubbly_multi_boat_karamja] @hundred_ogre_boat_karamja;
+[label,hundred_ogre_boat_karamja]
+if (%100_ogre_boat_free_ride = 1) {
+    ~chatnpc_specific("Bugs", bugs, "<p,neutral>Dad says you can get a free lift back with us if you want?");
+    if (~p_choice2("Yes please, I'll get a lift back with you.", 1, "No thanks.", 2) = 2) {
+        ~chatplayer("<p,neutral>No thanks.");
+        return;
+    }
+    ~chatplayer("<p,happy>Yes please, I'll get a lift back with you.");
+    mes("You accept a free ride from Fycie and Bugs on the makeshift boat.");
+    %100_ogre_boat_free_ride = 0;
+    if (%100_ogre_prog = ^hundred_ogre_cooked) %100_ogre_prog = ^hundred_ogre_back;
+    @hundred_ogre_sail(^hundred_ogre_feldip_landing, "the Feldip Hills");
+}
+~chatnpc_specific("Bugs", bugs, "<p,neutral>Dad says you can get a lift back with us if you want? But you's gives us two glug-glugs herbies first!");
+if (~p_choice2("Yes please, I'll get a lift back with you.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+if (inv_total(inv, karamja_rum) > 0) {
+    ~chatnpc_specific("Bugs", bugs, "<p,angry>Dad sez yous not bringin' da rummy stuff...das bad stuffsies un we get in big bads.");
+    return;
+}
+if (inv_total(inv, snake_weed) >= 2) {
+    inv_del(inv, snake_weed, 2);
+} else if (inv_total(inv, rogues_purse) >= 2) {
+    inv_del(inv, rogues_purse, 2);
+} else {
+    ~chatnpc_specific("Ogre boat", 100_jubbly_ogre_boat_full, "<p,neutral>You's got no glug-glugs herbies...no boatsie trips!");
+    return;
+}
+mes("You hand over two herbs and accept a ride from Fycie and Bugs on the makeshift boat.");
+@hundred_ogre_sail(^hundred_ogre_feldip_landing, "the Feldip Hills");
+
+[apnpc1,100_jubbly_multi_boat_feldip]
+if (npc_range(coord) > 4) {
+    p_aprange(4);
+    return;
+}
+@hundred_ogre_boat_feldip;
+[opnpc1,100_jubbly_multi_boat_feldip] @hundred_ogre_boat_feldip;
+[label,hundred_ogre_boat_feldip]
+~chatnpc_specific("Bugs", bugs, "<p,neutral>Dad says you can get a lift to Karamja with us if you want? But you's gives us two chompy first!");
+if (~p_choice2("Yes please, I'll get a lift to Karamja with you.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+if (inv_total(inv, raw_chompy) >= 2) {
+    inv_del(inv, raw_chompy, 2);
+} else if (inv_total(inv, cooked_chompy) >= 2) {
+    inv_del(inv, cooked_chompy, 2);
+} else {
+    ~chatnpc_specific("Ogre boat", 100_jubbly_ogre_boat, "<p,neutral>You's got no chompies...no boatsie trips!");
+    return;
+}
+@hundred_ogre_sail(^hundred_ogre_karamja_landing, "Karamja beach");
+
+[label,hundred_ogre_sail](coord $to, string $where)
+if_close;
+p_delay(1);
+p_telejump($to);
+if (compare($where, "Karamja beach") = 0) {
+    mes("@or1@You're ogre propelled to the beach of Karamja!");
+} else {
+    mes("@or1@You're ogre-propelled to the Feldip Hills!");
+}
+mes("The barely sea-worthy log arrives at <$where>.");
+
+// ---------------------------------------------------------------- the balloon toad
+[oploc1,swamp_rock1]
+def_obj $pickaxe = ~pickaxe_checker;
+if ($pickaxe = null) {
+    mes("You need a pickaxe to mine this rock."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+mes("You swing your pick at the rock.");
+anim(oc_param($pickaxe, mining_animation), 0);
+p_delay(2);
+anim(null, 0);
+inv_add(inv, rock, 1);
+mes("You manage to mine a rock.");
+
+[opheldu,bloated_toad]
+switch_obj (last_useitem) {
+    case filled_ogre_bellow3, filled_ogre_bellow2, filled_ogre_bellow1 : @hundred_ogre_balloon(last_useitem);
+    case default : ~displaymessage(^dm_default);
+}
+
+[label,hundred_ogre_balloon](obj $bellows)
+if (%100_ogre_prog < ^hundred_ogre_told) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, rock) < 1 | inv_total(inv, ball_of_wool) < 1) {
+    mes("You need a rock and a ball of wool to tie the toad down."); // ours
+    return;
+}
+~reduce_ogre_bellows($bellows);
+anim(human_chompybird_ogrebellows, 0);
+sound_synth(ogre_bellows, 1, 0);
+mes("You manage to inflate a bloated toad with the swamp gas.");
+p_delay(1);
+inv_del(inv, bloated_toad, 1);
+inv_del(inv, rock, 1);
+// the ball of wool is sometimes used up (OSRS wiki: a small chance; ours: 1 in 10)
+if (random(10) = 0) inv_del(inv, ball_of_wool, 1);
+if (random(2) = 0) inv_add(inv, 100_jubbly_balloon_toad_brown, 1);
+else inv_add(inv, 100_jubbly_balloon_toad_white, 1);
+mes("You blow the bloated toad up into a balloon toad.");
+
+[opheld1,100_jubbly_balloon_toad_brown] @hundred_ogre_place_toad(100_jubbly_balloon_toad_brown, 100_jubbly_balloon_toad_brown);
+[opheld1,100_jubbly_balloon_toad_white] @hundred_ogre_place_toad(100_jubbly_balloon_toad_white, 100_jubbly_balloon_toad_white);
+[opheld4,100_jubbly_balloon_toad_brown] @hundred_ogre_release_toads;
+[opheld4,100_jubbly_balloon_toad_white] @hundred_ogre_release_toads;
+[opheld5,100_jubbly_balloon_toad_brown] @hundred_ogre_release_toad;
+[opheld5,100_jubbly_balloon_toad_white] @hundred_ogre_release_toad;
+
+// ours: let go, they float off like bloated toads (bloated_toad.rs2)
+[label,hundred_ogre_release_toad]
+inv_delslot(inv, last_slot);
+~release_toad;
+mes("You release the toad and see it hop off into the distance.");
+
+[label,hundred_ogre_release_toads]
+def_int $count = calc(inv_total(inv, 100_jubbly_balloon_toad_brown) + inv_total(inv, 100_jubbly_balloon_toad_white));
+if (inv_total(inv, 100_jubbly_balloon_toad_brown) > 0) inv_del(inv, 100_jubbly_balloon_toad_brown, inv_total(inv, 100_jubbly_balloon_toad_brown));
+if (inv_total(inv, 100_jubbly_balloon_toad_white) > 0) inv_del(inv, 100_jubbly_balloon_toad_white, inv_total(inv, 100_jubbly_balloon_toad_white));
+def_int $i = 0;
+while ($i < $count) {
+    ~release_toad;
+    $i = add($i, 1);
+}
+mes("You release the toads and see them hop off into the distance.");
+
+[label,hundred_ogre_place_toad](obj $item, npc $toad)
+// ours: where chompies come, the ogre area (bloated_toad.rs2's three map squares)
+if (inzone(0_39_46_0_0, 0_41_46_63_63, coord) = false) {
+    mes("You won't attract a jubbly bird this far away from the ogre area."); // ours
+    return;
+}
+if (npc_findexact(coord, $toad) = true) {
+    mes("There is a balloon toad already placed at this location."); // ours
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_del(inv, $item, 1);
+if (p_finduid(uid) = true) {
+    npc_add(coord, $toad, 150);
+    %npc_attacking_uid = uid;
+    npc_queue(4, 0, 10);
+    mes("You carefully place the balloon toad bait.");
+    p_delay(0);
+    ~push_player(coord);
+}
+
+// every 10 ticks a 1 in 3 chance of a jubbly (ours), 6 tries before the toad goes down
+[ai_queue4,100_jubbly_balloon_toad_brown] @hundred_ogre_toad_roll(100_jubbly_rock_and_string_brown);
+[ai_queue4,100_jubbly_balloon_toad_white] @hundred_ogre_toad_roll(100_jubbly_rock_and_string_white);
+
+[label,hundred_ogre_toad_roll](loc $rock)
+if (random(3) = 0) {
+    def_coord $spawn = map_findsquare(npc_coord, 2, 6, ^map_findsquare_lineofwalk);
+    def_player_uid $baiter = %npc_attacking_uid;
+    // the rock and string loc plays the toad going down
+    loc_add(npc_coord, $rock, 0, centrepiece_straight, 50);
+    npc_del;
+    npc_add($spawn, 100_jubbly_bird, 200);
+    %npc_attacking_uid = $baiter;
+    npc_say("Squawk!"); // ours
+    if (finduid(%npc_attacking_uid) = true) hint_npc;
+    return;
+}
+if (last_int >= 5) {
+    loc_add(npc_coord, $rock, 0, centrepiece_straight, 50);
+    npc_del;
+    return;
+}
+npc_queue(4, add(last_int, 1), 10);
+
+// ---------------------------------------------------------------- the jubbly bird (shot like a chompy:
+// chompy_bird.rs2; a comp ogre bow takes brutal arrows too, OSRS wiki)
+[apnpc5,100_jubbly_bird] @hundred_ogre_jubbly_attack;
+[opnpc5,100_jubbly_bird] @hundred_ogre_jubbly_attack;
+
+[label,hundred_ogre_jubbly_attack]
+def_obj $rhand = inv_getobj(worn, ^wearpos_rhand);
+def_obj $ammo = inv_getobj(worn, ^wearpos_quiver);
+if ($rhand ! ogre_bow & $rhand ! zogre_bow) {
+    mes("You need an ogre bow to hunt the jubbly bird."); // ours
+    return;
+}
+if (%npc_attacking_uid ! uid) {
+    mes("This is not your Jubbly bird to shoot."); // ours
+    return;
+}
+if ($ammo = null) {
+    mes("There is no ammo left in your quiver");
+    return;
+}
+if (($rhand = ogre_bow & $ammo ! ogre_arrow) | ($rhand = zogre_bow & oc_category($ammo) ! ogre_arrows)) {
+    mes("You can't use that ammo with your bow.");
+    return;
+}
+def_int $attackrange = ~player_attackrange($rhand);
+if (npc_range(coord) > $attackrange) {
+    p_aprange($attackrange);
+    return;
+}
+~player_combat_chompybird($rhand, $ammo);
+
+[ai_queue3,100_jubbly_bird]
+if (npc_findhero = ^true) queue(hundred_ogre_jubbly_kill, 0, 0);
+gosub(npc_death);
+npc_add(npc_coord, 100_jubbly_bird_dead, 100);
+
+[queue,hundred_ogre_jubbly_kill](int $unused)
+mes("You scratch a notch on your bow for the jubbly bird kill.");
+
+[opnpc4,100_jubbly_bird_dead]
+mes("You start plucking the Jubbly bird.");
+anim(human_pickupfloor, 0);
+p_delay(1);
+// what it leaves (Void: raw jubbly, big bones, 15-45 feathers)
+obj_add(npc_coord, 100_jubbly_meat_raw, 1, ^lootdrop_duration);
+obj_add(npc_coord, big_bones, 1, ^lootdrop_duration);
+inv_add(inv, feather, calc(random(31) + 15));
+npc_del;
+
+// ---------------------------------------------------------------- roasting the jubbly (raw_chompy.rs2's spit-roast
+// calls this; OSRS wiki: Cooking 41, 160 XP, 191-245 on the spit-roast)
+[label,hundred_ogre_roast_jubbly]
+if (stat(cooking) < 41) {
+    mes("You need a Cooking level of 41 to roast a jubbly."); // ours
+    return;
+}
+inv_del(inv, 100_jubbly_meat_raw, 1);
+mes("You carefully place the Jubbly on the spit-roast.");
+anim(human_firecooking, 0);
+p_delay(2);
+mes("You start to cook the Jubbly...it takes some time.");
+p_delay(3);
+if (stat_random(cooking, 191, 245) = true) {
+    inv_add(inv, 100_jubbly_meat_cooked, 1);
+    stat_advance(cooking, 1600);
+    mes("Eventually the Jubbly is nicely cooked.");
+} else {
+    inv_add(inv, 100_jubbly_meat_burned, 1);
+    mes("You accidentally burn the Jubbly."); // ours
+}
+
+[label,hundred_ogre_spit_jubbly]
+~chatplayer("<p,neutral>I saw some large static ogre spits near Jiggig and Rantz. Perhaps I can cook this jubbly meat there?");
+
+[opheldu,100_jubbly_meat_raw]
+if (last_useitem = spit_iron) @hundred_ogre_spit_jubbly;
+~displaymessage(^dm_default);
+
+// eating it (OSRS wiki: heals 15)
+[opheld1,100_jubbly_meat_cooked] @player_consume_item(consume_effect_stat, 2, 3);
