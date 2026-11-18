@@ -1,0 +1,351 @@
+// EASCape: A Soul's Bane (quest_soulbane): Tolna's rift, its five rooms and the ways between them.
+// The rooms are the cache's (map squares 46_81 and 47_81); the monsters in them are added for
+// you alone, as the quest's are only yours to fight (the OSRS wiki: the rift is instanced).
+// Leaving, logging out or dying starts a room you hadn't finished again.
+
+// ---------------------------------------------------------------- where you are
+[proc,sb_room_at](coord $c)(int)
+if (inzone(0_47_81_0_32, 0_47_81_32_63, $c) = true) return(1);
+if (inzone(0_47_81_33_32, 0_47_81_63_63, $c) = true) return(2);
+if (inzone(0_47_81_33_0, 0_47_81_63_31, $c) = true) return(3);
+if (inzone(0_47_81_0_0, 0_47_81_32_31, $c) = true) return(4);
+if (inzone(1_46_81_0_0, 1_46_81_63_63, $c) = true) return(5);
+return(0);
+
+[proc,sb_room_done](int $room)(boolean)
+switch_int ($room) {
+    case 1 : if (%soulbane_prog >= ^sb_rage_done) return(true);
+    case 2 : if (%soulbane_prog >= ^sb_fear_done) return(true);
+    case 3 : if (%soulbane_prog >= ^sb_confusion_done) return(true);
+    case 4 : if (%soulbane_prog >= ^sb_hope_done) return(true);
+    case 5 : if (%soulbane_prog >= ^sb_tolna_beaten) return(true);
+}
+return(false);
+
+// ---------------------------------------------------------------- going into a room
+[proc,sb_enter_room](int $room)
+if_close;
+~fade_out;
+p_delay(1);
+switch_int ($room) {
+    case 1 : p_telejump(^sb_rage_arrive);
+    case 2 : p_telejump(^sb_fear_arrive);
+    case 3 : p_telejump(^sb_confusion_arrive);
+    case 4 : p_telejump(^sb_hope_arrive);
+    case 5 : p_telejump(^sb_tolna_arrive);
+}
+softtimer(sb_watch, 2);
+switch_int ($room) {
+    case 1 :
+        ~sb_rage_setup; // sb_rage.rs2
+        ~sb_music(music:wrath_and_ruin);
+    case 2 :
+        ~sb_fear_setup; // sb_fear.rs2
+        ~sb_music(music:fear_and_loathing);
+    case 3 :
+        ~sb_confusion_setup; // sb_confusion.rs2
+        ~sb_music(music:method_of_madness);
+    case 4 :
+        ~sb_hope_setup; // sb_hope.rs2
+        ~sb_music(music:no_way_out);
+    case 5 : ~sb_tolna_setup; // sb_tolna.rs2
+}
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+switch_int ($room) {
+    case 1 :
+        if (%soulbane_prog = ^sb_started) {
+            ~sb_voice("Why should I, Tolna, be trapped in such a wretched place?");
+            ~sb_voice("Arrghh, It's not fair! Feel my ANGER!");
+            %soulbane_prog = ^sb_rage;
+        }
+    case 2 :
+        if (%soulbane_prog = ^sb_rage_done) {
+            ~sb_voice("It's so quiet and dark. I FEAR I may never escape this horrid place.");
+            ~sb_voice("Mum, Dad, help me!");
+            %soulbane_prog = ^sb_fear;
+        }
+        if (%soulbane_prog = ^sb_fear) ~chatplayer("<p,confused>Hmmm, no light sources. So why can I still see down here? This can't just be a simple dungeon.");
+    case 3 :
+        if (%soulbane_prog = ^sb_fear_done) {
+            ~sb_voice("Where am I? How long have I been here? Am I still the person I once was?");
+            ~sb_voice("Oh why am I so CONFUSED?");
+            %soulbane_prog = ^sb_confusion;
+        }
+    case 4 :
+        if (%soulbane_prog = ^sb_confusion_done) {
+            ~sb_voice("What's the point? No-one will ever help me.");
+            ~sb_voice("I'm not worth anything. Will anyone ever combat my HOPELESSNESS?");
+            %soulbane_prog = ^sb_hope;
+        }
+    case 5 : if (%soulbane_prog = ^sb_hope_done) ~sb_tolna_meeting; // sb_tolna.rs2
+}
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+queue(sb_engage, 3, 0);
+
+// Tolna's voice, heard as you go into each room (no one says it; ours: his head with it)
+[proc,sb_voice](string $text)
+~chatnpc_specific("Tolna's Voice", soulbane_tolna_top, "<p,sad><$text>");
+
+// each room has its own music, unlocked as you go in (music.dbrow)
+[proc,sb_music](component $button)
+db_find(music:playbutton, $button);
+def_dbrow $song = db_findnext;
+if ($song = null) return;
+def_int $unlock;
+def_int $bit;
+$unlock, $bit = db_getfield($song, music:unlock, 0);
+if ($unlock ! null) {
+    if (testbit(~music_getvar($unlock), $bit) = ^false) ~music_setvar($unlock, $bit);
+}
+if (%musicplay ! 0) {
+    if_settext(music:com_177, db_getfield($song, music:name, 0));
+    midi_song(db_getfield($song, music:track, 0));
+}
+
+// ---------------------------------------------------------------- the ways on
+[oploc1,soul_bane_awall_void_exit]
+if (%soulbane_prog < ^sb_rage_done) {
+    mes("The flames block the way."); // ours
+    return;
+}
+~sb_enter_room(2);
+
+[oploc1,soulbane_fwall_exit_multi]
+if (%soulbane_prog < ^sb_fear_done) {
+    ~chatplayer("<p,shock>This door's darker than the rest. There is no WAY I'm going in there.");
+    return;
+}
+~sb_enter_room(3);
+
+[oploc1,soulbane_door_multi6]
+if (%soulbane_prog < ^sb_confusion_done) {
+    mes("The door won't open."); // ours
+    return;
+}
+~sb_enter_room(4);
+
+[oploc1,soulbane_door_multi1] mes("The door won't open."); // ours
+[oploc1,soulbane_door_multi2] mes("The door won't open."); // ours
+[oploc1,soulbane_door_multi3] mes("The door won't open."); // ours
+[oploc1,soulbane_door_multi4] mes("The door won't open."); // ours
+[oploc1,soulbane_door_multi5] mes("The door won't open."); // ours
+
+[oploc1,soul_bane_hwall_void_exit]
+if (%soulbane_prog < ^sb_hope_done) {
+    mes("I can't go on while these creatures are still here."); // ours
+    return;
+}
+~sb_enter_room(5);
+
+// ---------------------------------------------------------------- back to the surface
+[oploc1,soul_bane_awall_void_small] @sb_leave(1);
+[oploc1,soul_bane_fwall_void_small] @sb_leave(2);
+[oploc1,soul_bane_cwall_void_small] @sb_leave(3);
+[oploc1,soul_bane_hwall_void_small] @sb_leave(4);
+[oploc1,soul_bane_tolna_void_small] @sb_leave(5);
+
+[label,sb_leave](int $room)
+if (~sb_room_done($room) = false) {
+    if (~p_choice2_header("Yes, I don't mind starting this room again.", 1, "No, I'll finish this room first.", 2, "Do you wish to leave?") = 2) return;
+}
+~sb_to_surface;
+mes("You've returned to the entrance");
+
+[proc,sb_to_surface]
+~sb_tidy;
+anim(human_climbing, 0);
+p_delay(1);
+p_telejump(^sb_surface);
+
+// out of the rift: the rack's weapons go back on it (theirs are the rift's)
+[proc,sb_tidy]
+clearsofttimer(sb_watch);
+~sb_drop_anger_weapons; // sb_rage.rs2
+
+// teleporting out, or dying, leaves the rift
+[softtimer,sb_watch]
+if (~sb_room_at(coord) > 0 & stat(hitpoints) > 0) return;
+clearsofttimer(sb_watch);
+queue(sb_left, 0, 0);
+
+[queue,sb_left](int $unused)
+~sb_drop_anger_weapons;
+
+// logging out in the rift puts you back at the surface (OSRS wiki)
+[proc,sb_login]
+if (%soulbane_prog >= ^sb_complete) {
+    %soulbane_warning_pres = 1;
+    %soulbane_riftrope_pres = 1;
+}
+if (~sb_room_at(coord) > 0) {
+    ~sb_drop_anger_weapons;
+    p_telejump(^sb_surface);
+}
+
+// ---------------------------------------------------------------- the rift's monsters
+// each is added for you, and is only yours to fight
+[proc,sb_spawn](coord $c, npc $type)
+npc_add(map_findsquare($c, 0, 2, ^map_findsquare_lineofwalk), $type, 3000);
+%npc_attacking_uid = uid;
+
+[proc,sb_is_monster](npc $type)(boolean)
+switch_npc ($type) {
+    case soulbane_anger_bear, soulbane_anger_unicorn, soulbane_anger_rat, soulbane_anger_goblin, soulbane_fear_reaper,
+        soulbane_confu_creeper, soulbane_confu_creeper_fake1, soulbane_confu_creeper_fake2, soulbane_confu_creeper_fake3,
+        soulbane_confu_creeper_fake4, soulbane_hope_monst3, soulbane_hope_monst2, soulbane_hope_monst1,
+        soulbane_final_tolna1, soulbane_final_tolna2, soulbane_final_tolna3 : return(true);
+}
+return(false);
+
+// a few ticks after they're added: on you, and watching that you're still there
+[queue,sb_engage](int $unused)
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) {
+        if (~sb_is_monster(npc_type) = true) {
+            npc_settimer(4);
+            npc_setmode(opplayer2);
+        } else if (npc_type = soulbane_brana | npc_type = soulbane_tolna_top) {
+            npc_settimer(4);
+        }
+    }
+}
+
+// gone when you leave their room
+[ai_timer,soulbane_anger_bear] @sb_npc_tick;
+[ai_timer,soulbane_anger_unicorn] @sb_npc_tick;
+[ai_timer,soulbane_anger_rat] @sb_npc_tick;
+[ai_timer,soulbane_anger_goblin] @sb_npc_tick;
+[ai_timer,soulbane_fear_reaper] @sb_npc_tick;
+[ai_timer,soulbane_confu_creeper] @sb_npc_tick;
+[ai_timer,soulbane_confu_creeper_fake1] @sb_npc_tick;
+[ai_timer,soulbane_confu_creeper_fake2] @sb_npc_tick;
+[ai_timer,soulbane_confu_creeper_fake3] @sb_npc_tick;
+[ai_timer,soulbane_confu_creeper_fake4] @sb_npc_tick;
+[ai_timer,soulbane_hope_monst3] @sb_npc_tick;
+[ai_timer,soulbane_hope_monst2] @sb_npc_tick;
+[ai_timer,soulbane_hope_monst1] @sb_npc_tick;
+[ai_timer,soulbane_final_tolna1] @sb_npc_tick;
+[ai_timer,soulbane_final_tolna2] @sb_npc_tick;
+[ai_timer,soulbane_final_tolna3] @sb_npc_tick;
+[ai_timer,soulbane_brana] @sb_npc_tick;
+[ai_timer,soulbane_tolna_top] @sb_npc_tick;
+
+[label,sb_npc_tick]
+if (finduid(%npc_attacking_uid) = false) {
+    npc_del;
+    return;
+}
+if (~sb_room_at(coord) ! ~sb_room_at(npc_coord) | stat(hitpoints) = 0) {
+    npc_del;
+    return;
+}
+if (~sb_is_monster(npc_type) = true & npc_getmode = null & npc_stat(hitpoints) > 0) npc_setmode(opplayer2);
+
+// no one else can fight them
+[opnpc2,soulbane_anger_bear] @sb_attack_op;
+[opnpc2,soulbane_anger_unicorn] @sb_attack_op;
+[opnpc2,soulbane_anger_rat] @sb_attack_op;
+[opnpc2,soulbane_anger_goblin] @sb_attack_op;
+[opnpc2,soulbane_fear_reaper] @sb_attack_op;
+[opnpc2,soulbane_confu_creeper] @sb_attack_op;
+[opnpc2,soulbane_confu_creeper_fake1] @sb_attack_op;
+[opnpc2,soulbane_confu_creeper_fake2] @sb_attack_op;
+[opnpc2,soulbane_confu_creeper_fake3] @sb_attack_op;
+[opnpc2,soulbane_confu_creeper_fake4] @sb_attack_op;
+[opnpc2,soulbane_hope_monst3] @sb_attack_op;
+[opnpc2,soulbane_hope_monst2] @sb_attack_op;
+[opnpc2,soulbane_hope_monst1] @sb_attack_op;
+[opnpc2,soulbane_final_tolna1] @sb_attack_op;
+[opnpc2,soulbane_final_tolna2] @sb_attack_op;
+[opnpc2,soulbane_final_tolna3] @sb_attack_op;
+[apnpc2,soulbane_anger_bear] @sb_attack_ap;
+[apnpc2,soulbane_anger_unicorn] @sb_attack_ap;
+[apnpc2,soulbane_anger_rat] @sb_attack_ap;
+[apnpc2,soulbane_anger_goblin] @sb_attack_ap;
+[apnpc2,soulbane_fear_reaper] @sb_attack_ap;
+[apnpc2,soulbane_confu_creeper] @sb_attack_ap;
+[apnpc2,soulbane_confu_creeper_fake1] @sb_attack_ap;
+[apnpc2,soulbane_confu_creeper_fake2] @sb_attack_ap;
+[apnpc2,soulbane_confu_creeper_fake3] @sb_attack_ap;
+[apnpc2,soulbane_confu_creeper_fake4] @sb_attack_ap;
+[apnpc2,soulbane_hope_monst3] @sb_attack_ap;
+[apnpc2,soulbane_hope_monst2] @sb_attack_ap;
+[apnpc2,soulbane_hope_monst1] @sb_attack_ap;
+[apnpc2,soulbane_final_tolna1] @sb_attack_ap;
+[apnpc2,soulbane_final_tolna2] @sb_attack_ap;
+[apnpc2,soulbane_final_tolna3] @sb_attack_ap;
+
+[label,sb_attack_op]
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return;
+}
+@player_combat_start;
+
+[label,sb_attack_ap]
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return;
+}
+@player_combat_start_ap;
+
+// how they fight: melee; from a distance (the confusion beasts, the hopeless creatures'
+// first form and Tolna's eastern head); or both (Tolna's other heads: OSRS wiki)
+[ai_opplayer2,soulbane_anger_bear] @sb_npc_melee;
+[ai_opplayer2,soulbane_anger_unicorn] @sb_npc_melee;
+[ai_opplayer2,soulbane_anger_rat] @sb_npc_melee;
+[ai_opplayer2,soulbane_anger_goblin] @sb_npc_melee;
+[ai_opplayer2,soulbane_fear_reaper] @sb_npc_melee;
+[ai_opplayer2,soulbane_hope_monst2] @sb_npc_melee;
+[ai_opplayer2,soulbane_hope_monst1] @sb_npc_melee;
+[ai_opplayer2,soulbane_confu_creeper] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_confu_creeper_fake1] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_confu_creeper_fake2] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_confu_creeper_fake3] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_confu_creeper_fake4] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_hope_monst3] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_final_tolna1] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_final_tolna2] npc_setmode(applayer2);
+[ai_opplayer2,soulbane_final_tolna3] npc_setmode(applayer2);
+[ai_applayer2,soulbane_confu_creeper] @sb_npc_ranged(confrange);
+[ai_applayer2,soulbane_confu_creeper_fake1] @sb_npc_ranged(confrange);
+[ai_applayer2,soulbane_confu_creeper_fake2] @sb_npc_ranged(confrange);
+[ai_applayer2,soulbane_confu_creeper_fake3] @sb_npc_ranged(confrange);
+[ai_applayer2,soulbane_confu_creeper_fake4] @sb_npc_ranged(confrange);
+[ai_applayer2,soulbane_hope_monst3] @sb_npc_ranged(lessattack);
+[ai_applayer2,soulbane_final_tolna2] @sb_npc_ranged(neckrange);
+[ai_applayer2,soulbane_final_tolna1] @sb_npc_mixed;
+[ai_applayer2,soulbane_final_tolna3] @sb_npc_mixed;
+
+[label,sb_npc_melee]
+if (uid ! %npc_attacking_uid) {
+    npc_setmode(null);
+    return;
+}
+gosub(npc_default_attack);
+
+[label,sb_npc_ranged](seq $anim)
+if (uid ! %npc_attacking_uid) {
+    npc_setmode(null);
+    return;
+}
+def_int $was = %npc_action_delay;
+~npc_rangeattack;
+if (%npc_action_delay ! $was) npc_anim($anim, 0);
+
+[label,sb_npc_mixed]
+if (uid ! %npc_attacking_uid) {
+    npc_setmode(null);
+    return;
+}
+if (npc_range(coord) <= 1) {
+    gosub(npc_default_attack);
+    return;
+}
+def_int $was = %npc_action_delay;
+~npc_rangeattack;
+if (%npc_action_delay ! $was) npc_anim(neckrange, 0);

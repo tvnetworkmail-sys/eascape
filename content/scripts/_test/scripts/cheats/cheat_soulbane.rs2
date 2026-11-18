@@ -1,0 +1,39 @@
+// EASCape: test commands for A Soul's Bane (quests/quest_soulbane).
+
+// ::~sbpack - what the quest asks you to bring
+[debugproc,sbpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(rune_scimitar, 1));
+$banked = calc($banked + ~questpack_give(maple_shortbow, 1));
+$banked = calc($banked + ~questpack_give(adamant_arrow, 300));
+$banked = calc($banked + ~questpack_give(3doseantipoison, 2));
+$banked = calc($banked + ~questpack_give(shark, 10));
+~questpack_done("A Soul's Bane", $banked);
+mes("::~sbtele 0-5: Launa, the rooms of rage, fear, confusion and hopelessness, Tolna.");
+
+// ::~sbstage <n> - %soulbane_prog (1 started, 2 rage, 3 rage done, 4 fear, 5 fear done,
+// 6 confusion, 7 confusion done, 8 hope, 9 hope done, 10 Tolna, 11 Tolna beaten,
+// 12 Tolna saved, 13 complete)
+[debugproc,sbstage](int $n)
+if (p_finduid(uid) = false) return;
+%soulbane_prog = $n;
+if ($n >= ^sb_started) %soulbane_riftrope_pres = 1;
+%soulbane_tolna_pres = 0;
+%soulbane_launa_pres = 0;
+if ($n >= ^sb_tolna_saved) {
+    %soulbane_tolna_pres = 1;
+    %soulbane_launa_pres = 1;
+}
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+mes("A Soul's Bane stage: <tostring($n)>");
+
+// ::~sbtele <n> - 0 Launa, 1-5 into a room (as from the rift)
+[debugproc,sbtele](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 0) {
+    p_telejump(^sb_surface);
+    return;
+}
+~sb_enter_room($n);

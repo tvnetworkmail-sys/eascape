@@ -101,6 +101,7 @@ if (%eascape_onehit = ^true | ~player_npc_hit_roll(^magic_style) = true) {
         $maxhit = 0;
     }    
     $maxhit = ~myq2_juvinate_maxhit($maxhit, ^magic_style); // EASCape: juvinates take hits only from silver (quest_myreque2/myq2_fights.rs2)
+    $maxhit = ~sb_anger_maxhit($maxhit, ^magic_style); // EASCape: A Soul's Bane's angry beasts and the rack's weapons (quest_soulbane/sb_rage.rs2)
     ~pvm_spell_success($spell_data, $maxhit, $duration);
     ~pvm_stat_change_effect($spell_data);
     ~pvm_freeze_effect($spell_data);

@@ -1,0 +1,112 @@
+// EASCape: A Soul's Bane (quest_soulbane): the last room. Tolna, now a three-headed beast, and his
+// father Brana. Kill the three heads (a multicombat fight: OSRS wiki) and he's human again.
+
+[proc,sb_tolna_setup]
+if (%soulbane_prog >= ^sb_tolna_saved) return;
+~sb_spawn(^sb_tolna_brana, soulbane_brana);
+if (%soulbane_prog >= ^sb_tolna_beaten) {
+    ~sb_spawn(^sb_tolna_centre, soulbane_tolna_top);
+    return;
+}
+%soulbane_final_tol1dead = 0;
+%soulbane_final_tol2dead = 0;
+%soulbane_final_tol3dead = 0;
+~sb_spawn(movecoord(^sb_tolna_centre, -1, 0, -5), soulbane_final_tolna1); // the south head
+~sb_spawn(movecoord(^sb_tolna_centre, 4, 0, -1), soulbane_final_tolna2);  // the east head
+~sb_spawn(movecoord(^sb_tolna_centre, 0, 0, 3), soulbane_final_tolna3);   // the north head
+
+// meeting Tolna and his father (a cutscene: their lines, over their heads)
+[proc,sb_tolna_meeting]
+~sb_tolna_say(soulbane_brana, "Son! Is that you?");
+~sb_tolna_say(soulbane_brana, "Please speak to me! Tolna?");
+~sb_tolna_say(soulbane_final_tolna3, "Why should I speak to you? Besides, I'm no longer the boy you once knew.");
+~sb_tolna_say(soulbane_brana, "What do you mean?");
+~sb_tolna_say(soulbane_brana, "You'll always be my son!");
+~sb_tolna_say(soulbane_final_tolna3, "No. Something evil in this dungeon has morphed my body and mind.");
+~sb_tolna_say(soulbane_brana, "There must be a way.");
+~sb_tolna_say(soulbane_brana, "Don't give up so easily!");
+~sb_tolna_say(soulbane_final_tolna3, "Don't give up? You had your chance to help me, 25 years it's taken you!");
+~sb_tolna_say(soulbane_brana, "Sorry, but your mother and I...");
+~sb_tolna_say(soulbane_brana, "...tried so hard to find you!");
+~sb_tolna_say(soulbane_final_tolna3, "Lies!");
+~sb_tolna_say(soulbane_final_tolna3, "Ah, we have a visitor!");
+say("Your father isn't lying.");
+p_delay(2);
+~sb_tolna_say(soulbane_final_tolna3, "Hah! If that's the way you think, then you shall both die!");
+%soulbane_final_seencut = 1;
+%soulbane_prog = ^sb_tolna;
+
+[proc,sb_tolna_say](npc $who, string $text)
+if (npc_find(coord, $who, 30, 0) = true) npc_say($text);
+p_delay(2);
+
+// ---------------------------------------------------------------- Brana
+[opnpc1,soulbane_brana]
+if (%soulbane_prog >= ^sb_tolna_beaten) {
+    ~chatplayer("<p,happy>I think I've saved your son.");
+    ~chatnpc("<p,neutral>Please talk to him, make sure he's OK!");
+    return;
+}
+~chatplayer("<p,neutral>Are you ok?");
+~chatnpc("<p,sad>Please! You must help my son! He's beyond sense.");
+~chatplayer("<p,confused>But how can I help?");
+~chatnpc("<p,neutral>I take it you have travelled through the mental dilemmas of my son, as I have.");
+~chatplayer("<p,neutral>That's correct.");
+~chatnpc("<p,neutral>Now you must do what I cannot, conquer the physical dilemma!");
+~chatplayer("<p,neutral>I will try.");
+~chatnpc("<p,happy>Thank you stranger.");
+
+// ---------------------------------------------------------------- the three heads
+[ai_queue3,soulbane_final_tolna1] @sb_tolna_head_died(1);
+[ai_queue3,soulbane_final_tolna2] @sb_tolna_head_died(2);
+[ai_queue3,soulbane_final_tolna3] @sb_tolna_head_died(3);
+
+[label,sb_tolna_head_died](int $head)
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(sb_tolna_head_down, 0, $head);
+
+[queue,sb_tolna_head_down](int $head)
+if (%soulbane_prog ! ^sb_tolna) return;
+switch_int ($head) {
+    case 1 : %soulbane_final_tol1dead = 1;
+    case 2 : %soulbane_final_tol2dead = 1;
+    case 3 : %soulbane_final_tol3dead = 1;
+}
+if (%soulbane_final_tol1dead = 0 | %soulbane_final_tol2dead = 0 | %soulbane_final_tol3dead = 0) return;
+%soulbane_prog = ^sb_tolna_beaten;
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+// Tolna's human body appears
+~sb_spawn(^sb_tolna_centre, soulbane_tolna_top);
+spotanim_map(neck_death_spot, npc_coord, 0, 0);
+queue(sb_engage, 3, 0);
+
+// ---------------------------------------------------------------- Tolna, himself again
+[opnpc1,soulbane_tolna_top]
+if (%soulbane_prog ! ^sb_tolna_beaten | %npc_attacking_uid ! uid) return;
+~chatplayer("<p,confused>Tolna?");
+~chatnpc("<p,confused>Sorry? What happened?");
+~chatplayer("<p,neutral>You've been trapped down here for years. I've come to rescue you on behalf of your parents.");
+~chatnpc("<p,neutral>Oh yeah. I was looking for the legacy of a civilisation that used to live down here.");
+~chatnpc_specific("Brana", soulbane_brana, "<p,happy>Son!");
+~chatnpc("<p,sad>Father? Oh, I'm so sorry, can you ever forgive me?");
+~chatnpc_specific("Brana", soulbane_brana, "<p,happy>Don't worry, I'm just glad you're back to yourself. Are you OK?");
+~chatnpc("<p,neutral>I'm fine, my memories are slowly returning. How's mother?");
+~chatnpc_specific("Brana", soulbane_brana, "<p,neutral>She misses you dearly!");
+~chatnpc("<p,confused>Where is she?");
+~chatplayer("<p,neutral>She's up at the surface waiting for you.");
+~chatnpc_specific("Brana", soulbane_brana, "<p,happy>Thank you traveller, I'm glad my wife and I never gave up hope. We should return to her and tell her the good news.");
+~chatnpc("<p,happy>Thank you so much. I truly owe you for your help.");
+~chatplayer("<p,happy>I'm just glad I could help.");
+%soulbane_prog = ^sb_tolna_saved;
+%soulbane_tolna_pres = 1;
+%soulbane_launa_pres = 1;
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+~fade_out;
+p_delay(2);
+~sb_tidy;
+p_telejump(^sb_surface);
+p_delay(1);
+~fade_in;
+p_delay(2);
+if_openoverlay(null);

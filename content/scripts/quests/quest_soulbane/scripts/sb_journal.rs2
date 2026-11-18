@@ -1,0 +1,49 @@
+// EASCape: A Soul's Bane's journal. Its lines are the RuneScape journal's (2009scape's
+// ASoulsBane.java); the order of striking them out is ours.
+[if_button,questlist:soulbane]
+def_int $s = %soulbane_prog;
+if ($s = ^sb_not_started) {
+    ~quest_journal("A Soul's Bane", "@dbl@I can start this quest by talking to @dre@Launa@dbl@ at the @dre@Rift|@dre@entrance@dbl@ north west of the dig site.||@dbl@There are no minimum requirements, but I should be able|@dbl@to defeat level 46 monsters.");
+    return;
+}
+if ($s >= ^sb_complete) {
+    ~quest_journal("A Soul's Bane", ~sb_journal_done(append("@str@I spoke with Launa next to the rift and she told me|@str@about her lost Son.", ~sb_journal_rooms(^sb_complete)), "||@red@QUEST COMPLETE!"));
+    return;
+}
+def_string $t = "@str@I spoke with Launa next to the rift and she told me|@str@about her lost Son.";
+if ($s = ^sb_started) {
+    $t = "@dbl@I spoke with @dre@Launa@dbl@ next to the rift and she told me|@dbl@about her lost @dre@Son.@dbl@ I can get into the rift with a @dre@rope@dbl@.";
+    ~quest_journal("A Soul's Bane", $t);
+    return;
+}
+$t = append($t, ~sb_journal_rooms($s));
+~quest_journal("A Soul's Bane", $t);
+
+[proc,sb_journal_done](string $t, string $end)(string)
+return(append(append($t, "|@str@Tolna has repented and returned to the entrance of the rift."), append("|@str@Tolna has set up a dungeon to help others avoid his mistakes.", $end)));
+
+// what's happened in the rift; the last line not struck out until it's done
+[proc,sb_journal_rooms](int $s)(string)
+def_string $t = "";
+if ($s = ^sb_rage) return("|@dbl@I heard Tolna's voice say, 'Why should I, Tolna, be|@dbl@trapped in such a wretched place? Feel my ANGER!'");
+$t = "|@str@I heard Tolna's voice say, 'Why should I, Tolna, be|@str@trapped in such a wretched place? Feel my ANGER!'";
+if ($s = ^sb_rage_done) return(append($t, "|@dbl@I beat the anger beasts in the rift."));
+$t = append($t, "|@str@I beat the anger beasts in the rift.");
+if ($s = ^sb_fear) return(append($t, "|@dbl@I heard Tolna's voice say, 'I'm trapped and it's so dark. I|@dbl@FEAR I may never escape this place. Mum, help me!'"));
+$t = append($t, "|@str@I heard Tolna's voice say, 'I'm trapped and it's so dark. I|@str@FEAR I may never escape this place. Mum, help me!'");
+if ($s = ^sb_fear_done) return(append($t, "|@dbl@I defeated the fear beasts in the rift."));
+$t = append($t, "|@str@I defeated the fear beasts in the rift.");
+if ($s = ^sb_confusion) return(append($t, "|@dbl@I heard Tolna's voice say, 'Where am I? How long have I|@dbl@been here? Am I still the person I once was? I hate my|@dbl@CONFUSION'"));
+$t = append($t, "|@str@I heard Tolna's voice say, 'Where am I? How long have I|@str@been here? Am I still the person I once was? I hate my|@str@CONFUSION'");
+if ($s = ^sb_confusion_done) return(append($t, "|@dbl@I conquered the beasts of confusion."));
+$t = append($t, "|@str@I conquered the beasts of confusion.");
+if ($s = ^sb_hope) return(append($t, "|@dbl@I heard Tolna's voice say, 'What's the point? Why do I defy|@dbl@such HOPELESSNESS? No-one will ever help me.'"));
+$t = append($t, "|@str@I heard Tolna's voice say, 'What's the point? Why do I defy|@str@such HOPELESSNESS? No-one will ever help me.'");
+if ($s = ^sb_hope_done) return(append($t, "|@dbl@I overcame the emotion of hopelessness."));
+$t = append($t, "|@str@I overcame the emotion of hopelessness.");
+if ($s = ^sb_tolna) return(append($t, "|@dbl@I've discovered the physical form of @dre@Tolna@dbl@, and his father."));
+$t = append($t, "|@str@I've discovered the physical form of Tolna, and his father.");
+if ($s = ^sb_tolna_beaten) return(append($t, "|@dbl@I fought Tolna and he appears to have returned to his|@dbl@human form. I should @dre@talk to him@dbl@."));
+$t = append($t, "|@str@I fought Tolna and he appears to have returned to his|@str@human form.");
+if ($s = ^sb_tolna_saved) return(append($t, "|@dbl@Tolna has repented and returned to the entrance of the rift.|@dbl@I should talk to @dre@Tolna@dbl@ there."));
+return($t);

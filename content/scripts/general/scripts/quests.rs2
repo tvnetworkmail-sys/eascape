@@ -323,6 +323,9 @@ $questpoints = add($questpoints, ~hundred_questpoints); // EASCape: Recipe for D
 if (%myreque_2_quest >= ^myq2_complete) { // EASCape: In Aid of the Myreque (quest_myreque2)
     $questpoints = add($questpoints, ^myq2_questpoints);
 }
+if (%soulbane_prog >= ^sb_complete) { // EASCape: A Soul's Bane (quest_soulbane)
+    $questpoints = add($questpoints, ^sb_questpoints);
+}
 if (%lt_stage >= ^lt_complete) {
     $questpoints = add($questpoints, ^lt_questpoints);
 }
@@ -482,6 +485,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:fever, %fever_quest, ^fever_complete); // EASCape: Cabin Fever
 ~send_quest_progress_colour(questlist:hundred_main, %hundred_main_quest_var, ^hundred_complete); // EASCape: Recipe for Disaster
 ~send_quest_progress_colour(questlist:myreque_2, %myreque_2_quest, ^myq2_complete); // EASCape: In Aid of the Myreque
+~send_quest_progress_colour(questlist:soulbane, %soulbane_prog, ^sb_complete); // EASCape: A Soul's Bane
 ~send_quest_progress_colour(questlist:lost_tribe, %lt_stage, ^lt_complete);
 ~send_quest_progress_colour(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
 ~send_quest_progress_colour(questlist:rd, %rd_main, ^recruitmentdrive_complete); // EASCape: Recruitment Drive (quest_rd)

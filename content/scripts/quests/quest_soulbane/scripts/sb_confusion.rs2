@@ -1,0 +1,138 @@
+// EASCape: A Soul's Bane (quest_soulbane): the room of confusion. Five confusion beasts, only one
+// of them real; the others are illusions that take no damage and vanish after eight hits. Kill the
+// real one and a confusing door vanishes and the beasts come back; when one door's left, it opens
+// (OSRS wiki).
+
+[proc,sb_confusion_spot](int $n)(coord)
+switch_int ($n) {
+    case 0 : return(0_47_81_39_9);  // 3047,5193
+    case 1 : return(0_47_81_42_18); // 3050,5202
+    case 2 : return(0_47_81_48_6);  // 3056,5190
+    case 3 : return(0_47_81_48_24); // 3056,5208
+    case default : return(0_47_81_54_12); // 3062,5196
+}
+
+[proc,sb_confusion_setup]
+if (%soulbane_prog >= ^sb_confusion_done) {
+    ~sb_confusion_doors(5);
+    %soulbane_confu_door6open = 1;
+    return;
+}
+~sb_confusion_doors(0);
+%soulbane_confu_door6open = 0;
+~sb_confusion_round;
+
+// the first $gone of the five doors gone
+[proc,sb_confusion_doors](int $gone)
+%soulbane_confu_door1pres = 0;
+%soulbane_confu_door2pres = 0;
+%soulbane_confu_door3pres = 0;
+%soulbane_confu_door4pres = 0;
+%soulbane_confu_door5pres = 0;
+if ($gone >= 1) %soulbane_confu_door1pres = 1;
+if ($gone >= 2) %soulbane_confu_door2pres = 1;
+if ($gone >= 3) %soulbane_confu_door3pres = 1;
+if ($gone >= 4) %soulbane_confu_door4pres = 1;
+if ($gone >= 5) %soulbane_confu_door5pres = 1;
+
+[proc,sb_confusion_doors_gone]()(int)
+return(calc(%soulbane_confu_door1pres + %soulbane_confu_door2pres + %soulbane_confu_door3pres + %soulbane_confu_door4pres + %soulbane_confu_door5pres));
+
+// the real one somewhere new each time (ours)
+[proc,sb_confusion_round]
+%soulbane_confu_hitcount1 = 0;
+%soulbane_confu_hitcount2 = 0;
+%soulbane_confu_hitcount3 = 0;
+%soulbane_confu_hitcount4 = 0;
+def_int $real = random(5);
+def_int $fake = 1;
+def_int $n = 0;
+while ($n < 5) {
+    if ($n = $real) {
+        ~sb_spawn(~sb_confusion_spot($n), soulbane_confu_creeper);
+    } else {
+        switch_int ($fake) {
+            case 1 : ~sb_spawn(~sb_confusion_spot($n), soulbane_confu_creeper_fake1);
+            case 2 : ~sb_spawn(~sb_confusion_spot($n), soulbane_confu_creeper_fake2);
+            case 3 : ~sb_spawn(~sb_confusion_spot($n), soulbane_confu_creeper_fake3);
+            case default : ~sb_spawn(~sb_confusion_spot($n), soulbane_confu_creeper_fake4);
+        }
+        $fake = calc($fake + 1);
+    }
+    $n = calc($n + 1);
+}
+
+// the illusions: every hit's nothing, and after eight they're gone
+[ai_queue2,soulbane_confu_creeper_fake1] @sb_confusion_fake_hit(last_int, 1);
+[ai_queue2,soulbane_confu_creeper_fake2] @sb_confusion_fake_hit(last_int, 2);
+[ai_queue2,soulbane_confu_creeper_fake3] @sb_confusion_fake_hit(last_int, 3);
+[ai_queue2,soulbane_confu_creeper_fake4] @sb_confusion_fake_hit(last_int, 4);
+
+[label,sb_confusion_fake_hit](int $damage, int $fake)
+~npc_default_damage(0);
+if (finduid(%npc_attacking_uid) = true) queue(sb_confusion_fake_count, 0, $fake);
+
+[queue,sb_confusion_fake_count](int $fake)
+if (%soulbane_prog ! ^sb_confusion) return;
+def_int $hits = 0;
+def_npc $type = soulbane_confu_creeper_fake4;
+switch_int ($fake) {
+    case 1 :
+        %soulbane_confu_hitcount1 = min(15, calc(%soulbane_confu_hitcount1 + 1));
+        $hits = %soulbane_confu_hitcount1;
+        $type = soulbane_confu_creeper_fake1;
+    case 2 :
+        %soulbane_confu_hitcount2 = min(15, calc(%soulbane_confu_hitcount2 + 1));
+        $hits = %soulbane_confu_hitcount2;
+        $type = soulbane_confu_creeper_fake2;
+    case 3 :
+        %soulbane_confu_hitcount3 = min(15, calc(%soulbane_confu_hitcount3 + 1));
+        $hits = %soulbane_confu_hitcount3;
+        $type = soulbane_confu_creeper_fake3;
+    case 4 :
+        %soulbane_confu_hitcount4 = min(15, calc(%soulbane_confu_hitcount4 + 1));
+        $hits = %soulbane_confu_hitcount4;
+}
+if ($hits = 1) mes("Does this creature really exist?");
+if ($hits ! 8) return;
+mes("That monster wasn't even real!");
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & npc_type = $type) npc_del;
+}
+
+[ai_queue3,soulbane_confu_creeper]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(sb_confusion_down, 0, 0);
+
+[queue,sb_confusion_down](int $unused)
+if (%soulbane_prog ! ^sb_confusion) return;
+mes("Those other monsters were just hallucinations!");
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & ~sb_is_monster(npc_type) = true) npc_del;
+}
+~sb_confusion_doors(calc(~sb_confusion_doors_gone + 1));
+if (~sb_confusion_doors_gone < 5) {
+    queue(sb_confusion_again, 3, 0);
+    return;
+}
+%soulbane_confu_door6open = 1;
+%soulbane_prog = ^sb_confusion_done;
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+~chatplayer("<p,happy>Aha! The exit is now clear! This Tolna's mind really is a mess.");
+// Tolna, sitting in the room of confusion (a cutscene; here, his lines)
+~fade_out;
+p_delay(2);
+~chatnpc_specific("Tolna", soulbane_tolna_top, "<p,sad>Leave me... But I don't want to... How can you say that...");
+~chatnpc_specific("Tolna", soulbane_tolna_top, "<p,angry>I've done nothing wrong... Arrrghhh...");
+if_close;
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+[queue,sb_confusion_again](int $unused)
+if (%soulbane_prog ! ^sb_confusion | ~sb_room_at(coord) ! 3) return;
+~sb_confusion_round;
+queue(sb_engage, 3, 0);

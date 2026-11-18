@@ -1,0 +1,195 @@
+// EASCape: A Soul's Bane (quest_soulbane): the room of rage. Four kinds of angry beast, each hurt
+// only by one of the rack's weapons, and then by ten times the damage (OSRS wiki: unicorn - sword,
+// bear - spear, rat - mace, goblin - battleaxe). Hurting them fills your rage; full, it bursts out
+// and kills them all (40 Attack experience), and the fire goes from the exit.
+
+// where the beasts are, two of each (ours)
+[proc,sb_rage_spot](int $n)(coord)
+switch_int ($n) {
+    case 0 : return(0_47_81_11_42); // 3019,5226
+    case 1 : return(0_47_81_14_54); // 3022,5238
+    case 2 : return(0_47_81_17_48); // 3025,5232
+    case 3 : return(0_47_81_20_57); // 3028,5241
+    case 4 : return(0_47_81_23_39); // 3031,5223
+    case 5 : return(0_47_81_23_51); // 3031,5235
+    case 6 : return(0_47_81_26_45); // 3034,5229
+    case default : return(0_47_81_8_48); // 3016,5232
+}
+
+[proc,sb_rage_beast](int $n)(npc)
+switch_int (modulo($n, 4)) {
+    case 0 : return(soulbane_anger_unicorn);
+    case 1 : return(soulbane_anger_bear);
+    case 2 : return(soulbane_anger_rat);
+    case default : return(soulbane_anger_goblin);
+}
+
+[proc,sb_rage_setup]
+%soulbane_anger_damagedealt = 0;
+%soulbane_anger_donespecial = 0;
+~sb_drop_anger_weapons;
+if (%soulbane_prog >= ^sb_rage_done) {
+    %soulbane_anger_flamepres = 1;
+    return;
+}
+%soulbane_anger_flamepres = 0;
+def_int $n = 0;
+while ($n < 8) {
+    ~sb_spawn(~sb_rage_spot($n), ~sb_rage_beast($n));
+    $n = calc($n + 1);
+}
+
+// ---------------------------------------------------------------- the weapon rack
+[oploc1,soulbane_rack_multi]
+if (%soulbane_prog >= ^sb_rage_done) {
+    mes("You don't need any of these now."); // ours
+    return;
+}
+~sb_drop_anger_weapons;
+if (inv_freespace(inv) = 0) {
+    mes("You don't have enough room in your backpack."); // ours
+    return;
+}
+def_namedobj $weapon = null;
+switch_int (~p_choice5("The Sword", 1, "The Spear", 2, "The Mace", 3, "The Battleaxe", 4, "Nothing", 5)) {
+    case 1 : $weapon = soulbane_anger_swordq;
+    case 2 : $weapon = soulbane_anger_spearq;
+    case 3 : $weapon = soulbane_anger_maceq;
+    case 4 : $weapon = soulbane_anger_axeq;
+    case 5 :
+        mes("You didn't take any weapon.");
+        return;
+}
+inv_add(inv, $weapon, 1);
+%soulbane_anger_weaponmulti = ~sb_anger_weapon_index($weapon);
+anim(human_pickuptable, 0);
+
+[proc,sb_anger_weapon_index](obj $weapon)(int)
+switch_obj ($weapon) {
+    case soulbane_anger_swordq : return(1);
+    case soulbane_anger_spearq : return(2);
+    case soulbane_anger_maceq : return(3);
+    case soulbane_anger_axeq : return(4);
+}
+return(0);
+
+// dropped, it goes back on the rack
+[opheld5,soulbane_anger_swordq] @sb_anger_drop("sword");
+[opheld5,soulbane_anger_spearq] @sb_anger_drop("spear");
+[opheld5,soulbane_anger_maceq] @sb_anger_drop("mace");
+[opheld5,soulbane_anger_axeq] @sb_anger_drop("axe");
+
+[label,sb_anger_drop](string $name)
+inv_del(inv, last_item, 1);
+%soulbane_anger_weaponmulti = 0;
+mes("The <$name> returned to the wall as you dropped it!");
+
+[proc,sb_drop_anger_weapons]
+def_obj $held = inv_getobj(worn, ^wearpos_rhand);
+if (~sb_anger_weapon_index($held) > 0) {
+    inv_del(worn, $held, 1);
+    ~update_all($held);
+}
+inv_del(inv, soulbane_anger_swordq, 28);
+inv_del(inv, soulbane_anger_spearq, 28);
+inv_del(inv, soulbane_anger_maceq, 28);
+inv_del(inv, soulbane_anger_axeq, 28);
+%soulbane_anger_weaponmulti = 0;
+
+// ---------------------------------------------------------------- hurting them
+// the right weapon does ten times the damage; anything else, none (the player combat scripts)
+[proc,sb_anger_maxhit](int $maxhit, int $style)(int)
+def_obj $right = null;
+switch_npc (npc_type) {
+    case soulbane_anger_unicorn : $right = soulbane_anger_swordq;
+    case soulbane_anger_bear : $right = soulbane_anger_spearq;
+    case soulbane_anger_rat : $right = soulbane_anger_maceq;
+    case soulbane_anger_goblin : $right = soulbane_anger_axeq;
+    case default : return($maxhit);
+}
+if ($style = ^melee_style & inv_getobj(worn, ^wearpos_rhand) = $right) return(calc($maxhit * 10));
+mes("You can't deal any damage!");
+return(0);
+
+// what you deal fills your rage
+[ai_queue2,soulbane_anger_bear] @sb_anger_hurt(last_int);
+[ai_queue2,soulbane_anger_unicorn] @sb_anger_hurt(last_int);
+[ai_queue2,soulbane_anger_rat] @sb_anger_hurt(last_int);
+[ai_queue2,soulbane_anger_goblin] @sb_anger_hurt(last_int);
+
+[label,sb_anger_hurt](int $damage)
+def_int $dealt = min($damage, npc_stat(hitpoints));
+~npc_default_damage($damage);
+if ($dealt < 1) return;
+if (finduid(%npc_attacking_uid) = true) queue(sb_rage_add, 0, $dealt);
+
+[queue,sb_rage_add](int $dealt)
+if (%soulbane_prog ! ^sb_rage | %soulbane_anger_donespecial = 1) return;
+%soulbane_anger_damagedealt = min(4095, calc(%soulbane_anger_damagedealt + $dealt));
+if (%soulbane_anger_damagedealt < ^sb_rage_full) {
+    mes("Rage level: <tostring(scale(%soulbane_anger_damagedealt, ^sb_rage_full, 100))>%"); // ours, for the rage meter
+    return;
+}
+%soulbane_anger_donespecial = 1;
+queue(sb_rage_burst, 0, 0);
+
+// killed: another of its kind turns up (ours)
+[ai_queue3,soulbane_anger_unicorn] @sb_anger_died(0);
+[ai_queue3,soulbane_anger_bear] @sb_anger_died(1);
+[ai_queue3,soulbane_anger_rat] @sb_anger_died(2);
+[ai_queue3,soulbane_anger_goblin] @sb_anger_died(3);
+
+[label,sb_anger_died](int $kind)
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(sb_anger_respawn, 8, $kind);
+
+[queue,sb_anger_respawn](int $kind)
+if (%soulbane_prog ! ^sb_rage | %soulbane_anger_donespecial = 1 | ~sb_room_at(coord) ! 1) return;
+def_int $spot = random(8);
+~sb_spawn(~sb_rage_spot($spot), ~sb_rage_beast($kind));
+queue(sb_engage, 3, 0);
+
+// ---------------------------------------------------------------- the rage bursts out
+[queue,sb_rage_burst](int $unused)
+p_stopaction;
+anim(anger_special_play, 0);
+spotanim_pl(anger_special_spotanim, 0, 0);
+say("Arrrgghhh!");
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & ~sb_rage_is_beast(npc_type) = true) {
+        npc_anim(npc_param(death_anim), 30);
+        npc_setmode(null);
+    }
+}
+p_delay(2);
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid & ~sb_rage_is_beast(npc_type) = true) npc_del;
+}
+stat_advance(attack, 400);
+%soulbane_prog = ^sb_rage_done;
+%soulbane_anger_flamepres = 1;
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+~chatplayer("<p,shock>Wow! How did I do that? There's something truly mental about this place!");
+// Tolna leaving home, 25 years ago (a cutscene in Varrock; here, as its lines)
+~fade_out;
+p_delay(2);
+~chatnpc_specific("Launa", soulbane_launa_young, "<p,confused>Where are you going?");
+~chatnpc_specific("Tolna", soulbane_tolnaboy, "<p,angry>I can't live with your rules any more, Mother.");
+~chatnpc_specific("Tolna", soulbane_tolnaboy, "<p,angry>I'm tired of working hard for very little money. There's great wealth that's mine for the taking!");
+~chatnpc_specific("Launa", soulbane_launa_young, "<p,sad>But why? We're surviving perfectly fine on what we're earning.");
+~chatnpc_specific("Tolna", soulbane_tolnaboy, "<p,angry>I'm tired of your pathetic outlook. Good bye.");
+~chatnpc_specific("Launa", soulbane_launa_young, "<p,shock>Tolna?");
+~chatnpc_specific("Launa", soulbane_launa_young, "<p,shock>TOLNA !!!");
+if_close;
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+
+[proc,sb_rage_is_beast](npc $type)(boolean)
+switch_npc ($type) {
+    case soulbane_anger_bear, soulbane_anger_unicorn, soulbane_anger_rat, soulbane_anger_goblin : return(true);
+}
+return(false);

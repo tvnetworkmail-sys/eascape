@@ -1,0 +1,77 @@
+// EASCape: A Soul's Bane (quest_soulbane): the room of fear. A fear reaper hides in one of the six
+// dark holes, a different one each time; kill five and the black hole lights up (OSRS wiki).
+
+[proc,sb_fear_setup]
+%soulbane_fear_killedtally = 0;
+%soulbane_fear_monspres = 0;
+if (%soulbane_prog >= ^sb_fear_done) {
+    %soulbane_fear_exitlit = 1;
+    return;
+}
+%soulbane_fear_exitlit = 0;
+%soulbane_fear_enemydoor = calc(random(6) + 1);
+
+[oploc1,soul_bane_fwall_void] @sb_fear_hole(1);
+[oploc1,soul_bane_fwall_void2] @sb_fear_hole(2);
+[oploc1,soul_bane_fwall_void3] @sb_fear_hole(3);
+[oploc1,soul_bane_fwall_void4] @sb_fear_hole(4);
+[oploc1,soul_bane_fwall_void5] @sb_fear_hole(5);
+[oploc1,soul_bane_fwall_void6] @sb_fear_hole(6);
+
+[label,sb_fear_hole](int $hole)
+if (%soulbane_prog >= ^sb_fear_done) {
+    mes("There is nothing in there to be afraid of.");
+    return;
+}
+if (%soulbane_prog ! ^sb_fear) return;
+switch_int (random(10)) {
+    case 0 : say("Hello?");
+    case 1 : say("What's going on?");
+    case 2 : say("What on Gielinor?");
+    case 3 : say("Ahhhh!");
+    case 4 : say("Help me!");
+    case 5 : say("Oh no!");
+    case 6 : say("Who's there?");
+    case 7 : say("Is anybody there?");
+    case 8 : say("I can't see!");
+    case default : say("Who's that?");
+}
+if (%soulbane_fear_monspres = 1 | $hole ! %soulbane_fear_enemydoor) return;
+%soulbane_fear_monspres = 1;
+~sb_spawn(coord, soulbane_fear_reaper);
+npc_say("AHHHHH!"); // ours: its examine
+queue(sb_engage, 3, 0);
+
+[ai_queue3,soulbane_fear_reaper]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(sb_fear_down, 0, 0);
+
+[queue,sb_fear_down](int $unused)
+if (%soulbane_prog ! ^sb_fear) return;
+%soulbane_fear_monspres = 0;
+%soulbane_fear_killedtally = calc(%soulbane_fear_killedtally + 1);
+def_int $old = %soulbane_fear_enemydoor;
+def_int $new = calc(random(5) + 1);
+if ($new >= $old) $new = calc($new + 1);
+%soulbane_fear_enemydoor = $new;
+switch_int (%soulbane_fear_killedtally) {
+    case 1 : say("I don't like looking in these holes but I must!");
+    case 2 : say("I don't feel quite so afraid now.");
+    case 3 : say("These holes aren't that spooky.");
+    case 4 : say("This isn't so scary after all!");
+}
+if (%soulbane_fear_killedtally < 5) return;
+%soulbane_prog = ^sb_fear_done;
+%soulbane_fear_exitlit = 1;
+~send_quest_progress(questlist:soulbane, %soulbane_prog, ^sb_complete);
+~chatplayer("<p,happy>Phew, I don't feel so scared now. This feels like the figment of someone's imagination!");
+// Tolna falling into the rift (a cutscene; here, told)
+~fade_out;
+p_delay(2);
+~mesbox("You see a young man walk up to the rift as it opens... and fall in."); // ours, for the cutscene
+if_close;
+~fade_in;
+p_delay(2);
+if_openoverlay(null);
+mes("What's that?");
