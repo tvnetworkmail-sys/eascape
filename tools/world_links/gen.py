@@ -6,6 +6,13 @@ rows=[];seen=set()
 import os
 vpath=os.path.join(os.path.dirname(os.path.abspath(__file__)),'void_links.json')
 void=json.load(open(vpath)) if os.path.exists(vpath) else []
+# hand-checked landings first (fixes.json): exact squares
+fpath=os.path.join(os.path.dirname(os.path.abspath(__file__)),'fixes.json')
+for f in (json.load(open(fpath)) if os.path.exists(fpath) else []):
+    k=(tuple(f['frm']),f['op'])
+    if k in seen: continue
+    seen.add(k)
+    rows.append(f"// EASCape: {f['note']}\n[eascape_link_{len(rows)}]\ntable=eascape_links\ndata=from,{cs(*f['frm'])}\ndata=op,{f['op']}\ndata=to,{cs(*f['to'])}\ndata=up,{'true' if f['to'][0]>f['frm'][0] else 'false'}\ndata=kind,2\n")
 # Void's teleports first: where Void says a ladder or staircase puts you, that wins
 for v in void:
     k=(tuple(v['frm']),v['op'])
