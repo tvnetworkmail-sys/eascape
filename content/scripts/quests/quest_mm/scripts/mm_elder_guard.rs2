@@ -24,7 +24,8 @@ if(coordz(coord) > add(coordz(npc_coord), 1)) {
     ~forcemove(movecoord(coord, 0, 0, -3));
     return;
 }
-if(%mm_kruk = ^kruk_spoken) {
+// EASCape: or to ask about his favourite dish (Recipe for Disaster, quest_100/hundred_monkey.rs2)
+if(%mm_kruk = ^kruk_spoken | (%hundred_ilm_quest >= ^hundred_ilm_asked & %hundred_ilm_quest < ^hundred_ilm_freed)) {
     ~chatplayer("<p,neutral>I must speak with Awowogei again.");
     ~chatnpc("<p,neutral>As you wish.");
     if_close;

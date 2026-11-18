@@ -1,0 +1,646 @@
+// EASCape: Recipe for Disaster: Freeing King Awowogei. Words from the OSRS wiki's transcript (where it
+// has a gap, the next part it gives is used); the steps from its quest guide (Awowogei won't tell, the
+// three monkeys in the temple will; a big snake's corpse from the pit on Crash Island, a red banana
+// pulled down with a rope by a gorilla, tchiki nuts from the cave in the agility course reached by a
+// ninja monkey, stuffed and cooked on the hot rock under the temple, crossed as a zombie monkey). Lines
+// marked "ours" have no source. The stages are in hundred.constant.
+
+[proc,hundred_ilm_helping]()(boolean)
+if (%hundred_ilm_quest >= ^hundred_ilm_asked & %100monkeyvisible = 1 & %hundred_main_quest_var >= ^hundred_feast_seen) return(true);
+return(false);
+
+[proc,hundred_ilm_gorilla]()(boolean)
+def_obj $g = inv_getobj(worn, ^wearpos_rhand);
+if ($g = mm_monkey_greegree_for_normal_gorilla | $g = mm_monkey_greegree_for_bearded_gorilla) return(true);
+return(false);
+
+[proc,hundred_ilm_zombie]()(boolean)
+def_obj $g = inv_getobj(worn, ^wearpos_rhand);
+if ($g = mm_monkey_greegree_for_small_zombie_monkey | $g = mm_monkey_greegree_for_large_zombie_monkey) return(true);
+return(false);
+
+[proc,hundred_ilm_amulet]()(boolean)
+if (inv_total(worn, mm_amulet_of_monkey_speak) > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the dining room
+[oploc1,hundred_monkey_multi]
+if (%mm_main < ^mm_complete | stat_base(cooking) < 70 | stat_base(agility) < 48) {
+    mes("You need to have completed Monkey Madness, with a Cooking level of 70 and an Agility level"); // ours
+    mes("of 48, to help him.");
+    return;
+}
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>You will need to feed King Awowogei his favourite dish.");
+~chatplayer("<p,quiz>What's that then?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>I have to admit I'm not sure, maybe you should ask him?");
+~chatplayer("<p,quiz>Ask the version of him on Ape Atoll?");
+~chatnpc_specific("Aris", hundred_aris, "<p,neutral>Yes, of course.");
+if (%hundred_ilm_quest = 0) %hundred_ilm_quest = ^hundred_ilm_asked;
+
+[oplocu,hundred_monkey_multi]
+if (last_useitem ! hundred_ilm_cooked_stuffed_snake | ~hundred_ilm_helping = false) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (~hundred_ilm_amulet = false) {
+    mes("Maybe you should wear your amulet of Monkeyspeak before talking to the Monkey King...");
+    return;
+}
+inv_del(inv, hundred_ilm_cooked_stuffed_snake, 1);
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,confused>Err Where am I? Ooh! Roasted Stuffed Snake, lovely.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,happy>Mmmm, I'm sure I can detect the delicate aroma of Tchiki Monkey nuts, and the sweet perfume of Red Bananas, all slowly caramelised on hot rocks.");
+~mesbox("King Awowogei tucks into his roasted snake.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,quiz>*munch* Who are you?");
+~chatplayer("<p,happy>I'm just a wandering chef, travelling from town to town saving peoples lives.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,confused>*gorge* You're a bit odd, aren't you?");
+~chatplayer("<p,sad>Yet again, my heroic work goes unappreciated, I suppose that is the fate of a true hero.");
+~chatplayer("<p,quiz>So ... I've heard that this dish makes you more cooperative.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,shifty>*stuff* That's a lie, no definitely not. Well maybe.");
+~chatplayer("<p,quiz>Well, getting to Ape Atoll is quite a pain. Do you have a way of making it easier to get there?");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>N, Nnnnn..... nghghghnmnmn ... Yes there is a spell.");
+~chatplayer("<p,quiz>Will you let me know how to cast it?");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>Absolutely No... Nerrrrnnnn...Oh, go on then.");
+~chatplayer("<p,quiz>So, what do I need to know?");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>Well, it will take a while to explain...");
+~chatplayer("<p,neutral>Ah I see, so the banana actually has the crucial effect on the teleportation matrix.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>Yes, yes, of course.");
+~chatplayer("<p,sad>I'm sorry I forced you to tell me the spell.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,neutral>Oh that's alright - it could have been worse - you could have asked me to marry you.");
+~chatplayer("<p,neutral>Yes - that would have been a lot worse.");
+~chatnpc_specific("King Awowogei", 100_mm_awowogei_cutscene, "<p,confused>Anyway, it seems you have done me a favour. Though I'm a bit confused about what went on here.");
+~chatplayer("<p,laugh>You're confused? Get a ticket and join the queue, Your Monkeyness.");
+%100monkeyvisible = 0;
+%hundred_ilm_quest = ^hundred_ilm_freed;
+stat_advance(cooking, 100000);
+stat_advance(agility, 100000);
+~chatnpc_specific("Aris", hundred_aris, "<p,happy>Good work adventurer, I've teleported them away to safety! You only have <tostring(sub(8, ~hundred_freed))> council members left to protect!");
+~hundred_free_done("King Awowogei", hundred_ilm_cooked_stuffed_snake, "10,000 Cooking XP|10,000 Agility XP|Ape Atoll Teleport");
+
+// ---------------------------------------------------------------- Awowogei on his throne (mm_awowogei.rs2)
+[proc,hundred_ilm_throne]()(boolean)
+if (%hundred_ilm_quest < ^hundred_ilm_asked | %hundred_ilm_quest >= ^hundred_ilm_freed) return(false);
+if (%hundred_ilm_quest >= ^hundred_ilm_king) {
+    ~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,angry>Go away, I have nothing further to say to you!");
+    return(true);
+}
+~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,neutral>Hello stranger, what can I do for you?");
+~chatplayer("<p,quiz>Do you have a particular favourite dish?");
+~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,shifty>What? No. Definitely not.");
+~chatplayer("<p,quiz>Are you sure?...");
+~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,neutral>Absolutely, I can't let you have sensitive information like that...");
+~chatplayer("<p,neutral>So you do have a favourite dish, but you don't want to tell me.");
+~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,neutral>I won't tell you anything - and neither will the three monkeys, I made sure of that. I can't have any monkey knowing about it.");
+~chatplayer("<p,quiz>So if I talk with these three monkeys they'll tell me all about it?");
+~chatnpc_specific("King Awowogei", mm_awowogei_cutscene, "<p,angry>NO! Now go away and leave me in peace.");
+%hundred_ilm_quest = ^hundred_ilm_king;
+return(true);
+
+// ---------------------------------------------------------------- the three wise monkeys
+[opnpc1,hundred_ilm_mizaru] @hundred_ilm_monkeys;
+[opnpc1,hundred_ilm_kikazaru] @hundred_ilm_monkeys;
+[opnpc1,hundred_ilm_iwazaru] @hundred_ilm_monkeys;
+
+[proc,hundred_ilm_miz](string $s) ~chatnpc_specific("Mizaru", hundred_ilm_mizaru, $s);
+[proc,hundred_ilm_kik](string $s) ~chatnpc_specific("Kikazaru", hundred_ilm_kikazaru, $s);
+[proc,hundred_ilm_iwa](string $s) ~chatnpc_specific("Iwazaru", hundred_ilm_iwazaru, $s);
+
+[label,hundred_ilm_monkeys]
+if (%hundred_ilm_quest >= ^hundred_ilm_freed) {
+    ~mesbox("Mizaru is singing.");
+    ~hundred_ilm_miz("<p,happy>Born from an egg on a mountain top,");
+    ~hundred_ilm_miz("<p,happy>The punkiest Monkey that ever popped,");
+    ~chatplayer("<p,quiz>What are you singing?");
+    ~hundred_ilm_miz("<p,neutral>It's an old Monkey Legend.");
+    return;
+}
+if (%hundred_ilm_quest < ^hundred_ilm_king) {
+    ~mesbox("These monkeys are too busy arguing with each other to notice you.");
+    return;
+}
+if (~hundred_ilm_amulet = false) {
+    if (inv_total(inv, hundred_ilm_cooked_stuffed_snake) > 0) @hundred_ilm_cooked_ook;
+    ~chatplayer("<p,quiz>Hello?");
+    ~hundred_ilm_iwa("<p,neutral>Ook Ah Ook! Ah! Ook! Ook Ah Ook!");
+    ~hundred_ilm_miz("<p,neutral>Ook. Ah Ah! Ah Uh Ah! Ook. Ook.");
+    ~hundred_ilm_miz("<p,neutral>Ah Ah! Ook. Ook Ah Ook! Ook Ah Uh!");
+    ~mesbox("You don't understand a word. Maybe you've forgotten to wear something...");
+    return;
+}
+if (%hundred_ilm_quest < ^hundred_ilm_recipe) @hundred_ilm_meet;
+if (inv_total(inv, hundred_ilm_cooked_stuffed_snake) > 0) @hundred_ilm_cooked;
+if (%hundred_ilm_quest >= ^hundred_ilm_cooked) {
+    ~hundred_ilm_miz("<p,quiz>You still here? You haven't lost the royal dish have you?");
+    ~chatplayer("<p,sad>Errr I'm afraid I have.");
+    ~hundred_ilm_miz("<p,neutral>You'd better make another one then... You know what to do.");
+    return;
+}
+if (inv_total(inv, hundred_ilm_correctly_stuffed_snake) > 0) {
+    ~chatplayer("<p,happy>I've stuffed the snake.");
+    ~hundred_ilm_miz("<p,neutral>You'd better cook it now then.");
+    @hundred_ilm_how_cook;
+}
+if (%hundred_ilm_quest >= ^hundred_ilm_stuffed) {
+    ~hundred_ilm_miz("<p,quiz>Have you cooked the snake yet?");
+    if (~p_choice2("I've lost the snake", 1, "So how do I cook it again?", 2) = 2) @hundred_ilm_how_cook;
+    ~chatplayer("<p,sad>I'm afraid I've lost it.");
+    ~hundred_ilm_miz("<p,neutral>That was a bit careless wasn't it? You'd better go and make another one then.");
+    if (~p_choice2("What do I need again?", 1, "So how do I cook it again?", 2) = 2) @hundred_ilm_how_cook;
+    ~chatplayer("<p,confused>Err what am I doing again?");
+    ~hundred_ilm_miz("<p,neutral>Get a red banana, some tchiki monkey nuts, and the snake corpse. Prepare the ingredients and stuff them into the snake. Simple. Even Kikazaru could do it.");
+    ~chatplayer("<p,neutral>Thanks.");
+    return;
+}
+if (inv_total(inv, hundred_ilm_red_banana) > 0 | inv_total(inv, hundred_ilm_sliced_red_banana) > 0) {
+    if (%hundred_ilm_banana = 1) @hundred_ilm_eat_banana;
+    if (%hundred_ilm_banana >= 2) {
+        ~chatplayer("<p,quiz>This is the right one?");
+        ~mesbox("You hold on to the red banana tightly.");
+        ~hundred_ilm_iwa("<p,happy>Iwazaru nods and gives you the thumbs up.");
+        ~chatplayer("<p,happy>Thanks.");
+        return;
+    }
+}
+if (inv_total(inv, hundred_ilm_tchiki_monkey_nuts) > 0 | inv_total(inv, hundred_ilm_tchiki_monkey_nut_paste) > 0) {
+    if (%hundred_ilm_nuts = 1) @hundred_ilm_eat_nuts;
+    if (%hundred_ilm_nuts >= 2) {
+        ~chatplayer("<p,quiz>So these are definitely Tchiki Monkey nuts then?");
+        ~mesbox("Mizaru tries to snatch the nuts from your grip. You slap his wrists.");
+        ~chatplayer("<p,angry>Oi. I need these.");
+        ~hundred_ilm_iwa("<p,happy>Iwazaru nods and gives you the thumbs up.");
+        ~chatplayer("<p,happy>Thanks.");
+        return;
+    }
+}
+if (inv_total(inv, banana) > 0 & %hundred_ilm_banana = 0) @hundred_ilm_banana_wrong;
+if (inv_total(inv, mm_monkey_nuts) > 0 & %hundred_ilm_nuts = 0) @hundred_ilm_nuts_wrong;
+if (inv_total(inv, hundred_ilm_snake_corpse) > 0) {
+    ~chatplayer("<p,quiz>Is this the right kind of snake, Iwazaru?");
+    ~hundred_ilm_iwa("<p,neutral>Iwazaru looks at the snake, sniffs it and nods sagely.");
+    ~chatplayer("<p,happy>Thanks.");
+    return;
+}
+if (%hundred_ilm_nuts >= 1) {
+    ~chatplayer("<p,quiz>Where's this tchiki monkey nut bush again?");
+    ~hundred_ilm_miz("<p,neutral>Iwazaru says that there is a bush in a cave somewhere in the hills just south of the village.");
+    ~chatplayer("<p,happy>Thanks.");
+    return;
+}
+if (%hundred_ilm_banana >= 1) {
+    ~chatplayer("<p,quiz>Where's this red banana tree again?");
+    ~hundred_ilm_miz("<p,neutral>Iwazaru says that there is a tree in the West of the Island.");
+    ~chatplayer("<p,happy>Thanks.");
+    return;
+}
+~chatplayer("<p,quiz>What am I looking for again?");
+~hundred_ilm_miz("<p,neutral>Some monkey nuts, a banana and a snake to stuff them into.");
+~chatplayer("<p,quiz>Where do I find this stuff then?");
+~hundred_ilm_miz("<p,neutral>I've heard that there are snakes on a small island just to the east of here. Nuts and bananas? Just check out the normal places.");
+~hundred_ilm_iwa("<p,angry>gghmnmmn !!!");
+~hundred_ilm_miz("<p,angry>Stop making such a fuss Iwazaru.");
+~chatplayer("<p,quiz>Are you sure he's not trying to say something important....");
+~hundred_ilm_miz("<p,neutral>No, no, no. Always looking to be the centre of attention that one. Don't let him worry you.");
+~chatplayer("<p,confused>...If you say so...");
+
+[label,hundred_ilm_meet]
+~hundred_ilm_kik("<p,confused>What? eh? Did you say something?");
+~hundred_ilm_miz("<p,quiz>Who's there? Hello?");
+~hundred_ilm_iwa("<p,neutral>mmmmghmhhmh");
+~chatplayer("<p,quiz>Hello?");
+~hundred_ilm_kik("<p,quiz>Who are you?");
+~mesbox("It doesn't look like this monkey can hear you.");
+~hundred_ilm_miz("<p,quiz>Is there somebody there?");
+~mesbox("It doesn't look like this monkey can see you.");
+~hundred_ilm_iwa("<p,neutral>mmmmghhh mhhhh");
+~mesbox("It doesn't look like this monkey can... you get the idea...");
+~chatplayer("<p,confused>There's something familiar about you guys...");
+@hundred_ilm_meet_menu;
+
+[label,hundred_ilm_meet_menu]
+switch_int (~p_choice3_header("Who are you?", 1, "What are you doing here?", 2, "Do you know anything about the King's favourite dish?", 3, "So, Mr Monkeys ...")) {
+    case 1 :
+        ~hundred_ilm_miz("<p,neutral>I'm Mizaru - This is Iwazaru");
+        ~hundred_ilm_iwa("<p,neutral>mmhggmmmhh");
+        ~hundred_ilm_miz("<p,neutral>He says hello, and this is Kikazaru");
+        ~hundred_ilm_kik("<p,neutral>...");
+        ~hundred_ilm_miz("<p,angry>Oi, you, pay attention!");
+        ~mesbox("Mizaru gives Kikazaru a slap.");
+        ~hundred_ilm_kik("<p,confused>What? Oh, Hello who are you? I'm Kikazaru.");
+        ~hundred_ilm_miz("<p,angry>I've already said that.");
+        ~hundred_ilm_kik("<p,neutral>What? Oh, This is Mizaru and Kikazaru.");
+        ~mesbox("Mizaru turns and stares at Kikazaru.");
+        ~hundred_ilm_miz("<p,angry>I'VE ALREADY SAID THAT.");
+        ~hundred_ilm_miz("<p,neutral>Not very bright that one.");
+        ~hundred_ilm_iwa("<p,neutral>ggmmhhmm");
+        ~mesbox("Iwazaru waves his hands around at Kikazaru in a way that might be monkey sign language.");
+        ~hundred_ilm_kik("<p,angry>(sarcastically) Yeah, while you're the clever monkey around here aren't you?");
+        ~hundred_ilm_iwa("<p,angry>(Iwazaru waves his arms again. Whatever he said it wasn't very polite.)");
+        ~hundred_ilm_kik("<p,laugh>Hee Hee Hee, you're so rude.");
+        ~hundred_ilm_miz("<p,angry>Grrr. Do you have any other questions?");
+        @hundred_ilm_meet_menu;
+}
+// "Do you know anything about the King's favourite dish?" is missing from the transcript; its quest
+// guide has it lead to the same story (ours: the same words)
+~chatplayer("<p,quiz>So What exactly are you doing here?");
+~hundred_ilm_miz("<p,happy>Oh, just monkeying around.");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru slaps his forehead)");
+~hundred_ilm_miz("<p,shifty>You look trustworthy, I'll tell you a secret.");
+~hundred_ilm_miz("<p,shifty>(whispers) We're on a top secret mission, given to us by the King...");
+~hundred_ilm_miz("<p,happy>We are the exalted Guardians of one of the King's biggest secrets.");
+~hundred_ilm_miz("<p,neutral>Can't say any more than that or the King would go Ape on us.");
+~chatplayer("<p,happy>Oh go on...");
+~hundred_ilm_miz("<p,angry>No. We will protect the recipe with our lives...");
+~hundred_ilm_iwa("<p,angry>grrmmh fffhmmm (Iwazaru looks disgruntled)");
+~hundred_ilm_kik("<p,angry>Yeah, I agree with Iwazaru. The king CURSED us!");
+~chatplayer("<p,quiz>How did he curse you?");
+~hundred_ilm_iwa("<p,neutral>hmhmhhhh mmgghh");
+~hundred_ilm_kik("<p,happy>I know, I know, I'll tell him");
+~hundred_ilm_miz("<p,angry>NO!, I forbid you to tell this stranger anything!");
+~hundred_ilm_kik("<p,neutral>I can't hear you...");
+~hundred_ilm_miz("<p,angry>Yeah, well hear this gnome-brain! (He slaps Kikazaru)");
+~hundred_ilm_kik("<p,angry>Ow! There was this recipe right.");
+~hundred_ilm_miz("<p,angry>Stop it!");
+~mesbox("Mizaru slaps Iwazaru. Iwazaru slaps Mizaru back. They start to fight.");
+~hundred_ilm_kik("<p,angry>(Oof!) He liked it so much he married the cook! YEAH? Have some of this! (poke!)");
+~hundred_ilm_miz("<p,angry>AARGH not in the eye! (kick)");
+~hundred_ilm_kik("<p,angry>(Oof!) The King thought it was magic and AAAIEEE! He got a priest to curse us to keep quiet. (headbutt!)");
+~mesbox("Mizaru slumps to the floor and rolls about in pain.");
+~hundred_ilm_kik("<p,laugh>Ha! Serves you right! Anyway, The priest only had enough ingredients for one curse, so when he tried to keep us all from telling anyone the recipe, each of us only got part of the curse. That's why I can't hear");
+~hundred_ilm_kik("<p,neutral>anything now.");
+~hundred_ilm_iwa("<p,neutral>mmmmghhh (he nods his head)");
+~chatplayer("<p,quiz>Can you tell me what this recipe is then?");
+~hundred_ilm_miz("<p,shifty>How do you know about that - It's top secret information you know.");
+~chatplayer("<p,shifty>Well, I am also on a top secret mission.");
+~hundred_ilm_miz("<p,quiz>Ah I see, can you tell me what the mission is?");
+~chatplayer("<p,neutral>Well, it's on a strict need to know basis. I'm sure you understand.");
+~hundred_ilm_miz("<p,neutral>Of course, of course.");
+~chatplayer("<p,shifty>However, I think I can trust you with sensitive material.");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru raises an eyebrow dubiously. You give him a wink.)");
+~chatplayer("<p,shifty>(You whisper in Mizaru's ear) I've been charged with organising a secret party to celebrate the king's birthday, keep it quiet though, don't let a single monkey know.");
+~hundred_ilm_miz("<p,happy>Well, in that case, you definitely do need to know the recipe.");
+~hundred_ilm_miz("<p,happy>The King has a real soft spot for Roasted Giant Snake stuffed with sliced banana and monkey nut paste.");
+~hundred_ilm_iwa("<p,angry>GGHHMM! (Iwazaru starts jumping up and down)");
+~hundred_ilm_miz("<p,neutral>Yup, you need to find some bananas, and some monkey nuts and stuff a Giant snake with them, It's as simple as that. Stop hassling me Iwazaru.");
+~chatplayer("<p,quiz>Where do I find this stuff then?");
+~hundred_ilm_miz("<p,neutral>Every monkey knows where to get hold of nuts and bananas, but I believe that the snakes live on a nearby island. Never seen one myself.");
+%hundred_ilm_quest = ^hundred_ilm_recipe;
+
+[label,hundred_ilm_banana_wrong]
+~hundred_ilm_miz("<p,happy>This feels like the banana, this should do the job.");
+~hundred_ilm_iwa("<p,angry>(Iwazaru Jumps up and down waving his arms and legs about wildly)");
+~hundred_ilm_miz("<p,angry>Quiet! Iwazaru.");
+~hundred_ilm_iwa("<p,angry>(Iwazaru grabs you by the arm)");
+~hundred_ilm_iwa("<p,angry>(He shakes his head vigourously)");
+~chatplayer("<p,neutral>I think your friend wants to tell me something.");
+~hundred_ilm_miz("<p,neutral>Oh ignore him, he's clueless.");
+~hundred_ilm_miz("<p,angry>GGGRRRMMHHGG!!");
+~hundred_ilm_iwa("<p,angry>(Iwazaru makes what you suspect was a very rude gesture to Mizaru)");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru starts gesturing at Kikazaru)");
+~hundred_ilm_kik("<p,neutral>hmmm...");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru gestures some more)");
+~hundred_ilm_kik("<p,quiz>Really?");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru waves his arms about yet more)");
+~hundred_ilm_kik("<p,happy>Oh that's very interesting.");
+~chatplayer("<p,neutral>....");
+~chatplayer("<p,quiz>Well....");
+~hundred_ilm_iwa("<p,bored>(Iwazaru sighs. And points to you.)");
+~hundred_ilm_kik("<p,confused>What, eh, oh right.");
+~hundred_ilm_kik("<p,neutral>Iwazaru says that you have the wrong type of banana.");
+~hundred_ilm_kik("<p,neutral>You need a red one.");
+~chatplayer("<p,bored>(sigh), I should have guessed that it wouldn't be that easy. A red banana. Don't all bananas taste the same?");
+~hundred_ilm_iwa("<p,shock>(Iwazaru looks shocked)");
+~hundred_ilm_kik("<p,shock>(Mizaru looks astounded)");
+~hundred_ilm_kik("<p,neutral>(Kikazaru looks blankly over your shoulder)");
+~hundred_ilm_kik("<p,angry>How can a monkey say such a thing!");
+~chatplayer("<p,shifty>Oh, you mean RED bananas, yes, of course, I've heard that they are the tastiest. Much tastier than blue bananas. How could I forget. Bah, only a fake monkey wouldn't know that. Ahem.");
+~hundred_ilm_kik("<p,quiz>Blue bananas? There's no such thing. Hey, wait a second where did you say you came from?");
+~chatplayer("<p,shifty>Errm I'm not from round here, anyway, moving quickly on, is there a red banana tree nearby?");
+~hundred_ilm_iwa("<p,happy>(Iwazaru nods enthusiastically and points West)");
+~hundred_ilm_miz("<p,neutral>Iwazaru says that there is a tree in the West of the Island.");
+~chatplayer("<p,happy>Right! I'd better start looking for a red banana tree.");
+%hundred_ilm_banana = 1;
+%hundred_ilm_red_banana_tree = 3;
+
+[label,hundred_ilm_nuts_wrong]
+~hundred_ilm_miz("<p,happy>Ah, monkey nuts. Good work");
+~hundred_ilm_iwa("<p,angry>(Iwazaru is hysterically trying to get your attention)");
+~hundred_ilm_miz("<p,angry>Stop playing around Iwazaru.");
+~hundred_ilm_iwa("<p,angry>(Iwazaru grabs you by the arm)");
+~hundred_ilm_iwa("<p,angry>(He shakes his head vigourously)");
+~chatplayer("<p,neutral>I think Iwazaru is trying to say something.");
+~hundred_ilm_miz("<p,neutral>Oh ignore him.");
+~hundred_ilm_iwa("<p,angry>mmmh!! (He quickly makes some signs at Kikazaru)");
+~hundred_ilm_kik("<p,neutral>Ah, I see...");
+~hundred_ilm_kik("<p,neutral>Iwazaru says that you have the wrong kind of monkey nuts. Ordinary Monkeys nuts just won't do.");
+~hundred_ilm_kik("<p,neutral>There is a special type of monkey nut that grows on the island and has a subtle and distinctive flavour that is highly valued by all monkeys with a sophisticated palate.");
+~hundred_ilm_kik("<p,neutral>They are called Tchiki monkey nuts and require a very particular combination of soil and climate.");
+~hundred_ilm_kik("<p,neutral>They need the minerals and dampness found in hill caves, but they also cannot grow without sunlight.");
+~hundred_ilm_kik("<p,neutral>Myth and Legend shrouds the History of the Tchiki Monkey Nut.");
+~hundred_ilm_kik("<p,happy>Some say that it is the nut that gave monkeys their superior intelligence!");
+~hundred_ilm_kik("<p,happy>Others say Tchiki Monkey nuts are the food of the Monkey Gods.");
+~hundred_ilm_kik("<p,neutral>Either way, you will have to find a path through treacherous undergrowth to harvest the Nut of Kings.");
+~chatplayer("<p,confused>... He said all that?");
+~hundred_ilm_kik("<p,happy>Yup");
+~chatplayer("<p,neutral>I never realised monkey sign language was so...concise. Anyway, where do I find this plant then?");
+~hundred_ilm_iwa("<p,happy>(Iwazaru nods enthusiastically and points South)");
+~hundred_ilm_kik("<p,neutral>Look to the hills, south of here.");
+~chatplayer("<p,happy>Right! I'd better start looking for this Tchiki Monkey Nut Bush then...");
+%hundred_ilm_nuts = 1;
+
+[label,hundred_ilm_eat_banana]
+~chatplayer("<p,quiz>Is this the red banana I'm looking for?");
+~mesbox("Mizaru grabs the banana surprisingly quickly for a blind monkey.");
+if (inv_total(inv, hundred_ilm_red_banana) > 0) inv_del(inv, hundred_ilm_red_banana, 1);
+else inv_del(inv, hundred_ilm_sliced_red_banana, 1);
+~chatplayer("<p,shock>Wait! I need that, you don't have to eat...");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru slaps his forehead!)");
+~hundred_ilm_kik("<p,neutral>Too late...");
+~hundred_ilm_miz("<p,happy>Hmmm, oh yes very tasty.");
+~chatplayer("<p,quiz>Well... is that the right one?");
+~hundred_ilm_miz("<p,happy>Oh yes, I'd recognise the taste of red anywhere.");
+~chatplayer("<p,bored>Really... I suppose I'd better get another one now.");
+%hundred_ilm_banana = 2;
+
+[label,hundred_ilm_eat_nuts]
+~chatplayer("<p,happy>I think I've got some Tchiki monkey nuts.");
+~mesbox("Mizaru snatches the nuts from your grasp in an eye blink.");
+if (inv_total(inv, hundred_ilm_tchiki_monkey_nuts) > 0) inv_del(inv, hundred_ilm_tchiki_monkey_nuts, 1);
+else inv_del(inv, hundred_ilm_tchiki_monkey_nut_paste, 1);
+~chatplayer("<p,shock>Don't eat them...");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru shrugs apologetically!)");
+~hundred_ilm_miz("<p,happy>Mmm these are very tasty. Tchiki Monkey nuts really are the best nuts I've ever tasted.");
+~hundred_ilm_kik("<p,neutral>But I'm afraid you're going to have to get some more.");
+%hundred_ilm_nuts = 2;
+
+[label,hundred_ilm_how_cook]
+~chatplayer("<p,quiz>How do I cook this thing, it's huge! It's not going to fit in an oven or on a spit?");
+~hundred_ilm_miz("<p,quiz>A very good question. Anyone know?");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru nods) He looks at Kikazaru to translate for him.");
+~hundred_ilm_kik("<p,neutral>Zzzzzzzzzzzzzzz");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru prods Kikazaru)");
+~hundred_ilm_kik("<p,neutral>Zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+~hundred_ilm_iwa("<p,bored>(Iwazaru sighs, and then points to the floor directly beneath him, then acts like a zombie.");
+~hundred_ilm_iwa("<p,neutral>He then points at you and falls over and plays dead, gets up and then shrugs.)");
+~chatplayer("<p,quiz>Hmmm, somewhere underneath here, with zombies?");
+~hundred_ilm_iwa("<p,happy>(Iwazaru nods)");
+~hundred_ilm_iwa("<p,neutral>(He then wipes his forehead as if it were hot and points at the sacrificial pyre in the east of the temple.)");
+~chatplayer("<p,confused>Somewhere hot, nearby? What's this business about me dying though - that's not so cool.");
+~hundred_ilm_iwa("<p,neutral>(Iwazaru shrugs)");
+~chatplayer("<p,neutral>Well, I suppose I'd better have a look.");
+
+[label,hundred_ilm_cooked]
+~hundred_ilm_miz("<p,happy>Mmmm, something smells good...");
+~chatplayer("<p,happy>Yup, it's all cooked and ready to go, or at least I think it is.");
+~hundred_ilm_miz("<p,shifty>Maybe the King wouldn't notice if we had a little bit?");
+~hundred_ilm_kik("<p,shifty>Just a little taste.");
+~hundred_ilm_iwa("<p,angry>Iwazaru slaps both of the other monkeys on the back of the head!");
+~chatplayer("<p,angry>Yeah, listen to Iwazaru - stay away from my stuffed snake! I'm not making another one. There was more than enough monkey business involved in making this one.");
+~hundred_ilm_miz("<p,sad>Take that thing away from us. It will only fill us with unfulfilled longing...");
+~chatplayer("<p,happy>Thanks for your help guys! I've had more fun than a barrel of monkeys doing this.");
+~chatplayer("<p,neutral>Though I wish I'd realised earlier on that Iwazaru was the monkey with brains...");
+~hundred_ilm_miz("<p,angry>Ooh. You cheeky monkey!");
+~hundred_ilm_iwa("<p,happy>(Iwazaru mimes a crown on his head.)");
+~chatplayer("<p,happy>Heh, time to serve this to the king...");
+
+[label,hundred_ilm_cooked_ook]
+~hundred_ilm_miz("<p,happy>Ook Ah Uh! Ook Ah Uh! Ah Ah!");
+~chatplayer("<p,happy>Yup, it's all cooked and ready to go, or at least I think it is.");
+~hundred_ilm_miz("<p,shifty>Ook! Ah Uh Ah! Ook. Ook Ook! Ook.");
+~hundred_ilm_kik("<p,shifty>Ah Uh Ah! Ah Uh Ah! Ook Ah Uh!");
+~hundred_ilm_iwa("<p,angry>Ook Ook! Ook Ah Ook! Ook! Ah! Ah!");
+~chatplayer("<p,angry>Yeah, listen to Iwazaru - stay away from my stuffed snake! I'm not making another one. There was more than enough monkey business involved in making this one.");
+~hundred_ilm_miz("<p,sad>Ook Ah Ook! Ah Uh Ah! Ook Ah Ook!");
+~chatplayer("<p,happy>Thanks for your help guys! I've had more fun than a barrel of monkeys doing this.");
+~chatplayer("<p,neutral>Though I wish I'd realised earlier on that Iwazaru was the monkey with brains...");
+~hundred_ilm_miz("<p,angry>Ah Uh Ah! Ook Ah Ook! Ook. Ook.");
+~hundred_ilm_iwa("<p,happy>Ook Ah Uh! Ook Ah Ook! Ah Ah!");
+~chatplayer("<p,happy>Heh, time to serve this to the king...");
+
+// ---------------------------------------------------------------- the snake pit on Crash Island
+[oploc1,loc_12602]
+if (~p_choice2_header("No, I'm going to run away and cry", 1, "Yes, I'm as hard as nails.", 2, "It looks dangerous, are you sure you wish to enter?") = 1) return;
+p_telejump(^hundred_ilm_pit_in);
+softtimer(hundred_ilm_pit, 3);
+
+[oploc1,loc_12601]
+p_telejump(^hundred_ilm_pit_out);
+clearsofttimer(hundred_ilm_pit);
+~mesbox("You climb up the rope and out of the pit.");
+
+// the snakes in the walls bite anyone standing by their holes (ours: 1-3 damage, every 3 ticks)
+[softtimer,hundred_ilm_pit]
+if (inzone(0_47_85_0_32, 0_47_85_40_63, coord) = false) {
+    clearsofttimer(hundred_ilm_pit);
+    return;
+}
+if (distance(coord, 0_47_85_11_49) <= 1 | distance(coord, 0_47_85_13_43) <= 1 | distance(coord, 0_47_85_16_44) <= 1
+    | distance(coord, 0_47_85_16_52) <= 1 | distance(coord, 0_47_85_19_52) <= 1) {
+    queue(hundred_ilm_snake_bite, 0, 0);
+}
+
+[queue,hundred_ilm_snake_bite](int $unused)
+mes("A snake pokes its head out of the wall and attacks you.");
+say("Ouch!");
+~damage_self(calc(randominc(2) + 1));
+
+[ai_queue3,hundred_ilm_snake]
+def_coord $where = npc_coord;
+~npc_default_death;
+// the corpse only once the three monkeys have told the recipe, and only until the king's fed (OSRS wiki)
+if (npc_findhero = ^true) {
+    if (%hundred_ilm_quest >= ^hundred_ilm_recipe & %hundred_ilm_quest < ^hundred_ilm_freed) obj_add($where, hundred_ilm_snake_corpse, 1, ^lootdrop_duration);
+}
+
+// ---------------------------------------------------------------- the red banana tree
+[oploc1,loc_12610]
+mes("The tree is too spikey for even a monket to climb.");
+mes("It looks like you'll need to find a way to bring the bananas within reach.");
+
+[oplocu,loc_12610]
+if (last_useitem ! rope) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~mm_wearing_greegree = false) {
+    mes("You are not monkey enough to bend that tree!");
+    return;
+}
+if (~hundred_ilm_gorilla = false) {
+    mes("You're just not that great an ape!");
+    return;
+}
+if (%hundred_ilm_quest >= ^hundred_ilm_cooked) {
+    mes("You have already made the King's meal, you dont need any more of these.");
+    return;
+}
+if (%hundred_ilm_banana = 0) {
+    mes("There are no bananas on the tree right now.");
+    return;
+}
+if (inv_total(inv, hundred_ilm_red_banana) > 0) {
+    mes("You already have one Red Banana, better not take another.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You do not have space in your inventory for that item.");
+    return;
+}
+anim(human_pickuptable, 0); // ours
+inv_add(inv, hundred_ilm_red_banana, 1);
+if (%hundred_ilm_banana >= 2) mes("I hope Mizaru doesn't find this one!");
+
+// ---------------------------------------------------------------- the tchiki nut cave
+[oploc1,loc_12581]
+if (~hundred_ilm_gorilla = true | ~hundred_ilm_zombie = true) {
+    mes("Only the stealthiest and most agile monkey can use this!");
+    return;
+}
+if (~mm_wearing_greegree = false) {
+    p_telejump(^hundred_ilm_nutcave_in);
+    mes("You slip climbing down the hole and land hard on the floor.");
+    ~damage_self(calc(randominc(2) + 1)); // ours: how hard
+    return;
+}
+mes("You scamper through the vine choked hole...");
+p_telejump(^hundred_ilm_nutcave_in);
+mes("...and find yourself in front of a magnificent Monkey Nut bush.");
+
+[oploc1,loc_12616]
+anim(human_climbing, 0);
+p_delay(1);
+p_telejump(^hundred_ilm_nutcave_out);
+
+[oploc1,loc_12615]
+if (%hundred_ilm_quest >= ^hundred_ilm_cooked) {
+    mes("You have already made the King's meal, you dont need any more of these.");
+    return;
+}
+if (%hundred_ilm_nuts = 0) {
+    mes("There are no nuts on the bush right now.");
+    return;
+}
+if (inv_total(inv, hundred_ilm_tchiki_monkey_nuts) > 0) {
+    mes("You already have one Tchiki Monkey Nut, better not take another.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You do not have space in your inventory for that item.");
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_add(inv, hundred_ilm_tchiki_monkey_nuts, 1);
+mes("You take some Tchiki Nuts from the bush.");
+if (%hundred_ilm_nuts >= 2) mes("I hope Mizaru doesn't find this one!");
+
+// ---------------------------------------------------------------- preparing and stuffing
+[label,hundred_ilm_slice]
+inv_del(inv, hundred_ilm_red_banana, 1);
+inv_add(inv, hundred_ilm_sliced_red_banana, 1);
+mes("You deftly chop the red banana into slices.");
+
+[opheldu,hundred_ilm_red_banana]
+if (last_useitem = knife) @hundred_ilm_slice;
+~displaymessage(^dm_default);
+
+[opheldu,hundred_ilm_tchiki_monkey_nuts]
+if (last_useitem = pestle_and_mortar) {
+    inv_del(inv, hundred_ilm_tchiki_monkey_nuts, 1);
+    inv_add(inv, hundred_ilm_tchiki_monkey_nut_paste, 1);
+    anim(human_herbing_grind, 0);
+    sound_synth(grind, 1, 0);
+    mes("You grind the tchiki monkey nuts into a smooth sticky paste.");
+    return;
+}
+~displaymessage(^dm_default);
+
+[opheldu,hundred_ilm_snake_corpse]
+if (last_useitem ! hundred_ilm_sliced_red_banana & last_useitem ! hundred_ilm_tchiki_monkey_nut_paste) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (inv_total(inv, hundred_ilm_sliced_red_banana) < 1 | inv_total(inv, hundred_ilm_tchiki_monkey_nut_paste) < 1) {
+    mes("You need sliced red banana and tchiki nut paste to stuff the snake."); // ours
+    return;
+}
+inv_del(inv, hundred_ilm_snake_corpse, 1);
+inv_del(inv, hundred_ilm_sliced_red_banana, 1);
+inv_del(inv, hundred_ilm_tchiki_monkey_nut_paste, 1);
+inv_add(inv, hundred_ilm_correctly_stuffed_snake, 1);
+mes("You carefully stuff the ingredients into the snake corpse. Ewww!");
+if (%hundred_ilm_quest < ^hundred_ilm_stuffed) %hundred_ilm_quest = ^hundred_ilm_stuffed;
+
+// eating them (OSRS wiki: 5 each; the stuffed snake 20)
+[opheld1,hundred_ilm_red_banana] @hundred_ilm_eat(hundred_ilm_red_banana, 5, "You eat the red banana. They're tastier than your average banana.");
+[opheld1,hundred_ilm_sliced_red_banana] @hundred_ilm_eat(hundred_ilm_sliced_red_banana, 5, "You eat the sliced red banana. Yum.");
+[opheld1,hundred_ilm_tchiki_monkey_nuts] @hundred_ilm_eat(hundred_ilm_tchiki_monkey_nuts, 5, "You eat the Tchiki monkey nuts. They taste nutty.");
+[opheld1,hundred_ilm_tchiki_monkey_nut_paste] @hundred_ilm_eat(hundred_ilm_tchiki_monkey_nut_paste, 5, "You eat the tchiki nut paste. It sticks to the roof of your mouth.");
+[opheld1,hundred_ilm_cooked_stuffed_snake]
+if (~p_choice2_header("Yes", 1, "No", 2, "Are you sure you want to eat the cooked snake?") = 2) return;
+@hundred_ilm_eat(hundred_ilm_cooked_stuffed_snake, 20, "You eat the stuffed snake - it's quite a meal! It tastes like chicken.");
+
+[label,hundred_ilm_eat](obj $item, int $heal, string $message)
+if (inv_total(inv, $item) < 1) return;
+inv_del(inv, $item, 1);
+anim(human_eat, 0);
+sound_synth(eat, 1, 0);
+stat_heal(hitpoints, $heal, 0);
+mes($message);
+
+// ---------------------------------------------------------------- the hot rock under the temple
+[oploc1,loc_12617]
+~mesbox("You squeeze through the gap.");
+p_telejump(^hundred_ilm_rock_in);
+softtimer(hundred_ilm_coals, 1);
+
+[oploc1,loc_12657]
+~mesbox("You squeeze through the gap.");
+p_telejump(^hundred_ilm_rock_out);
+clearsofttimer(hundred_ilm_coals);
+
+// the hot coals (3062-3064,5483-5487) burn anyone not a zombie monkey and turn them back (ours: 1-3
+// damage, back to the side they came from)
+[softtimer,hundred_ilm_coals]
+if (inzone(0_47_85_40_32, 0_47_85_63_60, coord) = false) {
+    clearsofttimer(hundred_ilm_coals);
+    return;
+}
+if (inzone(0_47_85_54_43, 0_47_85_56_47, coord) = true & ~hundred_ilm_zombie = false) queue(hundred_ilm_hot_rocks, 0, 0);
+
+[queue,hundred_ilm_hot_rocks](int $unused)
+mes("The hot rocks burn your feet.");
+~damage_self(calc(randominc(2) + 1));
+if (coordx(coord) >= 3063) p_telejump(movecoord(coord, calc(3066 - coordx(coord)), 0, 0));
+else p_telejump(movecoord(coord, calc(3060 - coordx(coord)), 0, 0));
+
+[oplocu,loc_12633]
+if (last_useitem = hundred_ilm_snake_corpse | last_useitem = hundred_ilm_incorrectly_stuffed_snake) {
+    ~objbox(last_useitem, "The snake isn't ready for cooking yet.", 250, 0, divide(^objbox_height, 2));
+    return;
+}
+if (last_useitem ! hundred_ilm_correctly_stuffed_snake) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (stat(cooking) < 70) {
+    mes("You need a Cooking level of 70 to cook the stuffed snake."); // ours
+    return;
+}
+inv_del(inv, hundred_ilm_correctly_stuffed_snake, 1);
+anim(human_firecooking, 0);
+%100_ilm_cooking_snake_state = 1;
+p_delay(3);
+// OSRS wiki: 0 at level 1 to 255 at 99, from level 70; 180 XP
+if (stat_random(cooking, 0, 255) = true) {
+    %100_ilm_cooking_snake_state = 3;
+    p_delay(1);
+    inv_add(inv, hundred_ilm_cooked_stuffed_snake, 1);
+    stat_advance(cooking, 1800);
+    if (%hundred_ilm_quest < ^hundred_ilm_cooked) %hundred_ilm_quest = ^hundred_ilm_cooked;
+    %100_ilm_cooking_snake_state = 0;
+    ~objbox(hundred_ilm_cooked_stuffed_snake, "You cook the stuffed snake to perfection.", 250, 0, divide(^objbox_height, 2));
+} else {
+    %100_ilm_cooking_snake_state = 2;
+    p_delay(1);
+    inv_add(inv, 100_ilm_snake_burnt, 1);
+    %100_ilm_cooking_snake_state = 0;
+    ~objbox(100_ilm_snake_burnt, "You burn the stuffed snake.", 250, 0, divide(^objbox_height, 2));
+}

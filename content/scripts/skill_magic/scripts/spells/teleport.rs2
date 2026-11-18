@@ -30,10 +30,10 @@ if (p_finduid(uid) = true) {
         mes("You must have completed Watch Tower to use this spell.");
         return;
     }
-    // EASCape: the RuneScape Wiki has it unlocked by Recipe for Disaster's Freeing King
-    // Awowogei, which our game doesn't have; ours: Monkey Madness. It takes a banana too.
-    if($spell = ^apeatoll_teleport & %mm_main < ^mm_complete) {
-        mes("You need to have completed Monkey Madness to use this spell."); // ours
+    // EASCape: unlocked by Recipe for Disaster's Freeing King Awowogei (RuneScape Wiki;
+    // quest_100/hundred_monkey.rs2). It takes a banana too.
+    if($spell = ^apeatoll_teleport & %hundred_ilm_quest < ^hundred_ilm_freed) {
+        mes("You need to have freed King Awowogei to use this spell."); // ours
         return;
     }
     if($spell = ^apeatoll_teleport & inv_total(inv, banana) = 0) {

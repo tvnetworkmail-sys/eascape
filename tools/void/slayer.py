@@ -22,12 +22,12 @@ from slayer_map import CATEGORY
 VOID, WRITE = sys.argv[1], '--write' in sys.argv
 # EASCape: monsters to import that aren't Slayer monsters (quest areas), from VOID_EXTRA (comma list)
 # plus the ones already imported that way (kept so re-runs give the same result)
-EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant', 'chaoselemental', 'mole_giant', 'hundred_pirate_giant_mudskipper', 'hundred_pirate_giant_mudskipper_2', 'hundred_pirate_giant_crab'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
+EXTRA = {'fourdiamonds_sword_bandit_1', 'fourdiamonds_sword_bandit_free', 'ft2_gorak', 'fenk_experiment_1', 'fenk_experiment_2', 'fenk_experiment_3', 'roving_mossgiant', 'chaoselemental', 'mole_giant', 'hundred_pirate_giant_mudskipper', 'hundred_pirate_giant_mudskipper_2', 'hundred_pirate_giant_crab', 'hundred_ilm_snake'} | set(x for x in os.environ.get('VOID_EXTRA', '').split(',') if x)
 # EASCape: Void items that are ours under another name (the 2007 cache's, ported by name)
 ITEM_AS = {'gorak_claws': 'ft2_gorak_claws'}
 # EASCape: Void items that need quest state we don't track (Rag and Bone Man's wish list): the slot drops nothing
 ITEM_SKIP = {'dagannoth_ribs'}
-EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak', 'chaoselemental': 'chaos_elemental', 'mole_giant': 'giant_mole', 'hundred_pirate_giant_mudskipper': 'mudskipper', 'hundred_pirate_giant_mudskipper_2': 'mudskipper_2', 'hundred_pirate_giant_crab': 'crab_underwater'}
+EXTRA_AS = {'fourdiamonds_sword_bandit_free': 'bandit_bandit_camp', 'ft2_gorak': 'gorak', 'chaoselemental': 'chaos_elemental', 'mole_giant': 'giant_mole', 'hundred_pirate_giant_mudskipper': 'mudskipper', 'hundred_pirate_giant_mudskipper_2': 'mudskipper_2', 'hundred_pirate_giant_crab': 'crab_underwater', 'hundred_ilm_snake': 'big_snake'}
 OUT = os.path.join(CONTENT, 'scripts', 'eascape_void')
 
 vnpc = void_npcs(VOID)
