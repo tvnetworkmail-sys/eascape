@@ -2,7 +2,8 @@
 // World map (3.5): opens over the game from the globe by the minimap (or its hotkey).
 // The map pictures are drawn ahead of time from EASCape's 377 map data by
 // tools/worldmap/render.py (the 2004 minimap's own colours, walls and scenery), one picture
-// per 64 x 64 region and floor. This draws them with place names, map icons and you.
+// per 64 x 64 region and floor. This draws them with place names, map icons and you, with the
+// website world map's key of every icon (click one to pick them out) and icon names on hover.
 const fs = require('fs');
 const path = require('path');
 
@@ -10,6 +11,16 @@ const DIR = path.join(__dirname, '..', '..', 'ui', 'assets', 'worldmap');
 const ZOOMS = [0.25, 0.375, 0.5, 0.75, 1, 1.5, 2, 3, 4]; // x the minimap's 4 px per tile
 const ICON = 15; // map function icons are 15 x 15
 const VIEW = { x: 4, y: 4, w: 512, h: 334 }; // the game's 3D view, in game pixels
+// what each map icon is (the game's map functions, from their pictures and the objects that
+// carry them), as the website's world map names them (engine/view/site/worldmap.ejs on live)
+const NAMES = ['General Store', 'Sword Shop', 'Magic Shop', 'Axe Shop', 'Helmet Shop', 'Bank', 'Quest Start', 'Amulet Shop', 'Mining Site', 'Furnace',
+  'Anvil', 'Combat Training', 'Dungeon', 'Staff Shop', 'Platebody Shop', 'Platelegs Shop', 'Scimitar Shop', 'Archery Shop', 'Shield Shop', 'Altar',
+  'Herbalist', 'Jewellery Shop', 'Gem Shop', 'Crafting Shop', 'Candle Shop', 'Fishing Shop', 'Fishing Spot', 'Clothes Shop', 'Apothecary', 'Silk Trader',
+  'Kebab Seller', 'Pub / Bar', 'Mace Shop', 'Tannery', 'Rare Trees', 'Spinning Wheel', 'Food Shop', 'Cookery Shop', 'Minigame', 'Water Source',
+  'Cooking Range', 'Skirt Shop', 'Pottery Wheel', 'Windmill', 'Mining Shop', 'Chainmail Shop', 'Silver Shop', 'Fur Trader', 'Spice Shop', 'Agility Training',
+  'Vegetable Stall', 'Slayer Master', 'Hairdresser', 'Farming Patch', 'Makeover Mage', 'Information', 'Transportation', 'Point of Interest', 'Farming Shop', 'Loom',
+  'Brewery', 'Dairy Churn', 'Sink'];
+const iconName = (f) => NAMES[f] || 'Point of interest';
 
 module.exports = function worldMap(ctx) {
   let index = null;
@@ -21,6 +32,11 @@ module.exports = function worldMap(ctx) {
   let root = null;
   let canvas = null;
   let info = null;
+  let tip = null;
+  let keyBox = null;
+  let keyBtn = null;
+  let keyList = null;
+  const picked = new Set(); // icon kinds picked in the key: those pulse and the rest fade
   let open = false;
   let level = 0;
   let zoom = 4; // index into ZOOMS
@@ -108,6 +124,24 @@ module.exports = function worldMap(ctx) {
       .ll-map canvas.dragging { cursor: grabbing; }
       .ll-map-info { position: absolute; left: 8px; bottom: 6px; font-family: 'LostLiteRSSmall', Arial, sans-serif;
         font-size: 16px; color: #ff0; text-shadow: 1px 1px 0 #000; pointer-events: none; }
+      .ll-map-wrap { position: relative; flex: 1; min-height: 0; }
+      .ll-map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .ll-map-tip { position: absolute; pointer-events: none; font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 16px;
+        color: #fff; background: #3e3529; border: 1px solid #1d1913; padding: 0 5px; white-space: nowrap; display: none; z-index: 2; }
+      .ll-map-key { position: absolute; top: 4px; right: 4px; bottom: 4px; width: 170px; display: flex; flex-direction: column;
+        background: #3e3529; border: 2px solid #1d1913; box-shadow: 0 0 0 1px #5a4d3b inset; }
+      .ll-map-key.hidden { display: none; }
+      .ll-map-key .head { font-family: 'LostLiteRSBold', Arial, sans-serif; font-size: 15px; padding: 3px 6px 1px; display: flex; align-items: center; }
+      .ll-map-key .head span { margin-right: auto; }
+      .ll-map-key .head button { font: inherit; font-size: 13px; color: #ff981f; background: #5a4d3b; border: 1px solid #1d1913; padding: 0 5px; cursor: pointer; }
+      .ll-map-key .head button:hover { color: #fff; }
+      .ll-map-key .hint { font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 13px; color: #c8b48c; padding: 0 6px 3px; }
+      .ll-map-key ul { list-style: none; margin: 0; padding: 0 3px 3px; overflow-y: auto; flex: 1; }
+      .ll-map-key li { display: flex; align-items: center; gap: 5px; padding: 0 3px; cursor: pointer; font-size: 14px; line-height: 18px; }
+      .ll-map-key li:hover { color: #fff; background: #4a3f30; }
+      .ll-map-key li.on { color: #fff; background: #7b6a4f; }
+      .ll-map-key li .ic { width: 15px; height: 15px; flex: none; background-repeat: no-repeat; image-rendering: pixelated; }
+      .ll-map-key li .n { margin-left: auto; font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 13px; color: #c8b48c; }
     `;
     (document.head || document.documentElement).appendChild(st);
   }
@@ -127,6 +161,11 @@ module.exports = function worldMap(ctx) {
       b.addEventListener('click', () => { level = lv; follow = false; refreshBar(); draw(); });
       bar.appendChild(b);
     }
+    keyBtn = document.createElement('button');
+    keyBtn.textContent = 'Key';
+    keyBtn.title = 'Show or hide the key of map icons';
+    keyBtn.addEventListener('click', () => setKey(keyBox.classList.contains('hidden')));
+    bar.appendChild(keyBtn);
     const me = document.createElement('button');
     me.textContent = 'Me';
     me.title = 'Centre on you';
@@ -140,7 +179,16 @@ module.exports = function worldMap(ctx) {
     canvas = document.createElement('canvas');
     info = document.createElement('div');
     info.className = 'll-map-info';
-    root.append(bar, canvas, info);
+    tip = document.createElement('div');
+    tip.className = 'll-map-tip';
+    keyBox = buildKey();
+    const wrap = document.createElement('div');
+    wrap.className = 'll-map-wrap';
+    wrap.append(canvas, info, keyBox, tip);
+    root.append(bar, wrap);
+    let shown = true;
+    try { shown = localStorage.getItem('worldmapKey') !== 'hidden'; } catch { /* no storage */ }
+    setKey(shown);
     // Nothing on the map reaches the game.
     for (const t of ['mousedown', 'mouseup', 'click', 'contextmenu', 'pointerdown', 'pointerup', 'wheel', 'mousemove', 'pointermove']) {
       root.addEventListener(t, (e) => e.stopPropagation());
@@ -180,6 +228,73 @@ module.exports = function worldMap(ctx) {
       draw();
     }, { passive: false });
     document.body.appendChild(root);
+  }
+
+  // the key: each kind of icon on the map, A to Z, with how many there are; click one to pick
+  // them out (as the website's world map)
+  function buildKey() {
+    const box = document.createElement('div');
+    box.className = 'll-map-key';
+    const head = document.createElement('div');
+    head.className = 'head';
+    head.innerHTML = '<span>Key</span>';
+    const clear = document.createElement('button');
+    clear.textContent = 'Show all';
+    clear.title = 'Show every icon again';
+    clear.addEventListener('click', () => {
+      picked.clear();
+      for (const li of keyList.children) li.classList.remove('on');
+      draw();
+    });
+    head.appendChild(clear);
+    const hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = 'Click one to find them on the map';
+    keyList = document.createElement('ul');
+    const counts = new Map();
+    for (const [, , , f] of icons) counts.set(f, (counts.get(f) || 0) + 1);
+    const sheetUrl = iconSheet ? iconSheet.src : '';
+    const kinds = [...counts.keys()].sort((a, b) => iconName(a).localeCompare(iconName(b)));
+    for (const f of kinds) {
+      const li = document.createElement('li');
+      const ic = document.createElement('span');
+      ic.className = 'ic';
+      ic.style.backgroundImage = `url(${sheetUrl})`;
+      ic.style.backgroundPosition = `-${(f % 10) * ICON}px -${Math.floor(f / 10) * ICON}px`;
+      const name = document.createElement('span');
+      name.textContent = iconName(f);
+      const n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = counts.get(f);
+      li.append(ic, name, n);
+      li.title = `Show where every ${iconName(f).toLowerCase()} is`;
+      li.addEventListener('click', () => {
+        if (picked.has(f)) picked.delete(f); else picked.add(f);
+        li.classList.toggle('on', picked.has(f));
+        // zoom out a little so there are some to see
+        if (picked.has(f) && zoom > 3) setZoom(3);
+        draw();
+      });
+      keyList.appendChild(li);
+    }
+    box.append(head, hint, keyList);
+    return box;
+  }
+
+  function setKey(shown) {
+    keyBox.classList.toggle('hidden', !shown);
+    keyBtn.classList.toggle('on', shown);
+    try { localStorage.setItem('worldmapKey', shown ? 'shown' : 'hidden'); } catch { /* no storage */ }
+  }
+
+  function setZoom(next) {
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    const before = toTile(W / 2, H / 2);
+    zoom = Math.max(0, Math.min(ZOOMS.length - 1, next));
+    const after = toTile(W / 2, H / 2);
+    cx += before.x - after.x;
+    cz += before.z - after.z;
   }
 
   function refreshBar() {
@@ -280,11 +395,24 @@ module.exports = function worldMap(ctx) {
     // Map icons (banks, shops, altars ...)
     if (ctx.config('showIcons') && iconSheet && iconSheet.complete) {
       const cols = Math.floor(iconSheet.naturalWidth / ICON);
+      const beat = picked.size ? 0.5 + 0.5 * Math.sin(performance.now() / 180) : 0;
       for (const [lv, x, z, f] of icons) {
         if (lv !== level || x < tl.x - 2 || x > br.x + 2 || z > tl.z + 2 || z < br.z - 2) continue;
         const p = toScreen(x + 0.5, z + 0.5);
+        const on = picked.has(f);
+        g.globalAlpha = picked.size && !on ? 0.25 : 1;
+        if (on) {
+          // a ring that pulses round each picked icon, so they stand out at any zoom
+          g.lineWidth = 2;
+          g.strokeStyle = `rgba(255, 255, 0, ${0.4 + 0.6 * beat})`;
+          g.beginPath();
+          g.arc(p.x, p.y, ICON / 2 + 3 + 2 * beat, 0, Math.PI * 2);
+          g.stroke();
+        }
         g.drawImage(iconSheet, (f % cols) * ICON, Math.floor(f / cols) * ICON, ICON, ICON, Math.round(p.x - ICON / 2), Math.round(p.y - ICON / 2), ICON, ICON);
       }
+      g.globalAlpha = 1;
+      if (picked.size) pulse(); // keep the rings pulsing
     }
     // Place names
     if (ctx.config('showLabels') && level === 0) {
@@ -371,7 +499,23 @@ module.exports = function worldMap(ctx) {
       }
       pulse();
     }
-    // Tile under the mouse
+    // Tile under the mouse, and the icon under it named
+    let hit = null;
+    if (mouse && !drag && ctx.config('showIcons')) {
+      for (const [lv, x, z, f] of icons) {
+        if (lv !== level) continue;
+        const p = toScreen(x + 0.5, z + 0.5);
+        if (Math.abs(p.x - mouse.x) <= ICON / 2 + 1 && Math.abs(p.y - mouse.y) <= ICON / 2 + 1) { hit = f; break; }
+      }
+    }
+    if (hit !== null) {
+      tip.textContent = iconName(hit);
+      tip.style.display = 'block';
+      tip.style.left = `${Math.min(mouse.x + 14, W - tip.offsetWidth - 4)}px`;
+      tip.style.top = `${Math.min(mouse.y + 14, H - 20)}px`;
+    } else {
+      tip.style.display = 'none';
+    }
     if (mouse) {
       const t = toTile(mouse.x, mouse.y);
       info.textContent = `${Math.floor(t.x)}, ${Math.floor(t.z)}${level ? `, floor ${level}` : ''}`;
