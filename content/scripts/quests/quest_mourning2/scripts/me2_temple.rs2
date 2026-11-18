@@ -105,6 +105,26 @@ inv_add(inv, mourning_crystal_sample, 1);
 // its orange bit is the yellow crystal and its red bit the cyan one.
 [oploc1,mourning_temple_light_wall_lever]
 loc_anim(mourning_temple_lever);
+~me2_pull_lever;
+
+// ours: the collector itself offers the lever too, as the lever is a small thing to click on
+[proc,me2_collector_pull]
+def_int $dx = -2;
+while ($dx <= 2) {
+    def_int $dz = -2;
+    while ($dz <= 2) {
+        if (loc_find(movecoord(loc_coord, $dx, 0, $dz), mourning_temple_light_wall_lever) = true) {
+            loc_anim(mourning_temple_lever);
+            $dx = 3;
+            $dz = 3;
+        }
+        $dz = add($dz, 1);
+    }
+    $dx = add($dx, 1);
+}
+~me2_pull_lever;
+
+[proc,me2_pull_lever]
 mes("You pull the lever.");
 ~me2_clear_pillars;
 %mourning_temple_parts_1 = 1;
@@ -130,17 +150,19 @@ return(calc(%mourning_temple_orange_crystal_reset_tray + %mourning_temple_red_cr
 [oploc1,mourning_temple_light_wall_collector]
 def_int $m = %mourning_temple_mirrors_reset_tray;
 def_int $c = ~me2_tray_crystals;
-if ($m = 0 & $c = 0) {
-    ~mesbox("There is nothing in the tray.");
-    return;
-}
 def_int $choice = 4;
-if ($m > 0 & $c > 0) {
-    $choice = ~p_choice4_header("Take the mirrors.", 1, "Take the crystals.", 2, "Take all the items.", 3, "Leave all the items.", 4, "There are mirrors and crystals in the tray...");
+if ($m = 0 & $c = 0) {
+    $choice = ~p_choice2_header("Pull the lever.", 5, "Leave it.", 4, "There is nothing in the tray.");
+} else if ($m > 0 & $c > 0) {
+    $choice = ~p_choice5_header("Take the mirrors.", 1, "Take the crystals.", 2, "Take all the items.", 3, "Pull the lever.", 5, "Leave all the items.", 4, "There are mirrors and crystals in the tray...");
 } else if ($c > 0) {
-    $choice = ~p_choice2_header("Take the crystals.", 2, "Leave the crystals.", 4, "There are only crystals in the tray...");
+    $choice = ~p_choice3_header("Take the crystals.", 2, "Pull the lever.", 5, "Leave the crystals.", 4, "There are only crystals in the tray...");
 } else {
-    $choice = ~p_choice2_header("Take the mirrors.", 1, "Leave the mirrors", 4, "There are only mirrors in the tray...");
+    $choice = ~p_choice3_header("Take the mirrors.", 1, "Pull the lever.", 5, "Leave the mirrors", 4, "There are only mirrors in the tray...");
+}
+if ($choice = 5) {
+    ~me2_collector_pull;
+    return;
 }
 if ($choice = 4) {
     ~mesbox("You leave the items in the tray.");
