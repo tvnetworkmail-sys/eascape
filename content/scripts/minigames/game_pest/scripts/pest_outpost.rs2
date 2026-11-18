@@ -42,6 +42,11 @@ if (~p_choice2("I'd like to go back to Port Sarim please.", 1, "I'm fine thanks.
 // ---------------------------------------------------------------- the lander
 [oploc1,pest_lander_gangplank]
 p_arrivedelay;
+// from 24 Apr 2006 (2009scape's message)
+if (~player_combat_level < 40) {
+    mes("You need a combat level of 40 or higher to board this lander.");
+    return;
+}
 p_telejump(^pest_lander_in);
 mes("You board the lander.");
 if (%pest_state = 1) mes("A lander is already on the island. This one leaves when it's back."); // ours: one island

@@ -126,6 +126,19 @@ queue(combat_damage_player, calc($duration / 30), $damage);
 queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
 ~npc_set_attack_vars;
 
+// ---------------------------------------------------------------- hit
+[ai_queue2,_pest_splatter] @pest_hit;
+[ai_queue2,_pest_shifter] @pest_hit;
+[ai_queue2,_pest_ravager] @pest_hit;
+[ai_queue2,_pest_spinner] @pest_hit;
+[ai_queue2,_pest_torcher] @pest_hit;
+[ai_queue2,_pest_defiler] @pest_hit;
+[ai_queue2,_pest_brawler] @pest_hit;
+
+[label,pest_hit]
+~pest_zeal_hit(last_int);
+~npc_default_damage(last_int);
+
 // ---------------------------------------------------------------- dying
 [ai_queue3,_pest_splatter]
 %pest_count = max(sub(%pest_count, 1), 0);

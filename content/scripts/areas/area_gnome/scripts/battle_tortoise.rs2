@@ -1,0 +1,102 @@
+// EASCape: battle tortoises (24 April 2006): the gnomes' armoured tortoises at the Stronghold and on
+// the battlefield south-west of Ardougne. Ported from 2009scape (GnomeTortoiseNPC,
+// LieutenantSchepburDialogue): the war tortoise's gnomes shoot arrows and water strikes as well as it
+// bites, and when it dies its archer, driver and mage jump off and fight on for a while.
+
+// ---------------------------------------------------------------- the war tortoise
+[ai_opplayer2,battle_tortoise_war2]
+if (%npc_action_delay > map_clock) return;
+switch_int (random(3)) {
+    case 0 : gosub(npc_default_attack);
+    case 1 : ~battle_tortoise_shot(battle_tortoise_archer_attack, bronze_arrow_travel, null, ^ranged_style);
+    case 2 : ~battle_tortoise_shot(battle_tortoise_mage_attack, waterstrike_travel, waterstrike_impact, ^magic_style);
+}
+
+[proc,battle_tortoise_shot](seq $anim, spotanim $travel, spotanim $impact, int $style)
+if (~npc_check_notcombat = false) {
+    npc_setmode(null);
+    return;
+}
+if (~npc_check_notcombat_self = false) return;
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+npc_anim($anim, 0);
+def_int $duration = ~player_projectile(npc_coord, coord, uid, $travel, 35, 30, 10, 14, 0, 11, 5);
+if ($impact ! null) spotanim_pl($impact, 92, $duration);
+def_int $roll = ~npc_ranged_attack_roll;
+if ($style = ^magic_style) $roll = ~npc_magic_attack_roll;
+def_int $damage = 0;
+if (randominc($roll) > randominc(~player_defence_roll_specific($style))) $damage = randominc(npc_param(eascape_maxhit));
+if (~check_protect_prayer($style) = true) $damage = 0;
+anim(%com_defendanim, $duration);
+queue(combat_damage_player, calc($duration / 30), $damage);
+queue*(playerhit_n_retaliate, calc($duration / 30))(npc_uid);
+~npc_set_attack_vars;
+
+// it dies: its gnomes jump off round where it lay (2009scape)
+[ai_queue3,battle_tortoise_war2]
+def_coord $at = movecoord(npc_coord, 1, 0, 1);
+def_player_uid $hero = %npc_aggressive_player;
+.npc_add(movecoord($at, 1, 0, 0), gnome_archer, 25);
+.npc_say("Argh!");
+.%npc_aggressive_player = $hero;
+.npc_add(movecoord($at, 0, 0, 1), gnome_driver, 25);
+.npc_say("Nooooo! Dobbie's dead!");
+.%npc_aggressive_player = $hero;
+.npc_add(movecoord($at, -1, 0, 0), gnome_mage, 25);
+.npc_say("Kill the infidel!");
+.%npc_aggressive_player = $hero;
+gosub(npc_default_death);
+
+// ---------------------------------------------------------------- its gnomes
+[ai_applayer2,gnome_archer] ~npc_rangeattack;
+[ai_opplayer2,gnome_archer] npc_setmode(applayer2);
+[ai_queue1,gnome_archer] gosub(npc_default_retaliate_ap);
+[ai_applayer2,gnome_mage] ~battle_tortoise_shot(gnome_mage_attack, waterstrike_travel, waterstrike_impact, ^magic_style);
+[ai_opplayer2,gnome_mage] npc_setmode(applayer2);
+[ai_queue1,gnome_mage] gosub(npc_default_retaliate_ap);
+
+// ---------------------------------------------------------------- the commander and the trainer
+[opnpc1,gnome_tortoise_commander]
+~chatnpc("<p,neutral>Move into position lads! eh? Who are you and what do you want?");
+~chatplayer("<p,neutral>Who are you then?");
+~chatnpc("<p,neutral>Lieutenant Schepbur, commanding officer of the new Armoured Tortoise Regiment.");
+~chatplayer("<p,confused>There's only two tortoises here, that's hardly a regiment.");
+~chatnpc("<p,angry>This is just the beginning! Gnome breeders and trainers are already working to expand the number of units. Soon we'll have hundreds of these beauties, nay thousands! And they will not only carry mages and");
+~chatnpc("<p,angry>archers but other fiendish weapons of destruction of gnome devising. An army of giant tortoises will march upon this battlefield and rain the fire of our wrath upon all our enemies! Nothing will be able to stop us!");
+~chatplayer("<p,confused>Oooookayy...... I'll leave you to it then....");
+
+// the RuneScape wiki's transcript (its Eyes of Glouphrie option is from 2007, left out)
+[opnpc1,gnome_tortoise_trainer]
+~chatplayer("<p,neutral>Who are you then?");
+~chatnpc("<p,neutral>Hurumph. Nacklepen, tortoise trainer extraordinaire.");
+~chatplayer("<p,confused>What's extraordinary about you?");
+~chatnpc("<p,neutral>Do you know any other tortoise trainers?");
+~chatplayer("<p,neutral>Well, no.");
+~chatnpc("<p,neutral>Well there you go then.");
+@nacklepen_choice;
+
+[label,nacklepen_choice]
+switch_int (~p_choice4("So what are you training these tortoises to do?", 1, "Why tortoises?", 2, "Where did these tortoises come from?", 3, "I've heard enough.", 4)) {
+    case 1 :
+        ~chatplayer("<p,neutral>So what are you training these tortoises to do?");
+        ~chatnpc("<p,neutral>Tortoises are naturally pacifistic animals that eat nothing but cabbages. I am required to beat those peaceful tendencies out of the softies and turn them into hardened battle-trained killers. Firstly I acclimatise them to excessive aural stimulation and simple physical confrontation.");
+        ~chatplayer("<p,confused>You shout at them and beat them with sticks?");
+        ~chatnpc("<p,neutral>Of course. Then I re-educate them to become comfortable with riders and military combat situations.");
+        ~chatplayer("<p,confused>You sit on their backs and prod them with sharp pointy things.");
+        ~chatnpc("<p,neutral>If you like.");
+        ~chatplayer("<p,sad>Doesn't seem very fair on the tortoises.");
+        ~chatnpc("<p,angry>This is War! Fairness is a luxury of the weak.");
+        ~chatplayer("<p,confused>Hmmm, profound but disturbing.");
+        @nacklepen_choice;
+    case 2 :
+        ~chatplayer("<p,neutral>So why tortoises?");
+        ~chatnpc("<p,neutral>Isn't it obvious? Surely even to your untrained eye that giant tortoises are the perfect mobile armoured field unit? They are sturdy animals, and well protected by their shell. They can even swim! All we need to do is put a bit of fire in their bellies.");
+        ~chatplayer("<p,neutral>I suppose so....");
+        @nacklepen_choice;
+    case 3 :
+        ~chatplayer("<p,neutral>Where do these tortoises come from?");
+        ~chatnpc("<p,neutral>We breed them. The originals were found by gnome explorers back in King Healthorg the Great's rule. On their discovery King Healthorg authorised a small party to go there and transport a breeding pair back here. He kept one for himself to ride into battle.");
+        ~chatnpc("<p,neutral>Trouble is they take a lot of skill and time to breed, so we're only just getting them battle ready.");
+        @nacklepen_choice;
+    case 4 : ~chatplayer("<p,neutral>I've heard enough.");
+}
