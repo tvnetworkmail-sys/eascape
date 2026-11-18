@@ -1,0 +1,105 @@
+// EASCape: the pies of 20 February 2006: mud, garden, fish, admiral, wild and summer. Each is filled
+// in three steps from a pie shell. Recipes, levels and messages from Void (pie.recipes.toml); baking
+// in cooking_generic.dbrow, eating in consume_normal.dbrow. Every ingredient's own script sends its
+// pie steps here.
+
+// the recipe for $a used with $b (either way round), or -1
+[proc,pie2006_find](obj $a, obj $b)(int)
+def_int $i = 0;
+def_namedobj $pie;
+def_namedobj $add;
+def_namedobj $product;
+def_namedobj $back;
+def_int $level;
+def_string $what;
+while ($i < 20) {
+    $pie, $add, $product, $back, $level, $what = ~pie2006_recipe($i);
+    if (($a = $pie & $b = $add) | ($b = $pie & $a = $add)) return($i);
+    $i = add($i, 1);
+}
+return(-1);
+
+[proc,pie2006_recipe](int $i)(namedobj, namedobj, namedobj, namedobj, int, string)
+switch_int ($i) {
+    case 0 : return(pie_shell, bucket_compost, unfinished_mud_pie_1, bucket_empty, 29, "compost");
+    case 1 : return(unfinished_mud_pie_1, bucket_water, unfinished_mud_pie_2, bucket_empty, 29, "water");
+    case 2 : return(unfinished_mud_pie_1, bowl_water, unfinished_mud_pie_2, bowl_empty, 29, "water");
+    case 3 : return(unfinished_mud_pie_1, jug_water, unfinished_mud_pie_2, jug_empty, 29, "water");
+    case 4 : return(unfinished_mud_pie_2, clay, uncooked_mud_pie, null, 29, "clay");
+    case 5 : return(pie_shell, tomato, unfinished_garden_pie_1, null, 34, "tomato");
+    case 6 : return(unfinished_garden_pie_1, onion, unfinished_garden_pie_2, null, 34, "onion");
+    case 7 : return(unfinished_garden_pie_2, cabbage, uncooked_garden_pie, null, 34, "cabbage");
+    case 8 : return(pie_shell, trout, unfinished_fish_pie_1, null, 47, "trout");
+    case 9 : return(unfinished_fish_pie_1, cod, unfinished_fish_pie_2, null, 47, "cod");
+    case 10 : return(unfinished_fish_pie_2, potato, uncooked_fish_pie, null, 47, "potato");
+    case 11 : return(pie_shell, salmon, unfinished_admiral_pie_1, null, 70, "salmon");
+    case 12 : return(unfinished_admiral_pie_1, tuna, unfinished_admiral_pie_2, null, 70, "tuna");
+    case 13 : return(unfinished_admiral_pie_2, potato, uncooked_admiral_pie, null, 70, "potato");
+    case 14 : return(pie_shell, raw_bear_meat, unfinished_wild_pie_1, null, 85, "bear meat");
+    case 15 : return(unfinished_wild_pie_1, raw_chompy, unfinished_wild_pie_2, null, 85, "chompy meat");
+    case 16 : return(unfinished_wild_pie_2, raw_rabbit, uncooked_wild_pie, null, 85, "rabbit meat");
+    case 17 : return(pie_shell, strawberry, unfinished_summer_pie_1, null, 95, "strawberry");
+    case 18 : return(unfinished_summer_pie_1, watermelon, unfinished_summer_pie_2, null, 95, "watermelon");
+    case 19 : return(unfinished_summer_pie_2, cooking_apple, uncooked_summer_pie, null, 95, "apple");
+    case default : return(null, null, null, null, 0, "");
+}
+
+[label,pie2006_fill](int $i)
+def_namedobj $pie;
+def_namedobj $add;
+def_namedobj $product;
+def_namedobj $back;
+def_int $level;
+def_string $what;
+$pie, $add, $product, $back, $level, $what = ~pie2006_recipe($i);
+if (map_members = ^false) {
+    mes("You can only make that on a members' server.");
+    return;
+}
+if (stat(cooking) < $level) {
+    ~mesbox("You need a Cooking level of <tostring($level)> to make <~pie2006_name($product)>.");
+    return;
+}
+if (inv_total(inv, $pie) < 1 | inv_total(inv, $add) < 1) return;
+inv_del(inv, $pie, 1);
+inv_del(inv, $add, 1);
+inv_add(inv, $product, 1);
+if ($back ! null) inv_add(inv, $back, 1);
+mes("You fill the pie with <$what>.");
+
+// for the level message (as pies.rs2's "a Meat Pie")
+[proc,pie2006_name](obj $product)(string)
+switch_obj ($product) {
+    case unfinished_mud_pie_1, unfinished_mud_pie_2, uncooked_mud_pie : return("a Mud Pie");
+    case unfinished_garden_pie_1, unfinished_garden_pie_2, uncooked_garden_pie : return("a Garden Pie");
+    case unfinished_fish_pie_1, unfinished_fish_pie_2, uncooked_fish_pie : return("a Fish Pie");
+    case unfinished_admiral_pie_1, unfinished_admiral_pie_2, uncooked_admiral_pie : return("an Admiral Pie");
+    case unfinished_wild_pie_1, unfinished_wild_pie_2, uncooked_wild_pie : return("a Wild Pie");
+    case default : return("a Summer Pie");
+}
+
+[label,pie2006_use]
+def_int $i = ~pie2006_find(last_item, last_useitem);
+if ($i >= 0) @pie2006_fill($i);
+~displaymessage(^dm_default);
+
+// the part pies (and the ingredients that had no use-with script)
+[opheldu,unfinished_mud_pie_1] @pie2006_use;
+[opheldu,unfinished_mud_pie_2] @pie2006_use;
+[opheldu,unfinished_garden_pie_1] @pie2006_use;
+[opheldu,unfinished_garden_pie_2] @pie2006_use;
+[opheldu,unfinished_fish_pie_1] @pie2006_use;
+[opheldu,unfinished_fish_pie_2] @pie2006_use;
+[opheldu,unfinished_admiral_pie_1] @pie2006_use;
+[opheldu,unfinished_admiral_pie_2] @pie2006_use;
+[opheldu,unfinished_wild_pie_1] @pie2006_use;
+[opheldu,unfinished_wild_pie_2] @pie2006_use;
+[opheldu,unfinished_summer_pie_1] @pie2006_use;
+[opheldu,unfinished_summer_pie_2] @pie2006_use;
+[opheldu,trout] @pie2006_use;
+[opheldu,cod] @pie2006_use;
+[opheldu,salmon] @pie2006_use;
+[opheldu,raw_bear_meat] @pie2006_use;
+[opheldu,strawberry] @pie2006_use;
+[opheldu,watermelon] @pie2006_use;
+

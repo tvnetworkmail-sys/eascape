@@ -167,6 +167,11 @@ if ($low = 0 & $high = 0) {
     $passes_roll = stat_random(cooking, $low, $high);
 }
 inv_del(inv, $uncooked_item, 1);
+// EASCape: an iron spit breaks 1 time in 15 (2009scape StandardCookingPulse)
+if ($additional_item = spit_iron & random(15) = 5) {
+    $additional_item = null;
+    mes("Your iron spit seems to have broken in the process.");
+}
 
 if ($passes_roll = true) {
     inv_add(inv, $cooked_item, 1);

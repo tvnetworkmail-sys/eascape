@@ -127,7 +127,7 @@ if (%desertrescue >= ^desertrescue_learned_darts) {
 }
 // EASCape: the cache's fifth column has two labelled extras: "other" in the fourth box (bronze wire)
 // and "Studs" in the fifth (steel studs; a 2004 screenshot: https://imgur.com/CdcGdXD). The iron
-// spit (Feb 2006) that the later cache put in iron's fourth box is left out.
+// spit (20 Feb 2006) goes in iron's "other" box.
 if_sethide(smithing:other_layer, true);
 if_sethide(smithing:stud_layer, true);
 // EASCape: the later cache's nails box under column 4 is shown for bronze only (other metals'
@@ -145,6 +145,9 @@ if ($last_item = bronze_bar) {
     // EASCape: bronze nails in the nails box under column 4 (at the owner's request, 14 Nov 2026)
     if_sethide(smithing:com_149, false);
     if_sethide(smithing:com_150, false);
+} else if ($last_item = iron_bar) {
+    if_sethide (smithing:other_layer, false);
+    if_settext (smithing:com_101, "Iron spit");
 } else if ($last_item = steel_bar) {
     if_sethide (smithing:other_layer, false);
     // https://imgur.com/CdcGdXD

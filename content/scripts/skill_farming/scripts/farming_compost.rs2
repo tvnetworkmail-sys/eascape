@@ -268,6 +268,8 @@ return(vial_empty);
 // EASCape: on a bucket of compost ("You can do this with a bucket of compost", Ellamaria in Garden
 // of Tranquillity; the message ours)
 [opheldu,bucket_compost]
+def_int $pie2006 = ~pie2006_find(last_item, last_useitem); // EASCape: the 2006 pies (pies_2006.rs2)
+if ($pie2006 >= 0) @pie2006_fill($pie2006);
 switch_obj (last_useitem) {
     case supercompost_potion_4, supercompost_potion_3, supercompost_potion_2, supercompost_potion_1 :
         def_obj $potion = last_useitem;

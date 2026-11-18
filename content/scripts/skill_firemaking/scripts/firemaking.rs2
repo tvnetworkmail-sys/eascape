@@ -23,6 +23,8 @@ if (last_useitem = newbielogs) {
     @viking_light_firecracker;
 } else if(last_useitem = ratcatchers_weedpot) { // EASCape: Rat Catchers (quest_ratcatchers/rc_keldagrim.rs2)
     ~rc_light_pot;
+} else if (last_useitem = red_logs | last_useitem = green_logs | last_useitem = blue_logs) { // EASCape: coloured logs (firelighters.rs2)
+    @light_logs_inv(last_useslot);
 } else switch_category(oc_category(last_useitem)) {
     case category_22 : @light_logs_inv(last_useslot);
     case light_source_unlit : @ignite_light_source(last_useitem);
@@ -127,7 +129,13 @@ facesquare($fire_coord);
 mes("The fire catches and the logs begin to burn.");
 def_int $delay = calc(100 + random(100)); // firemaking length: https://archive.is/zF5hb
 // Temp note: dur does not need updated
-loc_add($fire_coord, fire, 1, centrepiece_straight, $delay);
+// EASCape: coloured logs burn in their colour, for 60 ticks (Void firemaking.tables.toml; fire_red/green/blue are 11404-11406)
+def_loc $fire = fire;
+if ($log = red_logs) $fire = loc_11404;
+else if ($log = green_logs) $fire = loc_11405;
+else if ($log = blue_logs) $fire = loc_11406;
+if ($fire ! fire) $delay = 60;
+loc_add($fire_coord, $fire, 1, centrepiece_straight, $delay);
 
 // -2 to match osrs behavior. Potentially this is an engine problem with world_delay being too slow though
 world_delay(add($delay, -2));

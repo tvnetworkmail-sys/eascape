@@ -1,0 +1,93 @@
+// EASCape: the Chaos Elemental (update of 20 February 2006). From Void (chaos_elemental.combat.toml,
+// ChaosElemental.kt): it casts from up to 10 squares away.
+// - discord (twice as likely): a hit of up to 28, rolled with a random style (melee, ranged or
+//   magic) against your defence for it; that style's protection prayer stops it
+// - confusion: teleports you to a random square nearby, not again for 10 ticks
+// - madness (only while you have room in your pack): takes off 1 to 3 random worn items
+// Void casts on every player in its area; ours casts on the one it is attacking.
+// Stats, drops and animations: its npc config (imported from Void by tools/void/slayer.py).
+
+[ai_queue1,chaoselemental] ~npc_default_retaliate_ap;
+[ai_opplayer2,chaoselemental] npc_setmode(applayer2);
+[ai_applayer2,chaoselemental]
+if (~eascape_npc_attack_ready = false) {
+    return;
+}
+def_int $total = 2;
+def_boolean $confuse = false;
+def_boolean $madness = false;
+if (%chaoselemental_confused_until <= map_clock) {
+    $confuse = true;
+    $total = add($total, 1);
+}
+if (inv_freespace(inv) > 0) {
+    $madness = true;
+    $total = add($total, 1);
+}
+def_int $pick = random($total);
+npc_anim(chaoselemental_attack, 0);
+if ($pick < 2) {
+    // discord
+    spotanim_npc(chaoselemental_spotanim_discord_casting, 0, 0);
+    ~sound_area(chaos_elemental_discord_cast, 0, npc_coord, 10);
+    def_int $duration = ~npc_projectile(coord, npc_uid, chaoselemental_spotanim_discord_travel, 43, 31, 40, 15, 10, 64, 5);
+    def_int $style = ^crush_style; // (melee: rolled as crush)
+    def_int $r = random(3);
+    if ($r = 1) $style = ^ranged_style;
+    else if ($r = 2) $style = ^magic_style;
+    def_int $damage = 0;
+    if (~eascape_npc_roll($style, $style) = true) $damage = randominc(28);
+    spotanim_pl(chaoselemental_spotanim_discord_impact, 88, $duration);
+    ~eascape_npc_proj_hit($damage, $duration, $style);
+    return;
+}
+def_int $duration;
+if ($confuse = true & ($pick = 2 | $madness = false)) {
+    spotanim_npc(chaoselemental_spotanim_confusion_casting, 0, 0);
+    ~sound_area(chaos_elemental_confusion_cast, 0, npc_coord, 10);
+    $duration = ~npc_projectile(coord, npc_uid, chaoselemental_spotanim_confusion_travel, 43, 31, 40, 16, 10, 64, 5);
+    queue(chaoselemental_confusion, calc($duration / 30), 0);
+} else {
+    spotanim_npc(chaoselemental_spotanim_madness_casting, 0, 0);
+    ~sound_area(chaos_elemental_madness_cast, 0, npc_coord, 10);
+    $duration = ~npc_projectile(coord, npc_uid, chaoselemental_spotanim_madness_travel, 43, 31, 40, 16, 10, 64, 5);
+    queue(chaoselemental_madness, calc($duration / 30), randominc(2));
+}
+~npc_set_attack_vars;
+%npc_action_delay = add(map_clock, npc_param(attackrate));
+
+// (ours: a square within 10 of you, where Void picks one within 10 of the elemental)
+[queue,chaoselemental_confusion](int $unused)
+%chaoselemental_confused_until = calc(map_clock + 10);
+spotanim_pl(chaoselemental_spotanim_confusion_impact, 88, 0);
+sound_synth(chaos_elemental_confusion_impact, 1, 0);
+p_telejump(map_findsquare(coord, 1, 10, ^map_findsquare_lineofwalk));
+
+// $extra: how many more than one item it takes off
+[queue,chaoselemental_madness](int $extra)
+spotanim_pl(chaoselemental_spotanim_madness_impact, 88, 0);
+sound_synth(chaos_elemental_madness_impact, 1, 0);
+def_int $n = add($extra, 1);
+while ($n > 0 & inv_freespace(inv) > 0) {
+    // a random worn slot that has something in it
+    def_int $count = 0;
+    def_int $slot = 0;
+    while ($slot < inv_size(worn)) {
+        if (inv_getobj(worn, $slot) ! null) $count = add($count, 1);
+        $slot = add($slot, 1);
+    }
+    if ($count = 0) return;
+    def_int $which = random($count);
+    $slot = 0;
+    while ($slot < inv_size(worn)) {
+        if (inv_getobj(worn, $slot) ! null) {
+            if ($which = 0) {
+                ~try_unequip($slot);
+                $slot = inv_size(worn);
+            }
+            $which = sub($which, 1);
+        }
+        $slot = add($slot, 1);
+    }
+    $n = sub($n, 1);
+}

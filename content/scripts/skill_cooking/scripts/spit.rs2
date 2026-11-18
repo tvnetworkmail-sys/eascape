@@ -1,0 +1,35 @@
+// EASCape: the iron spit (update of 20 February 2006): skewer a raw chompy or a raw rabbit on it
+// and roast it on any fire (cooking_generic.dbrow); the spit comes back. From 2009scape
+// (SkeweredFoodListener.kt: 30 Cooking for a chompy, 16 for a rabbit, and its message).
+[opheldu,spit_iron]
+switch_obj (last_useitem) {
+    case raw_chompy, raw_rabbit : ~spit_skewer(last_useitem);
+    case default : ~displaymessage(^dm_default);
+}
+
+[opheldu,raw_rabbit]
+def_int $pie2006 = ~pie2006_find(last_item, last_useitem); // EASCape: the 2006 pies (pies_2006.rs2)
+if ($pie2006 >= 0) @pie2006_fill($pie2006);
+switch_obj (last_useitem) {
+    case spit_iron : ~spit_skewer(raw_rabbit);
+    case default : ~displaymessage(^dm_default);
+}
+
+[proc,spit_skewer](obj $raw)
+def_int $level = 16;
+def_namedobj $skewered = spit_skewered_rabbit_meat;
+if ($raw = raw_chompy) {
+    $level = 30;
+    $skewered = spit_skewered_chompy;
+}
+if (stat(cooking) < $level) {
+    mes("You need a Cooking level of at least <tostring($level)> in order to do this.");
+    return;
+}
+if (inv_total(inv, $raw) < 1 | inv_total(inv, spit_iron) < 1) return;
+inv_del(inv, $raw, 1);
+inv_del(inv, spit_iron, 1);
+inv_add(inv, $skewered, 1);
+
+// eating the roast rabbit (heals 7: Void regicide.items.toml, 2009scape Consumables.java)
+[opheld1,spit_roasted_rabbit_meat] @player_consume_item(consume_effect_stat, 2, 3);

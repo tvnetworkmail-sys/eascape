@@ -1,6 +1,7 @@
 [opnpc1,professor_oddenstein]
 switch_int(%haunted) {
-    case ^haunted_not_started, ^haunted_complete : @oddenstein_nonquest;
+    case ^haunted_not_started : @oddenstein_nonquest;
+    case ^haunted_complete : @oddenstein_killerwatts; // EASCape: the killerwatts' plane (20 February 2006)
     case ^haunted_started : @oddenstein_looking;
     case ^haunted_spoken_to_oddenstein : @oddenstein_items;
 }
@@ -105,4 +106,29 @@ if(inv_total(inv, pressure_gauge) > 0 & inv_total(inv, oil_can) > 0 & inv_total(
 } else {
     ~chatplayer("<p,sad>I'm afraid I don't have any yet!");
     ~chatnpc("<p,neutral>I need a rubber tube, a pressure gauge and a can of oil. Then your friend can stop being a chicken.");
+}
+
+// EASCape: after Ernest the Chicken the machine opens a portal to the killerwatts' plane (update of
+// 20 February 2006). Words and the plane's landing square from Void (ProfessorOddenstein.kt).
+[label,oddenstein_killerwatts]
+~chatnpc("<p,confused>Errr, just before you go through there...");
+~chatplayer("<p,quiz>What's the problem?");
+~chatnpc("<p,neutral>That portal opens into a plane populated with some very shocking creatures. You should wear some kind of insulated armour before going there.");
+switch_int (~p_choice3("Where can I get insulated armour from?", 1, "Thanks, I think I'll stay here for a while then.", 2, "Thanks for the warning, but I'm not scared of any monster.", 3)) {
+    case 1 :
+        ~chatplayer("<p,quiz>Where can I get insulated armour from?");
+        ~chatnpc("<p,neutral>Well there were some pretty tough people here last week. Said they were Slayer Masters. They were planning on making some protective boots. You should speak to one of them.");
+        if (~p_choice2("Thanks, I'll do that.", 1, "I don't want to run around after Slayer Masters, I'm going through.", 2) = 1) {
+            ~chatplayer("<p,neutral>Thanks, I'll do that.");
+            ~chatnpc("<p,neutral>No problem. See you later.");
+            return;
+        }
+        ~chatplayer("<p,neutral>I don't want to run around after Slayer Masters, I'm going through.");
+        p_telejump(2_41_81_53_30);
+    case 2 :
+        ~chatplayer("<p,neutral>Thanks, I think I'll stay here for a while then.");
+    case 3 :
+        ~chatplayer("<p,neutral>Thanks for the warning, but I'm not scared of any monster.");
+        ~chatnpc("<p,neutral>Ok. Just don't say I didn't warn you");
+        p_telejump(2_41_81_53_30);
 }

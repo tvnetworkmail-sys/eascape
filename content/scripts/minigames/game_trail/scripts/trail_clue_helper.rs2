@@ -89,3 +89,11 @@ while ($slot < inv_size(trail_rewardinv)) {
     $slot = calc($slot + 1);
 }
 inv_clear(trail_rewardinv);
+
+// EASCape: a red, green or blue firelighter (20 February 2006)
+[proc,trail_reward_firelighter]()(namedobj)
+switch_int (random(3)) {
+    case 0 : return(gnomish_firelighter_red);
+    case 1 : return(gnomish_firelighter_green);
+    case default : return(gnomish_firelighter_blue);
+}

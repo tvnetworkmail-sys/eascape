@@ -30,7 +30,7 @@ if ($rare > 0) {
 ~trail_complete;
 
 [proc,trail_clue_easy_normal]
-def_int $random = random(28);
+def_int $random = random(29);
 
 switch_int ($random) {
     case 0 : inv_add(trail_rewardinv, coins, calc(50 + random(151)));
@@ -61,10 +61,11 @@ switch_int ($random) {
     case 25 : inv_add(trail_rewardinv, amulet_of_magic, 1);
     case 26 : inv_add(trail_rewardinv, willow_longbow, 1);
     case 27 : inv_add(trail_rewardinv, ~trail_reward_godpage);
+    case 28 : inv_add(trail_rewardinv, ~trail_reward_firelighter, calc(4 + random(7))); // EASCape: firelighters, 20 Feb 2006 (OSRS wiki: shared, 4-10)
 }
 
 [proc,trail_clue_easy_rare]
-def_int $random = random(15);
+def_int $random = random(28); // EASCape: every case (the 20 Feb 2006 rewards past the old count could never be rolled)
 
 switch_int ($random) {
     case 0 : inv_add(trail_rewardinv, black_platebody_trim, 1);
@@ -89,4 +90,10 @@ switch_int ($random) {
     case 19 : inv_add(trail_rewardinv, bluewizhat_trim, 1);
     case 20 : inv_add(trail_rewardinv, wizards_robe_trim, 1);
     case 21 : inv_add(trail_rewardinv, wizards_robe_trim_gold, 1);
+    case 22 : inv_add(trail_rewardinv, studded_body_trim_gold, 1);
+    case 23 : inv_add(trail_rewardinv, studded_body_trim_fur, 1);
+    case 24 : inv_add(trail_rewardinv, studded_chaps_trim_gold, 1);
+    case 25 : inv_add(trail_rewardinv, studded_chaps_trim_fur, 1);
+    case 26 : inv_add(trail_rewardinv, blue_skirt_trim_gold, 1);
+    case 27 : inv_add(trail_rewardinv, blue_skirt_trim, 1);
 }

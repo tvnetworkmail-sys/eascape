@@ -1,8 +1,11 @@
 [opheldu,raw_chompy]
+def_int $pie2006 = ~pie2006_find(last_item, last_useitem); // EASCape: the 2006 pies (pies_2006.rs2)
+if ($pie2006 >= 0) @pie2006_fill($pie2006);
 switch_obj (last_useitem)
 {
     case cabbage, tomato, potato, equa_leaves, doogleleaves :
         @quest_chompybird_add_ingredients_to_chompy_message;
+    case spit_iron : ~spit_skewer(raw_chompy); // EASCape: iron spits (skill_cooking/spit.rs2)
     case default : ~displaymessage(^dm_default);
 }
 

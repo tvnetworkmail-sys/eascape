@@ -3,6 +3,7 @@
 switch_obj(last_useitem) {
     case knife : @fletch_log(last_item);
     case tinderbox : @light_logs_inv(last_slot);
+    case gnomish_firelighter_red, gnomish_firelighter_green, gnomish_firelighter_blue : ~firelighter_use(last_useitem, last_item); // EASCape: firelighters (skill_firemaking/firelighters.rs2)
     case default :
         // Lost City 274: sacred oil used on logs makes pyre logs too (mortton_pyre.rs2 has it the other way round)
         if (oc_category(last_useitem) = sacred_oil & last_item ! achey_tree_logs) {
