@@ -17,9 +17,16 @@ if (~check_axis(coord, loc_coord, loc_angle) = true) {
     ~open_and_close_door(loc_param(next_loc_stage), false, false);
 }
 
-[opnpc1,master_crafter] @master_crafter_talk;
-[opnpc1,master_crafter_2] @master_crafter_talk; // EASCape: a copy of this character that had no Talk-to script
-[opnpc1,master_crafter_3] @master_crafter_talk; // EASCape: a copy of this character that had no Talk-to script
+// EASCape: Swan Song's bone seeds first (quest_swan/swan_army.rs2)
+[opnpc1,master_crafter]
+if (~swan_crafter_talk(npc_type) = true) return;
+@master_crafter_talk;
+[opnpc1,master_crafter_2] // EASCape: a copy of this character that had no Talk-to script
+if (~swan_crafter_talk(npc_type) = true) return;
+@master_crafter_talk;
+[opnpc1,master_crafter_3] // EASCape: a copy of this character that had no Talk-to script
+if (~swan_crafter_talk(npc_type) = true) return;
+@master_crafter_talk;
 
 [label,master_crafter_talk]
 ~chatnpc("<p,confused>Yeah?"); // animationId = 575

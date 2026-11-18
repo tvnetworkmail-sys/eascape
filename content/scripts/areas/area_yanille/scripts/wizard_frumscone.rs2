@@ -1,2 +1,14 @@
-[opnpc1,wizard_frumscone]
+[opnpc1,wizard_frumscone] @frumscone_talk;
+// EASCape: across the railings of his zombie pen
+[apnpc1,wizard_frumscone]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@frumscone_talk;
+
+[label,frumscone_talk]
 ~chatnpc("<p,neutral>Do you like my magic Zombies?|Feel free to kill them,|there's plenty more where these came from!");
+// EASCape: Swan Song (quest_swan/swan_army.rs2)
+if (%swansong = ^swan_army | %swansong = 85) @swan_frumscone;
+if (%swansong >= ^swan_necro & %swansong < ^swan_bones) @swan_frumscone_again;

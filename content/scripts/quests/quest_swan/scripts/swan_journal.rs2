@@ -1,0 +1,57 @@
+// EASCape: Swan Song's quest journal (ours, in the usual style)
+[if_button,questlist:swansong]
+def_int $s = %swansong;
+if ($s = ^swan_not_started) {
+    ~quest_journal("Swan Song", "@dbl@I can start this quest by speaking to @dre@Herman Caranos@dbl@ outside|@dbl@the @dre@Piscatoris Fishing Colony@dbl@, reached by boat from the river|@dbl@west of the Gnome Stronghold.||@dbl@To start this quest I need:|@dre@101 Quest Points|@dre@Level 66 Magic, 62 Cooking, 62 Fishing, 45 Smithing,|@dre@42 Firemaking and 40 Crafting|@dbl@and to have completed @dre@One Small Favour@dbl@ and|@dre@Garden of Tranquillity@dbl@.");
+    return;
+}
+def_string $t = "@str@Herman Caranos asked me to fetch the Wise Old Man to save his Colony.";
+if ($s < ^swan_wom_outside) {
+    $t = "@dbl@@dre@Herman Caranos@dbl@ asked me to fetch the @dre@Wise Old Man@dbl@ of|@dre@Draynor Village@dbl@ to save his Colony from sea trolls.";
+    if ($s = ^swan_runes) $t = append($t, "||@dbl@He wants @dre@5 blood runes@dbl@, @dre@10 lava runes@dbl@ and @dre@10 mist runes@dbl@.");
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "|@str@He came, once I'd brought him runes.");
+if ($s < ^swan_inside) {
+    $t = append($t, "||@dbl@He's waiting for me outside the Colony, by a @dre@tunnel@dbl@.");
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "|@str@We fought our way into the Colony.");
+if ($s <= ^swan_helping) {
+    if ($s = ^swan_inside) $t = append($t, "||@dbl@I should tell @dre@Herman@dbl@, in his office, that we're here.");
+    else {
+        $t = append($t, "||@dbl@Herman wants me to help around the Colony:");
+        if (%swansong_franklin = 4) $t = append($t, "|@str@Franklin: 5 iron sheets on the broken wall");
+        else $t = append($t, "|@dre@Franklin@dbl@: 5 iron sheets on the broken wall");
+        if (%swansong_arnold = 2) $t = append($t, "|@str@Arnold: 5 fresh monkfish, cooked");
+        else $t = append($t, "|@dre@Arnold@dbl@: 5 fresh monkfish, cooked");
+    }
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "|@str@I helped Franklin and Arnold.");
+if ($s < ^swan_seeds) {
+    if ($s < ^swan_necro) $t = append($t, "||@dbl@The Colony needs an army: @dre@Wizard Frumscone@dbl@ in the|@dbl@Wizards' Guild in Yanille might lend one.");
+    else if ($s = ^swan_necro) $t = append($t, "||@dbl@Frumscone sent me to @dre@Malignius Mortifer@dbl@, south of Falador.");
+    else if ($s = ^swan_bones) $t = append($t, "||@dbl@Malignius wants @dre@7 bones@dbl@ (<tostring(%swansong_bones)> given).");
+    else if ($s = ^swan_crafter) $t = append($t, "||@dbl@I need to ask a @dre@master crafter@dbl@ at the Crafting Guild how to|@dbl@carry bone seeds.");
+    else $t = append($t, "||@dbl@I need a @dre@pot with a lid@dbl@ for Malignius' bone seeds.");
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "|@str@Malignius gave me an army of bone seeds.");
+if ($s < ^swan_queen_dead) {
+    $t = append($t, "||@dbl@I should take them to @dre@Herman@dbl@ and fight the trolls.");
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "|@str@I killed the Sea Troll Queen.");
+if ($s < ^swan_complete) {
+    $t = append($t, "||@dbl@@dre@Herman@dbl@ wants to see me in his office.");
+    ~quest_journal("Swan Song", $t);
+    return;
+}
+$t = append($t, "||@red@QUEST COMPLETE!");
+~quest_journal("Swan Song", $t);

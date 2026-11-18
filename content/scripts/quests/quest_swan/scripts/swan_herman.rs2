@@ -1,0 +1,259 @@
+// EASCape: Swan Song (2 May 2006): Herman Caranos, the Wise Old Man and the boat to the Colony.
+// Dialogue from the OSRS wiki's transcript; the cutscenes are told in the chat (ours).
+
+// ---------------------------------------------------------------- requirements
+[proc,swan_can_start]()(boolean)
+if (~count_questpoints < ^swan_qp_needed) return(false);
+if (stat(magic) < 66 | stat(cooking) < 62 | stat(fishing) < 62 | stat(smithing) < 45 | stat(firemaking) < 42 | stat(crafting) < 40) return(false);
+if (%onesmallfavour < ^osf_complete | %garden_quest < ^got_complete) return(false);
+return(true);
+
+// ---------------------------------------------------------------- outside the Colony: Herman, then the Wise Old Man
+[opnpc1,swan_multioutside]
+if (%swansong >= ^swan_wom_outside) {
+    @swan_wom_outside;
+}
+@swan_herman_talk;
+
+[opnpc1,swan_herman] @swan_herman_talk;
+// over his desk (ours: the engine needs this to talk across it, like a banker)
+[apnpc1,swan_herman]
+if (npc_range(coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@swan_herman_talk;
+
+[label,swan_herman_talk]
+def_int $s = %swansong;
+if ($s = ^swan_not_started) @swan_herman_start;
+if ($s < ^swan_wom_outside) {
+    ~chatnpc("<p,neutral>Ah, <displayname>. I was wondering where you'd got to.");
+    ~chatplayer("<p,confused>What was it you wanted me to do?");
+    ~chatnpc("<p,neutral>Go to Draynor Village and fetch the Wise Old Man to help save the Colony!");
+    ~chatplayer("<p,neutral>Couldn't I just save it myself?");
+    ~chatnpc("<p,angry>No! Now go and do what I told you!");
+    return;
+}
+if ($s < ^swan_inside) {
+    ~chatnpc("<p,neutral>Please hurry - the trolls are getting closer!"); // ours: he's inside by now
+    return;
+}
+if ($s = ^swan_inside) @swan_herman_arrive;
+if ($s = ^swan_helping) @swan_herman_helping;
+if ($s = ^swan_army) @swan_herman_army;
+if ($s < ^swan_seeds) {
+    ~chatnpc("<p,neutral><displayname> - have you brought an army?");
+    ~chatplayer("<p,neutral>Wizard Frumscone wouldn't help, but he told me where I could find a wizard who might help. I have to look for him just south of Falador.");
+    ~chatnpc("<p,neutral>Off you go!");
+    ~chatplayer("<p,confused>By the way, where's the Wise Old Man gone?");
+    ~chatnpc("<p,neutral>He said he'd be back in a minute. But never mind him - go to Falador and talk to this wizard!");
+    return;
+}
+if ($s = ^swan_seeds) @swan_herman_seeds;
+if ($s = ^swan_queen) @swan_battle_again;
+if ($s = ^swan_queen_dead) @swan_herman_reward;
+~chatnpc("<p,happy>Thank you again for saving my Colony!"); // ours
+
+[label,swan_herman_start]
+~chatplayer("<p,happy>Hello. Lovely day, isn't it?");
+~chatnpc("<p,confused>Lovely? Oh - er - if you say so. But please excuse me, I really don't have time to chat about the weather.");
+if (~p_choice2_header("What's the rush?", 1, "I'll leave you to it, then.", 2, "What would you like to say?") = 2) @swan_leave;
+~chatplayer("<p,neutral>What's the rush?");
+~chatnpc("<p,angry>Trolls! They're attacking my fishing Colony!");
+~chatplayer("<p,confused>Gosh, I didn't know there were any trolls around here.");
+~chatnpc("<p,neutral>These are a sort of sea-dwelling troll. They feed on the monkfish that live in this part of the sea, but just recently they've started invading my Colony!");
+@swan_herman_help;
+
+[label,swan_herman_help]
+if (~p_choice2("Do you need any help?", 1, "I'll leave you to it, then.", 2) = 2) @swan_leave;
+~chatplayer("<p,neutral>Do you need any help?");
+~chatnpc("<p,neutral>Well yes, I do. I've done some research about this, and I think our best hope is to get hold of an experienced adventurer.");
+~chatnpc("<p,neutral>In all the legends I've read, brave adventurers have no trouble vanquishing whatever monsters are menacing the helpless settlement.");
+@swan_herman_try;
+
+[label,swan_herman_try]
+switch_int (~p_choice3("You've been... reading stories about adventurers?", 1, "I'm a brave adventurer! Can I try?", 2, "I'll leave you to it, then.", 3)) {
+    case 1 :
+        ~chatplayer("<p,confused>You've been... reading stories about adventurers?");
+        ~chatnpc("<p,neutral>Yes, I've done my research very carefully. I've always made important decisions based on careful analysis of whatever documents are available to me on the topic. For example, I chose this site for my Fishing Colony because");
+        ~chatnpc("<p,neutral>records show this part of the sea to be a prime site for catching monkfish. I don't just fumble along like an amateur!");
+        ~chatplayer("<p,neutral>... fair enough, I suppose! Anyway, you think you need an adventurer?");
+        ~chatnpc("<p,neutral>Yes, that's right. A brave adventurer with plenty of experience in this sort of work.");
+        @swan_herman_try;
+    case 2 :
+        ~chatplayer("<p,happy>I'm a brave adventurer! Can I try?");
+        ~chatnpc("<p,confused>You? I hadn't thought of that... let's have a look at you...");
+        if (~swan_can_start = false) {
+            ~chatnpc("<p,sad>No, I'm sorry, but you simply do not have enough experience. I've got a LOT at stake here, and I can't afford to have an amateur getting in the way.");
+            mes("You do not meet all the requirements to start the Swan Song quest.");
+            return;
+        }
+        @swan_herman_accept;
+    case 3 : @swan_leave;
+}
+
+[label,swan_leave]
+~chatplayer("<p,neutral>I'll leave you to it, then.");
+~chatnpc("<p,neutral>Fine, fine.");
+
+[label,swan_herman_accept]
+~chatnpc("<p,neutral>Hmmm... You're not what I'm looking for, but... <tostring(~count_questpoints)> Quest Points is really rather a lot...");
+~chatnpc("<p,happy>Ok, the Piscatoris Fishing Colony gratefully accepts your offer of help. When the Colony is safe you shall be handsomely rewarded.");
+~chatplayer("<p,happy>Oh goody, I love rewards! Now, how can I help?");
+%swansong = ^swan_started;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+~chatnpc("<p,neutral>Well, as qualified as you undoubtedly are, I believe we're going to need a truly expert adventurer if the Colony is to stand a chance.");
+if (%legendsquest = ^legends_complete) ~chatplayer("<p,angry>Expert adventurer? I'll have you know I'm in the Guild of Legends!");
+else ~chatplayer("<p,angry>Expert adventurer? I'll wager I've had more adventures than you've had pickled gherkins!");
+~chatnpc("<p,neutral>If you could just stop blowing your own trumpet for a minute...");
+~chatplayer("<p,neutral>...");
+~chatnpc("<p,happy>Excellent! Now, in far-away Misthalin there lives one of the greatest adventurers of all time.");
+~chatplayer("<p,neutral>... this better be good...");
+~chatnpc("<p,neutral>His name is lost in the mists of time, but you shouldn't have much trouble finding the Wise Old Man of Draynor Village.");
+~chatplayer("<p,confused>Him? What in the heck do you want with HIM?");
+~chatnpc("<p,confused>Oh, do you know him?");
+~chatplayer("<p,neutral>Well I've met him. Don't you think he's a bit old?");
+~chatnpc("<p,neutral>Maybe, but he's still an expert adventurer.");
+~chatplayer("<p,neutral>And you want me to fetch this Wise Old Man?");
+~chatnpc("<p,neutral>You don't sound convinced. Look, I'll tell you what I've read about him...");
+// the cutscene of his adventures (ours: told, not shown)
+~mesbox("Herman talks about the Wise Old Man's adventures: how he slew an ogre shaman, silenced a drunken dwarf, killed the Shaikahan, and fought the Kalphite Queen.");
+~chatplayer("<p,neutral>Right... so you want me to fetch this old man who used to be a great adventurer.");
+~chatnpc("<p,neutral>Yes, that's right. And do watch out for the sea trolls!");
+
+// ---------------------------------------------------------------- the Wise Old Man in Draynor (areas/area_draynor/wise_old_man.rs2)
+[label,swan_wom_draynor]
+if (%swansong = ^swan_started) {
+    if (~p_choice2("You used to be a famous adventurer, didn't you?", 1, "More...", 2) = 2) @wom_menu;
+    ~chatplayer("<p,neutral>You used to be a famous adventurer, didn't you?");
+    ~chatnpc("<p,laugh>Heh heh! Yes, I suppose you could say that. But that was all quite a long time ago. I haven't been on what you'd call a 'quest' for a while.");
+    ~chatplayer("<p,neutral>Does that mean you'd be interested if someone asked for your help?");
+    ~chatnpc("<p,quiz>Oh? What exactly had you in mind?");
+    ~chatplayer("<p,neutral>Herman Caranos of the Piscatoris Fishing Colony thinks he needs you to save his colony from a tribe of attacking sea trolls.");
+    ~chatnpc("<p,neutral>Hmmm... so I haven't been forgotten... and the world once again is calling for my aid...");
+    ~chatplayer("<p,neutral>Well, it's just one man who smells of fish, not exactly the whole world...");
+    ~chatnpc("<p,neutral>... yet this could be the opportunity I've been waiting for...");
+    ~chatplayer("<p,bored>... yawn...");
+    anim(emote_yawn, 0);
+    ~chatnpc("<p,sad>... but I'm a lot older than I used to be, do I still have the strength? Should I retire now, or can I do just one more quest?");
+    ~chatplayer("<p,neutral>If you're not feeling up to it, I'll leave you alone.");
+    ~chatnpc("<p,happy>Yes, I'll do it! This can be my final adventure, my last great quest. Saving this colony shall be my swan song.");
+    ~chatplayer("<p,confused>Swan song?");
+    ~chatnpc("<p,neutral>Legend tells us that a swan, before it dies, sings a song of outstanding beauty as a fitting conclusion to its graceful life. This adventure will be my swan song.");
+    ~chatplayer("<p,confused>You're going to sing a song and then snuff it? Maybe I should tell Herman you've flipped...");
+    ~chatnpc("<p,angry>No, you ignoramus! I shall bring my adventuring days to a dramatic close by saving this colony!");
+    ~chatplayer("<p,neutral>Great. So long as you're not going to sing.");
+    ~chatnpc("<p,neutral>Yes, that's right, I'm not going to sing. Anyway, I shall need some supplies from you.");
+    ~chatplayer("<p,quiz>Oh yes? What do you want?");
+    ~chatnpc("<p,neutral>I'm rather short of runes. If you could fetch me 5 Blood runes, 10 Lava runes and 10 Mist runes, I'll be able to set off.");
+    %swansong = ^swan_runes;
+    if (~swan_has_runes = true) {
+        ~chatplayer("<p,happy>I just happen to have those with me!");
+        ~chatnpc("<p,happy>Gosh, you're very efficient!");
+        ~chatplayer("<p,happy>Sometimes I amaze even myself.");
+        ~chatnpc("<p,neutral>Ok, hand 'em over.");
+        @swan_wom_runes_given;
+    }
+    ~chatplayer("<p,neutral>Right, 5 Blood runes, 10 Lava runes and 10 Mist runes.");
+    return;
+}
+// asked for the runes
+if (~p_choice2("You asked me to get some runes.", 1, "More...", 2) = 2) @wom_menu;
+~chatplayer("<p,neutral>You asked me to get some runes.");
+if (~swan_has_runes = false) {
+    ~chatnpc("<p,quiz>I'm guessing you haven't got them all, have you?");
+    ~chatplayer("<p,sad>No, not yet.");
+    ~chatnpc("<p,angry>Well, do get a move on! I need 5 Blood runes, 10 Lava runes and 10 Mist runes, otherwise I'll be no use in a fight.");
+    return;
+}
+~chatnpc("<p,neutral>Okay, hand 'em over.");
+@swan_wom_runes_given;
+
+[proc,swan_has_runes]()(boolean)
+if (inv_total(inv, bloodrune) >= 5 & inv_total(inv, lavarune) >= 10 & inv_total(inv, mistrune) >= 10) return(true);
+return(false);
+
+[label,swan_wom_runes_given]
+~chatplayer("<p,neutral>Here you go...");
+if (~swan_has_runes = false) return;
+inv_del(inv, bloodrune, 5);
+inv_del(inv, lavarune, 10);
+inv_del(inv, mistrune, 10);
+%swansong = ^swan_wom_outside;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+~chatnpc("<p,happy>Excellent. I'll see you outside the Colony. Don't forget to arm yourself - it could be dangerous!");
+if (npc_find(coord, wise_old_man, 5, 0) = true) spotanim_map(teleport_other_impact, npc_coord, 92, 0); // ours: he's left; the map keeps him in Draynor
+
+// ---------------------------------------------------------------- the Wise Old Man outside the Colony
+[label,swan_wom_outside]
+if (%swansong = ^swan_wom_outside) {
+    ~chatnpc("<p,happy>Hello again, <displayname>! I must thank you for persuading me to come - I feel quite invigorated in the sea breeze!");
+    ~chatplayer("<p,neutral>Oh - er - good. Well, Herman must be inside the Colony now, so we should probably go in.");
+    ~chatnpc("<p,neutral>Are you sure you're ready? I can hear creatures moving around in the trees, and we might have to do some fighting soon.");
+    %swansong = ^swan_ready;
+    if (~p_choice2("I'm ready to fight.", 1, "I should go and get ready first.", 2) = 1) {
+        ~chatplayer("<p,neutral>I'm ready to fight.");
+        ~chatnpc("<p,neutral>Excellent. I think this little tunnel will lead us there...");
+        return;
+    }
+    ~chatplayer("<p,neutral>I should go and get ready first.");
+    ~chatnpc("<p,neutral>Yes, better safe than sorry! We can go through this little tunnel when you're ready.");
+    return;
+}
+if (%swansong < ^swan_ambush_won) {
+    ~chatnpc("<p,neutral>Just hop into the tunnel when you're ready.");
+    return;
+}
+~chatnpc("<p,happy>Well, it all seems to have gone smoothly so far!");
+~chatplayer("<p,neutral>Yes, we're both still alive.");
+
+// ---------------------------------------------------------------- Kathy Corkat's boat
+[opnpc1,swan_boat_boatwoman]
+if (%swansong < ^swan_started) {
+    ~chatnpc("<p,neutral>Ahoy there! I can row you up the river to the coast for 50 coins."); // ours
+    if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 2) {
+        ~chatplayer("<p,neutral>No thanks.");
+        return;
+    }
+    if (inv_total(inv, coins) < 50) {
+        ~chatplayer("<p,sad>I haven't got enough money.");
+        return;
+    }
+    inv_del(inv, coins, 50);
+    @swan_row;
+}
+~chatnpc("<p,neutral>Hello again! Want a ride?"); // ours
+if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+@swan_row;
+
+[opnpc3,swan_boat_boatwoman]
+if (%swansong < ^swan_started) {
+    mes("Kathy wants 50 coins for the ride. Talk to her first."); // ours
+    return;
+}
+@swan_row;
+
+[label,swan_row]
+def_coord $to = ^swan_kathy_colony;
+if (distance(coord, ^swan_kathy_colony) < 30) $to = ^swan_kathy_stronghold;
+~fade_out;
+p_delay(2);
+p_telejump(map_findsquare(movecoord($to, 0, 0, -1), 0, 3, ^map_findsquare_lineofwalk));
+p_delay(1);
+~fade_in;
+mes("Kathy rows you along the river."); // ours
+
+// the Kathy by the Colony (the cache spawns her there directly)
+[opnpc1,swan_boatwoman_2]
+~chatnpc("<p,neutral>Hello again! Want a ride?"); // ours
+if (~p_choice2("Yes please.", 1, "No thanks.", 2) = 2) {
+    ~chatplayer("<p,neutral>No thanks.");
+    return;
+}
+@swan_row;
+
+[opnpc3,swan_boatwoman_2] @swan_row;

@@ -14,6 +14,12 @@
 [opnpc1,wise_old_man]
 ~chatnpc("<p,happy>Greetings, <displayname>.");
 if (%wom_met = 0) @wom_intro;
+// EASCape: Swan Song (quest_swan/swan_herman.rs2)
+if (%swansong >= ^swan_started & %swansong < ^swan_wom_outside) @swan_wom_draynor;
+if (%swansong >= ^swan_wom_outside & %swansong < 190) {
+    ~chatnpc("<p,neutral>I'll see you at the Colony, <displayname>!"); // ours: the cache has him leave Draynor; our map keeps him
+    return;
+}
 ~wom_check_bed;
 ~wom_check_items;
 @wom_menu;

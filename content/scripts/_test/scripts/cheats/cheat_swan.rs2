@@ -1,0 +1,49 @@
+// EASCape: test commands for Swan Song (quests/quest_swan).
+
+// ::~swanstage <n> - the stage (0, 5, 15, 30, 40, 55, 60, 65, 80, 90, 95, 100, 110, 120, 150, 160, 200)
+[debugproc,swanstage](int $n)
+if (p_finduid(uid) = false) return;
+%swansong = $n;
+if ($n <= ^swan_helping) {
+    %swansong_franklin = 0;
+    %swansong_arnold = 0;
+    %swansong_fish = 0;
+    %swansong_wall_1 = 0;
+    %swansong_wall_2 = 0;
+    %swansong_wall_3 = 0;
+    %swansong_wall_4 = 0;
+    %swansong_wall_5 = 0;
+}
+mes("Swan Song stage <tostring(%swansong)>.");
+
+// ::~swantele <n> - 1 the Stronghold boat, 2 outside the Colony, 3 Herman's office, 4 Franklin's shed,
+// 5 Arnold, 6 the broken wall, 7 the fishing spot, 8 the kitchen
+[debugproc,swantele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(0_37_54_1_29);
+    case 2 : p_telejump(0_36_57_42_2);
+    case 3 : p_telejump(0_36_57_48_35);
+    case 4 : p_telejump(0_36_57_40_18);
+    case 9 : p_telejump(0_36_57_39_28);
+    case 5 : p_telejump(0_36_57_27_42);
+    case 6 : p_telejump(0_36_57_8_38);
+    case 7 : p_telejump(0_36_57_8_47);
+    case 8 : p_telejump(0_36_57_13_21);
+}
+
+// ::~swanpack - the quest's items
+[debugproc,swanpack]
+if (p_finduid(uid) = false) return;
+inv_add(inv, bloodrune, 5);
+inv_add(inv, lavarune, 10);
+inv_add(inv, mistrune, 10);
+inv_add(inv, iron_bar, 5);
+inv_add(inv, logs, 1);
+inv_add(inv, bones, 7);
+inv_add(inv, favour_airtight_pot, 1);
+
+// ::~swanqueen - the queen, here
+[debugproc,swanqueen]
+npc_add(^swan_queen_spot, swan_seatroll_queen, 500);
+mes("queen at <tostring(coordx(npc_coord))>,<tostring(coordz(npc_coord))>");

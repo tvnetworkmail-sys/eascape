@@ -64,6 +64,14 @@ inv_del(inv, fairy_symptoms_list, 1);
 
 [opnpc1,elemental_wizard_boss]
 ~chatnpc("<p,neutral>So, <displayname>, your curiosity leads you to speak to me?");
+// EASCape: Swan Song (quest_swan/swan_army.rs2): its option first while it has one
+if (~swan_malignius_active = true) {
+    def_string $swan = "I need help with saving a fishing colony.";
+    if (%swansong = ^swan_bones) $swan = "What was it you said you'd need to help me save the Colony?";
+    if (%swansong = ^swan_crafter) $swan = "What am I meant to be doing for the Colony?";
+    if (%swansong = ^swan_pot) $swan = "I've spoken to the master crafter...";
+    if (~p_choice2($swan, 1, "Something else...", 2) = 1) @swan_malignius;
+}
 def_int $s = %fairy_farmers_quest;
 def_string $quest = "";
 if ($s = ^fairy1_malignius) {

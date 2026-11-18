@@ -329,6 +329,9 @@ if (%soulbane_prog >= ^sb_complete) { // EASCape: A Soul's Bane (quest_soulbane)
 if (%rag_quest >= ^rag_complete) { // EASCape: Rag and Bone Man (quest_rag)
     $questpoints = add($questpoints, ^rag_questpoints);
 }
+if (%swansong >= ^swan_complete) { // EASCape: Swan Song (quest_swan)
+    $questpoints = add($questpoints, ^swan_questpoints);
+}
 if (testbit(%rag_bones_main, 8) = ^true) { // EASCape: Rag and Bone Man's wish list (quest_rag)
     $questpoints = add($questpoints, ^rag_wish_questpoints);
 }
@@ -493,6 +496,7 @@ if (testbit(%ibanmulti, ^upass_started_bit) = ^true & %upass ! ^upass_complete) 
 ~send_quest_progress_colour(questlist:myreque_2, %myreque_2_quest, ^myq2_complete); // EASCape: In Aid of the Myreque
 ~send_quest_progress_colour(questlist:soulbane, %soulbane_prog, ^sb_complete); // EASCape: A Soul's Bane
 ~send_quest_progress_colour(questlist:rag, %rag_quest, ^rag_complete); // EASCape: Rag and Bone Man
+~send_quest_progress_colour(questlist:swansong, %swansong, ^swan_complete); // EASCape: Swan Song
 ~send_quest_progress_colour(questlist:lost_tribe, %lt_stage, ^lt_complete);
 ~send_quest_progress_colour(questlist:giantdwarf, %giantdwarf_quest, ^gd_complete);
 ~send_quest_progress_colour(questlist:rd, %rd_main, ^recruitmentdrive_complete); // EASCape: Recruitment Drive (quest_rd)

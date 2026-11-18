@@ -1,0 +1,209 @@
+// EASCape: Swan Song (2 May 2006): an army for the Colony - Wizard Frumscone (areas/area_yanille),
+// Malignius Mortifer (quest_fairy1/fairy1_mages.rs2) and the Crafting Guild's master crafter
+// (skill_crafting/crafting_guild). Dialogue from the OSRS wiki's transcript.
+
+// ---------------------------------------------------------------- Wizard Frumscone
+[label,swan_frumscone]
+if (%swansong = ^swan_army) {
+    ~chatplayer("<p,neutral>Hello. I need your help with something...");
+    ~chatnpc("<p,quiz>Oho? Very well, young man, what can I do for you?");
+    ~chatplayer("<p,neutral>The Piscatoris Fishing Colony, somewhere north of the Gnome Stronghold, is under attack by sea trolls, and they've sent me to ask for an army.");
+    ~chatnpc("<p,confused>An army, heh? But I haven't GOT an army!");
+    ~chatplayer("<p,neutral>They said you might lend us some of your zombies.");
+    ~chatnpc("<p,angry>What? This is a combat training facility, not a library! My magic zombies are not for loan.");
+    ~chatplayer("<p,sad>So you can't help the Colony?");
+    ~chatnpc("<p,angry>I'm jolly well not lending them an army! If I did that for you, I'd have to do that for everyone, and I'd never get a moment's peace again!");
+    ~chatplayer("<p,angry>So what should I tell the Colony? They've got to give up all their work because you won't help?");
+    ~chatnpc("<p,neutral>Actually that does seem rather harsh...");
+    ~chatnpc("<p,happy>I have an idea!");
+    ~chatplayer("<p,quiz>Yes?");
+    ~chatnpc("<p,shifty>Now, you mustn't breathe a word of this to Zavistic or Disentor upstairs, but I know a man who could help you get an army.");
+    ~chatplayer("<p,happy>Great! Is he a Guild wizard too?");
+    ~chatnpc("<p,neutral>No, his work is completely different. He's a necromancer.");
+    @swan_frumscone_necro;
+}
+// he hasn't sent you yet (you walked away)
+~chatplayer("<p,neutral>You said you knew a man who could help me save the Piscatoris Fishing Colony.");
+~chatnpc("<p,shifty>Oh yes. Now, you mustn't mention this to Zavistic or Distentor, but he's a necromancer.");
+@swan_frumscone_necro;
+
+[label,swan_frumscone_necro]
+~chatplayer("<p,angry>Necromancy? I don't want anything to do with that!");
+~chatnpc("<p,neutral>He's not going to have you doing any of the actual spellcasting for it. You'll probably just have to collect some weird item from him and take it to the Colony.");
+~chatplayer("<p,confused>I don't know if I still want to do this.");
+~chatnpc("<p,neutral>If you don't want to continue the quest, just walk away and think no more about it. But I'm sure you won't have to do anything evil or unnatural yourself.");
+~chatnpc("<p,quiz>So what's it to be?");
+if (~p_choice2_header("Enough of this - I'm off.", 1, "I'll see what the necromancer needs me to do.", 2, "What would you like to say?") = 1) {
+    ~chatplayer("<p,angry>Enough of this - I'm off.");
+    ~chatnpc("<p,neutral>Understandable. But if you ever change your mind, just come and ask me.");
+    %swansong = add(^swan_army, 5); // ours: asked, but not sent (85 is no stage the cache uses)
+    return;
+}
+~chatplayer("<p,neutral>I'll see what the necromancer needs me to do.");
+~chatnpc("<p,happy>Excellent. His name's Malignius Mortifer. You'll find him somewhere south of Falador.");
+~chatplayer("<p,quiz>Can't I ask a different necromancer? There's one not so far away.");
+~chatnpc("<p,neutral>Hah! Necromancers aren't helpful people. I don't know of many - most guild wizards won't have anything to do with their practices. I think Malignius will help only because he loves showing off his powers.");
+%swansong = ^swan_necro;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+
+[label,swan_frumscone_again]
+~chatplayer("<p,neutral>Hello again.");
+~chatnpc("<p,quiz><displayname>? Have you spoken to Malignius Mortifer?");
+~chatplayer("<p,neutral>I haven't asked him yet.");
+~chatnpc("<p,neutral>He'll probably still be wandering around south of Falador whenever you do want to speak to him.");
+
+// ---------------------------------------------------------------- Malignius Mortifer
+// true if he has something for Swan Song now
+[proc,swan_malignius_active]()(boolean)
+if (%swansong >= ^swan_necro & %swansong < ^swan_seeds) return(true);
+return(false);
+
+[label,swan_malignius]
+def_int $s = %swansong;
+if ($s = ^swan_necro) {
+    ~chatplayer("<p,neutral>I need help with saving a fishing colony.");
+    ~chatnpc("<p,laugh>Hahaha! You want MY help? HAHAHA!");
+    ~chatplayer("<p,confused>... um... The Piscatoris Fishing Colony needs an army to defend them against attacking trolls.");
+    ~chatnpc("<p,laugh>And of all the people in the world, you came to ask ME? HAHAHA!");
+    ~chatplayer("<p,confused>... um... pretty please?");
+    ~chatnpc("<p,shifty>Oh, I'll help! I'll give you GOOD help!");
+    ~chatplayer("<p,confused>... um... thanks, I think...");
+    ~chatnpc("<p,happy>An army, eh? I can raise you a lovely army of the undead skeletal magi! That'd be just right, wouldn't it?");
+    ~chatplayer("<p,worried>I'm not going to have to do anything... evil, am I?");
+    ~chatnpc("<p,shifty>No, I'll keep the fun bits for myself. You'll just have to get a few things for me.");
+    ~chatplayer("<p,neutral>Alright - what do you need?");
+    ~chatnpc("<p,neutral>Firstly, I need 7 bones, the normal sort you get from people and small monsters.");
+    %swansong = ^swan_bones;
+    %swansong_bones = 0;
+    ~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+    if (inv_total(inv, bones) > 0) {
+        ~chatplayer("<p,happy>I have some here!");
+        ~chatnpc("<p,laugh>Hah! And I thought only necromancers and jogres carried bones around with them! Very well, hand 'em over.");
+        @swan_malignius_bones;
+    }
+    return;
+}
+if ($s = ^swan_bones) {
+    if (inv_total(inv, bones) > 0) {
+        ~chatplayer("<p,neutral>I have some bones for you.");
+        @swan_malignius_bones;
+    }
+    ~chatplayer("<p,confused>What was it you said you'd need to help me save the Colony?");
+    ~chatnpc("<p,neutral>Bones! I need bones, the normal sort you get from humans and small monsters. If you're having trouble, go to the highwaymen just north of here - they've got bones!");
+    ~chatplayer("<p,neutral>Oh yes, how could I have forgotten?");
+    return;
+}
+if ($s = ^swan_crafter) {
+    if (~swan_has_apron = false) {
+        ~chatplayer("<p,neutral>Can you spare me a brown apron so I can go to the Crafting Guild to ask the master crafters about transporting bone seeds?");
+        ~chatnpc("<p,neutral>Yes, yes.");
+        inv_add(inv, brown_apron, 1);
+        ~chatplayer("<p,happy>Thanks!");
+        return;
+    }
+    ~chatplayer("<p,confused>What am I meant to be doing for the Colony?");
+    ~chatnpc("<p,angry>Is there something wrong with your memory? I told you to go to the Crafting Guild to ask the master crafters for advice on transporting bone seeds.");
+    return;
+}
+// the crafter told you: a pot with a lid
+~chatplayer("<p,neutral>I've spoken to the master crafter about a container for transporting bone seeds.");
+~chatnpc("<p,laugh>Ah, excellent. HAHAHA! Have you got such a container?");
+if (~swan_has_pot = false) {
+    ~chatplayer("<p,sad>No, I haven't got one.");
+    ~chatnpc("<p,angry>Then get one!");
+    return;
+}
+~chatplayer("<p,happy>Yes, I have it here.");
+~chatnpc("<p,happy>I have raised you an army and bound them into bone seeds for you!");
+~chatplayer("<p,confused>... um... Thanks!");
+~chatnpc("<p,laugh>Don't mention it, it was fun! HAHAHA!");
+~chatnpc("<p,neutral>Now I will seal the seeds into your pot.");
+if (~swan_has_pot = false) return;
+~swan_take_pot;
+inv_add(inv, swan_army, 1);
+%swansong = ^swan_seeds;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+~chatplayer("<p,quiz>Thank you. So what do I do with them?");
+~chatnpc("<p,laugh>Take the pot to the Colony and open it! HAHAHA! Just don't open it before you get there.");
+~chatplayer("<p,shifty>Suppose I - ahem - need another one later?");
+~chatnpc("<p,neutral>Bring me another of these pots with a lid and I will give you more bone seeds.");
+~mesbox("Malignius unexpectedly casts a spell on you.");
+mes("Malignius unexpectedly casts a spell on you!");
+~chatnpc("<p,laugh>HAHAHA!");
+anim(human_castteleport, 0);
+spotanim_pl(teleport_casting, 92, 0);
+p_delay(2);
+p_telejump(0_36_57_45_30);
+
+[label,swan_malignius_bones]
+def_int $need = calc(7 - %swansong_bones);
+def_int $give = min(inv_total(inv, bones), $need);
+inv_del(inv, bones, $give);
+%swansong_bones = add(%swansong_bones, $give);
+if (%swansong_bones < 7) {
+    ~chatnpc("<p,neutral>Good. Now I need <tostring(calc(7 - %swansong_bones))> more.");
+    return;
+}
+~chatnpc("<p,happy>Excellent!");
+~chatplayer("<p,quiz>What should I do now for the quest?");
+~chatnpc("<p,neutral>From the bones you have given me, I shall make bone seeds. These will contain the essence of your army. But you will need some way to carry the seeds.");
+~chatplayer("<p,quiz>What had you in mind?");
+~chatnpc("<p,neutral>You must go to the Crafting Guild to ask the advice of the master crafters. There are quite a few of them there, and one of them's sure to help.");
+%swansong = ^swan_crafter;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+if (~swan_has_apron = true) return;
+~chatplayer("<p,neutral>I doubt they'll let me in there without a brown apron.");
+inv_add(inv, brown_apron, 1);
+~chatnpc("<p,neutral>Here, take this one.");
+~chatplayer("<p,happy>Thanks!");
+
+[proc,swan_has_apron]()(boolean)
+if (inv_total(inv, brown_apron) > 0 | inv_total(worn, brown_apron) > 0 | inv_total(bank, brown_apron) > 0) return(true);
+return(false);
+
+// a pot with a lid: the airtight pot, or a pot and a lid (the OSRS wiki)
+[proc,swan_has_pot]()(boolean)
+if (inv_total(inv, favour_airtight_pot) > 0) return(true);
+if (inv_total(inv, pot_empty) > 0 & inv_total(inv, potlid) > 0) return(true);
+return(false);
+
+[proc,swan_take_pot]
+if (inv_total(inv, favour_airtight_pot) > 0) {
+    inv_del(inv, favour_airtight_pot, 1);
+    return;
+}
+inv_del(inv, pot_empty, 1);
+inv_del(inv, potlid, 1);
+
+// ---------------------------------------------------------------- the master crafters
+// true if the crafter took over the talk
+[proc,swan_crafter_talk](npc $type)(boolean)
+if (%swansong < ^swan_crafter | %swansong >= ^swan_seeds) return(false);
+if ($type ! master_crafter_3) {
+    ~chatnpc("<p,neutral>Hello, and welcome to the Crafting Guild. Accomplished crafters from all over the land come here to use our top notch workshops.");
+    ~chatplayer("<p,quiz>Can you tell me anything about transporting bone seeds?");
+    ~chatnpc("<p,confused>Bone seeds? What are bone seeds?");
+    ~chatplayer("<p,neutral>A necromancer is going to bind the essence of an undead army into some bone seeds for me if I can get a container to carry them in.");
+    ~chatnpc("<p,angry>That's horrible - ask someone else!");
+    return(true);
+}
+if (%swansong = ^swan_pot) {
+    ~chatnpc("<p,confused>Yeah?");
+    ~chatplayer("<p,quiz>What was it you said I needed for transporting bone seeds?");
+    ~chatnpc("<p,neutral>A pot with a lid. Nothing more, nothing less.");
+    ~chatplayer("<p,neutral>Thanks.");
+    return(true);
+}
+~chatnpc("<p,confused>Yeah?");
+~chatplayer("<p,quiz>Can you tell me anything about transporting bone seeds?");
+~chatnpc("<p,happy>Woah dude! That's, like, some seriously maximum stuff you're talking.");
+~chatplayer("<p,quiz>But do you know what I should carry them in?");
+~chatnpc("<p,neutral>Yeah, you just need a pot with a lid. Do you know how to make pot lids?");
+~chatplayer("<p,neutral>Yes, a woman called Tassie taught me.");
+~chatnpc("<p,happy>Tassie Slipcast? She's one groovy lady.");
+~chatplayer("<p,neutral>Yes, yes, very nice. So if I get a pot with a lid, I'll be able to carry bone seeds safely in it?");
+~chatnpc("<p,neutral>Yeah, yeah. You need to chill out more, dude.");
+~chatplayer("<p,neutral>...");
+%swansong = ^swan_pot;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+return(true);

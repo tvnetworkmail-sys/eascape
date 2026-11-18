@@ -1,0 +1,653 @@
+// EASCape: Swan Song (2 May 2006): the Piscatoris Fishing Colony - the tunnel and the trolls'
+// ambush, Herman's office, Franklin's press and wall, Arnold's monkfish. Dialogue from the OSRS wiki's
+// transcript; the cache's own varbits hold the progress (swansong_franklin, swansong_wall_1-5,
+// swansong_arnold, swansong_fish, swansong_trolls).
+
+// ---------------------------------------------------------------- the tunnel and the ambush
+[oploc1,loc_14922]
+def_int $s = %swansong;
+if ($s < ^swan_ready) {
+    mes("You don't fancy going in there on your own."); // ours
+    return;
+}
+anim(human_pickupfloor, 0);
+p_delay(1);
+if (distance(coord, ^swan_hole_out) <= distance(coord, ^swan_hole_in)) {
+    p_telejump(movecoord(^swan_hole_in, 0, 0, 1));
+} else {
+    p_telejump(movecoord(^swan_hole_out, 1, 0, 0));
+    return;
+}
+if ($s = ^swan_ready | $s = ^swan_ambush) ~swan_ambush_start;
+
+[proc,swan_ambush_start]
+%swansong = ^swan_ambush;
+%swansong_trolls = 0;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+// the trolls from before go (ours: so a second go starts clean)
+npc_huntall(coord, 12, 0);
+while (.npc_findnext = true) {
+    if (.npc_type = swan_troll_ambush | .npc_type = swan_wom_ambush) .npc_del;
+}
+.npc_add(0_36_57_41_7, swan_wom_ambush, 500);
+.npc_say("Wait - I think something's coming!");
+~chatnpc_specific("Wise Old Man", swan_wom_ambush, "<p,neutral>Wait - I think something's coming!");
+~swan_troll_rise(0_36_57_37_10);
+~swan_troll_rise(0_36_57_43_10);
+~swan_troll_rise(0_36_57_40_12);
+
+[proc,swan_troll_rise](coord $c)
+.npc_add(map_findsquare($c, 0, 2, ^map_findsquare_lineofwalk), swan_troll_ambush, 500);
+.npc_anim(swan_seatroll_water_rise, 0);
+.%npc_aggressive_player = uid;
+.npc_setmode(opplayer2);
+
+[opnpc1,swan_wom_ambush]
+if (%swansong = ^swan_ambush) {
+    npc_say("First fight, talk later!");
+    return;
+}
+~chatnpc("<p,happy>Well, it all seems to have gone smoothly so far!");
+~chatplayer("<p,neutral>Yes, we're both still alive.");
+
+// his spells while you fight (ours: he lends a hand, 2009scape has no ambush to copy)
+[ai_timer,swan_wom_ambush]
+npc_huntall(npc_coord, 8, 0);
+while (.npc_findnext = true) {
+    if (.npc_type = swan_troll_ambush & random(3) = 0) {
+        npc_anim(human_castwave, 0);
+        def_int $duration = ~npc_to_npc_projectile(.npc_uid, waterwave_travel, 40, 36, 20, 15, 11, 0, 5);
+        .spotanim_npc(waterwave_impact, 92, $duration);
+        return;
+    }
+}
+
+[ai_queue3,swan_troll_ambush]
+if (finduid(%npc_aggressive_player) = true) queue(swan_ambush_kill, 0, 0);
+gosub(npc_default_death);
+
+[queue,swan_ambush_kill](int $unused)
+if (%swansong ! ^swan_ambush) return;
+%swansong_trolls = add(%swansong_trolls, 1);
+if (%swansong_trolls < 3) return;
+%swansong = ^swan_ambush_won;
+say("Got them all!");
+
+// ---------------------------------------------------------------- the Colony gate
+[oploc1,loc_14929] @swan_gate;
+[oploc1,loc_14931] @swan_gate;
+
+[label,swan_gate]
+if (%swansong >= ^swan_ambush & %swansong < ^swan_ambush_won) {
+    mes("You'd better deal with the trolls first."); // ours
+    return;
+}
+if (%swansong < ^swan_ambush_won) {
+    mes("The gate is locked."); // ours: the way in is the tunnel
+    return;
+}
+~open_and_close_door(loc_type, ~check_axis(coord, loc_coord, loc_angle), false);
+if (%swansong = ^swan_ambush_won) {
+    %swansong = ^swan_inside;
+    ~chatnpc_specific("Wise Old Man", wom_cutscene_2, "<p,neutral>Please go and tell Herman I'm here. Someone's sure to know where to find him.");
+    mes("The Wise Old Man teleports away.");
+}
+
+// ---------------------------------------------------------------- Herman in his office
+[label,swan_herman_arrive]
+~chatnpc("<p,happy>Finally you've arrived! Did you bring the Wise Old Man?");
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,happy>Indeed, I am here!");
+~chatnpc("<p,happy>Excellent! You have no idea how grateful I am!");
+~chatplayer("<p,shifty>Talking of gratitude, I believe you mentioned some kind of reward...");
+~chatnpc("<p,neutral>Reward? Well... we've got to discuss the Colony's defences now. Perhaps you could go and make yourself useful around the Colony? I'm sure my brother, Franklin, could do with a bit of help. Arnold, the storemaster, said he needed an extra pair of hands too.");
+~chatnpc("<p,neutral>He's in one of the big storage sheds.");
+~chatplayer("<p,neutral>Ok, I help out, then I get a reward?");
+~chatnpc("<p,neutral>Yes, yes... now please excuse us.");
+%swansong = ^swan_helping;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+
+[label,swan_herman_helping]
+if (%swansong_franklin = 4 & %swansong_arnold = 2) @swan_herman_plan;
+~chatplayer("<p,happy>Yoohoo to you two!");
+anim(emote_wave, 0);
+~chatnpc("<p,neutral><displayname>? Have you helped Franklin and Arnold yet?");
+if (%swansong_franklin = 0 & %swansong_arnold = 0) {
+    ~chatplayer("<p,sad>No, I haven't.");
+    ~chatnpc("<p,neutral>Please do so!");
+    return;
+}
+~chatplayer("<p,neutral>I'm on the case, no problems.");
+~chatnpc("<p,happy>That's what I like to hear. Off you go...");
+
+[label,swan_herman_plan]
+~chatplayer("<p,happy>I've finished helping Franklin and Arnold now.");
+~chatnpc("<p,neutral>Or - er - that's good...");
+~chatplayer("<p,quiz>Does this mean you're going to reward me now?");
+~chatnpc("<p,neutral>There's something else I need you to do first.");
+~chatplayer("<p,sad>There always is.");
+~chatnpc("<p,neutral>Well, the Wise Old Man and I have discussed the situation, and he's come up with a plan...");
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,neutral>Yes, that's right. The sheer number of trolls means that the best hope for the Colony is to gather our forces and wipe out all the trolls at once.");
+~chatplayer("<p,neutral>Well, that sounds like a nice plan. One big fight, no more trolls.");
+~chatnpc("<p,neutral>There's a slight problem, though.");
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,neutral>Yes, with the bit about gathering our forces.");
+~chatplayer("<p,neutral>Let me guess - you haven't got any forces to gather!");
+~chatnpc("<p,sad>I sent most of the colonists away for their own safety when the trolls started attacking the Colony.");
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,neutral>So what you need to do, <displayname>, is to fetch us an army!");
+~chatplayer("<p,confused>???");
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,neutral>In the Wizards' Guild in Yanille, Wizard Frumscone always seems to have a limitless supply of zombies and similar creatures. If you can persuade him to lend us an army, we should be able to defeat these trolls.");
+~chatplayer("<p,neutral>Ok, so I just need to go see Wizard Frumscone in Yanille?");
+~chatnpc("<p,neutral>Yes, please hurry!");
+%swansong = ^swan_army;
+~send_quest_progress(questlist:swansong, %swansong, ^swan_complete);
+
+[label,swan_herman_army]
+~chatnpc("<p,neutral><displayname> - have you brought an army?");
+if (~p_choice2("No, I'm afraid I haven't asked Wizard Frumscone yet.", 1, "What was it you asked me to do?", 2) = 1) {
+    ~chatplayer("<p,sad>No, I'm afraid I haven't asked Wizard Frumscone yet.");
+} else {
+    ~chatplayer("<p,confused>What was it you asked me to do?");
+    ~chatnpc("<p,neutral>Go to the Wizards' Guild in Yanille and ask Wizard Frumscone to lend us an army to save the Colony!");
+    ~chatplayer("<p,neutral>Right, I know it was something like that.");
+}
+~chatnpc_specific("Wise Old Man", wom_inactive, "<p,angry>Do get a move on, <displayname>!");
+
+// Herman's desk and his book (the OSRS wiki's transcript of the book)
+[oploc1,loc_14971] @swan_desk;
+// across it (ours: the engine can't reach round it)
+[aploc1,loc_14971]
+if (distance(coord, loc_coord) > 2) {
+    p_aprange(2);
+    return;
+}
+@swan_desk;
+
+[label,swan_desk]
+if (inv_total(inv, swan_book) > 0 | inv_total(bank, swan_book) > 0) {
+    mes("There's nothing else of interest on the desk."); // ours
+    return;
+}
+inv_add(inv, swan_book, 1);
+~objbox(swan_book, "Amongst the papers on Herman's desk is a book. You 'borrow' it.", 250, 0, divide(^objbox_height, 2));
+
+[opheld1,swan_book]
+~book("Dionysius: A Legend in His Own Lifetime", append(append(append(append("This world of Gielinor has always had its share of heroes throughout its history. Tales of the daring exploits of legendary figures such as Arrav, Camorra, Robert and Wally have held children spellbound for generations. But even in these modern times, the world still needs heroes. One such figure, standing protectively between civilisation and the forces of chaos, is that of Dionysius. The young Dionysius was educated in Varrock, where records tell us that he regularly attended the local Saradominist chapel. Local tradition has it that Dionysius led a band of young men to graffiti the Zamorakian temple in the south of the city, although doubtless such things have happened often in the busy city that is Varrock. It was expected that Dionysius would become a priest, but he seems to have had other plans..||", "At the age of 15, the age at which children of that era completed their education, Dionysius is reported to have turned down a prestigious invitation to study on the holy island of Entrana. Instead he declared a wish to travel the world before settling to a permanent career.||The path trodden by the young Dionysius is a winding one. The older dwarves living near Keldagrim remember a youth of that name travelling through their mines at that time. They claim that he gave them great assistance in defending the mines from a rogue tribe of trolls, eventually driving the trolls out of those mines completely.||"), "It is believed that the young Dionysius travelled amongst the mountain tribes after he left the dwarves. One tribe, now disbanded, used to tell of a strange mystical warrior named 'Deesus' - surely a corruption of 'Dionysius' - who helped defend their camp from the monsters that roam the northern lands. 'Deesus' was said to be an invincible warrior who wielded a powerful staff.||"), "Dionysius subsequently travelled across the seas to the tropical island of Karamja, where some of the oldest natives tell of how he brought with him strange herbs that increased their powers in combat. He is also remembered for venturing into the deep caves underneath that island, where very few dare to tread. One Karamjan family claims that a pale-skinned 'shaman' visited their village a few generations ago and told them to build a hut over the entrance to the caves and demand money from anyone wishing to enter; this 'shaman' may have been Dionysius.||Even in the depths of the Kharidian desert, some still remember a stranger who lived with the tent-dwelling Bedabin tribe for a while, studying the great mysterious pyramid of the desert. No-one could make him speak of what he discovered about the pyramid or the desert bandits who live near it.||"), "By now an adult, Dionysius returned to the civilised lands and finally travelled to Entrana. Always a tough youth, he had now learnt great magical powers, and many on Entrana recall that they were in awe of his abilities, venturing fearlessly into the cave under that||<col=800000>The rest of the pages seem to be missing.</col>"));
+
+// ---------------------------------------------------------------- Franklin: the press and the wall
+[opnpc1,swan_franklin]
+def_int $s = %swansong;
+if ($s < ^swan_inside) {
+    ~chatnpc("<p,neutral>Please excuse me, I'm very busy."); // ours
+    return;
+}
+if ($s < ^swan_helping) {
+    ~chatnpc("<p,neutral>Ah, <displayname>! Herman told me to expect you. You'll find him in his office by the eastern wall of the Colony.");
+    ~chatplayer("<p,neutral>Thanks I'll go there now.");
+    return;
+}
+if ($s >= ^swan_queen_dead & $s < ^swan_complete) {
+    ~chatnpc("<p,happy>I say, you certainly gave that Troll Queen a good thrashing!");
+    ~chatplayer("<p,neutral>Yes, no more trouble from her.");
+    ~chatnpc("<p,neutral>I think Herman would like to talk to you in his office. We all owe you so much.");
+    ~chatplayer("<p,neutral>Ok, I'll go and see Herman.");
+    return;
+}
+if ($s = ^swan_seeds) {
+    ~chatnpc("<p,neutral>Herman tells me you've been fetching us an army.");
+    ~chatplayer("<p,happy>Something like that!");
+    ~chatnpc("<p,neutral>Interesting. I didn't know magic could do that.");
+    ~chatplayer("<p,neutral>You learn something new every day.");
+    return;
+}
+if ($s > ^swan_helping) {
+    ~chatnpc("<p,neutral>Thanks a lot for your help earlier, but I have a lot to do, so please excuse me...");
+    return;
+}
+def_int $f = %swansong_franklin;
+if ($f = 0) @swan_franklin_ask;
+if ($f = 4) {
+    if (%swansong_arnold = 2) {
+        ~chatnpc("<p,neutral>Now you've finished helping me and Arnold, you should see if Herman's got anything else for you to do.");
+        ~chatplayer("<p,neutral>I'll get to it.");
+        return;
+    }
+    ~chatnpc("<p,happy>Thanks again! Now you can help Arnold."); // ours
+    return;
+}
+~chatnpc("<p,neutral>How are you getting on?");
+def_int $walls = ~swan_walls_done;
+if ($f = 3 & $walls = 5) {
+    ~chatplayer("<p,happy>I've fixed all 5 bits of wall.");
+    %swansong_franklin = 4;
+    if (%swansong_arnold = 2) {
+        ~chatnpc("<p,happy>Wonderful - thank you very much! You should return to my brother, Herman, and tell him you've finished helping me and Arnold.");
+        ~chatnpc("<p,neutral>Oh, and if you've got any of those iron sheets left, I'll be happy to buy them off you once the Colony is safe.");
+        ~chatplayer("<p,happy>Oh good. Now maybe Herman will give me that reward he mentioned!");
+        return;
+    }
+    ~chatnpc("<p,happy>Wonderful - thank you very much! Now you can turn your full attention to help Arnold...");
+    ~chatnpc("<p,neutral>Oh, and if you've got any of those iron sheets left, I'll be happy to buy them off you once the Colony is safe.");
+    ~chatplayer("<p,sad>This is turning into a lot of work...");
+    return;
+}
+if ($f < 3) {
+    if (~p_choice2("I'm working on it.", 1, "I can't remember what you wanted me to do.", 2) = 1) {
+        ~chatplayer("<p,neutral>I'm working on it.");
+        ~chatnpc("<p,happy>Good, good.");
+    } else {
+        ~chatplayer("<p,confused>I can't remember what you wanted me to do.");
+        ~chatnpc("<p,neutral>Put some logs into the metal press in my shed, and light them. Then feed 5 iron bars into the press to roll them into sheets. After that, you'll need to hammer them onto the damaged wall.");
+    }
+    if (inv_total(inv, tinderbox) < 1) {
+        ~chatplayer("<p,neutral>I think I need a tinderbox."); // ours: 2009scape has him give one when asked again
+        inv_add(inv, tinderbox, 1);
+        ~chatnpc("<p,neutral>Here you are.");
+    }
+    return;
+}
+def_int $left = calc(5 - $walls);
+if ($left = 5) ~chatplayer("<p,neutral>Well, the press is working now, but I still have to patch the broken sections.");
+else if ($left = 1) ~chatplayer("<p,neutral>Well, the press is working now, but I still have to patch the last piece of wall.");
+else ~chatplayer("<p,neutral>Well, the press is working now, but I still have to patch <tostring($left)> more bits of wall.");
+def_int $sheets = inv_total(inv, iron_sheet);
+if ($sheets = 0 & $walls = 0) ~chatnpc("<p,neutral>I hope you don't have too much trouble with that press.");
+else if ($sheets >= $left) ~chatnpc("<p,neutral>At least you've got enough iron sheets.");
+else if (calc($left - $sheets) = 1) ~chatnpc("<p,neutral>I think you'll need to make another iron sheet first.");
+else ~chatnpc("<p,neutral>I think you'll need to make <tostring(calc($left - $sheets))> more iron sheets first.");
+if (inv_total(inv, hammer) < 1) {
+    ~chatplayer("<p,neutral>Also I think I need a hammer.");
+    ~chatnpc("<p,happy>Hammer? Not a problem - here's mine.");
+    inv_add(inv, hammer, 1);
+}
+
+[label,swan_franklin_ask]
+~chatplayer("<p,neutral>Herman said you wanted a hand with something.");
+~chatnpc("<p,neutral>Well, yes, I do. Are you any good at smithing?");
+~chatplayer("<p,happy>Oh yes, I'm quite an expert.");
+~chatnpc("<p,neutral>Ok, we'll see. Now, the trolls managed to smash part of our western wall earlier today. We need 5 sheets of iron to patch it.");
+~chatplayer("<p,confused>Won't iron go all rusty with all the salt water around here?");
+~chatnpc("<p,neutral>Yes, but it'll do for a few weeks, and we haven't the time or materials to do a proper job just now.");
+~chatplayer("<p,neutral>Alrighty. So where do I get sheets of iron?");
+~chatnpc("<p,neutral>I've got a press in my shed. You can use it to heat up some iron bars and roll them into sheets. You'll need to fill its firebox first - stick some logs in it and light them.");
+~chatnpc("<p,neutral>When you've got 5 iron sheets, hammer them onto the damaged wall.");
+~chatplayer("<p,confused>Why do I need to heat the bars? I've been cold-working metal all my life, and I've never bothered heating it.");
+~chatnpc("<p,confused>How odd! I'd have expected all your products to be horribly brittle.");
+~chatplayer("<p,happy>I guess I'm just talented.");
+%swansong_franklin = 1;
+if (inv_total(inv, tinderbox) < 1) {
+    ~chatnpc("<p,neutral>Anyway, take this tinderbox and get to work.");
+    inv_add(inv, tinderbox, 1);
+    ~chatplayer("<p,happy>Thanks.");
+    return;
+}
+~chatnpc("<p,neutral>Anyway, off you go.");
+
+[opnpcu,swan_franklin]
+if (last_useitem = iron_sheet) {
+    ~chatnpc("<p,angry>You should be sticking the sheets to the wall, not to me!");
+    return;
+}
+~displaymessage(^dm_default);
+
+[proc,swan_walls_done]()(int)
+return(calc(%swansong_wall_1 + %swansong_wall_2 + %swansong_wall_3 + %swansong_wall_4 + %swansong_wall_5));
+
+// the firebox (loc_14955) and the press (loc_14954), multilocs on %swansong_franklin
+[oplocu,loc_14955]
+if (%swansong ! ^swan_helping | %swansong_franklin = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~swan_is_logs(last_useitem) = true) {
+    if (%swansong_franklin >= 2) {
+        mes("The firebox is already full."); // ours
+        return;
+    }
+    inv_del(inv, last_useitem, 1);
+    anim(human_pickupfloor, 0);
+    %swansong_franklin = 2;
+    ~mesbox("The firebox of the press is now filled with wood.");
+    return;
+}
+if (last_useitem = tinderbox) {
+    if (%swansong_franklin >= 3) {
+        ~chatplayer("<p,neutral>It's already lit!");
+        return;
+    }
+    if (%swansong_franklin < 2) {
+        mes("There's nothing in it to light."); // ours
+        return;
+    }
+    anim(human_createfire, 0);
+    sound_synth(fire_lit, 1, 0);
+    %swansong_franklin = 3;
+    ~mesbox("The press is now hot enough to process iron.");
+    return;
+}
+if (last_useitem = iron_bar) {
+    ~chatplayer("<p,neutral>I should probably try putting metal bars into the OTHER end of the machine.");
+    return;
+}
+~chatplayer("<p,neutral>I'm not putting that into the press! I don't want to break it!");
+
+[oplocu,loc_14954]
+if (%swansong ! ^swan_helping | %swansong_franklin = 0) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (~swan_is_logs(last_useitem) = true | last_useitem = tinderbox) {
+    ~chatplayer("<p,neutral>The firebox is at the other end of the machine!");
+    return;
+}
+if (last_useitem = iron_sheet) {
+    ~mesbox("The iron sheet is not changed in any way.");
+    return;
+}
+if (last_useitem ! iron_bar) {
+    ~chatplayer("<p,neutral>I'm not putting that into the press! I don't want to break it!");
+    return;
+}
+if (%swansong_franklin < 3) {
+    ~chatplayer("<p,neutral>It's not hot enough to work at the moment.");
+    return;
+}
+inv_del(inv, iron_bar, 1);
+anim(swan_machine_use, 0);
+inv_add(inv, iron_sheet, 1);
+mes("You press an iron bar into a sheet of iron.");
+
+[proc,swan_is_logs](obj $item)(boolean)
+switch_obj ($item) {
+    case logs, oak_logs, willow_logs, maple_logs, yew_logs, magic_logs, achey_tree_logs : return(true);
+}
+return(false);
+
+// the broken wall (loc_14933-14937: swansong_wall_1-5)
+[oplocu,loc_14933] ~swan_wall(1);
+[oplocu,loc_14934] ~swan_wall(2);
+[oplocu,loc_14935] ~swan_wall(3);
+[oplocu,loc_14936] ~swan_wall(4);
+[oplocu,loc_14937] ~swan_wall(5);
+
+[proc,swan_wall](int $n)
+def_boolean $fixed = ~swan_wall_fixed($n);
+if (last_useitem = hammer) {
+    say("YAAAAARRRRGH!");
+    if ($fixed = true) ~mesbox("You feel a lot calmer now, but it didn't achieve anything else.");
+    else ~mesbox("You feel a lot calmer now, but it didn't achieve anything else. Maybe you should be using the iron sheet on the wall instead.");
+    return;
+}
+if (last_useitem ! iron_sheet) {
+    ~chatplayer("<p,neutral>I don't think that will help.");
+    return;
+}
+if ($fixed = true) {
+    ~chatplayer("<p,neutral>This bit of wall is fine. I don't need to mess around with it now.");
+    return;
+}
+if (inv_total(inv, hammer) < 1) {
+    mes("You need a hammer to fix the iron sheet to the wall."); // ours
+    return;
+}
+inv_del(inv, iron_sheet, 1);
+anim(swan_hammer, 0);
+switch_int ($n) {
+    case 1 : %swansong_wall_1 = 1;
+    case 2 : %swansong_wall_2 = 1;
+    case 3 : %swansong_wall_3 = 1;
+    case 4 : %swansong_wall_4 = 1;
+    case 5 : %swansong_wall_5 = 1;
+}
+~mesbox("The section of the wall is now fixed.");
+
+[proc,swan_wall_fixed](int $n)(boolean)
+def_int $v = 0;
+switch_int ($n) {
+    case 1 : $v = %swansong_wall_1;
+    case 2 : $v = %swansong_wall_2;
+    case 3 : $v = %swansong_wall_3;
+    case 4 : $v = %swansong_wall_4;
+    case 5 : $v = %swansong_wall_5;
+}
+if ($v = 1) return(true);
+return(false);
+
+// ---------------------------------------------------------------- Arnold: the monkfish
+[opnpc1,swan_arnold]
+def_int $s = %swansong;
+if ($s < ^swan_inside) {
+    ~chatnpc("<p,neutral>Arnold busy, very busy!"); // ours
+    return;
+}
+if ($s < ^swan_helping) {
+    ~chatnpc("<p,neutral>So, <displayname>! I did hear from Herr Caranos that you were to our Colony coming. The Director in his office is waiting for you.");
+    ~chatplayer("<p,neutral>Thanks, I'll go there now.");
+    return;
+}
+if ($s >= ^swan_complete) {
+    ~chatnpc("<p,happy>Hallo, <displayname>! You want Arnold to send fish to bank, ja?"); // ours
+    return;
+}
+if ($s >= ^swan_queen_dead) {
+    ~chatnpc("<p,happy>You kick big troll queenie pretty hard, ja?");
+    ~chatplayer("<p,neutral>Yes, I don't think you'll have any more trouble with the trolls in future.");
+    ~chatnpc("<p,neutral>Piscatoris Colony owe you big-time for your help. You go see Hermie - maybe he got something for you.");
+    ~chatplayer("<p,confused>'Hermie'?");
+    ~chatnpc("<p,neutral>Herr Herman Caranos. I call him 'Hermie' when him not listening. Sometimes I call him worse things, but not today.");
+    return;
+}
+if ($s = ^swan_seeds) {
+    ~chatnpc("<p,happy><displayname>! I hear you fetch mighty army for us!");
+    ~chatplayer("<p,happy>Something like that!");
+    ~chatnpc("<p,neutral>You go take them to Herr Caranos quickly!");
+    return;
+}
+if ($s > ^swan_helping) {
+    ~chatnpc("<p,neutral>It good to see you, <displayname>, but many things I have to do with lovely fresh monkfish you bring me earlier.");
+    return;
+}
+def_int $a = %swansong_arnold;
+if ($a = 0) @swan_arnold_ask;
+if ($a = 2) {
+    if (%swansong_franklin = 4) {
+        ~chatnpc("<p,neutral>Now you done helping me and Frankie, you go see what Herr Caranos want next.");
+        ~chatplayer("<p,neutral>I'll get to it.");
+        return;
+    }
+    ~chatnpc("<p,happy>Your fresh monkfish superb! But now you go help little Frankie, ja?");
+    ~chatplayer("<p,neutral>Oh yes.");
+    return;
+}
+~chatnpc("<p,quiz>You bring me fresh monkfish?");
+def_int $cooked = inv_total(inv, swan_monkfish);
+if ($cooked = 0) {
+    if (inv_total(inv, swan_raw_monkfish) > 0) {
+        ~chatplayer("<p,happy>Arnold, I've got some monkfish for you.");
+        ~chatnpc("<p,angry>This? This fresh, but it no good to me raw! You go use range in kitchen!");
+        return;
+    }
+    if (inv_total(inv, raw_monkfish) > 0 | inv_total(inv, monkfish) > 0 | inv_total(inv, raw_shrimp) > 0 | inv_total(inv, raw_tuna) > 0 | inv_total(inv, raw_swordfish) > 0) {
+        ~chatplayer("<p,neutral>I've got this fish...");
+        ~chatnpc("<p,angry>That not monkfish! Go to sea at north-west corner of Colony and catch MONKFISH!");
+        return;
+    }
+    ~chatplayer("<p,sad>No, I haven't got any.");
+    ~chatnpc("<p,neutral>Well, you go to sea at north-west corner of Colony and catch nice fresh monkfish for Arnold, ja?");
+    ~chatplayer("<p,neutral>Ok.");
+    return;
+}
+~chatplayer("<p,happy>Arnold, I've got some monkfish for you.");
+def_int $need = calc(5 - %swansong_fish);
+def_int $give = min($cooked, $need);
+inv_del(inv, swan_monkfish, $give);
+%swansong_fish = add(%swansong_fish, $give);
+if (%swansong_fish < 5) {
+    ~chatnpc("<p,happy>Ah, lovely fresh monkfish straight from the sea! Now you bring me <tostring(calc(5 - %swansong_fish))> more, ja?");
+    ~chatplayer("<p,neutral>Right, right.");
+    return;
+}
+%swansong_arnold = 2;
+if (%swansong_franklin = 4) {
+    ~chatnpc("<p,happy>This is superb, <displayname>! Now I store these carefully, and you go tell Herr Caranos.");
+    ~chatplayer("<p,happy>Oh good, maybe he'll reward me now.");
+    return;
+}
+~chatnpc("<p,happy>This is superb, <displayname>! Now I store these carefully, and you go help little Frankie.");
+
+[label,swan_arnold_ask]
+~chatnpc("<p,neutral>You come to speak to me, <displayname>?");
+~chatplayer("<p,neutral>Yes... Herman said you needed me to do something?");
+~chatnpc("<p,neutral>Ah, that is good. I the storemaster am for this Piscatoris Fishing Colony, and our stores are - ahah - not so good. Indeed, our stores contain not a bit of food!");
+~chatnpc("<p,sad>This a catastrophe may become, as difficult it may be to fish while the trolls outside are waiting, and our bellies soon shall rumble loudly!");
+~chatplayer("<p,confused>Riiiiight...");
+~chatnpc("<p,happy>But now you come here to help Arnold! A good and sturdy warrior you must be indeed to have entered our Colony in these times! So you can the fishing do for us!");
+~chatplayer("<p,confused>You want me to catch fish?");
+~chatnpc("<p,neutral>Ja, this is so. But the fish must then be stored, or stinking rotten they become! So the fish you bring must be shiny fresh!");
+~chatplayer("<p,quiz>Where do I get fresh fish?");
+~chatnpc("<p,neutral>The monkfish in these waters swim, this is why Herr Caranos build his Colony here.");
+~chatnpc("<p,neutral>You go catch 5 fresh monkfish from sea over in north-west corner. If you bring stinking old monkfish, Arnold know about it, and Arnold not take them!");
+%swansong_arnold = 1;
+if (inv_total(inv, net) < 1) {
+    ~chatplayer("<p,neutral>I'll need a net or something like that.");
+    ~chatnpc("<p,neutral>Ja, is not a problem.");
+    inv_add(inv, net, 1);
+}
+~chatplayer("<p,neutral>Ok, five fresh monkfish coming up.");
+~chatnpc("<p,happy>Big thanks, <displayname>. When Colony safe, Herman reward you good.");
+
+// the bank: after the quest (2009scape: Arnold banks and trades)
+[opnpc4,swan_arnold]
+if (%swansong < ^swan_complete) {
+    ~chatnpc("<p,angry>No way can I send items to bank for you with great big trolls outside! You save Colony, then Arnold open bank for you.");
+    return;
+}
+@openbank;
+
+[opnpc3,swan_arnold]
+if (%swansong < ^swan_complete) {
+    ~chatnpc("<p,neutral>I not have spare stuff to trade with you now. Maybe we trade after you save Colony, ja?");
+    return;
+}
+~openshop(swan_arnoldshop, 1300, 400, 30, "Arnold's Eclectic Supplies");
+
+[oploc1,loc_14964] ~chatplayer("<p,neutral>I think I should maybe catch my own.");
+
+// the quest's fishing spot (loc_14939, a multiloc showing loc_14938: Net): fresh monkfish, and trolls come for you (the 1st, 3rd and
+// 4th catch)
+[oploc1,loc_14939]
+if (%swansong ! ^swan_helping | %swansong_arnold ! 1) {
+    mes("You don't think you should fish here just now."); // ours
+    return;
+}
+if (stat(fishing) < 62) {
+    ~mesbox("You need at least 62 Fishing to catch these fish.");
+    return;
+}
+if (inv_total(inv, net) < 1) {
+    ~mesbox("You need a net to catch these fish.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~mesbox("You can't carry any more fish.");
+    return;
+}
+if (%action_delay > map_clock) {
+    p_oploc(1);
+    return;
+}
+%action_delay = calc(map_clock + 5);
+anim(human_smallnet, 0);
+sound_synth(net, 1, 0);
+def_int $before = inv_total(inv, swan_raw_monkfish);
+~fish_roll_loc(swan_raw_monkfish, null, null);
+if (inv_total(inv, swan_raw_monkfish) > $before) {
+    def_int $caught = calc(%swansong_fish + inv_total(inv, swan_raw_monkfish) + inv_total(inv, swan_monkfish));
+    if ($caught = 1) ~swan_fish_troll(swan_troll_fishing_1, "Your activity attracts a sea troll!");
+    else if ($caught = 3) ~swan_fish_troll(swan_troll_fishing_2, "Your activity attracts a bigger sea troll!");
+    else if ($caught = 4) ~swan_fish_troll(swan_troll_fishing_3, "Your activity attracts an even bigger sea troll!");
+}
+p_oploc(1);
+
+[proc,swan_fish_troll](npc $type, string $message)
+mes($message);
+npc_add(map_findsquare(coord, 1, 3, ^map_findsquare_lineofwalk), $type, 300);
+npc_anim(swan_seatroll_water_rise, 0);
+%npc_aggressive_player = uid;
+npc_setmode(opplayer2);
+
+// after the quest: the fishing spots (Net: monkfish, Harpoon: tuna and swordfish)
+[opnpc1,swan_fishingspot] @swan_fish_harpoon;
+[opnpc3,swan_fishingspot] @swan_fish_monk;
+
+[label,swan_fish_monk]
+if (stat(fishing) < 62) {
+    ~mesbox("You need at least 62 Fishing to catch these fish.");
+    return;
+}
+if (~check_fish_equipment(net) = false) return;
+if (inv_freespace(inv) < 1) {
+    ~mesbox("You can't carry any more fish.");
+    return;
+}
+if (%action_delay < map_clock) {
+    %action_delay = calc(map_clock + 5);
+    mes("You cast out your net...");
+} else if (%action_delay = map_clock) {
+    ~fish_roll(raw_monkfish, null, net, null);
+}
+anim(human_smallnet, 0);
+p_opnpc(3);
+
+[label,swan_fish_harpoon]
+if (stat(fishing) < 35) {
+    ~mesbox("You need at least 35 Fishing to catch these fish.");
+    return;
+}
+if (~check_fish_equipment(harpoon) = false) return;
+if (inv_freespace(inv) < 1) {
+    ~mesbox("You can't carry any more fish.");
+    return;
+}
+if (%action_delay < map_clock) {
+    %action_delay = calc(map_clock + 6);
+    mes("You start harpooning fish.");
+} else if (%action_delay = map_clock) {
+    if (stat(fishing) >= 50) ~fish_roll(raw_tuna, raw_swordfish, harpoon, null);
+    else ~fish_roll(raw_tuna, null, harpoon, null);
+}
+anim(human_harpoon, 0);
+p_opnpc(1);
+
+// the seaweed nets by the shore (after the quest: Herman)
+[oploc1,loc_14973]
+if (%swansong < ^swan_complete) {
+    mes("The nets are empty."); // ours
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    mes("You don't have enough inventory space.");
+    return;
+}
+anim(human_pickupfloor, 0);
+inv_add(inv, seaweed, 1);
+mes("You take some seaweed from the net."); // ours
+
+// ---------------------------------------------------------------- the colonists
+[opnpc1,swan_colonist_1] @swan_colonist;
+[opnpc1,swan_colonist_2] @swan_colonist;
+[opnpc1,swan_boat_colonist] @swan_colonist;
+
+[label,swan_colonist]
+if (%swansong >= ^swan_queen_dead & %swansong < ^swan_complete) {
+    ~chatnpc("<p,neutral><displayname>? Mr Caranos said he wanted to see you in his office. I wouldn't keep him waiting if I were you!");
+    ~chatplayer("<p,neutral>Thanks, I'll go see him.");
+    return;
+}
+~chatnpc("<p,neutral>Hello there."); // ours
+
+[opnpc1,swan_colonist_3]
+if (%swansong >= ^swan_queen_dead & %swansong < ^swan_complete) {
+    ~chatnpc("<p,neutral><displayname>? Monsieur Caranos wishes to see you in 'is office. Please, go to 'im!");
+    ~chatplayer("<p,neutral>Thanks, I'll go see him.");
+    return;
+}
+~chatnpc("<p,neutral>Bonjour."); // ours
