@@ -1,0 +1,729 @@
+// EASCape: In Aid of the Myreque (quest_myreque2): Burgh de Rott, its gate and townsfolk, and the
+// inn's cellar. Words from the RuneScape wiki's transcripts of the quest, the open chest and the
+// table (its 2006 dialogue); the OSRS wiki's where it has none (marked). Anything else is ours.
+
+// ---------------------------------------------------------------- the gate
+// Before the townsfolk trust you, a lookout throws a rotten tomato at you (RuneScape wiki).
+[oploc1,burgh_fencegate_l] @myq2_gate;
+[oploc1,burgh_fencegate_r] @myq2_gate;
+
+[label,myq2_gate]
+if (%myreque_2_quest >= ^myq2_chest | coordz(coord) < 3244) {
+    ~eascape_door_walk;
+    return;
+}
+if (npc_find(coord, burgh_vilager_8, 10, 0) = true) {
+    npc_facesquare(coord);
+    npc_say("Get out of it, you're not having our food or our blood!");
+    npc_anim(human_throw, 0); // ours: the throw
+    def_int $duration = ~player_projectile(npc_coord, coord, uid, rotten_tomato_travel, 40, 20, 20, 15, 0, 10, 5);
+    p_delay(calc($duration / 30));
+    @myq2_lookout;
+}
+mes("The gate is barred from the inside."); // ours: Florin's not there
+
+// Florin, or any of them, over the gate before you're let in
+[label,myq2_lookout]
+~chatnpc("<p,angry>Get out of it! You'se aint commin' in 'ere to get our's blood or's our food!");
+~chatplayer("<p,confused>What on earth makes you think I want your food or your blood?");
+~chatnpc("<p,angry>Hey! Don't try to sweet talk me, I know you want something! But we's got nothing ya see! Nothin'! What blood we've got, we're keeping for us-selves! You can tell that stinkin' Vanstrom to go milk a cow!");
+~chatnpc("<p,angry>And as for food, why we've barely got enough to feed ourselves - so you ain't 'aving none! Right!");
+def_int $op = ~p_choice5("What is this place?", 1, "What do you do?", 2, "Why would I want your blood?", 3, "Why would I want your food?", 4, "Ok, goodbye.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What is this place?");
+            ~chatnpc("<p,angry>This is our town...we's live here, it's called Burgh De Rott, and you aint comin' in!");
+            ~chatplayer("<p,neutral>Where did you all come from?");
+            ~chatnpc("<p,angry>We've escaped from that Vanstrom, he was herding us into the Sanguinesti region and was going to drink our blood! Yuck!");
+            ~chatplayer("<p,neutral>What's the Sanguinesti region?");
+            ~chatnpc("<p,angry>As if you don't know! It's the dark lands to the east where humans are kept like animals to feed those greedy evil vampyres!");
+            ~chatplayer("<p,neutral>Sounds like an awful place! Let me in and I'll help you!");
+            ~chatnpc("<p,angry>Yeah, ok then....eh! No way! You can't trick me like that!");
+        case 2 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 3 :
+            ~chatplayer("<p,neutral>Why would I want your blood?");
+            ~chatnpc("<p,angry>You's probably one of them stinking vampyres what drinks people's blood! You's aint comin' in!");
+            ~chatplayer("<p,angry>I don't want your blood!");
+            ~chatnpc("<p,angry>We's don't care, you probably want's our food then, so yous ain't coming in.");
+        case 4 :
+            ~chatplayer("<p,neutral>Why would I want your food?");
+            ~chatnpc("<p,angry>You's probably want's to eat it all and we aint gonna let ya!");
+            ~chatplayer("<p,neutral>But I don't want to eat your food, I'm plenty healthy enough!");
+            ~chatnpc("<p,angry>Well, that's as maybe, but yous probably wants to drink ours blood! And you aint having it and you aint coming in!");
+    }
+    $op = ~p_choice5("What is this place?", 1, "What do you do?", 2, "Why would I want your blood?", 3, "Why would I want your food?", 4, "Ok, goodbye.", 5);
+}
+~chatplayer("<p,neutral>Ok, goodbye.");
+
+// the low fence on the west side (Void: 25 Agility); ours: not before the townsfolk let you in
+[oploc1,burgh_agility_shortcut_fence]
+if (%myreque_2_quest < ^myq2_chest) {
+    mes("The townsfolk would see you climbing in."); // ours
+    return;
+}
+if (stat(agility) < 25) {
+    ~mesbox("You need an Agility level of 25 to negotiate this obstacle.");
+    return;
+}
+def_coord $to = movecoord(loc_coord, -1, 0, 0);
+if (coordx(coord) < coordx(loc_coord)) $to = loc_coord;
+anim(human_spot_jump, 0); // ours: the jump
+p_delay(1);
+p_telejump($to);
+
+// ---------------------------------------------------------------- the chest and the table outside the gate
+[oploc1,burgh_quest_food_table]
+~mesbox("You search the table and come to the conclusion that the lookouts who usually sit at the table probably play games on it amongst the rotten remains of scavenged meals.");
+
+[oplocu,burgh_quest_food_table]
+if (~is_food_item(last_useitem) = true) {
+    ~mesbox("If you placed food here, it would just get ruined. You decide against it.");
+    return;
+}
+~displaymessage(^dm_default);
+
+[oploc2,burgh_quest_food_chest_open]
+if (%myreque_2_quest < ^myq2_started) {
+    mes("You don't think you should mess around with other people's things..");
+    return;
+}
+~mesbox("You search the chest and suppose that it was once used for housing weapons and the like, but recently has contained wrapped food packages.");
+
+[oplocu,burgh_quest_food_chest_open]
+if (~is_food_item(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%myreque_2_quest < ^myq2_started) {
+    mes("You don't think you should mess around with other people's things..");
+    return;
+}
+if (%myreque_2_quest >= ^myq2_chest) {
+    ~mesbox("You've already placed some food in the chest, you're not sure how useful it would be to place more in.");
+    return;
+}
+def_obj $food = last_useitem;
+~mesbox("You gingerly place the food item into the chest.");
+inv_del(inv, $food, 1);
+mes("The chest closes afterwards.");
+%myreque_2_quest = ^myq2_chest;
+if (npc_find(coord, burgh_vilager_8, 10, 0) = true) {
+    def_string $he = "he";
+    def_string $hes = "He's";
+    if (gender = 1) {
+        $he = "she";
+        $hes = "She's";
+    }
+    ~chatnpc("<p,happy>Blimey, did you see that, <$he> put some food into the casket for us! <$hes> probably not after anything!");
+}
+~mesbox("The towns people allow you to enter, curious as to what you put in the casket.");
+p_telejump(^myq2_gate_inside);
+
+// ---------------------------------------------------------------- the townsfolk
+[opnpc1,burgh_vilager_leader] @myq2_villager;
+[opnpc1,burgh_villager_0] @myq2_villager;
+[opnpc1,burgh_vilager_1] @myq2_villager;
+[opnpc1,burgh_vilager_2] @myq2_villager;
+[opnpc1,burgh_vilager_3] @myq2_villager;
+[opnpc1,burgh_vilager_4] @myq2_villager;
+[opnpc1,burgh_vilager_5] @myq2_villager;
+[opnpc1,burgh_vilager_6] @myq2_villager;
+[opnpc1,burgh_vilager_7] @myq2_villager;
+[opnpc1,burgh_vilager_8] @myq2_villager;
+[opnpc1,burgh_villager_child1] @myq2_villager;
+[opnpc1,burgh_villager_child2] @myq2_villager;
+[opnpc1,burgh_villager_child3] @myq2_villager;
+[opnpc1,burgh_villager_child4] @myq2_villager;
+[opnpc1,burgh_farmer] @myq2_villager;
+[opnpc1,burgh_bed_man_wife] @myq2_villager;
+[opnpc1,burgh_vilager_sit1] @myq2_villager;
+[opnpc1,burgh_vilager_sit2] @myq2_villager;
+[opnpc1,burgh_vilager_sit3] @myq2_villager;
+[opnpc1,burgh_vilager_sit4] @myq2_villager;
+[opnpc1,burgh_vilager_rat_1] @myq2_villager;
+[opnpc1,burgh_vilager_rat_2] @myq2_villager;
+[opnpc1,burgh_vilager_rat_3] @myq2_villager;
+[opnpc1,burgh_general_store_owner] @myq2_villager;
+[opnpc1,burgh_potential_bank_teller_multinpc] @myq2_villager;
+
+// "What do you do here?", by who's asked
+[proc,myq2_whatdo]
+def_int $r = random(3);
+switch_npc (npc_type) {
+    case burgh_general_store_owner :
+        ~chatnpc("<p,neutral>I'm Aurel the village store owner.");
+        ~chatplayer("<p,neutral>Can you open the shop for me please?");
+        if (%myreque_2_quest >= ^myq2_fix_bank) {
+            ~openshop_activenpc;
+            return;
+        }
+        ~chatnpc("<p,neutral>I'm sorry, my friend, but I cannot open a store which has no stock.");
+    case burgh_potential_bank_teller_multinpc :
+        ~chatnpc("<p,neutral>I'm Cornelius. It's been ages since we last had a bank in this village.");
+    case burgh_vilager_leader : ~chatnpc("<p,neutral>I'm Elisabeta the village leader.");
+    case burgh_bed_man_wife : ~chatnpc("<p,neutral>I'm Gabriela. I'm looking after my husband who isn't feeling too well!");
+    case burgh_farmer : ~chatnpc("<p,neutral>I'm Teodor. I be a farmer, oh arrr...and what can I do for you?");
+    case burgh_villager_child1, burgh_villager_child2, burgh_villager_child3, burgh_villager_child4 :
+        ~chatnpc("<p,angry>I'm <npc_name>. I may be just a kid, but I'll duff you in! You don't look that tough to me!");
+    case burgh_vilager_sit1, burgh_vilager_sit2, burgh_vilager_sit3, burgh_vilager_sit4 :
+        ~chatnpc("<p,neutral>I'm <npc_name>. I'm trying to stay warm by this fire.");
+    case burgh_vilager_rat_1, burgh_vilager_rat_2, burgh_vilager_rat_3 :
+        if ($r = 0) ~chatnpc("<p,neutral>Huh! I'm <npc_name>. Ravaging after food is what I mostly do. Occasionally, I'll happen across a rat - and that's a good day - just like today!");
+        if ($r = 1) ~chatnpc("<p,neutral>Oh, hello. <npc_name> is the name and I help to keep the village clear of rat infestations. Clearly I love my work, as I bring it home with me...on a stick!");
+        if ($r = 2) ~chatnpc("<p,neutral>Oh, hi, I'm <npc_name>. I hunt mostly rats. Speaking of which, this rat tastes awful - but it's the only food we have!");
+    case burgh_vilager_8 :
+        if ($r = 0) ~chatnpc("<p,neutral>Oh, my name's Florin. I just help out around here, you know, look for food and so on.");
+        if ($r = 1) ~chatnpc("<p,neutral>Not that it makes much difference but my name's Florin. Like all the other survivors here, I just try to make do and get through life one day at a time.");
+        if ($r = 2) ~chatnpc("<p,neutral>Well met! My name's Florin. I do a bit of this, a bit of that. Just try to survive really, there's nothing much else we can do.");
+    case default :
+        if ($r = 0) ~chatnpc("<p,neutral>Huh! I'm <npc_name>. Ravaging after food is what I mostly do. Occasionally, I'll happen across a rat - and that's a good day - just like today!");
+        if ($r = 1) ~chatnpc("<p,neutral>Oh, my name's <npc_name>. I just help out around here, you know, look for food and so on.");
+        if ($r = 2) ~chatnpc("<p,neutral>Well met! My name's <npc_name>. I do a bit of this, a bit of that. Just try to survive really, there's nothing much else we can do.");
+}
+
+[label,myq2_villager]
+def_int $s = %myreque_2_quest;
+// Aurel and Cornelius have quest talk of their own
+if (npc_type = burgh_general_store_owner) {
+    if ($s >= ^myq2_tithe_won) @myq2_aurel_hero;
+    if ($s >= ^myq2_fix_store & $s < ^myq2_banker) @myq2_aurel;
+}
+if (npc_type = burgh_potential_bank_teller_multinpc & $s >= ^myq2_fix_bank & $s < ^myq2_banker) @myq2_cornelius;
+if ($s < ^myq2_chest) @myq2_lookout;
+if ($s >= ^myq2_tithe_won) @myq2_villager_hero;
+if ($s = ^myq2_tithe) @myq2_villager_peril;
+if ($s = ^myq2_banker) @myq2_villager_furnace;
+if ($s >= ^myq2_fix_bank) @myq2_villager_bank;
+if ($s >= ^myq2_fix_store) @myq2_villager_store;
+if ($s >= ^myq2_basement_done) @myq2_villager_finished;
+if ($s = ^myq2_told_inn) {
+    ~chatnpc("<p,neutral>Hey there, how's it going?");
+    ~chatplayer("<p,neutral>Not so bad, but it's a lot of hard to be honest.");
+    ~chatnpc("<p,neutral>Oh well, I'm sure you can manage. Remember, we need you to help us fix up the village once you've finished.");
+    ~chatplayer("<p,neutral>Ok, I remember. I'll find someone to chat to when it's all complete.");
+    ~chatnpc("<p,happy>That's good to hear!");
+    return;
+}
+// let in: first time they wonder what you put in the chest
+switch_int (random(3)) {
+    case 0 : ~chatnpc("<p,happy>Hey...what you put in that chest?..Is it something tasty, like a nice cooked snail? Or perhaps a well matured piece of cheese with some fresh bread? Ohhh, I bet it's dead tasty...");
+    case 1 : ~chatnpc("<p,quiz>Hey we're all wondering what you put in that chest...");
+    case 2 : ~chatnpc("<p,happy>It's really good of you to put something in that chest for us!");
+}
+def_int $op = ~p_choice5("How come you have no food?", 1, "What is this place?", 2, "What do you do?", 3, "Are there any 'out of the way' places in here?", 4, "Ok, thanks!", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>How come you have no food?");
+            switch_int (random(3)) {
+                case 0 : ~chatnpc("<p,sad>We can only stay in the village and there's precious little food in there...just rats to live on! Not very appetising. There's also no where to store any food around here, the town is incredibly run down.");
+                case 1 : ~chatnpc("<p,sad>We dare not leave the town for fear that the Vampyres might spot us and force us to pay a blood tithe. We're all very weak and would most likely die if they took more blood from us.");
+                case 2 : ~chatnpc("<p,laugh>We just don't seem to get out to the shops like we used to!");
+            }
+        case 2 :
+            ~chatplayer("<p,neutral>What is this place?");
+            ~chatnpc("<p,neutral>This is our town...we's live here, it's called Burgh De Rott. It aint much to look at, but it's our home.");
+        case 3 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 4 :
+            ~chatplayer("<p,neutral>Are there any 'out of the way' places in here?");
+            ~chatnpc("<p,confused>How do you mean, 'out of the way'?");
+            ~chatplayer("<p,neutral>Somewhere where myself and a couple of friends could hold up for a while without attracting any vampyre attention?");
+            ~chatnpc("<p,neutral>Ah, right, I know what you mean...hmm, let's think now...");
+            ~chatnpc("<p,neutral>Well, there's the Inn...you could look there I suppose. The cellar would have been useful, but the trapdoor down to it is covered with rubble from a broken wall. The cellar itself is probably filled with rubble as well. But you may be able to do something with it.");
+            ~chatplayer("<p,neutral>Ok, thanks.");
+            ~chatnpc("<p,neutral>Listen, if you do manage to find a way to get a place here, we'll expect you to help make the village a little nicer. You know, help to fix things up a bit.");
+            if (%myreque_2_quest < ^myq2_told_inn) %myreque_2_quest = ^myq2_told_inn;
+    }
+    $op = ~p_choice5("How come you have no food?", 1, "What is this place?", 2, "What do you do?", 3, "Are there any 'out of the way' places in here?", 4, "Ok, thanks!", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks!");
+
+// the cellar cleared
+[label,myq2_villager_finished]
+~chatplayer("<p,happy>Hey there, I'm finished with my project.");
+~chatnpc("<p,neutral>Oh, that's good to know.");
+def_int $op = ~p_choice4("What do you do here?", 1, "What do you think of your town?", 2, "I'd like to help fix up the town.", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,neutral>It's barely a town...I mean, not exactly a breeding ground for high society is it? But at least we can hide from the Juvinates and Juveniles. Hopefully we can start to get things up and running soon, you know, some of the trappings of normal city life.");
+        case 3 :
+            ~chatplayer("<p,neutral>I'd like to help fix up the town.");
+            ~chatnpc("<p,happy>Oh, that's very kind of you!");
+            ~chatnpc("<p,neutral>Hmm, perhaps you'd consider fixing up the general store. Go and have a chat with the store owner if you want more details.");
+            ~chatplayer("<p,neutral>Hmm, sounds interesting.");
+            %myreque_2_quest = ^myq2_fix_store;
+            return;
+    }
+    $op = ~p_choice4("What do you do here?", 1, "What do you think of your town?", 2, "I'd like to help fix up the town.", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// fixing the general store and stocking it
+[label,myq2_villager_store]
+def_int $s = %myreque_2_quest;
+if ($s = ^myq2_fix_store) {
+    ~chatplayer("<p,neutral>Hello!");
+    ~chatnpc("<p,neutral>Yeah, what can I do ya for?");
+} else if ($s = ^myq2_store_fixed) {
+    ~chatnpc("<p,happy>Hi there...you've done a good job on that general store.");
+    ~chatplayer("<p,neutral>Yeah, but I've only fixed the roof and the walls.");
+} else {
+    ~chatplayer("<p,neutral>Hello, I wonder if I could ask a few questions?");
+    ~chatnpc("<p,neutral>Sure, go ahead.");
+}
+def_int $op = ~p_choice4("What do you do here?", 1, "What do you think of your town?", 2, "What should I do now?", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            if ($s = ^myq2_fix_store) ~chatnpc("<p,neutral>Well, it would look a lot nicer if someone managed to fix up the general store I think.");
+            else if ($s = ^myq2_store_fixed) ~chatnpc("<p,neutral>It's looking a lot better now that the general store is fixed up, but it really needs some stock I think...imagine how nice it would be to have a warm fire for a change? I just hope they start to stock some tinderboxes!");
+            else ~chatnpc("<p,neutral>It's coming together now, the store is looking nicer now that it's been fixed up a bit, but it would be better with some stock in it.");
+        case 3 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            if ($s = ^myq2_fix_store) {
+                ~chatnpc("<p,neutral>I thought you were helping the general store owner with something? Perhaps fixing up his store?");
+                ~chatplayer("<p,confused>Oh, was I?");
+                ~chatnpc("<p,neutral>I'd go and have a chat with him if I were you.");
+            } else if ($s = ^myq2_store_fixed) {
+                ~chatnpc("<p,neutral>I thought you were helping out Aurel the store owner? Go and talk to him.");
+            } else {
+                ~chatnpc("<p,neutral>You could stock the store!");
+                ~chatplayer("<p,neutral>What did you want me to do again?");
+                ~chatnpc("<p,neutral>I thought you were helping the store owner stock his store?");
+            }
+    }
+    $op = ~p_choice4("What do you do here?", 1, "What do you think of your town?", 2, "What should I do now?", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// fixing the bank
+[label,myq2_villager_bank]
+def_int $wall = %burgh_bank_wall;
+def_int $booth = %burgh_bank_booth_open;
+if ($wall > 0) {
+    ~chatnpc("<p,happy>Hey it's you! You're doing a great job with the town! It's really getting a lot better!");
+    ~chatplayer("<p,happy>I'm happy to help!");
+} else if ($booth > 0) {
+    ~chatplayer("<p,neutral>Well met friend!");
+    ~chatnpc("<p,neutral>Well met indeed!");
+} else {
+    ~chatplayer("<p,neutral>Hello, I wonder if I could ask a few questions?");
+    ~chatnpc("<p,neutral>Sure, go ahead.");
+}
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            if ($wall > 0) ~chatnpc("<p,happy>Oh, I think it's going great...we're all so pleased with the work you're doing, but there's still lots left to do.");
+            else if ($booth > 0) ~chatnpc("<p,neutral>It's getting to be quite nice now with the general store, but it would be useful to get to use the bank!");
+            else ~chatnpc("<p,happy>It's a lot better now that we have a general store, you're doing a great job! What a hero!");
+        case 3 :
+            ~chatplayer("<p,neutral>How did everyone come to be here?");
+            if ($wall > 0) {
+                ~chatnpc("<p,neutral>We all came from the Sanguinesti region, we're scared to make the trip back through Mort'ton and the swamps of Mort Myre.");
+                ~chatplayer("<p,neutral>What is the Sanguinesti region?");
+                ~chatnpc("<p,sad>Oh, it's a terrible place to the east of 'Burgh de Rott'. That's where Drakan has his castle and people are treated like cattle and slaves to the Vampyric overlords. It's terrible...we have to give daily blood tithes!");
+            } else if ($booth > 0) {
+                ~chatnpc("<p,neutral>We just escaped from the Sanguinesti region! It's a terrible place, separated into two districts. To the north is an area some call 'Darkmeyer', and the south is known as 'Meiyerditch'. For all intents and purposes, anything east of 'Burgh de Rott' is the Sanguinesti region, do not go there my friend.");
+            } else {
+                ~chatnpc("<p,neutral>We were escaping the Sanguinesti region and the vampyres!");
+                ~chatplayer("<p,neutral>What's the Sanguinesti region?");
+                ~chatnpc("<p,sad>That's the place to the east that we came from. It's a terrible place, we were lucky to escape, many others still have to suffer the torment. There is a huge, ominous castle which looms over the land, oh, it sends shivers down my spine just thinking about that place.");
+            }
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            if ($wall > 0) ~chatnpc("<p,neutral>Well, that bank is all fixed now, but it isn't going to serve people's accounts all on its own. You'll have to recruit someone!");
+            else if ($booth > 0) ~chatnpc("<p,neutral>You need to fix up the bank, the booth looks good now, but the wall could do with patching up.");
+            else ~chatnpc("<p,neutral>Please can you fix the bank booth first as it's quite delicate. If you can't fix the booth then there's not much point in fixing the wall.");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// the furnace
+[label,myq2_villager_furnace]
+~chatnpc("<p,happy>Well met and many felicitous salutations <displayname>! All in the town are much agreed that your efforts in restoring the utilities are most proper and correct.");
+~chatplayer("<p,confused>Err, thanks I think.");
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Why does everyone stay in this town?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,happy>Oh it's brilliant, but we could really do with somewhere to melt down the local ores, and stand a chance of making our own metal items.");
+        case 3 :
+            ~chatplayer("<p,neutral>Why does everyone stay in this town?");
+            ~chatnpc("<p,neutral>It's simply safer to stay here than to risk going through Mort'ton where those horrible Shades just appear out of nowhere and start eating your soul. Also, those horrible ghasts in Mort Myre would just eat you alive! What a way to go, I know I wouldn't fancy it myself.");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,neutral>You've already done quite a lot and I'm sure that everyone is very pleased with your efforts. But I overheard someone saying how great it would be if the old furnace were up and working again. It seems like quite a big job, so I've no idea if it's even possible.");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Why does everyone stay in this town?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// Gadderanks' blood tithe
+[label,myq2_villager_peril]
+~chatnpc("<p,angry>Well done big shot, the smoke from the furnace attracted Gadderanks and his Juvinate body guards. He's set up a blood tithe station in the general store.");
+def_int $op = ~p_choice5("What do you do here?", 1, "Who's Gadderanks?", 2, "What's a juvinate?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>Who's Gadderanks?");
+            ~chatnpc("<p,neutral>He's a human lackie for Vanstrom Klause. He wants to become a vampyre like Vanstrom. He goes around with his juvinate body guards because he's too weak to defend himself. He gets blood tithes from the locals and takes them back to the vampyres.");
+        case 3 :
+            ~chatplayer("<p,neutral>What's a juvinate?");
+            ~chatnpc("<p,neutral>A juvinate is an immature form of vampyre. They have total immunity to all known weapon types, and some say they can fly as well. There is a form of the vampyre before this called a Juvenile. A juvinate is an 'initiated juvenile'. They're pretty tough, I have to say, no one that I have seen has ever gotten the better of one.");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,neutral>If I were you, I'd get out of town...now Gadderanks is here, I doubt many people will stay around! Most will try to hide and stay away from him and his blood tithe station. Do you know he's set it up in the general store!");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "Who's Gadderanks?", 2, "What's a juvinate?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// after Gadderanks
+[label,myq2_villager_hero]
+~chatnpc("<p,happy>Hey it's the hero! Wow, you're amazing! How on earth did you manage to tackle those two juvinates and Gadderanks? And the town is lovely, you've done a great job!");
+~chatplayer("<p,happy>You're more than welcome.");
+@myq2_villager_hero_menu;
+
+[label,myq2_villager_hero_menu]
+def_int $op = ~p_choice5("What do you do here?", 1, "How do you like your town?", 2, "What's happening around here?", 3, "Is there anything I can do to help out?", 4, "Okay, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>How do you like your town?");
+            ~chatnpc("<p,happy>It's just perfect, thanks so much for your efforts.");
+        case 3 :
+            ~chatplayer("<p,neutral>What's happening around here?");
+            ~chatnpc("<p,neutral>Oh, not much really, we're all still hiding from the vampyres and eking out a living from this terrible place, hopefully soon we'll be strong enough to make the journey to the temple on the Salve.");
+        case 4 :
+            ~chatplayer("<p,neutral>Is there anything I can do to help out?");
+            ~chatnpc("<p,happy>Not as far as I know, we have some basic amenities now which is so very useful, we're all incredibly grateful to you. I've never really seen or known a hero before, so I have nothing to compare one to, but I suspect in most people's judgement, you would be one! I for one am very pleased to have met you.");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "How do you like your town?", 2, "What's happening around here?", 3, "Is there anything I can do to help out?", 4, "Okay, thanks.", 5);
+}
+~chatplayer("<p,neutral>Okay, thanks.");
+
+// ---------------------------------------------------------------- the inn
+[oploc1,burgh_inn_climb_over]
+// the broken wall into the inn's back room, both ways (ours: a step over it and the pile of
+// bricks against it)
+def_coord $to = movecoord(loc_coord, 0, 0, 1);
+if (coordz(coord) > coordz(loc_coord)) $to = movecoord(loc_coord, 0, 0, -1);
+p_delay(1);
+p_telejump($to);
+
+[oplocu,burgh_inn_colapsed_wall_multiloc]
+if (last_useitem ! ~pickaxe_checker) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@myq2_wall_rubble;
+
+[label,myq2_wall_rubble]
+if (%burgh_inn_colapsed_wall = 1) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%myreque_2_quest < ^myq2_told_inn) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (stat(mining) < 15) {
+    ~mesbox("You need a Mining level of 15 to break up this rubble."); // ours (the cellar's rubble: 15 Mining, RuneScape wiki)
+    return;
+}
+mes("You use the pick on the collapsed wall.");
+anim(oc_param(~pickaxe_checker, mining_animation), 0);
+p_delay(2);
+%burgh_inn_colapsed_wall = 1;
+~mesbox("You break the wall rubble down...");
+
+[oploc1,burgh_inn_trapdoor_multiloc]
+if (%burgh_inn_trapdoor = 1) {
+    @myq2_cellar_down;
+}
+if (%burgh_inn_colapsed_wall = 0) {
+    mes("There is a huge fallen wall blocking this trapdoor, you just cannot open it.");
+    return;
+}
+anim(human_pickuptable, 0);
+mes("You pull the trapdoor open.");
+%burgh_inn_trapdoor = 1;
+
+[oploc2,burgh_inn_trapdoor_multiloc]
+if (%burgh_inn_trapdoor = 0) return;
+anim(human_pickuptable, 0);
+%burgh_inn_trapdoor = 0;
+
+[label,myq2_cellar_down]
+anim(human_reachforladder, 0);
+p_delay(0);
+mes("You climb through the trap door into the cellar.");
+if (%myreque_2_quest < ^myq2_ivan_safe) {
+    p_telejump(^myq2_cellar_rubble);
+    if (%myreque_2_quest < ^myq2_basement_done) {
+        ~myq2_rubble_spawn;
+        def_int $left = calc(^myq2_rubble_piles - %burgh_inn_rubble_pile);
+        ~mesbox("You see that this basement is full of rubble, <tostring($left)> piles of them. You think you'll need to clear these away before the Inn basement will start to be serviceable as a base of operations.");
+    }
+    return;
+}
+p_telejump(^myq2_cellar_base);
+
+[oploc1,burgh_inn_basement_ladderup]
+anim(human_reachforladder, 0);
+p_delay(0);
+mes("You climb up the basement ladder.");
+p_telejump(^myq2_inn_trapdoor_top);
+
+// ---------------------------------------------------------------- the rubble in the cellar
+// Each pile is mined three times, then shovelled into a bucket (RuneScape wiki). The piles are
+// put there when you climb down (ours: the cellar isn't a copy of its own for each player).
+[proc,myq2_rubble_coord](int $n)(coord)
+switch_int ($n) {
+    case 0 : return(1_54_150_38_26);
+    case 1 : return(1_54_150_38_27);
+    case 2 : return(1_54_150_38_28);
+    case 3 : return(1_54_150_39_26);
+    case 4 : return(1_54_150_40_25);
+    case 5 : return(1_54_150_41_26);
+    case 6 : return(1_54_150_41_27);
+    case 7 : return(1_54_150_42_25);
+    case 8 : return(1_54_150_42_26);
+    case 9 : return(1_54_150_42_27);
+    case 10 : return(1_54_150_43_25);
+    case 11 : return(1_54_150_43_26);
+    case 12 : return(1_54_150_43_27);
+    case 13 : return(1_54_150_43_28);
+    case 14 : return(1_54_150_42_28);
+}
+return(null);
+
+[proc,myq2_rubble_spawn]
+def_int $left = calc(^myq2_rubble_piles - %burgh_inn_rubble_pile);
+def_int $n = 0;
+while ($n < ^myq2_rubble_piles & $left > 0) {
+    def_coord $c = ~myq2_rubble_coord($n);
+    if (loc_find($c, burgh_rubble_a_1) = false & loc_find($c, burgh_rubble_a_2) = false & loc_find($c, burgh_rubble_a_3) = false & loc_find($c, myq2_rubble_small) = false) {
+        loc_add($c, burgh_rubble_a_1, 0, centrepiece_straight, 6000);
+    }
+    $left = calc($left - 1);
+    $n = calc($n + 1);
+}
+
+[oploc1,burgh_rubble_a_1] @myq2_rubble_mine(burgh_rubble_a_2);
+[oploc1,burgh_rubble_a_2] @myq2_rubble_mine(burgh_rubble_a_3);
+[oploc1,burgh_rubble_a_3] @myq2_rubble_mine(myq2_rubble_small);
+[oploc2,burgh_rubble_a_1] ~mesbox("This rock is just a big pile of rubble taking up space. You probably need to get rid of this to make the inn basement useable as a base of operations."); // OSRS wiki's examine
+[oploc2,burgh_rubble_a_2] ~mesbox("This rock is just a big pile of rubble taking up space. You probably need to get rid of this to make the inn basement useable as a base of operations.");
+[oploc2,burgh_rubble_a_3] ~mesbox("This rock is just a big pile of rubble taking up space. You probably need to get rid of this to make the inn basement useable as a base of operations.");
+
+[label,myq2_rubble_mine](loc $next)
+if (%myreque_2_quest < ^myq2_told_inn | %myreque_2_quest >= ^myq2_basement_done) {
+    mes("Nothing interesting happens.");
+    return;
+}
+def_obj $pick = ~pickaxe_checker;
+if ($pick = null) {
+    mes("You need a pickaxe to mine this rubble."); // ours
+    return;
+}
+if (stat(mining) < 15) {
+    ~mesbox("You need a Mining level of 15 to mine this rubble.");
+    return;
+}
+anim(oc_param($pick, mining_animation), 0);
+p_delay(2);
+if (loc_type ! burgh_rubble_a_1 & loc_type ! burgh_rubble_a_2 & loc_type ! burgh_rubble_a_3) return;
+stat_advance(mining, 100); // 10 experience (RuneScape wiki)
+loc_change($next, 6000);
+if ($next ! myq2_rubble_small) {
+    mes("You manage to break the rubble into smaller pieces.");
+    return;
+}
+if (%burgh_rubble_bucket_message = 0) {
+    %burgh_rubble_bucket_message = 1;
+    ~mesbox("You mine the rubble into smaller chunks which will be easier for you to carry out of the inn basement, though you think you will need put them into some sort of container.");
+    return;
+}
+mes("You manage to mine the rubble into chunks small enough to carry.");
+
+[oploc1,myq2_rubble_small] @myq2_rubble_remove;
+[oplocu,myq2_rubble_small]
+if (last_useitem = spade | last_useitem = bucket_empty | last_useitem = burgh_rubble_bucket_1 | last_useitem = burgh_rubble_bucket_2) @myq2_rubble_remove;
+~displaymessage(^dm_default);
+
+[label,myq2_rubble_remove]
+def_namedobj $bucket = null;
+def_namedobj $fuller = null;
+if (inv_total(inv, burgh_rubble_bucket_2) > 0) {
+    $bucket = burgh_rubble_bucket_2;
+    $fuller = burgh_rubble_bucket_3;
+} else if (inv_total(inv, burgh_rubble_bucket_1) > 0) {
+    $bucket = burgh_rubble_bucket_1;
+    $fuller = burgh_rubble_bucket_2;
+} else if (inv_total(inv, bucket_empty) > 0) {
+    $bucket = bucket_empty;
+    $fuller = burgh_rubble_bucket_1;
+}
+if ($bucket = null) {
+    mes("You have no container suitable for putting the rubble in.");
+    return;
+}
+if (inv_total(inv, spade) < 1) {
+    mes("You need a spade to scoop the rubble into the bucket."); // ours
+    return;
+}
+anim(human_dig, 0);
+p_delay(1);
+if (loc_type ! myq2_rubble_small) return;
+mes("You use the spade to scoop the rubble into the bucket.");
+inv_del(inv, $bucket, 1);
+inv_add(inv, $fuller, 1);
+loc_del(1);
+%burgh_inn_rubble_pile = calc(%burgh_inn_rubble_pile + 1);
+def_int $n = %burgh_inn_rubble_pile;
+// what turns up in the rubble, and when (ours: when; the RuneScape wiki: what)
+if ($n = ^myq2_find_rubbish1) {
+    ~myq2_find(nails_bronze, 10);
+    ~myq2_find(nails_iron, 5);
+    ~myq2_find(rock, 1);
+    ~doubleobjbox(nails_bronze, rock, "You pick up a pile of rubbish with the rubble dust. It won't fit in the bucket.", 250);
+} else if ($n = ^myq2_find_rubbish2) {
+    ~myq2_find(nails, 3);
+    ~myq2_find(nails_black, 2);
+    ~myq2_find(nails_mithril, 1);
+    ~myq2_find(broken_glass, 1);
+    ~doubleobjbox(nails_black, broken_glass, "You pick up a pile of rubbish with the rubble dust. It won't fit in the bucket.", 250);
+} else if ($n = ^myq2_find_plaster) {
+    %myq2_found_plaster = 1;
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, burgh_plaster_inscription_ivandis, 1);
+        ~objbox(burgh_plaster_inscription_ivandis, "You find a piece of plaster with some interesting inscriptions on it.", 250, 0, 0);
+    } else {
+        ~objbox(burgh_plaster_inscription_ivandis, "You find a piece of plaster with some interesting inscriptions on it, but you don't have enough space to keep it. You throw it into the bucket with the rest of the rubble.", 250, 0, 0); // OSRS wiki
+    }
+} else if ($n = ^myq2_find_scroll) {
+    %myq2_found_scroll = 1;
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, burgh_efaritay_info_scroll, 1);
+        ~objbox(burgh_efaritay_info_scroll, "You find a scroll with some interesting inscriptions on it.", 250, 0, 0);
+    } else {
+        ~objbox(burgh_efaritay_info_scroll, "You find a scroll with some interesting writing on it, but you don't have enough space to keep it. You throw it into the bucket with the rest of the rubble.", 250, 0, 0); // OSRS wiki
+    }
+}
+if ($n >= ^myq2_rubble_piles) {
+    %myreque_2_quest = ^myq2_basement_done;
+    mes("You clear the last of the rubble out of the inn basement.");
+    ~mesbox("As you clear away the last of the rubble from the inn basement, you notice a dusty looking wall plaque which you hadn't noticed before.");
+}
+
+[proc,myq2_find](namedobj $obj, int $count)
+if (inv_freespace(inv) > 0 | (oc_stackable($obj) = true & inv_total(inv, $obj) > 0)) {
+    inv_add(inv, $obj, $count);
+    return;
+}
+obj_add(coord, $obj, $count, ^lootdrop_duration);
+
+[oploc1,burgh_inn_wall_plaque]
+if (%myreque_2_quest < ^myq2_basement_done) {
+    mes("It's still too full of rubbish in this room to properly make anything out on this plaque.");
+    return;
+}
+%burgh_wall_plaque_read = 1;
+~mesbox("You read the wall plaque. 'Blessings on Efaritay, our icyene queen from far off lands and her loving children of Hallowed name.'");
+
+// the buckets of rubble: emptied only on the pile outside the inn or outside the village
+[opheld4,burgh_rubble_bucket_1] @myq2_bucket_empty;
+[opheld4,burgh_rubble_bucket_2] @myq2_bucket_empty;
+[opheld4,burgh_rubble_bucket_3] @myq2_bucket_empty;
+
+[label,myq2_bucket_empty]
+if (inzone(0_54_150_0_0, 3_54_150_63_63, coord) = true) {
+    ~mesbox("You'll just fill the room up with rubble again if you empty it in here.");
+    return;
+}
+if (inzone(0_54_50_30_26, 3_54_50_40_34, coord) = true) {
+    ~mesbox("You're too close to the basement to empty that here, it will just fill up the basement again.");
+    return;
+}
+if (inzone(0_54_49_10_60, 0_55_50_8_43, coord) = true) {
+    ~mesbox("The people of Burgh de Rott would not be happy if you just dumped the rubble anywhere.");
+    return;
+}
+inv_del(inv, last_item, 1);
+inv_add(inv, bucket_empty, 1);
+mes("You empty the contents of the bucket on the floor.");
+
+[oplocu,burgh_outside_rubble_pile]
+if (last_useitem ! burgh_rubble_bucket_1 & last_useitem ! burgh_rubble_bucket_2 & last_useitem ! burgh_rubble_bucket_3) {
+    ~displaymessage(^dm_default);
+    return;
+}
+anim(human_pickuptable, 0);
+inv_del(inv, last_useitem, 1);
+inv_add(inv, bucket_empty, 1);
+mes("You empty the bucket of rubble onto the pile of rubble.");
+
+[oploc2,burgh_outside_rubble_pile]
+~mesbox("You start to search through the rubble pile...");
+if (%myq2_found_plaster = 1 & ~myq2_has(burgh_plaster_inscription_ivandis) = false) {
+    inv_add(inv, burgh_plaster_inscription_ivandis, 1);
+    mes("You find a piece of plaster with some interesting inscriptions on it.");
+    return;
+}
+if (%myq2_found_scroll = 1 & ~myq2_has(burgh_efaritay_info_scroll) = false) {
+    inv_add(inv, burgh_efaritay_info_scroll, 1);
+    mes("You find a scroll with some interesting inscriptions on it.");
+    return;
+}
+~mesbox("You search the pile of rubble and find nothing in particular. It seems that this is where the locals dump their rubbish (and rubble).");
+
+[proc,myq2_has](namedobj $obj)(boolean)
+if (inv_total(inv, $obj) > 0 | inv_total(bank, $obj) > 0 | inv_total(worn, $obj) > 0) return(true);
+return(false);
+
+// the plaster fragment and the dusty scroll (RuneScape wiki's transcripts)
+[opheld1,burgh_plaster_inscription_ivandis]
+~mesbox("The plaster has some pictograms on it, which you make out to be a small map of Morytania. Within the map are depictions of seven figures near the Salve, near to where the temple of Saradomin now stands.");
+~mesbox("One figure, the seventh, stands forwards of the other six and looks masculine. He seems to have an item in one hand which he holds aloft and in his other hand he holds some sort of container.");
+~mesbox("Emanating from the sky appear two rays of light; green, you think represents Guthix and silver represents Saradomin.");
+~mesbox("The seventh figure seems to be surrounded by this light.");
+~mesbox("All the figures depicted hold items, and some are commented. You see that someone holds a mace, another holds a cudgel.");
+~mesbox("The forward standing figure holds something called, 'Silvthril', and yet another figure holds a sword. You also notice some signs representing chemical formulas which point to the container held by the figure standing forwards of the main group.");
+~mesbox("They represent the elements silver, garlic, harralander, and the eggs of the red arachnid.");
+~mesbox("The figure seems to be administering this potion to a dark creature held in some sort of powerful force.");
+~mesbox("This is quite clearly an artist's impression of some moment in Morytania's history.");
+
+[opheld1,burgh_efaritay_info_scroll]
+~objbox(burgh_efaritay_info_scroll, "You take the scroll and gingerly unravel it. It seems very old and the language is not easy to make out. You begin to see that it looks like a letter of some kind.", 250, 0, 0);
+~book("Dusty scroll", append("My dearest Lantania,||I know not what these dark hours bring. I will come for thee as soon as I am able, I care no longer for the possessions which tie me to this wasted land and the living which I earned from it.||Prepare for leaving soon, I shall be there with haste, and with Saradomin's blessings we shall make our way out of Hallowvale westwards over the Salve towards Misthalin and hopefully into the arms of our brethren.||I also offer up a prayer to Saradomin that he may help Queen Efaritay in her hour of need and somehow fight these beasts back to the dead place from where they came.", "||I cry at the plight of poor Ascertes and offer up a prayer for their children in this darkest of hours.||So make ready your plans and so soon as you see me, so we shall set for Misthalin, bring only what you need. We shall need all good fortune and speed in this, our last chance at a life together.||Yours, most faithfully,|Sialathin"));

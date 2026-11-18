@@ -1,0 +1,113 @@
+// EASCape: In Aid of the Myreque's journal (ours; the requirements are the RuneScape wiki's).
+[if_button,questlist:myreque_2]
+def_int $s = %myreque_2_quest;
+if ($s = ^myq2_not_started) {
+    def_string $search = "@dbl@Completed @dre@In Search of the Myreque";
+    if (%routequest >= ^routequest_complete) $search = "@str@Completed In Search of the Myreque";
+    def_string $agility = "@dbl@Level 25 @dre@Agility";
+    if (stat_base(agility) >= 25) $agility = "@str@Level 25 Agility";
+    def_string $crafting = "@dbl@Level 25 @dre@Crafting";
+    if (stat_base(crafting) >= 25) $crafting = "@str@Level 25 Crafting";
+    def_string $mining = "@dbl@Level 15 @dre@Mining";
+    if (stat_base(mining) >= 15) $mining = "@str@Level 15 Mining";
+    def_string $magic = "@dbl@Level 7 @dre@Magic";
+    if (stat_base(magic) >= 7) $magic = "@str@Level 7 Magic";
+    ~quest_journal("In Aid of the Myreque", "@dbl@I can start this quest by speaking to @dre@Veliaf Hurtz@dbl@ in the|@dre@Myreque's hideout@dbl@ in the Hollows, under Canifis.||@dbl@To complete this quest I will need:|<$search>|<$agility>|<$crafting>|<$mining>|<$magic>|@dbl@and to be able to defeat level 75 @dre@vampyre juvinates@dbl@ with silver.");
+    return;
+}
+if ($s >= ^myq2_complete) {
+    ~quest_journal("In Aid of the Myreque", "@str@I helped the Myreque set up a new base in the inn's cellar|@str@in Burgh de Rott, fixed up the town for its people and|@str@saw off Gadderanks and his blood tithe. I took Ivan to|@str@Paterdomus, found Ivandis' tomb and made the Rod of|@str@Ivandis, which I gave to Veliaf.||@red@QUEST COMPLETE!");
+    return;
+}
+def_string $t = "@str@Veliaf asked me to find the Myreque a new base in Burgh|@str@de Rott, south of Mort'ton, and to help its people.";
+if ($s = ^myq2_started) {
+    $t = "@dbl@Veliaf asked me to find the Myreque a new base in @dre@Burgh|@dre@de Rott@dbl@, south of Mort'ton, and to help its people.";
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@The townsfolk let me in when I left some food in their chest.");
+if ($s = ^myq2_chest) {
+    $t = append($t, "|@dbl@I should ask the @dre@townsfolk@dbl@ about out of the way places.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+if ($s = ^myq2_told_inn) {
+    $t = append($t, "|@dbl@The @dre@inn's cellar@dbl@ would do, but its trapdoor is under a fallen|@dbl@wall and the cellar's full of @dre@rubble@dbl@: I need to mine it and|@dbl@shovel it into @dre@buckets@dbl@ with a @dre@spade@dbl@, and empty them on the|@dbl@rubble pile outside. @dre@<tostring(calc(^myq2_rubble_piles - %burgh_inn_rubble_pile))>@dbl@ piles left.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@I cleared the rubble out of the inn's cellar.");
+if ($s = ^myq2_basement_done) {
+    $t = append($t, "|@dbl@I should tell one of the @dre@townsfolk@dbl@ I've finished.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+if ($s = ^myq2_fix_store) {
+    $t = append($t, "|@dbl@I offered to fix up the town. @dre@Aurel@dbl@'s general store needs its|@dre@roof@dbl@ and then its @dre@wall@dbl@ mending: three @dre@planks@dbl@ and twelve @dre@nails@dbl@|@dbl@each, with a @dre@hammer@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@I mended the roof and the wall of Aurel's general store.");
+if ($s = ^myq2_store_fixed) {
+    $t = append($t, "|@dbl@I should talk to @dre@Aurel@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+if ($s = ^myq2_crate) {
+    $t = append($t, "|@dbl@Aurel wants his @dre@crate@dbl@ filled with stock: 10 @dre@bronze hatchets@dbl@,|@dbl@10 @dre@<~myq2_food_name(false)>@dbl@ and 3 @dre@tinderboxes@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@I stocked the general store.");
+if ($s = ^myq2_fix_bank) {
+    $t = append($t, "|@dbl@The @dre@bank@dbl@ needs fixing: its booth (two @dre@planks@dbl@, eight @dre@nails@dbl@ and|@dre@swamp paste@dbl@) and its wall (three planks, twelve nails). Then|@dbl@it needs a banker; @dre@Cornelius@dbl@ might do.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@I fixed the bank, and Cornelius became its banker.");
+if ($s = ^myq2_banker) {
+    $t = append($t, "|@dbl@The townsfolk would like the old @dre@furnace@dbl@ in the south-east|@dbl@working: two @dre@steel bars@dbl@ and a @dre@hammer@dbl@ to mend it, then @dre@coal@dbl@ and|@dbl@a @dre@tinderbox@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@The furnace's smoke brought Gadderanks and his juvinates.");
+if ($s = ^myq2_tithe) {
+    $t = append($t, "|@dbl@@dre@Gadderanks@dbl@ has set up a blood tithe in the @dre@general store@dbl@. I'll|@dbl@need a @dre@silver weapon@dbl@ to hurt his @dre@juvinates@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@With Veliaf's help I beat them; before he died Gadderanks|@str@told me the vampyres fear silver and garlic.");
+if ($s = ^myq2_tithe_won) {
+    $t = append($t, "|@dbl@I should talk to @dre@Veliaf@dbl@ in the general store.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+if ($s = ^myq2_hollows) {
+    $t = append($t, "|@dbl@I need to tell @dre@Polmafi@dbl@ or @dre@Radigad@dbl@ in the Hollows that the new base|@dbl@is ready, then take @dre@Ivan@dbl@ to the temple of @dre@Paterdomus@dbl@. Steel|@dbl@armour, a silver sickle and food would help him.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+if ($s = ^myq2_escort) {
+    $t = append($t, "|@dbl@I need to tell @dre@Polmafi@dbl@ or @dre@Radigad@dbl@ in the Hollows that the new base|@dbl@is ready, then take @dre@Ivan@dbl@ to the temple of @dre@Paterdomus@dbl@. Steel|@dbl@armour, a silver sickle and food would help him.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@I took Ivan safely to Paterdomus.");
+if ($s = ^myq2_ivan_safe) {
+    $t = append($t, "|@dbl@I should ask @dre@Drezel@dbl@, under the temple, about @dre@Ivandis@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@Drezel gave me the key to a secret library under the temple.");
+if ($s = ^myq2_key) {
+    $t = append($t, "|@dbl@I should look for something about @dre@Ivandis@dbl@ in the @dre@library@dbl@.");
+    ~quest_journal("In Aid of the Myreque", $t);
+    return;
+}
+$t = append($t, "|@str@The Sleeping Seven told me where Ivandis' tomb is.");
+if (inv_total(inv, burgh_rod_command_final_10) > 0 | inv_total(worn, burgh_rod_command_final_10) > 0) {
+    $t = append($t, "|@dbl@I've made the @dre@Rod of Ivandis@dbl@. I should give it to @dre@Veliaf@dbl@ in the|@dbl@inn's cellar in Burgh de Rott.");
+} else {
+    $t = append($t, "|@dbl@The @dre@rod@dbl@ is fused to Ivandis' coffin, in a boarded-up cave off|@dbl@the Hollows. A copy might be made from a @dre@mould@dbl@ of it, @dre@silver@dbl@,|@dre@mithril@dbl@ and a @dre@sapphire@dbl@ - but it would need the magic of man|@dbl@and Saradomin's blessing too.");
+}
+~quest_journal("In Aid of the Myreque", $t);

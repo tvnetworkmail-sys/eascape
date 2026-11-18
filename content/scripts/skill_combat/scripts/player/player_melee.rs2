@@ -44,6 +44,7 @@ if ($hit = true) {
     if (~fairy1_is_tanglefoot(npc_type) = true) { // EASCape: Fairytale I's magic secateurs (fairy1_grove.rs2)
         $maxhit = ~fairy1_tanglefoot_maxhit($maxhit);
     }
+    $maxhit = ~myq2_juvinate_maxhit($maxhit, ^melee_style); // EASCape: juvinates take hits only from silver (quest_myreque2/myq2_fights.rs2)
     $damage = randominc(min($maxhit, npc_param(max_dealt)));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     // EASCape: Desert Treasure's Fareed knocks your weapon away without ice gloves

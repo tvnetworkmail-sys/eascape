@@ -12,6 +12,8 @@ if_settabactive(^tab_magic);
 def_obj $initial_obj = inv_getobj(inv, $slot);
 // EASCape: the Enchanting Chamber's shapes (minigames/game_mage_training_arena/mta_ench.rs2)
 if (~mta_ench_obj($initial_obj) = true) @mta_enchant($spell, $slot);
+// EASCape: In Aid of the Myreque's Silvthrill rod takes Lvl-1 Enchant (quest_myreque2/myq2_rod.rs2)
+if ($spell = ^enchant_lvl1 & ($initial_obj = burgh_rod_command1 | $initial_obj = burgh_rod_command2)) @myq2_enchant_rod($slot);
 if (inv_total(inv, $initial_obj) < 1) {
     return;
 }

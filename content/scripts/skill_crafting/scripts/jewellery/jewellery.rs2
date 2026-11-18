@@ -297,7 +297,7 @@ p_delay(2);
 [label,craft_silver]
 // EASCape: the Silver Casting window (the cache's inter_282, as in the RuneCraft update of 13 June
 // 2005 onward): each mould held shows its item with Make 1/5/10, otherwise "You need a ... mould".
-// The Silvthrill rod belongs to a quest not in the game yet, so it always shows the mould message.
+// The Silvthrill rod (In Aid of the Myreque, quest_myreque2) takes a mithril bar and a sapphire as well: 25 Crafting, 55 xp (OSRS wiki).
 // The demonic sigil is Shadow of the Storm's (quest_agrith): Void's 30 Crafting and 50 xp. Levels and xp: Void's silver_casting table.
 ~silver_cast_slot(1, inter_282:com_90, inter_282:com_93, inter_282:com_91, inter_282:com_94, silver_cast1, holy_symbol_mould);
 ~silver_cast_slot(2, inter_282:com_97, inter_282:com_100, inter_282:com_98, inter_282:com_101, silver_cast2, unholy_symbol_mould);
@@ -328,6 +328,7 @@ switch_int ($slot) {
     case 3 : return(silver_sickle);
     case 4 : return(fenk_conductor);
     case 5 : return(tiara);
+    case 6 : return(burgh_rod_command1); // EASCape: In Aid of the Myreque
     case 7 : return(agrith_sigil); // EASCape: Shadow of the Storm
 }
 return(null);
@@ -339,6 +340,7 @@ switch_int ($slot) {
     case 3 : return(sickle_mould);
     case 4 : return(fenk_lightning_mould);
     case 5 : return(tiara_mould);
+    case 6 : return(burgh_rod_clay);
     case 7 : return(agrith_sigil_mould);
 }
 return(null);
@@ -358,6 +360,10 @@ return(null);
 [inv_button1,inter_282:com_119] @silver_cast(5, 1);
 [inv_button2,inter_282:com_119] @silver_cast(5, 5);
 [inv_button3,inter_282:com_119] @silver_cast(5, 10);
+[inv_button1,inter_282:com_126] @silver_cast(6, 1);
+[inv_button2,inter_282:com_126] @silver_cast(6, 5);
+[inv_button3,inter_282:com_126] @silver_cast(6, 10);
+[inv_button4,inter_282:com_126] @silver_cast_x(6);
 [inv_button1,inter_282:com_134] @silver_cast(7, 1);
 [inv_button2,inter_282:com_134] @silver_cast(7, 5);
 [inv_button3,inter_282:com_134] @silver_cast(7, 10);
@@ -375,7 +381,7 @@ if (last_int > 0) @silver_cast($slot, last_int);
 [label,silver_cast](int $slot, int $count)
 def_namedobj $product = ~silver_cast_product($slot);
 if ($product = null | inv_total(inv, ~silver_cast_mould($slot)) = 0) return;
-if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4 | $slot = 7)) {
+if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4 | $slot = 6 | $slot = 7)) {
     mes(^mes_members_feature);
     return;
 }
@@ -383,7 +389,11 @@ if (map_members = ^false & ($slot = 2 | $slot = 3 | $slot = 4 | $slot = 7)) {
 def_int $level = 20;
 def_int $exp = 500;
 if ($slot = 7) $level = 30; // the demonic sigil: Void's silver_casting table (30 Crafting, 50 xp)
-if ($slot ! 4 & $slot ! 7) {
+if ($slot = 6) {
+    $level = 25; // the Silvthrill rod (OSRS wiki: 25 Crafting, 55 xp)
+    $exp = 550;
+}
+if ($slot ! 4 & $slot ! 6 & $slot ! 7) {
     def_struct $struct = oc_param($product, crafting_jewelry_struct);
     $level = struct_param($struct, levelrequired);
     $exp = struct_param($struct, productexp);
@@ -405,6 +415,15 @@ p_delay(2);
 
 [proc,silver_cast_make](namedobj $product, int $exp, int $count)
 if (inv_total(inv, silver_bar) < 1) return;
+if ($product = burgh_rod_command1) {
+    // EASCape: a mithril bar and a sapphire go in too (OSRS wiki)
+    if (inv_total(inv, mithril_bar) < 1 | inv_total(inv, sapphire) < 1) {
+        ~mesbox("You need a mithril bar and a sapphire as well as the silver to make the rod."); // ours
+        return;
+    }
+    inv_del(inv, mithril_bar, 1);
+    inv_del(inv, sapphire, 1);
+}
 inv_del(inv, silver_bar, 1);
 inv_add(inv, $product, 1);
 stat_advance(crafting, $exp);

@@ -53,6 +53,7 @@ if (~player_npc_hit_roll(%damagetype) = true) {
         & (oc_category($rhand) ! weapon_bow | inv_total(worn, slayer_broad_arrows) = 0)) {
         $maxhit = 0;
     }
+    $maxhit = ~myq2_juvinate_maxhit($maxhit, ^ranged_style); // EASCape: juvinates take hits only from silver (quest_myreque2/myq2_fights.rs2)
     $damage = randominc(min($maxhit, npc_param(max_dealt)));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     ~give_combat_experience(%damagestyle, $damage_capped, %npc_combat_xp_multiplier);

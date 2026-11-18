@@ -257,6 +257,7 @@ while($op ! null) {
     $op = ~p_choice5("What's your job here?", 1, "What can you tell me about your squad?", 2, "What's your grasp of the situation soldier?", 3, "Have you heard any rumours?", 4, "Ok, thanks.", 5);
 }
 [opnpc1,route_radigad_ponfit]
+if (%myreque_2_quest > 0) @myq2_radigad; // EASCape: In Aid of the Myreque (quest_myreque2)
 if(%routequest < ^routequest_introduced_veliaf) {
     ~chatnpc("<p,happy>Greetings, friend! Once you've introduced yourself to Veliaf please feel free to chat with me...");
 } else if(%routequest < ^routequest_enter_cutscene) {
@@ -305,6 +306,7 @@ while($op ! null) {
     $op = ~p_choice5("What's your job here?", 1, "What can you tell me about the Myreque?", 2, "What're your plans for the future?", 3, "Have you heard any rumours?", 4, "Ok, thanks.", 5);
 }
 [opnpc1,route_polmafi_ferdygris]
+if (%myreque_2_quest > 0) @myq2_polmafi; // EASCape: In Aid of the Myreque (quest_myreque2)
 if(%routequest < ^routequest_introduced_veliaf) {
     ~chatnpc("<p,happy>Good day. You should quickly introduce yourself to Veliaf - after that I'll be happy to have a chat with you.");
 } else if(%routequest < ^routequest_enter_cutscene) {
@@ -357,6 +359,7 @@ while($op ! null) {
     $op = ~p_choice5("What are you doing here?", 1, "What can you tell me about the Myreque?", 2, "What do you know about Morytania?", 3, "Have you heard any rumours?", 4, "Ok, thanks.", 5);
 }
 [opnpc1,route_ivan_strom]
+if (%myreque_2_quest > 0) @myq2_ivan; // EASCape: In Aid of the Myreque (quest_myreque2)
 if(%routequest < ^routequest_introduced_veliaf) {
     ~chatnpc("<p,happy>Oh--er... hello... greetings that is... sorry... you need to speak to Veliaf first. I'm not sure if I'm supposed to be talking to you.");
 } else if(%routequest < ^routequest_enter_cutscene) {
@@ -464,6 +467,8 @@ if(%routequest < ^routequest_introduced_veliaf) {
     @route_attempt_enter_cutscene(0);
 } else if(%routequest < ^routequest_saved_myreque) {
     mes("Veliaf can't talk right now, he seems to be formulating a plan.");
+} else if(%routequest >= ^routequest_complete & %myreque_2_quest > 0) { // EASCape: In Aid of the Myreque (quest_myreque2)
+    @myq2_veliaf;
 } else if(%routequest >= ^routequest_saved_myreque) { // EASCape: was "=", so after he told you the way out he said nothing
     ~chatnpc("<p,neutral>That murderer Vanstrom has killed Sani and Harold! He came in and killed them right in front of our eyes. And that beast he summoned probably would have killed the rest of us if it wasn't for you!");
     ~chatplayer("<p,neutral>It was the least I could do!|After all, I was the one he followed here,|I'm sort of responsible.");
@@ -504,6 +509,7 @@ def_int $op = ~p_choice5("I want to join your organisation.", 1, "What do you pl
 while($op ! null) {
     switch_int($op) {
         case 1 : 
+            if (~myq2_can_start = true) @myq2_veliaf_join; // EASCape: In Aid of the Myreque (quest_myreque2)
             ~chatplayer("<p,neutral>I want to join your organisation.");
             ~chatnpc("<p,neutral>Hmm, well, thanks for your support.|But I'll need to talk to my superior first.");
         case 2 :
@@ -613,3 +619,7 @@ queue(skeleton_hellhound_defeat, 0, 0);
 if(%routequest = ^routequest_ambush) {
     %routequest = ^routequest_saved_myreque;
 }
+
+// EASCape: In Aid of the Myreque (quest_myreque2)
+[opnpcu,route_veliaf_hurtz] @myq2_veliaf_use;
+[opnpcu,route_ivan_strom] @myq2_ivan_use;

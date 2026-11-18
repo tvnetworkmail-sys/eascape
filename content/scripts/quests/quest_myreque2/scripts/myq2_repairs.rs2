@@ -1,0 +1,648 @@
+// EASCape: In Aid of the Myreque (quest_myreque2): fixing up Burgh de Rott - Aurel's general store
+// and its stock, the bank and Cornelius, and the furnace. Words from the RuneScape wiki's transcript
+// (its 2006 dialogue); anything else is ours.
+
+// ---------------------------------------------------------------- nails
+// The work takes any nails; with too few bronze ones you're asked before dearer ones go (RuneScape wiki).
+[proc,myq2_nails_total]()(int)
+return(calc(inv_total(inv, nails_bronze) + inv_total(inv, nails_iron) + inv_total(inv, nails) + inv_total(inv, nails_black) + inv_total(inv, nails_mithril) + inv_total(inv, nails_adamant) + inv_total(inv, nails_rune)));
+
+[proc,myq2_is_nails](obj $obj)(boolean)
+switch_obj ($obj) {
+    case nails_bronze, nails_iron, nails, nails_black, nails_mithril, nails_adamant, nails_rune : return(true);
+}
+return(false);
+
+// true if $count nails were taken
+[proc,myq2_take_nails](int $count)(boolean)
+if (inv_total(inv, nails_bronze) < $count) {
+    def_int $op = ~p_choice2_header("I'll use more expensive nails.", 1, "Stop, I'll get some cheaper nails.", 2, "You don't have <tostring($count)> cheap nails.");
+    if ($op ! 1) return(false);
+}
+def_int $left = $count;
+$left = ~myq2_take_some(nails_bronze, $left);
+$left = ~myq2_take_some(nails_iron, $left);
+$left = ~myq2_take_some(nails, $left);
+$left = ~myq2_take_some(nails_black, $left);
+$left = ~myq2_take_some(nails_mithril, $left);
+$left = ~myq2_take_some(nails_adamant, $left);
+$left = ~myq2_take_some(nails_rune, $left);
+return(true);
+
+[proc,myq2_take_some](namedobj $obj, int $left)(int)
+if ($left < 1) return(0);
+def_int $take = min($left, inv_total(inv, $obj));
+if ($take > 0) inv_del(inv, $obj, $take);
+return(calc($left - $take));
+
+// ---------------------------------------------------------------- Aurel
+[label,myq2_aurel]
+def_int $s = %myreque_2_quest;
+if ($s = ^myq2_crate & ~myq2_crate_full = true & inv_total(inv, burgh_generalstore_crate) > 0) @myq2_aurel_stocked;
+if ($s >= ^myq2_fix_bank) @myq2_aurel_bank;
+if ($s = ^myq2_crate) @myq2_aurel_crate;
+if ($s = ^myq2_store_fixed) {
+    ~chatnpc("<p,happy>Hi there...you've done a good job on my store! It's starting to look great!");
+    ~chatplayer("<p,neutral>Yeah, but I've only fixed the roof and the walls.");
+    def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Have you got any tips?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+    while ($op ! 5) {
+        switch_int ($op) {
+            case 1 :
+                ~chatplayer("<p,neutral>What do you do here?");
+                ~myq2_whatdo;
+            case 2 :
+                ~chatplayer("<p,neutral>What do you think of your town?");
+                ~chatnpc("<p,neutral>It's looking better since you fixed my store...that's for sure...but how about a nice bit of stock in order to get the punters in? Just some basic commodities, nothing too fancy like.");
+            case 3 :
+                ~chatplayer("<p,neutral>Have you got any tips?");
+                ~chatnpc("<p,neutral>Yes, finish off the general store! Get me some stock!");
+            case 4 :
+                ~chatplayer("<p,neutral>What should I do now?");
+                ~chatnpc("<p,neutral>You could stock the store for us, we'd really start being like a new town then.");
+                ~chatplayer("<p,neutral>What stock do you need?");
+                %burgh_food_type = calc(1 + random(2));
+                ~chatnpc("<p,neutral>Ok, I need 3 Tinderboxes, 10 <~myq2_food_name(true)>, and 10 Bronze hatchets.");
+                ~myq2_give_crate;
+                ~mesbox("The store owner gives you a crate.");
+                %myreque_2_quest = ^myq2_crate;
+                ~chatnpc("<p,neutral>There you go, fill that up for me please.");
+                return;
+        }
+        $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Have you got any tips?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+    }
+    ~chatplayer("<p,neutral>Ok, thanks.");
+    return;
+}
+// asked to fix the store
+~chatplayer("<p,neutral>Hello!");
+~chatnpc("<p,neutral>Yeah, what can I do ya for?");
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "I'd like to help fix up the town.", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,neutral>Well, it would look a lot nicer if someone managed to fix up the general store I think.");
+        case 3 :
+            ~chatplayer("<p,neutral>I'd like to help fix up the town.");
+            ~chatnpc("<p,neutral>Yes, I know, you said you'd help fix up my general store!");
+            ~chatplayer("<p,confused>Oh! Right, did I? Where was I?");
+            ~chatnpc("<p,neutral>Well, I'm not sure, could you take a look at the roof and then look at the walls. Once you've done that, come and have a chat with me.");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,neutral>I thought you were fixing up my general store? First fix the roof, then the walls. After that, come and have a chat with me.");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "I'd like to help fix up the town.", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[proc,myq2_give_crate]
+%burgh_axes_crate = 0;
+%burgh_food_crate = 0;
+%burgh_tinderbox_crate = 0;
+if (inv_freespace(inv) > 0) inv_add(inv, burgh_generalstore_crate, 1);
+else obj_add(coord, burgh_generalstore_crate, 1, ^lootdrop_duration);
+
+[proc,myq2_food_name](boolean $raw)(string)
+if (%burgh_food_type = 2) {
+    if ($raw = true) return("raw snails of any type");
+    return("snails");
+}
+return("Mackerel");
+
+[label,myq2_aurel_crate]
+~chatplayer("<p,neutral>Hello, I wonder if I could ask a few questions?");
+~chatnpc("<p,neutral>Sure, go ahead.");
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,neutral>It's coming together now, the store is looking nicer now that it's been fixed up a bit, but it would be better with some stock in it.");
+        case 3 :
+            ~chatplayer("<p,neutral>How did everyone come to be here?");
+            ~chatnpc("<p,neutral>We came over from the Sanguinesti region where we were being farmed as food for the vampyres.");
+            ~chatplayer("<p,neutral>Where's the Sanguinesti region?");
+            ~chatnpc("<p,neutral>It's to the east of here. The land of Morytania is split in half, one half is undead infested desolate swamp, the other is Sanguinesti. I'm glad that I'm not in Sanguinesti any more!");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,neutral>You could stock the store!");
+            ~chatplayer("<p,neutral>What did you want me to do again?");
+            if (~myq2_has(burgh_generalstore_crate) = false) {
+                ~myq2_give_crate;
+                ~chatnpc("<p,neutral>It looks like you need a new crate...here, don't lose this one. Fill it with the stock I asked for and then come back to me.");
+            } else {
+                ~chatnpc("<p,neutral>You need to collect 10 Bronze hatchets, 10 <~myq2_food_name(false)> and 3 Tinderboxes.");
+                ~chatplayer("<p,neutral>Ok, thanks.");
+            }
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_aurel_stocked]
+~mesbox("You show the completed stock crate to the shop owner who takes it off your hands.");
+~chatnpc("<p,happy>Wow, well done! You're doing a great job...I'm going to get this stock straight out onto the shelves.");
+inv_del(inv, burgh_generalstore_crate, 1);
+%burgh_store_stocked = 1;
+%myreque_2_quest = ^myq2_fix_bank;
+~mesbox("Aurel quickly puts the stock out around the shop.. and then returns to you.");
+~chatnpc("<p,happy>Hey, you've done such a great job for me, would you consider helping us fixing up the bank?");
+~chatplayer("<p,neutral>Hmm, sounds interesting but I'd like to ask a few more questions first.");
+@myq2_aurel_bank_menu;
+
+[label,myq2_aurel_bank]
+~chatplayer("<p,neutral>Hello, I wonder if I could ask a few questions?");
+~chatnpc("<p,neutral>Sure, go ahead.");
+@myq2_aurel_bank_menu;
+
+[label,myq2_aurel_bank_menu]
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+            return;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,happy>It's a lot better now that we have a general store, you're doing a great job! What a hero!");
+        case 3 :
+            ~chatplayer("<p,neutral>How did everyone come to be here?");
+            ~chatnpc("<p,neutral>We were escaping the Sanguinesti region and the vampyres!");
+            ~chatplayer("<p,neutral>What's the Sanguinesti region?");
+            ~chatnpc("<p,sad>That's the place to the east that we came from. It's a terrible place, we were lucky to escape, many others still have to suffer the torment. There is a huge, ominous castle which looms over the land, oh, it sends shivers down my spine just thinking about that place.");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,neutral>Please can you fix the bank booth first as it's quite delicate. If you can't fix the booth then there's not much point in fixing the wall.");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// after Gadderanks: the hero, and the Gadderhammer (RuneScape wiki, Aurel after the quest)
+[label,myq2_aurel_hero]
+if (%gadderanks_warhammer_give = 1) {
+    if (inv_freespace(inv) < 1) {
+        ~chatnpc("<p,happy>Hey there! Gadderanks dropped this warhammer, I guess it belongs to you now! You'll need some room to carry it though."); // ours: the last sentence
+        return;
+    }
+    %gadderanks_warhammer_give = 0;
+    inv_add(inv, gadderanks_warhammer, 1);
+    ~chatnpc("<p,happy>Hey there! Gadderanks dropped this warhammer, I guess it belongs to you now!");
+    ~objbox(gadderanks_warhammer, "Aurel gives you Gadderanks' Warhammer.", 250, 0, 0);
+    return;
+}
+~chatnpc("<p,happy>Hey it's the hero! Wow, you're amazing! How on earth did you manage to tackle those two juvinates and Gadderanks? And the town is lovely, you've done a great job.");
+~chatplayer("<p,happy>You're more than welcome.");
+if (~myq2_has(gadderanks_warhammer) = true) @myq2_villager_hero_menu;
+def_int $op = ~p_choice5("I've lost Gadderanks' Hammer!", 1, "What do you do here?", 2, "What's happening around here?", 3, "Is there anything I can do to help out?", 4, "Okay, thanks.", 5);
+switch_int ($op) {
+    case 1 :
+        ~chatplayer("<p,sad>I've lost Gadderanks' Hammer!");
+        ~chatnpc("<p,neutral>Hmm, how careless of you! However, you're in luck! Someone found it earlier and sold it to me, now I can pass the hammer back to you for the remarkably cheap price of 3,000 gold coins. Deal?");
+        @myq2_aurel_hammer;
+    case 2 :
+        ~chatplayer("<p,neutral>What do you do here?");
+        ~myq2_whatdo;
+    case 3 :
+        ~chatplayer("<p,neutral>What's happening around here?");
+        ~chatnpc("<p,neutral>Oh, not much really, we're all still hiding from the vampyres and eking out a living from this terrible place, hopefully soon we'll be strong enough to make the journey to the temple on the Salve.");
+    case 4 :
+        ~chatplayer("<p,neutral>Is there anything I can do to help out?");
+        ~chatnpc("<p,happy>Not as far as I know, we have some basic amenities now which is so very useful, we're all incredibly grateful to you. I've never really seen or known a hero before, so I have nothing to compare one to, but I suspect in most people's judgement, you would be one! I for one am very pleased to have met you.");
+    case 5 : ~chatplayer("<p,neutral>Okay, thanks.");
+}
+
+[label,myq2_aurel_hammer]
+def_int $op = ~p_choice3("Okay, I'll pay 3,000 coins for the hammer.", 1, "Why does the hammer cost so much?", 2, "No thanks, I'll leave it, 3,000 coins is too much to pay.", 3);
+if ($op = 1) {
+    ~chatplayer("<p,neutral>Okay, I'll pay 3,000 coins for the hammer.");
+    if (inv_total(inv, coins) < 3000) {
+        ~chatnpc("<p,neutral>You don't seem to have enough coins on you, come back when you do."); // ours
+        return;
+    }
+    if (inv_freespace(inv) < 1 & inv_total(inv, coins) > 3000) {
+        ~displaymessage(^dm_invspace);
+        return;
+    }
+    ~chatnpc("<p,happy>A good deal and I'm sure of it!");
+    inv_del(inv, coins, 3000);
+    inv_add(inv, gadderanks_warhammer, 1);
+    ~objbox(gadderanks_warhammer, "Aurel gives you another Gadderanks' Warhammer.", 250, 0, 0);
+    if (gender = 1) ~chatnpc("<p,happy>Thanks for you business madam!"); // ours: the RuneScape wiki has "sir"
+    else ~chatnpc("<p,happy>Thanks for you business sir!");
+    return;
+}
+if ($op = 2) {
+    ~chatplayer("<p,confused>Why does the hammer cost so much?");
+    ~chatnpc("<p,neutral>So much! That's cheap! The adventurer I bought it from wanted twice as much but I managed to knock him down to a reasonable price. I had a feeling you might like the item back so I traded what I could to get the item and hold it for ya. If you don't want it, I can just as easily trade it to the many other adventurers that frequent my premises.");
+    @myq2_aurel_hammer;
+}
+~chatplayer("<p,neutral>No thanks, I'll leave it, 3,000 coins is too much to pay.");
+~chatnpc("<p,neutral>Very good then! I'll have no guilty conscience in offering it to other adventurers that frequent my shop then. Many thanks for your time and good day to ya sir.");
+
+[opnpc3,burgh_general_store_owner]
+if (%myreque_2_quest < ^myq2_fix_bank) {
+    ~chatnpc("<p,neutral>I'm sorry my friend, but I cannot open a store which has no stock.");
+    return;
+}
+~openshop_activenpc;
+
+// ---------------------------------------------------------------- the store's roof and wall
+[oploc1,burgh_ladder_generalstore_up]
+anim(human_reachforladder, 0);
+p_delay(0);
+mes("You climb the ladder to get to the roof.");
+p_telejump(^myq2_store_roof);
+
+[oploc1,burgh_ladder_generalstore_down]
+anim(human_reachforladder, 0);
+p_delay(0);
+mes("You climb the ladder to get back down from the roof.");
+p_telejump(^myq2_store_ladder_foot);
+
+[oploc1,burgh_general_store_roof_multiloc]
+if (%burgh_store_roof = 0) {
+    ~mesbox("The roof looks like it's seen better days. The planks that keep the rain out have all rotted away and the nails are all rusty.");
+    return;
+}
+~mesbox("The roof looks pretty rainproof now, though a very small leak, you think the store owner can live with this for the time being.");
+
+[oplocu,burgh_general_store_roof_multiloc]
+if (last_useitem ! woodplank & ~myq2_is_nails(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%burgh_store_roof > 0) {
+    ~mesbox("This roof is already fixed!");
+    return;
+}
+if (%myreque_2_quest < ^myq2_fix_store) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (~myq2_mend_check(3, 12) = false) return;
+if (~myq2_take_nails(12) = false) return;
+inv_del(inv, woodplank, 3);
+anim(human_hammer_hit, 0);
+p_delay(2);
+%burgh_store_roof = 1;
+~mesbox("You use some wooden planks and nails to patch up the hole in the roof.");
+
+// a hammer, enough planks and nails
+[proc,myq2_mend_check](int $planks, int $nails)(boolean)
+if (inv_total(inv, hammer) < 1) {
+    mes("You need a hammer to do that."); // ours
+    return(false);
+}
+if (inv_total(inv, woodplank) < $planks) {
+    ~mesbox("You need at least <~myq2_number($planks)> wooden planks to fix this section of <~myq2_part>.");
+    return(false);
+}
+if (~myq2_nails_total < $nails) {
+    ~mesbox("You need at least <tostring($nails)> nails.");
+    return(false);
+}
+return(true);
+
+[proc,myq2_number](int $n)(string)
+if ($n = 2) return("two");
+if ($n = 3) return("three");
+return(tostring($n));
+
+[proc,myq2_part]()(string)
+if (loc_type = burgh_general_store_roof_multiloc) return("roof");
+return("wall");
+
+[oploc1,burgh_general_store_wall_multiloc]
+if (%burgh_store_wall = 0) ~mesbox("The wall is nothing but a hole surrounded by rotten wood and rusty metal, that may have been boards and nails at one time.");
+
+[oplocu,burgh_general_store_wall_multiloc]
+if (last_useitem ! woodplank & ~myq2_is_nails(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%burgh_store_wall > 0) {
+    ~mesbox("You've already fixed this wall!");
+    return;
+}
+if (%myreque_2_quest < ^myq2_fix_store) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%burgh_store_roof = 0) {
+    ~mesbox("Aurel asked you to fix the roof first before starting work on the wall.");
+    return;
+}
+if (~myq2_mend_check(3, 12) = false) return;
+if (~myq2_take_nails(12) = false) return;
+inv_del(inv, woodplank, 3);
+anim(human_hammer_hit, 0);
+p_delay(2);
+%burgh_store_wall = 1;
+%myreque_2_quest = ^myq2_store_fixed;
+~mesbox("You use some wooden planks and nails to patch up the hole in the wall."); // ours
+
+// ---------------------------------------------------------------- the stock crate
+[proc,myq2_crate_full]()(boolean)
+if (%burgh_axes_crate >= 10 & %burgh_food_crate >= 10 & %burgh_tinderbox_crate >= 3) return(true);
+return(false);
+
+[opheld1,burgh_generalstore_crate]
+mes("You search inside the crate...");
+if (~myq2_crate_full = true) {
+    mes("This crate is packed with stock, you should return it to the store.");
+    return;
+}
+if (%burgh_axes_crate = 0 & %burgh_food_crate = 0 & %burgh_tinderbox_crate = 0) mes("...it's empty!");
+~mesbox("You need to collect <tostring(calc(10 - %burgh_axes_crate))> bronze hatchets, <tostring(calc(10 - %burgh_food_crate))> <~myq2_food_name(false)> and <tostring(calc(3 - %burgh_tinderbox_crate))> tinderboxes.");
+
+[opheldu,burgh_generalstore_crate]
+def_obj $item = last_useitem;
+if ($item = burgh_generalstore_crate) $item = last_item;
+def_int $kind = 0;
+switch_obj ($item) {
+    case bronze_axe : $kind = 1;
+    case tinderbox : $kind = 3;
+    case raw_mackerel, mackerel : if (%burgh_food_type ! 2) $kind = 2;
+    case snail_corpse1, snail_corpse2, snail_corpse3, snail_corpse_cooked1, snail_corpse_cooked2, snail_corpse_cooked3 : if (%burgh_food_type = 2) $kind = 2;
+}
+if ($kind = 0) {
+    mes("Nothing interesting happens.");
+    return;
+}
+def_int $need = 0;
+def_string $name = "bronze hatchet";
+def_string $names = "bronze hatchets";
+if ($kind = 1) $need = calc(10 - %burgh_axes_crate);
+if ($kind = 2) {
+    $need = calc(10 - %burgh_food_crate);
+    $name = "mackerel";
+    $names = "mackerel";
+    if (%burgh_food_type = 2) {
+        $name = "snail";
+        $names = "snails";
+    }
+}
+if ($kind = 3) {
+    $need = calc(3 - %burgh_tinderbox_crate);
+    $name = "tinderbox";
+    $names = "tinderboxes";
+}
+if ($need < 1) {
+    mes("The crate is already full of <$names>."); // ours
+    return;
+}
+def_int $have = inv_total(inv, $item);
+def_int $put = 1;
+if ($have > 1) {
+    ~mesbox("Would you like to fill the crate with this item?");
+    if (~p_choice2("Yes, I'll fill the crate.", 1, "No, I just want to add one.", 2) = 1) $put = min($have, $need);
+}
+inv_del(inv, $item, $put);
+if ($kind = 1) %burgh_axes_crate = calc(%burgh_axes_crate + $put);
+if ($kind = 2) %burgh_food_crate = calc(%burgh_food_crate + $put);
+if ($kind = 3) %burgh_tinderbox_crate = calc(%burgh_tinderbox_crate + $put);
+if ($put = 1) mes("You add 1 <$name> to the crate.");
+else mes("You add <tostring($put)> <$names> to the crate.");
+$need = calc($need - $put);
+if ($need > 0) {
+    if ($need = 1) mes("You need another 1 <$name> to fill this crate.");
+    else mes("You need another <tostring($need)> <$names> to fill this crate.");
+} else {
+    mes("The crate is now full of <$names>.");
+}
+if (~myq2_crate_full = true) mes("The crate is now full. You should return it to Aurel in the village store.");
+
+// ---------------------------------------------------------------- the bank
+[oploc1,burgh_bank_booth_multiloc]
+if (%burgh_bank_booth_open = 0) {
+    ~mesbox("This bank booth is in an awful condition... There's no way that safe transactions can be carried out here. You can see that there is a lot of broken glass and most of the wooden structure of the booth has been destroyed.");
+    return;
+}
+if (%burgh_bank_teller = 0) {
+    ~mesbox("While the booth looks functional, there still isn't anyone working behind the booth in order to service your account.");
+    return;
+}
+if (npc_find(loc_coord, burgh_actual_bank_teller_multinpc, 3, 0) = true) @talk_to_banker;
+@openbank;
+
+[oploc2,burgh_bank_booth_multiloc]
+if (%burgh_bank_teller = 0) {
+    ~mesbox("While the booth looks functional, there still isn't anyone working behind the booth in order to service your account.");
+    return;
+}
+@openbank;
+
+[oplocu,burgh_bank_booth_multiloc]
+if (last_useitem ! woodplank & last_useitem ! swamppaste & ~myq2_is_nails(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%burgh_bank_booth_open > 0 | %myreque_2_quest < ^myq2_fix_bank) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (inv_total(inv, woodplank) < 2) {
+    ~mesbox("You'll need at least two planks of wood in order to fix the wooden bank booth case.");
+    return;
+}
+if (~myq2_nails_total < 8) {
+    ~mesbox("You need at least 8 nails.");
+    return;
+}
+if (inv_total(inv, swamppaste) < 1) {
+    ~mesbox("You'll need some sticky paste like substance to fix the glass back together.");
+    return;
+}
+if (inv_total(inv, hammer) < 1) {
+    mes("You need a hammer to do that."); // ours
+    return;
+}
+if (~myq2_take_nails(8) = false) return;
+inv_del(inv, woodplank, 2);
+inv_del(inv, swamppaste, 1);
+anim(human_hammer_hit, 0);
+p_delay(2);
+%burgh_bank_booth_open = 1;
+~mesbox("You manage to fix the bits of glass together using swamp paste and then repair the structure of the booth with wooden planks and nails. You feel it's a good job, well done.");
+
+[oploc1,burgh_bank_wall_multiloc]
+if (%burgh_bank_wall = 0) ~mesbox("The wall is nothing but a hole surrounded by rotten wood and rusty metal, that may have been planks and nails at one time.");
+
+[oplocu,burgh_bank_wall_multiloc]
+if (last_useitem ! woodplank & ~myq2_is_nails(last_useitem) = false) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%burgh_bank_wall > 0 | %myreque_2_quest < ^myq2_fix_bank) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%burgh_bank_booth_open = 0) {
+    ~mesbox("You should fix the bank booth first, it's quite delicate."); // ours (from the townsfolk's advice)
+    return;
+}
+if (inv_total(inv, woodplank) < 3) {
+    ~mesbox("You'll need at least three planks of wood in order to fix this section of wall.");
+    return;
+}
+if (~myq2_nails_total < 12) {
+    ~mesbox("You need at least 12 nails.");
+    return;
+}
+if (inv_total(inv, hammer) < 1) {
+    mes("You need a hammer to do that."); // ours
+    return;
+}
+if (~myq2_take_nails(12) = false) return;
+inv_del(inv, woodplank, 3);
+anim(human_hammer_hit, 0);
+p_delay(2);
+%burgh_bank_wall = 1;
+~mesbox("You use some wooden planks and nails to patch up the hole in the wall."); // ours
+
+// Cornelius
+[label,myq2_cornelius]
+if (%burgh_bank_wall > 0) {
+    ~chatnpc("<p,happy>Hey it's you! You're doing a great job with the town! It's really getting a lot better!");
+    ~chatplayer("<p,happy>I'm happy to help!");
+    def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Do you fancy the job?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+    while ($op ! 5) {
+        switch_int ($op) {
+            case 1 :
+                ~chatplayer("<p,neutral>What do you do here?");
+                ~myq2_whatdo;
+            case 2 :
+                ~chatplayer("<p,neutral>What do you think of your town?");
+                ~chatnpc("<p,happy>Oh, I think it's going great...we're all so pleased with the work you're doing, but there's still lots left to do.");
+            case 3 :
+                ~chatplayer("<p,neutral>Do you fancy the job?");
+                ~chatnpc("<p,shock>Me...why, I guess I could...yes, in fact, I'm sure I could...ok then!");
+                ~chatnpc("<p,happy>Yeah, Ok, I'd best go and get changed now...");
+                %burgh_bank_teller = 1;
+                %myreque_2_quest = ^myq2_banker;
+                ~mesbox("Cornelius gets changed into more suitable attire and stands behind the bank booth.");
+                return;
+            case 4 :
+                ~chatplayer("<p,neutral>What should I do now?");
+                ~chatnpc("<p,neutral>Well, that bank is all fixed now, but it isn't going to serve people's accounts all on its own. You'll have to recruit someone!");
+        }
+        $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "Do you fancy the job?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+    }
+    ~chatplayer("<p,neutral>Ok, thanks.");
+    return;
+}
+~chatplayer("<p,neutral>Hello, I wonder if I could ask a few questions?");
+~chatnpc("<p,neutral>Sure, go ahead.");
+def_int $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>What do you do here?");
+            ~myq2_whatdo;
+        case 2 :
+            ~chatplayer("<p,neutral>What do you think of your town?");
+            ~chatnpc("<p,neutral>It's getting to be quite nice now with the general store, but it would be useful to get to use the bank!");
+        case 3 :
+            ~chatplayer("<p,neutral>How did everyone come to be here?");
+            ~chatnpc("<p,neutral>We were escaping the Sanguinesti region and the vampyres!");
+        case 4 :
+            ~chatplayer("<p,neutral>What should I do now?");
+            ~chatnpc("<p,angry>Fix the floopin bank would ya! We's not had a place to store our valuables in ages! Get on with ya and get that booth fixed!");
+    }
+    $op = ~p_choice5("What do you do here?", 1, "What do you think of your town?", 2, "How did everyone come to be here?", 3, "What should I do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[opnpc1,burgh_actual_bank_teller_multinpc] @talk_to_banker;
+
+// ---------------------------------------------------------------- the furnace
+[oploc1,burgh_furnace_multiloc]
+switch_int (%burgh_furnace_fix) {
+    case 0 : ~mesbox("The furnace has a solid brick bottom half and a steel chimney to funnel the smoke out. Unfortunately there is a huge hole in the chimney which is probably why it doesn't work.");
+    case 1 : ~mesbox("The steel furnace hood has been repaired, it looks like a pretty good job has been done, but the furnace is without fuel.");
+    case 2 : @myq2_furnace_light;
+}
+
+[oploc2,burgh_furnace_multiloc]
+if (%burgh_furnace_fix = 3) @smelting_menu;
+
+[oplocu,burgh_furnace_multiloc]
+if (%burgh_furnace_fix = 3) @use_furnace;
+if (%myreque_2_quest < ^myq2_banker) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (%burgh_furnace_fix = 0 & last_useitem = steel_bar) {
+    if (inv_total(inv, steel_bar) < 2) {
+        ~mesbox("You need two bars of steel in order to fix this furnace.");
+        return;
+    }
+    if (inv_total(inv, hammer) < 1) {
+        mes("You need a hammer to do that."); // ours
+        return;
+    }
+    inv_del(inv, steel_bar, 2);
+    anim(human_smithing, 0);
+    p_delay(2);
+    %burgh_furnace_fix = 1;
+    ~mesbox("You make some metal panels out of the steel and patch up the hole in the furnace.");
+    return;
+}
+if (%burgh_furnace_fix = 1 & last_useitem = coal) {
+    inv_del(inv, coal, 1);
+    anim(human_pickuptable, 0);
+    %burgh_furnace_fix = 2;
+    ~mesbox("You place the coal into the newly fixed furnace.");
+    return;
+}
+if (%burgh_furnace_fix = 2 & last_useitem = tinderbox) @myq2_furnace_lit;
+mes("Nothing interesting happens.");
+
+[label,myq2_furnace_light]
+~mesbox("The furnace looks good, the steel furnace hood is repaired and the coal has been well distributed within the oven. It just needs to be lit now.");
+if (~p_choice2_header("Yes", 1, "No", 2, "Do you want to light the furnace now?") ! 1) return;
+@myq2_furnace_lit;
+
+[label,myq2_furnace_lit]
+if (inv_total(inv, tinderbox) < 1) {
+    mes("You need a tinderbox to light the furnace."); // ours
+    return;
+}
+anim(human_createfire, 0);
+p_delay(2);
+%burgh_furnace_fix = 3;
+~mesbox("You light the coal fire in the furnace.");
+@myq2_cutscene;
+
+// "Burgh de Rott is discovered": Vanstrom and Gadderanks, told here in dialogue (ours: the cutscene)
+[label,myq2_cutscene]
+%myreque_2_quest = ^myq2_tithe;
+%blood_tithe_visible = 1;
+%gadderanks_blood_tithe_chat = 0;
+%villager_blood_tithe_chat = 0;
+%juve_blood_tithe_chat = 0;
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,angry>I don't want to hear your pathetic excuses Gadderanks.");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,angry>Just do the job you've been appointed to do.");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,angry>You'll never be anything more than a useless human unless you can prove yourself worthy.");
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,scared>But my lord Vanstrom there are precious few human settlements left worth collecting tithes from.");
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,scared>Mort'ton is just a dead town, full of afflicted and Lord Malak was so ill when he drank of them last time.");
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,scared>Canifis is delivering more than it originally agreed to but that still isn't sufficient.");
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,scared>Pray, tell where should I get the remainder from?");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,neutral>I couldn't care less for your problems Gadderanks.");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,neutral>I just don't seem to be able to think on an empty stomach...");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,neutral>Sniff...Sniff...Sniff...");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,happy>Ah, smoke.");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,happy>There you go Gadderanks, it looks like you have a fresh appointment and we have fresh meat!");
+~chatnpc_specific("Vanstrom Klause", route_vanstrom_klause_normal, "<p,laugh>Let's just hope that you can achieve your blood tithe target before you become a meal yourself!");
+~mesbox("Vanstrom turns into mist and teleports away.");
+~chatnpc_specific("Vampyre Juvinate", burgh_vampire_juve1_blood_tithe, "<p,laugh>Ha, ha, ha, ha!");
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,scared>!GULP!");
+~chatnpc_specific("Sorin", burgh_villager_0, "<p,scared>Gadderanks is here and he wants blood.");

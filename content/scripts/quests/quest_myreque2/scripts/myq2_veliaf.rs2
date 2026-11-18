@@ -1,0 +1,360 @@
+// EASCape: In Aid of the Myreque (quest_myreque2): Veliaf and the Myreque.
+// Words from the RuneScape wiki's transcript of the quest (its 2006 dialogue; the OSRS wiki's was
+// rewritten in 2020), the OSRS wiki's where the RuneScape wiki has none (marked). Anything else is ours.
+// Veliaf is in the Hollows (route_veliaf_hurtz), in the general store after the blood tithe fight
+// and in the inn's cellar once the Myreque have moved there (burgh_rescue_veliaf_hurtz_talk).
+
+// ---------------------------------------------------------------- the start (from In Search of the Myreque's Veliaf)
+[proc,myq2_can_start]()(boolean)
+if (%routequest < ^routequest_complete) return(false);
+return(true);
+
+// "I want to join your organisation." once In Search of the Myreque is done
+[label,myq2_veliaf_join]
+~chatplayer("<p,neutral>I want to join your organisation.");
+~chatnpc("<p,neutral>Hmm, well, thanks for your support. But I'll need to talk to my superior first.");
+~chatplayer("<p,neutral>Isn't there something I can do in the meantime to help out a bit?");
+~chatnpc("<p,neutral>Hmm, well, perhaps there is my friend, but I also have some information which I should like to impart to you first.");
+def_int $op = ~p_choice3("Nope, sorry not interested.", 1, "Ok, tell me this information you have to impart.", 2, "Can you tell me about the job?", 3);
+if ($op = 1) {
+    ~chatplayer("<p,neutral>Nope, sorry, not interested.");
+    return;
+}
+if ($op = 2) {
+    ~myq2_veliaf_ivandis;
+    $op = ~p_choice2("Can you tell me about the job?", 1, "Sorry, not interested.", 2);
+    if ($op = 2) {
+        ~chatplayer("<p,neutral>Nope, sorry, not interested.");
+        return;
+    }
+}
+@myq2_veliaf_job;
+
+[proc,myq2_veliaf_ivandis]
+~chatplayer("<p,neutral>Ok, tell me this information you have to impart.");
+~chatnpc("<p,neutral>You may know a brief history of Morytania already, if not then this will possibly mean little to you. I will let you into my confidence in this matter.");
+~chatnpc("<p,neutral>With this knowledge you may serve us well in the future. I pray that you share with us as I will share with you now.");
+~chatplayer("<p,neutral>I'll do my best!");
+~chatnpc("<p,neutral>In the early history of Morytania seven warrior priests helped to drive the darkness back from Misthalin into what we now call Morytania.");
+~chatnpc("<p,neutral>And the priests of Saradomin would have you believe that all seven are buried within the holy temple on the Salve. Information I have leads me to believe that one warrior priest, so bent on the destruction of evil, made countless");
+~chatnpc("<p,neutral>charges deep into Morytania.");
+~chatnpc("<p,neutral>His name was Ivandis and we believe that he perished within the lands now spoilt by Lowerniel Drakan.");
+~chatplayer("<p,neutral>In what way will this impact on our struggle?");
+~chatnpc("<p,neutral>I have long believed that the warrior priests that fought so bravely had aid from the gods. Perhaps not directly, but in some hidden form. Perhaps an item of some usefulness which may have been used against the foe. It's");
+~chatnpc("<p,neutral>clear to me that these priestly warriors were powerful but perhaps may have mainly fought weaker minions of darkness. Foes which a trained and brave adventurer could dispatch.");
+~chatplayer("<p,neutral>So you think that the warrior priests also suffered defeat by the vampyres?");
+~chatnpc("<p,neutral>Perhaps they did, eventually. But I like to consider that they may have found some ways to combat this evil. There is much history in this land, much that we may make use of to fight our cause.");
+~chatnpc("<p,neutral>My wish is that you keep your eyes open for information which may give us a clue to Ivandis' resting place. It is said he had an item of no small power. This would be a great artefact to reclaim, if, in fact it still exists.");
+
+[label,myq2_veliaf_job]
+~chatplayer("<p,neutral>Can you tell me about the job?");
+// the quest's requirements (RuneScape wiki); the words are ours
+if (stat(agility) < 25 | stat_base(crafting) < 25 | stat_base(mining) < 15 | stat(magic) < 7) {
+    ~chatnpc("<p,neutral>I'm sorry my friend, but I don't think you're quite ready for what I have in mind.");
+    ~mesbox("You need 25 Agility, 25 Crafting, 15 Mining and 7 Magic to start this quest.");
+    return;
+}
+~chatnpc("<p,neutral>Certainly, but the information I have to impart is of importance, please I beg you, ask me about it when you're ready.");
+~chatnpc("<p,neutral>I can understand your impatience for action, I feel it myself, but forewarned is forearmed as Sani used to say.");
+~chatplayer("<p,neutral>Ok, I'll keep that in mind, now, what's the job?");
+~chatnpc("<p,neutral>Very well. Seeing as our base of operations has been discovered by Vanstrom and we need to evacuate before the entire Vyrewatch descends on us, we'll need to relocate.");
+~chatnpc("<p,neutral>We've been hiding in the caves to avoid detection for sometime, but now we need to move on.");
+~chatplayer("<p,neutral>Seems like a wise move, what part do I play?");
+~chatnpc("<p,neutral>To the south of Mort'ton we've become aware of a nearly deserted township known as Burgh De Rott. It's a ghastly place where the few escapees from the Sanguinesti region have collected.");
+~chatnpc("<p,neutral>Please go down to this town and try to establish a new base of operations for us.");
+~chatplayer("<p,neutral>Hmm, check out a place for a new base for the Myreque, that sounds interesting.");
+~chatnpc("<p,neutral>Please do not underestimate the importance of this request. In addition to founding the base, we need to ensure that the township can help to support our cause.");
+~chatnpc("<p,neutral>Help the locals with as many requests as you can in order that they may be well disposed to our efforts.");
+def_int $op = ~p_choice3("Ok, I'll do the job.", 1, "Tell me about the information you have to impart...", 2, "Sorry, not interested.", 3);
+if ($op = 2) {
+    ~myq2_veliaf_ivandis;
+    $op = ~p_choice2("Ok, I'll do the job.", 1, "Sorry, not interested.", 3);
+}
+if ($op = 3) {
+    ~chatplayer("<p,neutral>Nope, sorry, not interested.");
+    return;
+}
+~chatplayer("<p,neutral>Ok, I'll do the job.");
+%myreque_2_quest = ^myq2_started;
+~send_quest_progress(questlist:myreque_2, %myreque_2_quest, ^myq2_complete);
+~chatnpc("<p,neutral>That is great news my friend, and very good luck to you.");
+
+// ---------------------------------------------------------------- Veliaf, through the quest
+[label,myq2_veliaf]
+def_int $s = %myreque_2_quest;
+if ($s >= ^myq2_complete) @myq2_veliaf_done;
+if ($s = ^myq2_tithe_won) @myq2_veliaf_after_fight;
+if ($s = ^myq2_tithe & %myq2_fight > 0) {
+    ~chatnpc("<p,neutral>Huh, it looks like Gadderanks is still alive...perhaps he's ready to give us some information before he meets his maker.");
+    return;
+}
+if ($s = ^myq2_hollows | $s = ^myq2_escort) @myq2_veliaf_escort;
+if ($s >= ^myq2_ivan_safe) @myq2_veliaf_ivandis_hunt;
+~chatplayer("<p,neutral>Well met!");
+~chatnpc("<p,neutral>Indeed, well met <displayname>.");
+def_int $op = ~p_choice3("What should I do again?", 1, "Can you tell me about the priestly warriors again?", 2, "Ok, thanks.", 3);
+while ($op ! 3) {
+    if ($op = 1) {
+        ~chatplayer("<p,neutral>What should I do again?");
+        ~chatnpc("<p,neutral>Please go to Burgh De Rott and endeavour to resource a new base camp for us. Please afford the locals any help and assistance you can muster so that they may be persuaded to help us in our fight.");
+    } else {
+        ~chatplayer("<p,neutral>Can you tell me about the priestly warriors again?");
+        ~chatnpc("<p,neutral>In the early history of Morytania seven warrior priests helped to drive the darkness back from Misthalin into what we now call Morytania.");
+        ~chatnpc("<p,neutral>And the priests of Saradomin would have you believe that all seven are buried within the holy temple on the Salve. Information I have leads me to believe that one warrior priest, so bent on the destruction of evil, made countless");
+        ~chatnpc("<p,neutral>charges deep into Morytania.");
+        ~chatnpc("<p,neutral>His name was Ivandis and we believe that he perished within the lands now spoilt by Lowerniel Drakan.");
+        ~chatnpc("<p,neutral>My wish is that you keep your eyes open for information which may give us a clue to Ivandis' resting place. It is said he had an item of no small power. This would be a great artefact to reclaim, if, in fact it still exists.");
+    }
+    $op = ~p_choice3("What should I do again?", 1, "Can you tell me about the priestly warriors again?", 2, "Ok, thanks.", 3);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// after Gadderanks' death, in the general store
+[label,myq2_veliaf_after_fight]
+~chatplayer("<p,happy>Phew! Thanks for your help Veliaf, it sure was good of you to turn up.");
+~chatnpc("<p,neutral>Don't mention it.");
+~chatnpc("<p,neutral>Quickly now, I need to return to the Hollows. Please can you come as quickly as you can and help me to organise Polmafi and Radigad?");
+~chatplayer("<p,neutral>Sure.");
+%myreque_2_quest = ^myq2_hollows;
+%blood_tithe_visible = 0;
+~mesbox("Veliaf heads off back to the Hollows.");
+
+[label,myq2_veliaf_escort]
+if (%myreque_2_quest = ^myq2_hollows) %myreque_2_quest = ^myq2_escort;
+~chatplayer("<p,neutral>What should I do again?");
+~chatnpc("<p,neutral>After you've informed Radigad and Polmafi that our new base is in Burgh de Rott, please take Ivan to the temple for his own safety. I've already discussed this with him. Just explain when you're ready and he'll go with you.");
+def_int $op = ~p_choice5("Why are Polmafi and Radigad to go down to the Inn?", 1, "What do you make of what Gadderanks said?", 2, "Why should I take Ivan to the temple?", 3, "What are you going to do now?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>Why are Polmafi and Radigad to go down to the Inn?");
+            ~chatnpc("<p,neutral>The Inn is going to be our new base. We've struck a blow against Vanstrom. A small one admittedly, but we should now disappear for while. The inn basement you dug out seems functional enough to me. When we get down there, we'll clean it up a bit more and get it functional and I want Polmafi and Radigad down there for backup.");
+        case 2 :
+            ~chatplayer("<p,neutral>What do you make of what Gadderanks said?");
+            ~chatnpc("<p,neutral>It could be a load of rubbish, but it may be worth looking into. I recognise at least two of those items as ingredients for a potion. Though why he would mention garlic and silver is not really apparent at the moment. Perhaps the vampyres have a strong reaction against those two items as well?");
+            ~chatplayer("<p,confused>What? Garlic and silver? How would I test that?");
+            ~chatnpc("<p,neutral>A good question my friend, but I have no answer for you. Perhaps you can experiment?");
+        case 3 :
+            ~chatplayer("<p,neutral>Why should I take Ivan to the temple?");
+            ~chatnpc("<p,neutral>He'll be safer there under the eye of Drezel, I don't have the time to watch over him while we're in this sort of area. You may have noticed that Ivan has special talents. Vanstrom would dearly love to get his hands on Ivan, I believe that Drakan would also.");
+        case 4 :
+            ~chatplayer("<p,neutral>What are you going to do now?");
+            ~chatnpc("<p,neutral>I'm going to return to the new base in Burgh de Rott. That will be our best plan for the time being. From there, we may be able to plunge further into the darkness of Morytania and reveal the true horror of what has befallen the peoples of our land.");
+    }
+    $op = ~p_choice5("Why are Polmafi and Radigad to go down to the Inn?", 1, "What do you make of what Gadderanks said?", 2, "Why should I take Ivan to the temple?", 3, "What are you going to do now?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// Ivan's at the temple: the hunt for Ivandis
+[label,myq2_veliaf_ivandis_hunt]
+// the rod: given whole, or as far as you've got with it
+if (inv_total(inv, burgh_rod_command_final_10) > 0 | inv_total(worn, burgh_rod_command_final_10) > 0) @myq2_veliaf_rod_ready;
+if (inv_total(inv, burgh_rod_clay) > 0 | inv_total(inv, burgh_rod_command1) > 0 | inv_total(inv, burgh_rod_command2) > 0) @myq2_veliaf_mould;
+if (%myq2_entered_tomb = 1) @myq2_veliaf_tomb;
+if (%myreque_2_quest >= ^myq2_key) @myq2_veliaf_library;
+~chatnpc("<p,neutral>Thanks for getting Ivan to the temple and letting Polmafi and Radigad know about the new base. Remember, if you get any information about Ivandis, please let me know.");
+def_int $op = ~p_choice4("Where else might I look for information about Ivandis.", 1, "What do you know about Ivandis?", 2, "I've been talking to Drezel but he doesn't seem responsive.", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    if ($op = 1) {
+        ~chatplayer("<p,neutral>Where else might I look for information about Ivandis?");
+        ~chatnpc("<p,neutral>I can give you no specifics my friend. All around us are details of historical importance, any of which might lead us to a significant advantage in our struggle against Drakan. Always be hopeful, always keep your wits about you and double check anything which you think might be important.");
+        ~chatplayer("<p,neutral>Hmm, yes, well I'm doing that already to be honest. I just wondered if you knew anyone who might actually know something?");
+        ~chatnpc("<p,neutral>You may like to check with Drezel, though I know he isn't keen on discussing such issues. He firmly believes what he's been told by his fellow priests and so I doubt you'll have much luck in gaining information from him.");
+    } else if ($op = 2) {
+        ~myq2_veliaf_about_ivandis;
+    } else {
+        ~chatplayer("<p,neutral>I've been talking to Drezel but he doesn't seem responsive.");
+        ~chatnpc("<p,neutral>That doesn't surprise me at all my friend. On matters such as this you'll find him incredibly stubborn. However, he is still probably the most likely person to know something about Ivandis and the not so well known history of Morytania.");
+    }
+    $op = ~p_choice4("Where else might I look for information about Ivandis.", 1, "What do you know about Ivandis?", 2, "I've been talking to Drezel but he doesn't seem responsive.", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[proc,myq2_veliaf_about_ivandis]
+~chatplayer("<p,neutral>What do you know about Ivandis?");
+~chatnpc("<p,neutral>Ivandis was a priestly warrior, somehow he found a way, along with six others, to fight against the evil that was spewing forth from Morytania. He held aloft a great rod of power which rendered the being useless and lame for a short period. There are stories that he did something else but he is credited with the restoring what is called, 'Guthix' balance'.");
+~chatplayer("<p,neutral>You mean that he helped to fight against the evil so that Misthalin could remain in Saradomin's control?");
+~chatnpc("<p,neutral>That is my interpretation on the meaning of it. Guthix will try to restore power in which ever way he can. He will certainly fight the minions of Zamorak if they trespass into Saradomins land, however, he will also battle Saradomins forces should they be gaining in Zamoraks land.");
+~chatnpc("<p,neutral>Since the time of the god wars Guthix has sought peace and fights to maintain a balance. Guthix doesn't see that Drakan is evil, or that the Myreque are good. He just sees two sides of opposed forces trying to outdo the other one.");
+
+[label,myq2_veliaf_library]
+~chatnpc("<p,neutral>Thanks for getting this base dug out, it's really serving our purposes very well. Do you have any information about Ivandis yet?");
+def_int $op = ~p_choice4("I've found a library in the temple.", 1, "Do you know where Ivandis' tomb might be?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    if ($op = 1) {
+        ~chatplayer("<p,neutral>I've found a library in the temple.");
+        ~chatnpc("<p,happy>Oh yes. That's great news.... have you had a good look around? Did you find anything interesting? If so, please show it to me, I'd be very grateful to read anything which might related to Ivandis.");
+    } else if ($op = 2) {
+        ~chatplayer("<p,neutral>Do you know where Ivandis tomb might be?");
+        ~chatnpc("<p,laugh>Of course not! I would be there now wouldn't I?");
+        ~chatplayer("<p,neutral>No, I mean just roughly? Is it in the east of Morytania, the west. Do you think it's in Mort'ton, Burgh de Rott...any of these places?");
+        ~chatnpc("<p,neutral>Oh, I see what you're asking now. Sorry my friend, I've explored for it extensively and still haven't found it's whereabouts. Though I would suggest that it wouldn't be too far from the temple. Even an enthusiastic fighter like Ivandis wouldn't forget that tactically he would be outnumbered if he pressed too deeply into Morytania.");
+    } else {
+        ~myq2_veliaf_about_ivandis;
+    }
+    $op = ~p_choice4("I've found a library in the temple.", 1, "Do you know where Ivandis' tomb might be?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_veliaf_tomb]
+~chatnpc("<p,neutral>Hey there, how's it going?");
+def_int $op = ~p_choice4("I think I've found Ivandis' tomb.", 1, "What should I be looking for in Ivandis' tomb?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    if ($op = 1) {
+        ~chatplayer("<p,happy>I think I've found Ivandis' tomb.");
+        ~chatnpc("<p,happy>That's great news... where did you find it? Oh never mind, did you find anything useful? If so show it to me won't you?");
+        ~chatplayer("<p,neutral>Sure, but I need to ask a few questions first.");
+    } else if ($op = 2) {
+        ~chatplayer("<p,neutral>What should I be looking for in Ivandis' tomb?");
+        ~chatnpc("<p,neutral>The main thing should be the rod which he used to combat the evil minions. Perhaps it has some effect on the vampyres.");
+        ~chatplayer("<p,neutral>There is only a coffin in there and the rod is fused to the top of it. There doesn't seem to be a way of removing the rod from the coffin lid.");
+        ~chatnpc("<p,sad>Perhaps it's fate that we're not supposed to gain the Rod of Ivandis, if so then our destiny is cast! It's such a pity that we cannot break the mould of our historical defeats and take the fight to Drakan.");
+    } else {
+        ~myq2_veliaf_about_ivandis;
+    }
+    $op = ~p_choice4("I think I've found Ivandis' tomb.", 1, "What should I be looking for in Ivandis' tomb?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_veliaf_mould]
+~chatplayer("<p,happy>I think I've found a way to make the Rod of Ivandis!");
+~chatnpc("<p,shock>Truly? Are you certain? Tell me more!");
+~chatplayer("<p,neutral>I made a clay mould of the rod on Ivandis coffin!");
+~chatnpc("<p,happy>How clever you are!");
+@myq2_veliaf_rod_questions;
+
+[label,myq2_veliaf_rod_questions]
+def_int $op = ~p_choice4("Do you know which metal is used to make the rod?", 1, "Do you know what the rod does?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+while ($op ! 4) {
+    if ($op = 1) {
+        ~chatplayer("<p,neutral>Do you know which metal is used to make the rod?");
+        ~chatnpc("<p,neutral>I do not I'm afraid, but perhaps you can get some ideas by researching historical tomes, or even studying the rod itself.");
+    } else if ($op = 2) {
+        ~chatplayer("<p,neutral>Do you know what the rod does?");
+        ~chatnpc("<p,neutral>Unfortunately my friend, I do not, I would suggest that some time be spent researching the subject. Perhaps there are some tomes which might point you in the right direction? You could also spend some time studying the rod itself.");
+    } else {
+        ~myq2_veliaf_about_ivandis;
+    }
+    $op = ~p_choice4("Do you know which metal is used to make the rod?", 1, "Do you know what the rod does?", 2, "What do you know about Ivandis?", 3, "Ok, thanks.", 4);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_veliaf_rod_ready]
+~chatnpc("<p,neutral>Hey there, how's it going?");
+~chatplayer("<p,neutral>Well thanks...I think I've found out how to make a rod like Ivandis used to own?");
+~chatnpc("<p,shock>Wow, you'll have to show me that if you ever manage to make one.");
+~chatplayer("<p,neutral>Don't worry, I will!");
+def_int $op = ~p_choice5("I have brought you the Rod of Ivandis!", 1, "Do you know which metal is used to make the rod?", 2, "Do you know what the rod does?", 3, "What do you know about Ivandis?", 4, "Ok, thanks.", 5);
+switch_int ($op) {
+    case 1 :
+        ~chatplayer("<p,happy>I have brought you the Rod of Ivandis!");
+        ~chatnpc("<p,neutral>Very impressive <displayname>, are you sure you wish to part with it though?");
+        $op = ~p_choice2("Yes, I've come to give the Rod of Ivandis to you!", 1, "Hmm, I'll keep hold of it for the time being.", 2);
+        if ($op = 1) {
+            ~chatplayer("<p,happy>Yes, I've come to give the Rod of Ivandis to you!");
+            @myq2_give_rod;
+        }
+        ~chatplayer("<p,neutral>Hmm, I'll keep hold of it for the time being.");
+        ~chatnpc("<p,neutral>Very well <displayname>, simply bring me a fully charged rod when you get the opportunity and you'll have my gratitude.");
+    case 2, 3 :
+        if ($op = 2) {
+            ~chatplayer("<p,neutral>Do you know which metal is used to make the rod?");
+            ~chatnpc("<p,neutral>I do not I'm afraid, but perhaps you can get some ideas by researching historical tomes, or even studying the rod itself.");
+        } else {
+            ~chatplayer("<p,neutral>Do you know what the rod does?");
+            ~chatnpc("<p,neutral>Unfortunately my friend, I do not, I would suggest that some time be spent researching the subject. Perhaps there are some tomes which might point you in the right direction? You could also spend some time studying the rod itself.");
+        }
+    case 4 : ~myq2_veliaf_about_ivandis;
+    case 5 : ~chatplayer("<p,neutral>Ok, thanks.");
+}
+
+[label,myq2_give_rod]
+if (inv_total(inv, burgh_rod_command_final_10) < 1) {
+    ~chatnpc("<p,neutral>Hmmm, well, I can't take it off your hands while you're still using it. If you want to offer it to me, place it in your inventory.");
+    return;
+}
+~chatnpc("<p,shock>I...I don't believe it! Could this truly be the Rod as used by Ivandis Seergaze? I do believe it is.");
+~chatnpc("<p,happy>Well, <displayname>, you have certainly excelled yourself in this task. I believe you may be Myreque material even yet.");
+inv_del(inv, burgh_rod_command_final_10, 1);
+queue(myq2_complete, 0, 0);
+
+[queue,myq2_complete](int $unused)
+if (%myreque_2_quest >= ^myq2_complete) return;
+%myreque_2_quest = ^myq2_complete;
+// 2,000 experience in each (RuneScape wiki); the OSRS wiki's four lamps are later
+stat_advance(attack, 20000);
+stat_advance(strength, 20000);
+stat_advance(crafting, 20000);
+stat_advance(defence, 20000);
+session_log(^log_adventure, "Quest complete: In Aid of the Myreque");
+~send_quest_complete(questlist:myreque_2, burgh_rod_command_final_10, 250, ^myq2_questpoints, "You have completed In Aid of the Myreque!", "2 Quest Points|2,000 Attack, Strength,|Defence and Crafting XP|Access to Burgh de Rott|The Gadderhammer");
+
+[label,myq2_veliaf_done]
+// RuneScape wiki (Veliaf, after the quest): his talk about the Hallowland is from later quests, so ours
+~chatnpc("<p,neutral>Hey there, how's it going?");
+~chatplayer("<p,neutral>Not so bad.");
+~chatnpc("<p,happy>Thanks to you we have a base in Burgh de Rott, and the Rod of Ivandis besides. You may yet be Myreque material, my friend.");
+
+// using the rod on Veliaf
+[label,myq2_veliaf_use]
+switch_obj (last_useitem) {
+    case burgh_rod_command1 :
+        ~chatplayer("<p,happy>Here you go, I've managed to make the rod that Ivandis used to have.");
+        ~chatnpc("<p,neutral>Hmm, well it certainly looks very authentic. But there doesn't seem to be any enchantment on the item, either mortal or devine. Perhaps there is a step of the process you have not completed yet?");
+        ~chatplayer("<p,neutral>Where would I find out the process for completing the rod?");
+        ~chatnpc("<p,neutral>That's a good question but one I cannot answer directly. Perhaps the secret is lost for all time in the annals of history, in which case, perhaps Drezel will be able to give more help.");
+    case burgh_rod_command2 :
+        ~chatplayer("<p,happy>Here you go, I've managed to make the rod that Ivandis used to have.");
+        ~chatnpc("<p,neutral>Hmm, well it certainly looks very authentic. Ah, I see you have enchanted it already, but there doesn't seem to be any divine blessing on the item. Perhaps there is a step of the process you have not completed yet?");
+        ~chatplayer("<p,neutral>Where would I find out the process for completing the rod?");
+        ~chatnpc("<p,neutral>That's a good question but one I cannot answer directly. Perhaps the secret is lost for all time in the annals of history, in which case, perhaps Drezel will be able to give more help.");
+    case burgh_rod_command_final_10 :
+        if (%myreque_2_quest >= ^myq2_complete) {
+            ~displaymessage(^dm_default);
+            return;
+        }
+        ~chatplayer("<p,happy>Here you go...the rod Ivandis used to have.");
+        @myq2_give_rod;
+    case default : ~displaymessage(^dm_default);
+}
+
+// ---------------------------------------------------------------- the other Myreque
+[label,myq2_polmafi]
+if (%myreque_2_quest = ^myq2_escort) {
+    if (%burgh_route_myreque_party_visible = 0) {
+        ~chatplayer("<p,neutral>Veliaf has asked me to ask you to go down to the new Burgh de Rott base. Can you let Radigad know as well, I'm taking Ivan to the temple.");
+        ~chatnpc("<p,neutral>Ok then, I will.");
+        %burgh_route_myreque_party_visible = 1;
+        return;
+    }
+    ~chatnpc("<p,neutral>Don't worry, I'm just getting my stuff together before leaving, good luck with the trip to the temple.");
+    return;
+}
+if (%myreque_2_quest >= ^myq2_ivan_safe) {
+    ~chatnpc("<p,happy>Hey there...it's good of you to do all this work for Veliaf. I've heard him say one or two good things about you! Keep up the good work and I'm sure you'll be on the team soon!");
+    return;
+}
+~chatplayer("<p,neutral>Hey how's it going?");
+~chatnpc("<p,neutral>Not so good, but it looks as if Veliaf is giving you some important things to do! It's great you're helping us out!");
+
+[label,myq2_radigad]
+if (%myreque_2_quest = ^myq2_escort) {
+    if (%burgh_route_myreque_party_visible = 0) {
+        ~chatplayer("<p,neutral>Veliaf has asked me to ask you to go down to the new Burgh de Rott base. Can you let Polmafi know as well, I'm taking Ivan to the temple.");
+        ~chatnpc("<p,neutral>Ok then, I will.");
+        %burgh_route_myreque_party_visible = 1;
+        return;
+    }
+    ~chatnpc("<p,neutral>Don't worry, I'm just getting my stuff together before leaving, good luck with the trip to the temple.");
+    return;
+}
+if (%myreque_2_quest >= ^myq2_ivan_safe) {
+    ~chatnpc("<p,happy>Thanks for doing such good work on the new base, it looks great. Of course, we've tidied up a bit as you can see!");
+    return;
+}
+~chatplayer("<p,neutral>Hello again!");
+~chatnpc("<p,neutral>Well met <displayname>! Veliaf tells me you're doing some important work for him! Best attend to it with utmost importance if you ever want to gain his respect!");
+
+// Veliaf in the general store (after the fight) and in the inn's cellar
+[opnpc1,burgh_rescue_veliaf_hurtz_talk] @myq2_veliaf;
+[opnpcu,burgh_rescue_veliaf_hurtz_talk] @myq2_veliaf_use;

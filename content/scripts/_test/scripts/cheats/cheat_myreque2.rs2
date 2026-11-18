@@ -1,0 +1,78 @@
+// EASCape: test commands for In Aid of the Myreque (quests/quest_myreque2).
+
+// ::~myq2pack - what the quest asks you to bring
+[debugproc,myq2pack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(shark, 2));
+$banked = calc($banked + ~questpack_give(hammer, 1));
+$banked = calc($banked + ~questpack_give(rune_pickaxe, 1));
+$banked = calc($banked + ~questpack_give(spade, 1));
+$banked = calc($banked + ~questpack_give(bucket_empty, 5));
+$banked = calc($banked + ~questpack_give(woodplank, 11));
+$banked = calc($banked + ~questpack_give(nails_bronze, 44));
+$banked = calc($banked + ~questpack_give(swamppaste, 1));
+$banked = calc($banked + ~questpack_give(raw_mackerel, 10));
+$banked = calc($banked + ~questpack_give(snail_corpse1, 10));
+$banked = calc($banked + ~questpack_give(bronze_axe, 10));
+$banked = calc($banked + ~questpack_give(tinderbox, 4));
+$banked = calc($banked + ~questpack_give(steel_bar, 2));
+$banked = calc($banked + ~questpack_give(coal, 1));
+$banked = calc($banked + ~questpack_give(silver_sickle_blessed, 1));
+$banked = calc($banked + ~questpack_give(silver_sickle, 1));
+$banked = calc($banked + ~questpack_give(steel_med_helm, 1));
+$banked = calc($banked + ~questpack_give(steel_chainbody, 1));
+$banked = calc($banked + ~questpack_give(steel_platelegs, 1));
+$banked = calc($banked + ~questpack_give(stew, 15));
+$banked = calc($banked + ~questpack_give(softclay, 1));
+$banked = calc($banked + ~questpack_give(rope, 1));
+$banked = calc($banked + ~questpack_give(silver_bar, 1));
+$banked = calc($banked + ~questpack_give(mithril_bar, 1));
+$banked = calc($banked + ~questpack_give(sapphire, 1));
+$banked = calc($banked + ~questpack_give(cosmicrune, 1));
+$banked = calc($banked + ~questpack_give(waterrune, 1));
+~questpack_done("In Aid of the Myreque", $banked);
+mes("::~myq2tele 1-8: Veliaf, Burgh gate, the inn, the store, the bank, the furnace, Drezel, the tomb.");
+
+// ::~myq2stage <n> - %myreque_2_quest (20 started, 30 let in, 40 the inn, 60 cellar cleared,
+// 70 store, 80 store mended, 90 crate, 100 bank, 110 banker, 120 tithe, 130 tithe won,
+// 140 Hollows, 150 escort, 160 Ivan safe, 170 key, 180 book read, 430 complete)
+[debugproc,myq2stage](int $n)
+if (p_finduid(uid) = false) return;
+%myreque_2_quest = $n;
+if ($n >= ^myq2_basement_done) {
+    %burgh_inn_colapsed_wall = 1;
+    %burgh_inn_trapdoor = 1;
+    %burgh_inn_rubble_pile = ^myq2_rubble_piles;
+}
+if ($n >= ^myq2_store_fixed) {
+    %burgh_store_roof = 1;
+    %burgh_store_wall = 1;
+}
+if ($n >= ^myq2_fix_bank) %burgh_store_stocked = 1;
+if ($n >= ^myq2_banker) {
+    %burgh_bank_booth_open = 1;
+    %burgh_bank_wall = 1;
+    %burgh_bank_teller = 1;
+}
+if ($n >= ^myq2_tithe) %burgh_furnace_fix = 3;
+if ($n = ^myq2_tithe) %blood_tithe_visible = 1;
+if ($n = ^myq2_tithe_won) %blood_tithe_visible = 2;
+if ($n > ^myq2_tithe_won | $n < ^myq2_tithe) %blood_tithe_visible = 0;
+if ($n >= ^myq2_ivan_safe) %burgh_route_myreque_party_visible = 1;
+~send_quest_progress(questlist:myreque_2, %myreque_2_quest, ^myq2_complete);
+mes("In Aid of the Myreque: stage <tostring($n)>.");
+
+[debugproc,myq2tele](int $n)
+if (p_finduid(uid) = false) return;
+switch_int ($n) {
+    case 1 : p_telejump(0_54_153_48_45);
+    case 2 : p_telejump(^myq2_gate_outside);
+    case 3 : p_telejump(^myq2_inn_trapdoor_top);
+    case 4 : p_telejump(^myq2_store_ladder_foot);
+    case 5 : p_telejump(0_54_50_40_11);
+    case 6 : p_telejump(0_55_50_6_7);
+    case 7 : p_telejump(0_53_154_48_40);
+    case 8 : p_telejump(^myq2_tomb_outside);
+    case default : mes("::~myq2tele 1-8");
+}

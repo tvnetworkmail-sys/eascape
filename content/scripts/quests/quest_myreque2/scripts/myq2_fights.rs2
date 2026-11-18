@@ -1,0 +1,542 @@
+// EASCape: In Aid of the Myreque (quest_myreque2): Gadderanks' blood tithe in the general store,
+// and taking Ivan to Paterdomus. Words from the RuneScape wiki's transcript (its 2006 dialogue),
+// the OSRS wiki's where it has none (marked). Juvinates are hurt only by silver weapons (the
+// townsfolk: "total immunity to all known weapon types"; the wikis: silver). How the fights run -
+// who the vampyres go for, Ivan's hitpoints and how armour and food help him - is ours.
+
+// ---------------------------------------------------------------- juvinates and silver
+[proc,myq2_is_juvinate](npc $type)(boolean)
+if (compare(nc_name($type), "Vampyre Juvinate") = 0) return(true);
+return(false);
+
+// what a hit can do to a juvinate: silver weapons in melee only
+[proc,myq2_juvinate_maxhit](int $maxhit, int $style)(int)
+if (~myq2_is_juvinate(npc_type) = false) return($maxhit);
+if ($style ! ^melee_style) return(0);
+switch_obj (inv_getobj(worn, ^wearpos_rhand)) {
+    case silver_sickle, silver_sickle_blessed, dagger_wolfbane, silverlight, agrith_silverlight_dyed, darklight,
+        burgh_rod_command_final_10, burgh_rod_command_final_9, burgh_rod_command_final_8, burgh_rod_command_final_7, burgh_rod_command_final_6,
+        burgh_rod_command_final_5, burgh_rod_command_final_4, burgh_rod_command_final_3, burgh_rod_command_final_2, burgh_rod_command_final_1 : return($maxhit);
+}
+return(0);
+
+// ---------------------------------------------------------------- the blood tithe station
+[opnpc1,burgh_gadderanks_multinpc]
+if (%myreque_2_quest ! ^myq2_tithe | %myq2_fight > 0) return;
+~chatplayer("<p,neutral>What's going on here?");
+if (%gadderanks_blood_tithe_chat = 0) {
+    ~chatnpc("<p,happy>Oh happy days! It's so good we came across this village! If it hadn't been for some good soul lighting that smokey furnace we'd have never known about this place! Now I should be able to make my blood tithe quota...especially after you pay your tithe. You look like an incredibly fit specimen! I bet you could pay twice as much as the others before passing out...they all do you know!");
+    ~chatplayer("<p,angry>I don't have any intentions of paying a blood tithe!");
+    ~chatnpc("<p,laugh>Ha, ha ha, We'll see about that!");
+    %gadderanks_blood_tithe_chat = 1;
+    return;
+}
+~chatnpc("<p,angry>Do I need to explain it all again! Stand in line ready to pay your blood tithe! Oh yes, and many thanks for lighting that smokey furnace. The locals were more than obliging in letting me know it was you who gave away the position of this village. We thought it was deserted before so I offer you my gratitude.");
+
+[opnpc1,burgh_villager_tithe_multinpc]
+if (%blood_tithe_visible = 2) @myq2_veliaf;
+if (%myreque_2_quest ! ^myq2_tithe | %myq2_fight > 0) return;
+~chatplayer("<p,neutral>What's going on here?");
+if (%villager_blood_tithe_chat = 0) {
+    ~chatnpc("<p,scared>They're draining my blood, that's what they're doing...else they say I'm done for!");
+    %villager_blood_tithe_chat = 1;
+    return;
+}
+~chatnpc("<p,scared>Didn't you hear me, I said they're draining my blood, that's what they're doing...else they say I'm done for!");
+
+[opnpc1,burgh_juve1_multinpc] @myq2_juve_talk;
+[opnpc1,burgh_juve2_multinpc] @myq2_juve_talk;
+
+[label,myq2_juve_talk]
+if (%myreque_2_quest ! ^myq2_tithe | %myq2_fight > 0) return;
+~chatplayer("<p,neutral>What's going on here?");
+if (%juve_blood_tithe_chat = 0) {
+    ~chatnpc("<p,laugh>Haa...we're getting some delicious blood tithes from these sacks of food...yum.");
+    %juve_blood_tithe_chat = 1;
+} else {
+    ~chatnpc("<p,angry>Didn't you hear me, I said we're getting some delicious blood tithes from these sacks of food...yum.");
+}
+// having heard Gadderanks out, the fight starts (OSRS wiki's guide: Gadderanks, Wiskit, then a juvinate)
+if (%gadderanks_blood_tithe_chat = 0) return;
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,angry>I've had enough of you poking your nose in here! If you think you can stop us, go ahead!");
+if_close;
+@myq2_fight_start;
+
+[label,myq2_fight_start]
+~myq2_fight_clear;
+%blood_tithe_visible = 3;
+%myq2_fight = 1;
+%myq2_juves_left = 2;
+npc_add(0_54_50_58_41, burgh_gadderanks_attackable, 1000);
+%npc_attacking_uid = uid;
+npc_add(0_54_50_57_41, burgh_vampire_juve_1_attackable, 1000);
+%npc_attacking_uid = uid;
+npc_add(0_54_50_57_42, burgh_vampire_juve_2_attackable, 1000);
+%npc_attacking_uid = uid;
+// a new npc takes its own type's mode when it first runs, so they're set a tick or two later
+queue(myq2_engage, 3, 0);
+softtimer(myq2_fight_watch, 2);
+
+// sets this player's foes on them, and Veliaf and Ivan to work
+[queue,myq2_engage](int $unused)
+npc_findallany(coord, 20, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) {
+        switch_npc (npc_type) {
+            case burgh_rescue_veliaf_hurtz_talk, burgh_ivan_strom_temple_ambush, burgh_ivan_strom_temple_ambush_sickle :
+                npc_settimer(3);
+                if (npc_type ! burgh_rescue_veliaf_hurtz_talk) npc_setmode(playerfollow);
+            case burgh_gadderanks_wounded : npc_setmode(none);
+            case default :
+                npc_settimer(5);
+                npc_setmode(opplayer2);
+        }
+    }
+}
+
+[proc,myq2_fight_clear]
+npc_findallany(coord, 25, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) {
+        switch_npc (npc_type) {
+            case burgh_gadderanks_attackable, burgh_gadderanks_wounded, burgh_vampire_juve_1_attackable, burgh_vampire_juve_2_attackable, burgh_rescue_veliaf_hurtz_talk : npc_del;
+        }
+    }
+}
+
+// in the store: x 3512-3518, z 3238-3245
+[proc,myq2_in_store]()(boolean)
+return(inzone(0_54_50_56_38, 0_54_50_62_45, coord));
+
+// leaving the room (or dying) ends the fight; it starts again when you come back (OSRS wiki)
+[softtimer,myq2_fight_watch]
+if (%myq2_fight = 0) {
+    clearsofttimer(myq2_fight_watch);
+    return;
+}
+if (~myq2_in_store = true & stat(hitpoints) > 0) return;
+clearsofttimer(myq2_fight_watch);
+queue(myq2_fight_fled, 0, 0);
+
+[queue,myq2_fight_fled](int $unused)
+if (npc_find(0_54_50_58_41, burgh_gadderanks_attackable, 15, 0) = true) {
+    if (%npc_attacking_uid = uid) npc_say("Yes, flee from me and my Juvinates...we'll be ready next time.");
+}
+~myq2_fight_clear;
+%myq2_fight = 0;
+%blood_tithe_visible = 1;
+
+// only you can fight your blood tithe foes
+[opnpc2,burgh_gadderanks_attackable] @myq2_attack;
+[opnpc2,burgh_vampire_juve_1_attackable] @myq2_attack;
+[opnpc2,burgh_vampire_juve_2_attackable] @myq2_attack;
+[opnpc2,burgh_ivan_temple_vampire_juve_1] @myq2_attack;
+[opnpc2,burgh_ivan_temple_vampire_juve_2] @myq2_attack;
+[apnpc2,burgh_gadderanks_attackable] @myq2_attack_ap;
+[apnpc2,burgh_vampire_juve_1_attackable] @myq2_attack_ap;
+[apnpc2,burgh_vampire_juve_2_attackable] @myq2_attack_ap;
+[apnpc2,burgh_ivan_temple_vampire_juve_1] @myq2_attack_ap;
+[apnpc2,burgh_ivan_temple_vampire_juve_2] @myq2_attack_ap;
+
+[label,myq2_attack]
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return;
+}
+@player_combat_start;
+
+[label,myq2_attack_ap]
+if (%npc_attacking_uid ! uid) {
+    mes("That's someone else's fight."); // ours
+    return;
+}
+@player_combat_start_ap;
+
+[opnpc1,burgh_gadderanks_attackable] mes("Nothing interesting happens.");
+
+// Gadderanks beaten: he falls, and Veliaf comes to help
+[ai_queue3,burgh_gadderanks_attackable]
+def_coord $where = npc_coord;
+if (finduid(%npc_attacking_uid) = false) {
+    npc_del;
+    return;
+}
+npc_del;
+npc_add($where, burgh_gadderanks_wounded, 1000);
+%npc_attacking_uid = uid;
+queue(myq2_gadder_down, 0, 0);
+
+[queue,myq2_gadder_down](int $unused)
+if (%myq2_fight ! 1) return;
+%myq2_fight = 2;
+npc_add(0_54_50_59_42, burgh_rescue_veliaf_hurtz_talk, 1000);
+%npc_attacking_uid = uid;
+npc_say("Fear not my friend, I will come to your aid.");
+mes("Veliaf : Fear not my friend, I will come to your aid.");
+queue(myq2_engage, 3, 0);
+if (%myq2_juves_left < 1) ~myq2_fight_juves_gone;
+
+// Veliaf fights the juvinates
+[ai_timer,burgh_rescue_veliaf_hurtz_talk]
+if (finduid(%npc_attacking_uid) = false) {
+    npc_del;
+    return;
+}
+npc_huntall(npc_coord, 8, 0);
+while (.npc_findnext = true) {
+    if (.%npc_attacking_uid = %npc_attacking_uid & (.npc_type = burgh_vampire_juve_1_attackable | .npc_type = burgh_vampire_juve_2_attackable)) {
+        npc_facesquare(.npc_coord);
+        npc_anim(human_sword_slash, 0);
+        .npc_queue(5, randominc(3), 1);
+        switch_int (random(6)) {
+            case 0 : npc_say("Never fear, Veliaf is here!");
+            case 1 : npc_say("Come let us slay these dogs!");
+            case 2 : npc_say("Fight on...bravely...let's go!");
+            case 3 : npc_say("En garde!");
+            case 4 : npc_say("Have at thee!");
+            case 5 : npc_say("Take that you fiend!");
+        }
+        return;
+    }
+}
+
+// hits from Veliaf or Ivan
+[ai_queue5,burgh_vampire_juve_1_attackable] ~npc_default_damage(last_int);
+[ai_queue5,burgh_vampire_juve_2_attackable] ~npc_default_damage(last_int);
+[ai_queue5,burgh_ivan_temple_vampire_juve_1] ~npc_default_damage(last_int);
+[ai_queue5,burgh_ivan_temple_vampire_juve_2] ~npc_default_damage(last_int);
+
+[ai_queue3,burgh_vampire_juve_1_attackable] @myq2_store_juve_died;
+[ai_queue3,burgh_vampire_juve_2_attackable] @myq2_store_juve_died;
+
+[label,myq2_store_juve_died]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(myq2_store_juve_down, 0, 0);
+
+[queue,myq2_store_juve_down](int $unused)
+if (%myq2_fight = 0) return;
+%myq2_juves_left = max(0, calc(%myq2_juves_left - 1));
+if (%myq2_juves_left > 0 | %myq2_fight ! 2) return;
+~myq2_fight_juves_gone;
+
+[proc,myq2_fight_juves_gone]
+%myq2_fight = 3;
+if (npc_find(coord, burgh_gadderanks_wounded, 15, 0) = true) npc_say("Cough...Cough!");
+~chatnpc_specific("Veliaf Hurtz", burgh_rescue_veliaf_hurtz_talk, "<p,neutral>Huh, it looks like Gadderanks is still alive...perhaps he's ready to give us some information before he meets his maker.");
+
+[opnpc1,burgh_gadderanks_wounded]
+if (%npc_attacking_uid ! uid) return;
+if (%myq2_fight < 3) {
+    ~chatplayer("<p,neutral>You don't look too well Gadderanks, and against my better judgement I do feel sorry for you.");
+    ~chatnpc("<p,angry>Keep your pity, my Juvinates will protect me!");
+    return;
+}
+~chatplayer("<p,sad>You don't look too well 'Gadderanks', and against my better judgement I feel sorry for you.");
+~chatnpc("<p,sad>You do...you feel sorry for me (cough)?");
+~chatplayer("<p,neutral>Yes I do. I understand that you wanted to feel strong, but you took the wrong side.");
+~chatnpc("<p,sad>But..(cough)I just didn't want my family (cough)...you understand (cough)...I wanted to do my best by them (cough)...and be strong.");
+~chatplayer("<p,neutral>You need to take a second and think of them then, think of why you did this in the first place. You needed to provide for your family and you wanted to protect them, but all of that will count for nothing if you don't help us!");
+~chatnpc("<p,sad>Then...will you do me a favour (cough) and try to save them (cough)...please I beg you.");
+~chatplayer("<p,neutral>We're all trying our best to overthrow Drakan, but it seems that our foe is almost entirely invulnerable.");
+~chatnpc("<p,sad>I have some information which may help...(cough), they fear some things...silver dust...garlic (cough) to name some. Also outlawed are (cough)...ralander and (cough)...ders eggs, so is the potion which you make with them.");
+~chatplayer("<p,sad>Take it easy Gadderanks...let's see if we can sort you out.");
+npc_del;
+~chatnpc_specific("Gadderanks", burgh_gadderanks, "<p,sad>It's too late for me (cough)...though with what I have told you (cough), perhaps you can find a way to (cough)bring light once again to Morytania.");
+~mesbox("Gadderanks passes away and the bustle of the village increases slightly.");
+clearsofttimer(myq2_fight_watch);
+~myq2_fight_clear;
+%myq2_fight = 0;
+%myreque_2_quest = ^myq2_tithe_won;
+%blood_tithe_visible = 2;
+if (inv_freespace(inv) > 0) {
+    ~chatnpc_specific("Aurel", burgh_general_store_owner, "<p,happy>Hey there! Gadderanks dropped this warhammer, I guess it belongs to you now!");
+    inv_add(inv, gadderanks_warhammer, 1);
+    ~objbox(gadderanks_warhammer, "Aurel gives you Gadderanks' Warhammer.", 250, 0, 0);
+} else {
+    %gadderanks_warhammer_give = 1; // he keeps it for you (OSRS wiki's guide)
+}
+
+// ---------------------------------------------------------------- Ivan
+[label,myq2_ivan]
+def_int $s = %myreque_2_quest;
+if ($s >= ^myq2_ivan_safe) {
+    mes("Ivan isn't here; he went to the temple on the Salve."); // ours
+    return;
+}
+if ($s = ^myq2_escort) {
+    if (%burgh_route_myreque_party_visible = 0) {
+        // OSRS wiki
+        ~chatnpc("<p,neutral>Hey there. I hear you're going to be taking me to the temple.");
+        ~chatplayer("<p,neutral>That's right. I just need to speak with Polmafi and Radigad and then we'll head off.");
+        return;
+    }
+    ~chatplayer("<p,neutral>Veliaf has asked me to take you to the temple.");
+    ~chatnpc("<p,neutral>Very well, I'm ready, lead the way.");
+    def_int $op = ~p_choice2_header("Take the route through Canifis.", 1, "Take route 2, through Mort Myre.", 2, "Which way will you go to the temple?"); // ours: the choice's words
+    if ($op = 1) {
+        mes("You take the route through Canifis.");
+        @myq2_escort_start(1);
+    }
+    if ($op = 2) {
+        mes("You decide to take route 2.");
+        @myq2_escort_start(2);
+    }
+    return;
+}
+~chatnpc("<p,happy>Is something new and exciting happening?");
+~chatplayer("<p,neutral>Veliaf has asked me to do some work for him. Hopefully I'll prove helpful to him.");
+
+[proc,myq2_ivan_food](obj $obj)(boolean)
+switch_obj ($obj) {
+    case snail_corpse_cooked1, snail_corpse_cooked2, snail_corpse_cooked3, salmon, mort_slimey_eel_cooked, stew : return(true);
+}
+return(false);
+
+[label,myq2_ivan_use]
+def_obj $item = last_useitem;
+if (%myreque_2_quest ! ^myq2_escort) {
+    ~displaymessage(^dm_default);
+    return;
+}
+switch_obj ($item) {
+    case steel_med_helm :
+        if (%burgh_ivan_armour_give_helm = 1) {
+            ~chatnpc("<p,neutral>Many thanks friend, but you have already given me one of those.");
+            return;
+        }
+        inv_del(inv, steel_med_helm, 1);
+        %burgh_ivan_armour_give_helm = 1;
+        ~chatnpc("<p,happy>Thanks for the helmet! That's great! It's going to help a lot! I'm going to wear it under my normal clothes.");
+        return;
+    case steel_chainbody :
+        if (%burgh_ivan_armour_give_body = 1) {
+            ~chatnpc("<p,neutral>Many thanks friend, but you have already given me one of those.");
+            return;
+        }
+        inv_del(inv, steel_chainbody, 1);
+        %burgh_ivan_armour_give_body = 1;
+        ~chatnpc("<p,happy>Thanks for the steel body! That's great! It's going to help a lot! I'm going to wear it under my normal clothes.");
+        return;
+    case steel_platelegs :
+        if (%burgh_ivan_armour_give_legs = 1) {
+            ~chatnpc("<p,neutral>Many thanks friend, but you have already given me one of those.");
+            return;
+        }
+        inv_del(inv, steel_platelegs, 1);
+        %burgh_ivan_armour_give_legs = 1;
+        ~chatnpc("<p,happy>Thanks for the steel legs! That's great! It's going to help a lot! I'm going to wear it under my normal clothes.");
+        return;
+    case silver_sickle :
+        if (%ivan_sickle_give = 1) {
+            ~chatnpc("<p,neutral>Many thanks friend, but you have already given me one of those.");
+            return;
+        }
+        ~objbox(silver_sickle, "You offer the silver sickle to Ivan", 250, 0, 0);
+        inv_del(inv, silver_sickle, 1);
+        %ivan_sickle_give = 1;
+        ~chatplayer("<p,neutral>You might find this sickle helpful on our travels.");
+        ~chatnpc("<p,happy>Many thanks friend, I shall endeavour to wield it as bravely as Veliaf and yourself!");
+        return;
+}
+if (~myq2_ivan_food($item) = true) {
+    def_int $room = calc(^myq2_ivan_food_max - %burgh_ivan_food_give);
+    if ($room < 1) {
+        ~chatnpc("<p,happy>Ohh delicious, some food! I'll keep that for the trip. I'm totally stocked up with food now, thanks!"); // OSRS wiki
+        return;
+    }
+    def_int $give = 1;
+    if (inv_total(inv, $item) > 1) {
+        ~objbox($item, "Would you like to offer Ivan all of this food type in your inventory?", 250, 0, 0);
+        if (~p_choice2("Yes, I'll offer all of this food item in my inventory to Ivan.", 1, "Nope, I'll just give him one.", 2) = 1) $give = min($room, inv_total(inv, $item));
+    }
+    inv_del(inv, $item, $give);
+    %burgh_ivan_food_give = calc(%burgh_ivan_food_give + $give);
+    ~objbox($item, "You hand over some food to Ivan. His eyes light up when he sees it!", 250, 0, 0);
+    ~chatnpc("<p,happy>Ohh delicious, some food! I'll keep that for the trip - in fact I could carry another <tostring(calc(^myq2_ivan_food_max - %burgh_ivan_food_give))> bits of food.");
+    return;
+}
+if (~is_food_item($item) = true) {
+    ~chatnpc("<p,neutral>Thanks for the kind offer of food, but my favourites are either cooked snails, salmon, slimy Eel or stew!");
+    return;
+}
+if (oc_wearpos($item) ! null & oc_wearpos($item) ! ^wearpos_rhand) {
+    ~chatnpc("<p,neutral>Thanks for the kind offer of some armour, but I can only wear a steel helm, steel chainbody and steel platelegs.");
+    return;
+}
+~displaymessage(^dm_default);
+
+// ---------------------------------------------------------------- the escort
+[label,myq2_escort_start](int $route)
+if_close;
+~myq2_escort_clear;
+%myq2_route = $route;
+def_npc $ivan = burgh_ivan_strom_temple_ambush;
+if (%ivan_sickle_give = 1) $ivan = burgh_ivan_strom_temple_ambush_sickle;
+if ($route = 1) {
+    p_telejump(^myq2_swamp1_start);
+    npc_add(^myq2_swamp1_ivan, $ivan, 3000);
+    %npc_attacking_uid = uid;
+    %myq2_juves_left = 2;
+    npc_add(0_44_71_20_40, burgh_ivan_temple_vampire_juve_1, 3000);
+    %npc_attacking_uid = uid;
+    npc_say("There's that tasty morsel Ivan, let's eat him. You're trapped here! Ha you're going to have to defeat us to get to the temple.");
+    npc_add(0_44_71_24_40, burgh_ivan_temple_vampire_juve_1, 3000);
+    %npc_attacking_uid = uid;
+} else {
+    p_telejump(^myq2_swamp2_start);
+    npc_add(^myq2_swamp2_ivan, $ivan, 3000);
+    %npc_attacking_uid = uid;
+    %myq2_juves_left = 4;
+    npc_add(0_44_71_44_17, burgh_ivan_temple_vampire_juve_2, 3000);
+    %npc_attacking_uid = uid;
+    npc_say("There's that tasty morsel Ivan, let's eat him. You're trapped here! Ha you're going to have to defeat us to get to the temple.");
+    npc_add(0_44_71_47_16, burgh_ivan_temple_vampire_juve_2, 3000);
+    %npc_attacking_uid = uid;
+    npc_add(0_44_71_50_17, burgh_ivan_temple_vampire_juve_2, 3000);
+    %npc_attacking_uid = uid;
+    npc_add(0_44_71_47_19, burgh_ivan_temple_vampire_juve_2, 3000);
+    %npc_attacking_uid = uid;
+}
+queue(myq2_engage, 3, 0);
+softtimer(myq2_escort_watch, 2);
+
+[proc,myq2_escort_clear]
+npc_findallany(coord, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_attacking_uid = uid) {
+        switch_npc (npc_type) {
+            case burgh_ivan_strom_temple_ambush, burgh_ivan_strom_temple_ambush_sickle, burgh_ivan_temple_vampire_juve_1, burgh_ivan_temple_vampire_juve_2 : npc_del;
+        }
+    }
+}
+
+[proc,myq2_in_swamp]()(boolean)
+return(inzone(0_44_71_0_0, 0_44_71_63_63, coord));
+
+[softtimer,myq2_escort_watch]
+if (%myq2_route = 0) {
+    clearsofttimer(myq2_escort_watch);
+    return;
+}
+if (~myq2_in_swamp = true & stat(hitpoints) > 0) return;
+clearsofttimer(myq2_escort_watch);
+queue(myq2_escort_left, 0, 0);
+
+[queue,myq2_escort_left](int $unused)
+~myq2_escort_clear;
+%myq2_route = 0;
+
+// the way out of the swamp: back towards Canifis; Ivan goes back to the Hollows (OSRS wiki's guide)
+[oploc1,burgh_swamp_exit_path] mes("A path leading out of this swampy dead end.");
+[oploc2,burgh_swamp_exit_path]
+clearsofttimer(myq2_escort_watch);
+~myq2_escort_clear;
+%myq2_route = 0;
+p_telejump(^myq2_escort_quit);
+mes("You make your way out of the swamp."); // ours
+
+// Ivan hit: armour takes some off; low on hitpoints he eats, or leaves you
+[ai_queue5,burgh_ivan_strom_temple_ambush] if (~myq2_ivan_hit(last_int) = false) return;
+[ai_queue5,burgh_ivan_strom_temple_ambush_sickle] if (~myq2_ivan_hit(last_int) = false) return;
+
+[proc,myq2_ivan_hit](int $damage)(boolean)
+if (finduid(%npc_attacking_uid) = false) return(true);
+$damage = calc($damage - %burgh_ivan_armour_give_helm - %burgh_ivan_armour_give_body - %burgh_ivan_armour_give_legs);
+if ($damage < 1) {
+    npc_damage(^hitmark_block, 0);
+    return(true);
+}
+$damage = min($damage, calc(npc_stat(hitpoints) - 1));
+npc_damage(^hitmark_damage, $damage);
+if (npc_stat(hitpoints) >= 10) return(true);
+if (%burgh_ivan_food_give > 0) {
+    npc_statheal(hitpoints, 9, 0);
+    queue(myq2_ivan_ate, 0, 0);
+    return(true);
+}
+if (npc_stat(hitpoints) > 3) return(true);
+npc_say("I'm getting badly beaten up here, I'm going to die here if I stay...see you back at the old base."); // OSRS wiki
+npc_del;
+queue(myq2_ivan_fled, 0, 0);
+return(false);
+
+[queue,myq2_ivan_ate](int $unused)
+%burgh_ivan_food_give = max(0, calc(%burgh_ivan_food_give - 1));
+mes("Ivan : Urgh, just had too eat some food, I only have <tostring(%burgh_ivan_food_give)> left."); // OSRS wiki
+
+[queue,myq2_ivan_fled](int $unused)
+if (%myq2_route = 1 | %myq2_route = 2) %myq2_route = 3;
+mes("Ivan has fled. You'll have to leave the swamp and try again."); // ours
+
+// Ivan, with the sickle, fights back; without it he follows you
+[ai_timer,burgh_ivan_strom_temple_ambush]
+if (~myq2_ivan_follow = false) return;
+[ai_timer,burgh_ivan_strom_temple_ambush_sickle]
+if (~myq2_ivan_follow = false) return;
+npc_huntall(npc_coord, 1, 0);
+while (.npc_findnext = true) {
+    if (.%npc_attacking_uid = %npc_attacking_uid & (.npc_type = burgh_ivan_temple_vampire_juve_1 | .npc_type = burgh_ivan_temple_vampire_juve_2)) {
+        npc_facesquare(.npc_coord);
+        npc_anim(human_sword_slash, 0);
+        .npc_queue(5, randominc(2), 1);
+        return;
+    }
+}
+
+[proc,myq2_ivan_follow]()(boolean)
+if (finduid(%npc_attacking_uid) = false) {
+    npc_del;
+    return(false);
+}
+if (npc_getmode ! playerfollow) npc_setmode(playerfollow);
+// juvinates not busy with you come for Ivan (ours)
+npc_huntall(npc_coord, 15, 0);
+while (.npc_findnext = true) {
+    if (.%npc_attacking_uid = %npc_attacking_uid & (.npc_type = burgh_ivan_temple_vampire_juve_1 | .npc_type = burgh_ivan_temple_vampire_juve_2)) {
+        if (distance(.npc_coord, npc_coord) > 1) {
+            // ours: one held off by you flits over to him ("some say they can fly")
+            if (random(4) = 0) .npc_tele(map_findsquare(npc_coord, 1, 1, ^map_findsquare_lineofwalk));
+        } else if (random(2) = 0) {
+            .npc_facesquare(npc_coord);
+            if (.npc_type = burgh_ivan_temple_vampire_juve_1) return(~myq2_ivan_hit(randominc(6)));
+            return(~myq2_ivan_hit(randominc(5)));
+        }
+    }
+}
+return(true);
+
+[opnpc1,burgh_ivan_strom_temple_ambush] @myq2_ivan_scared;
+[opnpc1,burgh_ivan_strom_temple_ambush_sickle] @myq2_ivan_scared;
+[label,myq2_ivan_scared]
+// OSRS wiki
+if (random(2) = 0) ~chatnpc("<p,scared>Let's get of this place... I'm scared!");
+else ~chatnpc("<p,scared>Did those vampyres say they wanted to 'eat' me?");
+
+[opnpcu,burgh_ivan_strom_temple_ambush] @myq2_ivan_busy;
+[opnpcu,burgh_ivan_strom_temple_ambush_sickle] @myq2_ivan_busy;
+[label,myq2_ivan_busy]
+if (~is_food_item(last_useitem) = true) {
+    ~chatnpc("<p,scared>Food is the very last thing on my mind right now... let's get out of here!"); // OSRS wiki
+    return;
+}
+~displaymessage(^dm_default);
+
+[ai_queue3,burgh_ivan_temple_vampire_juve_1] @myq2_escort_juve_died;
+[ai_queue3,burgh_ivan_temple_vampire_juve_2] @myq2_escort_juve_died;
+
+[label,myq2_escort_juve_died]
+gosub(npc_death);
+if (npc_findhero = ^false) return;
+queue(myq2_escort_juve_down, 0, 0);
+
+[queue,myq2_escort_juve_down](int $unused)
+%myq2_juves_left = max(0, calc(%myq2_juves_left - 1));
+if (%myq2_juves_left > 0 | (%myq2_route ! 1 & %myq2_route ! 2)) return;
+clearsofttimer(myq2_escort_watch);
+~myq2_escort_clear;
+%myq2_route = 0;
+%myreque_2_quest = ^myq2_ivan_safe;
+~mesbox("You manage to slay the rest of the vampyre juvinates and continue on your journey.");
+p_telejump(^myq2_temple_arrive);
+~chatnpc_specific("Ivan Strom", route_ivan_strom, "<p,happy>Many thanks for bringing me safely to the temple, I'm going to rush on ahead as I'm eager to get out of these muddy clothes. It might be worth chatting to Drezel, even if it's just to inform him I've arrived.");

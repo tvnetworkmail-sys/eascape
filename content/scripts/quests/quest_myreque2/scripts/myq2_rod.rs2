@@ -1,0 +1,279 @@
+// EASCape: In Aid of the Myreque (quest_myreque2): Drezel and the secret library, Ivandis' tomb and
+// the Rod of Ivandis. Words from the RuneScape wiki's transcript (its 2006 dialogue); anything else
+// is ours. The rod is cast at a furnace (skill_crafting/jewellery.rs2: 25 Crafting, 55 experience,
+// OSRS wiki), enchanted with Lvl-1 Enchant (skill_magic/enchant.rs2) and blessed in the well.
+
+// ---------------------------------------------------------------- Drezel
+[label,myq2_drezel]
+if (%myreque_2_quest >= ^myq2_key) {
+    if (~myq2_has(burgh_key) = false & %myreque_2_quest < ^myq2_complete) {
+        def_int $op = ~p_choice2("Ask about items.", 1, "Talk about something else.", 2);
+        if ($op = 1) ~chatplayer("<p,sad>I've lost my library key.");
+        else ~chatplayer("<p,sad>I've lost the key to the library!");
+        inv_add(inv, burgh_key, 1);
+        ~chatnpc("<p,neutral>Ok, here's another one for you.");
+        if ($op = 1) ~chatplayer("<p,happy>Thanks for that!");
+    }
+    ~chatplayer("<p,happy>Thanks very much for your help so far, I really appreciate it.");
+    ~chatnpc("<p,neutral>I just hope that all our sacrifices are worth it and prove fruitful in the end.");
+    return;
+}
+~chatnpc("<p,neutral>Greetings again adventurer. How go your travels in Morytania? Is it as evil as I have heard?");
+~chatnpc("<p,happy>Well done for bringing Ivan to the temple, <displayname>, he will be much safer here.");
+~chatplayer("<p,neutral>Yes, it seems to be getting more dangerous in Morytania all the time doesn't it?");
+~chatnpc("<p,neutral>Indeed it does my friend, but thanks to you, and the Myreque, we have at least the hope of finding salvation in this dark and oppressive land.");
+~chatplayer("<p,neutral>It's interesting that you talk about salvation. It appears we may find it in the most unlikely of places.");
+~chatplayer("<p,neutral>Perhaps even in the history of this rotten land we could find some clue to aid us in our attempts to defeat Lowerniel and his Drakan clan.");
+~chatnpc("<p,neutral>Indeed my friend, history could be a good teacher for the best of us. Would that I had more knowledge on the subject, and perhaps a hint of the information which you have already found.");
+@myq2_drezel_menu;
+
+[label,myq2_drezel_menu]
+def_int $op = ~p_choice5("Veliaf told me about Ivandis.", 1, "I found out some things about Efaritay.", 2, "What happened before in Morytania?", 3, "Can you give me more information about Veliaf?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>Veliaf told me about Ivandis.");
+            ~chatnpc("<p,neutral>Hmmm, how can I say this diplomatically, Veliaf is a good leader, but perhaps shouldn't be voicing ideas about religious history.");
+            ~chatplayer("<p,confused>But you don't even know what he said about Ivandis?");
+            ~chatnpc("<p,angry>I assume he's made suggestions that Ivandis isn't actually buried in this temple along with the other six priestly warriors? If he has made such a claim, it's not something I'm prepared to talk about.");
+            @myq2_drezel_ivandis;
+        case 2 :
+            ~chatplayer("<p,neutral>I found out some things about Efaritay.");
+            ~chatnpc("<p,neutral>I'm sure that's fascinating for you my friend, but I'm not sure how that helps our situation here.");
+            ~chatplayer("<p,neutral>Do you know anything about it?");
+            ~chatnpc("<p,neutral>Nothing relevant. It is not pertinent to our problems.");
+        case 3 :
+            ~chatplayer("<p,neutral>What happened before in Morytania?");
+            ~chatnpc("<p,neutral>Well it's certainly a colourful past, but I prefer to look to the future.");
+        case 4 :
+            ~chatplayer("<p,neutral>Can you give me more information about Veliaf?");
+            ~chatnpc("<p,neutral>He's certainly a good leader, but it's a tough job he has to do.");
+            return;
+    }
+    $op = ~p_choice5("Veliaf told me about Ivandis.", 1, "I found out some things about Efaritay.", 2, "What happened before in Morytania?", 3, "Can you give me more information about Veliaf?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_drezel_ivandis]
+def_int $op = ~p_choice5("So, you're sure that Ivandis is buried here then?", 1, "What proof do you have that Ivandis is buried here?", 2, "What do you know about the history of this area?", 3, "Is there somewhere that I might get more information about Ivandis?", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>So, you're sure that Ivandis is buried here then?");
+            ~chatnpc("<p,neutral>If you don't mind me saying, that is a bit of a redundant question. Of course Ivandis and the rest of the seven priestly warriors are buried here.");
+            ~chatplayer("<p,neutral>So where did this rumour come from then?");
+            ~chatnpc("<p,angry>I don't have time to consider such pointless concerns. I am sorry to be so blunt, but it offends me that you challenge me on this. Please, unless you have something else to talk about, leave me alone.");
+        case 2 :
+            ~chatplayer("<p,neutral>What proof do you have that Ivandis is buried here?");
+            ~chatnpc("<p,neutral>Servants of Saradomin are not concerned with trifling matters such as proof. We have our faith, and our faith guides us.");
+            ~chatplayer("<p,neutral>So you don't actually know for sure then that he is buried here then?");
+            ~chatnpc("<p,angry>Leave me now! Do not challenge me on matters of faith, it will be your undoing.");
+        case 3 :
+            ~chatplayer("<p,neutral>What do you know about the history of this area?");
+            ~chatnpc("<p,neutral>I know that this temple is built on the place where the holy seven warrior priests defended Misthalin against the encroaching evil of Morytania. I also know that their sanctified and holy remains rest peacefully in holy Saradomin's house.");
+            ~chatplayer("<p,neutral>Have you checked that then, have you seen their remains with your own eyes.");
+            ~chatnpc("<p,neutral>Well, not exactly...a pious follower of my Saradomin needs only the truth of his faith.");
+        case 4 :
+            ~chatplayer("<p,neutral>Is there somewhere that I might get more information about Ivandis?");
+            ~chatnpc("<p,neutral>What little information there is, is probably already known, to you.");
+            ~chatplayer("<p,neutral>So you have no further information on Ivandis that could possibly help me with my quest? Remember that this could potentially release the poor peoples of Morytania from their ill fated ends.");
+            ~chatnpc("<p,neutral>I have told you all I know...that is as much as I, or anyone, can do.");
+            @myq2_drezel_more;
+    }
+    $op = ~p_choice5("So, you're sure that Ivandis is buried here then?", 1, "What proof do you have that Ivandis is buried here?", 2, "What do you know about the history of this area?", 3, "Is there somewhere that I might get more information about Ivandis?", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+[label,myq2_drezel_more]
+def_int $op = ~p_choice5("Will you let me check Ivandis' tomb in this temple?", 1, "Why are you so resistant to talking about history?", 2, "The lives of those pitiful few left in Morytania could rest on this!", 3, "Very well then, Morytania is lost to ignorance.", 4, "Ok, thanks.", 5);
+while ($op ! 5) {
+    switch_int ($op) {
+        case 1 :
+            ~chatplayer("<p,neutral>Will you let me check Ivandis' tomb in this temple?");
+            ~chatnpc("<p,angry>Absolutely not! What a disgrace that you should even ask! His remains pure and undisturbed beneath this hallowed earth! How could you even ask!");
+            ~chatplayer("<p,neutral>We need to consider every possible thing which could help us!");
+            ~chatnpc("<p,angry>I don't see how that can help you! And if you continue in this vein, it will certainly hinder you for you shall not have my support!");
+        case 2 :
+            ~chatplayer("<p,neutral>Why are you so resistant to talking about history?");
+            ~chatnpc("<p,neutral>I am not resistant my friend, I just cannot see the use of it. I know only what I know and that is most likely what you know already!");
+            ~chatplayer("<p,neutral>I think you're holding something back! We really need all the help we can get!");
+            ~chatnpc("<p,neutral>I understand that my friend, but digging up the remains of saintly heroes will not aid us in any way I can assure you!");
+        case 3 :
+            ~chatplayer("<p,neutral>The lives of those pitiful few left in Morytania could rest on this!");
+            ~chatnpc("<p,sad>I would do all I could to help those...");
+            ~chatplayer("<p,neutral>Yes, so would I, so please, please, help me as much as you can.");
+            if (inv_freespace(inv) < 1) {
+                ~chatnpc("<p,neutral>Very well, but you'll need some room for what I have to give you."); // ours
+                return;
+            }
+            ~chatnpc("<p,neutral>Very well, but there is only so much I can do...I am still a priest of Saradomin remember. I know not if this will help, but please take this key, it will allow you access to a secret library. In there you may find what you're looking for, but I pray you never reveal this to me.");
+            inv_add(inv, burgh_key, 1);
+            %myreque_2_quest = ^myq2_key;
+            ~objbox(burgh_key, "Drezel gives you a strange key.", 250, 0, 0);
+            return;
+        case 4 :
+            ~chatplayer("<p,neutral>Very well then, Morytania is lost then to ignorance.");
+            ~chatnpc("<p,angry>Not ignorance my friend, and if you give in so easily, perhaps the Myreque had better search for someone of more conviction.");
+    }
+    $op = ~p_choice5("Will you let me check Ivandis' tomb in this temple?", 1, "Why are you so resistant to talking about history?", 2, "The lives of those pitiful few left in Morytania could rest on this!", 3, "Very well then, Morytania is lost to ignorance.", 4, "Ok, thanks.", 5);
+}
+~chatplayer("<p,neutral>Ok, thanks.");
+
+// ---------------------------------------------------------------- the secret library
+[oploc1,burgh_library_keyhole] mes("You search the panel. It looks like it needs some sort of key in order to unlock it.");
+
+[oplocu,burgh_library_keyhole]
+if (last_useitem ! burgh_key) {
+    ~displaymessage(^dm_default);
+    return;
+}
+mes("You use the key in the key hole and you hear a click to the left of you.");
+%burgh_temple_trapdoor = 1;
+p_delay(1);
+@myq2_library_down;
+
+[oploc1,burgh_temple_trapdoor_multiloc]
+if (%burgh_temple_trapdoor = 0) return;
+@myq2_library_down;
+
+[label,myq2_library_down]
+anim(human_reachforladder, 0);
+p_delay(0);
+mes("Climb down through the trap door.");
+p_telejump(^myq2_library);
+
+[oploc1,burgh_temple_library_ladder_up]
+anim(human_reachforladder, 0);
+p_delay(0);
+p_telejump(^myq2_library_top);
+
+[oploc1,burgh_library_bookcase_history]
+if (inv_total(inv, burgh_book_historiesofhallowland) < 1) {
+    if (inv_freespace(inv) < 1) {
+        ~displaymessage(^dm_invspace);
+        return;
+    }
+    inv_add(inv, burgh_book_historiesofhallowland, 1);
+    ~mesbox("You search the bookcase, and find a book titled 'Histories of the Hallowland'.");
+    return;
+}
+if (inv_total(inv, burgh_book_moderndaymorytania) < 1) {
+    if (inv_freespace(inv) < 1) {
+        ~displaymessage(^dm_invspace);
+        return;
+    }
+    inv_add(inv, burgh_book_moderndaymorytania, 1);
+    ~mesbox("You search the bookcase, and find a book titled 'Modern day Morytania.'");
+    return;
+}
+~mesbox("You have taken both notable books from this bookcase.");
+
+[oploc1,burgh_library_bookcase_ivandis]
+if (inv_total(inv, burgh_book_sevenwarriors) > 0) {
+    ~mesbox("You have already taken the only notable book from this bookcase.");
+    return;
+}
+if (inv_freespace(inv) < 1) {
+    ~displaymessage(^dm_invspace);
+    return;
+}
+inv_add(inv, burgh_book_sevenwarriors, 1);
+~mesbox("You search the bookcase, and find a book titled 'The Sleeping Seven'.");
+
+// ---------------------------------------------------------------- Ivandis' tomb, off the Hollows
+[oplocu,burgh_ivandis_tombdoor_board_multiloc] @myq2_boards;
+// the boards are fixed over the cave mouth, so a hammer on the cave does the same
+[oplocu,burgh_ivandis_tomb_entrance] @myq2_boards;
+
+[label,myq2_boards]
+if (%ivandis_tomb_boards = 1) {
+    mes("Nothing interesting happens.");
+    return;
+}
+if (last_useitem ! hammer) {
+    ~displaymessage(^dm_default);
+    return;
+}
+if (%myreque_2_quest < ^myq2_rod) {
+    mes("Nothing interesting happens."); // ours: you've no reason to before reading where the tomb is
+    return;
+}
+anim(human_hammer_hit, 0);
+p_delay(1);
+%ivandis_tomb_boards = 1;
+~mesbox("You use the hammer on the boards and smash them up.");
+
+[oploc1,burgh_ivandis_tomb_entrance]
+if (%ivandis_tomb_boards = 0) {
+    mes("The cave entrance is boarded up."); // ours
+    return;
+}
+p_telejump(^myq2_tomb_inside);
+%myq2_entered_tomb = 1;
+
+[oploc1,burgh_ivandis_tomb_exit] p_telejump(^myq2_tomb_outside);
+
+[oploc1,burgh_ancient_coffin]
+~mesbox("You search the strange and ancient looking coffin. It looks incredibly basic and on top you see the remains of some sort of rod.");
+~mesbox("The rod, while only a little tarnished, is very thoroughly fused to the surface of the coffin. You can see that it is made out of a unique silver and mithril alloy.");
+~mesbox("As you run your hand over the rod, it seems to give out a mixture of both mortal and divine magical energies.");
+
+[oplocu,burgh_ancient_coffin]
+if (last_useitem ! softclay | %myreque_2_quest < ^myq2_rod) {
+    mes("Nothing interesting happens.");
+    return;
+}
+inv_del(inv, softclay, 1);
+inv_add(inv, burgh_rod_clay, 1);
+mes("You place some wet clay on the rod and carefully surround it.");
+~objbox(burgh_rod_clay, "The clay slowly hardens and you get an accurate mould of the rod.", 250, 0, 0);
+
+// ---------------------------------------------------------------- the rod
+[opheld1,burgh_rod_command1]
+~mesbox("This rod looks very similar to the rod you saw fused to the top of Ivandis tomb coffin. However, the rod on Ivandis Coffin gave off a mixture of mortal and divine magical energies which this rod seems to lack.");
+
+[opheld1,burgh_rod_command2]
+~mesbox("This rod looks very similar to the rod you saw fused to the top of Ivandis tomb coffin. However, the rod on Ivandis Coffin gave of a mixture of mortal and divine magical energies while this rod seems to exhibit only a mortal enchantment.");
+
+// Lvl-1 Enchant on the rod (from skill_magic/scripts/spells/enchant.rs2)
+[label,myq2_enchant_rod](int $slot)
+if (inv_getobj(inv, $slot) = burgh_rod_command2) {
+    mes("The rod is already enchanted.");
+    return;
+}
+def_dbrow $spell_data = ~get_spell_data(^enchant_lvl1);
+if (~check_spell_requirements($spell_data) = false) return;
+def_namedobj $unused;
+def_seq $anim;
+def_spotanim $spotanim;
+def_synth $sound;
+$unused, $anim, $spotanim, $sound = ~magic_spell_search_convertobj($spell_data, sapphire_ring);
+inv_setslot(inv, $slot, burgh_rod_command2, 1);
+~delete_spell_runes($spell_data);
+~give_spell_xp($spell_data);
+anim($anim, 0);
+spotanim_pl($spotanim, 92, 0);
+sound_synth($sound, 0, 0);
+~mesbox("As you cast the enchantment on the rod, it seems to vibrate and glow.");
+
+// the well under Paterdomus (areas/area_mausoleum/scripts/well.rs2): the Salve's blessing
+[label,myq2_well_rod]
+def_obj $rod = last_useitem;
+if ($rod = burgh_rod_command_final_10) {
+    mes("This rod has already been blessed by Saradomin.");
+    return;
+}
+if (inv_total(inv, rope) < 1) {
+    mes("You think you would lose the rod if you just dropped it down there.");
+    return;
+}
+mes("You tie a rope around the rod and lower it into the Salve.");
+anim(human_pickuptable, 0);
+p_delay(2);
+if ($rod = burgh_rod_command1) {
+    ~mesbox("After some time you withdraw the rod, it seems to be wet, but otherwise nothing has changed.");
+    return;
+}
+inv_del(inv, burgh_rod_command2, 1);
+inv_add(inv, burgh_rod_command_final_10, 1);
+~objbox(burgh_rod_command_final_10, "After some time you withdraw the rod. It seems to glow in a rather strange way.", 250, 0, 0);

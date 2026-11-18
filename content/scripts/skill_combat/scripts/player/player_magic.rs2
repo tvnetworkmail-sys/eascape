@@ -100,6 +100,7 @@ if (%eascape_onehit = ^true | ~player_npc_hit_roll(^magic_style) = true) {
     if((npc_param(slayer_category) = ^slayer_kurask | npc_param(slayer_category) = ^slayer_turoth) & $spell ! ^magic_dart) {
         $maxhit = 0;
     }    
+    $maxhit = ~myq2_juvinate_maxhit($maxhit, ^magic_style); // EASCape: juvinates take hits only from silver (quest_myreque2/myq2_fights.rs2)
     ~pvm_spell_success($spell_data, $maxhit, $duration);
     ~pvm_stat_change_effect($spell_data);
     ~pvm_freeze_effect($spell_data);
