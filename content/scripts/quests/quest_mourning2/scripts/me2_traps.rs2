@@ -1,0 +1,111 @@
+// EASCape: Mourning's End Part II - the Temple of Light's sawblade traps. The RS and OSRS wikis
+// (Trap (Temple of Light)): stepping on the square in front of one makes you try to dodge its
+// sawblade; dodge it and you're past (5 Agility experience), fail and you're pushed back a square
+// for 5 damage; no Agility level is needed, and you dodge it every time at about 66 (Mod Ash).
+// Ours: the chances below 66, the animations and the words. The map's invisible wall
+// (inviswall_serverside) by each trap stops you walking past it (mourning2_traps.enum).
+
+// watch your steps while you're in a zone with a trap
+[zone,0_29_72_8_48] ~me2_trap_watch;
+[zone,0_29_72_16_48] ~me2_trap_watch;
+[zone,1_29_72_0_0] ~me2_trap_watch;
+[zone,1_29_72_0_16] ~me2_trap_watch;
+[zone,1_29_72_0_24] ~me2_trap_watch;
+[zone,1_29_72_0_40] ~me2_trap_watch;
+[zone,1_29_72_0_56] ~me2_trap_watch;
+[zone,1_29_72_8_0] ~me2_trap_watch;
+[zone,1_29_72_8_8] ~me2_trap_watch;
+[zone,1_29_72_8_16] ~me2_trap_watch;
+[zone,1_29_72_8_48] ~me2_trap_watch;
+[zone,1_29_72_8_56] ~me2_trap_watch;
+[zone,1_29_72_16_0] ~me2_trap_watch;
+[zone,1_29_72_16_40] ~me2_trap_watch;
+[zone,1_29_72_24_0] ~me2_trap_watch;
+[zone,1_29_72_24_56] ~me2_trap_watch;
+[zone,1_29_72_32_8] ~me2_trap_watch;
+[zone,1_29_72_32_16] ~me2_trap_watch;
+[zone,1_29_72_40_40] ~me2_trap_watch;
+[zone,1_29_72_40_48] ~me2_trap_watch;
+[zone,2_29_72_8_8] ~me2_trap_watch;
+[zone,2_29_72_8_16] ~me2_trap_watch;
+[zone,2_29_72_8_40] ~me2_trap_watch;
+[zone,2_29_72_8_48] ~me2_trap_watch;
+[zone,2_29_72_16_16] ~me2_trap_watch;
+[zone,2_29_72_16_40] ~me2_trap_watch;
+[zone,2_29_72_24_40] ~me2_trap_watch;
+[zone,2_29_72_32_8] ~me2_trap_watch;
+[zone,2_29_72_32_16] ~me2_trap_watch;
+
+[proc,me2_trap_watch]
+~me2_trap_setprev(coord);
+settimer(me2_traps, 1);
+
+[timer,me2_traps]
+def_coord $c = coord;
+if (inzone(0_29_72_0_0, 2_29_72_63_63, $c) = false) {
+    cleartimer(me2_traps);
+    return;
+}
+def_coord $prev = ~me2_trap_getprev;
+~me2_trap_setprev($c);
+def_int $d = enum(coord, int, me2_trap, $c);
+if ($d = -1 | $prev = $c) return;
+// only walking up to the trap's wall sets it off, not stepping away from it
+if ($prev ! ~me2_trap_step($c, modulo(add($d, 2), 4))) return;
+queue(me2_trap_dodge, 0, $d);
+
+[proc,me2_trap_step](coord $c, int $d)(coord)
+switch_int ($d) {
+    case 0 : return(movecoord($c, -1, 0, 0));
+    case 1 : return(movecoord($c, 0, 0, 1));
+    case 2 : return(movecoord($c, 1, 0, 0));
+}
+return(movecoord($c, 0, 0, -1));
+
+[queue,me2_trap_dodge](int $d)
+def_coord $from = coord;
+def_coord $to = ~me2_trap_step($from, $d);
+def_coord $back = ~me2_trap_step($from, modulo(add($d, 2), 4));
+p_stopaction;
+~me2_trap_saw($from);
+if (stat_random(agility, 64, 353) = true) {
+    anim(human_spot_jump, 0);
+    p_exactmove($from, $to, 10, 40, ~rd_exactdir(calc(coordx($to) - coordx($from)), calc(coordz($to) - coordz($from))));
+    stat_advance(agility, 50);
+    ~me2_trap_setprev($to);
+    p_delay(1);
+    anim(null, 0);
+    return;
+}
+anim(human_sidestep_fall, 0);
+mes("The sawblade catches you!"); // ours
+p_delay(1);
+p_telejump($back);
+~me2_trap_setprev($back);
+damage(uid, 1, 5);
+
+// the trap's sawblade swings out (the Rogues' Den wall saw's animation)
+[proc,me2_trap_saw](coord $c)
+sound_synth(saw_spin, 1, 0);
+def_int $dx = -1;
+while ($dx <= 1) {
+    def_int $dz = -1;
+    while ($dz <= 1) {
+        if (loc_find(movecoord($c, $dx, 0, $dz), mourning_temple_blade_wall) = true) {
+            loc_anim(rogue_wall_saw);
+            return;
+        }
+        $dz = add($dz, 1);
+    }
+    $dx = add($dx, 1);
+}
+
+// where you stood last tick, as a square of the temple's map square (29_72): kept in the spare
+// bits 8-21 of %me2_picks (bits 0-5 are Thorgel's picks), so it needs no varp of its own
+[proc,me2_trap_setprev](coord $c)
+def_int $v = calc(coordy($c) * 4096 + (coordx($c) - 1856) * 64 + (coordz($c) - 4608));
+%me2_picks = setbit_range_toint(%me2_picks, $v, 8, 21);
+
+[proc,me2_trap_getprev]()(coord)
+def_int $v = getbit_range(%me2_picks, 8, 21);
+return(movecoord(0_29_72_0_0, modulo(divide($v, 64), 64), divide($v, 4096), modulo($v, 64)));
