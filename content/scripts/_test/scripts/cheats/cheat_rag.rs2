@@ -1,0 +1,46 @@
+// EASCape: test commands for Rag and Bone Man (quests/quest_rag).
+
+// ::~ragpack - what the quest asks you to bring: 8 pots, vinegar money, logs and a tinderbox
+[debugproc,ragpack]
+if (p_finduid(uid) = false) return;
+def_int $banked = 0;
+$banked = calc($banked + ~questpack_give(pot_empty, 8));
+$banked = calc($banked + ~questpack_give(coins, 100));
+$banked = calc($banked + ~questpack_give(logs, 8));
+$banked = calc($banked + ~questpack_give(tinderbox, 1));
+~questpack_done("Rag and Bone Man", $banked);
+mes("::~ragtele 1 Odd Old Man, 2 Fortunato. ::~ragstage 0-2, ::~ragbones gives the cleaned bones.");
+
+// ::~ragstage <n> - 0 not started (clears the bones handed in), 1 started, 2 complete (the wish list
+// open); 3 also clears the wish list
+[debugproc,ragstage](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 0 | $n = 3) {
+    %rag_bones_main = 0;
+    %rag_bones_wish = 0;
+    %rag_bone_2 = 0;
+}
+if ($n < 3) %rag_quest = $n;
+~send_quest_progress(questlist:rag, %rag_quest, ^rag_complete);
+mes("Rag and Bone Man stage: <tostring(%rag_quest)>");
+
+// ::~ragbones <list> - 1 the first list's eight bones cleaned, 2 the wish list's 27
+[debugproc,ragbones](int $list)
+if (p_finduid(uid) = false) return;
+def_int $from = 0;
+def_int $to = ^rag_main_bones;
+if ($list = 2) {
+    $from = ^rag_main_bones;
+    $to = ^rag_all_bones;
+}
+def_int $i = $from;
+while ($i < $to) {
+    if (inv_freespace(inv) > 0) inv_add(inv, ~rag_polished($i), 1);
+    else inv_add(bank, ~rag_polished($i), 1);
+    $i = add($i, 1);
+}
+
+[debugproc,ragtele](int $n)
+if (p_finduid(uid) = false) return;
+if ($n = 2) p_telejump(0_48_50_14_50);
+else p_telejump(0_52_54_33_47);

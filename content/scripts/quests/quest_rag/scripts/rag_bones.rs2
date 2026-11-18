@@ -1,0 +1,179 @@
+// EASCape: Rag and Bone Man (quest_rag): the bones - where they drop, the vinegar, and the Odd Old
+// Man's pot-boiler. The RuneScape and OSRS wikis: a bone from the first list always drops while you
+// need it, one from the wish list a quarter of the time (Mod Ash); you put a bone in a pot of
+// vinegar, logs on the pot-boiler, the pot on it, light the logs, and 12 seconds later the bone's
+// clean.
+
+// ---------------------------------------------------------------- what's been handed in
+[proc,rag_handed](int $i)(boolean)
+if ($i < ^rag_main_bones) {
+    if (testbit(%rag_bones_main, $i) = ^true) return(true);
+    return(false);
+}
+if (testbit(%rag_bones_wish, calc($i - ^rag_main_bones)) = ^true) return(true);
+return(false);
+
+[proc,rag_set_handed](int $i)
+if ($i < ^rag_main_bones) %rag_bones_main = setbit(%rag_bones_main, $i);
+else %rag_bones_wish = setbit(%rag_bones_wish, calc($i - ^rag_main_bones));
+
+[proc,rag_wish_done]()(boolean)
+if (testbit(%rag_bones_main, 8) = ^true) return(true);
+return(false);
+
+// you're after this one now
+[proc,rag_wanted](int $i)(boolean)
+if (~rag_handed($i) = true) return(false);
+if ($i < ^rag_main_bones) {
+    if (%rag_quest = ^rag_started) return(true);
+    return(false);
+}
+if (%rag_quest >= ^rag_complete & ~rag_wish_done = false) return(true);
+return(false);
+
+// you have it already, as it was, in vinegar or cleaned, on you or in the bank
+[proc,rag_has](int $i)(boolean)
+def_int $n = calc(inv_total(inv, ~rag_raw($i)) + inv_total(inv, ~rag_pot($i)) + inv_total(inv, ~rag_polished($i)));
+$n = calc($n + inv_total(bank, ~rag_raw($i)) + inv_total(bank, ~rag_pot($i)) + inv_total(bank, ~rag_polished($i)));
+if ($n > 0) return(true);
+return(false);
+
+// ---------------------------------------------------------------- the drops (npc_death.rs2)
+[proc,rag_bone_drop]
+if (%rag_quest = ^rag_not_started) return;
+def_int $i = ~rag_bone_of(nc_name(npc_type));
+if ($i = -1) return;
+if (~rag_wanted($i) = false | ~rag_has($i) = true) return;
+if ($i >= ^rag_main_bones & random(4) ! 0) return;
+obj_add(npc_coord, ~rag_raw($i), 1, ^lootdrop_duration);
+
+// ---------------------------------------------------------------- vinegar
+[opheldu,rag_vinegar]
+if (last_useitem ! pot_empty) {
+    ~displaymessage(^dm_default);
+    return;
+}
+@rag_fill_pot;
+
+[label,rag_fill_pot]
+inv_del(inv, rag_vinegar, 1);
+inv_del(inv, pot_empty, 1);
+inv_add(inv, jug_empty, 1);
+inv_add(inv, rag_pot_vinegar, 1);
+mes("You pour the vinegar into the pot."); // ours
+
+[opheld4,rag_vinegar]
+inv_del(inv, rag_vinegar, 1);
+inv_add(inv, jug_empty, 1);
+mes("You empty the jug."); // ours
+
+[opheld4,rag_pot_vinegar]
+inv_del(inv, rag_pot_vinegar, 1);
+inv_add(inv, pot_empty, 1);
+mes("You empty the pot."); // ours
+
+// a bone into a pot of vinegar
+[opheldu,rag_pot_vinegar]
+def_obj $bone = last_useitem;
+def_int $i = ~rag_index_raw($bone);
+if ($i = -1) {
+    ~displaymessage(^dm_default);
+    return;
+}
+~rag_into_pot($i);
+
+[proc,rag_into_pot](int $i)
+inv_del(inv, ~rag_raw($i), 1);
+inv_del(inv, rag_pot_vinegar, 1);
+inv_add(inv, ~rag_pot($i), 1);
+mes("You put the bone into the pot of vinegar."); // ours
+
+// emptying a bone in vinegar gives back the bone and the pot (Void: it empties to an empty pot)
+[label,rag_empty_bone_pot]
+def_obj $pot = last_item;
+def_int $i = ~rag_index_pot($pot);
+if ($i = -1) return;
+inv_del(inv, $pot, 1);
+inv_add(inv, pot_empty, 1);
+inv_add(inv, ~rag_raw($i), 1);
+mes("You empty the pot, keeping the bone."); // ours
+
+// ---------------------------------------------------------------- the pot-boiler (rag_boiler: 0 no logs,
+// 1 logs, 2 a pot on them, 3 alight, 4 boiled; rag_potboiler: which bone, +1)
+[oplocu,rag_multi_potboiler]
+def_obj $item = last_useitem;
+def_int $slot = last_useslot;
+switch_int (%rag_boiler) {
+    case 0 :
+        if (~rag_is_logs($item) = false) {
+            mes("I should put some logs on the fire first."); // ours
+            return;
+        }
+        inv_delslot(inv, $slot);
+        anim(human_pickupfloor, 0);
+        %rag_boiler = 1;
+        mes("You put the logs in the pot-boiler."); // ours
+    case 1 :
+        def_int $i = ~rag_index_pot($item);
+        if ($i = -1) {
+            mes("I need a bone in a pot of vinegar to put on it."); // ours
+            return;
+        }
+        inv_delslot(inv, $slot);
+        anim(human_pickupfloor, 0);
+        %rag_potboiler = add($i, 1);
+        %rag_boiler = 2;
+        mes("You put the pot on the pot-boiler."); // ours
+    case 2 :
+        if ($item ! tinderbox) {
+            mes("I need to light the logs."); // ours
+            return;
+        }
+        anim(human_createfire, 0);
+        sound_synth(fire_lit, 1, 0);
+        %rag_boiler = 3;
+        mes("You light the logs. The vinegar starts to boil."); // ours
+        queue(rag_boiled, ^rag_boil_ticks, 0);
+    case default : mes("Nothing interesting happens.");
+}
+
+[queue,rag_boiled](int $unused)
+if (%rag_boiler ! 3) return;
+%rag_boiler = 4;
+mes("The vinegar has boiled away."); // ours
+
+[oploc1,rag_multi_potboiler]
+def_int $i = calc(%rag_potboiler - 1);
+if (%rag_boiler = 2) {
+    // Remove-Pot
+    if (inv_freespace(inv) = 0) {
+        mes("You don't have enough room in your backpack."); // ours
+        return;
+    }
+    if ($i >= 0) inv_add(inv, ~rag_pot($i), 1);
+    %rag_potboiler = 0;
+    %rag_boiler = 1;
+    return;
+}
+if (%rag_boiler = 4) {
+    // Remove-Bone
+    if (inv_freespace(inv) < 2) {
+        mes("You need two free spaces in your backpack."); // ours
+        return;
+    }
+    if ($i >= 0) inv_add(inv, ~rag_polished($i), 1);
+    inv_add(inv, pot_empty, 1);
+    %rag_potboiler = 0;
+    %rag_boiler = 0;
+    mes("You take the clean bone out of the pot."); // ours
+}
+
+[proc,rag_is_logs](obj $item)(boolean)
+switch_obj ($item) {
+    case logs, oak_logs, willow_logs, maple_logs, yew_logs, magic_logs, achey_tree_logs : return(true);
+}
+return(false);
+
+// logged out while it boiled: it's done
+[proc,rag_login]
+if (%rag_boiler = 3) %rag_boiler = 4;
