@@ -43,24 +43,6 @@ if (.finduid(%duel2accept) = true) {
         return;
     }
 }
-// EASCape: the loser logged out before this ran (died and disconnected): the winner still wins and
-// leaves the arena (before, they were left in it with the duel never ended)
-if (%duelstatus = ^duelstatus_victory | %duelstatus = ^duelstatus_opponent_resigned) {
-    if (%duelstatus = ^duelstatus_opponent_resigned) {
-        if_settext(duel_win:com_91, "You are victorious! Your opponent resigned!");
-    } else {
-        if_settext(duel_win:com_91, "You are victorious!");
-    }
-    mes("Well done! You have won the duel!"); // ours
-    midi_jingle("duel win2");
-    ~duel_reset_all;
-    if_settext(duel_win:displayname, "");
-    if_settext(duel_win:combat_level, "");
-    ~moveallinv(dueloffer, inv);
-    inv_transmit(duelwinnings, duel_win:spoils);
-    if_openmain(duel_win);
-    return;
-}
 if (%duelstatus = ^duelstatus_lost) {
     ~duel_reset_all;
 }
@@ -109,15 +91,10 @@ clearqueue(duel_arena_disconnect);
 clearqueue(duel_arena_prepare_start);
 clearqueue(duel_finish);
 
-// EASCape: closing an interface runs without protected access, so the spoils couldn't be moved and
-// were lost (script error on every claim): hand them over in a queue, which has it
 [if_close,duel_win]
-inv_stoptransmit(duel_win:spoils);
-queue(duel_claim, 0, 0);
-
-[queue,duel_claim]
 if (~moveallinv_itemspace(duelwinnings, inv) = false) {
     inv_dropall(duelwinnings, coord, ^lootdrop_duration);
     return;
 }
 ~moveallinv(duelwinnings, inv);
+inv_stoptransmit(duel_win:spoils);

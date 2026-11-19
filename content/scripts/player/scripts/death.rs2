@@ -44,12 +44,6 @@ if (.finduid(%duel2accept) = true) {
         return;
     }
 }
-// EASCape: dying in a duel arena with the opponent gone (logged out) is never a real death: no winner
-if (~in_duel_arena(coord) = true) {
-    ~moveallinv(dueloffer, inv);
-    ~duel_reset_all;
-    return;
-}
 
 def_obj $prev_wep = inv_getobj(worn, ^wearpos_rhand);
 if (findhero = true) {
