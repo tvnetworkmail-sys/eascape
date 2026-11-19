@@ -12654,8 +12654,10 @@ export class Client extends GameShell {
                 this.keyHeld[4] = 0;
                 return;
             } else {
-                if (!MobileKeyboard.isDisplayed() && this.insideMobileInput()) {
-                    // show keyboard when tapping in an input area
+                if (!MobileKeyboard.isDisplayed() && (this.insideMobileInput() || this.insideLoginExisting())) {
+                    // show keyboard when tapping in an input area (EASCape: and on "Existing User", so
+                    // it is up for your username as the login box opens; it has to be in this tap,
+                    // phones only open the keyboard from one)
                     MobileKeyboard.show(x, y, e.clientX, e.clientY);
                 } else if (MobileKeyboard.isDisplayed() && !MobileKeyboard.isWithinCanvasKeyboard(x, y)) {
                     // hide keyboard when tapping outside of an input area
@@ -12860,6 +12862,13 @@ export class Client extends GameShell {
         const x2: number = x1 + 348;
         const y2: number = y1 + 37;
         return this.mouseX >= x1 && this.mouseX <= x2 && this.mouseY >= y1 && this.mouseY <= y2;
+    }
+
+    // EASCape: the title screen's "Existing User" button (titleScreenLoop)
+    private insideLoginExisting() {
+        const x: number = ((this.sWid / 2) | 0) + 80;
+        const y: number = ((this.sHei / 2) | 0) + 40;
+        return !this.ingame && this.loginscreen === 0 && this.mouseX >= x - 75 && this.mouseX <= x + 75 && this.mouseY >= y - 20 && this.mouseY <= y + 20;
     }
 
     private insideLoginUser() {
