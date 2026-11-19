@@ -2,7 +2,7 @@
 
 // ::wantedpack - what the quest needs (the OSRS wiki): 10,000 coins (or a law rune, an enchanted
 // gem and molten glass), 20 pure essence and a light source (a lit candle lantern). It also marks
-// Recruitment Drive, The Lost Tribe, Priest in Peril and Enter the Abyss done (no rewards); the 32
+// Black Knights' Fortress and Druidic Ritual (Recruitment Drive's own), Recruitment Drive, The Lost Tribe, Priest in Peril and Enter the Abyss done (no rewards); the 32
 // quest points still have to come from quests (::questdone).
 [debugproc,wantedpack]
 if (p_finduid(uid) = false) return;
@@ -13,6 +13,8 @@ $banked = calc($banked + ~questpack_give(slayer_gem, 1));
 $banked = calc($banked + ~questpack_give(molten_glass, 1));
 $banked = calc($banked + ~questpack_give(blankrune_high, 20));
 $banked = calc($banked + ~questpack_give(candle_lantern_lit, 1));
+if (%spy < 4) %spy = 4;
+if (%druidquest < ^druid_complete) %druidquest = ^druid_complete;
 if (%rd_main < ^rcd_complete) %rd_main = ^rcd_complete;
 if (%lt_stage < ^lt_complete) %lt_stage = ^lt_complete;
 if (%priestperil < ^priestperil_complete) %priestperil = ^priestperil_complete;
