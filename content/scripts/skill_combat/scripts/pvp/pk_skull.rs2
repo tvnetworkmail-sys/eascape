@@ -4,9 +4,10 @@
 if (~in_fightpit_arena(coord) = true) {
     return(false);
 }
-// if (~in_duel_arena(coord) = true) {
-//     return(false);
-// }
+// EASCape: no skull for a duel (the wiki: skulls come from attacking players in the Wilderness)
+if (~in_duel_arena(coord) = true) {
+    return(false);
+}
 if (.%pk_prey1 = uid | .%pk_prey2 = uid | %pk_predator1 = .uid | %pk_predator2 = .uid | %pk_predator3 = .uid) {
     return(false);
 }
