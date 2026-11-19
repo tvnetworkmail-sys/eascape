@@ -113,11 +113,11 @@ module.exports = function worldMap(ctx) {
       .ll-map { position: fixed; z-index: 2147483647; background: #000; border: 2px solid #3e3529;
         box-shadow: inset 0 0 0 1px #6b5d48; display: flex; flex-direction: column; user-select: none;
         font-family: 'LostLiteRS', Arial, sans-serif; color: #ff981f; }
-      .ll-map-bar { display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: #3e3529;
+      .ll-map-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px; background: #3e3529;
         border-bottom: 1px solid #1d1913; font-size: 16px; }
       .ll-map-bar .title { font-family: 'LostLiteRSBold', Arial, sans-serif; margin-right: auto; }
       .ll-map-bar button { font: inherit; font-size: 15px; color: #ff981f; background: #5a4d3b; border: 1px solid #1d1913;
-        padding: 0 7px; cursor: pointer; line-height: 18px; }
+        padding: 0 8px; cursor: pointer; line-height: 20px; }
       .ll-map-bar button.on { color: #fff; background: #7b6a4f; }
       .ll-map-bar button:hover { color: #fff; }
       .ll-map canvas { flex: 1; width: 100%; min-height: 0; cursor: grab; display: block; }
@@ -125,23 +125,23 @@ module.exports = function worldMap(ctx) {
       .ll-map-info { position: absolute; left: 8px; bottom: 6px; font-family: 'LostLiteRSSmall', Arial, sans-serif;
         font-size: 16px; color: #ff0; text-shadow: 1px 1px 0 #000; pointer-events: none; }
       .ll-map-wrap { position: relative; flex: 1; min-height: 0; }
-      .ll-map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .ll-map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; } /* the game page puts every canvas at z-index -1, under its wrap, where the mouse never reached it */
       .ll-map-tip { position: absolute; pointer-events: none; font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 16px;
         color: #fff; background: #3e3529; border: 1px solid #1d1913; padding: 0 5px; white-space: nowrap; display: none; z-index: 2; }
-      .ll-map-key { position: absolute; top: 4px; right: 4px; bottom: 4px; width: 170px; display: flex; flex-direction: column;
+      .ll-map-key { position: absolute; top: 8px; right: 8px; bottom: 8px; width: 210px; display: flex; flex-direction: column;
         background: #3e3529; border: 2px solid #1d1913; box-shadow: 0 0 0 1px #5a4d3b inset; }
       .ll-map-key.hidden { display: none; }
-      .ll-map-key .head { font-family: 'LostLiteRSBold', Arial, sans-serif; font-size: 15px; padding: 3px 6px 1px; display: flex; align-items: center; }
+      .ll-map-key .head { font-family: 'LostLiteRSBold', Arial, sans-serif; font-size: 16px; padding: 4px 8px 2px; display: flex; align-items: center; }
       .ll-map-key .head span { margin-right: auto; }
-      .ll-map-key .head button { font: inherit; font-size: 13px; color: #ff981f; background: #5a4d3b; border: 1px solid #1d1913; padding: 0 5px; cursor: pointer; }
+      .ll-map-key .head button { font: inherit; font-size: 13px; color: #ff981f; background: #5a4d3b; border: 1px solid #1d1913; padding: 0 6px; cursor: pointer; }
       .ll-map-key .head button:hover { color: #fff; }
-      .ll-map-key .hint { font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 13px; color: #c8b48c; padding: 0 6px 3px; }
-      .ll-map-key ul { list-style: none; margin: 0; padding: 0 3px 3px; overflow-y: auto; flex: 1; }
-      .ll-map-key li { display: flex; align-items: center; gap: 5px; padding: 0 3px; cursor: pointer; font-size: 14px; line-height: 18px; }
+      .ll-map-key .hint { font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 14px; color: #c8b48c; padding: 0 8px 4px; }
+      .ll-map-key ul { list-style: none; margin: 0; padding: 0 4px 4px; overflow-y: auto; flex: 1; }
+      .ll-map-key li { display: flex; align-items: center; gap: 6px; padding: 1px 4px; cursor: pointer; font-size: 15px; line-height: 19px; }
       .ll-map-key li:hover { color: #fff; background: #4a3f30; }
       .ll-map-key li.on { color: #fff; background: #7b6a4f; }
       .ll-map-key li .ic { width: 15px; height: 15px; flex: none; background-repeat: no-repeat; image-rendering: pixelated; }
-      .ll-map-key li .n { margin-left: auto; font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 13px; color: #c8b48c; }
+      .ll-map-key li .n { margin-left: auto; font-family: 'LostLiteRSSmall', Arial, sans-serif; font-size: 14px; color: #c8b48c; }
     `;
     (document.head || document.documentElement).appendChild(st);
   }
@@ -160,6 +160,14 @@ module.exports = function worldMap(ctx) {
       b.title = lv === 0 ? 'Ground floor' : `Floor ${lv} (upstairs)`;
       b.addEventListener('click', () => { level = lv; follow = false; refreshBar(); draw(); });
       bar.appendChild(b);
+    }
+    // zoom buttons, as the website's world map
+    for (const [label, title, step] of [['-', 'Zoom out', -1], ['+', 'Zoom in', 1]]) {
+      const z = document.createElement('button');
+      z.textContent = label;
+      z.title = title;
+      z.addEventListener('click', () => { setZoom(zoom + step); draw(); });
+      bar.appendChild(z);
     }
     keyBtn = document.createElement('button');
     keyBtn.textContent = 'Key';
