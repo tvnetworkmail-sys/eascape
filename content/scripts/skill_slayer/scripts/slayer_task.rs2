@@ -89,10 +89,11 @@ switch_int($target) {
         return (true);
     // EASCape: Skippy and the Mogres (Void slayer.tables.toml: mogres need the miniquest;
     // quests/miniquest_skippy)
-    // Your call (16 Nov 2026): no master gives mogres until the Mogres update has been tested;
-    // put the Skippy check back then
     case ^slayer_mogre :
-        return (false);
+        if (%skippy_state < ^skippy_sober) {
+            return (false);
+        }
+        return (true);
     // EASCape: Mourning's End Part II (2009scape: Tasks.java's DARK_BEASTS)
     case ^slayer_darkbeast :
         if (%mourning_quest_main < ^me2_complete) {
