@@ -1,0 +1,28 @@
+// EASCape: gnomish firelighters (Treasure Trails, 20 February 2006). One used on logs makes them
+// red, green or blue logs (Void Firelighters.kt; 2009scape FirelighterPlugin.java), which light
+// like logs and burn in their colour (firemaking.rs2).
+[opheldu,gnomish_firelighter_red] ~firelighter_use(gnomish_firelighter_red, last_useitem);
+[opheldu,gnomish_firelighter_green] ~firelighter_use(gnomish_firelighter_green, last_useitem);
+[opheldu,gnomish_firelighter_blue] ~firelighter_use(gnomish_firelighter_blue, last_useitem);
+
+[proc,firelighter_use](obj $lighter, obj $logs)
+if ($logs ! logs) {
+    ~displaymessage(^dm_default);
+    return;
+}
+def_namedobj $coloured = red_logs;
+if ($lighter = gnomish_firelighter_green) $coloured = green_logs;
+else if ($lighter = gnomish_firelighter_blue) $coloured = blue_logs;
+inv_del(inv, $lighter, 1);
+inv_del(inv, logs, 1);
+inv_add(inv, $coloured, 1);
+
+[opobj4,red_logs] @light_logs_ground;
+[opobj4,green_logs] @light_logs_ground;
+[opobj4,blue_logs] @light_logs_ground;
+[opobju,red_logs] if (last_useitem = tinderbox) { @light_logs_ground; } else { ~displaymessage(^dm_default); }
+[opobju,green_logs] if (last_useitem = tinderbox) { @light_logs_ground; } else { ~displaymessage(^dm_default); }
+[opobju,blue_logs] if (last_useitem = tinderbox) { @light_logs_ground; } else { ~displaymessage(^dm_default); }
+[opheldu,red_logs] if (last_useitem = tinderbox) { @light_logs_inv(last_slot); } else { ~displaymessage(^dm_default); }
+[opheldu,green_logs] if (last_useitem = tinderbox) { @light_logs_inv(last_slot); } else { ~displaymessage(^dm_default); }
+[opheldu,blue_logs] if (last_useitem = tinderbox) { @light_logs_inv(last_slot); } else { ~displaymessage(^dm_default); }
