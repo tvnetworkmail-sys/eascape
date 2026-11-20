@@ -358,7 +358,9 @@ p_delay(2);
 npc_say("Ohhhhhmmmmmm");
 p_delay(2);
 // guess but it seems pretty common
-if(stat_random(prayer, 80, 250) = true) {
+// EASCape: a failed stat_random is the failure; Lost City had it the other way round, so a higher
+// Prayer level failed more often (at 80 Prayer, about 85% of tries)
+if(stat_random(prayer, 80, 250) = false) {
     stat_sub(prayer, 5, 0);
     ~mesbox("You were not able to go into a deep enough trance. You lose some prayer...");
     ~chatnpc("<p,neutral>Would you like to try again?");
