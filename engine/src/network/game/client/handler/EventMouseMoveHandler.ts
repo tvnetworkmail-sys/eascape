@@ -5,6 +5,7 @@ import EventMouseMove from '#/network/game/client/model/EventMouseMove.js';
 export default class EventMouseMoveHandler extends ClientGameMessageHandler<EventMouseMove> {
     handle(message: EventMouseMove, player: Player): boolean {
         player.input.mouseMove(message);
+        player.botWatch.mouseMove(); // EASCape: in-game bot detection
         return true;
     }
 }

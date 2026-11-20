@@ -710,7 +710,19 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
         if (player.staffModLevel >= 2) {
             // "super-moderator" commands (similar to a jmod but we don't know their command capabilities on live)
 
-            if (cmd === 'getcoord') {
+            if (cmd === 'botcheck') {
+                // EASCape: ::botcheck [name] - what the in-game bot detection sees for a player right now (engine/entity/tracking/BotWatch.ts)
+                const name = args.join(' ');
+                const other = name ? World.getPlayerByUsername(name) : player;
+                if (!other) {
+                    player.messageGame(`${name} is not online on this world.`);
+                    return false;
+                }
+                player.messageGame(`Bot check for ${other.displayName}:`);
+                for (const line of other.botWatch.summary()) {
+                    player.messageGame(line);
+                }
+            } else if (cmd === 'getcoord') {
                 // authentic
 
                 // Displays current coordinate
