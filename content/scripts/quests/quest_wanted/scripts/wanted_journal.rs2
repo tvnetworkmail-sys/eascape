@@ -88,10 +88,18 @@ return("a");
 
 // ---------------------------------------------------------------- the reward
 [proc,wanted_complete]
+~wanted_reward;
+~wanted_scroll;
+
+// the rewards, given as Sir Amik takes the proof; the scroll comes at the end of his talk
+// (wanted_start.rs2), as anything said after it would close it
+[proc,wanted_reward]
 %wanted_main = ^wanted_complete;
 ~wanted_clear_missions;
 stat_advance(slayer, 50000);
 ~wanted_kills_change(^wanted_kill_bonus, true);
+
+[proc,wanted_scroll]
 ~send_quest_complete(questlist:wanted, wanted_solus_trophy, 250, ^wanted_questpoints, "You have completed the Wanted! Quest!", "5,000 Slayer XP|Access to the White Knight armoury");
 
 // ---------------------------------------------------------------- ranks
