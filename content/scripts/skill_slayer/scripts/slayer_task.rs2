@@ -93,6 +93,12 @@ switch_int($target) {
     // put the Skippy check back then
     case ^slayer_mogre :
         return (false);
+    // EASCape: skeletal wyverns need Elemental Workshop I (OSRS wiki: an elemental shield is needed for their icy breath)
+    case ^slayer_skeletalwyvern :
+        if (testbit(%elemental_workshop_bits, ^elemental_workshop_complete) = ^false) {
+            return (false);
+        }
+        return (true);
     // EASCape: Mourning's End Part II (2009scape: Tasks.java's DARK_BEASTS)
     case ^slayer_darkbeast :
         if (%mourning_quest_main < ^me2_complete) {
