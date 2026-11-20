@@ -32,6 +32,7 @@ import { PlayerLoading } from '#/engine/entity/PlayerLoading.js';
 import { PlayerQueueRequest, PlayerQueueType, QueueType, ScriptArgument } from '#/engine/entity/PlayerQueueRequest.js';
 import { PlayerStat, PlayerStatEnabled, PlayerStatFree, PlayerStatNameMap } from '#/engine/entity/PlayerStat.js';
 import InputTracking from '#/engine/entity/tracking/InputTracking.js';
+import BotWatch from '#/engine/entity/tracking/BotWatch.js';
 import { WealthEventParams } from '#/engine/entity/tracking/WealthEvent.js';
 import { changeNpcCollision, changePlayerOccCollision, findNaivePath, reachedEntity, reachedLoc, reachedObj } from '#/engine/GameMap.js';
 import { Inventory, InventoryListener } from '#/engine/Inventory.js';
@@ -319,6 +320,7 @@ export default class Player extends PathingEntity {
 
     session: string = 'headless';
     input: InputTracking;
+    botWatch: BotWatch; // EASCape: in-game bot detection
 
     slot: number = -1;
     uid: number = -1;
@@ -453,6 +455,7 @@ export default class Player extends PathingEntity {
         this.lastStats.fill(-1);
         this.lastLevels.fill(-1);
         this.input = new InputTracking(this);
+        this.botWatch = new BotWatch(this);
 
         for (let i = 0; i < this.vars.length; i++) {
             const varp = VarPlayerType.get(i);

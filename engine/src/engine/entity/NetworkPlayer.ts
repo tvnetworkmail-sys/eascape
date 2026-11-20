@@ -144,6 +144,7 @@ export class NetworkPlayer extends Player {
                 // todo: move out of model
                 if (success && message.category === ClientGameProtCategory.USER_EVENT) {
                     this.userLimit++;
+                    this.botWatch.action(message); // EASCape: in-game bot detection
                 } else if (message.category === ClientGameProtCategory.RESTRICTED_EVENT) {
                     this.restrictedLimit++;
                 } else {
