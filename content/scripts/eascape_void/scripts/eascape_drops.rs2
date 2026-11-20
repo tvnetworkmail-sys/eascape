@@ -12,8 +12,6 @@ def_int $kind = db_getfield($table, eascape_drop:kind, 0);
 if ($maxroll <= 0) {
     $maxroll = db_getfield($table, eascape_drop:roll, 0);
 }
-def_int $roll = random(max($maxroll, 1));
-def_int $count = 0;
 def_int $i = 0;
 def_int $n = db_getfieldcount($table, eascape_drop:entry);
 def_namedobj $obj;
@@ -22,9 +20,29 @@ def_int $max;
 def_int $chance;
 def_dbrow $sub;
 def_int $subroll;
+// EASCape: a worn ring of wealth takes the empty slots out of the gem and mega-rare tables, so
+// every roll gives an item (the OSRS wiki's ring of wealth; as ~randomjewel in shared_droptables.rs2)
+def_boolean $wealth = false;
+if (($table = void_drop_gem_drop_table | $table = void_drop_mega_rare_drop_table) & map_members = ^true & inv_total(worn, ring_of_wealth) > 0) {
+    $wealth = true;
+    $maxroll = 0;
+    while ($i < $n) {
+        $obj, $min, $max, $chance, $sub, $subroll = db_getfield($table, eascape_drop:entry, $i);
+        if ($obj ! null | $sub ! null) {
+            $maxroll = add($maxroll, $chance);
+        }
+        $i = add($i, 1);
+    }
+    $i = 0;
+}
+def_int $roll = random(max($maxroll, 1));
+def_int $count = 0;
 while ($i < $n) {
     $obj, $min, $max, $chance, $sub, $subroll = db_getfield($table, eascape_drop:entry, $i);
     $i = add($i, 1);
+    if ($wealth = true & $obj = null & $sub = null) {
+        $chance = 0; // an empty slot, taken out by the ring
+    }
     if ($chance > 0) {
         if ($sub ! null) {
             $count = add($count, $chance);

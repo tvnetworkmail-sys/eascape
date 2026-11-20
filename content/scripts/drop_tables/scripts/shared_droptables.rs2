@@ -124,6 +124,10 @@ if ($random < 3) {
 // Name unconfirmed
 [proc,megararetable]()(namedobj, int)
 def_int $random = random(128);
+// EASCape: a worn ring of wealth takes out the table's 113 empty slots (the OSRS wiki's ring of wealth)
+if (inv_total(worn, ring_of_wealth) > 0 & map_members = ^true) {
+    $random = random(15);
+}
 def_namedobj $drop = null;
 if ($random < 8) { $drop = rune_spear; }
 else if ($random < 12) { $drop = dragonshield_a; }
