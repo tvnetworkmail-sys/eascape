@@ -8,33 +8,41 @@ switch_npc(npc_type) {
 }
 
 [proc,generate_slayer_task](dbrow $master)
+// EASCape (ours): a weighted pick among the tasks you can be given. Lost City went down the list
+// rolling 1 in <weight> for each task in turn, as assignment worked before Jagex's 2014 rework
+// (https://oldschool.runescape.wiki/w/Update:Slayer_Assignment_Rework), which left the tasks at
+// the end of a long list almost never given. Now each task's chance is its weight out of the
+// total; the weights and amounts are unchanged.
+def_int $count = db_getfieldcount($master, slayer_task_table:task);
 def_int $i = 0;
-def_int $weight;
-def_int $slayer_target;
-def_int $slayer_count;
-def_int $min;
-def_int $max;
+def_int $total = 0;
 def_dbrow $task_data;
-// original system for task assignment:
-// "Slayer assignments used to run down a list in a pre-defined arbitrary order, so the chance of each task depended unpredictably on what else was in the list"
-// this seems to imply it does a seperate roll on each task in the list, meaning tasks towards the end of the list will be very rare
-while($i < db_getfieldcount($master, slayer_task_table:task)) {
+while ($i < $count) {
     $task_data = db_getfield($master, slayer_task_table:task, $i);
-    $weight = db_getfield($task_data, slayer_master_task:weight, 0);
-    $min = db_getfield($task_data, slayer_master_task:min_amount, 0);
-    $max = db_getfield($task_data, slayer_master_task:max_amount, 0);
-    if(random($weight) = 0) {
-        $slayer_target = db_getfield($task_data, slayer_master_task:task, 0);
-        if(~validate_slayer_target($slayer_target) = true) {
-            %slayer_target = $slayer_target;
-            %slayer_count = ~random_range($min, $max);
+    if (~validate_slayer_target(db_getfield($task_data, slayer_master_task:task, 0)) = true) {
+        $total = add($total, db_getfield($task_data, slayer_master_task:weight, 0));
+    }
+    $i = add($i, 1);
+}
+if ($total <= 0) {
+    return; // nothing on this master's list can be given
+}
+def_int $roll = random($total);
+def_int $target;
+$i = 0;
+while ($i < $count) {
+    $task_data = db_getfield($master, slayer_task_table:task, $i);
+    $target = db_getfield($task_data, slayer_master_task:task, 0);
+    if (~validate_slayer_target($target) = true) {
+        $roll = sub($roll, db_getfield($task_data, slayer_master_task:weight, 0));
+        if ($roll < 0) {
+            %slayer_target = $target;
+            %slayer_count = ~random_range(db_getfield($task_data, slayer_master_task:min_amount, 0), db_getfield($task_data, slayer_master_task:max_amount, 0));
             return;
         }
     }
     $i = add($i, 1);
 }
-// if no task was assigned
-~generate_slayer_task($master);
 
 [proc,validate_slayer_target](int $target)(boolean)
 if (stat_base(slayer) < enum(int, int, slayer_req, $target)) { // slayer req check
