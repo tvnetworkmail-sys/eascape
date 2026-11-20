@@ -2993,3 +2993,27 @@ if (inv_total(inv, spade) = 0) $banked = calc($banked + ~questpack_give(spade, 1
 p_telejump(0_49_47_32_33);
 if ($banked > 0) mes("Some of it went to your bank (no room in your pack).");
 mes("Saradomin wizard clue: dig here (the spade) and he appears.");
+
+// ::~slayerroll <master 1-5> - rolls 15 assignments from Turael, Mazchna, Vannaka, Chaeldar or
+// Duradel and lists them, then puts your own task back (slayer_task.rs2's weighted pick)
+[debugproc,slayerroll](int $master)
+if (p_finduid(uid) = false) {
+    return;
+}
+def_int $keep_target = %slayer_target;
+def_int $keep_count = %slayer_count;
+def_dbrow $table = turael_task_table;
+if ($master = 2) $table = mazchna_task_table;
+else if ($master = 3) $table = vannaka_task_table;
+else if ($master = 4) $table = chaeldar_task_table;
+else if ($master = 5) $table = duradel_task_table;
+def_int $i = 0;
+def_string $list = "";
+while ($i < 15) {
+    ~generate_slayer_task($table);
+    $list = append($list, "<~slayer_taskname> <tostring(%slayer_count)>, ");
+    $i = add($i, 1);
+}
+%slayer_target = $keep_target;
+%slayer_count = $keep_count;
+mes($list);
