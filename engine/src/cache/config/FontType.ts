@@ -179,6 +179,11 @@ export default class FontType {
 
             str = str.substring(splitIndex + 1);
 
+            // EASCape: the client keeps @str@ on to the end of the line it's drawn on, so a struck
+            // line that wraps should stay struck on the next line (journals only put @str@ at the
+            // start of each sentence, so wrapped lines were coming out half struck).
+            const struck = line.indexOf('@str@') !== -1;
+
             // apply saved color
             if (savedCol !== null && str.length > 0 && str.charAt(0) !== '|') {
                 const strIndex = str.indexOf('@str@');
@@ -190,6 +195,9 @@ export default class FontType {
                 } else {
                     str = savedCol + str;
                 }
+            }
+            if (struck && str.length > 0 && str.charAt(0) !== '|' && !str.startsWith('@str@')) {
+                str = '@str@' + str;
             }
         }
         return lines;
