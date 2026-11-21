@@ -177,8 +177,12 @@ assert.strictEqual(ll.tagColour(/@(~[0-9a-z]{2})@/.exec(m[m.length - 1])[1]), 0x
 const walkAt = m.indexOf('Walk here');
 const coinsTake = m.findIndex((t) => t.startsWith('Take @lre@Coins'));
 assert.ok(coinsTake < walkAt && coinsTake > 0, 'hidden coins below Walk here');
-assert.strictEqual(m.filter((t) => t.startsWith('Take @lre@Coins')).length, 1, 'duplicates collapsed');
-assert.ok(m.some((t) => t === 'Take @lre@Coins (300) x 2'), `quantity and count shown: ${m.join(' | ')}`);
+// EASCape: two stacks of coins (50 and 250) each show their own amount, so they aren't the same
+// entry and stay apart (they were both "(300)" and collapsed to "x 2")
+assert.ok(m.includes('Take @lre@Coins (50)') && m.includes('Take @lre@Coins (250)'), `each stack's own amount: ${m.join(' | ')}`);
+const same = menu([['Cancel', 1106], ['Walk here', 718], ['Take @lre@Bones', 617, 526, 50, 50], ['Take @lre@Bones', 617, 526, 50, 50]]);
+assert.strictEqual(same.filter((t) => t.startsWith('Take @lre@Bones')).length, 1, 'duplicates collapsed');
+assert.ok(same.includes('Take @lre@Bones x 2'), `count shown: ${same.join(' | ')}`);
 console.log('ground items: ok');
 
 // ---- switching off stops drawing and menu changes
