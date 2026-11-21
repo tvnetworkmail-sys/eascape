@@ -119,6 +119,7 @@ while ($value > 0) {
     $value = enum(int, int, fightcave_wave_npcs, add(multiply($wave, 8), $n));
 }
 %fightcave_left = $n;
+%fightcave_empty_checks = 0;
 
 [proc,fightcave_monster](int $value)(npc)
 switch_int ($value) {
@@ -197,12 +198,12 @@ if (npc_type = tzhaar_fightcave_swarm_3a | npc_type = tzhaar_fightcave_swarm_5a 
     npc_setmode(opplayer2);
 }
 
-// a kill for the owner: the wave is over when none of their monsters are left in the cave.
-// EASCape: this used to count down from the wave's size ($more being a Tz-Kek's two), but a
-// monster whose death ran twice counted twice, and the next wave came on top of the last one
-// (wave 36 while wave 35's Ket-Zek was still up, 21 Nov 2026). Now it looks at what's actually
-// there, like the 5-tick check. A monster still in its death animation is there until it's
-// removed, and its own kill is queued after that (a Tz-Kek's two come out first).
+// a kill counted for the owner; $more is how many new monsters the kill made (a Tz-Kek's two).
+// EASCape: waves were coming on top of the last (wave 36 on wave 35's Ket-Zek, 21 Nov 2026; wave
+// 5 on wave 4's small Tz-Kek, the same day). Looking for your monsters can't see one that's busy
+// (in its death animation, say), so it can't be what ends a wave: the count does. Each death
+// counts once (fightcave_death), and when the count runs out the wave still only ends if no
+// monster of yours can be seen.
 [queue,fightcave_killed](int $more)
 if (%fightcave_wave = 0 | %fightcave_left <= 0) {
     return; // the wave already ended (the 5-tick check got there first)
@@ -210,13 +211,17 @@ if (%fightcave_wave = 0 | %fightcave_left <= 0) {
 if (%fightcave_wave >= ^fightcave_wave_jad) {
     return; // Jad's wave ends with fightcave_victory
 }
+%fightcave_left = add(sub(%fightcave_left, 1), $more);
+if (%fightcave_left > 0) {
+    return;
+}
 def_player_uid $me = uid;
 def_int $alive = ~fightcave_alive;
 if (p_finduid($me) = false) {
     return;
 }
 if ($alive > 0) {
-    %fightcave_left = $alive;
+    %fightcave_left = $alive; // miscounted: these are still to kill
     return;
 }
 %fightcave_left = 0;
@@ -269,7 +274,15 @@ def_int $alive = ~fightcave_alive;
 if (p_finduid($me) = false) {
     return;
 }
-if ($alive = 0) {
+// EASCape: only after three checks in a row (15 ticks) find none, since a monster that's busy
+// (dying, say) can't be seen for a few ticks
+if ($alive > 0) {
+    %fightcave_empty_checks = 0;
+    return;
+}
+%fightcave_empty_checks = add(%fightcave_empty_checks, 1);
+if (%fightcave_empty_checks >= 3) {
+    %fightcave_empty_checks = 0;
     %fightcave_left = 0;
     %fightcave_wave = add(%fightcave_wave, 1);
     queue(fightcave_spawn_wave, ^fightcave_wave_delay, %fightcave_run);
