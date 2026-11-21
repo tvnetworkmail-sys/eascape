@@ -395,16 +395,38 @@
         const levels = c[f.groundObj];
         const list = levels && levels[level] && levels[level][pb[i]] && levels[level][pb[i]][pc[i]];
         const by = new Map();
-        if (list) for (let o = list[f.listHead](); o; o = list[f.listNext]()) by.set(o[f.objId], (by.get(o[f.objId]) || 0) + o[f.objCount]);
-        tileCache.set(key, by);
+        const stacks = new Map();
+        if (list) {
+          for (let o = list[f.listHead](); o; o = list[f.listNext]()) {
+            by.set(o[f.objId], (by.get(o[f.objId]) || 0) + o[f.objCount]);
+            if (!stacks.has(o[f.objId])) stacks.set(o[f.objId], []);
+            stacks.get(o[f.objId]).push(o[f.objCount]);
+          }
+        }
+        tileCache.set(key, { by, stacks });
       }
       const id = pa[i];
-      const quantity = tileCache.get(key).get(id) || 1;
+      const quantity = tileCache.get(key).by.get(id) || 1;
       const info = rt.itemInfo(id);
       const item = colourOf({
         id, quantity, name: info.name, stackable: info.stackable,
       });
-      out.push({ i, action: a, item });
+      out.push({ i, action: a, item, stack: quantity, tile: key });
+    }
+    // EASCape: two stacks of one item on a tile (your own arrows next to ones already shown to
+    // everyone, say) each show their own amount, not both the total. The game adds a tile's items
+    // to the menu from the end of its list, so the entries from the bottom up match its list from
+    // the start.
+    const groups = new Map();
+    for (const e of out) {
+      const g = `${e.action}|${e.item.id}|${e.tile}`;
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(e);
+    }
+    for (const entries of groups.values()) {
+      const counts = tileCache.get(entries[0].tile).stacks.get(entries[0].item.id) || [];
+      if (counts.length < 2) continue;
+      entries.sort((x, y) => y.i - x.i).forEach((e, j) => { if (counts[j] !== undefined) e.stack = counts[j]; });
     }
     return out;
   }
@@ -444,7 +466,7 @@
     if (!n) return;
     const [opt, act, pa, pb, pc] = arrays;
     const recolourMode = cfg.itemHighlightMode === 'menu' || cfg.itemHighlightMode === 'both';
-    for (const { i, item } of groundEntries(c, arrays, rt)) {
+    for (const { i, item, stack } of groundEntries(c, arrays, rt)) {
       let text = String(opt[i]);
       const at = text.indexOf('@lre@');
       const canRecolour = item.highlighted || (item.hidden && cfg.recolorMenuHiddenItems);
@@ -454,7 +476,7 @@
         if (mode === 'both' || mode === 'name') text = text.slice(0, at) + tag + text.slice(at + 5);
         if (mode === 'both' || mode === 'option') text = tag + text;
       }
-      if (cfg.showMenuItemQuantities && item.stackable && item.quantity > 1) text += ` (${item.quantity})`;
+      if (cfg.showMenuItemQuantities && item.stackable && stack > 1) text += ` (${stack})`;
       opt[i] = text;
     }
     if (cfg.collapseEntries) {
