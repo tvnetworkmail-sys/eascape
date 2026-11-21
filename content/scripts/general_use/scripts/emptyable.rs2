@@ -19,6 +19,10 @@ inv_add(inv, bucket_empty, 1);
 [opheld4,pot_flour] ~empty_container(pot_empty);
 [opheld4,cup_water] ~empty_container(cup_empty);
 [opheld4,cup_hot_water] ~empty_container(cup_empty);
+[opheld4,cup_guthix_rest_1] ~empty_cup;
+[opheld4,cup_guthix_rest_2] ~empty_cup;
+[opheld4,cup_guthix_rest_3] ~empty_cup;
+[opheld4,cup_guthix_rest_4] ~empty_cup;
 [opheld4,goldbowl_water] ~empty_container(goldbowl_empty);
 [opheld4,goldbowl_pure] ~empty_container(goldbowl_empty);
 [opheld4,goldbowlbless_water] ~empty_container(goldbowlbless_empty);
@@ -27,3 +31,7 @@ inv_add(inv, bucket_empty, 1);
 [proc,empty_container](namedobj $empty)
 inv_setslot(inv, last_slot, $empty, 1);
 mes("You empty the <lowercase(oc_name($empty))>.");
+
+[proc,empty_cup]
+inv_setslot(inv, last_slot, cup_empty, 1);
+mes("You empty the cup.");

@@ -4,6 +4,12 @@ if(oc_category(last_useitem) = potion) {
 }
 ~displaymessage(^dm_default);
 
+// EASCape: Guthix rest isn't in the potion category, so it needs its own triggers
+[opheldu,cup_guthix_rest_1] @decant_potion(last_item, last_useitem);
+[opheldu,cup_guthix_rest_2] @decant_potion(last_item, last_useitem);
+[opheldu,cup_guthix_rest_3] @decant_potion(last_item, last_useitem);
+[opheldu,cup_guthix_rest_4] @decant_potion(last_item, last_useitem);
+
 [label,decant_potion](obj $potion, obj $used_potion)
 def_enum $potion_enum = ~get_potion_type($potion, $used_potion);
 if ($potion_enum = null) {
@@ -24,6 +30,7 @@ if($total_doses > 4) {
 }
 def_namedobj $decanted_potion = enum(int, namedobj, $potion_enum, $total_doses);
 def_namedobj $remainder_potion = vial_empty;
+if ($potion_enum = potion_guthix_rest) $remainder_potion = cup_empty; // EASCape: tea is in cups
 if($remainder_doses > 0) {
     $remainder_potion = enum(int, namedobj, $potion_enum, $remainder_doses);
 }
