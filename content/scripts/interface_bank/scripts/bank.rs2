@@ -21,6 +21,8 @@ if (~bankpin_needed = true) {
     @bankpin_request(^bankpin_after_bank);
 }
 %bankcert = 0;
+~bank_unworn_boots(inv);
+~bank_unworn_boots(bank);
 ~reorganize_inv(bank);
 inv_transmit(inv, bank_side:inv);
 inv_transmit(bank, bank_main:bank);
@@ -102,6 +104,17 @@ def_int $deposit = sub($amount, $overflow);
 if ($deposit > 0) {
     session_log(^log_moderator, "Deposited <oc_debugname($obj)> x<tostring($deposit)> into bank");
     inv_moveitem_uncert($inv, bank, $obj, $deposit);
+    if ($obj = ikov_bootsoflightnessworn) ~bank_unworn_boots(bank);
+}
+
+// EASCape: boots of lightness have a second obj for while they're worn (it's what weighs -4.5 kg).
+// Taking them off swaps it back, but some ways out of the worn slot don't (dropped on death, say),
+// and the two never stacked in the bank. Any worn ones in the inventory or bank become normal ones.
+[proc,bank_unworn_boots](inv $inv)
+def_int $count = inv_total($inv, ikov_bootsoflightnessworn);
+if ($count > 0) {
+    inv_del($inv, ikov_bootsoflightnessworn, $count);
+    inv_add($inv, ikov_bootsoflightness, $count);
 }
 
 [proc,bank_check_nobreak](obj $obj)(boolean)
