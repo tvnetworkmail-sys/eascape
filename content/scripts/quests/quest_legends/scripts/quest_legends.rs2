@@ -2059,11 +2059,14 @@ if(last_useitem = thtotempole) {
         inv_del(inv, thtotempole, 1);
         def_coord $coord = map_findsquare(coord, 1, 7, ^map_findsquare_lineofwalk);
         // https://www.youtube.com/live/8fW1_vt07Z4?si=hyMZCBFKax08k9L2&t=7655, TODO: not sure about distance
-        if(npc_find(coord, gujuo, 8, 0) = false) {
+        // EASCape: the Gujuo still about from the talk by the pond walks over, rather than a second
+        // one coming out of the trees (Lost City only looked 8 squares away, and did nothing with
+        // one it found)
+        if(npc_find(coord, gujuo, 20, 0) = false) {
             npc_add($coord, gujuo, 500);
-            npc_walk(movecoord(coord, 1, 0, 0));
-            npc_setmode(opplayer2);
         }
+        npc_walk(movecoord(coord, 1, 0, 0));
+        npc_setmode(opplayer2);
     } else {
         loc_change(lg_totem_pole_good, 20);
         ~mesbox("You have already replaced the evil totem pole with your own. You feel a great sense of accomplishment.");
