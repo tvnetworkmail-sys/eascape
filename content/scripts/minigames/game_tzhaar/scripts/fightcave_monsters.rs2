@@ -240,6 +240,9 @@ strongqueue(combat_damage_player, 0, $damage);
 // ---- deaths
 
 [proc,fightcave_death](int $more)
+// EASCape: a death only counts once (%npc_int2), even if it runs twice
+if (%npc_int2 = 1) return;
+%npc_int2 = 1;
 def_player_uid $owner = %npc_aggressive_player;
 def_int $run = %npc_int;
 gosub(npc_death);
@@ -255,6 +258,8 @@ return(~in_fightcave(coord));
 
 // two small Tz-Kek come out
 [proc,fightcave_kek_death]
+if (%npc_int2 = 1) return; // EASCape: once, as above
+%npc_int2 = 1;
 def_coord $at = npc_coord;
 def_player_uid $owner = %npc_aggressive_player;
 def_int $run = %npc_int;
