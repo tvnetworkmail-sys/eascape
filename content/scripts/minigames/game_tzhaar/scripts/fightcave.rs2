@@ -197,15 +197,29 @@ if (npc_type = tzhaar_fightcave_swarm_3a | npc_type = tzhaar_fightcave_swarm_5a 
     npc_setmode(opplayer2);
 }
 
-// a kill counted for the owner; $more is how many new monsters the kill made (a Tz-Kek's two)
+// a kill for the owner: the wave is over when none of their monsters are left in the cave.
+// EASCape: this used to count down from the wave's size ($more being a Tz-Kek's two), but a
+// monster whose death ran twice counted twice, and the next wave came on top of the last one
+// (wave 36 while wave 35's Ket-Zek was still up, 21 Nov 2026). Now it looks at what's actually
+// there, like the 5-tick check. A monster still in its death animation is there until it's
+// removed, and its own kill is queued after that (a Tz-Kek's two come out first).
 [queue,fightcave_killed](int $more)
 if (%fightcave_wave = 0 | %fightcave_left <= 0) {
     return; // the wave already ended (the 5-tick check got there first)
 }
-%fightcave_left = add(sub(%fightcave_left, 1), $more);
-if (%fightcave_left > 0) {
+if (%fightcave_wave >= ^fightcave_wave_jad) {
+    return; // Jad's wave ends with fightcave_victory
+}
+def_player_uid $me = uid;
+def_int $alive = ~fightcave_alive;
+if (p_finduid($me) = false) {
     return;
 }
+if ($alive > 0) {
+    %fightcave_left = $alive;
+    return;
+}
+%fightcave_left = 0;
 %fightcave_wave = add(%fightcave_wave, 1);
 queue(fightcave_spawn_wave, ^fightcave_wave_delay, %fightcave_run);
 
@@ -241,26 +255,18 @@ if (%fightcave_left = 0) {
     return; // between waves
 }
 def_player_uid $me = uid;
-def_int $run = %fightcave_run;
-def_int $alive = 0;
-def_boolean $jad = false;
-npc_findallany(^fightcave_centre, 40, 0);
-while (npc_findnext = true) {
-    if (%npc_aggressive_player = $me & %npc_int = $run & npc_type ! tzhaar_fightcave_swarm_boss_cleric) {
-        if (npc_type = tzhaar_fightcave_swarm_boss) {
-            if (npc_stat(hitpoints) > 0) $jad = true;
-        } else {
-            $alive = add($alive, 1);
-        }
-    }
-}
-if (p_finduid($me) = false) {
-    return;
-}
 if (%fightcave_wave >= ^fightcave_wave_jad) {
+    def_boolean $jad = ~fightcave_jad_up;
+    if (p_finduid($me) = false) {
+        return;
+    }
     if ($jad = false) {
         queue(fightcave_victory, 0, 0);
     }
+    return;
+}
+def_int $alive = ~fightcave_alive;
+if (p_finduid($me) = false) {
     return;
 }
 if ($alive = 0) {
@@ -268,6 +274,33 @@ if ($alive = 0) {
     %fightcave_wave = add(%fightcave_wave, 1);
     queue(fightcave_spawn_wave, ^fightcave_wave_delay, %fightcave_run);
 }
+
+// how many of your monsters (this run, not Jad's healers) are in the cave (looking lets go of you:
+// p_finduid after)
+[proc,fightcave_alive]()(int)
+def_player_uid $me = uid;
+def_int $run = %fightcave_run;
+def_int $alive = 0;
+npc_findallany(^fightcave_centre, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = $me & %npc_int = $run & npc_type ! tzhaar_fightcave_swarm_boss_cleric & npc_type ! tzhaar_fightcave_swarm_boss) {
+        $alive = add($alive, 1);
+    }
+}
+return($alive);
+
+// your Jad (this run) is in the cave and not down
+[proc,fightcave_jad_up]()(boolean)
+def_player_uid $me = uid;
+def_int $run = %fightcave_run;
+def_boolean $jad = false;
+npc_findallany(^fightcave_centre, 40, 0);
+while (npc_findnext = true) {
+    if (%npc_aggressive_player = $me & %npc_int = $run & npc_type = tzhaar_fightcave_swarm_boss) {
+        if (npc_stat(hitpoints) > 0) $jad = true;
+    }
+}
+return($jad);
 
 // ---- dying in the cave: safe, like the duel arena
 
