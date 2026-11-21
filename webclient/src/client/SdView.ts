@@ -296,6 +296,13 @@ export default class SdView {
         PixMap.hole = { owner, x, y, width: w, height: h, copy, age: performance.now() };
     }
 
+    // EASCape: for a bot screenshot, the increased-resolution frame drawn back at game pixels under the game canvas
+    static drawUnder(ctx: CanvasRenderingContext2D): void {
+        if (SdView.shown && SdView.view) {
+            ctx.drawImage(SdView.view, SdView.offX + SdView.x, SdView.offY + SdView.y, SdView.w, SdView.h);
+        }
+    }
+
     static hide(): void {
         if (SdView.shown && SdView.view) {
             SdView.view.style.setProperty('visibility', 'hidden', 'important');

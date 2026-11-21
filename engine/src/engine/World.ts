@@ -1957,6 +1957,7 @@ class World {
                 player.muted_until = muted_until ? new Date(muted_until) : null;
                 player.members = members;
                 player.messageCount = messageCount ?? 0;
+                player.accountId = msg.account_id ?? 0; // EASCape: for bot screenshots (BotShots.ts)
 
                 if (this.logoutRequests.has(username)) {
                     // already logged in (on another world)

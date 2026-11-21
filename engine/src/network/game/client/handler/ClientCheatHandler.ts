@@ -25,6 +25,7 @@ import { isClientConnected } from '#/engine/entity/NetworkPlayer.js';
 import Npc from '#/engine/entity/Npc.js';
 import Player, { getExpByLevel } from '#/engine/entity/Player.js';
 import { PlayerStat, PlayerStatEnabled, PlayerStatMap } from '#/engine/entity/PlayerStat.js';
+import { requestBotShot } from '#/engine/entity/tracking/BotShots.js';
 import ScriptProvider from '#/engine/script/ScriptProvider.js';
 import ScriptRunner from '#/engine/script/ScriptRunner.js';
 import ServerTriggerType from '#/engine/script/ServerTriggerType.js';
@@ -722,6 +723,17 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
                 for (const line of other.botWatch.summary()) {
                     player.messageGame(line);
                 }
+            } else if (cmd === 'botshot') {
+                // EASCape: ::botshot [name] - ask a player's client for a screenshot of its game screen, for the
+                // website's bot detection page (engine/entity/tracking/BotShots.ts)
+                const name = args.join(' ');
+                const other = name ? World.getPlayerByUsername(name) : player;
+                if (!other) {
+                    player.messageGame(`${name} is not online on this world.`);
+                    return false;
+                }
+                requestBotShot(other, 'staff', true);
+                player.messageGame(`Asked ${other.displayName}'s client for a screenshot.`);
             } else if (cmd === 'getcoord') {
                 // authentic
 

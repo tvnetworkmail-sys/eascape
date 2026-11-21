@@ -20,6 +20,8 @@ import ObjType from '#/cache/config/ObjType.js';
 
 import World from '#/engine/World.js';
 
+import { requestBotShot } from '#/engine/entity/tracking/BotShots.js';
+
 import type Player from '#/engine/entity/Player.js';
 
 import ClientGameMessage from '#/network/game/client/ClientGameMessage.js';
@@ -245,6 +247,8 @@ export default class BotWatch {
         this.player.addSessionLog(LoggerEventType.MODERATOR, `Bot check: ${signal} (+${POINTS[signal]}, ${score} this session): suspected, ${text}`);
         // record their mouse and camera in full from now on, for staff to look at
         this.player.input.active = true;
+        // and ask their client for a picture of its screen (at most one every 10 minutes)
+        requestBotShot(this.player, signal);
     }
 
     // for the ::botcheck staff command

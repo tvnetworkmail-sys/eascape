@@ -12,6 +12,7 @@ import { CrcBuffer, CrcTable } from '#/cache/CrcTable.js';
 
 import OnDemand from '#/engine/OnDemand.js';
 import World from '#/engine/World.js';
+import { MAX_SHOT_BYTES, receiveBotShot } from '#/engine/entity/tracking/BotShots.js';
 import { lookup as hiscoreLookup, killTable, npcNames, npcRecords, BOSSES } from '#/engine/Hiscores.js';
 
 import NullClientSocket from '#/server/NullClientSocket.js';
@@ -271,6 +272,14 @@ fastify.get<{ Params: { crc: string } }>('/sounds:crc', async (req, reply) => {
     }
 
     reply.send(OnDemand.cache.read(0, 8));
+});
+
+// EASCape: a suspected bot's client sends its screenshot here when the game asks for one
+// (engine/entity/tracking/BotShots.ts); the token in the address is what the game gave it
+fastify.addContentTypeParser('image/jpeg', { parseAs: 'buffer', bodyLimit: MAX_SHOT_BYTES }, (_req, body, done) => done(null, body));
+fastify.post<{ Params: { token: string } }>('/botshot/:token', async (req, reply) => {
+    const ok = /^[0-9a-f]{32}$/.test(req.params.token) && Buffer.isBuffer(req.body) && receiveBotShot(req.params.token, req.body);
+    reply.status(ok ? 204 : 404).send();
 });
 
 fastify.register(FastifyStatic, {
