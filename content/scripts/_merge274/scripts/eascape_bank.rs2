@@ -13,5 +13,6 @@ def_int $deposit = sub($amount, $overflow);
 if ($deposit > 0) {
     session_log(^log_moderator, "Deposited <oc_debugname($obj)> x<tostring($deposit)> into bank");
     inv_moveitem_uncert($inv, bank, $obj, $deposit);
+    if ($obj = ikov_bootsoflightnessworn) ~bank_unworn_boots(bank);
 }
 return(true);
