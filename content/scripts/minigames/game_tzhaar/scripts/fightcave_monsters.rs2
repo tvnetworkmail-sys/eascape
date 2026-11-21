@@ -259,6 +259,12 @@ def_coord $at = npc_coord;
 def_player_uid $owner = %npc_aggressive_player;
 def_int $run = %npc_int;
 gosub(npc_death);
+// EASCape: the two come out before the kill is counted, so the wave can't end with them still to come
+// (they leave on their own if you've gone: fightcave_npc_timer)
+npc_add(~fightcave_kek_square($at, 2), tzhaar_fightcave_swarm_2spawn, 12000);
+~fightcave_npc_owner($owner, $run);
+npc_add(~fightcave_kek_square($at, -2), tzhaar_fightcave_swarm_2spawn, 12000);
+~fightcave_npc_owner($owner, $run);
 if (finduid($owner) = false) {
     return;
 }
@@ -266,10 +272,15 @@ if (~fightcave_owner_still($owner, $run) = false) {
     return;
 }
 queue(fightcave_killed, 0, 2);
-npc_add(map_findsquare(movecoord($at, 2, 0, 2), 0, 1, ^map_findsquare_lineofwalk), tzhaar_fightcave_swarm_2spawn, 12000);
-~fightcave_npc_owner($owner, $run);
-npc_add(map_findsquare(movecoord($at, -2, 0, -2), 0, 1, ^map_findsquare_lineofwalk), tzhaar_fightcave_swarm_2spawn, 12000);
-~fightcave_npc_owner($owner, $run);
+
+// EASCape: a square 2 either side of where the Tz-Kek died, in the cave and not rock or lava (small
+// ones used to come out inside the walls and stay stuck there); where it died if there's none
+[proc,fightcave_kek_square](coord $at, int $off)(coord)
+def_coord $c = movecoord($at, $off, 0, $off);
+if (~in_fightcave($c) = true & map_blocked($c) = false) return($c);
+$c = map_findsquare($c, 0, 2, ^map_findsquare_lineofwalk);
+if (~in_fightcave($c) = true & map_blocked($c) = false) return($c);
+return($at);
 
 [proc,fightcave_jad_death]
 def_player_uid $owner = %npc_aggressive_player;
