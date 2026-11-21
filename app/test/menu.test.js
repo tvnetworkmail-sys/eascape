@@ -179,5 +179,35 @@ c = menu([['Attack @yel@Paladin @gre@(level-62)', PAL], ['Pickpocket @yel@Paladi
 ll.menuBuilt(c);
 assert.strictEqual(top(c), 'Attack @yel@Paladin @gre@(level-62)');
 
+// EASCape: an item's choice is kept for the interface it was set in. Withdraw-All in the bank
+// (component 5382) and Store-All beside it (5064) don't replace each other; an older choice
+// saved for every place still applies where there's no newer one.
+{
+  const swapper = require('../src/plugins/menuentryswapper/game');
+  let state = { entitySwaps: JSON.stringify({ 'left|item|yew logs': 'Withdraw-All' }) };
+  let sent = null;
+  const plugin = swapper({
+    state: (k, d) => (k in state ? state[k] : d), setState: (k, v) => { state[k] = v; },
+    config: (k) => (k === 'leftClickCustomization' ? true : ''), sendToGame: (m) => { sent = m; },
+    onRuntime: (fn) => { plugin._choose = fn; return () => {}; }, log() {},
+  });
+  plugin.start();
+  plugin._choose('menu-choose', { kind: 'item', target: 'yew logs', name: 'Yew logs', shift: false, option: 'Store-All', com: 5064 });
+  rules(sent);
+  const bankLogs = () => menu([['Withdraw-1 @lre@Yew logs', [1515, 3, 5382]], ['Withdraw-All @lre@Yew logs', [1515, 3, 5382]], ['Examine @lre@Yew logs', [1515, 3, 5382]]]);
+  const invLogs = () => menu([['Store-1 @lre@Yew logs', [1515, 0, 5064]], ['Store-All @lre@Yew logs', [1515, 0, 5064]], ['Examine @lre@Yew logs', [1515, 0, 5064]]]);
+  c = bankLogs(); ll.menuBuilt(c);
+  assert.strictEqual(top(c), 'Withdraw-All @lre@Yew logs', 'bank keeps Withdraw-All');
+  c = invLogs(); ll.menuBuilt(c);
+  assert.strictEqual(top(c), 'Store-All @lre@Yew logs', 'inventory beside the bank has Store-All');
+  plugin._choose('menu-choose', { kind: 'item', target: 'yew logs', name: 'Yew logs', shift: false, option: 'Withdraw-1', com: 5382 });
+  rules(sent);
+  c = bankLogs(); ll.menuBuilt(c);
+  assert.strictEqual(top(c), 'Withdraw-1 @lre@Yew logs', 'a newer bank choice wins over the old one');
+  c = invLogs(); ll.menuBuilt(c);
+  assert.strictEqual(top(c), 'Store-All @lre@Yew logs');
+  rules({ swaps: [] });
+}
+
 assert.deepStrictEqual(parseLines('Bank, Banker\n  # comment\nPickpocket'), [{ option: 'bank', target: 'banker' }, { option: 'pickpocket', target: '*' }]);
 console.log('menu: ok');
