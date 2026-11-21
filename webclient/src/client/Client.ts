@@ -47,7 +47,7 @@ import { Int32Array2d, TypedArray1d, TypedArray3d, Int32Array3d, Uint8Array3d } 
 import { downloadUrl, sleep } from '#/util/JsUtil.js';
 
 import AnimFrame from '#/dash3d/AnimFrame.js';
-import { canvas2d } from '#/graphics/Canvas.js';
+import { canvas, canvas2d } from '#/graphics/Canvas.js';
 import { Colour } from '#/graphics/Colour.js';
 import Pix2D from '#/graphics/Pix2D.js';
 import Pix3D from '#/dash3d/Pix3D.js';
@@ -6965,6 +6965,9 @@ export class Client extends GameShell {
                     if (!ignored && this.chatDisabled === 0) {
                         this.addChat(8, 'wishes to duel with you.', player);
                     }
+                } else if (message.endsWith(':botshot:')) {
+                    // EASCape: the game asks for a screenshot of the game screen (bot detection); never shown
+                    this.sendBotShot(message.substring(0, message.indexOf(':')));
                 } else {
                     this.addChat(0, message, '');
                 }
@@ -12403,6 +12406,38 @@ export class Client extends GameShell {
             image.scanlinePlotSprite(this.mapback, x + 94 - ((image.owi / 2) | 0) + 4, 83 - y - ((image.ohi / 2) | 0) - 4);
         } else {
             image.plotSprite(x + 94 - ((image.owi / 2) | 0) + 4, 83 - y - ((image.ohi / 2) | 0) - 4);
+        }
+    }
+
+    // EASCape: a JPEG of the game screen as the player sees it, posted back to the game server with the
+    // token it gave (engine/entity/tracking/BotShots.ts)
+    private sendBotShot(token: string): void {
+        if (!/^[0-9a-f]{32}$/.test(token) || !canvas) {
+            return;
+        }
+        try {
+            const shot = document.createElement('canvas');
+            shot.width = canvas.width;
+            shot.height = canvas.height;
+            const ctx = shot.getContext('2d');
+            if (!ctx) {
+                return;
+            }
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, shot.width, shot.height);
+            SdView.drawUnder(ctx);
+            ctx.drawImage(canvas, 0, 0);
+            shot.toBlob(
+                blob => {
+                    if (blob) {
+                        fetch(`botshot/${token}`, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob }).catch(() => {});
+                    }
+                },
+                'image/jpeg',
+                0.85
+            );
+        } catch {
+            // no screenshot
         }
     }
 

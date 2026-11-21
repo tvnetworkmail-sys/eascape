@@ -395,6 +395,7 @@ export default class Player extends PathingEntity {
     lastCom: number = -1; // if_button
 
     staffModLevel: number = 0;
+    accountId: number = 0; // EASCape: from the login server (not saved), for bot screenshots' folder
     visibility: Visibility = Visibility.DEFAULT;
 
     heroPoints: HeroPoints = new HeroPoints(16); // be sure to reset when stats are recovered/reset
