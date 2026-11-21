@@ -1343,6 +1343,10 @@
       const t = this.parseEntry(arrays[0][top]);
       for (const r of swaps) {
         if ((r.kind && r.kind !== t.kind) || !this.matchText(r.target, t.target)) continue;
+        // EASCape: an item's choice is for the place you set it (the bank's list, your inventory
+        // beside the bank, your inventory), so Withdraw-All in the bank and Store-All beside it
+        // don't replace each other
+        if (r.com >= 0 && r.com !== arrays[4][top]) continue;
         // "<default>": you chose the game's own left click for this target; no swaps apply.
         if (r.option === '<default>') return;
         if (this.matchText(r.option, t.option)) return; // already the left-click option
@@ -1427,13 +1431,14 @@
         const add = [];
         for (const which of ['left', 'shift']) {
           if (!want[which]) continue;
-          const current = chosen[`${which}|${e.kind}|${e.target}`];
+          const com = e.kind === 'item' ? arrays[4][i] : -1;
+          const current = (com >= 0 && chosen[`${which}|item@${com}|${e.target}`]) || chosen[`${which}|${e.kind}|${e.target}`];
           for (const o of options) {
             if (current && current.toLowerCase() === o.toLowerCase()) continue;
-            add.push({ text: `Swap ${which} click ${o} ${shown}`, choice: { kind: e.kind, target: e.target, name, shift: which === 'shift', option: o } });
+            add.push({ text: `Swap ${which} click ${o} ${shown}`, choice: { kind: e.kind, target: e.target, name, shift: which === 'shift', option: o, ...(com >= 0 ? { com } : {}) } });
           }
           if (current && current !== '<default>') {
-            add.push({ text: `Reset ${which} click ${shown}`, choice: { kind: e.kind, target: e.target, name, shift: which === 'shift', option: null } });
+            add.push({ text: `Reset ${which} click ${shown}`, choice: { kind: e.kind, target: e.target, name, shift: which === 'shift', option: null, ...(com >= 0 ? { com } : {}) } });
           }
         }
         // Group like RuneLite: left/shift pairs per option.
@@ -2188,7 +2193,7 @@
       } else if (cmd.type === 'menu-rules') {
         const clean = (list) => (Array.isArray(list) ? list : [])
           .filter((r) => r && typeof r.option === 'string' && typeof r.target === 'string')
-          .map((r) => ({ option: r.option.toLowerCase().trim(), target: r.target.toLowerCase().trim(), kind: typeof r.kind === 'string' ? r.kind : '' }));
+          .map((r) => ({ option: r.option.toLowerCase().trim(), target: r.target.toLowerCase().trim(), kind: typeof r.kind === 'string' ? r.kind : '', com: Number.isInteger(r.com) ? r.com : -1 }));
         const cz = cmd.customize || {};
         const chosen = {};
         if (cmd.chosen && typeof cmd.chosen === 'object') for (const [k, v] of Object.entries(cmd.chosen)) if (typeof v === 'string') chosen[k] = v;

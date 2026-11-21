@@ -36,13 +36,18 @@ module.exports = function menuEntrySwapper(ctx) {
     }
   }
 
+  // EASCape: an item's choice is saved for the interface it was set in ("left|item@5382|yew logs"
+  // for the bank's list), so the bank and your inventory keep their own; those come before
+  // older choices saved for every place ("left|item|yew logs")
   function savedRules(which) {
     const out = [];
     for (const [key, option] of Object.entries(saved())) {
-      const [w, kind, ...rest] = key.split('|');
-      if (w === which) out.push({ option: String(option).toLowerCase(), target: rest.join('|'), kind });
+      const [w, kindAt, ...rest] = key.split('|');
+      if (w !== which) continue;
+      const [kind, com] = kindAt.split('@');
+      out.push({ option: String(option).toLowerCase(), target: rest.join('|'), kind, com: com === undefined ? -1 : Number(com) });
     }
-    return out;
+    return out.sort((a, b) => (b.com >= 0) - (a.com >= 0));
   }
 
   function push() {
@@ -60,7 +65,8 @@ module.exports = function menuEntrySwapper(ctx) {
   }
 
   function keyOf(info) {
-    return `${info.shift ? 'shift' : 'left'}|${info.kind}|${info.target}`;
+    const kind = info.kind === 'item' && Number.isInteger(info.com) && info.com >= 0 ? `item@${info.com}` : info.kind;
+    return `${info.shift ? 'shift' : 'left'}|${kind}|${info.target}`;
   }
 
   function choose(info, option) {
