@@ -293,7 +293,9 @@ while ($i < $size) {
     if ($obj ! null) {
         if ($i ! ^wearpos_quiver
             | inv_getobj(worn, ^wearpos_rhand) = null
-            | (oc_category($obj) = arrows & oc_category(inv_getobj(worn, ^wearpos_rhand)) = weapon_bow)
+            // EASCape: not with the crystal bow, which fires its own arrows: arrows left in the quiver
+            // were adding their ranged strength to it (rune arrows, +49 on top of the bow's own)
+            | (oc_category($obj) = arrows & oc_category(inv_getobj(worn, ^wearpos_rhand)) = weapon_bow & ~crystal_bow(inv_getobj(worn, ^wearpos_rhand)) = false)
             | (oc_category($obj) = bolts & oc_category(inv_getobj(worn, ^wearpos_rhand)) = weapon_crossbow)
             // EASCape: bolt racks have no category, so their +55 ranged strength never counted
             // with Karil's crossbow (it hit like a bow with no arrows)
@@ -339,7 +341,7 @@ while ($i < $size) {
     if ($obj ! null) {
         if ($i ! ^wearpos_quiver
             | .inv_getobj(worn, ^wearpos_rhand) = null
-            | (oc_category($obj) = arrows & oc_category(.inv_getobj(worn, ^wearpos_rhand)) = weapon_bow)
+            | (oc_category($obj) = arrows & oc_category(.inv_getobj(worn, ^wearpos_rhand)) = weapon_bow & ~crystal_bow(.inv_getobj(worn, ^wearpos_rhand)) = false) // EASCape: as above
             | (oc_category($obj) = bolts & oc_category(.inv_getobj(worn, ^wearpos_rhand)) = weapon_crossbow)
             | ($obj = barrows_karil_ammo & oc_category(.inv_getobj(worn, ^wearpos_rhand)) = weapon_crossbow)) { // EASCape: bolt racks
             $rangebonus = calc($rangebonus + oc_param($obj, rangebonus));
