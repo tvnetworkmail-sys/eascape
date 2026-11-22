@@ -108,6 +108,14 @@ switch_int($target) {
             return (false);
         }
         return (true);
+    // EASCape: fever spiders are only on Braindeath Island, so they need Rum Deal far enough to
+    // have been there (OSRS wiki, Slayer task: "Rum Deal (partially)"; 2009scape Tasks.java:
+    // FEVER_SPIDER, Quests.RUM_DEAL)
+    case ^slayer_feverspider :
+        if (%deal_quest < ^deal_met_braindeath) {
+            return (false);
+        }
+        return (true);
     // EASCape: Mourning's End Part II (2009scape: Tasks.java's DARK_BEASTS)
     case ^slayer_darkbeast :
         if (%mourning_quest_main < ^me2_complete) {
