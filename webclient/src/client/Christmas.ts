@@ -1,5 +1,5 @@
 // EASCape: Christmas mode (from 2007scape; not authentic: a seasonal extra staff switch on for December
-// with ::christmas on|off). The server tells every client through varp 913 (christmas_mode, engine
+// with ::christmas on|off). The server tells every client through varp 914 (christmas_mode, engine
 // WorldSettings), and while it is 1:
 //   - snow falls over the 3D view, under the interfaces, whenever you stand outdoors above ground. It is
 //     Trollweiss' own snow (overlay_atmosphere_snow_flakes: models 4961 / 4962 with the seqs snowfall /
@@ -38,7 +38,8 @@ const ZOOM = 200;
 const UNDERGROUND_Z = 4160;
 
 export default class Christmas {
-    static readonly VARP = 913;
+    // 914, as on live (it was 913 here until the ids were matched to live's, 21 Nov 2026)
+    static readonly VARP = 914;
 
     // the app's "Show falling snow" on (app preload/game.js sets the attribute); off by default
     static get falling(): boolean {
