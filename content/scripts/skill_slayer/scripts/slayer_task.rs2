@@ -97,10 +97,11 @@ switch_int($target) {
         return (true);
     // EASCape: Skippy and the Mogres (Void slayer.tables.toml: mogres need the miniquest;
     // quests/miniquest_skippy)
-    // Your call (16 Nov 2026): no master gives mogres until the Mogres update has been tested;
-    // put the Skippy check back then
     case ^slayer_mogre :
-        return (false);
+        if (%skippy_state < ^skippy_sober) {
+            return (false);
+        }
+        return (true);
     // EASCape: skeletal wyverns need Elemental Workshop I (OSRS wiki: an elemental shield is needed for their icy breath)
     case ^slayer_skeletalwyvern :
         if (testbit(%elemental_workshop_bits, ^elemental_workshop_complete) = ^false) {
