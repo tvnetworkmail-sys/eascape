@@ -83,6 +83,13 @@ if (map_locaddunsafe(movecoord(coord, -1, 0, -1)) = true) {
     mes("There isn't enough space to set up here."); // osrs just checks sw coord for loc's
     return;
 }
+// EASCape: not in TzHaar City, the Fight Cave or the Fight Pit (RS wiki, Dwarf multicannon: "It's too
+// hot in these caves, the heat could damage the cannon."; the OSRS wiki has a newer line). The four
+// map squares 37-38_79-80 are all TzHaar's.
+if (inzone(0_37_79_0_0, 0_38_80_63_63, coord) = true) {
+    mes("It's too hot in these caves, the heat could damage the cannon.");
+    return;
+}
 if (inzone(0_39_72_0_0, 0_39_72_63_63, coord) = true) {
     mes("The air is too dank for you to set up a cannon here."); // under lighthouse
     return;
