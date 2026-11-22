@@ -83,7 +83,12 @@ if (inv_itemspace($inv, $cert_or_uncert, $amount, inv_size($inv)) = false){
 def_int $overflow = inv_itemspace2($inv, $cert_or_uncert, $amount, inv_size($inv));
 def_int $withdraw = sub($amount, $overflow);
 if ($withdraw > 0) {
-    session_log(^log_moderator, "Withdrew <oc_debugname($obj)> x<tostring($withdraw)> from bank");
+    // EASCape: says when they came out as notes
+    if (%bankcert ! 0 & oc_cert($obj) ! $obj) {
+        session_log(^log_moderator, "Withdrew <oc_debugname($obj)> x<tostring($withdraw)> from bank (noted)");
+    } else {
+        session_log(^log_moderator, "Withdrew <oc_debugname($obj)> x<tostring($withdraw)> from bank");
+    }
     switch_int (%bankcert) {
         case 0 : inv_moveitem_uncert(bank, $inv, $obj, $withdraw);
         case default : inv_moveitem_cert(bank, $inv, $obj, $withdraw);
