@@ -139,7 +139,11 @@
 
     drawIcons() {
       const now = performance.now();
+      // EASCape: a few at a time, so asking for a lot of pictures (the Loot Tracker's totals) doesn't
+      // hold up the game, or push the inventory's own pictures out of the game's picture cache
+      let drawn = 0;
       for (const key of this.iconQueue) {
+        if (drawn++ >= 8) break;
         this.iconQueue.delete(key);
         const [id, step] = String(key).split(':').map(Number);
         let icon = null;
