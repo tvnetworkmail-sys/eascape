@@ -9,7 +9,7 @@
 //   the biggest that fit what's left, and so on (that's how 2006Scape's 63-wave table is built).
 //   Which monsters come, and where, follow Void's wave and rotation table (fightcave_waves.enum).
 // - Tokkul when you leave or die: N x (N + 1), N being the waves you finished (OSRS wiki). Killing
-//   Jad gives the fire cape and 8,032 tokkul.
+//   Jad gives the fire cape and 8,032 tokkul (just the tokkul if you already have a fire cape).
 // - Log out and you start the same wave again 10 seconds after you log back in.
 // The cave isn't a copy per player (the 2006 engine has no instances): everyone shares it, but
 // each player's monsters only go for, and can only be hit by, that player.
@@ -244,8 +244,22 @@ p_teleport(map_findsquare(^fightcave_city, 0, 1, ^map_findsquare_lineofwalk));
 // out of the cave first: with a full pack the cape is dropped where you arrive, not left in
 // the cave behind you
 p_delay(0);
-~fightcave_give(tzhaar_cape_fire, 1);
+// EASCape: only one fire cape at a time. Winning another when you already have one came to Old
+// School on 2 August 2013 (OSRS wiki, Patch Notes (2 August 2013): "You can now win firecapes even
+// if you have one already"), so in 2006 you didn't. With one already, it's the Tokkul alone (the
+// line saying so is ours: not found).
+def_boolean $has_cape = false;
+if (inv_total(inv, tzhaar_cape_fire) > 0 | inv_total(worn, tzhaar_cape_fire) > 0 | inv_total(bank, tzhaar_cape_fire) > 0) {
+    $has_cape = true;
+}
+if ($has_cape = false) {
+    ~fightcave_give(tzhaar_cape_fire, 1);
+}
 ~fightcave_give(tzhaar_token, ^fightcave_tokkul_jad);
+if ($has_cape = true) {
+    ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You even defeated TzTok-Jad, I am most impressed!|You already have a cape, so take this Tokkul instead.");
+    return;
+}
 ~chatnpc_specific("TzHaar-Mej-Jal", tzhaar_fightcave_master, "<p,neutral>You even defeated TzTok-Jad, I am most impressed!|Please accept this gift as a reward.");
 
 // ---- a check every 5 ticks that the wave can't get stuck: if none of your monsters are left
