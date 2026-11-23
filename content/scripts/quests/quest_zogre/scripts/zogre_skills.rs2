@@ -121,13 +121,14 @@ mes("You mix the snake weed into your potion."); // ours
 [opheld1,relicyms_balm2] @zogre_drink_balm(relicyms_balm1);
 [opheld1,relicyms_balm1] @zogre_drink_balm(vial_empty);
 
-// the OSRS wiki: three doses cure most disease, Slash Bash's in more; ours: a dose takes 4 off it
+// the OSRS wiki: three doses cure most disease, Slash Bash's in more; ours: a dose takes 4 off its
+// strength (%disease counts 5 a strength: see below)
 [label,zogre_drink_balm](namedobj $next)
 anim(human_eat, 0);
 sound_synth(liquid, 1, 0);
 inv_setslot(inv, last_slot, $next, 1);
 mes("You drink some of your Relicym's balm."); // ours
-%disease = max(0, calc(%disease - 4));
+%disease = max(0, calc(%disease - 20));
 if (%disease = 0) {
     cleartimer(disease);
     mes("The disease has been cured."); // ours
@@ -139,14 +140,18 @@ if (%disease = 0) {
 [opheld4,relicyms_balm1] ~empty_container(vial_empty);
 
 // ---------------------------------------------------------------- disease
-// %disease is the strength left; every 30 ticks a random skill (not Hitpoints or Prayer) drops by a
-// fifth of it, rounded up, and the strength falls by 1 (ours: the hit's size and the countdown are
-// poison's). Void's starting strengths: 10 from zogres, skogres and the coffins, 15 from Slash Bash.
+// EASCape, from the OSRS wiki's Disease page: every 18 seconds (30 ticks) one skill, at random
+// from all but Hitpoints and Prayer, is drained by the disease's strength, shown on a yellow
+// hitsplat; if that skill is already at 1, Hitpoints takes it instead. The strength falls by 1
+// every 1.5 minutes, so it lasts 1.5 minutes a strength (8 from fever spiders: 12 minutes), and a
+// new dose resets it to the source's strength if that's higher. %disease counts 18-second rounds
+// left, 5 a strength: the strength is a fifth of it, rounded up. Strengths: 10 from zogres,
+// skogres, the zombie and the coffins, 15 from Slash Bash, 8 from fever spiders (OSRS wiki).
 [proc,zogre_disease_player](int $severity)
-if (%disease >= $severity) return;
+if (%disease >= calc($severity * 5)) return;
 if (%disease = 0) mes("You have been diseased.");
-%disease = $severity;
-if (gettimer(disease) = 0) settimer(disease, 30);
+%disease = calc($severity * 5);
+if (gettimer(disease) < 1) settimer(disease, 30); // EASCape: < 1, as poison (it was = 0, so the timer never started)
 
 // called by the npc melee and ranged attacks (skill_combat/npc)
 [proc,npc_disease_player]
@@ -167,10 +172,21 @@ if (%disease <= 0) {
 def_int $hit = calc((%disease + 4) / 5);
 def_stat $s = ~zogre_disease_stat(random(18));
 if (stat($s) <= 1) {
-    ~damage_self($hit);
+    if_close;
+    damage(uid, ^hitmark_disease, $hit);
+    ~human_hit_sound;
+    if (stat(hitpoints) = 0) {
+        ~player_die;
+        return;
+    }
 } else {
     stat_sub($s, $hit, 0);
-    mes("You feel ill."); // ours: the 2007 client has no disease hitsplat
+    // the yellow hitsplat shows what was drained; Hitpoints is put straight back
+    def_int $hp = stat(hitpoints);
+    if ($hp > $hit) {
+        damage(uid, ^hitmark_disease, $hit);
+        stat_heal(hitpoints, calc($hp - stat(hitpoints)), 0);
+    }
 }
 %disease = calc(%disease - 1);
 if (%disease = 0) {

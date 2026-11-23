@@ -1,6 +1,8 @@
 // EASCape: fever spiders (Void: data/area/morytania/braindeath_island/braindeath_island.combat.toml,
 // FeverSpider.kt). With slayer gloves: an ordinary bite, max 7. Without: the fever bite takes
-// 12.5% of your current hitpoints; Protect from Melee stops it.
+// 12.5% of your Hitpoints level (both wikis: "12.5% of their Hitpoints level"; Void took it from
+// your current hitpoints) and gives you disease of strength 8 (OSRS wiki, Disease); Protect from
+// Melee stops the bite but not the disease (Void).
 [ai_opplayer2,deal_fever_spiders1]
 if (~eascape_npc_attack_ready = false) {
     return;
@@ -12,4 +14,5 @@ if (inv_total(worn, deal_slayer_gloves) > 0) {
     ~npc_meleeattack;
     return;
 }
-~playerhit_n_melee(true, scale(125, 1000, stat(hitpoints)), npc_param(attackrate));
+~playerhit_n_melee(true, scale(125, 1000, stat_base(hitpoints)), npc_param(attackrate));
+queue(zogre_disease, 0, 8);
