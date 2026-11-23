@@ -177,12 +177,15 @@ export default class FontType {
                 }
             }
 
+            // EASCape: whether the line ended at a '|' (a new line in the text itself), not a wrap
+            const hardBreak = str.charAt(splitIndex) === '|';
             str = str.substring(splitIndex + 1);
 
             // EASCape: the client keeps @str@ on to the end of the line it's drawn on, so a struck
             // line that wraps should stay struck on the next line (journals only put @str@ at the
-            // start of each sentence, so wrapped lines were coming out half struck).
-            const struck = line.indexOf('@str@') !== -1;
+            // start of each sentence, so wrapped lines were coming out half struck). Not after a
+            // '|': the next line is its own (a quest's requirements, each struck or not).
+            const struck = !hardBreak && line.indexOf('@str@') !== -1;
 
             // apply saved color
             if (savedCol !== null && str.length > 0 && str.charAt(0) !== '|') {
