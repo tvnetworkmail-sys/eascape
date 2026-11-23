@@ -517,10 +517,15 @@ if ($x <= 380) {
     ~barrows_give(bloodrune, ~barrows_band_amount($x, 756, 880, 37, 43));
 } else if ($x <= 1005) {
     ~barrows_give(barrows_karil_ammo, ~barrows_band_amount($x, 881, 1005, 35, 40));
-} else if ($x <= 1008) {
-    ~barrows_give(keyhalf2, 1); // loop half
 } else if ($x <= 1011) {
-    ~barrows_give(keyhalf1, 1); // tooth half
+    // EASCape: one band for both halves from 1,006 reward potential (OSRS wiki, Chest (Barrows):
+    // "Key half 1006"), either half alike (3/1012 each). The loop had 1,006-1,008 and the tooth
+    // 1,009-1,011, so a chest with less than 1,009 could only give loops.
+    if (random(2) = 0) {
+        ~barrows_give(keyhalf2, 1); // loop half
+    } else {
+        ~barrows_give(keyhalf1, 1); // tooth half
+    }
 } else {
     ~barrows_give(dragon_med_helm, 1);
 }
