@@ -3,7 +3,12 @@
 def_int $s = %roving_elves_quest;
 def_string $t;
 if ($s = ^roving_not_started) {
-    ~quest_journal("Roving Elves", "@dbl@I can start this quest by talking to @dre@Islwyn@dbl@ found in @dre@Isafdar.||@dbl@Minimum requirements:|@dre@I must have completed the Waterfall quest|@dre@I must be able to kill a level 84 moss giant unarmed");
+    // ours: Regicide added (Islwyn won't help without it; the OSRS wiki), met ones struck
+    def_string $waterfall = "@dre@I must have completed the Waterfall quest";
+    if (%waterfall_quest >= ^waterfall_complete) $waterfall = "@str@I must have completed the Waterfall quest";
+    def_string $regicide = "@dre@I must have completed Regicide";
+    if (%regicide_quest >= ^regicide_complete) $regicide = "@str@I must have completed Regicide";
+    ~quest_journal("Roving Elves", "@dbl@I can start this quest by talking to @dre@Islwyn@dbl@ found in @dre@Isafdar.||@dbl@Minimum requirements:|<$regicide>|<$waterfall>|@dre@I must be able to kill a level 84 moss giant unarmed");
     return;
 }
 if ($s = ^roving_started) {
