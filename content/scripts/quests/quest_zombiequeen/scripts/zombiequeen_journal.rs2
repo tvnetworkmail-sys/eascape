@@ -22,10 +22,23 @@ if (%zombiequeen = ^zombiequeen_not_started) {
     $x = append($x, "@dbl@I can start this quest by speaking to @dre@Mosol Rei@dbl@ deep in the|");
     $x = append($x, "@dbl@unexplored jungles of @dre@Southern Karamja@dbl@.|");
     $x = append($x, "@dbl@To start this quest I need to complete the following:-|");
-    $x = append($x, "@dre@Jungle Potion|");
+    // EASCape: met requirements are struck through, like the other journals
+    if (%junglepotion >= ^junglepotion_complete) {
+        $x = append($x, "@str@Jungle Potion|");
+    } else {
+        $x = append($x, "@dre@Jungle Potion|");
+    }
     $x = append($x, "@dbl@To complete this quest I'll need the following:-|");
-    $x = append($x, "@dre@Level 20 Crafting|");
-    $x = append($x, "@dre@Level 32 Agility|");
+    if (stat_base(crafting) >= 20) {
+        $x = append($x, "@str@Level 20 Crafting|");
+    } else {
+        $x = append($x, "@dre@Level 20 Crafting|");
+    }
+    if (stat_base(agility) >= 32) {
+        $x = append($x, "@str@Level 32 Agility|");
+    } else {
+        $x = append($x, "@dre@Level 32 Agility|");
+    }
     $x = append($x, "@dbl@I also need to be able to defeat a @dre@level 86 Monster@dbl@.");
     ~quest_journal($n, $x);
     return;
