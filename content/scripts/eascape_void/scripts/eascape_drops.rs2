@@ -71,6 +71,11 @@ return(false);
 if ($obj = null) {
     return;
 }
+// EASCape: the shield left half only drops for players who've done Legends' Quest
+// (OSRS wiki, Shield left half: Mod Ash, "If you've done Legends' Quest, yes.")
+if ($obj = dragonshield_a & %legendsquest < ^legends_complete) {
+    return;
+}
 def_int $amount = $min;
 if ($max > $min) {
     $amount = add($min, random(add(sub($max, $min), 1)));
