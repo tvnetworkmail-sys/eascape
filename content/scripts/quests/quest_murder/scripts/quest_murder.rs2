@@ -289,15 +289,17 @@ if(inv_total(bank, murderpot2) > 0) {
 inv_add(inv, murderpot2, 1);
 ~mesbox("It seems like Lord Sinclair was drinking from this before he died.");
 
+// EASCape: a category script gets its own item as last_item and the other one as last_useitem
+// (OpHeldUHandler, 15 Nov 2026); these had it the other way round, so flypaper did nothing
 [opheldu,_murder_proofobj]
-if(last_item = pot_flour) {
-    @flour_proofobj(last_useitem);
+if(last_useitem = pot_flour) {
+    @flour_proofobj(last_item);
 }
 ~displaymessage(^dm_default);
 
 [opheldu,_murder_flourobj]
-if(last_item = murderpaper) {
-    @create_flourprints(last_useitem);
+if(last_useitem = murderpaper) {
+    @create_flourprints(last_item);
 }
 ~displaymessage(^dm_default);
 
