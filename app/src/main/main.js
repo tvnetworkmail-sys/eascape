@@ -549,8 +549,24 @@ function windowsNotifications() {
 
 ipcMain.handle('notify', (e, title, body, opts) => {
   if (!gameView || e.sender !== gameView.webContents) return false;
+  if (opts && opts.raise) raiseWindow();
   return notify(title, body, { sound: !!(opts && opts.sound), always: !!(opts && opts.always) });
 });
+
+// EASCape (the Skilling Notifier, 25 Nov 2026): bring 2006RS back up when it's minimised or behind
+// other windows. Windows won't let an app take the focus from another, so it is shown on top for
+// a moment (which puts it in front) and its taskbar button flashes until you click it.
+function raiseWindow() {
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  if (win.isFocused()) return;
+  win.show();
+  win.setAlwaysOnTop(true);
+  win.focus();
+  win.moveTop();
+  setTimeout(() => { if (win && !win.isDestroyed()) win.setAlwaysOnTop(false); }, 500);
+  win.flashFrame(true);
+}
 
 // Quest Helper routes, worked out in a worker thread (so the game never waits on them).
 let routeWorker = null;
