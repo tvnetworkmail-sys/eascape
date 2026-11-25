@@ -149,6 +149,57 @@ const root = path.join(__dirname, '..', 'src');
   console.log('logout notifier: ok');
 }
 
+{
+  // Skilling Notifier: an alert once woodcutting or fishing stops
+  let t = 1000000;
+  const realNow = Date.now;
+  Date.now = () => t;
+  const intervals = [];
+  const realSet = global.setInterval;
+  const realClear = global.clearInterval;
+  global.setInterval = (fn) => { intervals.push(fn); return intervals.length; };
+  global.clearInterval = () => {};
+  const sent = [];
+  let listener = null;
+  const cfg = { woodcutting: true, fishing: true, delay: 5 };
+  const ctx = { config: (k) => cfg[k], notify: (title, text, opts) => sent.push([text, opts]), onRuntime: (fn) => { listener = fn; return () => {}; } };
+  const p = require('../src/plugins/skillingnotifier/game')(ctx);
+  p.start();
+  const tick = () => intervals[0]();
+  const play = (anim, ms) => { for (let i = 0; i < ms; i += 600) { listener('player', { name: 'Zezima', animation: anim }); t += 600; tick(); } };
+  // cutting for 10 s, swinging with short gaps
+  for (let i = 0; i < 5; i++) { play(879, 1200); play(-1, 1200); }
+  assert.strictEqual(sent.length, 0, 'no alert while cutting');
+  play(-1, 6000);
+  assert.deepStrictEqual(sent[0], ['Zezima stopped woodcutting!', { sound: true, flash: true, always: true }], 'alert after the tree');
+  play(-1, 10000);
+  assert.strictEqual(sent.length, 1, 'alerted once');
+  // fishing with 3 s pauses between casts doesn't alert until it stops
+  for (let i = 0; i < 4; i++) { play(623, 1800); play(-1, 3000); }
+  assert.strictEqual(sent.length, 1, 'no alert while fishing');
+  play(-1, 6000);
+  assert.strictEqual(sent[1][0], 'Zezima stopped fishing!', 'alert after fishing');
+  // a single swing doesn't count; fishing off in the settings
+  play(879, 600); play(-1, 8000);
+  assert.strictEqual(sent.length, 2, 'one swing is not skilling');
+  cfg.fishing = false;
+  play(621, 6000); play(-1, 8000);
+  assert.strictEqual(sent.length, 2, 'fishing alerts off');
+  cfg.fishing = true;
+  // the runtime only reports changes: one report as you start, none while it keeps playing
+  listener('player', { name: 'Zezima', animation: 621 });
+  for (let i = 0; i < 100; i++) { t += 600; tick(); }
+  assert.strictEqual(sent.length, 2, 'no alert while the animation keeps playing unreported');
+  listener('player', { name: 'Zezima', animation: -1 });
+  for (let i = 0; i < 10; i++) { t += 600; tick(); }
+  assert.strictEqual(sent[2][0], 'Zezima stopped fishing!', 'alert once it stops');
+  p.stop();
+  Date.now = realNow;
+  global.setInterval = realSet;
+  global.clearInterval = realClear;
+  console.log('skilling notifier: ok');
+}
+
 // ---------------------------------------------------------------- xp drops (page side)
 {
   let now = 0;
