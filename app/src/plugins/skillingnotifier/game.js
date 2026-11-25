@@ -5,7 +5,7 @@
 // 2 fishing). When it hasn't moved for the time set, you've stopped, whatever stopped you: the
 // tree fell, the spot moved, your inventory filled, you clicked away or got attacked. Then one
 // alert: a ding and the screen flash, plus a desktop notification when the window isn't in
-// front (as the Logout Notifier).
+// front (as the Logout Notifier), and the window comes back up if it was minimised or behind others.
 
 const SKILLS = { 1: 'woodcutting', 2: 'fishing' };
 const NEW_SPELL = 15000; // longer without a beat than this starts a new spell
@@ -46,7 +46,7 @@ module.exports = function skillingNotifier(ctx) {
     skill = null;
     beats = 0;
     if (long && opt(was) !== false) {
-      ctx.notify('2006RS', `${name || 'You'} stopped ${was}!`, { sound: true, flash: true, always: true });
+      ctx.notify('2006RS', `${name || 'You'} stopped ${was}!`, { sound: true, flash: true, always: true, raise: opt('raise') !== false });
     }
   }
 

@@ -174,7 +174,7 @@ const root = path.join(__dirname, '..', 'src');
   for (let i = 0; i < 8; i++) { report(1, { animation: i % 2 ? -1 : 879 }); wait(2400); }
   assert.strictEqual(sent.length, 0, 'no alert while the server says you are cutting');
   wait(6000);
-  assert.deepStrictEqual(sent[0], ['Zezima stopped woodcutting!', { sound: true, flash: true, always: true }], 'alert once the beats stop');
+  assert.deepStrictEqual(sent[0], ['Zezima stopped woodcutting!', { sound: true, flash: true, always: true, raise: true }], 'alert once the beats stop');
   wait(20000);
   assert.strictEqual(sent.length, 1, 'alerted once');
   // other changes to your player (moving, hitpoints) aren't beats

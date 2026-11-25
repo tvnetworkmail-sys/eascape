@@ -354,7 +354,7 @@ function contextFor(p) {
         const rgb = /([0-9a-f]{6})$/i.exec(String(cfg('lostlite', 'flashColour') || '')) || [null, 'FF0000'];
         sendToGame({ type: 'flash', mode: flash, colour: `#${alpha.toString(16).padStart(2, '0')}${rgb[1]}` });
       }
-      return ipcRenderer.invoke('notify', title, body, { sound: !!(opts && opts.sound), always: !!(opts && opts.always) }).catch(() => false);
+      return ipcRenderer.invoke('notify', title, body, { sound: !!(opts && opts.sound), always: !!(opts && opts.always), raise: !!(opts && opts.raise) }).catch(() => false);
     },
     /** Open the plugin's own sidebar panel (as RuneLite's ClientToolbar.openPanel). */
     openPanel: () => ipcRenderer.send('game-event', { type: 'open-panel', data: p.id }),
