@@ -16,6 +16,7 @@ module.exports = {
     sections: [],
     items: [
       { key: 'logoutWarning', name: 'Seconds before logout', description: 'How many seconds before the 90 second idle logout to ding and flash the screen (in combat the game waits until the fight is over)', type: 'int', default: 10, min: 1, max: 85, position: 0 },
+      { key: 'raise', name: 'Bring the window back up', description: 'When it alerts you, bring 2006RS back up if it is minimised or behind other windows', type: 'boolean', default: true, position: 1 },
     ],
   },
 };
