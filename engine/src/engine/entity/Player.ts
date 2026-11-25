@@ -1209,6 +1209,7 @@ export default class Player extends PathingEntity {
             this.clearWaypoints();
 
             this.executeScript(ScriptRunner.init(opTrigger, this, target), true);
+            this.skillBeat(opTrigger);
 
             // If p_opnpc was called, remember it for later
             // For now, keep the current target
@@ -1850,6 +1851,28 @@ export default class Player extends PathingEntity {
         for (const id of this.appQuestVarps ?? []) {
             this.writeVarp(id, this.vars[id] ?? 0);
         }
+    }
+
+    // EASCape: the app's Skilling Notifier. Every woodcutting or fishing op the player runs (the
+    // first click, and each p_oploc/p_opnpc that keeps the action going) moves varp skill_beat on:
+    // bits 2+ a counter, bits 0-1 the skill (1 woodcutting, 2 fishing). It stops moving when the
+    // player stops, whatever stopped them, so the app knows without guessing from animations.
+    private static skillBeatVarp = -2;
+    private skillBeat(script: ScriptFile) {
+        const file = script.info.sourceFilePath.replace(/\\/g, '/');
+        const code = file.endsWith('/skill_woodcutting/scripts/woodcut.rs2') ? 1 : file.includes('/skill_fishing/scripts/fishing_spots/') ? 2 : 0;
+        if (code === 0) {
+            return;
+        }
+        if (Player.skillBeatVarp === -2) {
+            Player.skillBeatVarp = VarPlayerType.getId('skill_beat');
+        }
+        const id = Player.skillBeatVarp;
+        if (id < 0) {
+            return;
+        }
+        const count = (((this.vars[id] ?? 0) >> 2) + 1) & 0x3fff;
+        this.setVar(id, (count << 2) | code);
     }
 
     setVar(id: number, value: number | string) {

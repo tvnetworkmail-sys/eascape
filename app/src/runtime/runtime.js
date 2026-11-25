@@ -499,6 +499,8 @@
         specialAttack: varps ? Math.round((varps[300] | 0) / 10) : null,
         specialAttackOn: varps ? (varps[301] | 0) === 1 : null,
         runOn: varps ? (varps[this.RUN.varp] | 0) === 1 : null,
+        // EASCape: varp 945 skill_beat, moved on by the server with every woodcutting or fishing op (Skilling Notifier)
+        skillBeat: varps ? varps[945] | 0 : 0,
         specialAvailable: this.fields.sideIcon ? this.specBar() >= 0 : null,
       };
       const key = JSON.stringify(data);
