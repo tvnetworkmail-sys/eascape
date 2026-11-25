@@ -152,16 +152,6 @@ return(true);
 // first, so you needn't talk to him again for each.
 [label,mh_jorral_progress]
 def_int $t = %makinghistory_trader_prog;
-if ($t >= ^mh_trader_chest & $t < ^mh_trader_done & inv_total(inv, makinghistory_journal) = 0) {
-    if (inv_total(inv, makinghistory_chest) > 0) {
-        ~chatplayer("<p,happy>Hi. I found a chest.");
-        ~chatnpc("<p,neutral>Best you look inside then.");
-        return;
-    }
-    // the RS wiki: lost the chest (and what was in it)
-    ~chatplayer("<p,sad>Hi. I found a chest... oh no! I lost it, and its contents. I'll have to look around again.");
-    return;
-}
 if ($t >= ^mh_trader_key & $t < ^mh_trader_done & inv_total(inv, makinghistory_journal) > 0) {
     ~chatplayer("<p,happy>I found a journal!");
     ~chatnpc("<p,happy>Good work. Let's see what it says.");
@@ -199,6 +189,18 @@ if (%makinghistory_warr_prog = ^mh_warr_answers) {
     ~chatnpc("<p,laugh>It seems you're lucky he didn't beat you up! Well done, that's another piece of the puzzle.");
     if (~mh_all_told = true) @mh_jorral_all;
     @mh_jorral_progress; // ours: on to anything else you've brought, then the menu
+}
+// the chest, once nothing else is handed in (ours: it came first and stopped there, so the scroll
+// and Dron's story couldn't be told while you carried the unopened chest)
+if ($t >= ^mh_trader_chest & $t < ^mh_trader_done & inv_total(inv, makinghistory_journal) = 0) {
+    if (inv_total(inv, makinghistory_chest) > 0) {
+        ~chatplayer("<p,happy>Hi. I found a chest.");
+        ~chatnpc("<p,neutral>Best you look inside then.");
+        return;
+    }
+    // the RS wiki: lost the chest (and what was in it)
+    ~chatplayer("<p,sad>Hi. I found a chest... oh no! I lost it, and its contents. I'll have to look around again.");
+    return;
 }
 @mh_jorral_menu;
 
