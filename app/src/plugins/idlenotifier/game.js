@@ -2,7 +2,8 @@
 // Logout Notifier, game side. Works from the game's own idle timer (the 2004 game asks the
 // server to log you out after 90 seconds without mouse or key input in the game; in combat
 // the server waits until the fight is over). At the time set, one alert: a ding and the
-// screen flash, plus a desktop notification when the window isn't in front.
+// screen flash, plus a desktop notification when the window isn't in front, and the window comes
+// back up if it was minimised or behind others.
 
 const LOGOUT_AFTER = 90 * 1000;
 
@@ -33,7 +34,7 @@ module.exports = function logoutNotifier(ctx) {
     if (!warned && idleFor >= LOGOUT_AFTER - warn && idleFor < LOGOUT_AFTER + 60000) {
       warned = true;
       const left = Math.max(1, Math.round((LOGOUT_AFTER - idleFor) / 1000));
-      ctx.notify('2006RS', `${name || 'You'} will be logged out in ${left} second${left === 1 ? '' : 's'}!`, { sound: true, flash: true, always: true });
+      ctx.notify('2006RS', `${name || 'You'} will be logged out in ${left} second${left === 1 ? '' : 's'}!`, { sound: true, flash: true, always: true, raise: opt('raise') !== false });
     }
   }
 

@@ -115,7 +115,7 @@ const root = path.join(__dirname, '..', 'src');
   assert.strictEqual(sent.length, 0, 'not yet at 70 s');
   t += 10000;
   tick();
-  assert.deepStrictEqual(sent[0], ['Zezima will be logged out in 10 seconds!', { sound: true, flash: true, always: true }], 'alerted at 80 s');
+  assert.deepStrictEqual(sent[0], ['Zezima will be logged out in 10 seconds!', { sound: true, flash: true, always: true, raise: true }], 'alerted at 80 s');
   t += 1000;
   tick();
   assert.strictEqual(sent.length, 1, 'alerted once');
