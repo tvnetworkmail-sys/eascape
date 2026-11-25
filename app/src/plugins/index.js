@@ -41,6 +41,7 @@ module.exports = [
   require('./crystalbow/descriptor'),
   require('./chatnotifications/descriptor'),
   require('./idlenotifier/descriptor'), // (moved here so merging into eascape-live brings it back: it was taken off there 8 Nov)
+  require('./skillingnotifier/descriptor'),
   require('./hiscore/descriptor'),
   require('./grimyherbs/descriptor'),
   require('./questhelper/descriptor'),
