@@ -150,7 +150,7 @@ const root = path.join(__dirname, '..', 'src');
 }
 
 {
-  // Skilling Notifier: an alert once woodcutting or fishing stops
+  // Skilling Notifier: an alert once the server stops moving the skill beat on
   let t = 1000000;
   const realNow = Date.now;
   Date.now = () => t;
@@ -166,33 +166,40 @@ const root = path.join(__dirname, '..', 'src');
   const p = require('../src/plugins/skillingnotifier/game')(ctx);
   p.start();
   const tick = () => intervals[0]();
-  const play = (anim, ms) => { for (let i = 0; i < ms; i += 600) { listener('player', { name: 'Zezima', animation: anim }); t += 600; tick(); } };
-  // cutting for 10 s, swinging with short gaps
-  for (let i = 0; i < 5; i++) { play(879, 1200); play(-1, 1200); }
-  assert.strictEqual(sent.length, 0, 'no alert while cutting');
-  play(-1, 6000);
-  assert.deepStrictEqual(sent[0], ['Zezima stopped woodcutting!', { sound: true, flash: true, always: true }], 'alert after the tree');
-  play(-1, 10000);
+  let n = 0;
+  const report = (code, extra) => listener('player', Object.assign({ name: 'Zezima', skillBeat: code ? ((++n << 2) | code) : (n << 2) }, extra || {}));
+  const wait = (ms) => { for (let i = 0; i < ms; i += 600) { t += 600; tick(); } };
+  report(0); // logged in
+  // woodcutting: a beat every roll, with the animation doing anything at all in between
+  for (let i = 0; i < 8; i++) { report(1, { animation: i % 2 ? -1 : 879 }); wait(2400); }
+  assert.strictEqual(sent.length, 0, 'no alert while the server says you are cutting');
+  wait(6000);
+  assert.deepStrictEqual(sent[0], ['Zezima stopped woodcutting!', { sound: true, flash: true, always: true }], 'alert once the beats stop');
+  wait(20000);
   assert.strictEqual(sent.length, 1, 'alerted once');
-  // fishing with 3 s pauses between casts doesn't alert until it stops
-  for (let i = 0; i < 4; i++) { play(623, 1800); play(-1, 3000); }
-  assert.strictEqual(sent.length, 1, 'no alert while fishing');
-  play(-1, 6000);
-  assert.strictEqual(sent[1][0], 'Zezima stopped fishing!', 'alert after fishing');
-  // a single swing doesn't count; fishing off in the settings
-  play(879, 600); play(-1, 8000);
-  assert.strictEqual(sent.length, 2, 'one swing is not skilling');
+  // other changes to your player (moving, hitpoints) aren't beats
+  for (let i = 0; i < 5; i++) { report(1); wait(3000); }
+  listener('player', { name: 'Zezima', skillBeat: (n << 2) | 1, x: 3200 });
+  wait(6000);
+  assert.strictEqual(sent[1][0], 'Zezima stopped woodcutting!', 'a player report without a new beat is not a beat');
+  // fishing
+  for (let i = 0; i < 5; i++) { report(2); wait(3000); }
+  assert.strictEqual(sent.length, 2, 'no alert while fishing');
+  wait(6000);
+  assert.strictEqual(sent[2][0], 'Zezima stopped fishing!', 'alert after fishing');
+  // one op alone (no axe) isn't skilling; fishing off in the settings
+  report(1); wait(8000);
+  assert.strictEqual(sent.length, 3, 'one op is not skilling');
   cfg.fishing = false;
-  play(621, 6000); play(-1, 8000);
-  assert.strictEqual(sent.length, 2, 'fishing alerts off');
+  for (let i = 0; i < 5; i++) { report(2); wait(3000); }
+  wait(8000);
+  assert.strictEqual(sent.length, 3, 'fishing alerts off');
+  // logging out mid-cut: nothing
   cfg.fishing = true;
-  // the runtime only reports changes: one report as you start, none while it keeps playing
-  listener('player', { name: 'Zezima', animation: 621 });
-  for (let i = 0; i < 100; i++) { t += 600; tick(); }
-  assert.strictEqual(sent.length, 2, 'no alert while the animation keeps playing unreported');
-  listener('player', { name: 'Zezima', animation: -1 });
-  for (let i = 0; i < 10; i++) { t += 600; tick(); }
-  assert.strictEqual(sent[2][0], 'Zezima stopped fishing!', 'alert once it stops');
+  for (let i = 0; i < 5; i++) { report(1); wait(2400); }
+  listener('login-state', false);
+  wait(8000);
+  assert.strictEqual(sent.length, 3, 'no alert after logging out');
   p.stop();
   Date.now = realNow;
   global.setInterval = realSet;
