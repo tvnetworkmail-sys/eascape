@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -3398,6 +3398,8 @@ export class Client extends GameShell {
                                 } catch (_e) {
                                     // empty
                                 }
+                            } else if (this.chatInput.startsWith('::') && lostliteCommand(this.chatInput)) {
+                                // 2006RS-2: an app plugin took the command (RuneLite's CommandExecuted.consume)
                             } else if (this.chatInput.startsWith('::')) {
                                 this.out.p1Enc(ClientProt.CLIENT_CHEAT);
                                 this.out.p1(this.chatInput.length - 2 + 1);
@@ -6305,7 +6307,9 @@ export class Client extends GameShell {
                 this.out.pjstr(cmd);
                 return true;
             });
+            lostliteSetClient(this); // 2006RS-2: the bridge's reads (LostLite.ts bridgeApi)
             lostliteConfigure();
+            lostliteCycle();
         }
         return ll;
     }
@@ -6927,6 +6931,7 @@ export class Client extends GameShell {
             if (this.ptype === ServerProt.PLAYER_INFO) {
                 this.getPlayerPos(this.in, this.psize);
                 this.awaitingPlayerInfo = false;
+                lostliteServerTick(); // 2006RS-2: one a server tick (the app's GameTick)
 
                 this.ptype = -1;
                 return true;
@@ -7538,7 +7543,7 @@ export class Client extends GameShell {
                 const loops: number = this.in.g1();
                 const delay: number = this.in.g2();
 
-                if (this.waveEnabled && !Client.lowMem && this.waveCount < 50) {
+                if (this.waveEnabled && !Client.lowMem && this.waveCount < 50 && lostliteSound('effect', soundId)) { // 2006RS-2: the app can mute it
                     this.waveIds[this.waveCount] = soundId;
                     this.waveLoops[this.waveCount] = loops;
                     this.waveDelay[this.waveCount] = delay + JagFX.delays[soundId];
@@ -8113,6 +8118,7 @@ export class Client extends GameShell {
     }
 
     private showObject(x: number, z: number): void {
+        lostliteObjShown(this.minusedlevel, x, z); // 2006RS-2: the app's ground item events
         const objs = this.groundObj[this.minusedlevel][x][z];
         if (!objs) {
             this.world?.delObj(this.minusedlevel, x, z);

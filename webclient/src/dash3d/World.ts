@@ -191,7 +191,13 @@ export default class World {
         this.resetMap();
     }
 
+    // 2006RS-2: every loc added to or taken off the scene, for the app (LostLite.ts lostliteLoc: RuneLite's
+    // Wall/Decorative/Game/GroundObject Spawned and Despawned). k 0 wall, 1 decoration, 2 scenery, 3 ground
+    // decoration, -1 the whole scene reset. Null in a plain browser.
+    static locHook: ((k: number, level: number, x: number, z: number, typecode: number, info: number, spawned: boolean) => void) | null = null;
+
     resetMap(): void {
+        World.locHook?.(-1, 0, 0, 0, 0, 0, false);
         for (let level: number = 0; level < this.maxTileLevel; level++) {
             for (let x: number = 0; x < this.maxTileX; x++) {
                 for (let z: number = 0; z < this.maxTileZ; z++) {
@@ -346,6 +352,7 @@ export default class World {
         const tile: Square | null = this.squares[tileLevel][tileX][tileZ];
         if (tile) {
             tile.groundDecor = new GroundDecor(y, tileX * 128 + 64, tileZ * 128 + 64, model, typecode, typecode2);
+            World.locHook?.(3, tileLevel, tileX, tileZ, typecode, typecode2, true);
         }
     }
 
@@ -355,6 +362,9 @@ export default class World {
             return;
         }
 
+        if (tile.groundDecor) {
+            World.locHook?.(3, level, x, z, tile.groundDecor.typecode, tile.groundDecor.typecode2, false);
+        }
         tile.groundDecor = null;
     }
 
@@ -407,6 +417,7 @@ export default class World {
         const tile: Square | null = this.squares[level][tileX][tileZ];
         if (tile) {
             tile.wall = new Wall(y, tileX * 128 + 64, tileZ * 128 + 64, angle1, angle2, model1, model2, typecode1, typecode2);
+            World.locHook?.(0, level, tileX, tileZ, typecode1, typecode2, true);
         }
     }
 
@@ -416,6 +427,9 @@ export default class World {
             return;
         }
 
+        if (tile.wall) {
+            World.locHook?.(0, level, x, z, tile.wall.typecode, tile.wall.typecode2, false);
+        }
         tile.wall = null;
     }
 
@@ -433,6 +447,7 @@ export default class World {
         const tile: Square | null = this.squares[level][tileX][tileZ];
         if (tile) {
             tile.decor = new Decor(y, tileX * 128 + offsetX + 64, tileZ * 128 + offsetZ + 64, type, angle, model, typecode, info);
+            World.locHook?.(1, level, tileX, tileZ, typecode, info, true);
         }
     }
 
@@ -442,6 +457,9 @@ export default class World {
             return;
         }
 
+        if (tile.decor) {
+            World.locHook?.(1, level, x, z, tile.decor.typecode, tile.decor.typecode2, false);
+        }
         tile.decor = null;
     }
 
@@ -469,7 +487,11 @@ export default class World {
 
         const sceneX: number = tileX * 128 + width * 64;
         const sceneZ: number = tileZ * 128 + length * 64;
-        return this.setSprite(sceneX, sceneZ, y, level, tileX, tileZ, width, length, model, typecode, info, yaw, false);
+        const added = this.setSprite(sceneX, sceneZ, y, level, tileX, tileZ, width, length, model, typecode, info, yaw, false);
+        if (added && ((typecode >> 29) & 0x3) === 2) {
+            World.locHook?.(2, level, tileX, tileZ, typecode, info, true);
+        }
+        return added;
     }
 
     addDynamic(level: number, x: number, y: number, z: number, model: ModelSource | null, typecode: number, yaw: number, padding: number, forwardPadding: boolean): boolean {
@@ -518,6 +540,7 @@ export default class World {
         for (let l: number = 0; l < tile.spriteCount; l++) {
             const loc: Sprite | null = tile.sprites[l];
             if (loc && ((loc.typecode >> 29) & 0x3) === 2 && loc.minTileX === x && loc.minTileZ === z) {
+                World.locHook?.(2, level, x, z, loc.typecode, loc.typecode2, false);
                 this.delSprite(loc);
                 return;
             }
