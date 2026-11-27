@@ -260,6 +260,7 @@ def main(root, out):
     # quest list names
     names = {}
     buttons = set()
+    hidden = set()  # EASCape: quests switched off (hide=yes, e.g. Fairytale II) stay out of the helper
     cur = None
     with open(os.path.join(scripts, 'interfaces', 'questlist.if')) as f:
         for line in f:
@@ -270,6 +271,8 @@ def main(root, out):
                 names[cur] = line.strip()[5:]
             elif cur and line.startswith('buttontype=normal'):
                 buttons.add(cur)
+            elif cur and line.strip() == 'hide=yes':
+                hidden.add(cur)
 
     quests = {}
     for path in all_rs2:
@@ -279,6 +282,8 @@ def main(root, out):
         if not m:
             continue
         key = m.group(1)
+        if key in hidden:
+            continue
         branches = journal(path, consts)
         if not branches:
             print('  no journal stages:', key, os.path.relpath(path, root))
@@ -309,7 +314,7 @@ def main(root, out):
         }
     # Quests whose journal we couldn't read still show in the list (status from its colour).
     for key in sorted(buttons):
-        if key not in quests and key in names and if_ids.get('questlist:' + key):
+        if key not in quests and key not in hidden and key in names and if_ids.get('questlist:' + key):
             quests[key] = {'name': names[key], 'com': if_ids.get('questlist:' + key), 'varp': None, 'complete': None, 'journal': [], 'dialogue': {}}
     # EASCape: where each quest's variable lives, so the app can ask the server to send it live
     # (::appquests): {id: varp id, lo, hi: its bits}. Quests with no journal we can read take the
