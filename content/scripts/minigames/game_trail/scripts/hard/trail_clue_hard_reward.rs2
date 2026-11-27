@@ -23,7 +23,7 @@ if ($rare > 0) {
 ~trail_complete;
 
 [proc,trail_clue_hard_normal]
-def_int $random = random(22);
+def_int $random = random(21); // EASCape: no firelighters until the 20 February 2006 update comes to main
 
 switch_int ($random) {
     case 0 : inv_add(trail_rewardinv, coins, calc(1000 + random(4001)));
@@ -47,7 +47,6 @@ switch_int ($random) {
     case 18 : inv_add(trail_rewardinv, magic_shortbow, 1);
     case 19 : inv_add(trail_rewardinv, magic_longbow, 1);
     case 20 : inv_add(trail_rewardinv, ~trail_reward_godpage);
-    case 21 : inv_add(trail_rewardinv, ~trail_reward_firelighter, calc(4 + random(7))); // EASCape: firelighters, 20 Feb 2006 (OSRS wiki: shared, 4-10)
 }
 
 [proc,trail_clue_hard_rare]
