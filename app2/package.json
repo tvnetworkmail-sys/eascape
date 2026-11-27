@@ -1,0 +1,55 @@
+{
+  "name": "2006rs-2",
+  "productName": "2006RS-2",
+  "version": "0.1.0",
+  "description": "2006RS-2: the test app, 2007RS's RuneLite-style app ported to 2006RS",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/patcher.test.js && node test/drawdistance.test.js && node test/bank.test.js && node test/player.test.js && node test/worldmap.test.js && node test/dialoguekeys.test.js && node test/questhelper.test.js && node test/features.test.js && node test/hotkeys.test.js && node test/clones.test.js",
+    "dist:win": "electron-builder --win --x64 --publish never"
+  },
+  "build": {
+    "appId": "2006rs-2.client",
+    "productName": "2006RS-2",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "artifactName": "2006RS-2-${version}-windows.${ext}",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "2006RS-2",
+      "artifactName": "2006RS-2-${version}-setup.${ext}"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://2006rs.com/download/2006rs-2/"
+    },
+    "asarUnpack": [
+      "src/main/routeWorker.js",
+      "src/plugins/questhelper/**"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}

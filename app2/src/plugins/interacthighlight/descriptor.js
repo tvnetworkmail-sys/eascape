@@ -1,0 +1,42 @@
+'use strict';
+// RuneLite's Interact Highlight plugin (net.runelite.client.plugins.interacthighlight), cloned 1:1: InteractHighlightConfig.
+module.exports = {
+  id: 'interacthighlight',
+  name: 'Interact Highlight',
+  description: 'Outlines entities you interact with or hover over',
+  tags: [],
+  enabledByDefault: false,
+  game: './interacthighlight/game.js',
+  page: './interacthighlight/page.js',
+  config: {
+    group: 'interacthighlight',
+    sections: [
+      { key: 'npcSection', name: 'NPCs', description: 'Settings for NPC highlight.', position: 0 },
+      { key: 'playerSection', name: 'Players', description: 'Settings for player highlight.', position: 1 },
+      { key: 'objectSection', name: 'Objects', description: 'Settings for object highlight.', position: 2 },
+      { key: 'itemSection', name: 'Items', description: 'Settings for item highlight.', position: 3 },
+    ],
+    items: [
+      { key: 'npcShowHover', name: 'Show on hover', description: 'Outline NPCs when hovered.', type: 'boolean', default: true, section: 'npcSection', position: 1 },
+      { key: 'npcShowInteract', name: 'Show on interact', description: 'Outline NPCs when interacted.', type: 'boolean', default: true, section: 'npcSection', position: 2 },
+      { key: 'npcHoverHighlightColor', name: 'NPC hover', description: 'The color of the hover outline for NPCs.', type: 'color', alpha: true, default: '#90FFFF00', section: 'npcSection', position: 3 },
+      { key: 'npcAttackHoverHighlightColor', name: 'NPC attack hover', description: 'The color of the attack hover outline for NPCs.', type: 'color', alpha: true, default: '#90FFFF00', section: 'npcSection', position: 4 },
+      { key: 'npcInteractHighlightColor', name: 'NPC interact', description: 'The color of the target outline for NPCs.', type: 'color', alpha: true, default: '#90FF0000', section: 'npcSection', position: 5 },
+      { key: 'npcAttackHighlightColor', name: 'NPC attack', description: 'The color of the outline on attacked NPCs.', type: 'color', alpha: true, default: '#90FF0000', section: 'npcSection', position: 6 },
+      { key: 'playerShowHover', name: 'Show on hover', description: 'Outline players when hovered.', type: 'boolean', default: true, section: 'playerSection', position: 1 },
+      { key: 'playerShowInteract', name: 'Show on interact', description: 'Outline players when interacted.', type: 'boolean', default: true, section: 'playerSection', position: 2 },
+      { key: 'playerHoverHighlightColor', name: 'Player hover', description: 'The color of the hover outline for players.', type: 'color', alpha: true, default: '#9000FFFF', section: 'playerSection', position: 4 },
+      { key: 'playerInteractHighlightColor', name: 'Player interact', description: 'The color of the target outline for players.', type: 'color', alpha: true, default: '#90FF0000', section: 'playerSection', position: 6 },
+      { key: 'objectShowHover', name: 'Show on hover', description: 'Outline objects when hovered.', type: 'boolean', default: true, section: 'objectSection', position: 1 },
+      { key: 'objectShowInteract', name: 'Show on interact', description: 'Outline objects when interacted.', type: 'boolean', default: true, section: 'objectSection', position: 2 },
+      { key: 'objectHoverHighlightColor', name: 'Object hover', description: 'The color of the hover outline for objects.', type: 'color', alpha: true, default: '#9000FFFF', section: 'objectSection', position: 4 },
+      { key: 'objectInteractHighlightColor', name: 'Object interact', description: 'The color of the target outline for objects.', type: 'color', alpha: true, default: '#90FF0000', section: 'objectSection', position: 6 },
+      { key: 'itemShowHover', name: 'Show on hover', description: 'Outline items when hovered.', type: 'boolean', default: true, section: 'itemSection', position: 1 },
+      { key: 'itemShowInteract', name: 'Show on interact', description: 'Outline items when interacted.', type: 'boolean', default: true, section: 'itemSection', position: 2 },
+      { key: 'itemHoverHighlightColor', name: 'Item hover', description: 'The color of the hover outline for items.', type: 'color', alpha: true, default: '#9000FFFF', section: 'itemSection', position: 4 },
+      { key: 'itemInteractHighlightColor', name: 'Item interact', description: 'The color of the target outline for items.', type: 'color', alpha: true, default: '#90FF0000', section: 'itemSection', position: 6 },
+      { key: 'borderWidth', name: 'Border width', description: 'Width of the outlined border.', type: 'int', default: 4, min: 0, position: 7 },
+      { key: 'outlineFeather', name: 'Outline feather', description: 'Specify between 0-4 how much of the model outline should be faded.', type: 'int', default: 4, min: 0, max: 4, position: 8 },
+    ],
+  },
+};

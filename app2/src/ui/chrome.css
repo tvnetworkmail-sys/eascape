@@ -1,0 +1,542 @@
+/* 2007RS shell: RuneLite's look, 1:1.
+   Colours: net.runelite.client.ui.ColorScheme. Sizes and component looks: RuneLiteLAF.properties
+   over FlatLaf 3.2.5 (FlatLaf.properties, FlatDarkLaf.properties) with @background = DARK_GRAY,
+   @foreground = TEXT, accent = BRAND_ORANGE. Fonts: FontManager's RuneScape fonts at 16 px.
+   Layout: ClientUI (title pane, 4 px content border, JTabbedPane sidebar on the right with
+   26 px tabs and 16 px icons), PluginPanel (225 + 17 px), PluginListPanel, ConfigPanel. */
+@font-face { font-family: 'RuneScape'; src: url('assets/fonts/runescape.ttf'); }
+@font-face { font-family: 'RuneScape Small'; src: url('assets/fonts/runescape_small.ttf'); }
+@font-face { font-family: 'RuneScape Bold'; src: url('assets/fonts/runescape_bold.ttf'); }
+
+:root {
+  /* ColorScheme */
+  --brand-orange: rgb(220, 138, 0);
+  --brand-orange-t: rgba(220, 138, 0, 0.47);
+  --darker-gray: rgb(30, 30, 30);
+  --dark-gray: rgb(40, 40, 40);
+  --medium-gray: rgb(77, 77, 77);
+  --light-gray: rgb(165, 165, 165);
+  --text: rgb(198, 198, 198);
+  --control: rgb(30, 30, 30);
+  --border: rgb(23, 23, 23);
+  --darker-gray-hover: rgb(60, 60, 60);
+  --dark-gray-hover: rgb(35, 35, 35);
+  --progress-complete: rgb(55, 240, 70);
+  --progress-error: rgb(230, 30, 30);
+  --progress-inprogress: rgb(230, 150, 30);
+  --scroll-track: rgb(25, 25, 25);
+  /* derived by FlatLaf from the above */
+  --menu-bg: rgb(50, 50, 50);              /* @menuBackground = lighten(@background, 4%) */
+  --title-btn-hover: rgb(68, 68, 68);      /* TitlePane.buttonHoverBackground = lighten(DARKER_GRAY, 15%) */
+  --title-btn-pressed: rgb(56, 56, 56);    /* TitlePane.buttonPressedBackground = lighten(DARKER_GRAY, 10%) */
+  --title-inactive: rgb(149, 149, 149);    /* @disabledForeground = shade(@foreground, 25%) */
+  --tab-hover: rgb(17, 17, 17);            /* TabbedPane.hoverColor = darken(DARKER_GRAY, 5%) */
+  --btn-hover: rgb(38, 38, 38);            /* Button.hoverBackground = lighten(CONTROL, 3%) */
+  --btn-pressed: rgb(46, 46, 46);          /* Button.pressedBackground = lighten(CONTROL, 6%) */
+  --focus-border: rgb(90, 90, 90);         /* Component.focusedBorderColor = lighten(MEDIUM_GRAY, 5%) */
+  --arrow: rgb(164, 164, 164);             /* @buttonArrowColor = shade(@foreground, 17%) */
+  --arrow-hover: rgb(190, 190, 190);       /* @buttonHoverArrowColor = lighten(@buttonArrowColor, 10%) */
+  --checkmark: rgb(178, 178, 178);         /* CheckBox.icon.checkmarkColor = shade(@foreground, 10%) */
+  --odd-row: rgb(44, 44, 44);
+  --title-h: 23px;
+  --tab-w: 26px;
+  --panel-w: 242px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--darker-gray); color: var(--text);
+  font: 16px/16px 'RuneScape', sans-serif; user-select: none; cursor: default; }
+button, input, select, textarea { font: inherit; color: inherit; line-height: 16px; }
+button { cursor: default; }
+button:focus, input:focus, textarea:focus { outline: none; }
+img { image-rendering: auto; }
+.small { font-family: 'RuneScape Small', sans-serif; }
+.bold { font-family: 'RuneScape Bold', sans-serif; }
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- title pane (FlatTitlePane) */
+/* icon 16 px with iconMargins 3,8,3,8; title in RuneScape Bold; the embedded menu bar's glue, then
+   ClientToolbarPanel (23 px buttons, 4 px apart); window buttons 33 x 23 (TitlePane.buttonSize). */
+#titlebar { height: var(--title-h); display: flex; align-items: stretch; background: var(--darker-gray);
+  -webkit-app-region: drag; }
+#titlebar .app-icon { width: 16px; height: 16px; margin: 3px 8px; align-self: center; }
+#title { font-family: 'RuneScape Bold', sans-serif; color: var(--text); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; align-self: center; flex: 1; min-width: 60px; padding: 0; }
+body.blurred #title { color: var(--title-inactive); }
+#toolbar { display: flex; gap: 4px; -webkit-app-region: no-drag; align-items: stretch; }
+#toolbar button { width: 23px; height: 23px; border: 0; padding: 0; background: transparent; display: grid; place-items: center; }
+#toolbar button:hover img { opacity: 0.7; } /* [style]Button.iconButton rolloverIconAlpha 0.7 */
+.window-buttons { display: flex; -webkit-app-region: no-drag; }
+.window-buttons button { width: 33px; height: 23px; border: 0; padding: 0; background: transparent; display: block; color: var(--text); }
+.window-buttons svg { display: block; width: 33px; height: 23px; shape-rendering: crispEdges; }
+.window-buttons button:hover { background: var(--title-btn-hover); }
+.window-buttons button:active { background: var(--title-btn-pressed); }
+.window-buttons button.close:hover { background: #c42b1c; color: #fff; }
+.window-buttons button.close:active { background: rgba(196, 43, 28, 0.9); color: #fff; }
+body.blurred .window-buttons button { color: var(--title-inactive); }
+
+/* ---------------------------------------------------------------- content (ClientUI.Layout) */
+/* MatteBorder(4,4,4,4, DARKER_GRAY) round the client and sidebar unless maximized */
+#body { display: flex; height: calc(100% - var(--title-h)); padding: 4px; background: var(--darker-gray); }
+body.maximized #body { padding: 0; }
+#game-space { flex: 1; background: #000; min-width: 0; }
+#sidebar { display: flex; flex: none; background: var(--darker-gray); }
+body.sidebar-closed #sidebar { display: none; }
+#panel { width: var(--panel-w); flex: none; background: var(--dark-gray); overflow-y: auto; overflow-x: hidden; position: relative; }
+#panel.fill { overflow: hidden; display: flex; flex-direction: column; }
+body.panel-closed #panel { display: none; }
+/* JTabbedPane(RIGHT): tabInsets 2,5,2,5, tabHeight 26, 16 px icons; the 1 px content separator
+   (TabbedPane.contentAreaColor = Component.borderColor = BORDER) between the panel and the tabs;
+   the selected tab's 3 px underline faces the content; hover = TabbedPane.hoverColor */
+#tabs { width: calc(var(--tab-w) + 1px); flex: none; background: var(--darker-gray); display: flex; flex-direction: column;
+  border-left: 1px solid var(--border); }
+#tabs button { width: var(--tab-w); height: 26px; flex: none; border: 0; padding: 0; background: transparent; position: relative;
+  display: grid; place-items: center; }
+#tabs button img { width: 16px; height: 16px; display: block; }
+#tabs button:hover { background: var(--tab-hover); }
+#tabs button.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-orange); }
+
+/* RuneLiteScrollBarUI: 7 px, MEDIUM_GRAY thumb on SCROLL_TRACK, no buttons */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--medium-gray); }
+::-webkit-scrollbar-corner { background: var(--scroll-track); }
+
+/* ---------------------------------------------------------------- shared components */
+.pad { padding: 6px; } /* PluginPanel.BORDER_OFFSET */
+.white { color: #fff; }
+.orange { color: var(--brand-orange); }
+.muted { color: var(--light-gray); }
+.green { color: var(--progress-complete); }
+.red { color: var(--progress-error); }
+.amber { color: var(--progress-inprogress); }
+
+/* SwingUtil.removeButtonDecorations: borderless, transparent; rollover 0.7 alpha on the icon */
+.icon-btn { border: 0; background: transparent; padding: 0; display: grid; place-items: center; }
+.icon-btn:hover img { opacity: 0.7; }
+/* FlatButton under RuneLiteLAF: CONTROL background, 1 px BORDER, white text, margin 2,14,2,14 */
+.btn { min-height: 22px; border: 1px solid var(--border); background: var(--control); color: #fff; padding: 2px 14px; text-align: center; }
+.btn:hover { background: var(--btn-hover); }
+.btn:active { background: var(--btn-pressed); }
+.btn.block { width: 100%; display: block; }
+
+/* IconTextField: 30 px high, DARKER_GRAY (hover DARK_GRAY_HOVER), 30 px icon column, red "×" clear button */
+.text-field { position: relative; height: 30px; background: var(--darker-gray); display: flex; align-items: stretch; }
+.text-field:hover { background: var(--dark-gray-hover); }
+.text-field .tf-icon { width: 30px; flex: none; display: grid; place-items: center; }
+.text-field .tf-icon img { display: block; }
+.text-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); padding: 0; caret-color: var(--text); user-select: text; }
+.text-field input::placeholder { color: var(--title-inactive); }
+.text-field .clear { width: 30px; flex: none; border: 0; background: transparent; padding: 0; font-family: 'RuneScape Bold', sans-serif;
+  color: var(--progress-error); display: none; }
+.text-field .clear:hover { color: pink; }
+.text-field.has-text .clear { display: block; }
+
+/* MaterialTabGroup: GridLayout(1, 0, 7, 7), border 10,10,0,10; MaterialTab: DARKER_GRAY, hover
+   DARKER_GRAY_HOVER, padding 5,10,5,10 (selected 5,10,4,10 plus a 1 px BRAND_ORANGE bottom line) */
+.mtabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 7px; padding: 10px 10px 0; flex: none; }
+.mtab { border: 0; background: var(--darker-gray); padding: 5px 10px; display: grid; place-items: center; }
+.mtab:hover { background: var(--darker-gray-hover); }
+.mtab.selected { padding-bottom: 4px; border-bottom: 1px solid var(--brand-orange); }
+.mtab img { display: block; }
+
+/* JPopupMenu (FlatLaf): @menuBackground, drop shadow; JMenuItem margin 3,6,3,6, min width 72,
+   selection = MEDIUM_GRAY */
+.popup { position: fixed; z-index: 20; background: var(--menu-bg); padding: 4px 1px; min-width: 72px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); }
+.popup.labelmenu { padding: 5px; } /* PluginListItem.addLabelPopupMenu: EmptyBorder(5,5,5,5) */
+.popup button { display: block; width: 100%; border: 0; background: transparent; text-align: left; padding: 3px 6px; min-width: 72px;
+  white-space: nowrap; color: var(--text); }
+.popup button:hover { background: var(--medium-gray); }
+
+/* JToolTip (FlatToolTipUI): @menuBackground, border 4,6,4,6, drop shadow */
+.tooltip { position: fixed; z-index: 21; max-width: 300px; background: var(--menu-bg); color: var(--text);
+  padding: 4px 6px; pointer-events: none; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); white-space: pre; }
+
+/* JCheckBox (RuneLiteCheckBoxUI / FlatCheckBoxIcon): 22 px, CONTROL, 1 px BORDER, checkmark
+   path 4.5,7.5 6.6,10 11.25,3.5 (of 15) stroked 1.9 px */
+.checkbox { width: 22px; height: 22px; flex: none; border: 1px solid var(--border); background: var(--control); padding: 0; display: block; }
+.checkbox svg { display: block; width: 20px; height: 20px; visibility: hidden; overflow: visible; }
+.checkbox svg path { fill: none; stroke: var(--checkmark); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.checkbox[aria-checked="true"] svg { visibility: visible; }
+.checkbox:hover { background: var(--btn-hover); border-color: var(--focus-border); }
+.checkbox:active { background: var(--btn-pressed); }
+
+/* JSpinner (FlatSpinnerUI): 1 px BORDER, CONTROL, padding 2,6,2,6, a 6-column field, arrow
+   buttons as wide as the inner height with a BORDER separator and chevrons */
+.spinner { display: flex; height: 22px; border: 1px solid var(--border); background: var(--control); flex: none; }
+.spinner input { width: 66px; border: 0; outline: 0; background: transparent; color: var(--text); padding: 2px 6px; user-select: text; }
+.spinner.focus { border-color: var(--focus-border); }
+.spinner .arrows { width: 20px; display: flex; flex-direction: column; border-left: 1px solid var(--border); }
+.spinner .arrows button { flex: 1; border: 0; padding: 0; background: var(--control); color: var(--arrow); display: grid; place-items: center; }
+.spinner .arrows button:hover { color: var(--arrow-hover); }
+.spinner .arrows svg { display: block; width: 8px; height: 5px; }
+.spinner .arrows svg path { fill: none; stroke: currentColor; stroke-width: 1; }
+
+/* JComboBox (FlatComboBoxUI): 22 px high (ConfigPanel), padding 2,6,2,6, button as wide as the
+   inner height, min width 72 */
+.combo { position: relative; display: flex; height: 22px; min-width: 72px; max-width: 160px; border: 1px solid var(--border);
+  background: var(--control); color: var(--text); padding: 0; text-align: left; flex: none; }
+.enum-set { border: 1px solid var(--border); background: var(--darker-gray); }
+.enum-set > div { padding: 2px 6px; cursor: pointer; user-select: none; }
+.enum-set > div.sel { background: var(--brand-orange); color: #fff; }
+.combo .cv { flex: 1; min-width: 0; padding: 2px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combo .cb { width: 20px; flex: none; display: grid; place-items: center; color: var(--arrow); }
+.combo:hover .cb { color: var(--arrow-hover); }
+.combo .cb svg { display: block; width: 8px; height: 5px; }
+.combo .cb svg path { fill: none; stroke: currentColor; stroke-width: 1; }
+.combo-list { position: fixed; z-index: 20; background: var(--control); border: 1px solid var(--border); max-height: 330px; overflow-y: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); }
+.combo-list div { padding: 1px 6px; white-space: nowrap; height: 18px; }
+.combo-list div.sel { background: var(--medium-gray); }
+.combo-list div:hover { background: var(--medium-gray); }
+
+/* ColorJButton: filled with the colour, "#RRGGBB" in black or white by perceived luminance */
+.color-btn { height: 22px; min-width: 72px; border: 1px solid var(--border); padding: 2px 14px; color: #fff; flex: none; }
+/* HotkeyButton: Dialog 12 */
+.hotkey-btn { height: 22px; min-width: 72px; border: 1px solid var(--border); background: var(--control); color: #fff;
+  padding: 2px 14px; font: 12px/16px Arial, sans-serif; flex: none; }
+.hotkey-btn:hover { background: var(--btn-hover); }
+.hotkey-btn.listening { border-color: var(--focus-border); }
+
+/* RuneliteColorPicker, as a popup: saturation/brightness square, hue strip, hex field */
+.colorpicker { position: fixed; z-index: 22; background: var(--dark-gray); border: 1px solid var(--border); padding: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6); width: 220px; }
+.colorpicker .cp-title { color: #fff; margin-bottom: 8px; }
+.colorpicker .cp-main { display: flex; gap: 8px; }
+.colorpicker canvas { display: block; cursor: crosshair; }
+.colorpicker .cp-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.colorpicker .cp-swatch { width: 30px; height: 22px; border: 1px solid var(--border); }
+.colorpicker .cp-hex { width: 90px; height: 22px; border: 1px solid var(--border); background: var(--control); color: var(--text); padding: 2px 6px; user-select: text; }
+.colorpicker .cp-alpha { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.colorpicker .cp-alpha input { flex: 1; accent-color: var(--brand-orange); }
+
+/* Desktop-style notification, shown in the app when the OS can't (Notifier's own fallback) */
+.toast { position: fixed; right: 12px; bottom: 12px; z-index: 30; width: 280px; background: var(--darker-gray);
+  border: 1px solid var(--border); border-left: 3px solid var(--brand-orange); padding: 8px 10px; box-shadow: 0 3px 10px rgba(0,0,0,.6); }
+.toast .t-title { font-family: 'RuneScape Bold', sans-serif; color: #fff; }
+.toast .t-body { color: var(--text); margin-top: 2px; white-space: normal; }
+
+/* ---------------------------------------------------------------- info panel */
+.info-version { background: var(--darker-gray); padding: 10px; }
+.info-version div { line-height: 1.3; }
+.dt-panel { padding: 6px; background: #282828; }
+.dt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.dt-btn { background: #1e1e1e; color: #c6c6c6; border: 1px solid #111; padding: 5px 2px; font: inherit; font-size: 12px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-btn:hover { background: #333; }
+.dt-btn.active { background: #00ff00; color: #000; }
+.dt-frame { margin-top: 8px; border-top: 1px solid #111; padding-top: 6px; }
+.dt-frame-title { color: #fff; margin-bottom: 4px; }
+.dt-checks { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.dt-checks .dt-btn { margin-left: auto; padding: 2px 8px; }
+.dt-check { display: flex; gap: 3px; align-items: center; font-size: 12px; }
+.dt-log { max-height: 50vh; overflow-y: auto; font-size: 12px; color: #c6c6c6; background: #1e1e1e; padding: 2px 4px; overflow-wrap: anywhere; }
+.dt-tick { border-bottom: 1px solid #a5a5a5; padding: 3px 0 0 6px; color: #fff; }
+.link-panel { display: flex; align-items: center; background: var(--darker-gray); margin-top: 10px; padding: 10px; cursor: pointer; }
+.link-panel:hover, .link-panel:hover .lp-text { background: var(--darker-gray-hover); }
+.link-panel:active, .link-panel:active .lp-text { background: rgb(42, 42, 42); }
+.link-panel img { width: 30px; height: 30px; object-fit: contain; flex: none; }
+.lp-text { padding: 5px 10px; line-height: 1.25; flex: 1; }
+.lp-arrow { flex: none; }
+
+
+/* ---------------------------------------------------------------- PluginListPanel / ConfigPanel */
+.rl-top { padding: 10px; flex: none; }                       /* topPanel: EmptyBorder(10,10,10,10) */
+.rl-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.rl-main { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 5px; } /* mainPanel: 8,10,10,10; DynamicGridLayout(0,1,0,5) */
+/* PluginListItem: 20 px, BorderLayout(3, 0): star 21 | name | [cog 25][switch 25] */
+.plugin-item { height: 20px; display: flex; align-items: stretch; gap: 3px; flex: none; }
+.plugin-item .pin { width: 21px; flex: none; }
+.plugin-item .name { flex: 1; min-width: 0; color: #fff; white-space: nowrap; overflow: hidden; align-self: center; }
+.plugin-item .name:hover { color: var(--brand-orange); }
+.plugin-item .btns { display: grid; grid-template-columns: repeat(var(--n, 2), 25px); flex: none; }
+.plugin-item .btns > * { width: 25px; }
+.empty { color: var(--light-gray); }
+
+/* ConfigPanel top: [back 22 (5 px right inset)] title [switch 25], BorderLayout(0, 6) */
+.config-top { display: flex; align-items: stretch; padding: 10px; min-height: 38px; flex: none; }
+.config-top .back { width: 22px; padding-right: 5px; flex: none; justify-content: center; }
+.config-top .title { flex: 1; min-width: 0; color: #fff; overflow: hidden; white-space: nowrap; align-self: center; }
+.config-top .title:hover { color: var(--brand-orange); }
+.config-top .toggle { width: 25px; flex: none; }
+/* item: BorderLayout, white label in the centre, control on the east (or south for text) */
+.cfg-item { display: flex; align-items: center; justify-content: space-between; gap: 0; min-height: 16px; }
+.cfg-item .label { color: #fff; flex: 1; min-width: 0; padding-right: 4px; }
+.cfg-item.stack { flex-direction: column; align-items: stretch; }
+.cfg-item.stack .label { padding: 0 0 0 0; }
+/* section: header with MatteBorder(0,0,1,0, MEDIUM_GRAY) + EmptyBorder(0,0,3,1); 18 px toggle with
+   a 5 px right inset; name in RuneScape Bold, BRAND_ORANGE; contents DynamicGridLayout(0,1,0,5) with
+   MatteBorder(0,0,1,0, MEDIUM_GRAY) + EmptyBorder(6,0,6,0) */
+.cfg-section { display: flex; flex-direction: column; }
+.cfg-section-header { display: flex; align-items: stretch; border-bottom: 1px solid var(--medium-gray); padding: 0 1px 3px 0; }
+.cfg-section-header .arrow { width: 18px; padding: 0 5px 0 0; flex: none; border: 0; background: transparent; display: flex; align-items: center; overflow: hidden; }
+/* the 18 px icon centred in the 13 px left by the inset, as Swing lays it out (x = -2) */
+.cfg-section-header .arrow img { width: 18px; height: 18px; max-width: none; display: block; margin-left: -2px; flex: none; }
+.cfg-section-header .sname { font-family: 'RuneScape Bold', sans-serif; color: var(--brand-orange); align-self: center; }
+.cfg-section-body { border-bottom: 1px solid var(--medium-gray); padding: 6px 0; display: flex; flex-direction: column; gap: 5px; }
+.cfg-section.closed .cfg-section-body { display: none; }
+/* JTextArea under ConfigPanel: EmptyBorder(5,5,5,5), line wrap */
+textarea.cfg-text, input.cfg-text { width: 100%; border: 0; background: var(--control); color: var(--text); outline: 0; padding: 5px;
+  resize: none; user-select: text; overflow: hidden; display: block; min-height: 26px; }
+
+/* item list editor (Ground Items lists) */
+.list-box { width: 100%; }
+.list-rows { background: var(--darker-gray); max-height: 180px; overflow-y: auto; margin-bottom: 4px; }
+.list-row { display: flex; align-items: center; padding: 2px 4px 2px 6px; }
+.list-row:hover { background: var(--darker-gray-hover); }
+.list-name { flex: 1; color: var(--light-gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-remove { background: none; border: 0; color: var(--light-gray); font-size: 14px; line-height: 1; padding: 0 4px; }
+.list-remove:hover { color: var(--progress-error); }
+.list-empty { padding: 2px 0 6px; }
+.list-controls { display: flex; gap: 4px; }
+.list-add { flex: 1; min-width: 0; height: 22px; border: 1px solid var(--border); background: var(--control); color: var(--text); outline: 0; padding: 2px 6px; user-select: text; }
+.list-btn { padding: 2px 8px; }
+
+/* Profiles */
+.profile-list { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 4px; }
+.profile { background: var(--darker-gray); padding: 8px 8px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.profile:hover { background: var(--darker-gray-hover); }
+.profile.active { box-shadow: inset 3px 0 0 var(--brand-orange); }
+.profile .pname { flex: 1; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile .pname input { width: 100%; background: var(--control); border: 1px solid var(--border); color: #fff; outline: 0; }
+.profile .icon-btn img { width: 16px; height: 16px; }
+.profile .tag { color: var(--brand-orange); }
+
+/* ---------------------------------------------------------------- world hopper
+   RuneLite's WorldSwitcherPanel: WorldTableHeader (SCROLL_TRACK_COLOR, 1px MEDIUM_GRAY right border, RuneScape Small,
+   LIGHT_GRAY / BRAND_ORANGE), WorldTableRow (ODD_ROW 44,44,44 / DARK_GRAY, brighter on hover, 2px vertical border) */
+.wh-header { display: flex; height: 22px; }
+.wh-th { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 0 2px 0 5px; background: rgb(25,25,25);
+  border-right: 1px solid rgb(77,77,77); color: rgb(165,165,165); font-family: 'RuneScape Small', sans-serif; cursor: default; user-select: none; }
+.wh-th:hover, .wh-th.ordering { color: rgb(220,138,0); }
+.wh-th img.up { transform: rotate(180deg); }
+.wh-th img.faded { filter: brightness(0.55); }
+.wh-th:hover img.faded { filter: none; }
+.wh-row { display: flex; align-items: center; padding: 2px 0; min-height: 26px; background: rgb(40,40,40); font-family: 'RuneScape Small', sans-serif; cursor: default; user-select: none; }
+.wh-row.odd { background: rgb(44,44,44); }
+.wh-row:hover { background: rgb(57,57,57); }
+.wh-world { width: 60px; flex: none; display: flex; align-items: center; gap: 7px; padding: 0 5px; box-sizing: border-box; }
+.wh-players { width: 40px; flex: none; padding: 0 5px; box-sizing: border-box; }
+.wh-activity { flex: 1; min-width: 0; padding: 0 5px; white-space: nowrap; overflow: hidden; }
+.wh-ping { width: 35px; flex: none; padding: 0 5px; text-align: right; box-sizing: border-box; }
+
+/* ---------------------------------------------------------------- Quest Helper */
+.qh-title { color: var(--brand-orange); font-size: 16px; margin-bottom: 6px; }
+.qh-head { display: flex; align-items: center; gap: 6px; }
+.qh-head .qh-title { margin: 0; }
+.qh-search { margin-bottom: 8px; }
+.qh-list { display: flex; flex-direction: column; }
+.qh-quest { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 4px 6px; cursor: pointer; }
+.qh-quest:nth-child(odd) { background: var(--odd-row); }
+.qh-quest:hover { background: var(--darker-gray-hover); }
+.qh-quest.disabled { cursor: default; }
+.qh-quest.disabled:hover { background: inherit; }
+.qh-quest .small { white-space: nowrap; }
+.qh-yellow { color: rgb(255, 255, 0); }
+.qh-red { color: rgb(255, 60, 60); }
+.qh-current { background: var(--dark-gray); border: 1px solid var(--medium-gray); padding: 8px; margin: 8px 0; }
+.qh-label { color: var(--brand-orange); margin-bottom: 4px; }
+.qh-steptext { color: #fff; margin-bottom: 4px; }
+.qh-stepitems { margin: 4px 0; }
+.qh-item { padding: 1px 0; }
+.qh-note { margin-top: 6px; }
+.qh-gap { margin-top: 8px; }
+.qh-unpin { margin-top: 6px; }
+.qh-step { padding: 4px 0 4px 8px; border-left: 2px solid transparent; }
+.qh-step.current { color: #fff; border-left-color: var(--brand-orange); background: var(--dark-gray); }
+.qh-step.done { color: var(--medium-gray); text-decoration: line-through; }
+.qh-credit { margin-top: 12px; }
+
+/* ---------------------------------------------------------------- XP Tracker */
+/* RuneLite's XpPanel (6 px border), its overall panel (10 px border, icon west, 2 rows) and XpInfoBox (5 px above;
+   a 35 x 35 icon and a 2 x 2 grid with 9/2 px borders; the progress bar 16 px, 7 px from the sides; compact: 5/1/5/5) */
+.xpt-panel { padding: 6px; }
+.xpt-overall { background: var(--darker-gray); padding: 10px; display: flex; align-items: center; }
+.xpt-overall img { image-rendering: pixelated; flex: none; }
+.xpt-overall-info { padding-left: 10px; display: grid; grid-template-rows: 1fr 1fr; }
+.xpt-label { font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; color: #fff; white-space: nowrap; overflow: hidden; }
+.xpt-key { color: var(--light-gray); }
+.xpt-box { padding-top: 5px; }
+.xpt-container { background: var(--darker-gray); cursor: default; }
+.xpt-header { display: flex; }
+.xpt-icon { width: 35px; height: 35px; flex: none; display: flex; align-items: center; justify-content: center; }
+.xpt-icon img, .xpt-icon-small img { image-rendering: pixelated; }
+.xpt-stats { flex: 1; min-width: 0; display: grid; grid-template-columns: auto auto; justify-content: space-between; column-gap: 4px; padding: 9px 2px; }
+.xpt-progress { display: flex; align-items: center; padding: 0 7px 7px 7px; }
+.xpt-progress.compact { padding: 5px 5px 5px 1px; }
+.xpt-icon-small { width: 25px; height: 16px; flex: none; display: flex; align-items: center; justify-content: center; }
+.xpt-bar { position: relative; flex: 1; height: 16px; overflow: hidden; }
+.xpt-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; }
+.xpt-bar-mark { position: absolute; top: 0; bottom: 0; width: 1px; }
+.xpt-bar span { position: absolute; top: 2px; line-height: 14px; font-family: 'RuneScape Small', sans-serif; font-size: 16px; color: #fff; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+.xpt-bar span.dim { color: rgb(128, 128, 128); }
+.xpt-bar-left { left: 5px; }
+.xpt-bar-center { left: 50%; transform: translateX(-50%); }
+.xpt-bar-right { right: 5px; }
+/* PluginErrorPanel: 50 px from the top, a white title and a grey RuneScape Small description, centred */
+.plugin-error { padding: 50px 10px 0; text-align: center; text-shadow: 1px 1px 0 #000; }
+.plugin-error-title { color: #fff; }
+.plugin-error-text { color: rgb(128, 128, 128); font-family: 'RuneScape Small', sans-serif; font-size: 16px; }
+
+/* Info Boxes panel */
+.ib-all { border-bottom: 1px solid var(--border); margin: 6px 0 2px; padding-bottom: 4px; }
+.ib-kinds { margin-bottom: 8px; }
+.ib .cfg-section { margin-top: 4px; }
+.ib-help { margin: 10px 0; display: grid; gap: 6px; }
+.ib-reset { margin-top: 4px; }
+.ib-from { margin: 8px 0 2px; }
+
+/* Loot Tracker: RuneLite's LootTrackerPanel / LootTrackerBox */
+.ltr-panel { padding: 6px; }
+.ltr-actions { display: flex; justify-content: space-between; align-items: center; background: var(--darker-gray); padding: 5px 10px; margin-bottom: 10px; }
+.ltr-actions-left { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.ltr-details-title { color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ltr-actions-right { display: grid; grid-template-columns: repeat(4, auto); gap: 10px; }
+.ltr-btn { background: none; border: 0; padding: 0; cursor: pointer; display: flex; }
+.ltr-btn img { image-rendering: pixelated; }
+.ltr-btn.faded img { opacity: 0.3; }
+.ltr-btn.faded:hover img { opacity: 0.15; }
+.ltr-btn.back:hover img, .ltr-btn:not(.faded):not(.selected):hover img { opacity: 0.3; }
+.ltr-overall { display: flex; align-items: center; background: var(--darker-gray); padding: 8px 10px; margin-bottom: 10px; }
+.ltr-overall-icon { image-rendering: pixelated; flex: none; margin-right: 10px; }
+.ltr-overall-info { display: grid; grid-template-rows: 1fr 1fr; }
+.ltr-label { font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; color: #fff; white-space: nowrap; }
+.ltr-key { color: rgb(165, 165, 165); }
+.ltr-box { margin-bottom: 5px; }
+.ltr-title { display: flex; align-items: center; padding: 7px; background: rgb(21, 21, 21); font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; cursor: default; }
+.ltr-title.ignored { background: rgb(36, 36, 36); }
+.ltr-name { color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; min-width: 1px; }
+.ltr-sub { color: rgb(165, 165, 165); white-space: nowrap; flex: 1; margin-left: 5px; }
+.ltr-price { color: rgb(165, 165, 165); white-space: nowrap; margin-left: 5px; }
+.ltr-box.collapsed .ltr-name { color: rgb(178, 178, 178); }
+.ltr-box.collapsed .ltr-sub, .ltr-box.collapsed .ltr-price { color: rgb(115, 115, 115); }
+.ltr-items { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: rgb(21, 21, 21); padding-top: 1px; }
+.ltr-slot { position: relative; height: 42px; background: var(--darker-gray); display: flex; align-items: center; justify-content: center; }
+.ltr-slot img { image-rendering: pixelated; }
+.ltr-slot.ignored img { opacity: 0.3; }
+.ltr-qty { position: absolute; left: 6px; top: 3px; color: #ff0; font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; text-shadow: 1px 1px 0 #000; }
+.ltr-modal { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; }
+.ltr-dialog { background: var(--darker-gray); padding: 12px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+.ltr-dialog-title { color: #fff; margin-bottom: 8px; }
+.ltr-dialog-text { color: rgb(198, 198, 198); margin-bottom: 10px; }
+.ltr-dialog-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+/* LostLite > Sidebar order */
+.order-row .order-icon { width: 16px; height: 16px; margin-right: 6px; image-rendering: pixelated; }
+.order-row .list-remove { font-size: 10px; }
+.order-row .list-remove:hover { color: var(--brand-orange, #dc8a00); }
+.order-row .list-remove[disabled] { opacity: 0.25; cursor: default; }
+.order-row .list-remove[disabled]:hover { color: var(--light-gray); }
+.list-box .list-rows.order { max-height: none; }
+
+/* Time Tracking (RuneLite's TimeTrackingPanel): tab group (GridLayout 6 columns, 7px gaps, 10px border, 30x27 tabs
+   with 24px item icons), display with a 10/10/8/10 border; OverviewItemPanel (DARKER_GRAY, 7px border, 8px apart,
+   hover DARKER_GRAY_HOVER, arrow); TimeablePanel (7px apart, 7/7/6/0 top container, 2/3-size overlay icon at the icon's
+   bottom right, ThinProgressBar); ClockPanel (name field 24px, display field 24px centred, 16x14 buttons, 6px apart) */
+.tt-panel { display: flex; flex-direction: column; }
+.tt-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; padding: 10px 10px 0; }
+.tt-tab { height: 27px; border: 0; background: var(--darker-gray); display: grid; place-items: center; padding: 0; cursor: pointer; }
+.tt-tab:hover { background: var(--darker-gray-hover); }
+.tt-tab.selected { border-bottom: 1px solid var(--brand-orange); }
+.tt-tab img { width: 24px; height: 24px; object-fit: contain; object-position: left top; image-rendering: auto; }
+.tt-display-area { padding: 10px 10px 8px; }
+.tt-overview { display: flex; flex-direction: column; gap: 8px; }
+.tt-ov { display: flex; align-items: center; background: var(--darker-gray); padding: 7px; cursor: pointer; }
+.tt-ov:hover { background: var(--darker-gray-hover); }
+.tt-ov-icon { width: 36px; height: 32px; flex: none; }
+.tt-ov-icon img, .tt-icon { image-rendering: pixelated; display: block; }
+.tt-ov-text { flex: 1; min-width: 0; padding: 5px 7px; font-family: "RuneScape Small", sans-serif; }
+.tt-title { color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-status, .tt-estimate { color: rgb(128, 128, 128); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-ov-arrow { flex: none; }
+.tt-group { font-family: "RuneScape Small", sans-serif; color: var(--light-gray); padding-top: 15px; }
+.tt-group.first { padding-top: 4px; }
+.tt-timeable { padding-top: 7px; }
+.tt-timeable.first { padding-top: 0; }
+.tt-top { display: flex; align-items: center; background: var(--darker-gray); padding: 7px 0 6px 7px; }
+.tt-icons { position: relative; width: 36px; height: 32px; flex: none; }
+.tt-overlay { position: absolute; left: 12px; top: 10px; width: 24px; height: 21px; image-rendering: auto; }
+.tt-info { flex: 1; min-width: 0; padding: 4px 0 4px 4px; font-family: "RuneScape Small", sans-serif; }
+.shadow { text-shadow: 1px 1px 0 #000; }
+.tt-notify { border: 0; background: transparent; padding: 0 10px 0 0; width: 30px; height: 16px; cursor: pointer; display: grid; place-items: center; }
+.tt-progress { height: 4px; }
+.tt-progress > div { height: 100%; }
+.tt-clocks { display: flex; flex-direction: column; gap: 4px; }
+.tt-header { display: flex; align-items: center; justify-content: space-between; color: #fff; font-family: "RuneScape Small", sans-serif; }
+.tt-header.large { padding-top: 11px; }
+.tt-add { border: 0; background: transparent; padding: 0; width: 14px; height: 14px; cursor: pointer; display: grid; place-items: center; }
+.tt-add:hover img { opacity: 0.53; }
+.tt-info-panel { padding: 7px 8px 6px; color: rgb(115, 115, 115); font-family: "RuneScape Small", sans-serif; }
+.tt-clock { padding-top: 3px; }
+.tt-name-wrap { background: var(--darker-gray); border-bottom: 1px solid var(--dark-gray); }
+.tt-name { width: 100%; height: 24px; border: 0; outline: 0; background: transparent; color: var(--text); padding: 0 0 0 8px; user-select: text; }
+.tt-clock-main { background: var(--darker-gray); padding-top: 5px; }
+.tt-display { width: 100%; height: 24px; border: 0; outline: 0; background: transparent; text-align: center; padding: 0; user-select: text; }
+.tt-display[readonly] { cursor: default; }
+.tt-laps { display: grid; grid-template-columns: repeat(3, 1fr); padding-top: 5px; color: rgb(115, 115, 115); font-family: "RuneScape Small", sans-serif; text-align: center; }
+.tt-laps > div { padding: 4px 5px 3px; }
+.tt-actions { display: flex; justify-content: space-between; padding: 4px 0; }
+.tt-left, .tt-right { display: flex; gap: 6px; padding: 0 6px; }
+.tt-btn { border: 0; background: transparent; padding: 0; width: 16px; height: 14px; cursor: pointer; display: grid; place-items: center; }
+.tt-btn:hover img { filter: brightness(0.55); }
+.profile-head { color: #fff; font-family: "RuneScape Bold", sans-serif; }
+
+/* NotesPanel: border 10, DARKER_GRAY container with 10 px padding, transparent text area */
+.notes-panel { flex: 1; min-height: 0; padding: 10px; display: flex; }
+.notes-container { flex: 1; background: var(--darker-gray); padding: 10px; display: flex; }
+.notes-editor { flex: 1; border: 0; outline: 0; resize: none; background: transparent; color: var(--text); padding: 0; tab-size: 2; user-select: text; }
+
+/* Screen Markers (ScreenMarkerPluginPanel / ScreenMarkerPanel / ScreenMarkerCreationPanel) */
+.smk-panel { padding: 10px; }
+.smk-north { display: flex; justify-content: space-between; align-items: center; padding: 1px 0 10px; color: #fff; }
+.smk-add, .smk-icon { cursor: pointer; display: inline-flex; }
+.smk-add:hover img, .smk-icon:hover img { opacity: 0.53; }
+.smk-view > * + * { margin-top: 10px; }
+.smk-marker { background: var(--darker-gray, #1e1e1e); }
+.smk-name-wrapper { display: flex; align-items: center; border-bottom: 1px solid var(--dark-gray, #282828); }
+.smk-name { flex: 1; min-width: 0; background: transparent; border: 0; color: #fff; padding: 6px 8px; outline: none; }
+.smk-name-actions { padding-right: 8px; display: flex; gap: 8px; font-family: 'RuneScape Small', sans-serif; font-size: 16px; cursor: pointer; }
+.smk-save { color: rgb(55, 240, 70); } .smk-cancel { color: rgb(230, 30, 30); } .smk-rename { color: rgb(141, 141, 141); }
+.smk-save:hover, .smk-cancel:hover, .smk-rename:hover { filter: brightness(0.7); }
+.smk-bottom { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+.smk-left { display: flex; align-items: center; gap: 8px; padding-left: 8px; }
+.smk-right { display: flex; align-items: center; gap: 8px; padding-right: 8px; }
+.smk-indicator { background: none !important; border: 0; padding: 0; cursor: pointer; display: inline-flex; line-height: 0; }
+.smk-indicator:hover img { opacity: 0.53; }
+.smk-thickness { width: 50px; height: 20px; box-sizing: border-box; }
+img.smk-off { opacity: 0.4; }
+img.smk-locked { filter: grayscale(1); }
+.smk-creation { background: var(--darker-gray, #1e1e1e); padding: 8px; display: flex; justify-content: space-between; align-items: center; }
+.smk-instructions { color: #fff; font-family: 'RuneScape Small', sans-serif; font-size: 16px; text-shadow: 1px 1px 0 #000; }
+.smk-creation-actions { display: flex; gap: 8px; }
+
+/* Skill Calculator (panels/skillcalculator.js): SkillCalculatorPanel, UICalculatorInputArea, UIActionSlot, UICombinedActionSlot */
+.skc-panel { padding: 10px; }
+.skc-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+.skc-tab { padding: 5px 0; min-width: 0; }
+.skc-tab.selected { padding-bottom: 4px; }
+.skc-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 15px 0; }
+.skc-field { min-width: 0; }
+.skc-label { font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; color: #fff; padding-bottom: 4px; }
+.skc-flat { background: var(--darker-gray); }
+.skc-flat:hover { background: var(--dark-gray-hover); }
+.skc-input { width: 100%; box-sizing: border-box; border: 0; outline: 0; background: transparent; color: var(--text); padding: 5px 7px; caret-color: var(--text); user-select: text; }
+.skc-field .spinner { height: 26px; box-sizing: border-box; }
+.skc-list { display: flex; flex-direction: column; gap: 5px; }
+.skc-bonus { display: flex; justify-content: space-between; align-items: center; padding: 1px 0 1px 7px; }
+.skc-bonus-label { font-family: 'RuneScape Small', sans-serif; font-size: 16px; color: #fff; }
+.skc-gap { height: 4px; margin-top: -5px; }
+.skc-combined, .skc-slot { display: flex; align-items: center; background: var(--darker-gray); }
+.skc-combined { padding: 7px; }
+.skc-combined .skc-icon { padding-right: 5px; }
+.skc-slot { padding: 7px 7px 7px 12px; border-left: 4px solid rgb(161, 21, 21); cursor: default; }
+.skc-slot.green { border-left-color: rgb(38, 168, 49); }
+.skc-slot.orange { border-left-color: rgb(161, 105, 21); }
+.skc-slot:hover { background: var(--darker-gray-hover); }
+.skc-slot.selected { background: rgb(85, 85, 85); }
+.skc-icon { width: 32px; height: 32px; flex: none; display: grid; place-items: center; }
+.skc-icon img { display: block; max-width: 32px; max-height: 32px; image-rendering: pixelated; }
+.skc-info { padding-left: 5px; min-width: 0; display: grid; grid-template-rows: 1fr 1fr; }
+.skc-name, .skc-actions { white-space: nowrap; overflow: hidden; text-shadow: 1px 1px 0 #000; }
+.skc-name { color: #fff; }
+.skc-actions { font-family: 'RuneScape Small', sans-serif; font-size: 16px; line-height: 16px; color: var(--light-gray); }
+.skc-empty { text-align: center; padding-top: 50px; color: var(--text); }
