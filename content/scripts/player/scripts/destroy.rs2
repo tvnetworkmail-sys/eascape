@@ -22,13 +22,3 @@ inv_stoptransmit(inter_289:com_0);
 inv_clear(destroy_item);
 if_close;
 return($yes);
-
-// Fairytale II (OSRS wiki, Nuff's certificate: "Maybe I can find another in Fairy Nuff's grotto.")
-[opheld5,ft2_nuffs_certificate]
-def_int $slot = last_slot;
-if (~destroy_confirm(ft2_nuffs_certificate, "Maybe I can find another in Fairy Nuff's grotto.") = false) {
-    return;
-}
-if (inv_getobj(inv, $slot) = ft2_nuffs_certificate) {
-    inv_delslot(inv, $slot);
-}

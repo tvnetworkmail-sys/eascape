@@ -19,7 +19,9 @@
 [opnpc1,fairy_godfather_multi]
 def_int $s = %fairy_farmers_quest;
 if ($s >= ^fairy1_complete) {
-    @fairy2_godfather; // EASCape: Fairytale II (quest_fairy2/fairy2_zanaris.rs2)
+    // EASCape: as stored's Fairytale II has him before that quest starts (it isn't on main)
+    ~mesbox("The Godfather is ignoring you.");
+    return;
 }
 if ($s = ^fairy1_return & inv_total(inv, fairy_queen_secateurs) > 0) {
     @fairy1_godfather_finish;
@@ -98,8 +100,6 @@ session_log(^log_adventure, "Quest complete: Fairytale I - Growing Pains");
 // ---------------------------------------------------------------- Fairy Nuff
 
 [opnpc1,fairy_nuff] @fairy1_nuff;
-// EASCape: Fairytale II puts her in the 2007 cache's multinpc (gone while the quest has her away)
-[opnpc1,ft2_multi_4431] @fairy1_nuff;
 
 [label,fairy1_nuff]
 def_int $s = %fairy_farmers_quest;

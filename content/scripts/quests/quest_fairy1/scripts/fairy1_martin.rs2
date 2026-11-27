@@ -12,7 +12,6 @@
 //   - the transcript has nothing for Martin between telling you to find a fairy and the end, so
 //     there he asks how you are getting on (his own line from the transcript) and you say you're
 //     still working on it (ours);
-//   - after the quest, Martin starts Fairytale II (quest_fairy2).
 
 [opnpc1,martin_the_master_farmer]
 def_int $s = %fairy_farmers_quest;
@@ -23,11 +22,9 @@ if ($s = ^fairy1_gardeners) {
     @fairy1_martin_report;
 }
 if ($s >= ^fairy1_complete) {
-    if (~eascape_on(^eascape_fairy2_on) = false) { // EASCape: Fairytale II switched off for now (eascape_switches.constant)
-        ~chatnpc("<p,happy>Hello again, <displayname>. Thanks again for your help with the Gardening Group's problems."); // ours
-        return;
-    }
-    @fairy2_martin; // Fairytale II (quest_fairy2/scripts/fairy2_martin.rs2)
+    // EASCape: Fairytale II isn't on main (it came out in July 2006); stored has it
+    ~chatnpc("<p,happy>Hello again, <displayname>. Thanks again for your help with the Gardening Group's problems."); // ours
+    return;
 }
 ~chatnpc("<p,quiz>Hello again, <displayname>. How are you getting on with solving the Gardening Group's problems?");
 ~chatplayer("<p,neutral>I'm still working on it."); // ours
