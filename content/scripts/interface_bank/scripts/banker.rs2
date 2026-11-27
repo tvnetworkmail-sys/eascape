@@ -42,3 +42,28 @@ switch_int ($option) {
 
         }
 }
+
+// EASCape: a banker faces the bank booth beside them when they spawn. Spawns carry no facing,
+// so every npc started facing south, which turned some bankers away from or along their booths
+[proc,banker_face_booth]
+def_coord $square;
+def_int $i = 0;
+while ($i < 4) {
+    if ($i = 0) {
+        $square = movecoord(npc_coord, 1, 0, 0);
+    } else if ($i = 1) {
+        $square = movecoord(npc_coord, -1, 0, 0);
+    } else if ($i = 2) {
+        $square = movecoord(npc_coord, 0, 0, 1);
+    } else {
+        $square = movecoord(npc_coord, 0, 0, -1);
+    }
+    loc_findallzone($square);
+    while (loc_findnext = true) {
+        if (loc_coord = $square & compare(lowercase(lc_name(loc_type)), "bank booth") = 0) {
+            npc_facesquare($square);
+            return;
+        }
+    }
+    $i = add($i, 1);
+}
