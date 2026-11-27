@@ -1,0 +1,36 @@
+'use strict';
+// RuneLite's Runecraft plugin (net.runelite.client.plugins.runecraft), cloned 1:1 (era-trimmed: no colossal pouch).
+module.exports = {
+  id: 'runecraft',
+  name: 'Runecraft',
+  description: 'Show minimap icons and clickboxes for abyssal rifts',
+  tags: ['abyssal', 'minimap', 'overlay', 'rifts', 'rc', 'runecrafting', 'essence', 'pouch'],
+  enabledByDefault: true,
+  game: './runecraft/game.js',
+  page: './runecraft/page.js',
+  config: {
+    group: 'runecraft',
+    sections: [{ key: 'riftSection', name: 'Rift settings', description: 'Abyss rift overlay settings.', position: 99 }],
+    items: [
+      { key: 'showPouch', name: 'Show pouch count', description: 'Configures whether the pouch essence count is displayed.', type: 'boolean', default: true, position: 1 },
+      { key: 'pouchDegrade', name: 'Show pouch fills', description: 'Configures whether the pouch durability is shown as an approximate number of fills remaining.', type: 'boolean', default: true, position: 2 },
+      { key: 'showRifts', name: 'Show rifts in abyss', description: 'Configures whether the rifts in the abyss will be displayed.', type: 'boolean', default: true, position: 2, section: 'riftSection' },
+      { key: 'showClickBox', name: 'Show rift click box', description: 'Configures whether to display the click box of the rift.', type: 'boolean', default: true, position: 3, section: 'riftSection' },
+      { key: 'showAir', name: 'Show air rift', description: 'Configures whether to display the air rift.', type: 'boolean', default: true, position: 4, section: 'riftSection' },
+      { key: 'showBlood', name: 'Show blood rift', description: 'Configures whether to display the blood rift.', type: 'boolean', default: true, position: 5, section: 'riftSection' },
+      { key: 'showBody', name: 'Show body rift', description: 'Configures whether to display the body rift.', type: 'boolean', default: true, position: 6, section: 'riftSection' },
+      { key: 'showChaos', name: 'Show chaos rift', description: 'Configures whether to display the chaos rift.', type: 'boolean', default: true, position: 7, section: 'riftSection' },
+      { key: 'showCosmic', name: 'Show cosmic rift', description: 'Configures whether to display the cosmic rift.', type: 'boolean', default: true, position: 8, section: 'riftSection' },
+      { key: 'showDeath', name: 'Show death rift', description: 'Configures whether to display the death rift.', type: 'boolean', default: true, position: 9, section: 'riftSection' },
+      { key: 'showEarth', name: 'Show earth rift', description: 'Configures whether to display the earth rift.', type: 'boolean', default: true, position: 10, section: 'riftSection' },
+      { key: 'showFire', name: 'Show fire rift', description: 'Configures whether to display the fire rift.', type: 'boolean', default: true, position: 11, section: 'riftSection' },
+      { key: 'showLaw', name: 'Show law rift', description: 'Configures whether to display the law rift.', type: 'boolean', default: true, position: 12, section: 'riftSection' },
+      { key: 'showMind', name: 'Show mind rift', description: 'Configures whether to display the mind rift.', type: 'boolean', default: true, position: 13, section: 'riftSection' },
+      { key: 'showNature', name: 'Show nature rift', description: 'Configures whether to display the nature rift.', type: 'boolean', default: true, position: 14, section: 'riftSection' },
+      { key: 'showSoul', name: 'Show soul rift', description: 'Configures whether to display the soul rift.', type: 'boolean', default: true, position: 15, section: 'riftSection' },
+      { key: 'showWater', name: 'Show water rift', description: 'Configures whether to display the water rift.', type: 'boolean', default: true, position: 16, section: 'riftSection' },
+      { key: 'hightlightDarkMage', name: 'Highlight Dark mage NPC', description: 'Configures whether to highlight the Dark mage when pouches are degraded.', type: 'boolean', default: true, position: 18 },
+      { key: 'degradingNotification', name: 'Notify when pouch degrades', description: 'Send a notification when a pouch degrades.', type: 'notification', default: true, position: 19 },
+    ],
+  },
+};
