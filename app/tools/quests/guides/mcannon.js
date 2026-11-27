@@ -1,0 +1,53 @@
+// Dwarf Cannon. Based on Quest Helper's DwarfCannon (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (lawgof2, railings, dwarf_remains,
+// mcannon_ladders, mcannon_cave, mcannon_crate, mcannon_broken_cannon, nulodion) and maps.
+module.exports = {
+  quest: 'mcannon',
+  difficulty: 'Intermediate',
+  members: true,
+  start: 'Talk to Captain Lawgof at the Dwarven Black Guard camp north of the Coal Trucks, west of Seers\' Village.',
+  items: {
+    railing: { name: 'Railing', obj: 'mcannonrailing1_obj', qty: 6, tip: 'Captain Lawgof gives you six' },
+    remains: { name: 'Dwarf remains', obj: 'mcannonremains', tip: 'At the top of the guard tower' },
+    toolkit: { name: 'Toolkit', obj: 'mcannontoolkit', tip: 'Captain Lawgof gives it' },
+    mould: { name: 'Ammo mould', obj: 'ammo_mould', tip: 'Nulodion gives it' },
+    notes: { name: "Nulodion's notes", obj: 'nulodions_notes', tip: 'Nulodion gives them' },
+  },
+  steps: {
+    start: { text: 'Talk to Captain Lawgof at the Dwarven Black Guard camp.', npc: 'lawgof2', at: [2571, 3463, 0], options: ["Yeah, I'd love to help."] },
+    railings: { text: 'Fix the six broken railings around the camp (search each one); ask Lawgof for another railing if one breaks. Then tell Lawgof they are done.', loc: ['mcannonrailing1', 'mcannonrailing2', 'mcannonrailing3', 'mcannonrailing4', 'mcannonrailing5', 'mcannonrailing6'], at: [2558, 3472, 0], items: ['railing'] },
+    railingsDone: { text: 'Tell Captain Lawgof the railings are fixed.', npc: 'lawgof2', at: [2571, 3463, 0] },
+    tower: { text: 'Climb to the top of the guard tower south of the camp and pick up the dwarf remains.', obj: 'mcannonremains', at: [2567, 3444, 2] },
+    remains: { text: 'Show Captain Lawgof the remains.', npc: 'lawgof2', at: [2571, 3463, 0], items: ['remains'] },
+    cave: { text: 'Find the goblin cave south-east of the camp, east of the Fishing Guild, and go in.', loc: 'mcannoncave', at: [2622, 3392, 0] },
+    crate: { text: 'Search the crates in the cave to find Lawgof\'s son tied up, and untie him.', loc: 'mcannoncrateboy', at: [2571, 9850, 0] },
+    son: { text: 'Go back and tell Captain Lawgof you found his son.', npc: 'lawgof2', at: [2571, 3463, 0], options: ["Ok, I'll see what I can do."] },
+    inspect: { text: 'Inspect the broken multicannon in the camp.', loc: 'broken_multicannon', at: [2577, 3461, 0], items: ['toolkit'] },
+    repair: { text: 'Inspect the cannon again and repair each damaged part with the toolkit (pipe, barrel, axle, shaft); you may fail a few times.', loc: 'broken_multicannon', at: [2577, 3461, 0], items: ['toolkit'] },
+    fixed: { text: 'Tell Captain Lawgof the cannon is fixed.', npc: 'lawgof2', at: [2571, 3463, 0], options: ['Ok then, just for you!'] },
+    nulodion: { text: 'Talk to Nulodion at the Dwarven Black Guard\'s base south of Ice Mountain.', npc: 'nulodion', at: [3011, 3453, 0] },
+    finish: { text: 'Bring the ammo mould and Nulodion\'s notes back to Captain Lawgof.', npc: 'lawgof2', at: [2571, 3463, 0], items: ['mould', 'notes'] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    1: [[null, 'railings']],
+    2: [
+      ['have:remains', 'remains'],
+      [null, 'tower'],
+    ],
+    3: [[null, 'cave']],
+    4: [[null, 'crate']],
+    5: [[null, 'son']],
+    6: [[null, 'inspect']],
+    7: [[null, 'repair']],
+    8: [[null, 'fixed']],
+    9: [[null, 'nulodion']],
+    10: [[null, 'finish']],
+  },
+  sections: [
+    { title: 'The camp', steps: ['start', 'railings', 'railingsDone', 'tower', 'remains'] },
+    { title: 'Lawgof\'s son', steps: ['cave', 'crate', 'son'] },
+    { title: 'The cannon', steps: ['inspect', 'repair', 'fixed', 'nulodion', 'finish'] },
+  ],
+  rewards: ['1 Quest Point', '750 Crafting experience', 'Ability to use a dwarf multicannon'],
+};

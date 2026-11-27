@@ -323,6 +323,11 @@ def main(root, out):
     with open(os.path.join(scripts, 'general', 'scripts', 'quests.rs2'), encoding='utf-8') as f:
         for mm in re.finditer(r'send_quest_progress_colour\(questlist:(\w+),\s*%(\w+),\s*\^(\w+)\)', f.read()):
             listvar[mm.group(1)] = (mm.group(2), consts.get(mm.group(3)))
+        # EASCape: a quest kept in bits (Elemental Workshop) colours from sub(pow(2, ^done_bit), 1)
+        f.seek(0)
+        for mm in re.finditer(r'send_quest_progress_colour\(questlist:(\w+),\s*%(\w+),\s*sub\(pow\(2,\s*\^(\w+)\),\s*1\)\)', f.read()):
+            c = consts.get(mm.group(3))
+            listvar[mm.group(1)] = (mm.group(2), None if c is None else 2 ** c - 1)
     varp_ids = {}
     with open(os.path.join(root, 'pack', 'varp.pack')) as f:
         for ln in f:

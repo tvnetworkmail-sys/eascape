@@ -1,0 +1,55 @@
+// Making History. Based on Quest Helper's MakingHistory (BSD 2-Clause, (c) 2020 Zoinkwiz).
+// EASCape: steps, options and positions from our scripts (quest_makinghistory: mh_jorral, mh_leads,
+// mh_treasure; silver_merchant, king_lathas) and maps. The app follows the quest's stage; the three
+// parts (trader, ghost, warrior) are followed by what you carry.
+module.exports = {
+  quest: 'makinghistory',
+  difficulty: 'Intermediate',
+  members: true,
+  start: 'Talk to Jorral at the outpost north of West Ardougne.',
+  items: {
+    spade: { name: 'Spade', obj: 'spade', tip: 'To dig up the chest' },
+    sapphire: { name: 'Strung sapphire amulet', obj: 'strung_sapphire_amulet', tip: 'For Melina, the ghost in Port Phasmatys' },
+    ghostspeak: { name: 'Ghostspeak amulet', obj: ['amulet_of_ghostspeak', 'amulet_of_ghostspeak_enchanted'], worn: true, tip: 'To talk to the ghosts' },
+    key: { name: 'Enchanted key', obj: 'makinghistory_key', tip: 'Erin lends it' },
+    chest: { name: 'Chest', obj: 'makinghistory_chest', tip: 'Dug up north of Castle Wars' },
+    journal: { name: 'Journal', obj: 'makinghistory_journal', tip: 'In the chest' },
+    scroll: { name: 'Scroll', obj: 'makinghistory_scroll1', tip: 'Droalak gives it' },
+    letter1: { name: "Jorral's letter", obj: 'makinghistory_letter1', tip: 'Jorral gives it' },
+    letter2: { name: "King Lathas's letter", obj: 'makinghistory_letter2', tip: 'King Lathas gives it' },
+  },
+  required: ['spade', 'sapphire', 'ghostspeak'],
+  skills: ['Priest in Peril and The Restless Ghost completed'],
+  steps: {
+    start: { text: 'Talk to Jorral at the outpost north of West Ardougne.', npc: 'makinghistory_jorral', at: [2437, 3347, 0], options: ['Tell me more.', 'OK, I will make a stand for history!'] },
+    erin: { text: 'Trader: ask Erin, the silver merchant in Ardougne market, about the outpost; she lends you an enchanted key.', npc: 'silver_merchant', at: [2658, 3316, 0], options: ['Ask about the outpost.'] },
+    dig: { text: 'Feel the enchanted key to find where to dig (it steams when you are close): the chest is just north of Castle Wars. Dig there with a spade.', at: [2442, 3139, 0], items: ['key', 'spade'] },
+    open: { text: 'Use the enchanted key on the chest for the journal, then show Jorral.', at: [2442, 3139, 0], items: ['key', 'chest'] },
+    droalak: { text: 'Ghost: wear your ghostspeak amulet and talk to Droalak in Port Phasmatys; give his wife Melina the strung sapphire amulet, then go back to Droalak for a scroll.', npc: 'makinghistory_droalak_multi', at: [3657, 3469, 0], items: ['ghostspeak', 'sapphire'] },
+    melina: { text: 'Give Melina the strung sapphire amulet.', npc: 'makinghistory_melina_multi', at: [3674, 3484, 0], items: ['ghostspeak', 'sapphire'] },
+    blanin: { text: 'Warrior: talk to Blanin in Rellekka for hints about his brother Dron, then answer Dron\'s questions in the north-east of the town.', npc: 'makinghistory_blanin', at: [2675, 3671, 0] },
+    dron: { text: 'Talk to Dron and answer his questions: an iron mace, breakfast, lunch, bunnies, red, 36, 8, fifth and fourth, north-east side of town, Blanin, Fluffy, 12.', npc: 'makinghistory_dron', at: [2658, 3700, 0], options: ["I'm after important answers.", 'I just talked to your brother.', 'An iron mace', 'Breakfast', 'Lunch', 'Bunnies', 'Red', '36', '8', 'Fifth and Fourth', 'North East side of town', 'Blanin', 'Fluffy', '12, but what does that have to do with anything?'] },
+    jorral: { text: 'Tell Jorral what you found (the journal, the scroll and Dron\'s story); once he has all three he gives you a letter for the king.', npc: 'makinghistory_jorral', at: [2437, 3347, 0] },
+    lathas: { text: 'Take Jorral\'s letter to King Lathas upstairs in East Ardougne castle.', npc: 'kinglathas', at: [2578, 3293, 1], items: ['letter1'], options: ['Talk about the outpost.'] },
+    finish: { text: 'Take King Lathas\'s letter back to Jorral.', npc: 'makinghistory_jorral', at: [2437, 3347, 0], items: ['letter2'] },
+  },
+  stages: {
+    0: [[null, 'start']],
+    1: [
+      ['have:journal | have:scroll', 'jorral'],
+      ['have:chest', 'open'],
+      ['have:key', 'dig'],
+      [null, 'erin'],
+    ],
+    2: [[null, 'lathas']],
+    3: [[null, 'finish']],
+  },
+  sections: [
+    { title: 'Starting off', steps: ['start'] },
+    { title: 'The trader', steps: ['erin', 'dig', 'open'], items: ['spade'] },
+    { title: 'The ghost', steps: ['droalak', 'melina'], items: ['ghostspeak', 'sapphire'] },
+    { title: 'The warrior', steps: ['blanin', 'dron'] },
+    { title: 'The king', steps: ['jorral', 'lathas', 'finish'] },
+  ],
+  rewards: ['3 Quest Points', '1,000 Crafting experience', '1,000 Prayer experience', '750 coins', 'The enchanted key'],
+};
