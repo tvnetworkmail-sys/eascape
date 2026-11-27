@@ -1875,6 +1875,84 @@ export default class Player extends PathingEntity {
         this.setVar(id, (count << 2) | code);
     }
 
+    // 2006RS-2: what the app's Idle Notifier is told (::appidle on, only from the app), so it needn't
+    // guess from animations. The server knows when an action really stops: a skilling action is going
+    // on while the player has a target, a delayed script or anything queued, and gained xp in a skill
+    // during it; combat while a hit landed either way in the last 8 ticks (the 8 the combat scripts use
+    // for %lastcombat). When one starts the
+    // app gets "~2007rsapp~busy skill <stat>" or "busy combat"; when it ends "~2007rsapp~idle skill
+    // <stat>" or "idle combat". The app's runtime takes these lines out of the chat box. Nothing here
+    // is saved.
+    appIdle: boolean = false;
+    private appSkill: number = -1; // the skill gaining xp in the current action, -1 none
+    private appSkillTold: boolean = false;
+    private appCombat: boolean = false;
+    private appLastHit: number = -1000;
+
+    appIdleSet(on: boolean): void {
+        this.appIdle = on;
+        this.appSkill = -1;
+        this.appSkillTold = false;
+        this.appCombat = false;
+        if (on) {
+            this.appMessage('idle on');
+        }
+    }
+
+    // a line for the app's runtime only (the web game never asks for any)
+    appMessage(text: string): void {
+        this.messageGame('~2007rsapp~' + text);
+    }
+
+    private static readonly APP_COMBAT_STATS = new Set([PlayerStat.ATTACK, PlayerStat.DEFENCE, PlayerStat.STRENGTH, PlayerStat.HITPOINTS, PlayerStat.RANGED, PlayerStat.MAGIC]);
+
+    // a hit landed on this player, or this player's script hit an NPC (npc_damage, misses too)
+    appHit(): void {
+        this.appLastHit = World.currentTick;
+    }
+
+    // in combat: a hit either way in the last 8 ticks (an attack that never reaches its target, stuck
+    // behind a wall, isn't combat)
+    private appInCombat(): boolean {
+        return World.currentTick - this.appLastHit < 8;
+    }
+
+    // after the player's interactions each tick (World.processPlayers)
+    appIdleTick(): void {
+        if (!this.appIdle) {
+            return;
+        }
+        const combat = this.appInCombat();
+        if (combat !== this.appCombat) {
+            this.appCombat = combat;
+            this.appMessage(combat ? 'busy combat' : 'idle combat');
+        }
+        if (this.appSkill === -1) {
+            return;
+        }
+        const going = this.target !== null || this.delayed || this.activeScript?.execution === ScriptState.SUSPENDED || this.queue.head() !== null || this.weakQueue.head() !== null;
+        const name = (PlayerStatNameMap.get(this.appSkill) ?? 'unknown').toLowerCase();
+        if (!going) {
+            // (also when the one xp drop ended it: a tree that fell at the first log)
+            this.appMessage('idle skill ' + name);
+            this.appSkill = -1;
+            this.appSkillTold = false;
+        } else if (!this.appSkillTold) {
+            this.appSkillTold = true;
+            this.appMessage('busy skill ' + name);
+        }
+    }
+
+    private appXp(stat: number): void {
+        // (magic out of combat is a skill: alchemy, enchanting, superheating)
+        if (this.appIdle && (!Player.APP_COMBAT_STATS.has(stat) || (stat === PlayerStat.MAGIC && !this.appInCombat()))) {
+            if (this.appSkill !== stat) {
+                this.appSkillTold = false;
+            }
+            this.appSkill = stat;
+        }
+    }
+
     setVar(id: number, value: number | string) {
         const varp = VarPlayerType.get(id);
         if (!varp) {
@@ -1942,6 +2020,7 @@ export default class Player extends PathingEntity {
 
         const multi = allowMulti ? Environment.NODE_XPRATE : 1;
         this.stats[stat] += xp * multi;
+        this.appXp(stat); // 2006RS-2: the app's Idle Notifier
 
         // cap to 200m, this is represented as "2 billion" because we use 32-bit signed integers and divide by 10 to give us a decimal point
         if (this.stats[stat] > 2_000_000_000) {
@@ -2050,6 +2129,7 @@ export default class Player extends PathingEntity {
     }
 
     applyDamage(damage: number, type: number) {
+        this.appHit(); // 2006RS-2: the app's Idle Notifier (in combat)
         const current = this.levels[PlayerStat.HITPOINTS];
         if (current - damage <= 0) {
             this.levels[PlayerStat.HITPOINTS] = 0;

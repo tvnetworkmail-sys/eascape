@@ -36,6 +36,13 @@
     /* Misc */ 895, 2305, 2793, 2794, 2795, 832,
   ]);
 
+  // 2006RS-2: server data. With the plugin on, the app asks the server (::appidle on) to say when an action
+  // really stops (engine Player.appIdleTick): "busy skill <stat>" / "idle skill <stat>" and "busy combat" /
+  // "idle combat", hidden chat lines the runtime takes out of the chat box. Once the server answers "idle on"
+  // these replace the animation list and the interaction guess; on a server without them (no answer) the
+  // RuneLite guesses below stay in use. Hitpoints, prayer, run and special energy were server data already.
+  const command = (text) => !!(ll.api && ll.api.command && ll.api.command(text));
+
   // our actors are snapshots: Java's reference comparisons become typecode comparisons
   const same = (a, b) => (a == null || b == null ? a == b : a.equals(b)); // eslint-disable-line eqeqeq
 
@@ -59,9 +66,44 @@
       this.lastCombatCountdown = 0;
       this.ready = false;
       this.lastInteractWasCombat = false;
+      this.server = false; // the server tells us (it answered ::appidle on)
+      this.serverIdleAt = null; // when the server said the action stopped
+      this.serverIdleKind = null; // 'skill' or 'combat'
+      this.unlisten = null;
     }
-    startUp() {}
-    shutDown() {}
+    startUp() {
+      this.unlisten = ll.onAppMessage ? ll.onAppMessage((m) => this.onServer(m)) : null;
+      if (client.getGameState() === 'LOGGED_IN') command('appidle on');
+    }
+    shutDown() {
+      if (this.unlisten) this.unlisten();
+      this.unlisten = null;
+      if (this.server) command('appidle off');
+      this.server = false;
+      this.serverIdleAt = null;
+    }
+
+    onServer(msg) {
+      const [what, kind] = String(msg).split(' ');
+      if (what === 'idle' && kind === 'on') { this.server = true; return; }
+      if (what !== 'idle' && what !== 'busy') return;
+      this.server = true;
+      if (what === 'busy') {
+        this.serverIdleAt = null;
+        this.serverIdleKind = null;
+      } else {
+        this.serverIdleAt = Date.now();
+        this.serverIdleKind = kind === 'combat' ? 'combat' : 'skill';
+      }
+    }
+
+    checkServerIdle(waitDuration) {
+      if (this.serverIdleAt == null || Date.now() < this.serverIdleAt + waitDuration) return null;
+      const kind = this.serverIdleKind;
+      this.serverIdleAt = null;
+      this.serverIdleKind = null;
+      return kind;
+    }
 
     notify(enabled, message) { if (enabled) rl.notifier.notify(message); }
 
@@ -99,11 +141,14 @@
       this.lastInteracting = null;
       switch (gameStateChanged.getGameState()) {
         case 'LOGIN_SCREEN':
+          this.server = false;
           this.resetTimers();
           // (no LOGGING_IN state here: the login screen readies the next log in)
           this.ready = true;
           break;
         case 'LOGGED_IN':
+          // a new login: ask the server (it forgets on logout); not again after each map load
+          if (!this.server) command('appidle on');
           if (this.ready) {
             this.ready = false;
             this.resetTimers();
@@ -137,9 +182,13 @@
       }
       const c = this.config;
       if (this.checkIdleLogout()) this.notify(c.logoutIdle(), 'You are about to log out from idling too long!');
-      if (this.checkAnimationIdle(waitDuration, local)) this.notify(c.animationIdle(), 'You are now idle!');
+      if (this.server) {
+        const kind = this.checkServerIdle(waitDuration);
+        if (kind === 'skill') this.notify(c.animationIdle(), 'You are now idle!');
+        else if (kind === 'combat') this.notify(c.interactionIdle(), 'You are now out of combat!');
+      } else if (this.checkAnimationIdle(waitDuration, local)) this.notify(c.animationIdle(), 'You are now idle!');
       if (this.checkMovementIdle(waitDuration, local)) this.notify(c.movementIdle(), 'You have stopped moving!');
-      if (this.checkInteractionIdle(waitDuration, local)) {
+      if (!this.server && this.checkInteractionIdle(waitDuration, local)) {
         if (this.lastInteractWasCombat) this.notify(c.interactionIdle(), 'You are now out of combat!');
         else this.notify(c.interactionIdle(), 'You are now idle!');
       }
@@ -320,6 +369,8 @@
 
     resetTimers() {
       const local = client.getLocalPlayer();
+      // (you clicked or typed: whatever the server said stopped, you're not idle)
+      this.serverIdleAt = null;
       // Reset animation idle timer
       this.lastAnimating = null;
       const gameState = client.getGameState();

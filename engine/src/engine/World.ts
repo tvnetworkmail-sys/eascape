@@ -737,6 +737,9 @@ class World {
                 // - run energy
                 player.updateEnergy();
 
+                // 2006RS-2: the app's Idle Notifier (only when the app asked: ::appidle)
+                player.appIdleTick();
+
                 if ((player.masks & PlayerInfoProt.EXACT_MOVE) == 0) {
                     player.validateDistanceWalked();
                 }
