@@ -606,7 +606,26 @@ if ((~farming_patch_type($patch) = 7 | ~farming_patch_type($patch) = 8) & $key >
     ~farming_clear($patch);
     return;
 }
+// EASCape: a growing, watered or diseased crop can be dug up after a check (2009scape
+// DigUpPatchDialogue / UseWithPatchHandler.digPatch); grown trees are chopped first
+if ($key >= 1000 & calc(($key / 100) % 10) >= 1 & calc(($key / 100) % 10) <= 3 & ~farming_claimed($patch) = false) {
+    if (~p_choice2_header("Yes, I want to clear it for new crops.", 1, "No, I want to leave it as it is.", 2, "Are you sure you want to dig up this patch?") = 1) {
+        ~farming_dig_up($patch);
+    }
+    return;
+}
 ~displaymessage(^dm_default);
+
+// 2009scape DigUpPatchDialogue: two digs, then the patch is clear
+[proc,farming_dig_up](int $patch)
+mes("You start digging the farming patch...");
+anim(human_dig, 0);
+p_delay(2);
+anim(human_dig, 0);
+p_delay(1);
+anim(null, 0);
+mes("You have successfully cleared this patch for new crops.");
+~farming_empty($patch);
 
 // Void: tries until it works, the chance up to certain at Farming 60
 [proc,farming_clear](int $patch)
