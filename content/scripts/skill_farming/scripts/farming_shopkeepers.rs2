@@ -1,0 +1,44 @@
+// EASCape: the four farming shopkeepers' Talk-to (they had only Trade). Words: the OSRS wiki's
+// transcripts (Transcript:Vanessa, Transcript:Sarah, Transcript:Alice) and 2009scape's
+// VanessaDialogue.java. The wiki has no transcript for Richard in Taverley: ours, he says what the
+// others say.
+[opnpc1,farming_shopkeeper_1]
+~chatnpc("<p,happy>Hello. How can I help you?");
+switch_int (~p_choice4("What are you selling?", 1, "Can you give me any Farming advice?", 2, "Can you tell me how to use the loom?", 3, "I'm okay, thank you.", 4)) {
+    case 1 :
+        ~chatplayer("<p,quiz>What are you selling?");
+        ~openshop_activenpc;
+    case 2 : ~farming_shopkeeper_advice;
+    case 3 :
+        ~chatplayer("<p,quiz>Can you tell me how to use the loom?");
+        ~chatnpc("<p,neutral>Well, it's actually my loom, but I don't mind you using it, if you like. You can use it to weave sacks and baskets in which you can put vegetables and fruit.");
+        switch_int (~p_choice3("What do I need to weave sacks?", 1, "What do I need to weave baskets?", 2, "Thank you, that's very kind.", 3)) {
+            case 1 :
+                ~chatplayer("<p,quiz>What do I need to weave sacks?");
+                ~chatnpc("<p,neutral>Well, the best sacks are made with jute fibres; you can grow jute yourself in a hops patch. I'd say about 4 jute fibres should be enough to weave a sack.");
+                ~chatplayer("<p,happy>Thank you, that's very kind.");
+            case 2 :
+                ~chatplayer("<p,quiz>What do I need to weave baskets?");
+                ~chatnpc("<p,neutral>Well, the best baskets are made with young branches cut from a willow tree. You'll need a very young willow tree; otherwise, the branches will have grown too thick to be able to weave. I suggest growing your own.");
+                ~chatnpc("<p,neutral>You can cut the branches with a standard pair of secateurs. You will probably need about 6 willow branches to weave a complete basket.");
+                ~chatplayer("<p,happy>Thank you, that's very kind.");
+            case 3 : ~chatplayer("<p,happy>Thank you, that's very kind.");
+        }
+    case 4 : ~chatplayer("<p,happy>I'm okay, thank you.");
+}
+
+[opnpc1,farming_shopkeeper_2] ~farming_shopkeeper_talk;
+[opnpc1,farming_shopkeeper_3] ~farming_shopkeeper_talk;
+[opnpc1,farming_shopkeeper_4] ~farming_shopkeeper_talk;
+
+[proc,farming_shopkeeper_talk]
+~chatnpc("<p,happy>Hello. How can I help you?");
+switch_int (~p_choice3("What are you selling?", 1, "Can you give me any Farming advice?", 2, "I'm okay, thank you.", 3)) {
+    case 1 : ~openshop_activenpc; // the transcripts: the shop opens straight away
+    case 2 : ~farming_shopkeeper_advice;
+    case 3 : ~chatplayer("<p,happy>I'm okay, thank you.");
+}
+
+[proc,farming_shopkeeper_advice]
+~chatplayer("<p,quiz>Can you give me any Farming advice?");
+~chatnpc("<p,neutral>Yes - ask a gardener.");
