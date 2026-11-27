@@ -275,7 +275,7 @@ if (inv_getobj(worn, ^wearpos_front) ! amulet_of_ghostspeak_enchanted) return;
 
 [label,ahoy_necrovarus_command_choice]
 def_int $c = ~p_choice3_header("Let any ghost who so wishes pass on into the next world.", 1, "Tell me a joke.", 2, "Do a chicken impression.", 3, "What do you want to command Necrovarus to do?");
-~objbox(amulet_of_ghostspeak_enchanted, "A beam of intense green light radiates out from the amulet of ghostspeak, enveloping Necrovarus in its power. His eyes become softer, and appear to stare into nothingness.", 250, 0, divide(^objbox_height, 2));
+~objbox(amulet_of_ghostspeak_enchanted, "A beam of intense green light radiates out from the amulet of ghostspeak, enveloping Necrovarus in its power. His eyes become softer, and appear to stare into nothingness.", 250, 0, -20); // EASCape: raised to sit in the box (Lost City's glory amulet box uses -20)
 if ($c = 1) {
     %ahoy_questvar = ^ahoy_commanded;
     inv_setslot(worn, ^wearpos_front, amulet_of_ghostspeak, 1);
@@ -299,7 +299,7 @@ if ($c = 2) {
     ~chatnpc("<p,neutral>Cluck cluck squuuaaaakkkk cluck cluck");
     ~chatnpc("<p,neutral>I think I've laid an egg...");
 }
-~objbox(amulet_of_ghostspeak_enchanted, "Luckily the amulet of ghostspeak does not seem to have fully discharged.", 250, 0, divide(^objbox_height, 2));
+~objbox(amulet_of_ghostspeak_enchanted, "Luckily the amulet of ghostspeak does not seem to have fully discharged.", 250, 0, -20); // EASCape: raised to sit in the box (Lost City's glory amulet box uses -20)
 
 // ---------------------------------------------------------------- the old crone
 [opnpc1,ahoy_crone]
@@ -529,7 +529,7 @@ if (inv_getobj(worn, ^wearpos_front) = amulet_of_ghostspeak) {
     return;
 }
 %ahoy_questvar = ^ahoy_enchanted;
-~objbox(amulet_of_ghostspeak_enchanted, "The ghostspeak amulet emits a green glow from its gem.", 250, 0, divide(^objbox_height, 2));
+~objbox(amulet_of_ghostspeak_enchanted, "The ghostspeak amulet emits a green glow from its gem.", 250, 0, -20); // EASCape: raised to sit in the box (Lost City's glory amulet box uses -20)
 
 [label,ahoy_crone_again]
 if (~obj_gettotal(amulet_of_ghostspeak_enchanted) > 0) {
