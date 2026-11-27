@@ -76,12 +76,17 @@ if (%crystal_bow_shots < 250) {
 }
 %crystal_bow_shots = 0;
 def_namedobj $next = ~crystal_next($bow);
-inv_setslot(worn, ^wearpos_rhand, $next, 1);
 if ($next = crystal_seed_old) {
+    // EASCape: the seed goes in your pack (on the floor if it's full), not your weapon slot,
+    // so the combat tab goes back to unarmed and the next weapon you wield shows properly
+    inv_delslot(worn, ^wearpos_rhand);
+    ~crystal_seed_to_pack;
     mes("Your crystal bow has reverted to a crystal seed."); // ours
     p_stopaction;
+} else {
+    inv_setslot(worn, ^wearpos_rhand, $next, 1);
 }
-~update_all(null);
+~update_all($bow);
 
 [proc,crystal_shield_hit]
 def_obj $shield = inv_getobj(worn, ^wearpos_lhand);
@@ -100,11 +105,22 @@ if (%crystal_shield_hits < 250) {
 }
 %crystal_shield_hits = 0;
 def_namedobj $next = ~crystal_next($shield);
-inv_setslot(worn, ^wearpos_lhand, $next, 1);
 if ($next = crystal_seed_old) {
+    inv_delslot(worn, ^wearpos_lhand); // EASCape: as the bow, the seed goes in your pack
+    ~crystal_seed_to_pack;
     mes("Your crystal shield has reverted to a crystal seed."); // ours
+} else {
+    inv_setslot(worn, ^wearpos_lhand, $next, 1);
 }
 ~update_all(null);
+
+// EASCape: a worn-out bow or shield's seed, into your pack or onto the floor if it's full
+[proc,crystal_seed_to_pack]
+if (inv_freespace(inv) > 0) {
+    inv_add(inv, crystal_seed_old, 1);
+} else {
+    obj_add(coord, crystal_seed_old, 1, ^lootdrop_duration);
+}
 
 // ---------------------------------------------------------------- Check (your call: the charges left)
 [opheld3,roving_crystal_bow_new] ~crystal_check(roving_crystal_bow_new, 0);
