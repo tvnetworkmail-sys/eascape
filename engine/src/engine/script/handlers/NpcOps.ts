@@ -281,6 +281,7 @@ const NpcOps: CommandHandlers = {
         const type = check(state.popInt(), HitTypeValid);
 
         state.activeNpc.applyDamage(amount, type);
+        state._activePlayer?.appHit(); // 2006RS-2: the app's Idle Notifier (the player is in combat)
     },
 
     [ScriptOpcode.NPC_NAME]: state => {

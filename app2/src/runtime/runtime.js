@@ -878,6 +878,13 @@
     // Long values come in parts (k <head> / v <part> / put); whole records go to appBankListeners.
     appBankListeners: new Set(),
     appPend: null,
+    // 2006RS-2: the server's other lines for the app (the Idle Notifier's "idle ..."/"busy ..."): fn(text) for
+    // each, without the ~2007rsapp~; returns a function that stops listening
+    appListeners: new Set(),
+    onAppMessage(fn) {
+      this.appListeners.add(fn);
+      return () => this.appListeners.delete(fn);
+    },
 
     setApi(api) {
       const first = !this.api || !this.api.ifList;
@@ -1015,7 +1022,13 @@
 
     /** A message from the server for the app (AppBank): "bank <record>". */
     appMessage(msg) {
-      if (!msg.startsWith('bank ')) return;
+      // 2006RS-2: every other kind ("idle ...", "busy ...") goes to the plugins that listen (onAppMessage)
+      if (!msg.startsWith('bank ')) {
+        for (const fn of this.appListeners) {
+          try { fn(msg); } catch (e) { post('runtime-error', 'app message: ' + String((e && e.message) || e)); }
+        }
+        return;
+      }
       const rec = msg.slice(5);
       const sp = rec.indexOf(' ');
       const kind = sp < 0 ? rec : rec.slice(0, sp);

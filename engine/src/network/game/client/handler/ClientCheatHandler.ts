@@ -135,6 +135,16 @@ export default class ClientCheatHandler extends ClientGameMessageHandler<ClientC
             return true;
         }
 
+        // 2006RS-2: the app's Idle Notifier asks to be told when you go idle (::appidle on|off, only
+        // from the app; Player.appIdleTick)
+        if (cmd === 'appidle') {
+            if (!isClientConnected(player) || !player.client.isApp) {
+                return true;
+            }
+            player.appIdleSet(args[0] !== 'off');
+            return true;
+        }
+
         // EASCape: the app's Quest Helper asks for the quest variables it follows, sent to it
         // live as they change (only from the app; only number variables, at most 300):
         // ::appquests 160,553,... (a new list), ::appquests +29,... (more; a chat line is 80
