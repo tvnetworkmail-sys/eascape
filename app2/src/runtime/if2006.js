@@ -210,10 +210,11 @@
     if (raw.subRects) a.subRects = () => { const t = raw.subRects(); for (let i = 0; i < t.length; i += 6) t[i] = groupBack(t[i]); return t; };
     if (raw.widgetItems) a.widgetItems = () => { const w = Int32Array.from(raw.widgetItems()); for (let i = 2; i < w.length; i += 6) w[i] = back(w[i]) | 0; return w; };
     if (raw.com) {
-      // inventories by 2007 inv id: the items of the component that shows them (ids as the 2007 inv cache: -1 empty)
+      // inventories by 2007 inv id: the items of the component that shows them (its linkObjType is id + 1; the 2007 inv
+      // cache's ids are the id, -1 empty)
       a.inv = (id) => {
         const c = invs[id] !== undefined ? raw.com(invs[id]) : null;
-        if (c && c.linkObjType) return { ids: Array.from(c.linkObjType), counts: Array.from(c.linkObjNumber || [], (n, i) => (c.linkObjType[i] >= 0 ? n : 0)) };
+        if (c && c.linkObjType) return { ids: Array.from(c.linkObjType, (v) => v - 1), counts: Array.from(c.linkObjNumber || [], (n, i) => (c.linkObjType[i] > 0 ? n : 0)) };
         return raw.inv ? raw.inv(id) : null;
       };
     }

@@ -103,13 +103,18 @@
     const quantity = id >= 0 && c.linkObjNumber ? c.linkObjNumber[slot] | 0 : 0;
     return { id, quantity, bounds: new rl.Rectangle(x, y, 32, 32) };
   }
+  // (2006RS-2: the 2006 client's own drag state: objDragArea not 0 while an item is held down, objDragComId the 2006
+  // component (as the 2007 id through if2006), objDragSlot, objDragCycles)
+  const drag06 = (c) => (c && !ll.c2007 && typeof c.objDragArea === 'number'
+    ? { com: c.objDragArea !== 0 ? (ll.if2006 ? ll.if2006.back(c.objDragComId) : c.objDragComId) : -1, slot: c.objDragSlot | 0, cycles: c.objDragCycles | 0 } : null);
   client.getDraggedWidget = () => {
     const c = ll.client;
-    const id = c && typeof c.dragCom === 'number' ? c.dragCom : -1;
+    const d = drag06(c);
+    const id = d ? d.com : c && typeof c.dragCom === 'number' ? c.dragCom : -1;
     if (id === -1) return null;
-    return { getId: () => id, getIndex: () => c.dragSlot | 0, getDragDeadTime: () => 4, isIf3: () => false, getParent: () => client.getWidget(id) };
+    return { getId: () => id, getIndex: () => (d ? d.slot : c.dragSlot | 0), getDragDeadTime: () => 4, isIf3: () => false, getParent: () => client.getWidget(id) };
   };
-  client.getDragTime = () => (ll.client ? ll.client.dragCycles | 0 : 0);
+  client.getDragTime = () => { const d = drag06(ll.client); return d ? d.cycles : ll.client ? ll.client.dragCycles | 0 : 0; };
 
   client.playSoundEffect = (id, volume) => {
     if (volume === 0 || !ll.api || !ll.api.playSound) return;
