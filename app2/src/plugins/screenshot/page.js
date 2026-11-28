@@ -103,6 +103,15 @@
     }
     onGameTick() {
       this.onFrame();
+      // 2006RS-2: the tier of the last clue item in the pack (for our clue reward, onWidgetLoaded)
+      if (!ll.c2007 && ll.clueTiers2006) {
+        const inv = client.getItemContainer(rl.InventoryID.INV);
+        for (const it of inv ? inv.getItems() : []) {
+          const id = it.getId();
+          const t = id > 0 && Object.keys(ll.clueTiers2006).find((k) => ll.clueTiers2006[k].some(([a, b]) => id >= a && id <= b));
+          if (t) { this.lastClueTier = t; break; }
+        }
+      }
       if (!this.shouldTakeScreenshot) return;
       this.shouldTakeScreenshot = false;
       let screenshotSubDir = null;
@@ -175,6 +184,12 @@
         fileName = 'Barrows(' + this.killCountNumber + ')';
         screenshotSubDir = SD_BOSS_KILLS;
         this.killType = null; this.killCountNumber = 0;
+      } else if (groupId === InterfaceID.TRAIL_REWARDSCREEN && !ll.c2007 && ll.api && ll.api.ifOpen && ll.api.ifOpen(6960)) {
+        // 2006RS-2: our clue reward (trail_reward) comes with no "You have completed N <tier> Treasure Trails." line
+        // (trail_clue_helper.rs2), so it's named by the last clue item's tier (loottracker/cluetiers2006.js: every plugin's page scripts are loaded), with no count
+        if (!this.lastClueTier) return;
+        fileName = this.lastClueTier.charAt(0).toUpperCase() + this.lastClueTier.substring(1);
+        screenshotSubDir = SD_CLUE_SCROLL_REWARDS;
       } else if (groupId === InterfaceID.TRAIL_REWARDSCREEN) {
         if (this.clueType == null || this.clueNumber == null) return;
         fileName = this.clueType.charAt(0).toUpperCase() + this.clueType.substring(1) + '(' + this.clueNumber + ')';

@@ -169,11 +169,19 @@
       const componentId = event.getActionParam1();
       const groupId = WidgetUtil.componentToInterface(componentId);
       const option = event.getOption();
-      if (groupId !== FRIENDS) return;
       let after;
-      if (AFTER_OPTIONS.includes(option)) after = true;
-      else if (BEFORE_OPTIONS.includes(option)) after = false;
-      else return;
+      if (groupId === FRIENDS) {
+        if (AFTER_OPTIONS.includes(option)) after = true;
+        else if (BEFORE_OPTIONS.includes(option)) after = false;
+        else return;
+      } else {
+        // 2006RS-2: the 2006 friends list's entries are the client's MESSAGE_PRIVATE (902, "Message") and FRIENDLIST_DEL
+        // (513, "Remove"), with no component in their arguments: seen through if2006.js as 10000 + the opcode
+        const t = typeof event.getType === 'function' ? event.getType() : -1;
+        if ((t === 10902 || t === 12902) && option === 'Message') after = true;
+        else if ((t === 10513 || t === 12513) && option === 'Remove') after = false;
+        else return;
+      }
       // Don't add entry if user is offline
       const player = this.getChatPlayerFromName(event.getTarget());
       const worldResult = rl.worldService.getWorlds();

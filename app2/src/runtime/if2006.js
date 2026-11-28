@@ -40,7 +40,9 @@
     426: 20357, // fairy ring code screen (2007scape's copy of our fairyrings.if) -> fairyrings
     620: 20786, // fairy ring travel log (2007scape's copy of our fairyrings_log.if) -> fairyrings_log
     381: 193, // wilderness level overlay -> wilderness_overlay
-    275: 297, // quest / diary scroll -> questscroll
+    275: 8134, // the quest / diary journal scroll -> questjournal (quest_journal.rs2)
+    // the quest complete scrolls -> questscroll, and our two others (questscroll_tbwt, questscroll_death: quests.rs2)
+    276: 297, 277: [20095, 20079],
     335: 3323, // trade -> trademain
     336: 3321, // trade side -> tradeside
     300: 3824, // shop -> shop_template
