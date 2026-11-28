@@ -1082,6 +1082,18 @@
       if (!b.installed) return false;
       const inv = this.api && this.api.com ? this.api.com(this.BANK.inv) : null;
       if (com !== this.BANK.inv && !(inv && com === inv.layer)) return false;
+      // 2006RS-2: the 2006 server has no AppBank (placeholders aren't kept, so b.ph is empty): the drag is the client's
+      // own move, in the real slots the view's places stand for (the view closes up empty slots too, so they can
+      // differ even without a search); to an empty place past the items while not filtering, the place itself
+      if (!this.c2007 && this.api && this.api.invMove) {
+        if (b.dirty) this.bankRecompute();
+        const rf = b.map[from];
+        let rt = b.map[to];
+        if (rf === undefined || rf < 0) return true;
+        if (rt === undefined || rt < 0) { if (b.query || this.bankTagTab()) return true; rt = to; }
+        this.api.invMove(this.BANK.inv, rf, rt, mode);
+        return true;
+      }
       if (b.query || this.bankTagTab()) return true;
       if (this.api && this.api.command) this.api.command(`appbank drag ${from | 0} ${to | 0} ${mode === 1 ? 1 : 0}`);
       return true;
