@@ -426,8 +426,13 @@ function comVisible(id: number): boolean {
     return false;
 }
 
+// the component's scripts pass (it shows its active text / colour / graphic)
+function isActive(c: IfType): boolean {
+    return !!(c.scripts && cl && typeof cl.getIfActive === 'function' && safe(() => cl.getIfActive(c), false));
+}
+
 function shownText(c: IfType): string {
-    const t = c.text2 && c.text2.length > 0 && cl && typeof cl.getIfActive === 'function' && safe(() => cl.getIfActive(c), false) ? c.text2 : c.text;
+    const t = c.text2 && c.text2.length > 0 && isActive(c) ? c.text2 : c.text;
     return t ?? '';
 }
 
@@ -461,7 +466,8 @@ function comInfo(c: IfType | null): Any {
         text: c.text,
         text2: c.text2,
         shown: shownText(c),
-        colour: c.colour,
+        // the colour drawn: the active colour while its scripts pass (a music track: green once unlocked)
+        colour: c.colour2 !== 0 && isActive(c) ? c.colour2 : c.colour,
         ox,
         oy,
         hide: c.hide,

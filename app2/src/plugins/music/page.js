@@ -167,6 +167,13 @@
       this.saved = null;
     }
     trackLines() {
+      // 2006RS-2: our music tab (music.if, root 962): the tracks are the text buttons in music:com_0 (4262); a track's
+      // colour is red, and its active colour (shown while its musicmulti bit is set: unlocked) green, as the bridge's
+      // colour (the colour drawn) shows
+      if (!ll.c2007) {
+        return (ll.api.comsOf ? ll.api.comsOf(962) : []).filter((i) => i && i.type === 4 && i.layer === 4262 && i.buttonType === 1 && i.text)
+          .map((i) => client.getWidget(i.id)).filter(Boolean);
+      }
       const ws = [];
       for (let i = 1; i < 700; i++) {
         const c = ll.api.com((MUSIC << 16) | i);
