@@ -7,7 +7,8 @@ module.exports = {
   name: 'Diary Requirements',
   description: 'Display level requirements in Achievement Diary interface',
   tags: ['achievements', 'tasks'],
-  enabledByDefault: true,
+  // 2006RS-2: off by default: the game this plugin is for isn't in our 2006 game (app2/README.md)
+  enabledByDefault: false,
   game: './achievementdiary/game.js',
   page: ['./achievementdiary/diaries.js', './achievementdiary/page.js'],
   config: { group: 'achievementdiary', sections: [], items: [] },

@@ -7,7 +7,8 @@ module.exports = {
   name: 'Barbarian Assault',
   description: 'Show a timer to the next call change and game/wave duration in chat.',
   tags: ['minigame', 'overlay', 'timer'],
-  enabledByDefault: true,
+  // 2006RS-2: off by default: the game this plugin is for isn't in our 2006 game (app2/README.md)
+  enabledByDefault: false,
   game: './barbarianassault/game.js',
   page: './barbarianassault/page.js',
   resources: ['clock.png'],
