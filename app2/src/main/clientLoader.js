@@ -16,7 +16,8 @@ const REPORTED_VERSION = '999.0.0';
 
 // The runtime, then the page-side part(s) of each plugin that has one (they register
 // themselves with the runtime; their sidebar half switches them on).
-const RUNTIME = [fs.readFileSync(path.join(__dirname, '..', 'runtime', 'runtime.js'), 'utf8')]
+// (2006RS-2: if2006.js translates the 2007 interfaces the plugins name to the 2006 ones)
+const RUNTIME = ['runtime.js', 'if2006.js'].map((f) => fs.readFileSync(path.join(__dirname, '..', 'runtime', f), 'utf8'))
   .concat(require('../plugins').filter((d) => d.page).flatMap((d) => [].concat(d.page).map((p) => fs.readFileSync(path.join(__dirname, '..', 'plugins', p), 'utf8'))))
   .join('\n;\n');
 
