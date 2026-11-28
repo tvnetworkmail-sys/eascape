@@ -1210,6 +1210,7 @@ export default class Player extends PathingEntity {
 
             this.executeScript(ScriptRunner.init(opTrigger, this, target), true);
             this.skillBeat(opTrigger);
+            this.appSkillStart(opTrigger); // 2006RS-2: the app's skilling plugins
 
             // If p_opnpc was called, remember it for later
             // For now, keep the current target
@@ -1886,6 +1887,7 @@ export default class Player extends PathingEntity {
     appIdle: boolean = false;
     private appSkill: number = -1; // the skill gaining xp in the current action, -1 none
     private appSkillTold: boolean = false;
+    private appSkillXp: boolean = false; // xp gained in it (else its end isn't told unless its start was)
     private appCombat: boolean = false;
     private appLastHit: number = -1000;
 
@@ -1893,6 +1895,7 @@ export default class Player extends PathingEntity {
         this.appIdle = on;
         this.appSkill = -1;
         this.appSkillTold = false;
+        this.appSkillXp = false;
         this.appCombat = false;
         if (on) {
             this.appMessage('idle on');
@@ -1933,10 +1936,14 @@ export default class Player extends PathingEntity {
         const going = this.target !== null || this.delayed || this.activeScript?.execution === ScriptState.SUSPENDED || this.queue.head() !== null || this.weakQueue.head() !== null;
         const name = (PlayerStatNameMap.get(this.appSkill) ?? 'unknown').toLowerCase();
         if (!going) {
-            // (also when the one xp drop ended it: a tree that fell at the first log)
-            this.appMessage('idle skill ' + name);
+            // (also when the one xp drop ended it: a tree that fell at the first log; but not an op that
+            // never got going and gave nothing)
+            if (this.appSkillTold || this.appSkillXp) {
+                this.appMessage('idle skill ' + name);
+            }
             this.appSkill = -1;
             this.appSkillTold = false;
+            this.appSkillXp = false;
         } else if (!this.appSkillTold) {
             this.appSkillTold = true;
             this.appMessage('busy skill ' + name);
@@ -1950,7 +1957,30 @@ export default class Player extends PathingEntity {
                 this.appSkillTold = false;
             }
             this.appSkill = stat;
+            this.appSkillXp = true;
         }
+    }
+
+    // a gathering op the player runs on a loc or NPC (woodcutting, mining, fishing: each roll is a
+    // p_oploc / p_opnpc): the action is going from the op on, before its first xp (a tree's first log
+    // can take a while), so the app is told it started then
+    private static readonly APP_GATHER: [string, PlayerStat][] = [
+        ['/skill_woodcutting/', PlayerStat.WOODCUTTING],
+        ['/skill_mining/', PlayerStat.MINING],
+        ['/skill_fishing/', PlayerStat.FISHING]
+    ];
+    private appSkillStart(script: ScriptFile): void {
+        if (!this.appIdle) {
+            return;
+        }
+        const file = script.info.sourceFilePath.replace(/\\/g, '/');
+        const hit = Player.APP_GATHER.find(([dir]) => file.includes(dir));
+        if (!hit || this.appSkill === hit[1]) {
+            return;
+        }
+        this.appSkill = hit[1];
+        this.appSkillTold = false;
+        this.appSkillXp = false;
     }
 
     setVar(id: number, value: number | string) {

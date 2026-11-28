@@ -17,6 +17,9 @@
   const TrawlerOverlay = { CATCH: 0x016e000d, TIME: 0x016e000e };
   const TRAWLER_ACTIVITY = 3377;
   const { client, Skill, Color, LineComponent, TitleComponent, Overlay, OverlayPanel, OverlayPosition, OverlayLayer, LocalPoint, FishingSpot, InventoryID } = rl;
+  // 2006RS-2: server data: the server says when an action in a skill is going on (::appidle, engine Player.appIdleTick;
+  // the runtime's ll.appSkilling), so this needn't rest on the animation alone
+  const serverSkilling = (skill) => !!(ll.appSkilling && ll.appSkilling(skill));
 
   const FISHING_CATCH_REGEX = /You catch (?:a|an|some) |Your cormorant returns with its catch.|You catch .* Karambwanji/;
   // RuneLite's tools in the 2007 cache: harpoon, big net, net, Evil Bob's net, fishing rod, fly fishing rod, oily fishing
@@ -114,7 +117,7 @@
       const me = client.getLocalPlayer();
       const it = me && me.getInteracting();
       const ch = this.panelComponent.getChildren();
-      if (it != null && (it.getName() || '').includes(FISHING_SPOT) && FISHING_ANIMATIONS.has(me.getAnimation())) {
+      if (serverSkilling('fishing') || (it != null && (it.getName() || '').includes(FISHING_SPOT) && FISHING_ANIMATIONS.has(me.getAnimation()))) {
         ch.push(TitleComponent.builder().text('Fishing').color(Color.GREEN).build());
       } else {
         ch.push(TitleComponent.builder().text('NOT fishing').color(Color.RED).build());
@@ -143,11 +146,13 @@
     getFishingSpots() { return this.fishingSpots; }
     getCurrentSpot() { return this.currentSpot; }
     startUp() {
+      if (ll.appWant) ll.appWant('fishing', true);
       rl.overlayManager.add(this.overlay);
       rl.overlayManager.add(this.spotOverlay);
       rl.overlayManager.add(this.fishingSpotMinimapOverlay);
     }
     shutDown() {
+      if (ll.appWant) ll.appWant('fishing', false);
       this.spotOverlay.setHidden(true);
       this.fishingSpotMinimapOverlay.setHidden(true);
       rl.overlayManager.remove(this.overlay);

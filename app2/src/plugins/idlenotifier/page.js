@@ -73,12 +73,13 @@
     }
     startUp() {
       this.unlisten = ll.onAppMessage ? ll.onAppMessage((m) => this.onServer(m)) : null;
-      if (client.getGameState() === 'LOGGED_IN') command('appidle on');
+      if (ll.appWant) ll.appWant('idlenotifier', true); else if (client.getGameState() === 'LOGGED_IN') command('appidle on');
+      if (ll.appChannel) this.server = true;
     }
     shutDown() {
       if (this.unlisten) this.unlisten();
       this.unlisten = null;
-      if (this.server) command('appidle off');
+      if (ll.appWant) ll.appWant('idlenotifier', false); else if (this.server) command('appidle off');
       this.server = false;
       this.serverIdleAt = null;
     }
@@ -148,7 +149,7 @@
           break;
         case 'LOGGED_IN':
           // a new login: ask the server (it forgets on logout); not again after each map load
-          if (!this.server) command('appidle on');
+          if (!this.server && !ll.appWant) command('appidle on');
           if (this.ready) {
             this.ready = false;
             this.resetTimers();
