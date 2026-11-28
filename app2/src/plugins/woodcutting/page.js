@@ -13,6 +13,9 @@
   const rl = ll && ll.rl;
   if (!rl || !ll.woodcuttingTrees) return;
   const { client, Color, LineComponent, TitleComponent, Overlay, OverlayPanel, OverlayPosition, OverlayLayer, LocalPoint, Perspective, ProgressPieComponent } = rl;
+  // 2006RS-2: server data: the server says when an action in a skill is going on (::appidle, engine Player.appIdleTick;
+  // the runtime's ll.appSkilling), so this needn't rest on the animation alone
+  const serverSkilling = (skill) => !!(ll.appSkilling && ll.appSkilling(skill));
   const T = ll.woodcuttingTrees;
   const GAME_TICK_LENGTH = 600;
   const LOCAL_HALF_TILE_SIZE = 64;
@@ -59,7 +62,7 @@
       const session = this.plugin.getSession();
       if (session == null || !session.isActive() || !this.config.showWoodcuttingStats()) return null;
       const ch = this.panelComponent.getChildren();
-      if (WOODCUTTING_ANIMS.has(client.getLocalPlayer().getAnimation())) {
+      if (WOODCUTTING_ANIMS.has(client.getLocalPlayer().getAnimation()) || serverSkilling('woodcutting')) {
         ch.push(TitleComponent.builder().text('Woodcutting').color(Color.GREEN).build());
       } else {
         ch.push(TitleComponent.builder().text('NOT woodcutting').color(Color.RED).build());
@@ -122,10 +125,12 @@
     getRespawns() { return this.respawns; }
     resetSession() { this.session = null; }
     startUp() {
+      if (ll.appWant) ll.appWant('woodcutting', true);
       rl.overlayManager.add(this.overlay);
       rl.overlayManager.add(this.treesOverlay);
     }
     shutDown() {
+      if (ll.appWant) ll.appWant('woodcutting', false);
       rl.overlayManager.remove(this.overlay);
       rl.overlayManager.remove(this.treesOverlay);
       this.respawns = [];
@@ -135,7 +140,7 @@
     onGameTick() {
       this.respawns = this.respawns.filter((r) => !r.isExpired());
       if (this.session == null || this.session.getLastChopping() == null) return;
-      if (WOODCUTTING_ANIMS.has(client.getLocalPlayer().getAnimation())) {
+      if (WOODCUTTING_ANIMS.has(client.getLocalPlayer().getAnimation()) || serverSkilling('woodcutting')) {
         this.session.setLastChopping();
         return;
       }

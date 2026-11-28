@@ -415,9 +415,12 @@
           // Login Screen, 2007RS (the user's Remember username / password)
           if (loggedIn) this.saveLogin();
           else this.lastScreen = -1;
+          // (the server forgets ::appidle at logout)
+          this.appChannel = false; this.appAsked = 0; this.appBusy = { skill: null, combat: false, at: 0, server: false };
         }
         if (loggedIn) {
           this.pollStats();
+          if (!this.c2007) this.appSync(false);
           this.pollIdle();
           this.pollPlayer();
           this.pollItems();
@@ -885,6 +888,39 @@
       this.appListeners.add(fn);
       return () => this.appListeners.delete(fn);
     },
+    // 2006RS-2: the server's skilling / combat channel (::appidle on, engine Player.appIdleTick), shared by every
+    // plugin that wants it: appWant(owner, true) while a plugin needs it; it's asked for each login while anyone
+    // wants it, and turned off when nobody does. appBusy is what the server last said: the skill gaining xp in the
+    // action going on now (its name, lower case, as 'woodcutting'), or null; and whether you're in combat.
+    // appBusyAt is when that skill's action started (performance.now()).
+    appWants: new Set(),
+    appChannel: false, // the server answered ::appidle on since the last login
+    appAsked: 0,
+    appBusy: { skill: null, combat: false, at: 0, server: false },
+    appWant(owner, on) {
+      if (on) this.appWants.add(owner); else this.appWants.delete(owner);
+      this.appSync(true);
+    },
+    appSync(now) {
+      if (!this.loggedIn || !this.api || !this.api.command) return;
+      const want = this.appWants.size > 0;
+      const t = performance.now();
+      if (want && !this.appChannel && (now || t - this.appAsked > 5000)) { if (this.api.command('appidle on')) this.appAsked = t; }
+      else if (!want && this.appChannel) { if (this.api.command('appidle off')) { this.appChannel = false; this.appBusy = { skill: null, combat: false, at: 0, server: false }; } }
+    },
+    /** true while the server says an action in that skill (lower case name) is going on */
+    appSkilling(skill) { return this.appBusy.skill === String(skill).toLowerCase(); },
+    appTrack(msg) {
+      const [what, kind, name] = String(msg).split(' ');
+      if (what === 'idle' && kind === 'on') { this.appChannel = true; this.appBusy.server = true; return; }
+      if (what !== 'idle' && what !== 'busy') return;
+      this.appChannel = true; this.appBusy.server = true;
+      if (kind === 'combat') this.appBusy.combat = what === 'busy';
+      else if (kind === 'skill') {
+        if (what === 'busy') { this.appBusy.skill = name || null; this.appBusy.at = performance.now(); }
+        else if (this.appBusy.skill === name) this.appBusy.skill = null;
+      }
+    },
 
     setApi(api) {
       const first = !this.api || !this.api.ifList;
@@ -1024,6 +1060,7 @@
     appMessage(msg) {
       // 2006RS-2: every other kind ("idle ...", "busy ...") goes to the plugins that listen (onAppMessage)
       if (!msg.startsWith('bank ')) {
+        this.appTrack(msg);
         for (const fn of this.appListeners) {
           try { fn(msg); } catch (e) { post('runtime-error', 'app message: ' + String((e && e.message) || e)); }
         }

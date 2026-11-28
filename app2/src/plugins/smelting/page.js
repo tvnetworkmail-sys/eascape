@@ -7,6 +7,9 @@
   const rl = ll && ll.rl;
   if (!rl) return;
   const { client, Skill, Color, LineComponent, TitleComponent, OverlayPanel, OverlayPosition } = rl;
+  // 2006RS-2: server data: the server says when an action in a skill is going on (::appidle, engine Player.appIdleTick;
+  // the runtime's ll.appSkilling), so this needn't rest on the animation alone
+  const serverSkilling = (skill) => !!(ll.appSkilling && ll.appSkilling(skill));
   const GROUP = 'smelting';
   const HUMAN_FURNACE = 899; const HUMAN_PICKUPFLOOR = 827;
 
@@ -48,7 +51,7 @@
     }
     isSmelting() {
       const a = client.getLocalPlayer().getAnimation();
-      return a === HUMAN_FURNACE || a === HUMAN_PICKUPFLOOR;
+      return a === HUMAN_FURNACE || a === HUMAN_PICKUPFLOOR || serverSkilling('smithing');
     }
   }
 
@@ -57,6 +60,7 @@
     getSession() { return this.session; }
     setSession(s) { this.session = s; }
     startUp() {
+      if (ll.appWant) ll.appWant('smelting', true);
       this.config = rl.configProxy(GROUP, () => this.configItems);
       this.overlay = new SmeltingOverlay(this);
       this.session = null;
@@ -64,6 +68,7 @@
       this.cannonBallsMade = 0;
     }
     shutDown() {
+      if (ll.appWant) ll.appWant('smelting', false);
       rl.overlayManager.remove(this.overlay);
       this.session = null;
       this.cannonBallsMade = 0;

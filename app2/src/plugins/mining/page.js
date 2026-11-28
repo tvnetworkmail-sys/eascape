@@ -11,6 +11,9 @@
   const rl = ll && ll.rl;
   if (!rl || !ll.miningRocks) return;
   const { client, Skill, Color, LineComponent, TitleComponent, Overlay, OverlayPanel, OverlayPosition, OverlayLayer, LocalPoint, Perspective, ProgressPieComponent } = rl;
+  // 2006RS-2: server data: the server says when an action in a skill is going on (::appidle, engine Player.appIdleTick;
+  // the runtime's ll.appSkilling), so this needn't rest on the animation alone
+  const serverSkilling = (skill) => !!(ll.appSkilling && ll.appSkilling(skill));
   const R = ll.miningRocks;
   const GAME_TICK_LENGTH = 600;
 
@@ -55,11 +58,11 @@
       if (session == null || session.getLastMined() == null || !this.config.showMiningStats()) return null;
       const currentAnim = client.getLocalPlayer().getAnimation();
       const ch = this.panelComponent.getChildren();
-      if (this.plugin.isMining()
+      if (serverSkilling('mining') || (this.plugin.isMining()
         && (MiningAnimation.MINING_ANIMATIONS.has(currentAnim)
           // when receiving ore from a wall the animation sets to -1 before starting up again
           || (MiningAnimation.WAll_ANIMATIONS.has(this.plugin.getLastActionAnimationId())
-            && this.plugin.getLastAnimationChange() > Date.now() - 1800))) {
+            && this.plugin.getLastAnimationChange() > Date.now() - 1800)))) {
         ch.push(TitleComponent.builder().text('Mining').color(Color.GREEN).build());
       } else {
         ch.push(TitleComponent.builder().text('NOT mining').color(Color.RED).build());
@@ -123,10 +126,12 @@
     getLastAnimationChange() { return this.lastAnimationChange; }
     getLastActionAnimationId() { return this.lastActionAnimationId; }
     startUp() {
+      if (ll.appWant) ll.appWant('mining', true);
       rl.overlayManager.add(this.overlay);
       rl.overlayManager.add(this.rocksOverlay);
     }
     shutDown() {
+      if (ll.appWant) ll.appWant('mining', false);
       this.session = null;
       this.mining = false;
       rl.overlayManager.remove(this.overlay);
@@ -150,7 +155,7 @@
     onGameTick() {
       this.clearExpiredRespawns();
       if (this.session == null || this.session.getLastMined() == null) return;
-      if (this.mining && MiningAnimation.MINING_ANIMATIONS.has(client.getLocalPlayer().getAnimation())) {
+      if ((this.mining && MiningAnimation.MINING_ANIMATIONS.has(client.getLocalPlayer().getAnimation())) || serverSkilling('mining')) {
         this.session.setLastMined();
         return;
       }

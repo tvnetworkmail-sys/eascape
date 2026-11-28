@@ -9,6 +9,9 @@
   const rl = ll && ll.rl;
   if (!rl) return;
   const { client, Skill, Color, LineComponent, TitleComponent, OverlayPanel, OverlayPosition, InfoBox } = rl;
+  // 2006RS-2: server data: the server says when an action in a skill is going on (::appidle, engine Player.appIdleTick;
+  // the runtime's ll.appSkilling), so this needn't rest on the animation alone
+  const serverSkilling = (skill) => !!(ll.appSkilling && ll.appSkilling(skill));
   const HUMAN_FIRECOOKING = 897;
   const HUMAN_COOKING = 896;
   const JUG_WINE = 1993;
@@ -66,7 +69,7 @@
     }
     isCooking() {
       const a = client.getLocalPlayer().getAnimation();
-      return a === HUMAN_FIRECOOKING || a === HUMAN_COOKING;
+      return a === HUMAN_FIRECOOKING || a === HUMAN_COOKING || serverSkilling('cooking');
     }
   }
 
@@ -84,10 +87,12 @@
     getSession() { return this.session; }
     setSession(s) { this.session = s; }
     startUp() {
+      if (ll.appWant) ll.appWant('cooking', true);
       this.session = null;
       rl.overlayManager.add(this.overlay);
     }
     shutDown() {
+      if (ll.appWant) ll.appWant('cooking', false);
       rl.infoBoxManager.removeIf((b) => b instanceof FermentTimer);
       rl.overlayManager.remove(this.overlay);
       this.session = null;
