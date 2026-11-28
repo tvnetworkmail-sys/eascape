@@ -1082,6 +1082,13 @@ function bridgeApi(): Any {
         stretchedDimensions: () => ({ width: 765, height: 503 }),
         view: () => ({ x: 4, y: 4, w: 512, h: 334 }),
         minimapPoint,
+        // move an item in an inventory component (mode 1 inserts, 0 swaps), as the client's drag sends it; the server
+        // checks it as it checks the client's own
+        invMove: (com: number, from: number, to: number, mode: number): boolean => {
+            const c = ifGet(com);
+            if (!c || c.type !== 2 || !(from >= 0) || !(to >= 0) || from === to) return false;
+            return invMover(com | 0, from | 0, to | 0, mode === 1 ? 1 : 0);
+        },
         // the chat bar's Report Abuse text (display only; null puts the client's own back)
         reportText: (text?: string | null) => {
             if (text !== undefined) {
@@ -1091,6 +1098,12 @@ function bridgeApi(): Any {
             return reportText;
         }
     };
+}
+
+// set by the client: sends an inventory component's move (INV_BUTTOND), as its own drag does
+let invMover: (com: number, from: number, to: number, mode: number) => boolean = () => false;
+export function lostliteSetInvMover(mover: (com: number, from: number, to: number, mode: number) => boolean): void {
+    invMover = mover;
 }
 
 // the chat bar's Report Abuse button's text: the app's (Report Button plugin: the time) or the client's own

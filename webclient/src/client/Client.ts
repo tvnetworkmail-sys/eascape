@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText, lostliteChatInput } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText, lostliteChatInput, lostliteSetInvMover } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -6308,6 +6308,19 @@ export class Client extends GameShell {
                 return true;
             });
             lostliteSetClient(this); // 2006RS-2: the bridge's reads (LostLite.ts bridgeApi)
+            // 2006RS-2: an item moved in an inventory component, as the client's own drag sends it (the app's bank view
+            // works out the real slots while its search or tag tab shows only some of the bank)
+            lostliteSetInvMover((com: number, from: number, to: number, mode: number): boolean => {
+                if (!this.ingame || !this.out) {
+                    return false;
+                }
+                this.out.p1Enc(ClientProt.INV_BUTTOND);
+                this.out.p2_alt3(to);
+                this.out.p1_alt1(mode);
+                this.out.p2_alt2(com);
+                this.out.p2_alt1(from);
+                return true;
+            });
             lostliteConfigure();
             lostliteCycle();
         }
