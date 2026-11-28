@@ -34,7 +34,10 @@
   // a loc entry's identifier: an op's is the scene tag, with the loc's id in bits 32-62 (not RuneLite's plain id, so
   // RuneLite's `identifier & 0xFFFF` would read the tag's square instead); Examine's is the loc's id
   // (2006RS-2: the 2006 client's loc entries, ops and Examine alike, carry its 32-bit typecode: the loc id in bits 14-28)
-  const locIdOf = (raw) => (!ll.c2007 && typeof raw === 'number' && raw <= 0x7fffffff ? (raw >> 14) & 0x7fff : typeof raw === 'bigint' ? Number((raw >> 32n) & 0x7fffffffn)
+  // (its square in the low 14 bits, as the entry's x and z: a plain id, as 2007's Examine carries, doesn't match them)
+  const typecode06 = (raw, e) => !ll.c2007 && typeof raw === 'number' && raw >= 0 && raw <= 0x7fffffff && e
+    && (raw & 0x7f) === (e.getParam0() & 0x7f) && ((raw >> 7) & 0x7f) === (e.getParam1() & 0x7f);
+  const locIdOf = (raw, e) => (typecode06(raw, e) ? (raw >> 14) & 0x7fff : typeof raw === 'bigint' ? Number((raw >> 32n) & 0x7fffffffn)
     : Number(raw) > 0x7fffffff ? Math.floor(Number(raw) / 4294967296) & 0x7fffffff : Number(raw) | 0);
   const sameLoc = (a, b) => a.getParam0() === b.getParam0() && a.getParam1() === b.getParam1() && a.getTarget() === b.getTarget();
   const alwaysTrue = () => true;
@@ -163,9 +166,9 @@
     // the loc a multiloc shows as now (its varbit / varp state; Client.ts LocType.getMultiLoc), so the loc's op entries
     // take the id of the Examine at the same square with the same name
     objectIdOf(menuEntries, menuEntry) {
-      if (baseType(menuEntry.getType()) === MenuAction.EXAMINE_OBJECT) return locIdOf(menuEntry.getIdentifier());
-      for (const e of menuEntries) if (baseType(e.getType()) === MenuAction.EXAMINE_OBJECT && sameLoc(e, menuEntry)) return locIdOf(e.getIdentifier());
-      const objectId = locIdOf(menuEntry.getIdentifier());
+      if (baseType(menuEntry.getType()) === MenuAction.EXAMINE_OBJECT) return locIdOf(menuEntry.getIdentifier(), menuEntry);
+      for (const e of menuEntries) if (baseType(e.getType()) === MenuAction.EXAMINE_OBJECT && sameLoc(e, menuEntry)) return locIdOf(e.getIdentifier(), e);
+      const objectId = locIdOf(menuEntry.getIdentifier(), menuEntry);
       const composition = client.getObjectDefinition(objectId);
       const impostor = composition.getImpostorIds() != null ? composition.getImpostor() : null;
       return impostor ? impostor.getId() : objectId;

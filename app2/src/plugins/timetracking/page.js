@@ -599,15 +599,167 @@
     return sb;
   }
 
+  // ---------------------------------------------------------------- 2006RS-2: our farming
+  // Our patches aren't RuneLite's: each is a varbit of its own (transmitted) whose values our farming scripts give their
+  // own meaning (farming_states.enum: value -> crop * 1000 + kind * 100 + stage), and the growth ticks come from a
+  // clock the server keeps per player (farming.rs2). So on this server the farming tabs are fed from our data
+  // (farming2006.js, made by tools/farming/app_export.py, the same as the normal app's patches.json) and from the
+  // server: after you log in the app asks for your growth clock (::appfarming on, app only: eascape_app.rs2), which
+  // the server keeps in transmitted varps (your growth offset + 1, and the clock minute your patches last grew up
+  // to). Every growth tick is then the server's own: a tick at every clock minute m where (m - offset) is a multiple
+  // of 5 x the type's interval; a growing crop goes up a stage a tick and is grown the tick after its last stage, a
+  // diseased one dies at the next tick, weeds come back a stage a tick (as the normal app's farming plugin,
+  // app/src/plugins/farming/game.js). Only disease, a random roll at each tick, can't be told in advance. What was
+  // last seen of each patch and the clock are kept per account in the profile, so the tabs work while logged out.
+  const F06 = !ll.c2007 ? ll.timetrackingFarming2006 : null;
+  const TYPE_TAB = { allotment: 'ALLOTMENT', flower: 'FLOWER', herb: 'HERB', hops: 'HOPS', tree: 'TREE', fruit_tree: 'FRUIT_TREE', bush: 'BUSH' };
+  const title06 = (n) => String(n).replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+  class FarmingWorld2006 {
+    constructor() {
+      this.regions = new Map(); this.tabs = {}; this.all = [];
+      const byPlace = new Map(); const impls = {};
+      for (const p of F06.patches) {
+        const type = F06.types[p.type];
+        let region = byPlace.get(p.place);
+        if (!region) {
+          region = { name: p.place, regionID: 0, definite: false, patches: [], isInBounds: () => true, toString: () => p.place };
+          byPlace.set(p.place, region); this.all.push(region);
+        }
+        const impl = impls[p.type] || (impls[p.type] = { key: type.key, name: type.title, tab: TYPE_TAB[type.key] || 'SPECIAL' });
+        const patch = { region, name: '', varbit: p.varbit, implementation: impl, p06: p,
+          configKey() { return `2006.${p.index}`; }, notifyConfigKey() { return `${NOTIFY}.2006.${p.index}`; } };
+        region.patches.push(patch);
+        (this.tabs[impl.tab] = this.tabs[impl.tab] || []).push(patch);
+      }
+      for (const list of Object.values(this.tabs)) list.sort((a, b) => (a.p06.type - b.p06.type) || (a.region.name < b.region.name ? -1 : a.region.name > b.region.name ? 1 : 0));
+    }
+    getRegionsForLocation() { return []; }
+  }
+  class FarmingTracker2006 {
+    constructor(plugin, world) { this.plugin = plugin; this.farmingWorld = world; this.summaries = {}; this.completionTimes = {}; this.told = new Set(); this.lastCheck = Date.now(); }
+    get config() { return this.plugin.config; }
+    decode(p, varps) {
+      const raw = ((varps[p.varp] | 0) >>> p.start) & ((1 << (p.end - p.start + 1)) - 1);
+      const packed = (F06.decode[F06.types[p.type].key] || {})[raw];
+      if (packed === undefined || packed < 0) return { raw, unknown: true };
+      return { raw, crop: Math.floor(packed / 1000), kind: Math.floor(packed / 100) % 10, stage: packed % 100 };
+    }
+    lastStage(type, crop) {
+      let max = 0;
+      for (const packed of Object.values(F06.decode[F06.types[type].key] || {})) {
+        if (packed < 0 || Math.floor(packed / 1000) !== crop) continue;
+        const k = Math.floor(packed / 100) % 10;
+        if (k >= 1 && k <= 3) max = Math.max(max, packed % 100);
+      }
+      return max;
+    }
+    timing(profile) { try { return JSON.parse(cm().getConfiguration(CONFIG_GROUP, profile, '2006.timing') || 'null'); } catch { return null; } }
+    seen(patch, profile) { try { return JSON.parse(cm().getConfiguration(CONFIG_GROUP, profile, patch.configKey()) || 'null'); } catch { return null; } }
+    /** the server's clock and every patch, as the client has them now (each game tick) */
+    updateData() {
+      const varps = client.getVarps();
+      const offset = (varps[F06.appVarps.offset] | 0) - 1;
+      const clock = varps[F06.appVarps.clock] | 0;
+      if (offset < 0 || clock <= 0 || cm().getRSProfileKey() == null) return false;
+      const now = Date.now();
+      let changed = false;
+      const t = this.timing(cm().getRSProfileKey());
+      if (!t || t.clock !== clock || t.offset !== offset) {
+        // the server's clock less the computer's, to the minute (the clock turns over a few seconds after its minute)
+        const skew = t && t.clock === clock ? t.skew : Math.round((clock * 60000 - (now - 2500)) / 60000) * 60000;
+        cm().setRSProfileConfiguration(CONFIG_GROUP, '2006.timing', JSON.stringify({ offset, clock, skew }));
+        changed = true;
+      }
+      for (const region of this.farmingWorld.all) for (const patch of region.patches) {
+        const state = this.decode(patch.p06, varps);
+        const before = this.seen(patch, cm().getRSProfileKey());
+        if (!before || before.raw !== state.raw) { cm().setRSProfileConfiguration(CONFIG_GROUP, patch.configKey(), JSON.stringify(state)); changed = true; }
+      }
+      if (changed) this.updateCompletionTime();
+      return changed;
+    }
+    /** RuneLite's PatchPrediction: { produce, cropState, stage, stages, doneEstimate (unix seconds) } or null */
+    predictPatch(patch, profile = cm().getRSProfileKey()) {
+      if (profile == null) return null;
+      const s = this.seen(patch, profile); const t = this.timing(profile);
+      if (!s || s.unknown || !t || !t.clock) return null;
+      const p = patch.p06; const { crop, kind, stage } = s;
+      const period = F06.types[p.type].ticks * F06.tickMinutes;
+      const mod = (n) => ((n % period) + period) % period;
+      const first = t.clock + 1 + mod(t.offset - (t.clock + 1));
+      const serverNow = Math.floor((Date.now() + (t.skew || 0)) / 60000);
+      const passed = serverNow >= first ? Math.floor((serverNow - first) / period) + 1 : 0;
+      const at = (n) => Math.floor(((first + (n - 1) * period) * 60000 - (t.skew || 0)) / 1000);
+      const seenAt = Math.floor((t.clock * 60000 - (t.skew || 0)) / 1000);
+      if (crop === 0) {
+        const need = 3 - stage;
+        return { produce: Produce.WEEDS, cropState: 'GROWING', stage: Math.min(3, stage + passed), stages: 4, doneEstimate: need > 0 ? at(need) : Math.min(seenAt, nowSec()) };
+      }
+      // (99: the dead herb every herb turns into, farming.constant ^farming_crop_herb_dead)
+      const c = F06.crops[crop] || (crop === 99 ? { name: 'herbs', item: F06.types[p.type].icon } : {});
+      const last = this.lastStage(p.type, crop);
+      const produce = c.name === 'scarecrow' ? Produce.SCARECROW : { name: title06(c.name || `crop ${crop}`), itemID: c.item || F06.types[p.type].icon, tickrate: period };
+      const out = { produce, stage: Math.min(stage, last + 1), stages: last + 2 };
+      if (kind === 5 || kind === 6) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: Math.min(seenAt, nowSec()) });
+      if (kind === 7) return Object.assign(out, { cropState: passed > 0 ? 'HARVESTABLE' : 'GROWING', stage: out.stages - 1, doneEstimate: at(1) });
+      if (kind === 4) return Object.assign(out, { cropState: 'DEAD', doneEstimate: seenAt });
+      if (kind === 3) return passed > 0 ? Object.assign(out, { cropState: 'DEAD', doneEstimate: at(1) }) : Object.assign(out, { cropState: 'DISEASED', doneEstimate: seenAt });
+      const need = last - stage + 1;
+      if (passed >= need) return Object.assign(out, { cropState: 'HARVESTABLE', stage: out.stages - 1, doneEstimate: at(need) });
+      return Object.assign(out, { cropState: 'GROWING', stage: stage + passed, doneEstimate: at(need) });
+    }
+    loadCompletionTimes() { this.summaries = {}; this.completionTimes = {}; this.updateCompletionTime(); }
+    getSummary(tab) { return this.summaries[tab] || 'UNKNOWN'; }
+    getCompletionTime(tab) { const t = this.completionTimes[tab]; return t == null ? -1 : t; }
+    updateCompletionTime() {
+      for (const tab of FARMING_TABS) {
+        let extremum = this.config.preferSoonest() ? Number.MAX_SAFE_INTEGER : 0; let allUnknown = true; let allEmpty = true;
+        for (const patch of this.farmingWorld.tabs[tab] || []) {
+          const pr = this.predictPatch(patch);
+          if (pr == null || pr.produce.itemID < 0) continue;
+          allUnknown = false;
+          if (pr.produce !== Produce.WEEDS && pr.produce !== Produce.SCARECROW && pr.cropState !== 'EMPTY') {
+            allEmpty = false;
+            extremum = this.config.preferSoonest() ? Math.min(extremum, pr.doneEstimate) : Math.max(extremum, pr.doneEstimate);
+          }
+        }
+        let state; let time;
+        if (allUnknown) { state = 'UNKNOWN'; time = -1; } else if (allEmpty) { state = 'EMPTY'; time = -1; } else if (extremum <= nowSec()) { state = 'COMPLETED'; time = 0; } else { state = 'IN_PROGRESS'; time = extremum; }
+        this.summaries[tab] = state; this.completionTimes[tab] = time;
+      }
+    }
+    /** RuneLite's notification: when a patch with its bell on comes done between one check and the next */
+    checkCompletion() {
+      const now = Date.now();
+      for (const profile of cm().getRSProfiles()) {
+        const pk = profile.getKey();
+        for (const region of this.farmingWorld.all) for (const patch of region.patches) {
+          const sn = cm().getConfiguration(CONFIG_GROUP, pk, patch.notifyConfigKey());
+          if (!(sn === true || sn === 'true')) continue;
+          const pr = this.predictPatch(patch, pk);
+          if (!pr || pr.produce === Produce.WEEDS || pr.doneEstimate * 1000 > now || pr.doneEstimate * 1000 <= this.lastCheck) continue;
+          const id = `${pk}:${patch.configKey()}:${pr.doneEstimate}`;
+          if (this.told.has(id)) continue;
+          this.told.add(id);
+          if (pr.cropState === 'DEAD' || pr.cropState === 'DISEASED') continue;
+          const me = client.getGameState() === 'LOGGED_IN' ? client.getLocalPlayer() : null;
+          rl.notifier.notify(`${me && profile.getDisplayName() === me.getName() ? '' : `(${profile.getDisplayName()}) `}Your ${pr.produce.name} is ready to harvest in ${patch.region.name}.`);
+        }
+      }
+      this.lastCheck = now;
+      this.updateCompletionTime();
+    }
+  }
+
   // ---------------------------------------------------------------- TimeTrackingPlugin
   class TimeTrackingPlugin {
     constructor() {
       this.configGroup = CONFIG_GROUP;
       this.config = rl.configProxy(CONFIG_GROUP, () => this.configItems);
-      this.farmingWorld = new FarmingWorld();
+      this.farmingWorld = F06 ? new FarmingWorld2006() : new FarmingWorld();
       this.compostTracker = new CompostTracker(this.farmingWorld);
       this.paymentTracker = new PaymentTracker(this.farmingWorld);
-      this.farmingTracker = new FarmingTracker(this, this.farmingWorld, this.compostTracker, this.paymentTracker);
+      this.farmingTracker = F06 ? new FarmingTracker2006(this, this.farmingWorld) : new FarmingTracker(this, this.farmingWorld, this.compostTracker, this.paymentTracker);
       this.clockManager = new ClockManager(this);
       this.lastTickLocation = null;
       this.lastModalCloseTick = 0;
@@ -648,12 +800,19 @@
         // RuneScapeProfileChanged
         const pk = cm().getRSProfileKey();
         if (pk !== this.profileKey) { this.profileKey = pk; this.onRuneScapeProfileChanged(); }
+        // 2006RS-2: ask the server for the growth clock once each login (it forgets on logout)
+        if (F06 && this.lastGameState !== 'LOADING' && this.lastGameState !== 'LOGGED_IN') this.askClock = Date.now() + 1500;
       }
       this.lastGameState = e.getGameState();
       this.compostTracker.onGameStateChanged(e);
     }
 
     onGameTick() {
+      if (F06) {
+        if (this.askClock && Date.now() >= this.askClock && ll.api && ll.api.command && ll.api.command('appfarming on')) this.askClock = 0;
+        if (this.farmingTracker.updateData()) this.panelDirty = true;
+        return;
+      }
       this.paymentTracker.onGameTick();
       const loc = this.lastTickLocation;
       const player = client.getLocalPlayer();
@@ -695,6 +854,7 @@
      *  (the panel keeps them) */
     publishIcons() {
       const ids = new Set([BASKET_APPLE_5, ...Object.values(CompostState), ...Object.values(Tab).map((t) => t.itemID), ...Object.values(Produce).map((p) => p.itemID)]);
+      if (F06) for (const c of Object.values(F06.crops)) if (c.item) ids.add(c.item);
       this.icons = this.icons || {};
       let missing = false;
       for (const id of ids) {
@@ -738,8 +898,8 @@
           lastImpl = patch.implementation;
         }
         const prediction = this.farmingTracker.predictPatch(patch);
-        const prot = this.paymentTracker.getProtectedState(patch);
-        const compostState = this.compostTracker.getCompostState(patch);
+        const prot = F06 ? false : this.paymentTracker.getProtectedState(patch);
+        const compostState = F06 ? null : this.compostTracker.getCompostState(patch);
         let tooltip = '';
         if (prot) tooltip = ` protected${compostState != null ? ` and ${compostState.toLowerCase()}ed` : ''}`;
         else if (compostState != null) tooltip = ` with ${compostState.toLowerCase()}`;
