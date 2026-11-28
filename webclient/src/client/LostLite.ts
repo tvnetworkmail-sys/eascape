@@ -1023,8 +1023,22 @@ function bridgeApi(): Any {
         },
         stretchedDimensions: () => ({ width: 765, height: 503 }),
         view: () => ({ x: 4, y: 4, w: 512, h: 334 }),
-        minimapPoint
+        minimapPoint,
+        // the chat bar's Report Abuse text (display only; null puts the client's own back)
+        reportText: (text?: string | null) => {
+            if (text !== undefined) {
+                reportText = text === null ? null : String(text).slice(0, 40);
+                if (cl) cl.redrawChatMode = true;
+            }
+            return reportText;
+        }
     };
+}
+
+// the chat bar's Report Abuse button's text: the app's (Report Button plugin: the time) or the client's own
+let reportText: string | null = null;
+export function lostliteReportText(own: string): string {
+    return reportText ?? own;
 }
 
 // every client cycle while the app is on: the app's hint arrow and the open interfaces
