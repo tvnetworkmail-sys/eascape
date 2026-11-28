@@ -420,6 +420,9 @@ if(.%npc_lastcombat < map_clock) .%npc_lastcombat = map_clock;
 %aggressive_npc = npc_uid;
 
 [proc,npc_check_notcombat]()(boolean)
+if (inv_getobj(worn, ^wearpos_rhand) = magic_carpet) {
+    return(false); // EASCape: nothing can attack you while you fly on a magic carpet (areas/area_desert/magic_carpet.rs2)
+}
 if (nc_param(npc_type, eascape_combat_priority) = ^true) {
     return(true); // EASCape: a Barrows brother always gets to you
 }
