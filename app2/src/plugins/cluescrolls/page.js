@@ -20,6 +20,24 @@
     InventoryID, itemManager, worldMapPointManager, WorldMapPoint } = rl;
   const DATA = ll.cluescrollsData || {};
 
+  // 2006RS-2: our clues (content/scripts/minigames/game_trail, as app/tools/clues/extract.py reads them) are the same
+  // scrolls as data.js's, with the same texts and spots, except: a puzzle box (trail_clue_hard_riddleNNN_puzzlebox)
+  // belongs to its riddle's clue (you carry it to the riddle's NPC); a challenge scroll
+  // (trail_clue_medium_anagramNNN_challenge) is its anagram clue's question, answered to the same NPC; and the map
+  // trail_clue_hard_map004 is searched at 2459, 3179 (our trail_coord).
+  if (!ll.c2007 && DATA.cryptic) {
+    const PUZZLE_BOXES = { 2795: 2794, 2798: 2797, 2800: 2799, 3565: 3564, 3567: 3566, 3569: 3568, 3571: 3570, 3576: 3575, 3578: 3577 };
+    const CHALLENGES = { 2842: 2841, 2844: 2843, 2846: 2845, 2850: 2849, 2852: 2851, 2854: 2853 };
+    for (const [box, clue] of Object.entries({ ...PUZZLE_BOXES, ...CHALLENGES })) {
+      const c = DATA.cryptic.find((e) => (e.itemIds || []).includes(clue));
+      if (c) { c.itemIds.push(Number(box)); continue; }
+      const a = (DATA.anagram || []).find((e) => e.itemId === clue);
+      if (a) DATA.anagram.push(Object.assign({}, a, { itemId: Number(box) }));
+    }
+    const map = (DATA.map || []).find((e) => e.args && e.args[0] === 3524);
+    if (map && map.args[1] && map.args[1].wp) map.args[1].wp = [2459, 3179, 0];
+  }
+
   // ---- 2007 ids (RuneLite's ItemID / InterfaceID names)
   const ItemID = { SPADE: 952, TRAIL_CLUE_EASY_SIMPLE001: 2677 };
   const TRAIL_CLUETEXT = 345; // trail_cluelong: the scroll's eight lines are components 1-8
@@ -542,7 +560,7 @@
   const HIGHLIGHT_FILL_COLOR = new Color(0, 255, 0, 20);
   const CLUE_NOTE_KEY_PREFIX = 'note_';
   const GROUP = 'cluescroll';
-  const isClueItemName = (n) => /^(Clue scroll|Challenge scroll|Treasure scroll)/.test(n || '');
+  const isClueItemName = (n) => /^(Clue scroll|Challenge scroll|Treasure scroll|Puzzle box)/.test(n || ''); // (2006RS-2: our puzzle boxes too)
 
   class ClueScrollPlugin {
     constructor() {

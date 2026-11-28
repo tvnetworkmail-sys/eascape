@@ -95,7 +95,7 @@
       const c = ll.client;
       if (!c || !ll.fields.menuCount) return;
       const me = client.getLocalPlayer();
-      const arrays = ll.menuArrays(c);
+      const arrays = (ll.rlMenuArrays || ll.menuArrays).call(ll, c);
       const n = c[ll.fields.menuCount] | 0;
       const npcs = client.getNpcs();
       for (let i = 0; i < n; i++) {
