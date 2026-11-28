@@ -48,7 +48,10 @@ if (%sa_attack = ^false) {
     %sa_attack = ^false;
 }
 
-[if_button,combat_blunt:specbar]
+[if_button,combat_blunt:specbar] @specbar_blunt;
+
+// EASCape: the 2007 tab's button comes here too (combat07.rs2)
+[label,specbar_blunt]
 if (~duel_arena_spec_check = false) {
     return;
 }
@@ -65,7 +68,10 @@ if($weapon = granite_maul) { // https://www.youtube.com/watch?v=tASWhjUt8wg&t=25
 }
 @toggle_sa;
 
-[if_button,combat_axe:specbar]
+[if_button,combat_axe:specbar] @specbar_axe;
+
+// EASCape: the 2007 tab's button comes here too (combat07.rs2)
+[label,specbar_axe]
 // order is guessed (based off OSRS)
 // if (~duel_arena_spec_check = false) { TODO 377: re-enable with duel arena
 //     return;
@@ -100,7 +106,10 @@ if($weapon = dragon_battleaxe) {
 [if_button,combat_bow:specbar] @toggle_sa;
 [if_button,combat_stabsword:specbar] @toggle_sa;
 
-[if_button,combat_hacksword:specbar] 
+[if_button,combat_hacksword:specbar] @specbar_hacksword;
+
+// EASCape: the 2007 tab's button comes here too (combat07.rs2)
+[label,specbar_hacksword]
 def_obj $weapon = inv_getobj(worn, ^wearpos_rhand);
 if($weapon = excalibur) {
     if (~duel_arena_spec_check = false) {
