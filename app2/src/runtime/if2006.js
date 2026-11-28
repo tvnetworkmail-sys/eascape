@@ -37,7 +37,8 @@
     228: 2459, 230: 2469, 232: [2480, 19894], 234: [2492, 19906],
     287: 11126, // Monkey Madness reinitialisation puzzle -> inter_214
     345: 6965, // the clue scroll's text -> trail_cluelong (trail_clue_read.rs2 full_trail_readclue)
-    398: 20357, // fairy rings -> fairyrings
+    426: 20357, // fairy ring code screen (2007scape's copy of our fairyrings.if) -> fairyrings
+    620: 20786, // fairy ring travel log (2007scape's copy of our fairyrings_log.if) -> fairyrings_log
     381: 193, // wilderness level overlay -> wilderness_overlay
     275: 297, // quest / diary scroll -> questscroll
     335: 3323, // trade -> trademain
@@ -64,6 +65,13 @@
   // the clue scroll's eight lines: 2007 345:1-8 -> trail_cluelong:com_2-9 (6968-6975)
   for (let n = 1; n <= 8; n++) coms[P(345, n)] = 6967 + n;
 
+  // whole interfaces 2007scape copied from ours, component for component in the .if's order: 2007 child n is the 2006
+  // component (root + 1 + n), as content/pack/interface.pack numbers them
+  const ranges = {
+    426: { base: 20358, count: 20760 - 20358 }, // fairyrings.if
+    620: { base: 20787, count: 21226 - 20787 }, // fairyrings_log.if
+  };
+
   // 2007 inv id -> the 2006 component that shows it
   const invs = {
     93: 3214, // inv -> inventory:inv
@@ -85,10 +93,15 @@
 
   const isPacked = (id) => typeof id === 'number' && id > 0xffff;
   // a 2007 packed id -> 2006 component (-1: none); a 2006 id as it is
-  const com = (id) => (isPacked(id) ? (coms[id >>> 0] !== undefined ? coms[id >>> 0] : -1) : id);
+  const inRange = (id) => { const r = ranges[id >>> 16]; const n = id & 0xffff; return r && n < r.count ? r.base + n : -1; };
+  const com = (id) => (isPacked(id) ? (coms[id >>> 0] !== undefined ? coms[id >>> 0] : inRange(id >>> 0)) : id);
   // (a group can stand for several 2006 interfaces: an array; ifOpen is any of them, comsOf the first open one)
   const group = (g) => (typeof g === 'number' && groups[g] !== undefined ? groups[g] : g);
-  const back = (id) => (rev[id] !== undefined ? rev[id] : id);
+  const back = (id) => {
+    if (rev[id] !== undefined) return rev[id];
+    for (const [g, r] of Object.entries(ranges)) if (id >= r.base && id < r.base + r.count) return P(Number(g), id - r.base);
+    return id;
+  };
   const groupBack = (g) => (grev[g] !== undefined ? grev[g] : g);
 
   // WidgetLoaded / WidgetClosed come from the client with the 2006 root: the plugins get the 2007 group
@@ -236,7 +249,7 @@
     const virtualGroups = { 137: () => !!(ll.client && ll.client.ingame) };
     const openOf = (g) => { const t = group(g); return Array.isArray(t) ? t.find((x) => raw.ifOpen(x)) ?? t[0] : t; };
     if (raw.ifOpen) a.ifOpen = (g) => (virtualGroups[g] ? virtualGroups[g]() : Array.isArray(group(g)) ? group(g).some((x) => raw.ifOpen(x)) : raw.ifOpen(group(g)));
-    if (raw.comsOf) a.comsOf = (g) => raw.comsOf(openOf(g)).map((i) => (i && rev[i.id] !== undefined ? Object.assign({}, i, { id: rev[i.id], raw: i.id }) : i));
+    if (raw.comsOf) a.comsOf = (g) => raw.comsOf(openOf(g)).map((i) => { if (!i) return i; const b = back(i.id); return b !== i.id ? Object.assign({}, i, { id: b, raw: i.id, layer: i.layer >= 0 ? back(i.layer) : i.layer }) : i; });
     if (raw.componentTable) a.componentTable = () => { const t = raw.componentTable(); for (let i = 0; i < t.length; i += 2) t[i] = groupBack(t[i]); return t; };
     if (raw.subRects) a.subRects = () => { const t = raw.subRects(); for (let i = 0; i < t.length; i += 6) t[i] = groupBack(t[i]); return t; };
     if (raw.widgetItems) a.widgetItems = () => { const w = Int32Array.from(raw.widgetItems()); for (let i = 2; i < w.length; i += 6) w[i] = back(w[i]) | 0; return w; };
