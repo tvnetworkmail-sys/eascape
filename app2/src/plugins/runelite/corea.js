@@ -401,6 +401,16 @@
       for (const l of [...typedListeners]) { try { l.keyTyped(e); } catch { /* keep going */ } }
       if (consumed) { e.preventDefault(); e.stopImmediatePropagation(); }
     }, true);
+    // (2006RS-2: the 2006 client takes typed characters from keydown (its e.key) and cancels the keypress, so a
+    // printable keydown is the keyTyped here, after the keyPressed listeners have had it; consumed, the client never
+    // sees it)
+    window.addEventListener('keydown', (e) => {
+      if (ll.c2007 || !typedListeners.size || !e.key || e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
+      let consumed = false;
+      e.consume = () => { consumed = true; };
+      for (const l of [...typedListeners]) { try { l.keyTyped(e); } catch { /* keep going */ } }
+      if (consumed) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
   }
   // KeyEvent.setKeyCode / setKeyChar / getKeyCode / getKeyChar on every key event (the client reads keyCode and key)
   const KP = window.KeyboardEvent && window.KeyboardEvent.prototype;

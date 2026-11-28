@@ -1005,10 +1005,42 @@ function bridgeApi(): Any {
             }
             return false;
         },
-        // client variables (varc / varcstr) are 2007 clientscript state: none in this client
-        varc: () => 0,
-        varcStr: () => null,
-        varcStrs: () => [],
+        // client variables are 2007 clientscript state. Their chat box ones are this client's own fields: varc 5 the chat box
+        // prompt's mode (0 typing chat, 1 an amount / name, 6 a private message), varc string 1 the typed chat line, 22 a
+        // private message's text, 23 its friend's name (local input state, nothing is sent by itself); others are 0 / null
+        varc: (id: number) => {
+            if (id !== 5 || !cl) return 0;
+            if (cl.socialInputOpen) return cl.socialInputType === 3 ? 6 : 1;
+            return cl.dialogInputOpen ? 1 : 0;
+        },
+        varcStr: (id: number, value?: string) => {
+            if (!cl) return null;
+            if (id === 1) {
+                if (value !== undefined) {
+                    cl.chatInput = String(value ?? '').slice(0, 80);
+                    cl.redrawChat = true;
+                }
+                return cl.chatInput;
+            }
+            if (id === 22) {
+                if (value !== undefined) {
+                    cl.socialInput = String(value ?? '').slice(0, 80);
+                    cl.redrawChat = true;
+                }
+                return cl.socialInput;
+            }
+            if (id === 23) return cl.socialInputOpen && cl.socialInputType === 3 && cl.socialUserhash ? JString.toScreenName(JString.toRawUsername(cl.socialUserhash)) : null;
+            return null;
+        },
+        varcStrs: () => (cl ? [1, cl.chatInput, 22, cl.socialInput] : []),
+        // the chat box's input line as drawn (Key Remapping's "Press Enter to Chat..."; null: what's typed)
+        chatInputText: (text?: string | null) => {
+            if (text !== undefined) {
+                chatInputText = text === null ? null : String(text).slice(0, 80);
+                if (cl) cl.redrawChat = true;
+            }
+            return chatInputText;
+        },
         // a chat line put back by the app, past the app's own chat hook (no ChatMessage for it)
         addChatQuiet: (type: number, text: string, sender: string) => {
             if (!cl) return;
@@ -1065,6 +1097,12 @@ function bridgeApi(): Any {
 let reportText: string | null = null;
 export function lostliteReportText(own: string): string {
     return reportText ?? own;
+}
+
+// the chat box's input line as drawn: the app's text in place of what's typed (Key Remapping), or the client's own
+let chatInputText: string | null = null;
+export function lostliteChatInput(own: string): string {
+    return chatInputText ?? own;
 }
 
 // every client cycle while the app is on: the app's hint arrow and the open interfaces

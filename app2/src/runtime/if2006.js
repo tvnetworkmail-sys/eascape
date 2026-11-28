@@ -33,6 +33,8 @@
     261: 904, // options -> options
     182: 2449, // logout -> logout
     363: 6976, // clue sliding puzzle -> trail_puzzle
+    // the option dialogues (2007 228 / 230 / 232 / 234: 2-5 options) -> multi2..multi5 and the duplicates of 4 and 5
+    228: 2459, 230: 2469, 232: [2480, 19894], 234: [2492, 19906],
     287: 11126, // Monkey Madness reinitialisation puzzle -> inter_214
     345: 6965, // the clue scroll's text -> trail_cluelong (trail_clue_read.rs2 full_trail_readclue)
     398: 20357, // fairy rings -> fairyrings
@@ -77,13 +79,14 @@
     for (const k of Object.keys(rev)) delete rev[k];
     for (const [k, v] of Object.entries(coms)) rev[v] = Number(k);
     for (const k of Object.keys(grev)) delete grev[k];
-    for (const [k, v] of Object.entries(groups)) if (grev[v] === undefined) grev[v] = Number(k);
+    for (const [k, v] of Object.entries(groups)) for (const x of [].concat(v)) if (grev[x] === undefined) grev[x] = Number(k);
   };
   build();
 
   const isPacked = (id) => typeof id === 'number' && id > 0xffff;
   // a 2007 packed id -> 2006 component (-1: none); a 2006 id as it is
   const com = (id) => (isPacked(id) ? (coms[id >>> 0] !== undefined ? coms[id >>> 0] : -1) : id);
+  // (a group can stand for several 2006 interfaces: an array; ifOpen is any of them, comsOf the first open one)
   const group = (g) => (typeof g === 'number' && groups[g] !== undefined ? groups[g] : g);
   const back = (id) => (rev[id] !== undefined ? rev[id] : id);
   const groupBack = (g) => (grev[g] !== undefined ? grev[g] : g);
@@ -199,6 +202,27 @@
         info: () => { const t = raw.reportText() || 'Report Abuse'; return { id: P(548, 26), layer: -1, type: 4, text: t, shown: t, screen: [404, 457], x: 404, y: 457, width: 110, height: 22, colour: 0xffffff, hide: false }; },
         setText: (t) => raw.reportText(t == null || t === 'Report Abuse' ? null : String(t)),
       } : null,
+      // the chat box's input line, "Name: text*" (Client draws it; bridge chatInputText puts the app's text in place of
+      // what's typed: Key Remapping's "Press Enter to Chat...")
+      [P(137, 1)]: raw.chatInputText ? {
+        info: () => {
+          const c = ll.client; const me = c && c.localPlayer; const name = (me && me.name) || '';
+          const shown = raw.chatInputText() ?? ((c && c.chatInput) || '') + '*';
+          const t = `${name}: <col=0000ff>${shown}</col>`;
+          return { id: P(137, 1), layer: P(548, 90), type: 4, text: t, shown: t, screen: [21, 437], x: 4, y: 80, width: 470, height: 15, colour: 0, hide: false };
+        },
+        setText: (t) => {
+          const s = String(t == null ? '' : t); const i = s.indexOf(':');
+          const typed = (i >= 0 ? s.slice(i + 1) : s).replace(/<[^>]*>/g, '').replace(/^ /, '');
+          const c = ll.client;
+          raw.chatInputText(c && typed === (c.chatInput || '') + '*' ? null : typed);
+        },
+      } : null,
+      // the chat box (2007's chat layer 548:90): hidden while a dialogue covers it (the 2006 chat modal)
+      [P(548, 90)]: {
+        info: () => { const c = ll.client; return { id: P(548, 90), layer: -1, type: 0, text: null, shown: '', screen: [17, 357], x: 17, y: 357, width: 479, height: 96, colour: 0, hide: !c || !c.ingame || c.chatModalId !== -1 }; },
+        setText: () => {},
+      },
     };
     const virt = (id) => (isPacked(id) && virtual[id >>> 0]) || null;
     if (raw.com) a.com = (id) => { const v = virt(id); return v ? v.info() : wrapInfo(id, raw.com(com(id))); };
@@ -208,8 +232,11 @@
       if (raw[k]) a[k] = (id, ...rest) => { const c = com(id); return c >= 0 ? raw[k](c, ...rest) : k === 'comTextWidth' ? -1 : null; };
     }
     if (raw.setObjs) a.setObjs = (id, ids, counts) => { const c = com(id); return c >= 0 ? raw.setObjs(c, ids, counts) : null; };
-    if (raw.ifOpen) a.ifOpen = (g) => raw.ifOpen(group(g));
-    if (raw.comsOf) a.comsOf = (g) => raw.comsOf(group(g)).map((i) => (i && rev[i.id] !== undefined ? Object.assign({}, i, { id: rev[i.id], raw: i.id }) : i));
+    // interfaces the 2006 client draws itself: the chat box (2007 137) is there while you're logged in
+    const virtualGroups = { 137: () => !!(ll.client && ll.client.ingame) };
+    const openOf = (g) => { const t = group(g); return Array.isArray(t) ? t.find((x) => raw.ifOpen(x)) ?? t[0] : t; };
+    if (raw.ifOpen) a.ifOpen = (g) => (virtualGroups[g] ? virtualGroups[g]() : Array.isArray(group(g)) ? group(g).some((x) => raw.ifOpen(x)) : raw.ifOpen(group(g)));
+    if (raw.comsOf) a.comsOf = (g) => raw.comsOf(openOf(g)).map((i) => (i && rev[i.id] !== undefined ? Object.assign({}, i, { id: rev[i.id], raw: i.id }) : i));
     if (raw.componentTable) a.componentTable = () => { const t = raw.componentTable(); for (let i = 0; i < t.length; i += 2) t[i] = groupBack(t[i]); return t; };
     if (raw.subRects) a.subRects = () => { const t = raw.subRects(); for (let i = 0; i < t.length; i += 6) t[i] = groupBack(t[i]); return t; };
     if (raw.widgetItems) a.widgetItems = () => { const w = Int32Array.from(raw.widgetItems()); for (let i = 2; i < w.length; i += 6) w[i] = back(w[i]) | 0; return w; };
