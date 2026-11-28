@@ -249,6 +249,51 @@
         return raw.inv ? raw.inv(id) : null;
       };
     }
+    // ---- the game's size on screen (2007scape's DisplayScale, which the 2006 client hasn't got): the app's Game size
+    // setting (display({ scale: 'off' | 'pixel' | 'smooth' })) and RuneLite's stretched mode (stretch(o): fill the
+    // window, keep the aspect ratio, whole-number steps, fast = hard pixel edges), done on the canvas's CSS size
+    const DS = { mode: 'off', stretched: { enabled: false, fast: false, integerScaling: false, keepAspectRatio: false, scalingFactor: 50 } };
+    const canvasEl = () => document.getElementById('canvas');
+    const stretchedDimensions = () => {
+      const c = canvasEl(); const realW = c ? c.width || 765 : 765; const realH = c ? c.height || 503 : 503;
+      let w = window.innerWidth | 0; let h = window.innerHeight | 0;
+      if (DS.stretched.keepAspectRatio) {
+        const ar = realW / realH; const tw = Math.trunc(h * ar);
+        if (tw > w) h = Math.trunc(w / ar); else w = tw;
+      }
+      if (DS.stretched.integerScaling) {
+        if (w > realW) w -= w % realW;
+        if (h > realH) h -= h % realH;
+      }
+      return { width: w, height: h };
+    };
+    const applyScale = () => {
+      const c = canvasEl();
+      if (!c) return;
+      if (DS.stretched.enabled) {
+        const d = stretchedDimensions();
+        c.style.imageRendering = DS.stretched.fast ? 'pixelated' : 'auto';
+        c.style.width = `${d.width}px`; c.style.height = `${d.height}px`;
+        return;
+      }
+      c.style.imageRendering = DS.mode === 'smooth' ? 'auto' : 'pixelated';
+      if (DS.mode === 'off') { c.style.width = ''; c.style.height = ''; return; }
+      let k = Math.min(window.innerWidth / (c.width || 765), window.innerHeight / (c.height || 503));
+      if (DS.mode === 'pixel') { const dpr = window.devicePixelRatio || 1; const whole = Math.floor(k * dpr) / dpr; if (whole >= 1 && whole >= k * 0.9) k = whole; }
+      c.style.width = `${(c.width || 765) * k}px`; c.style.height = `${(c.height || 503) * k}px`;
+    };
+    window.addEventListener('resize', applyScale);
+    a.display = (o) => {
+      if (o && (o.scale === 'off' || o.scale === 'pixel' || o.scale === 'smooth')) { DS.mode = o.scale; applyScale(); }
+      if (raw.display) raw.display(o);
+    };
+    a.displayState = () => Object.assign({}, raw.displayState ? raw.displayState() : {}, { scale: DS.mode });
+    a.stretch = (o) => {
+      if (raw.stretch) raw.stretch(o); // (SD increased resolution)
+      Object.assign(DS.stretched, { enabled: !!(o && o.enabled), fast: !!(o && o.fast), integerScaling: !!(o && o.integerScaling), keepAspectRatio: !!(o && o.keepAspectRatio), scalingFactor: (o && o.scalingFactor) | 0 });
+      applyScale();
+    };
+    a.stretchedDimensions = () => (DS.stretched.enabled ? stretchedDimensions() : { width: 765, height: 503 });
     return setApi(a);
   };
 })();

@@ -170,10 +170,28 @@ function applyGameFrame() {
     removeStyle('lostlite-game');
     return;
   }
+  // 2006RS-2: the 2006 game page (engine/view/client.ejs) has its size selector, links and text round the canvas:
+  // everything but the canvas (and the app's own elements: the RuneLite overlays, orbs, login screen) is hidden and the canvas sits in the middle of the window, as
+  // the normal app does (app/src/preload/game.js); its size on screen is the runtime's (if2006.js: the Game size
+  // setting and Stretched Mode set the canvas's CSS size)
   addStyle('lostlite-game', `
     html, body { margin: 0 !important; background: #000 !important; overflow: hidden !important; }
-    body > center { display: flex !important; align-items: center !important; justify-content: center !important; height: 100vh !important; }
-    #game { margin: 0 !important; }`);
+    body * { visibility: hidden !important; }
+    #canvas, [id^="rl-"], [id^="ll-"], [class^="ll-"], [class*=" ll-"], [id^="lostlite"], [class^="ll-"] * { visibility: visible !important; }
+    #canvas {
+      position: fixed !important; left: 50% !important; top: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      max-width: none !important; max-height: none !important;
+      margin: 0 !important; border: 0 !important; padding: 0 !important;
+      z-index: 2147483646 !important;
+    }`);
+  for (let el = canvas.parentElement; el && el !== document.body; el = el.parentElement) {
+    const cs = getComputedStyle(el);
+    if (cs.transform !== 'none' || cs.filter !== 'none' || cs.perspective !== 'none' || cs.contain.includes('paint')) {
+      document.body.appendChild(canvas); // (a fixed canvas inside a transformed parent isn't fixed to the window)
+      break;
+    }
+  }
   sendDisplay();
 }
 
