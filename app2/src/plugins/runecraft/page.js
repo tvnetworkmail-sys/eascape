@@ -4,8 +4,8 @@
 // 2007 ids: the rifts are the 2007 locs abyss_exit_to_* (7129-7141, blood's is abyss_exit_to_blood), the pouches
 // 5509-5515, the Dark mage 2262 (RCU_ZAMMY_MAGE2 by its debug name). Era-trim: no colossal pouch.
 // Pouches: the counts are the 2007 cache's varbits 603-606 on varp 486 and the degradation varps 488-490 (OSRS's ids
-// under the same names). Our server keeps them but doesn't transmit them yet, so the counts are drawn only once one of
-// them has reached the client (not all zero).
+// under the same names). 2006RS-2: our server keeps them at the same ids and sends them to the client (transmit=yes in
+// content _unpack/377/all.varp); the counts are drawn once one of them is not zero, as before.
 (() => {
   const ll = window.__lostlite;
   const rl = ll && ll.rl;
