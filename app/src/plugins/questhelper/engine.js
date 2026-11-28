@@ -81,7 +81,12 @@ class QuestEngine {
         q.stage = Math.max(q.stage, done);
         q.sure = true;
       } else if (colour === 'yellow') {
-        if (q.stage <= 0 || q.stage >= done) {
+        // EASCape: the server's live value is the real stage; a yellow entry mustn't move it
+        // (Shield of Arrav's list goes by both gangs, the live value by the Black Arm Gang's only,
+        // so they flipped back and forth and kept auto starting the guide)
+        if (q.live) {
+          // keep the live stage
+        } else if (q.stage <= 0 || q.stage >= done) {
           q.stage = this.firstStage(key);
           q.sure = false; // somewhere in the quest: the journal will tell
         }

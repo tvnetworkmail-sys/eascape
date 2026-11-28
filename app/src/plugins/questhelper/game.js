@@ -20,6 +20,10 @@ module.exports = function questHelper(ctx) {
   let lastCommand = null;
   let current = null;
   let liveSynced = false; // the server's quest values have arrived since logging in
+  // EASCape: a quest you close isn't auto started again until its stage moves on
+  // ({ key: the stage it was at when you closed it })
+  const dismissed = {};
+  let lastSelected = null;
 
   // ---- saving: per account, in this profile's settings
 
@@ -59,11 +63,27 @@ module.exports = function questHelper(ctx) {
 
   function selected() {
     const s = ctx.config('selected');
-    return typeof s === 'string' && guides[s] ? s : null;
+    const key = typeof s === 'string' && guides[s] ? s : null;
+    if (lastSelected && !key) dismissed[lastSelected] = stageOf(lastSelected);
+    if (key) delete dismissed[key];
+    lastSelected = key;
+    return key;
+  }
+
+  function stageOf(key) {
+    const q = engine.state && engine.state.quests ? engine.state.quests[key] : null;
+    return q ? q.stage : 0;
   }
 
   function select(key) {
+    lastSelected = key || null;
     ctx.setState('selected', key || '');
+  }
+
+  // auto start: a guided quest that's started, unless you closed it and it hasn't moved on since
+  function autoStartable(q) {
+    if (!guides[q] || engine.status(q) !== 'started') return false;
+    return !(q in dismissed) || dismissed[q] !== stageOf(q);
   }
 
   // ---- inputs
@@ -94,10 +114,11 @@ module.exports = function questHelper(ctx) {
       markDirty();
       // Auto start: a guided quest that just moved on becomes the one we show.
       if (ctx.config('autoStart')) {
-        const k = moved.find((q) => guides[q] && engine.status(q) === 'started');
+        selected(); // notices a quest you've just closed
+        const k = moved.find(autoStartable);
         // (a quest the server says just started or moved on counts too: the conversation that
         // started it has often closed before the server's new value arrives)
-        const k2 = k && (d.dialogue || d.journal || liveMoved.includes(k)) ? k : liveMoved.find((q) => guides[q] && engine.status(q) === 'started');
+        const k2 = k && (d.dialogue || d.journal || liveMoved.includes(k)) ? k : liveMoved.find(autoStartable);
         if (k2 && k2 !== selected()) select(k2);
       }
     }
