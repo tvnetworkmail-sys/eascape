@@ -64,8 +64,10 @@
     }
     onMenuEntryAdded(event) {
       const groupId = WidgetUtil.componentToInterface(event.getActionParam1());
-      // Look for "Message" on friends list
-      if (groupId === InterfaceID.FRIENDS && event.getOption() === 'Message') {
+      // Look for "Message" on friends list (2006RS-2: the 2006 friends list's Message is the client's MESSAGE_PRIVATE
+      // entry, 902, with no component in its arguments; seen through if2006.js as 10000 + 902)
+      const friendsMessage = ll.c2007 ? groupId === InterfaceID.FRIENDS : event.getType() === 10902 || event.getType() === 12902;
+      if (friendsMessage && event.getOption() === 'Message') {
         const friend = Text.toJagexName(Text.removeTags(event.getTarget()));
         client.createMenuEntry(-1)
           .setOption(this.isHideNotification(friend) ? SHOW_NOTIFICATIONS : HIDE_NOTIFICATIONS)

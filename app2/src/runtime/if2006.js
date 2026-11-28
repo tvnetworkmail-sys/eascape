@@ -52,6 +52,8 @@
     [P(387, 28)]: 1688, // worn items -> wornitems:worn
     [P(363, 1)]: 6980, // puzzle pieces -> trail_puzzle:com_2 (inv_transmit(trail_puzzleinv, trail_puzzle:com_2), trail_puzzle.rs2)
     [P(287, 2)]: 11130, // MM puzzle pieces -> inter_214:com_3 (mm_puzzle.rs2)
+    [P(550, 2)]: 5067, // friends list title -> friends:com_1 ("Friends List")
+    [P(551, 2)]: 5717, // ignore list title -> ignore:com_1 ("Ignore List")
     [P(381, 1)]: 195, // Wilderness level text -> wilderness_overlay:com_1 ("Level: %1")
     [P(381, 2)]: 196, // its layer -> wilderness_overlay:com_2
   };
