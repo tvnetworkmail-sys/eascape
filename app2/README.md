@@ -18,44 +18,63 @@ has it while it's tested; if it works out it becomes the main client in place of
   `LostLite.ts` now has the same calls (`bridgeApi`), reading the 2006 client. Interfaces there are
   the 377 ones: a component is its own id and an interface is the root layer the server opens (bank
   5292, inventory 3213). The 2007 interface ids the plugins hardcode (packed group << 16 | child)
-  find nothing on purpose, so those parts of a plugin do nothing rather than touch a wrong 2006
-  component. Calls with no 2006 equivalent (clan chat, varcs, 2007 cache sprites, script-made
-  children, minimap zoom, HD and canvas scaling) answer safe empty values.
-- Plugins are moving to data the server sends (hidden `~2007rsapp~` chat lines the runtime takes
-  out of the chat box, as 2007RS's bank already does), so they don't guess from animations. The
-  Idle Notifier is the first: `::appidle on` and the server's "busy/idle skill <stat>" and
-  "busy/idle combat" lines (engine `Player.appIdleTick`). Plugins listen with `ll.onAppMessage`.
+  are translated by `src/runtime/if2006.js` to the 2006 component showing the same thing; one it
+  doesn't know finds nothing, so that part of a plugin does nothing rather than touch a wrong 2006
+  component. Calls with no 2006 equivalent (clan chat, 2007 cache sprites, script-made children,
+  HD) answer safe empty values; the minimap zoom, the chat box's client variables and the canvas
+  scaling are done for the 2006 client.
+- Plugins use data the server sends (hidden `~2007rsapp~` chat lines the runtime takes out of the
+  chat box), so they don't guess from animations: `::appidle on` and the server's "busy/idle skill
+  <stat>" and "busy/idle combat" lines (engine `Player.appIdleTick`) for the Idle Notifier and the
+  skilling plugins, `::appfarming on` for Time Tracking. Plugins listen with `ll.onAppMessage`.
 
-## Plugins on 2006RS (checked 27 Nov 2026 on a local server)
+## Plugins on 2006RS (checked 28 Nov 2026 in the app against a local server)
 
-Seen working: Idle Notifier (server data), Ground Items, Woodcutting, Inventory Viewer, Status Bars,
-XP Globes, XP Drop. Should work (nothing 2007-only in them; the data they read is there now): NPC
-Indicators, Object Markers, Ground Markers, Tile Indicators, Mouse Tooltips, Boosts, XP Tracker,
-Opponent Information, Timers & Buffs, Chat Filter, Chat Timestamps, Chat Notifications, FPS
-Control, Custom Cursor, Notes, Mining, Cooking, Fishing (not the Trawler overlay), Smelting,
-Agility, Slayer, Kingdom of Miscellania, Tears of Guthix, Crystal Bow, Cannon, Poison, Regeneration
-Meter, Special Attack Counter, Player Indicators, Interact Highlight, NPC Aggression Timer, Boss
-Timers, Random Events, Item Charges, Item Stats, Item Identification, Inventory Tags (drawing),
-Ammo, Examine, Metronome, Screen Markers, Screenshot (manual), Skill Calculator, Quest Helper,
-Dialogue Keys, Private Messages (Tab to reply), Login Screen, Extras, Loot Tracker (drops),
-Developer Tools, Prayer, Bank and Bank Tags (search, tags), World Map, Camera (zoom).
+`src/runtime/if2006.js` answers the plugins' 2007 interface, component and inventory ids from the 2006 ones showing
+the same thing (inventory, bank, worn items, the side tabs, the puzzles, the clue scroll text, the dialogues, the
+combat tabs, the reward windows, the Barrows, Trawler and Wilderness overlays, the emote buttons, the fairy ring
+screens ...). Where a plugin needs a variable the server kept to itself, the variable is now sent to the client
+(display only; nothing saved changes): the essence pouches, the cannon, the Charge spell.
 
-Partly (some features look up 2007 interfaces, which do nothing here): Menu Entry Swapper
-(inventory swaps), Attack Styles and Combat Level (combat tab), Barrows (2007 overlay; the 2006
-client has its own Barrows plugin), Blast Furnace and Pest Control (their 2007 overlays), Clue
-Scroll (emote tab), Run Energy, Minimap (dot colours work; hide/zoom don't), Chat History, World
-Hopper (one world locally), Time Tracking (timers work; farming patches use 2007 varbits, and our
-farming keeps its own variables), Runecraft (pouches work; the abyss rifts use later varbits), Bank
-(placeholders and dragging while searching need the 2007 server's AppBank commands, which this
-server doesn't have), Loot Tracker (reward windows), Screenshot (automatic ones), Friend Notes.
+Seen working in the app: Puzzle Solver (clue puzzle box, Monkey Madness), Clue Scroll (cryptic, coordinate, map,
+anagram / challenge scrolls, puzzle boxes; read from our clue scroll), Idle Notifier and the skilling plugins
+(Woodcutting, Mining, Fishing, Cooking, Smelting: the server's busy / idle data), Ground Items, Inventory Viewer,
+Status Bars, XP Globes, XP Drop, Menu Entry Swapper, Attack Styles, Combat Level, Report Button, Virtual Levels, Status
+Orbs, Quest List, Inventory Grid, Friend List, Friend Notes (Add / Edit Note on the friends and ignore lists), Music,
+Key Remapping, Stretched Mode (on the canvas; the app's Fit to window too), Fairy Rings (the code and log screens),
+Bank (search; rearranging while searching moves the real bank slots), Time Tracking (timers; farming from our patches
+and the server's growth clock), Loot Tracker (drops; the clue reward as "Clue Scroll (Easy / Medium / Hard)", by the
+last clue item's tier as our server names none; the Barrows chest), Screenshot (manual; automatic for levels, quest
+scrolls, the clue reward (named by tier) and the Barrows chest), Chat History (kept over a relog, Copy to clipboard on a
+chat line, Clear history on the chat box), Minimap (dot colours, zoom 2-8), Runecraft (pouch counts, the abyss rifts),
+Barrows Brothers (slain panel and potential underground, the door puzzle's answer), Cannon (it reads the cannon
+varps), Blast Furnace (the foreman's ten minutes, read from our NPC dialogue; bars and ores), Run Energy (the energy
+text is the controls tab's), World Hopper (Hop-to on the friends list).
 
-Don't work (built on 2007 interfaces): Puzzle Solver, Virtual Levels, Report Button, Quest List,
-Inventory Grid, Friend List, Fairy Rings (the content is there, the 2007 interface isn't), Music,
-Key Remapping, Stretched Mode (the 2006 client has no stretched scaling; the app's own Fit to window
-does the job). Status Orbs: the 2006 client draws its own.
+Should work (nothing 2007-only left in them, and the data they read reaches the client; not each tried on its own):
+NPC Indicators, Object Markers, Ground Markers, Tile Indicators, Mouse Tooltips, Boosts, XP Tracker, Opponent
+Information, Timers & Buffs, Chat Filter, Chat Timestamps, Chat Notifications, FPS Control, Custom Cursor, Notes,
+Agility, Slayer, Kingdom of Miscellania, Tears of Guthix, Crystal Bow, Poison, Regeneration Meter, Special Attack
+Counter, Player Indicators, Interact Highlight, NPC Aggression Timer, Boss Timers, Random Events, Item Charges, Item
+Stats, Item Identification, Inventory Tags, Ammo, Examine, Metronome, Screen Markers, Skill Calculator, Quest Helper,
+Dialogue Keys, Private Messages, Login Screen, Extras, Developer Tools, Prayer, Bank Tags, World Map, Camera, Fishing
+(the Trawler overlay's timer in m:ss over our 10-minute game).
 
-For content 2006RS doesn't have (left in, to turn off): Achievement Diary (diaries came in 2010),
-Barbarian Assault, Hunter and Implings (no Hunter skill), Mage Training Arena, Pyramid Plunder,
-Player-owned House (no Construction), Chat Channels (clan chat came in 2007), Team (its clan count).
+Parts that can't be on 2006RS:
+- Bank placeholders (off by default): the server would have to keep them with the account, and the player save stays
+  at version 7 with no new fields. Rearranging while searching works without them.
+- Friend Notes' note icon after a name: the 2006 client writes the friends list's names itself every frame.
+- Fishing's Trawler contribution count: our Trawler (like 2006's) keeps no contribution points; the overlay's own
+  catch line stays.
+- Blast Furnace's coffer overlay: the coffer came in 2016.
+- Minimap's Hide minimap: RuneLite does it only in its resizable frames; this is the fixed frame, as RuneLite's fixed
+  mode.
+- Clue Scroll's emote clues: our clue set has none (the emote highlighting on our controls tab is mapped and ready).
+- World Hopper lists one world on a local server; live has worlds 1-3 and the test server.
+
+For content our game doesn't have (left in, off by default): Diary Requirements (diaries came in 2010), Barbarian
+Assault, Hunter and Implings (no Hunter skill), Mage Training Arena, Pyramid Plunder, Player-owned House (no
+Construction), Chat Channels (clan chat came in 2007), Team (its clan count), Pest Control (our server has its
+scenery but not the minigame yet).
 
 `docs/PLUGIN_PARITY.md` and `docs/BATTLE-PLAN.md` are 2007RS's notes, kept as they were.
