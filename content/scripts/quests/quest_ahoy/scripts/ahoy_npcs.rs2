@@ -484,7 +484,7 @@ switch_int (~p_choice4($first, 1, "Remind me - what can I do about Necrovarus?",
                 ~chatplayer("<p,sad>I am afraid I have lost the boat you gave to me.");
                 ~chatnpc("<p,neutral>No, I've found it - here you go.");
                 ~ahoy_give(ahoy_toy_boat);
-                ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, divide(^objbox_height, 2));
+                ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 40); // EASCape: centred in the box
             }
         } else {
             ~chatplayer("<p,quiz>You are doing so much for me - is there anything I can do for you?");
@@ -497,7 +497,7 @@ switch_int (~p_choice4($first, 1, "Remind me - what can I do about Necrovarus?",
             %ahoy_mast_bottom = add(random(6), 1);
             %ahoy_mast_skull = add(random(6), 1);
             ~ahoy_give(ahoy_toy_boat);
-            ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, divide(^objbox_height, 2));
+            ~objbox(ahoy_toy_boat, "The old woman gives you a toy boat.", 250, 0, 40); // EASCape: centred in the box
             ~chatplayer("<p,neutral>Was this his boat?");
             ~chatnpc("<p,neutral>Yes, he made it himself. It is a model of the very ship in which he sailed away. The paint has peeled off and it has lost its flag, but I could never throw it away.");
             ~chatplayer("<p,neutral>If I find him, I will pass it on.");
@@ -601,7 +601,7 @@ if ($c = 2) {
     return;
 }
 ~chatplayer("<p,neutral>Is this your toy boat?");
-~objbox(ahoy_toy_boat_repaired, "The old man inspects the toy boat.", 250, 0, divide(^objbox_height, 2));
+~objbox(ahoy_toy_boat_repaired, "The old man inspects the toy boat.", 250, 0, 40); // EASCape: centred in the box
 if (~ahoy_correct_boat = true) {
     ~chatnpc("<p,neutral>My word - so it is!!! I never thought I would see it again!! Where did you get it from?");
     ~chatplayer("<p,neutral>Your mother gave it to me to pass on to you.");
