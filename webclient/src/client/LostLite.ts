@@ -311,14 +311,32 @@ function ifGet(id: number): IfType | null {
     return IfType.list[id | 0] ?? null;
 }
 
+// the layer a component is laid out in (-1 for a root). 377's IfType.layerId is the component's interface (its root),
+// not its parent, so the parent is found from the layers' children lists (built once: the list doesn't change).
+let parents: Int32Array | null = null;
+function parentOf(id: number): number {
+    if (!parents || parents.length !== IfType.list.length) {
+        parents = new Int32Array(IfType.list.length).fill(-1);
+        for (const l of IfType.list) {
+            if (l && l.type === 0 && l.children) {
+                for (const ch of l.children) {
+                    if (ch >= 0 && ch < parents.length && ch !== l.id) parents[ch] = l.id;
+                }
+            }
+        }
+    }
+    return id >= 0 && id < parents.length ? parents[id] : -1;
+}
+function parentLayer(c: IfType): IfType | null {
+    const p = parentOf(c.id);
+    return p >= 0 ? IfType.list[p] ?? null : null;
+}
+
 // the root layer a component is in (its interface)
 function rootOf(c: IfType): IfType {
     let cur: IfType = c;
     for (let guard = 0; guard < 32; guard++) {
-        if (cur.layerId === -1 || cur.layerId === cur.id) {
-            return cur;
-        }
-        const up = IfType.list[cur.layerId];
+        const up = parentLayer(cur);
         if (!up) {
             return cur;
         }
@@ -378,19 +396,19 @@ function comScreenPos(c: IfType): [number, number] | null {
     let y = 0;
     let cur: IfType = c;
     for (let guard = 0; guard < 32; guard++) {
-        if (cur.layerId === -1 || cur.layerId === cur.id) {
+        const layer = parentLayer(cur);
+        if (!layer) {
             const area = rootArea(cur.id);
             if (area < 0) return null;
             const o = areaOrigin(area);
             return [x + o[0], y + o[1]];
         }
-        const layer: IfType | undefined = IfType.list[cur.layerId];
-        if (!layer || !layer.children || !layer.childX || !layer.childY) return null;
+        if (!layer.children || !layer.childX || !layer.childY) return null;
         const i = layer.children.indexOf(cur.id);
         if (i < 0) return null;
+        // (drawInterface: a layer's children at its childX / Y plus their own x / y, less the layer's scroll)
         x += layer.childX[i] + cur.x;
-        y += layer.childY[i] + cur.y;
-        if (layer.layerId !== -1 && layer.layerId !== layer.id) y -= layer.scrollPos; // a nested layer's own scroll
+        y += layer.childY[i] + cur.y - layer.scrollPos;
         cur = layer;
     }
     return null;
@@ -401,8 +419,9 @@ function comVisible(id: number): boolean {
     let c = ifGet(id);
     for (let guard = 0; c && guard < 32; guard++) {
         if (c.hide) return false;
-        if (c.layerId === -1 || c.layerId === c.id) return rootArea(c.id) >= 0;
-        c = IfType.list[c.layerId] ?? null;
+        const up = parentLayer(c);
+        if (!up) return rootArea(c.id) >= 0;
+        c = up;
     }
     return false;
 }
@@ -424,7 +443,7 @@ function comInfo(c: IfType | null): Any {
     if (!c) return null;
     let ox = c.x;
     let oy = c.y;
-    const layer = c.layerId !== -1 && c.layerId !== c.id ? IfType.list[c.layerId] : null;
+    const layer = parentLayer(c);
     if (layer && layer.children && layer.childX && layer.childY) {
         const i = layer.children.indexOf(c.id);
         if (i >= 0) {
@@ -896,7 +915,7 @@ function bridgeApi(): Any {
         // a component's place: 377 keeps it in its layer's childX / childY
         setPosition: (id: number, x: number, y: number) => {
             const c = ifGet(id);
-            const layer = c && c.layerId !== -1 ? IfType.list[c.layerId] : null;
+            const layer = c ? parentLayer(c) : null;
             if (!c || !layer || !layer.children || !layer.childX || !layer.childY) return;
             const i = layer.children.indexOf(c.id);
             if (i >= 0) {
