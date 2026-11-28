@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText, lostliteChatInput, lostliteSetInvMover } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText, lostliteChatInput, lostliteSetInvMover, lostliteMinimapScale } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -2728,15 +2728,18 @@ export class Client extends GameShell {
                         if (this.staffmodlevel) {
                             this.menuOption[this.menuNumEntries] = 'Report abuse @whi@' + sender;
                             this.menuAction[this.menuNumEntries] = MiniMenuAction._PRIORITY + MiniMenuAction.ABUSE_REPORT;
+                            this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                             this.menuNumEntries++;
                         }
 
                         this.menuOption[this.menuNumEntries] = 'Add ignore @whi@' + sender;
                         this.menuAction[this.menuNumEntries] = MiniMenuAction._PRIORITY + MiniMenuAction.IGNORELIST_ADD;
+                        this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                         this.menuNumEntries++;
 
                         this.menuOption[this.menuNumEntries] = 'Add friend @whi@' + sender;
                         this.menuAction[this.menuNumEntries] = MiniMenuAction._PRIORITY + MiniMenuAction.FRIENDLIST_ADD;
+                        this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                         this.menuNumEntries++;
                     }
 
@@ -2785,15 +2788,18 @@ export class Client extends GameShell {
                     if (this.staffmodlevel >= 1) {
                         this.menuOption[this.menuNumEntries] = 'Report abuse @whi@' + sender;
                         this.menuAction[this.menuNumEntries] = MiniMenuAction.ABUSE_REPORT;
+                        this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                         this.menuNumEntries++;
                     }
 
                     this.menuOption[this.menuNumEntries] = 'Add ignore @whi@' + sender;
                     this.menuAction[this.menuNumEntries] = MiniMenuAction.IGNORELIST_ADD;
+                    this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                     this.menuNumEntries++;
 
                     this.menuOption[this.menuNumEntries] = 'Add friend @whi@' + sender;
                     this.menuAction[this.menuNumEntries] = MiniMenuAction.FRIENDLIST_ADD;
+                    this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                     this.menuNumEntries++;
                 }
 
@@ -2803,15 +2809,18 @@ export class Client extends GameShell {
                     if (this.staffmodlevel >= 1) {
                         this.menuOption[this.menuNumEntries] = 'Report abuse @whi@' + sender;
                         this.menuAction[this.menuNumEntries] = MiniMenuAction.ABUSE_REPORT;
+                        this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                         this.menuNumEntries++;
                     }
 
                     this.menuOption[this.menuNumEntries] = 'Add ignore @whi@' + sender;
                     this.menuAction[this.menuNumEntries] = MiniMenuAction.IGNORELIST_ADD;
+                    this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                     this.menuNumEntries++;
 
                     this.menuOption[this.menuNumEntries] = 'Add friend @whi@' + sender;
                     this.menuAction[this.menuNumEntries] = MiniMenuAction.FRIENDLIST_ADD;
+                    this.menuParamB[this.menuNumEntries] = i; // 2006RS-2: the chat line (the app's Chat History copies it)
                     this.menuNumEntries++;
                 }
 
@@ -2857,8 +2866,8 @@ export class Client extends GameShell {
         let sinYaw: number = Pix3D.sinTable[yaw];
         let cosYaw: number = Pix3D.cosTable[yaw];
 
-        sinYaw = (sinYaw * (this.macroMinimapZoom + 256)) >> 8;
-        cosYaw = (cosYaw * (this.macroMinimapZoom + 256)) >> 8;
+        sinYaw = (sinYaw * this.minimapScale()) >> 8;
+        cosYaw = (cosYaw * this.minimapScale()) >> 8;
 
         const relX: number = (y * sinYaw + x * cosYaw) >> 11;
         const relY: number = (y * cosYaw - x * sinYaw) >> 11;
@@ -12069,7 +12078,7 @@ export class Client extends GameShell {
         let anchorX: number = ((this.localPlayer.x / 32) | 0) + 48;
         let anchorY: number = 464 - ((this.localPlayer.z / 32) | 0);
 
-        this.minimap?.scanlineRotatePlotSprite(25, 5, 146, 151, anchorX, anchorY, angle, this.macroMinimapZoom + 256, this.minimapMaskLineOffsets, this.minimapMaskLineLengths);
+        this.minimap?.scanlineRotatePlotSprite(25, 5, 146, 151, anchorX, anchorY, angle, this.minimapScale(), this.minimapMaskLineOffsets, this.minimapMaskLineLengths);
         this.compass?.scanlineRotatePlotSprite(0, 0, 33, 33, 25, 25, this.orbitCameraYaw, 256, this.compassMaskLineOffsets, this.compassMaskLineLengths);
 
         for (let i: number = 0; i < this.activeMapFunctionCount; i++) {
@@ -12241,13 +12250,13 @@ export class Client extends GameShell {
             return;
         }
         const angle: number = (this.orbitCameraYaw + this.macroMinimapAngle) & 0x7ff;
-        const sin: number = ((Pix3D.sinTable[angle] * 256) / (this.macroMinimapZoom + 256)) | 0;
-        const cos: number = ((Pix3D.cosTable[angle] * 256) / (this.macroMinimapZoom + 256)) | 0;
+        const sin: number = ((Pix3D.sinTable[angle] * 256) / this.minimapScale()) | 0;
+        const cos: number = ((Pix3D.cosTable[angle] * 256) / this.minimapScale()) | 0;
         for (let i = 0; i < Client.BARROWS_BROTHERS.length; i++) {
             const [name, wx, wz] = Client.BARROWS_BROTHERS[i];
             const dx = (wx - this.mapBuildBaseX) * 4 + 2 - ((this.localPlayer.x / 32) | 0);
             const dy = (wz - this.mapBuildBaseZ) * 4 + 2 - ((this.localPlayer.z / 32) | 0);
-            if (dx * dx + dy * dy > 6400) {
+            if (dx * dx + dy * dy > this.minimapRadius2(6400)) {
                 continue;
             }
             const x = (dy * sin + dx * cos) >> 16;
@@ -12377,7 +12386,7 @@ export class Client extends GameShell {
         }
 
         const distance = dx * dx + dy * dy;
-        if (distance <= 4225 || distance >= 90000) {
+        if (distance <= this.minimapRadius2(4225) || distance >= 90000) {
             this.minimapDrawDot(dy, image, dx);
             return;
         }
@@ -12387,8 +12396,8 @@ export class Client extends GameShell {
         let sinAngle: number = Pix3D.sinTable[angle];
         let cosAngle: number = Pix3D.cosTable[angle];
 
-        sinAngle = ((sinAngle * 256) / (this.macroMinimapZoom + 256)) | 0;
-        cosAngle = ((cosAngle * 256) / (this.macroMinimapZoom + 256)) | 0;
+        sinAngle = ((sinAngle * 256) / this.minimapScale()) | 0;
+        cosAngle = ((cosAngle * 256) / this.minimapScale()) | 0;
 
         const x: number = (dy * sinAngle + dx * cosAngle) >> 16;
         const y: number = (dy * cosAngle - dx * sinAngle) >> 16;
@@ -12400,13 +12409,26 @@ export class Client extends GameShell {
         this.mapedge?.rotatePlotSprite(var15 + 94 + 4 - 10, 83 - var16 - 20, 20, 20, 15, 15, var13, 256);
     }
 
+    // the minimap's scale (256 = 4 pixels a tile; more is further out): the game's own, or the app's Minimap zoom
+    // (2006RS-2, bridge minimapZoom)
+    private minimapScale(): number {
+        const z: number = lostliteMinimapScale();
+        return z > 0 ? z : this.macroMinimapZoom + 256;
+    }
+
+    // a squared distance on the minimap image at the normal scale, at the scale now (the app's zoom only)
+    private minimapRadius2(d2: number): number {
+        const z: number = lostliteMinimapScale();
+        return z > 0 ? ((d2 * z * z) / 65536) | 0 : d2;
+    }
+
     private minimapDrawDot(dy: number, image: Pix32 | null, dx: number): void {
         if (!image) {
             return;
         }
 
         const distance: number = dx * dx + dy * dy;
-        if (distance > 6400) {
+        if (distance > this.minimapRadius2(6400)) {
             return;
         }
 
@@ -12415,13 +12437,13 @@ export class Client extends GameShell {
         let sinAngle: number = Pix3D.sinTable[angle];
         let cosAngle: number = Pix3D.cosTable[angle];
 
-        sinAngle = ((sinAngle * 256) / (this.macroMinimapZoom + 256)) | 0;
-        cosAngle = ((cosAngle * 256) / (this.macroMinimapZoom + 256)) | 0;
+        sinAngle = ((sinAngle * 256) / this.minimapScale()) | 0;
+        cosAngle = ((cosAngle * 256) / this.minimapScale()) | 0;
 
         const x: number = (dy * sinAngle + dx * cosAngle) >> 16;
         const y: number = (dy * cosAngle - dx * sinAngle) >> 16;
 
-        if (distance > 2500 && this.mapback) {
+        if (distance > this.minimapRadius2(2500) && this.mapback) {
             image.scanlinePlotSprite(this.mapback, x + 94 - ((image.owi / 2) | 0) + 4, 83 - y - ((image.ohi / 2) | 0) - 4);
         } else {
             image.plotSprite(x + 94 - ((image.owi / 2) | 0) + 4, 83 - y - ((image.ohi / 2) | 0) - 4);
