@@ -18,6 +18,10 @@
   const CONTAINER = (QUESTLIST << 16) | 0;
   const SWAP_BUTTON = (QUESTLIST << 16) | 11;
   const FIRST_LINE = 13;
+  // 2006RS-2: our quest list (questlist.if, root 638) is one scroll layer (questlist:com_0, 639) with a text line per
+  // quest (its button text is the quest's name) and the FREE / MEMBERS headers; no diary swap button, so the search
+  // button sits in the header row above the list, at its right. The lines aren't stored in order: sorted by y.
+  const Q06 = !ll.c2007 ? { root: 638, container: 639 } : null;
 
   class QuestSearchButtonOverlay extends Overlay {
     constructor(plugin) { super(plugin); this.plugin = plugin; this.setPosition(OverlayPosition.DYNAMIC); this.setLayer(OverlayLayer.ABOVE_WIDGETS); }
@@ -59,6 +63,12 @@
     }
     /** left of the 2007 swap button, where OSRS's button sits at the header's right */
     searchButtonBounds() {
+      if (Q06) {
+        const w = client.getWidget(Q06.container);
+        if (w == null || w.isHidden()) return null;
+        const p = w.getCanvasLocation();
+        return new Rectangle(p.getX() + w.getWidth() - 18 - 2, p.getY() - 18, 18, 17);
+      }
       const header = client.getWidget(SWAP_BUTTON);
       if (header == null || header.isHidden()) return null;
       const p = header.getCanvasLocation();
@@ -69,7 +79,7 @@
       // (OSRS: onVarbitChanged / onVarClientIntChanged TOPLEVEL_PANEL)
       if (this.isChatboxOpen() && !this.isOnQuestTab()) rl.chatboxPanelManager.close();
     }
-    isOnQuestTab() { const w = client.getWidget(CONTAINER); return w != null && !w.isHidden(); }
+    isOnQuestTab() { const w = client.getWidget(Q06 ? Q06.container : CONTAINER); return w != null && !w.isHidden(); }
     isChatboxOpen() { return this.searchInput != null && rl.chatboxPanelManager.getCurrentInput() === this.searchInput; }
     closeSearch() {
       rl.chatboxPanelManager.close();
@@ -98,7 +108,8 @@
       if (!this.saved) this.saved = lines.map((w) => ({ w, x: w.getOriginalX(), y: w.getOriginalY() }));
       let y = this.saved[0].y; const step = this.saved.length > 1 ? this.saved[1].y - this.saved[0].y : 15;
       for (const { w, x } of this.saved) {
-        const quest = (w.getActions() || []).some((a) => a && a.trim());
+        const info = Q06 ? ll.api.com(w.getId()) : null;
+        const quest = Q06 ? !!(info && info.buttonText && info.buttonText.trim()) : (w.getActions() || []).some((a) => a && a.trim());
         const show = !quest || w.getText().toLowerCase().includes(filter.toLowerCase());
         w.setHidden(!show);
         if (show) { w.setOriginalX(x).setOriginalY(y).revalidate(); y += step; }
@@ -110,6 +121,10 @@
       this.saved = null;
     }
     questLines() {
+      if (Q06) {
+        return (ll.api.comsOf ? ll.api.comsOf(Q06.root) : []).filter((i) => i && i.type === 4 && i.layer === Q06.container && i.text)
+          .sort((a, b) => a.oy - b.oy).map((i) => client.getWidget(i.id)).filter(Boolean);
+      }
       const ws = [];
       for (let i = FIRST_LINE; ; i++) {
         const w = client.getWidget(QUESTLIST, i);

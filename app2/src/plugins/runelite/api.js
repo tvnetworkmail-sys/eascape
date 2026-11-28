@@ -3083,7 +3083,8 @@
         return {
           getId: () => packed,
           getText: () => { const i = info() || {}; return (i.shown != null ? i.shown : i.text) || ''; },
-          isHidden: () => !(ll.api && ll.api.comVisible && ll.api.comVisible(packed)) || !!(ll.api && ll.api.ifOpen && !ll.api.ifOpen(packed >>> 16)),
+          // (2006RS-2: a 2006 component's own id is below 65536, and comVisible already asks whether its interface is shown)
+          isHidden: () => !(ll.api && ll.api.comVisible && ll.api.comVisible(packed)) || (packed > 0xffff && !!(ll.api && ll.api.ifOpen && !ll.api.ifOpen(packed >>> 16))),
           getWidth: () => (info() || {}).width | 0,
           getHeight: () => (info() || {}).height | 0,
           getCanvasLocation: () => { const i = info(); return i ? (i.screen ? new Point(i.screen[0] | 0, i.screen[1] | 0) : new Point(i.x | 0, i.y | 0)) : null; },
@@ -3095,8 +3096,11 @@
           getOriginalX: () => (info() || {}).ox | 0,
           getOriginalY: () => (info() || {}).oy | 0,
           // the components laid out in this layer, in order (if1: each child names its layer)
-          getStaticChildren: () => (ll.api && ll.api.comsOf ? ll.api.comsOf(packed >>> 16) : [])
-            .filter((i) => i && i.layer === packed).map((i) => client.getWidget(i.id)),
+          getStaticChildren: () => {
+            // (2006RS-2: a 2006 layer's children are listed on it)
+            if (packed <= 0xffff) { const i = info(); return i && i.children ? i.children.map((c) => client.getWidget(c)).filter(Boolean) : []; }
+            return (ll.api && ll.api.comsOf ? ll.api.comsOf(packed >>> 16) : []).filter((i) => i && i.layer === packed).map((i) => client.getWidget(i.id));
+          },
           // FontTypeFace.getTextWidth with the component's font (tags not counted); a 6 px per character guess until it's loaded
           getFont: () => ({ getTextWidth: (s) => { const w = ll.api && ll.api.comTextWidth ? ll.api.comTextWidth(packed, String(s)) : -1; return w >= 0 ? w : Text.removeTags(String(s)).length * 6; } }),
           // display-only writes, client-side like RuneLite's (the server's own updates overwrite them; nothing is sent)
