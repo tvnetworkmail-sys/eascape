@@ -533,9 +533,20 @@
       if (emoteWindow == null || emoteWindow.isHidden()) return null;
       const first = client.getWidget(EMOTE_TAB, clue.getFirstEmote().getComponent());
       const second = clue.getSecondEmote() != null && clue.getSecondEmote().hasSprite() ? client.getWidget(EMOTE_TAB, clue.getSecondEmote().getComponent()) : null;
+      // 2006RS-2: our emotes are in a scrolling layer of the controls tab (464:0 here): scroll the first emote into view
+      // once, as RuneLite's scrollToWidget does on OSRS's emote tab
+      if (!ll.c2007 && !this.hasScrolled && first && ll.api && ll.api.com && ll.api.setScroll) {
+        const box = ll.api.com((EMOTE_TAB << 16) | 0); const f = ll.api.com((EMOTE_TAB << 16) | clue.getFirstEmote().getComponent());
+        if (box && f && box.screen && f.screen && box.scrollHeight > box.height) {
+          const max = box.scrollHeight - box.height;
+          const top = f.screen[1] - box.screen[1] + (box.scrollPos | 0); // the emote's place in the scrolled list
+          ll.api.setScroll((EMOTE_TAB << 16) | 0, Math.max(0, Math.min(max, top - ((box.height - f.height) >> 1))));
+        }
+        this.hasScrolled = true;
+      }
       if (first && !first.isHidden()) this.plugin.highlightWidget(graphics, first, emoteWindow, null, clue.getSecondEmote() != null ? '1st' : null);
       if (second && !second.isHidden()) this.plugin.highlightWidget(graphics, second, emoteWindow, null, '2nd');
-      this.hasScrolled = true; // (2007's emote tab doesn't scroll)
+      if (ll.c2007) this.hasScrolled = true; // (2007's emote tab doesn't scroll)
       return null;
     }
   }

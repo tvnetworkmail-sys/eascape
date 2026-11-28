@@ -12,7 +12,9 @@
   // the Trawler: InterfaceID.TRAWLER_OVERLAY 366 (TrawlerOverlay.CATCH / TIME), VarbitID.TRAWLER_ACTIVITY, the ship's regions
   const TRAWLER_SHIP_REGION_NORMAL = 7499;
   const TRAWLER_SHIP_REGION_SINKING = 8011;
-  const TRAWLER_TIME_LIMIT_IN_SECONDS = 314;
+  // 2006RS-2: our Trawler game is 1000 ticks, 10 minutes (trawler_control.rs2 murphy_normal: 200 x 5 ticks), as in 2006
+  // (OSRS's is 5 minutes 14)
+  const TRAWLER_TIME_LIMIT_IN_SECONDS = ll && ll.c2007 ? 314 : 600;
   const TRAWLER_OVERLAY = 366;
   const TrawlerOverlay = { CATCH: 0x016e000d, TIME: 0x016e000e };
   const TRAWLER_ACTIVITY = 3377;
@@ -232,6 +234,9 @@
       const regionID = this.regionId();
       if (regionID !== TRAWLER_SHIP_REGION_NORMAL && regionID !== TRAWLER_SHIP_REGION_SINKING) return;
       if (!this.config.trawlerContribution()) return;
+      // 2006RS-2: our Trawler keeps no contribution points (OSRS's TRAWLER_ACTIVITY varbit came later), so the overlay's
+      // own catch line stays
+      if (!ll.c2007) return;
       const trawlerContributionWidget = client.getWidget(TrawlerOverlay.CATCH);
       if (trawlerContributionWidget == null) return;
       const trawlerContribution = client.getVarbitValue(TRAWLER_ACTIVITY);
