@@ -1,7 +1,7 @@
 [proc,trawler_overlay_huntall]
 def_int $catch = %npc_trawler_fish_caught;
 def_int $water = %npc_trawler_flood_status;
-def_int $time_left = divide(sub(1000, %npc_int), 100);
+def_int $time_left = divide(sub(1000, multiply(%npc_int, 5)), 100); // %npc_int counts the 5-tick timer (200 = 1000 ticks, 10 mins)
 def_int $net_ripped = ~trawler_net_ripped;
 
 def_int $bits = 0;
