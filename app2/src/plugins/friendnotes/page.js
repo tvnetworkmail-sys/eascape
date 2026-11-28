@@ -72,7 +72,12 @@
     }
     onMenuEntryAdded(event) {
       const groupId = WidgetUtil.componentToInterface(event.getActionParam1());
-      if ((groupId === InterfaceID.FRIENDS && event.getOption() === 'Message') || (groupId === InterfaceID.IGNORE && event.getOption() === 'Delete')) {
+      // 2006RS-2: the 2006 friends and ignore lists' entries are the client's MESSAGE_PRIVATE (902) and IGNORELIST_DEL (884,
+      // "Remove") with no component in their arguments, seen through if2006.js as 10000 + the opcode (+2000 priority)
+      const t = typeof event.getType === 'function' ? event.getType() : -1;
+      const is06 = (code) => t === 10000 + code || t === 12000 + code;
+      if ((groupId === InterfaceID.FRIENDS || is06(902)) && event.getOption() === 'Message'
+        || (groupId === InterfaceID.IGNORE && event.getOption() === 'Delete') || (is06(884) && event.getOption() === 'Remove')) {
         this.setHoveredFriend(Text.toJagexName(Text.removeTags(event.getTarget())));
         client.createMenuEntry(-1)
           .setOption(this.hoveredFriend == null || this.hoveredFriend.getNote() == null ? ADD_NOTE : EDIT_NOTE)
