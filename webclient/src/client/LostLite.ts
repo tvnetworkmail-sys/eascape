@@ -475,8 +475,8 @@ function comInfo(c: IfType | null): Any {
         scripts: c.scripts,
         scriptOperand: c.scriptOperand,
         ops: c.iop,
-        // as the 2007 client's inv cache: the item id (-1 empty), not 377's id + 1
-        linkObjType: c.linkObjType ? Array.from(c.linkObjType, (v) => v - 1) : null,
+        // the component's own arrays, as the 2007 client hands them over: item id + 1 (0 empty)
+        linkObjType: c.linkObjType,
         linkObjNumber: c.linkObjNumber,
         scrollHeight: c.scrollHeight,
         scrollPos: c.scrollPos,
@@ -881,8 +881,9 @@ function bridgeApi(): Any {
         setObjs: (id: number, ids: Any, counts: Any) => {
             const c = ifGet(id);
             if (!c) return null;
-            const before = { ids: c.linkObjType ? Array.from(c.linkObjType, (v) => v - 1) : null, counts: c.linkObjNumber };
-            if (ids) c.linkObjType = Int32Array.from(ids, (v: number) => (v >= 0 ? v + 1 : 0));
+            // (as the 2007 client: the arrays as the component keeps them, item id + 1)
+            const before = { ids: c.linkObjType, counts: c.linkObjNumber };
+            if (ids) c.linkObjType = Int32Array.from(ids);
             if (counts) c.linkObjNumber = Int32Array.from(counts);
             redrawFor(c);
             return before;
