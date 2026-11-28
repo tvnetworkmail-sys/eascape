@@ -52,6 +52,8 @@
     [P(387, 28)]: 1688, // worn items -> wornitems:worn
     [P(363, 1)]: 6980, // puzzle pieces -> trail_puzzle:com_2 (inv_transmit(trail_puzzleinv, trail_puzzle:com_2), trail_puzzle.rs2)
     [P(287, 2)]: 11130, // MM puzzle pieces -> inter_214:com_3 (mm_puzzle.rs2)
+    [P(381, 1)]: 195, // Wilderness level text -> wilderness_overlay:com_1 ("Level: %1")
+    [P(381, 2)]: 196, // its layer -> wilderness_overlay:com_2
   };
   // the clue scroll's eight lines: 2007 345:1-8 -> trail_cluelong:com_2-9 (6968-6975)
   for (let n = 1; n <= 8; n++) coms[P(345, n)] = 6967 + n;
