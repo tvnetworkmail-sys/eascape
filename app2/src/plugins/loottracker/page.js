@@ -417,6 +417,15 @@
     onGameTick() {
       // PostClientTick's inventory timeout, in server ticks here (CLIENT_TICK_LENGTH per GAME_TICK_LENGTH)
       if (this.inventoryTimeout > 0 && --this.inventoryTimeout === 0) this.resetEvent();
+      // 2006RS-2: the tier of the last clue item in the pack (for our tierless clue reward, onWidgetLoaded)
+      if (!ll.c2007 && ll.clueTiers2006) {
+        const inv = client.getItemContainer(InventoryID.INV);
+        for (const it of inv ? inv.getItems() : []) {
+          const id = it.getId();
+          const t = id > 0 && Object.keys(ll.clueTiers2006).find((k) => ll.clueTiers2006[k].some(([a, b]) => id >= a && id <= b));
+          if (t) { this.lastClueTier = t; break; }
+        }
+      }
       // (saved each tick rather than at shutdown: the 2007RS window can close without a shutdown event)
       if (this.queuedLoots.length) this.submitLoot();
       if (!this.panel.headerIcon) { this.loadHeaderIcon(); if (this.panel.headerIcon) this.panel.publish(); }
@@ -488,6 +497,18 @@
     // the reward windows of 2007 (RAIDS, TOB, TOA, the Fortis Colosseum, the Lunar Chest ... are later)
     onWidgetLoaded(widgetLoaded) {
       let event; let container; let metadata = null;
+      // 2006RS-2: our clue reward (trail_reward) and Barrows chest (barrows_chest) are two windows, both 2007's 364 here
+      // (if2006.js). Our server says "Well done you've completed the Treasure Trail!" with no tier, so the clue's
+      // tier is the last clue item seen in the pack (cluetiers2006.js).
+      if (!ll.c2007 && widgetLoaded.getGroupId() === rl.InterfaceID.TRAIL_REWARD && ll.api && ll.api.ifOpen && ll.api.ifOpen(6960)) {
+        const tier = this.lastClueTier;
+        const eventType = { easy: 'Clue Scroll (Easy)', medium: 'Clue Scroll (Medium)', hard: 'Clue Scroll (Hard)' }[tier];
+        container = client.getItemContainer(InventoryID.TRAIL_REWARDINV);
+        if (!eventType || container == null) return;
+        const items = container.getItems().filter((i) => i.getId() > -1).map((i) => new rl.ItemStack(i.getId(), i.getQuantity()));
+        if (items.length) this.addLoot(eventType, -1, LootRecordType.EVENT, null, items);
+        return;
+      }
       switch (widgetLoaded.getGroupId()) {
         case rl.InterfaceID.BARROWS_REWARD:
           // (2007: the same window as the clue reward, so only in the Barrows tunnels)

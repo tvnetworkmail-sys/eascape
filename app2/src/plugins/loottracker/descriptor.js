@@ -9,7 +9,7 @@ module.exports = {
   tags: ['drops'],
   enabledByDefault: true,
   game: './loottracker/game.js',
-  page: './loottracker/page.js',
+  page: ['./loottracker/cluetiers2006.js', './loottracker/page.js'],
   config: {
     group: 'loottracker',
     sections: [{ key: 'ignored', name: 'Ignored entries', description: 'The ignored items and sources.', position: -2, closedByDefault: true }],

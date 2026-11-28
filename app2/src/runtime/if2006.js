@@ -45,6 +45,18 @@
     336: 3321, // trade side -> tradeside
     300: 3824, // shop -> shop_template
     301: 3822, // shop side -> shop_template_side
+    24: 4535, // Barrows brothers overlay -> inter_98 (barrows.rs2 if_openoverlay(inter_98))
+    25: 4543, // Barrows door puzzle -> inter_99 (barrows.rs2 barrows_puzzle_open)
+    // the reward window, clue and Barrows chest alike -> trail_reward (trail_reward.rs2) and barrows_chest (barrows.rs2)
+    364: [6960, 20261],
+    367: 4564, // Fishing Trawler's reward -> trawler_catch (trawler_win.rs2)
+    392: 21226, // Miscellania's collected resources -> misc_collect (managing_miscellania.rs2)
+    // the NPC dialogues with 1-4 lines (2007 241-244, read by rl.npcChatText) -> npcchat1-4 (~chatnpc), and the
+    // player's (2007 64-67) -> chat1-4 (~chatplayer): the same layout, head 0, name 1, lines 2.., continue last
+    241: 4882, 242: 4887, 243: 4893, 244: 4900,
+    64: 968, 65: 973, 66: 979, 67: 986,
+    366: 11908, // Fishing Trawler's overlay -> inter_231 (trawler_overlay.rs2 if_openoverlay(inter_231))
+    464: 147, // the emote tab -> controls (2006's emotes are on the player controls tab: player_controls.rs2)
   };
 
   // 2007 packed component -> 2006 component
@@ -61,6 +73,16 @@
     [P(239, 177)]: 5450, // "Playing:" -> music:com_178
     [P(381, 1)]: 195, // Wilderness level text -> wilderness_overlay:com_1 ("Level: %1")
     [P(381, 2)]: 196, // its layer -> wilderness_overlay:com_2
+    [P(261, 27)]: 149, // the run energy text "%1%" -> controls:com_1 (script runenergy; the options tab's on 2007)
+    // the Trawler overlay's catch and time texts -> inter_231:com_28 ("N fish") and com_29 ("N mins")
+    [P(366, 13)]: 11937, [P(366, 14)]: 11938,
+    // the emote tab and its buttons (the plugins' 464:n, as Clue Scroll's EMOTES) -> controls and its emote buttons
+    // (player_controls.rs2's if_buttons: com_20 yes, com_21 no, com_16 bow ... com_77 the Lost Tribe's goblin dance)
+    [P(464, 0)]: 665, // (the emotes' scrolling layer, controls:com_40)
+    [P(464, 1)]: 168, [P(464, 2)]: 169, [P(464, 3)]: 164, [P(464, 4)]: 165, [P(464, 5)]: 162, [P(464, 6)]: 163,
+    [P(464, 7)]: 13370, [P(464, 8)]: 171, [P(464, 9)]: 167, [P(464, 10)]: 170, [P(464, 11)]: 13366, [P(464, 12)]: 13368,
+    [P(464, 13)]: 166, [P(464, 14)]: 13363, [P(464, 15)]: 13364, [P(464, 16)]: 13365, [P(464, 17)]: 161, [P(464, 18)]: 11100,
+    [P(464, 19)]: 13362, [P(464, 20)]: 13367, [P(464, 21)]: 172, [P(464, 22)]: 13369, [P(464, 23)]: 13383, [P(464, 24)]: 13384,
   };
   // the clue scroll's eight lines: 2007 345:1-8 -> trail_cluelong:com_2-9 (6968-6975)
   for (let n = 1; n <= 8; n++) coms[P(345, n)] = 6967 + n;
@@ -70,6 +92,13 @@
   const ranges = {
     426: { base: 20358, count: 20760 - 20358 }, // fairyrings.if
     620: { base: 20787, count: 21226 - 20787 }, // fairyrings_log.if
+    // (the Barrows overlay and puzzle: 2007's are the same layout as ours, child n is com_n: the puzzle's question
+    // models are com_1-3 and its answers com_6-8, as RuneLite's BarrowsPlugin reads 25:1 and 25:6-8)
+    24: { base: 4536, count: 7 }, // inter_98:com_0-6
+    25: { base: 4544, count: 14 }, // inter_99:com_0-13
+    // the dialogues (see groups): npcchat1-4 and chat1-4, com_n at root + 1 + n
+    241: { base: 4883, count: 4 }, 242: { base: 4888, count: 5 }, 243: { base: 4894, count: 6 }, 244: { base: 4901, count: 6 },
+    64: { base: 969, count: 4 }, 65: { base: 974, count: 5 }, 66: { base: 980, count: 6 }, 67: { base: 987, count: 6 },
   };
 
   // 2007 inv id -> the 2006 component that shows it
@@ -79,6 +108,9 @@
     95: 5382, // bank -> bank_main:bank
     140: 6980, // trail_puzzleinv -> trail_puzzle:com_2
     221: 11130, // reinitialisation_inv -> inter_214:com_3
+    141: [6963, 20298], // trail_rewardinv -> trail_reward:inv or barrows_chest:inv (whichever is open)
+    0: 4640, // trawler_rewardinv -> trawler_catch:inv
+    415: 21230, // misc_collectinv -> misc_collect:inv (managing_miscellania.rs2 inv_transmit)
   };
 
   const rev = {};
@@ -257,7 +289,9 @@
       // inventories by 2007 inv id: the items of the component that shows them (its linkObjType is id + 1; the 2007 inv
       // cache's ids are the id, -1 empty)
       a.inv = (id) => {
-        const c = invs[id] !== undefined ? raw.com(invs[id]) : null;
+        const ids = invs[id] !== undefined ? [].concat(invs[id]) : [];
+        const shown = ids.filter((x) => !raw.comVisible || raw.comVisible(x));
+        const c = (shown.length ? shown : ids).map((x) => raw.com(x)).find((x) => x && x.linkObjType) || null;
         if (c && c.linkObjType) return { ids: Array.from(c.linkObjType, (v) => v - 1), counts: Array.from(c.linkObjNumber || [], (n, i) => (c.linkObjType[i] > 0 ? n : 0)) };
         return raw.inv ? raw.inv(id) : null;
       };
