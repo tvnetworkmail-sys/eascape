@@ -113,6 +113,7 @@
       if (menuOption.endsWith(CLEAR_HISTORY)) this.clearChatboxHistory(ChatboxTab.of(event.getParam1()));
     }
     onMenuEntryAdded(entry) {
+      if (!ll.c2007 && this.onMenuEntryAdded2006(entry)) return;
       if (entry.getType() !== IF_BUTTON) {
         this.reportEntry(entry);
         return;
@@ -134,6 +135,45 @@
         return;
       }
       this.reportEntry(entry);
+    }
+    // 2006RS-2: the 2006 chat box has no tabs with View options: right-clicking the chat box gives "Clear history" (on
+    // the menu's Cancel). Its chat lines carry their line in the entry's param0 (Client addChatOptions), so "Copy to
+    // clipboard" goes on each line's "Add ignore" (the 2006 chat line has "Report abuse" for staff only).
+    onMenuEntryAdded2006(entry) {
+      const opt = Text.removeTags(entry.getOption() || '');
+      if (opt === 'Cancel') {
+        // (the client opens no menu over its chat buttons, so the entry is on the chat box itself where no line has options, below Cancel so a left
+        // click there never clears; the 2006 chat box has one view, so it clears everything, as RuneLite's All tab)
+        if (!this.config.clearHistory()) return true;
+        const m = client.getMouseCanvasPosition();
+        const x = m ? m.getX() : -1; const y = m ? m.getY() : -1;
+        const c = ll.client;
+        const cx = c ? c.frameChatX | 0 : 17; const cy = c ? c.frameChatY | 0 : 357;
+        if (x < cx || x >= cx + 479 || y < cy || y >= cy + 96) return true;
+        if (c && (c.menuNumEntries | 0) > 1) return true; // (only where no chat line has options)
+        client.createMenuEntry(-2).setType(rl.MenuAction.RUNELITE_HIGH_PRIORITY || 1501).setParam1(ChatboxTab.ALL.widgetId)
+          .setOption(CLEAR_HISTORY)
+          .onClick(() => this.clearChatboxHistory(ChatboxTab.ALL));
+        return true;
+      }
+      if (/^Add ignore\b/.test(opt)) {
+        if (!this.config.copyToClipboard()) return true;
+        const c = ll.client; const i = entry.getActionParam0();
+        const raw = c && c.chatText && i >= 0 && i < 100 ? c.chatText[i] : null;
+        if (raw == null) return true;
+        const currentMessage = String(raw);
+        client.createMenuEntry(1)
+          .setOption(COPY_TO_CLIPBOARD)
+          .setTarget(entry.getTarget())
+          .setType(rl.MenuAction.RUNELITE)
+          .onClick(() => {
+            const text = Text.removeTags(currentMessage).replace(/@[a-z0-9]{3}@/g, '');
+            try { navigator.clipboard.writeText(text); } catch { /* no clipboard */ }
+            this.lastCopied = text;
+          });
+        return true;
+      }
+      return false;
     }
     reportEntry(entry) {
       if (entry.getOption() !== REPORT || !this.config.copyToClipboard()) return;

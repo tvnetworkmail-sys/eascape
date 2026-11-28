@@ -860,7 +860,11 @@ function bridgeApi(): Any {
         },
         mapDotCount: () => MAPDOT_FIELDS.length,
         // the minimap's zoom isn't adjustable in this client: always the 4 pixels a tile it draws
-        minimapZoom: () => 4,
+        // the minimap's zoom, pixels a tile (4 = the game's): RuneLite's Minimap zoom (Client.minimapScale draws with it)
+        minimapZoom: (v?: number) => {
+            if (typeof v === 'number' && v > 0) minimapPixelsPerTile = v === 4 ? 0 : Math.max(2, Math.min(8, v));
+            return minimapPixelsPerTile || 4;
+        },
         dest: () => ({ x: cl ? cl.minimapFlagX : 0, z: cl ? cl.minimapFlagZ : 0 }),
         // 2007 cache sprites (archive 8): this client has none
         sprite: () => false,
@@ -1122,6 +1126,13 @@ export function lostliteChatInput(own: string): string {
 export function lostliteCycle(): void {
     if (appHint && cl && cl.hintType === 0) applyHint();
     lostlitePollWidgets();
+}
+
+// 2006RS-2: the app's minimap zoom (bridge minimapZoom), pixels a tile; 0 = the game's own scale
+let minimapPixelsPerTile = 0;
+// the minimap's scale for Client (256 = 4 pixels a tile, the minimap image's), or 0 for the game's own
+export function lostliteMinimapScale(): number {
+    return minimapPixelsPerTile > 0 ? Math.round(1024 / minimapPixelsPerTile) : 0;
 }
 
 // set by the client: sends a ::command (without the ::) when logged in
