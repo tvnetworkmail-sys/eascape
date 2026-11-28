@@ -141,13 +141,13 @@ if (inv_total(inv, needle) > 0 & inv_total(inv, knife) > 0 & inv_total(inv, silk
     inv_del(inv, thread, 1);
     inv_del(inv, ahoy_toy_boat, 1);
     inv_add(inv, ahoy_toy_boat_repaired, 1);
-    ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, divide(^objbox_height, 2));
+    ~objbox(ahoy_toy_boat_repaired, "You replace the toy boat's missing flag.", 250, 0, 40); // EASCape: centred in the box
     return;
 }
 ~mesbox("You need some silk to replace the flag, something to sew it to the boat, and something to cut the flag to the right size.");
 
 [opheld1,ahoy_toy_boat_repaired]
-~objbox(ahoy_toy_boat_repaired, "The top of the flag is <~ahoy_flag_colour(%ahoy_toy_top)>.|The skull emblem is <~ahoy_flag_colour(%ahoy_toy_skull)>.|The bottom of the flag is <~ahoy_flag_colour(%ahoy_toy_bottom)>.", 250, 0, divide(^objbox_height, 2));
+~objbox(ahoy_toy_boat_repaired, "The top of the flag is <~ahoy_flag_colour(%ahoy_toy_top)>.|The skull emblem is <~ahoy_flag_colour(%ahoy_toy_skull)>.|The bottom of the flag is <~ahoy_flag_colour(%ahoy_toy_bottom)>.", 250, 0, 40); // EASCape: centred in the box
 
 // a dye used on the repaired boat (skill_crafting/scripts/dye_cape/dye_cape.rs2 sends it here)
 [label,ahoy_dye_boat](namedobj $dye, int $colour)
@@ -156,15 +156,15 @@ switch_int (~p_choice3_header("Top half", 1, "Bottom half", 2, "Skull emblem", 3
     case 1 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_top = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the top of the flag <$name>.", 250, 0, divide(^objbox_height, 2));
+        ~objbox(ahoy_toy_boat_repaired, "You dye the top of the flag <$name>.", 250, 0, 40); // EASCape: centred in the box
     case 2 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_bottom = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the bottom of the flag <$name>.", 250, 0, divide(^objbox_height, 2));
+        ~objbox(ahoy_toy_boat_repaired, "You dye the bottom of the flag <$name>.", 250, 0, 40); // EASCape: centred in the box
     case 3 :
         inv_del(inv, $dye, 1);
         %ahoy_toy_skull = $colour;
-        ~objbox(ahoy_toy_boat_repaired, "You dye the skull emblem <$name>.", 250, 0, divide(^objbox_height, 2));
+        ~objbox(ahoy_toy_boat_repaired, "You dye the skull emblem <$name>.", 250, 0, 40); // EASCape: centred in the box
 }
 
 // ---------------------------------------------------------------- the wrecked ship

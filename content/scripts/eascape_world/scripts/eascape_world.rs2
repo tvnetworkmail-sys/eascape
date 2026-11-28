@@ -60,7 +60,20 @@ if ($kind = 1) {
         $dest = map_findsquare($to, 1, 3, ^map_findsquare_lineofwalk);
     }
 }
-~climb_ladder($dest, db_getfield($use, eascape_links:up, 0));
+// stairs have no animation (as Lost City's stairs.rs2: p_telejump only)
+if (string_indexof_string("stair", lowercase(lc_name(loc_type))) ! -1) {
+    p_telejump($dest);
+    return(true);
+}
+// up or down by where you end up: underground (z 6400 and over) to the surface is up, even
+// when the level number goes down (Void's rows go by the level number)
+def_boolean $up = db_getfield($use, eascape_links:up, 0);
+if (coordz(coord) >= 6400 & coordz($dest) < 6400) {
+    $up = true;
+} else if (coordz(coord) < 6400 & coordz($dest) >= 6400) {
+    $up = false;
+}
+~climb_ladder($dest, $up);
 return(true);
 
 // ---- generated
@@ -97,8 +110,7 @@ return(true);
 [oploc1,loc_14923] ~eascape_door_walk;
 [oploc1,loc_5126] ~eascape_door_walk;
 [oploc1,makinghistory_door] ~eascape_door_walk;
-[oploc1,makinghistory_doubledoorl] ~eascape_door_walk;
-[oploc1,makinghistory_doubledoorr] ~eascape_door_walk;
+// makinghistory_doubledoorl/r: double doors by their categories (doors/doubledoors.rs2)
 [oploc1,mdaughter_tent_door] ~eascape_door_walk;
 [oploc1,mdaughter_tent_doorl] ~eascape_door_walk;
 [oploc1,misc_viking_abode_door_low] ~eascape_door_walk;

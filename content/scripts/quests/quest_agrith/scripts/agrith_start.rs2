@@ -67,7 +67,7 @@ if (~agrith_has_plain_silverlight = true) {
 } else {
     ~agrith_reen("<p,quiz>Now, do you recognise this sword?");
     ~agrith_give(silverlight, 1);
-    ~objbox(silverlight, "Reen hands you a shining silver sword.", 250, 0, ^objbox_height);
+    ~objbox(silverlight, "Reen hands you a shining silver sword.", 250, 0, 16); // EASCape: centred in the box
     ~chatplayer("<p,shock>Silverlight! That's the sword I used to defeat the demon Delrith!");
 }
 ~agrith_reen("<p,neutral>There is an urgent task that only you can do - and only with Silverlight!");
@@ -380,14 +380,14 @@ def_obj $used = last_useitem;
 if ($used = golem_mushroom) {
     inv_del(inv, golem_mushroom, 1);
     ~agrith_dye_silverlight;
-    ~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, ^objbox_height);
+    ~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, 16); // EASCape: centred in the box
     return;
 }
 if ($used = golem_ink) {
     inv_del(inv, golem_ink, 1);
     inv_add(inv, vial_empty, 1);
     ~agrith_dye_silverlight;
-    ~objbox(agrith_silverlight_dyed, "You pour the ink over Silverlight and it stains the blade black.", 250, 0, ^objbox_height);
+    ~objbox(agrith_silverlight_dyed, "You pour the ink over Silverlight and it stains the blade black.", 250, 0, 16); // EASCape: centred in the box
     return;
 }
 ~displaymessage(^dm_default);
@@ -396,7 +396,7 @@ if ($used = golem_ink) {
 [label,agrith_mushroom_on_silverlight]
 inv_del(inv, golem_mushroom, 1);
 ~agrith_dye_silverlight;
-~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, ^objbox_height);
+~objbox(agrith_silverlight_dyed, "You slice the mushroom with Silverlight, and it stains the blade black.", 250, 0, 16); // EASCape: centred in the box
 
 [proc,agrith_dye_silverlight]
 inv_del(inv, silverlight, inv_total(inv, silverlight));
@@ -439,7 +439,7 @@ if (inv_total(inv, agrith_book) > 0) {
 }
 ~agrith_give(agrith_book, 1);
 ~agrith_set(^agrith_tome);
-~objbox(agrith_book, "You find a book in the kiln.", 250, 0, ^objbox_height);
+~objbox(agrith_book, "You find a book in the kiln.", 250, 0, 4); // EASCape: centred in the box
 
 // ---------------------------------------------------------------- the demonic tome
 [opheld1,agrith_book]

@@ -253,6 +253,13 @@ p_telejump(3_57_154_22_32);
 
 // fills every empty bucket in turn (Void: fill_bucket_slime, ours human_fillbucket_sandpit)
 [oplocu,_ecto_pool]
+// both wikis: the bedsheet can be dipped in the pool of slime itself (the message is ours)
+if (last_useitem = ahoy_bedsheet) {
+    anim(human_pickuptable, 0);
+    inv_setslot(inv, last_useslot, ahoy_bedsheetgreen, 1);
+    mes("You dip the bedsheet in the pool of ectoplasm.");
+    return;
+}
 if (last_useitem ! bucket_empty) {
     ~displaymessage(^dm_default);
     return;
