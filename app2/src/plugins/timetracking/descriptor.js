@@ -9,7 +9,7 @@ module.exports = {
   tags: ['birdhouse', 'farming', 'hunter', 'notifications', 'skilling', 'stopwatches', 'timers', 'panel'],
   enabledByDefault: true,
   game: './timetracking/game.js',
-  page: ['./timetracking/data.js', './timetracking/page.js'],
+  page: ['./timetracking/data.js', './timetracking/farming2006.js', './timetracking/page.js'],
   config: {
     group: 'timetracking',
     sections: [],

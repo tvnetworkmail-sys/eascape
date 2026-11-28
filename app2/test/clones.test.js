@@ -1466,7 +1466,9 @@ console.log('clue scroll clone: ok');
   assert.strictEqual(E.getNextCombatLevelPrayer(1, 1, 1, 10, 1, 1, 1), 5);
   assert.strictEqual(E.getNextCombatLevelRange(1, 1, 1, 10, 1, 1, 1), 2);
   const realApi = Object.assign({}, ll.api);
-  const open = new Set([75]); const texts = new Map([[(75 << 16) | 25, 'Combat Lvl: %1']]); const hidden = new Map();
+  // (2006RS-2: our combat07_axe tab, root 21264: its components are 21265 + the 2007 tab's)
+  const AXE = (c) => 21265 + c;
+  const open = new Set([21264]); const texts = new Map([[AXE(25), 'Combat Lvl: %1']]); const hidden = new Map();
   Object.assign(ll.api, {
     ifOpen: (g) => open.has(g), comVisible: () => true,
     com: (p) => ({ text: texts.get(p) || '', shown: (texts.get(p) || '').replace('%1', p === ((381 << 16) | 1) ? '5' : '3'), x: 560, y: 230, width: 180, height: 12 }),
@@ -1474,7 +1476,7 @@ console.log('clue scroll clone: ok');
   });
   ll.pluginConfig({ id: 'combatlevel', enabled: true, config: { __items: require('../src/plugins/combatlevel/descriptor').config.items } });
   const cl = ll.__combatlevel.plugin;
-  assert.strictEqual(texts.get((75 << 16) | 25), 'Combat Lvl: 3.4', 'precise level in the axe tab');
+  assert.strictEqual(texts.get(AXE(25)), 'Combat Lvl: 3.4', 'precise level in the axe tab');
   assert.strictEqual(cl.overlay.getLevelsUntilTooltip(), '<col=ff981f>Next combat level:</br></col>2 Attack/Strength</br>3 Defence/Hitpoints</br>2 Ranged</br>2 Magic</br>5 Prayer');
   // the Wilderness overlay: "Level: 5" + the attack range
   open.add(381); texts.set((381 << 16) | 1, 'Level: %1');
@@ -1482,7 +1484,7 @@ console.log('clue scroll clone: ok');
   assert.strictEqual(texts.get((381 << 16) | 1), 'Level: 5<br>3-5'); // (the fake player's level reads 0)
   ll.pluginConfig({ id: 'combatlevel', enabled: false, config: {} });
   assert.strictEqual(texts.get((381 << 16) | 1), 'Level: 5');
-  assert.strictEqual(texts.get((75 << 16) | 25), 'Combat Lvl: %1', 'given back its own level');
+  assert.strictEqual(texts.get(AXE(25)), 'Combat Lvl: %1', 'given back its own level');
   // Attack Styles: axe tab, style 2 (Smash, aggressive), warn for strength and remove warned styles
   const realVarp = rl.client.getVarpValue; rl.client.getVarpValue = (id) => (id === 43 ? 2 : 0);
   ll.pluginConfig({ id: 'attackstyles', enabled: true, config: { __items: require('../src/plugins/attackstyles/descriptor').config.items, warnForStrength: true, removeWarnedStyles: true } });
@@ -1491,10 +1493,10 @@ console.log('clue scroll clone: ok');
   assert.strictEqual(as.getAttackStyle().getName(), 'Aggressive');
   assert.ok(as.isWarnedSkillSelected());
   as.processWidgets();
-  for (const c of [5, 8, 28, 4, 9, 29]) assert.strictEqual(hidden.get((75 << 16) | c), true, 'Hack and Smash hidden: ' + c);
-  assert.ok(!hidden.get((75 << 16) | 2), 'Chop shown');
+  for (const c of [5, 8, 28, 4, 9, 29]) assert.strictEqual(hidden.get(AXE(c)), true, 'Hack and Smash hidden: ' + c);
+  assert.ok(!hidden.get(AXE(2)), 'Chop shown');
   ll.pluginConfig({ id: 'attackstyles', enabled: false, config: {} });
-  assert.strictEqual(hidden.get((75 << 16) | 5), false, 'shown again');
+  assert.strictEqual(hidden.get(AXE(5)), false, 'shown again');
   rl.client.getVarpValue = realVarp;
   for (const k of ['ifOpen', 'comVisible', 'com', 'setText', 'setHidden']) { if (realApi[k]) ll.api[k] = realApi[k]; else delete ll.api[k]; }
   console.log('combat level / attack styles clones: ok');
@@ -1800,12 +1802,16 @@ console.log('clue scroll clone: ok');
   ll.pluginConfig({ id: 'regenmeter', enabled: false, config: {} });
 
   // Quest List: the filter hides other quests and closes the list up; closing the search puts it back
-  const lines = { 13: ['Free Quests', null, 239], 14: ["Black Knights' Fortress", ['Read Journal'], 254], 15: ["Cook's Assistant", ['Read Journal'], 269], 16: ['Demon Slayer', ['Read Journal'], 284] };
+  // (2006RS-2: our quest tab, questlist 638, its lines text components in its scroll layer 639, a quest's with a button)
+  const lines = { 13: ['Free Quests', '', 239], 14: ["Black Knights' Fortress", 'Read Journal', 254], 15: ["Cook's Assistant", 'Read Journal', 269], 16: ['Demon Slayer', 'Read Journal', 284] };
   const hidden = new Set(); const pos = {};
   for (const [i, [, , y]] of Object.entries(lines)) pos[i] = y;
+  const qline = (i) => { const l = lines[i]; return l ? { id: +i, type: 4, layer: 639, text: l[0], buttonText: l[1], ox: 5, oy: pos[i], x: 5, y: pos[i], screen: [561, pos[i]] } : null; };
   Object.assign(ll.api, {
-    com: (p) => { const i = p & 0xffff; if ((p >>> 16) !== 274) return null; const l = lines[i]; return l ? { type: 4, text: l[0], ops: l[1], ox: 5, oy: pos[i], screen: [561, pos[i]] } : (i === 11 || i === 0 ? { type: 5, screen: [711, 209] } : null); },
-    setHidden: (p, h) => (h ? hidden.add(p & 0xffff) : hidden.delete(p & 0xffff)), setPosition: (p, x, y) => { pos[p & 0xffff] = y; },
+    com: (p) => (p === 639 || p === 638 ? { id: p, type: 0, screen: [553, 209], width: 190, height: 250, children: p === 638 ? [639] : Object.keys(lines).map(Number) } : qline(p)),
+    comsOf: (root) => (root === 638 ? Object.keys(lines).map(qline) : []),
+    ifOpen: (g) => g === 638 || g === 0, comVisible: (p) => p === 638 || p === 639 || !!lines[p],
+    setHidden: (p, h) => (h ? hidden.add(p) : hidden.delete(p)), setPosition: (p, x, y) => { pos[p] = y; },
   });
   ll.pluginConfig({ id: 'questlist', enabled: true, config: {} });
   const ql = ll.__questlist.plugin;

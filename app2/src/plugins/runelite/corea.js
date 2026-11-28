@@ -85,7 +85,7 @@
     if (!ll.api || !ll.api.com) return -1;
     // (2006RS-2: the 2006 client's side tabs are numbered as 2007's, 0 combat .. 13 music: its active one, unless a side
     // panel covers the tabs)
-    if (!ll.c2007) { const c = ll.client; return c && c.ingame && c.sideModalId === -1 && c.sideIcon && c.sideIcon[c.activeIcon] !== -1 ? c.activeIcon | 0 : -1; }
+    if (!ll.c2007 && ll.client && typeof ll.client.activeIcon === 'number') { const c = ll.client; return c && c.ingame && c.sideModalId === -1 && c.sideIcon && c.sideIcon[c.activeIcon] !== -1 ? c.activeIcon | 0 : -1; }
     for (let tab = 0; tab < 14; tab++) { const c = ll.api.com((548 << 16) | (99 + tab)); if (c && !c.hide) return tab; }
     return -1;
   };
