@@ -1106,7 +1106,7 @@
       const c = c0();
       if (!c || !fld('menuCount')) return [];
       const n = c[fld('menuCount')] | 0;
-      const arr = ll.menuArrays(c);
+      const arr = (ll.rlMenuArrays || ll.menuArrays).call(ll, c);
       const out = [];
       for (let i = 0; i < n; i++) out.push(new MenuEntryImpl(arr, i, false));
       return out;
@@ -1117,7 +1117,7 @@
       return {
         getMenuEntries() {
           const c = c0(); if (!c || !fld('menuCount')) return [];
-          const n = c[fld('menuCount')] | 0; const arr = ll.menuArrays(c); const out = [];
+          const n = c[fld('menuCount')] | 0; const arr = (ll.rlMenuArrays || ll.menuArrays).call(ll, c); const out = [];
           for (let i = 0; i < n; i++) out.push(new MenuEntryImpl(arr, i, true));
           return out;
         },
@@ -1583,6 +1583,8 @@
   const plugins = new Map(); // id -> { plugin, enabled }
   const pluginManager = {
     register(id, plugin) { plugins.set(id, { plugin, enabled: false }); },
+    /** the plugin object registered as id, or null (Developer Tools and the tests look at a plugin's state) */
+    get(id) { const p = plugins.get(id); return p ? p.plugin : null; },
     setEnabled(id, on, config) {
       const p = plugins.get(id);
       if (!p) return;
@@ -2408,18 +2410,18 @@
   // held (inventory) item entries: OPHELD1-5, Use (12), Examine (1001)
   const HELD_OPS = new Set([28, 9, 2, 21, 18, 12, 1001]);
   let menuResort = false;
-  function menuEntryAt(c, i) { return new MenuEntryImpl(ll.menuArrays(c), i, true); }
+  function menuEntryAt(c, i) { return new MenuEntryImpl((ll.rlMenuArrays || ll.menuArrays).call(ll, c), i, true); }
   /** Client.setMenuEntries: the client's menu becomes these entries (bottom first) */
   function setMenuEntries(entries) {
     const c = c0();
     if (!c || !fld('menuCount')) return;
-    const arr = ll.menuArrays(c);
+    const arr = (ll.rlMenuArrays || ll.menuArrays).call(ll, c);
     entries.forEach((e, i) => { arr[0][i] = e.text(); arr[1][i] = e.type; arr[2][i] = e.identifier; arr[3][i] = e.param0; arr[4][i] = e.param1; });
     c[fld('menuCount')] = entries.length;
   }
   /** the client's Minimenu::Sort (entries over 1000 below the others), again after deprioritized entries changed */
   function resortMenu(c) {
-    const arr = ll.menuArrays(c); const n = c[fld('menuCount')] | 0;
+    const arr = (ll.rlMenuArrays || ll.menuArrays).call(ll, c); const n = c[fld('menuCount')] | 0;
     for (let done = false; !done;) {
       done = true;
       for (let i = 0; i < n - 1; i++) {
@@ -3586,7 +3588,7 @@
       const n = c[fld('menuCount')] | 0;
       if (!force || n < 2) return;
       // move the top entry (ours) under the next one
-      const arrays = ll.menuArrays(c);
+      const arrays = (ll.rlMenuArrays || ll.menuArrays).call(ll, c);
       for (const arr of arrays) { const t = arr[n - 1]; arr[n - 1] = arr[n - 2]; arr[n - 2] = t; }
     });
     client.getMenuEntries = client.getMenuEntries || (() => {

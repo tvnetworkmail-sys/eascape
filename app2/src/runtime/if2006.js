@@ -34,7 +34,7 @@
     182: 2449, // logout -> logout
     363: 6976, // clue sliding puzzle -> trail_puzzle
     287: 11126, // Monkey Madness reinitialisation puzzle -> inter_214
-    203: 6988, // clue text (trail_clue) -> trail_clue
+    345: 6965, // the clue scroll's text -> trail_cluelong (trail_clue_read.rs2 full_trail_readclue)
     398: 20357, // fairy rings -> fairyrings
     381: 193, // wilderness level overlay -> wilderness_overlay
     275: 297, // quest / diary scroll -> questscroll
@@ -53,6 +53,8 @@
     [P(363, 1)]: 6980, // puzzle pieces -> trail_puzzle:com_2 (inv_transmit(trail_puzzleinv, trail_puzzle:com_2), trail_puzzle.rs2)
     [P(287, 2)]: 11130, // MM puzzle pieces -> inter_214:com_3 (mm_puzzle.rs2)
   };
+  // the clue scroll's eight lines: 2007 345:1-8 -> trail_cluelong:com_2-9 (6968-6975)
+  for (let n = 1; n <= 8; n++) coms[P(345, n)] = 6967 + n;
 
   // 2007 inv id -> the 2006 component that shows it
   const invs = {
@@ -64,9 +66,12 @@
   };
 
   const rev = {};
+  const grev = {};
   const build = () => {
     for (const k of Object.keys(rev)) delete rev[k];
     for (const [k, v] of Object.entries(coms)) rev[v] = Number(k);
+    for (const k of Object.keys(grev)) delete grev[k];
+    for (const [k, v] of Object.entries(groups)) if (grev[v] === undefined) grev[v] = Number(k);
   };
   build();
 
@@ -75,9 +80,20 @@
   const com = (id) => (isPacked(id) ? (coms[id >>> 0] !== undefined ? coms[id >>> 0] : -1) : id);
   const group = (g) => (typeof g === 'number' && groups[g] !== undefined ? groups[g] : g);
   const back = (id) => (rev[id] !== undefined ? rev[id] : id);
+  const groupBack = (g) => (grev[g] !== undefined ? grev[g] : g);
+
+  // WidgetLoaded / WidgetClosed come from the client with the 2006 root: the plugins get the 2007 group
+  for (const name of ['widgetLoaded', 'widgetClosed']) {
+    let fn = ll[name];
+    Object.defineProperty(ll, name, {
+      configurable: true,
+      get: () => (typeof fn === 'function' ? (g, ...rest) => fn(groupBack(g), ...rest) : fn),
+      set: (v) => { fn = v; },
+    });
+  }
 
   const api = {
-    groups, coms, invs, com, group, back,
+    groups, coms, invs, com, group, back, groupBack,
     /** add entries (2007 packed or group -> 2006); plugins may extend the table for what only they use */
     add(table) {
       if (table.groups) Object.assign(groups, table.groups);
@@ -88,11 +104,82 @@
   };
   ll.if2006 = api;
 
+  // ---- menu entries: the RuneLite core and its plugins read and write menu opcodes as the 2007 client's (RuneLite's
+  // MenuAction of that client: OPLOC1 7, OPNPC1 17, OPHELD1 28 ...). The 2006 client's are its MiniMenuAction values
+  // (webclient src/client/MiniMenuAction.ts). The arguments are in the same order on both (identifier: the NPC index,
+  // obj id or loc tag; param0: the slot or x; param1: the component or z). rlMenuArrays(c) is the runtime's
+  // menuArrays(c) with the opcodes (and a component in param1) seen as 2007's; writes go back as 2006's.
+  const OPS06 = {
+    625: 7, 721: 35, 743: 51, 357: 33, 1071: 1004, 1381: 1005, 899: 24, 810: 26, // loc 1-5, examine, spell, use item on
+    242: 17, 209: 38, 309: 34, 852: 32, 793: 4, 1714: 1002, 240: 19, 829: 48, // npc
+    139: 5, 778: 22, 617: 41, 224: 57, 662: 3, 1152: 1006, 370: 25, 111: 46, // ground obj
+    639: 30, 499: 58, 27: 29, 387: 45, 185: 37, 131: 23, 275: 14, // player 1-5, spell, use item on
+    694: 28, 962: 9, 795: 2, 681: 21, 100: 18, 1328: 1001, 563: 39, 398: 42, 102: 12, // held 1-5, examine, spell, use on, use
+    582: 6, 113: 8, 555: 49, 331: 44, 354: 13, // inv buttons 1-5
+    718: 10, 1106: 1007, // walk, cancel
+  };
+  // 2006 opcodes with no 2007 twin (if buttons, accept trade / duel, friends list...): seen as 10000 + the opcode
+  const OTHER06 = new Set([957, 507, 231, 274, 737, 435, 225, 997, 524, 605, 47, 513, 884, 902]);
+  const OPS07 = {};
+  for (const [k, v] of Object.entries(OPS06)) OPS07[v] = Number(k);
+  // opcodes whose param1 is a component (held items, inv buttons)
+  const COM_PARAM = new Set([694, 962, 795, 681, 100, 1328, 563, 398, 102, 582, 113, 555, 331, 354]);
+  const opRead = (v) => {
+    let t = v | 0; let pri = 0;
+    if (t >= 2000 && t < 10000) { t -= 2000; pri = 2000; }
+    if (OPS06[t] !== undefined) return OPS06[t] + pri;
+    if (OTHER06.has(t)) return 10000 + t + pri;
+    return v;
+  };
+  const opWrite = (v) => {
+    let t = v | 0; let pri = 0;
+    if (t >= 10000) { t -= 10000; if (t >= 2000) { t -= 2000; pri = 2000; } return t + pri; }
+    if (t >= 2000 && t < 3500 && OPS07[t - 2000] !== undefined) { t -= 2000; pri = 2000; }
+    return OPS07[t] !== undefined ? OPS07[t] + pri : v;
+  };
+  const isIndex = (k) => typeof k === 'string' && /^\d+$/.test(k);
+  const proxies = new WeakMap();
+  const viewOf = (target, get, set) => {
+    let p = proxies.get(target);
+    if (p) return p;
+    p = new Proxy(target, {
+      get(t, k) { if (isIndex(k)) return get(t, +k); const v = Reflect.get(t, k, t); return typeof v === 'function' ? v.bind(t) : v; },
+      set(t, k, v) { if (isIndex(k)) { set(t, +k, v); return true; } return Reflect.set(t, k, v, t); },
+    });
+    proxies.set(target, p);
+    return p;
+  };
+  ll.rlMenuArrays = function (c) {
+    const arr = ll.menuArrays(c);
+    if (ll.c2007) return arr;
+    const act = arr[1];
+    const comParam = (i) => { let t = act[i] | 0; if (t >= 2000) t -= 2000; return COM_PARAM.has(t); };
+    return [arr[0],
+      viewOf(act, (t, i) => opRead(t[i]), (t, i, v) => { t[i] = opWrite(v); }),
+      arr[2], arr[3],
+      viewOf(arr[4], (t, i) => (comParam(i) ? back(t[i]) : t[i]), (t, i, v) => { t[i] = comParam(i) ? com(v) : v; })];
+  };
+  ll.if2006.menuOp = { read: opRead, write: opWrite };
+
   // wrap the bridge once the client gives it (setApi), only for the 2006 client
   const setApi = ll.setApi.bind(ll);
   ll.setApi = function (raw) {
     if (ll.c2007 || !raw || raw.__if2006) return setApi(raw);
     const a = Object.assign({}, raw, { __if2006: true });
+    // an obj / loc id past the end of the 2006 tables makes the client read garbage forever (ObjType.list): answer
+    // null for those (the class's numDefinitions, read off a real type)
+    const guard = (k) => {
+      if (!raw[k]) return;
+      let max = -1;
+      a[k] = (id, ...rest) => {
+        if (max < 0) { try { const t = raw[k](0); max = t && t.constructor && t.constructor.numDefinitions ? t.constructor.numDefinitions : 0; } catch { max = 0; } }
+        return typeof id === 'number' && id >= 0 && (max === 0 || id < max) ? raw[k](id, ...rest) : null;
+      };
+    };
+    guard('obj');
+    guard('loc');
+    if (raw.objIcon && a.obj) a.objIcon = (id, count) => (a.obj(id) ? raw.objIcon(id, count) : null);
+    if (raw.iop && a.obj) a.iop = (id) => (a.obj(id) ? raw.iop(id) : [null, null, null, null, null]);
     const wrapInfo = (asked, info) => {
       if (!info || !isPacked(asked)) return info;
       const out = Object.assign({}, info, { id: asked, raw: info.id });
@@ -107,6 +194,8 @@
     if (raw.setObjs) a.setObjs = (id, ids, counts) => { const c = com(id); return c >= 0 ? raw.setObjs(c, ids, counts) : null; };
     if (raw.ifOpen) a.ifOpen = (g) => raw.ifOpen(group(g));
     if (raw.comsOf) a.comsOf = (g) => raw.comsOf(group(g)).map((i) => (i && rev[i.id] !== undefined ? Object.assign({}, i, { id: rev[i.id], raw: i.id }) : i));
+    if (raw.componentTable) a.componentTable = () => { const t = raw.componentTable(); for (let i = 0; i < t.length; i += 2) t[i] = groupBack(t[i]); return t; };
+    if (raw.subRects) a.subRects = () => { const t = raw.subRects(); for (let i = 0; i < t.length; i += 6) t[i] = groupBack(t[i]); return t; };
     if (raw.widgetItems) a.widgetItems = () => { const w = Int32Array.from(raw.widgetItems()); for (let i = 2; i < w.length; i += 6) w[i] = back(w[i]) | 0; return w; };
     if (raw.com) {
       // inventories by 2007 inv id: the items of the component that shows them (ids as the 2007 inv cache: -1 empty)

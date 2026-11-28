@@ -270,12 +270,13 @@ export function lostliteConfigure(): void {
     });
     ll.setApi({
         ifList: () => IfType.list,
-        obj: (id: number) => ObjType.list(id),
+        // (an id past the end would read garbage forever: null instead)
+        obj: (id: number) => (id >= 0 && id < ObjType.numDefinitions ? ObjType.list(id) : null),
         loopCycle: () => lostliteLoopCycle(),
         toUserhash: (name: string) => JString.toUserhash(name),
         pix: () => ({ pixels: Pix2D.pixels, width: Pix2D.width, height: Pix2D.height, x: 4, y: 4, w: 512, h: 334 }),
-        objIcon: (id: number, count: number) => ObjType.getSprite(id, count, 0),
-        loc: (id: number) => LocType.list(id),
+        objIcon: (id: number, count: number) => (id >= 0 && id < ObjType.numDefinitions ? ObjType.getSprite(id, count, 0) : null),
+        loc: (id: number) => (id >= 0 && id < LocType.numDefinitions ? LocType.list(id) : null),
         // EASCape: send a ::command for a plugin (the Quest Helper panel's ::questhelper)
         command: (cmd: string) => commandSender(cmd),
         // 2006RS-2: the rest of the 2007 client's bridge (2007scape webclient LostLite.ts), for this client
@@ -787,11 +788,11 @@ let varbitDefsCache: Int32Array | null = null;
 function bridgeApi(): Any {
     return {
         iop: (id: number) => {
-            const t = ObjType.list(id);
+            const t = id >= 0 && id < ObjType.numDefinitions ? ObjType.list(id) : null;
             return t && t.iop ? Array.from(t.iop, (o) => (o == null ? null : String(o))) : [null, null, null, null, null];
         },
         npcType: (id: number) => {
-            const t = safe(() => NpcType.list(id), null);
+            const t = id >= 0 && id < NpcType.numDefinitions ? safe(() => NpcType.list(id), null) : null;
             return t ? { id, name: t.name, ops: t.op ? Array.from(t.op, (o) => (o == null ? null : String(o))) : [null, null, null, null, null], level: t.vislevel, size: t.size, multinpc: t.multinpc ? Array.from(t.multinpc) : null } : null;
         },
         tickCount: () => serverTicks,
