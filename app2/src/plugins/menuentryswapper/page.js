@@ -25,14 +25,16 @@
   const GROUND_ITEM_TYPES = [MenuAction.GROUND_ITEM_FIRST_OPTION, MenuAction.GROUND_ITEM_SECOND_OPTION, MenuAction.GROUND_ITEM_THIRD_OPTION, MenuAction.GROUND_ITEM_FOURTH_OPTION, MenuAction.GROUND_ITEM_FIFTH_OPTION];
   const ESSENCE_MINE_NPCS = new Set(['aubury', 'archmage sedridor', 'wizard distentor', 'wizard cromperty', 'brimstail']);
   // ShiftWithdrawMode / ShiftDepositMode, BuyMode / SellMode: the option each mode moves to the top
-  const WITHDRAW = { WITHDRAW_1: 'withdraw-1', WITHDRAW_5: 'withdraw-5', WITHDRAW_10: 'withdraw-10', WITHDRAW_X: 'withdraw-x', WITHDRAW_ALL: 'withdraw-all' };
-  const DEPOSIT = { DEPOSIT_1: 'deposit-1', DEPOSIT_5: 'deposit-5', DEPOSIT_10: 'deposit-10', DEPOSIT_X: 'deposit-x', DEPOSIT_ALL: 'deposit-all' };
+  // 2006RS-2: our bank's ops (bank_main.if / bank_side.if: "Withdraw 1" ... "Withdraw X", "Deposit 1" ... "Deposit X")
+  const WITHDRAW = { WITHDRAW_1: 'withdraw 1', WITHDRAW_5: 'withdraw 5', WITHDRAW_10: 'withdraw 10', WITHDRAW_X: 'withdraw x', WITHDRAW_ALL: 'withdraw all' };
+  const DEPOSIT = { DEPOSIT_1: 'deposit 1', DEPOSIT_5: 'deposit 5', DEPOSIT_10: 'deposit 10', DEPOSIT_X: 'deposit x', DEPOSIT_ALL: 'deposit all' };
 
   const baseType = (t) => (t >= 2000 ? t - 2000 : t);
   const lower = (s) => Text.removeTags(s).toLowerCase();
   // a loc entry's identifier: an op's is the scene tag, with the loc's id in bits 32-62 (not RuneLite's plain id, so
   // RuneLite's `identifier & 0xFFFF` would read the tag's square instead); Examine's is the loc's id
-  const locIdOf = (raw) => (typeof raw === 'bigint' ? Number((raw >> 32n) & 0x7fffffffn)
+  // (2006RS-2: the 2006 client's loc entries, ops and Examine alike, carry its 32-bit typecode: the loc id in bits 14-28)
+  const locIdOf = (raw) => (!ll.c2007 && typeof raw === 'number' && raw <= 0x7fffffff ? (raw >> 14) & 0x7fff : typeof raw === 'bigint' ? Number((raw >> 32n) & 0x7fffffffn)
     : Number(raw) > 0x7fffffff ? Math.floor(Number(raw) / 4294967296) & 0x7fffffff : Number(raw) | 0);
   const sameLoc = (a, b) => a.getParam0() === b.getParam0() && a.getParam1() === b.getParam1() && a.getTarget() === b.getTarget();
   const alwaysTrue = () => true;
@@ -294,9 +296,9 @@
     swapBank(menu, menuEntry, option) {
       if (!this.shiftModifier()) return false;
       const deposit = this.config.bankDepositShiftClick();
-      if (deposit !== 'OFF' && option === 'deposit-1' && menuEntry === menu.top) { this.bankModeSwap(menu, DEPOSIT[deposit]); return true; }
+      if (deposit !== 'OFF' && option === DEPOSIT.DEPOSIT_1 && menuEntry === menu.top) { this.bankModeSwap(menu, DEPOSIT[deposit]); return true; }
       const withdraw = this.config.bankWithdrawShiftClick();
-      if (withdraw !== 'OFF' && option === 'withdraw-1' && menuEntry === menu.top) { this.bankModeSwap(menu, WITHDRAW[withdraw]); return true; }
+      if (withdraw !== 'OFF' && option === WITHDRAW.WITHDRAW_1 && menuEntry === menu.top) { this.bankModeSwap(menu, WITHDRAW[withdraw]); return true; }
       return false;
     }
     // swap("tan 1", "tan all"): the 2007 tanner (interface 324) has one button per op, stacked, each its own entry:
