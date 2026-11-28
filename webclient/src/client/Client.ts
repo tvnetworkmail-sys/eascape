@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText, lostliteChatInput } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -12010,7 +12010,7 @@ export class Client extends GameShell {
             }
 
             font?.drawString(username + ':', 4, 90, Colour.BLACK);
-            font?.drawString(this.chatInput + '*', font.stringWid(username + ': ') + 6, 90, Colour.BLUE);
+            font?.drawString(lostliteChatInput(this.chatInput + '*'), font.stringWid(username + ': ') + 6, 90, Colour.BLUE); // 2006RS-2: the app's text (Key Remapping)
 
             Pix2D.hline(0, 77, 479, Colour.BLACK);
         }
