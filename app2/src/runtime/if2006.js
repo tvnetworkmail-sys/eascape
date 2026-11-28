@@ -188,9 +188,19 @@
       if (typeof info.layer === 'number' && info.layer >= 0) out.layer = back(info.layer);
       return out;
     };
-    if (raw.com) a.com = (id) => wrapInfo(id, raw.com(com(id)));
-    if (raw.comVisible) a.comVisible = (id) => { const c = com(id); return c >= 0 && raw.comVisible(c); };
-    for (const k of ['setText', 'setHidden', 'setColour', 'setPosition', 'setSize', 'redraw', 'setScroll', 'comTextWidth', 'comChildren']) {
+    // components the 2006 client draws itself rather than as an interface: answered here, written through a bridge call
+    const virtual = {
+      // the chat bar's Report Abuse text (Client draws it; bridge reportText)
+      [P(548, 26)]: raw.reportText ? {
+        info: () => { const t = raw.reportText() || 'Report Abuse'; return { id: P(548, 26), layer: -1, type: 4, text: t, shown: t, screen: [404, 457], x: 404, y: 457, width: 110, height: 22, colour: 0xffffff, hide: false }; },
+        setText: (t) => raw.reportText(t == null || t === 'Report Abuse' ? null : String(t)),
+      } : null,
+    };
+    const virt = (id) => (isPacked(id) && virtual[id >>> 0]) || null;
+    if (raw.com) a.com = (id) => { const v = virt(id); return v ? v.info() : wrapInfo(id, raw.com(com(id))); };
+    if (raw.comVisible) a.comVisible = (id) => { if (virt(id)) return true; const c = com(id); return c >= 0 && raw.comVisible(c); };
+    if (raw.setText) a.setText = (id, t) => { const v = virt(id); if (v) return v.setText(t); const c = com(id); return c >= 0 ? raw.setText(c, t) : null; };
+    for (const k of [ 'setHidden', 'setColour', 'setPosition', 'setSize', 'redraw', 'setScroll', 'comTextWidth', 'comChildren']) {
       if (raw[k]) a[k] = (id, ...rest) => { const c = com(id); return c >= 0 ? raw[k](c, ...rest) : k === 'comTextWidth' ? -1 : null; };
     }
     if (raw.setObjs) a.setObjs = (id, ids, counts) => { const c = com(id); return c >= 0 ? raw.setObjs(c, ids, counts) : null; };

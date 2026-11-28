@@ -5,7 +5,7 @@ import ClientBuild from '#/client/ClientBuild.js';
 import { ClientCode } from '#/client/ClientCode.js';
 import GameShell from '#/client/GameShell.js';
 import { MiniMenuAction } from '#/client/MiniMenuAction.js';
-import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand } from '#/client/LostLite.js';
+import { appNeedsUpdate, lostlite, lostliteConfigure, lostliteSetCommandSender, lostliteSetLoopCycle, lostliteSetClient, lostliteCycle, lostliteServerTick, lostliteObjShown, lostliteSound, lostliteCommand, lostliteReportText } from '#/client/LostLite.js';
 import MobileKeyboard from '#/client/MobileKeyboard.js';
 import MouseTracking from '#/client/MouseTracking.js';
 import Skill from '#/client/Skill.js';
@@ -3139,7 +3139,7 @@ export class Client extends GameShell {
         font?.centreStringTag('Clan', 297, 15, Colour.WHITE, true);
         font?.centreStringTag('Trade', 363, 10, Colour.WHITE, true);
         font?.centreStringTag(trd[0], 363, 21, trd[1], true);
-        font?.centreStringTag('Report Abuse', 459, 15, Colour.WHITE, true);
+        font?.centreStringTag(lostliteReportText('Report Abuse'), 459, 15, Colour.WHITE, true);
         this.areaF07Chat?.draw(0, 480);
     }
 
@@ -4501,7 +4501,7 @@ export class Client extends GameShell {
                 this.p12?.centreStringTag('Off', 324, 41, Colour.RED, true);
             }
 
-            this.p12?.centreStringTag('Report abuse', 458, 33, Colour.WHITE, true);
+            this.p12?.centreStringTag(lostliteReportText('Report abuse'), 458, 33, Colour.WHITE, true); // 2006RS-2: the app's Report Button plugin can show the time here
 
             this.areaBackbase1?.draw(0, 453);
 
