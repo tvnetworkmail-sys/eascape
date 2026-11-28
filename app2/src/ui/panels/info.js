@@ -54,7 +54,7 @@ window.Panels = window.Panels || [];
       root.replaceChildren(h('div.pad', {},
         h('div.info-version', {},
           line('2006RS-2 version: ', s.version),
-          line('Game: ', 'September 2007 (client build 500)'),
+          line('Game: ', '2006 (revision 377)'),
           line('World: ', s.world != null ? String(s.world) : '-'),
           line('Client hook: ', hook[0], hook[1]),
           zoom ? line('Camera zoom: ', zoom[0], zoom[1]) : null,
