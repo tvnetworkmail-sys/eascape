@@ -6,7 +6,8 @@ module.exports = {
   name: 'Implings',
   description: 'Highlight nearby implings on the minimap and on-screen',
   tags: ['hunter', 'minimap', 'overlay', 'imp'],
-  enabledByDefault: true,
+  // 2006RS-2: off by default: the game this plugin is for isn't in our 2006 game (app2/README.md)
+  enabledByDefault: false,
   game: './implings/game.js',
   page: './implings/page.js',
   config: {

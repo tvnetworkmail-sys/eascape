@@ -6,7 +6,8 @@ module.exports = {
   name: 'Player-owned House',
   description: 'Show minimap icons and mark unlit/lit burners',
   tags: ['construction', 'poh', 'minimap', 'overlay'],
-  enabledByDefault: true,
+  // 2006RS-2: off by default: the game this plugin is for isn't in our 2006 game (app2/README.md)
+  enabledByDefault: false,
   game: './poh/game.js',
   page: './poh/page.js',
   resources: ICONS.map((i) => i + '.png'),
